@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 프로젝트 공통 유틸(선택) */
+:root {
+  --app-max-w: 720px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+.container-app {
+  @apply mx-auto max-w-[var(--app-max-w)] px-4;
+}
