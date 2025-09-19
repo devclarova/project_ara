@@ -193,6 +193,30 @@ export type Database = {
           },
         ]
       }
+      dialogues: {
+        Row: {
+          culture_note: string | null
+          dialogue: string | null
+          english: string | null
+          id: number
+          timeline: string | null
+        }
+        Insert: {
+          culture_note?: string | null
+          dialogue?: string | null
+          english?: string | null
+          id: number
+          timeline?: string | null
+        }
+        Update: {
+          culture_note?: string | null
+          dialogue?: string | null
+          english?: string | null
+          id?: number
+          timeline?: string | null
+        }
+        Relationships: []
+      }
       posts: {
         Row: {
           category: string | null
@@ -326,6 +350,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      temptts: {
+        Row: {
+          culture_note: string | null
+          dialogue: string | null
+          end: string
+          english: string | null
+          id: number
+          src: string | null
+          start: string
+        }
+        Insert: {
+          culture_note?: string | null
+          dialogue?: string | null
+          end: string
+          english?: string | null
+          id: number
+          src?: string | null
+          start: string
+        }
+        Update: {
+          culture_note?: string | null
+          dialogue?: string | null
+          end?: string
+          english?: string | null
+          id?: number
+          src?: string | null
+          start?: string
+        }
+        Relationships: []
       }
       users: {
         Row: {

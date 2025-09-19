@@ -17,17 +17,25 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { BrowserRouter as Router, NavLink, Route, Routes, useLocation } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  NavLink,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 import SignUpPage from './pages/SignupPage';
 import SignInPage from './pages/SignInPage';
 import ProfilePage from './pages/ProfilePage';
 import StudyPage from './pages/StudyPage';
 import VocaPage from './pages/VocaPage';
 import CommunityWritePage from './pages/CommunityWritePage';
-import CommunityListPage from './pages/CommunityListPage';
 import CommunityDetailPage from './pages/CommunityDetailPage';
 import NotFound from './pages/NotFound';
 import StudyListPage from './pages/StudyListPage';
+import CommunityListPage from './pages/CommunityListPage';
+import LearningPage from './pages/LearningPage';
 
 const TopHeader = () => {
   const linkActive = 'text-primary font-medium';
@@ -232,6 +240,7 @@ type HeroProps = {
 };
 
 const Hero = ({ onSignup }: HeroProps) => {
+  const navigate = useNavigate();
   return (
     <section className="relative h-[600px] bg-gradient-to-b from-primary/5 to-white overflow-hidden">
       <div className="max-w-screen-xl mx-auto px-6 h-full flex items-center">
@@ -246,7 +255,7 @@ const Hero = ({ onSignup }: HeroProps) => {
             지금 시작해보세요!
           </p>
           <button
-            onClick={onSignup}
+            onClick={() => navigate('/home')}
             className="px-8 py-4 bg-primary text-white rounded-[8px] text-lg font-medium"
           >
             무료로 시작하기
@@ -539,89 +548,6 @@ function CultureNote({ note }: { note: string }) {
     </div>
   );
 }
-
-const LearningPage = () => {
-  const [selected, setSelected] = useState<Dialogue | null>(null);
-  const [activeTab, setActiveTab] = useState<'words' | 'culture'>('words');
-
-  return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* 영상 플레이어 */}
-      <div className="w-full h-64 bg-gray-200 flex items-center justify-center rounded-xl">
-        🎬 영상 플레이어 (데모)
-      </div>
-
-      {/* 자막 리스트 */}
-      <div>
-        <h2 className="text-xl font-bold mb-2">자막</h2>
-        <ul className="space-y-2">
-          {initialDialogues.map((d, idx) => (
-            <li
-              key={idx}
-              onClick={() => setSelected(selected?.dialogue === d.dialogue ? null : d)}
-              className="p-3 bg-white rounded-lg shadow cursor-pointer hover:bg-primary/5"
-            >
-              <p className="font-medium">{d.dialogue}</p>
-              <p className="text-sm text-gray-500">
-                {d.character} · {d.timestamp}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* 학습 카드 */}
-      {selected && (
-        <div className="p-4 bg-primary/5 rounded-xl shadow-md space-y-4">
-          <h3 className="text-lg font-semibold">학습 카드</h3>
-          <p>
-            <strong>한국어:</strong> {selected.dialogue}
-          </p>
-          <p>
-            <strong>영어:</strong> (자동 번역 자리)
-          </p>
-          <p>
-            <strong>학습 포인트:</strong> {selected.category}
-          </p>
-
-          {/* 탭 메뉴 */}
-          <div className="flex space-x-4 mt-4">
-            <button
-              onClick={() => setActiveTab('words')}
-              className={`px-4 py-2 rounded-lg ${
-                activeTab === 'words' ? 'bg-primary text-white' : 'bg-white text-gray-600 border'
-              }`}
-            >
-              단어 설명
-            </button>
-            <button
-              onClick={() => setActiveTab('culture')}
-              className={`px-4 py-2 rounded-lg ${
-                activeTab === 'culture' ? 'bg-primary text-white' : 'bg-white text-gray-600 border'
-              }`}
-            >
-              문화 노트
-            </button>
-          </div>
-
-          {/* 탭 내용 */}
-          {activeTab === 'words' ? (
-            <WordExplanation words={selected.words} />
-          ) : (
-            <CultureNote note={selected.cultureNote} />
-          )}
-
-          <button
-            onClick={() => setSelected(null)}
-            className="mt-3 px-4 py-2 bg-primary text-white rounded-lg"
-          >
-            닫기
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
 
 // 학습 예시 끝 구간입니다.
 
@@ -953,6 +879,89 @@ const HomePage = () => {
 
 // 진정한 홈페이지입니다. end
 
+// const LearningPage = () => {
+//   const [selected, setSelected] = useState<Dialogue | null>(null);
+//   const [activeTab, setActiveTab] = useState<'words' | 'culture'>('words');
+
+//   return (
+//     <div className="max-w-4xl mx-auto p-6 space-y-6">
+//       {/* 영상 플레이어 */}
+//       <div className="w-full h-64 bg-gray-200 flex items-center justify-center rounded-xl">
+//         🎬 영상 플레이어 (데모)
+//       </div>
+
+//       {/* 자막 리스트 */}
+//       <div>
+//         <h2 className="text-xl font-bold mb-2">자막</h2>
+//         <ul className="space-y-2">
+//           {initialDialogues.map((d, idx) => (
+//             <li
+//               key={idx}
+//               onClick={() => setSelected(selected?.dialogue === d.dialogue ? null : d)}
+//               className="p-3 bg-white rounded-lg shadow cursor-pointer hover:bg-primary/5"
+//             >
+//               <p className="font-medium">{d.dialogue}</p>
+//               <p className="text-sm text-gray-500">
+//                 {d.character} · {d.timestamp}
+//               </p>
+//             </li>
+//           ))}
+//         </ul>
+//       </div>
+
+//       {/* 학습 카드 */}
+//       {selected && (
+//         <div className="p-4 bg-primary/5 rounded-xl shadow-md space-y-4">
+//           <h3 className="text-lg font-semibold">학습 카드</h3>
+//           <p>
+//             <strong>한국어:</strong> {selected.dialogue}
+//           </p>
+//           <p>
+//             <strong>영어:</strong> (자동 번역 자리)
+//           </p>
+//           <p>
+//             <strong>학습 포인트:</strong> {selected.category}
+//           </p>
+
+//           {/* 탭 메뉴 */}
+//           <div className="flex space-x-4 mt-4">
+//             <button
+//               onClick={() => setActiveTab('words')}
+//               className={`px-4 py-2 rounded-lg ${
+//                 activeTab === 'words' ? 'bg-primary text-white' : 'bg-white text-gray-600 border'
+//               }`}
+//             >
+//               단어 설명
+//             </button>
+//             <button
+//               onClick={() => setActiveTab('culture')}
+//               className={`px-4 py-2 rounded-lg ${
+//                 activeTab === 'culture' ? 'bg-primary text-white' : 'bg-white text-gray-600 border'
+//               }`}
+//             >
+//               문화 노트
+//             </button>
+//           </div>
+
+//           {/* 탭 내용 */}
+//           {activeTab === 'words' ? (
+//             <WordExplanation words={selected.words} />
+//           ) : (
+//             <CultureNote note={selected.cultureNote} />
+//           )}
+
+//           <button
+//             onClick={() => setSelected(null)}
+//             className="mt-3 px-4 py-2 bg-primary text-white rounded-lg"
+//           >
+//             닫기
+//           </button>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
 const App = () => {
   const [a, setA] = useState('');
   return (
@@ -965,11 +974,12 @@ const App = () => {
         <Routes>
           <Route path="/" element={<LandingPage />}></Route>
           <Route path="/landing" element={<LandingPage />}></Route>
+          <Route path="/home" element={<HomePage />}></Route>
           <Route path="/signup" element={<SignUpPage />}></Route>
           <Route path="/signin" element={<SignInPage />}></Route>
           <Route path="/profile" element={<ProfilePage />}></Route>
-          <Route path="/studyList" element={<StudyListPage />}></Route>
-          <Route path="/study" element={<StudyPage />}></Route>
+          <Route path="/studyList" element={<LearningPage />}></Route>
+          <Route path="/studyList/:id" element={<StudyListPage />}></Route>
           <Route path="/voca" element={<VocaPage />}></Route>
           <Route path="/communitywrite" element={<CommunityWritePage />}></Route>
           <Route path="/communitylist" element={<CommunityListPage />}></Route>
