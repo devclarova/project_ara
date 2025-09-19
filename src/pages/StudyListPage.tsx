@@ -1,5 +1,9 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ReactPlayer from 'react-player';
+import { useParams } from 'react-router-dom';
+import type { Tts } from '../types/database';
+import { supabase } from '../lib/supabase';
+import { getTts } from '../services/ClipService';
 
 type Dialogue = {
   character: string;
@@ -77,9 +81,23 @@ function CultureNote({ note }: { note: string }) {
   );
 }
 
+type VideoMap = {
+  [key: string]: string;
+};
+
+// const videoMap: VideoMap = {
+//   '1': 'https://youtu.be/SFg64eR3aKA?...',
+//   '2': 'https://youtu.be/f1ZJlT0yASs?...',
+//   '3': 'https://youtu.be/12o0jwxBcJI?...',
+//   '4': 'https://youtu.be/mhfacjgHrMY?...',
+//   default: 'https://youtu.be/jJAIFMiPdds?si=EGEHykwWqDMzMqhu',
+// };
 const VideoS = () => {
   const playerRef = useRef<HTMLVideoElement | null>(null);
   const [playing, setPlaying] = useState(true);
+  const { id } = useParams<{ id: string }>();
+  const [clip, setClip] = useState<Tts[] | null>(null);
+  const [videoMapTest, setVideoMapTest] = useState<VideoMap>({});
 
   // 반복 구간: 10초 ~ 20초
   const START_TIME = 10;
@@ -101,14 +119,43 @@ const VideoS = () => {
       playerRef.current.currentTime = START_TIME;
     }
   };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getTts();
+        console.log(data);
+        // setClip(data);
+
+        const map = data.reduce(
+          (acc, cur) => {
+            if (cur.id && cur.src) {
+              acc[cur.id.toString()] = cur.src;
+            }
+            return acc;
+          },
+          {} as Record<string, string>,
+        );
+
+        setVideoMapTest(map);
+      } catch (err) {
+        console.error(err);
+      }
+    })();
+  }, []);
+  const videoUrl =
+    id && videoMapTest[id]
+      ? videoMapTest[id]
+      : 'https://www.youtube.com/watch?v=jJAIFMiPdds&t=538s';
+
   return (
-    <div style={{ maxWidth: '640px', margin: '2rem auto' }}>
+    <div style={{ maxWidth: '100%', margin: '2rem auto' }}>
       <h2>ReactPlayer v3 구간 반복 테스트용, 크기 상관 고려 안함</h2>
       <ReactPlayer
         ref={playerRef}
-        src="https://youtu.be/SFg64eR3aKA?si=fPUmO9zVT1pxH380"
+        src={videoUrl}
         playing={playing}
-        controls={false}
+        controls={true}
         width="100%"
         height="360px"
         onReady={handleReady}
@@ -129,6 +176,7 @@ const VideoS = () => {
 };
 
 const StudyListPage = () => {
+  const { id } = useParams<{ id: string }>();
   const [selected, setSelected] = useState<Dialogue | null>(null);
   const [activeTab, setActiveTab] = useState<'words' | 'culture'>('words');
   return (
