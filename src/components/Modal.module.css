@@ -1,0 +1,40 @@
+.overlay {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal {
+  position: relative;
+  background-color: #ffffff;
+  padding: 32px;
+  border-radius: 24px;
+
+  width: 100%; /* 🟢 모바일에서는 꽉 차게 */
+  max-width: 600px; /* 🟢 데스크톱에서는 600px 제한 */
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.title {
+  flex-grow: 1;
+  font-size: 32px;
+}
+
+.closeButton {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}

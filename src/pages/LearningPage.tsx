@@ -163,6 +163,7 @@ const ContentCard = ({
     </div>
   );
 };
+
 // components/BottomNav.tsx
 const items = [
   { icon: 'ri-home-line', label: '홈' },
@@ -206,12 +207,12 @@ const BottomNav = () => {
   );
 };
 
-const InflearnNav = () => {
+export const InflearnNav = () => {
   return (
     <nav className="fixed bottom-0 inset-x-0 bg-white border-t block md:hidden">
       <div className="flex justify-around items-center h-16">
         <a
-          href="https://www.inflearn.com/courses?types=ONLINE"
+          href="/"
           className="flex flex-col items-center"
         >
           <img
@@ -222,7 +223,7 @@ const InflearnNav = () => {
           />
           <span className="text-sm">강의</span>
         </a>
-        <a href="https://www.inflearn.com/challenges" className="flex flex-col items-center">
+        <a href="/" className="flex flex-col items-center">
           <img
             src="https://cdn.inflearn.com/assets/images/header/challenge.png"
             alt="챌린지"
@@ -231,7 +232,7 @@ const InflearnNav = () => {
           />
           <span className="text-sm">챌린지</span>
         </a>
-        <a href="https://mentoring.inflearn.com/mentors" className="flex flex-col items-center">
+        <a href="/" className="flex flex-col items-center">
           <img
             src="https://cdn.inflearn.com/assets/images/header/mentoring.png"
             alt="멘토링"
@@ -240,7 +241,7 @@ const InflearnNav = () => {
           />
           <span className="text-sm">멘토링</span>
         </a>
-        <a href="https://www.inflearn.com/roadmaps" className="flex flex-col items-center">
+        <a href="/" className="flex flex-col items-center">
           <img
             src="https://cdn.inflearn.com/assets/images/header/roadmap.png"
             alt="로드맵"
@@ -360,7 +361,7 @@ const LearningPage = () => {
         </div>
       </div>
 
-      <BottomNav />
+      {/* <BottomNav /> */}
       <InflearnNav />
     </div>
   );

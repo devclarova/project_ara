@@ -1,3 +1,5 @@
+export type TodoType = { id: string; title: string; completed: boolean };
+
 export type Clip = Database['public']['Tables']['clip']['Row'];
 export type Dialogues = Database['public']['Tables']['dialogues']['Row'];
 export type Tts = Database['public']['Tables']['temptts']['Row'];
