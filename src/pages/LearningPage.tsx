@@ -163,6 +163,7 @@ const ContentCard = ({
     </div>
   );
 };
+
 // components/BottomNav.tsx
 const items = [
   { icon: 'ri-home-line', label: '홈' },
@@ -206,6 +207,54 @@ const BottomNav = () => {
   );
 };
 
+export const InflearnNav = () => {
+  return (
+    <nav className="fixed bottom-0 inset-x-0 bg-white border-t block md:hidden">
+      <div className="flex justify-around items-center h-16">
+        <a
+          href="/"
+          className="flex flex-col items-center"
+        >
+          <img
+            src="https://cdn.inflearn.com/assets/images/header/course.png"
+            alt="강의"
+            width={26}
+            height={26}
+          />
+          <span className="text-sm">강의</span>
+        </a>
+        <a href="/" className="flex flex-col items-center">
+          <img
+            src="https://cdn.inflearn.com/assets/images/header/challenge.png"
+            alt="챌린지"
+            width={26}
+            height={26}
+          />
+          <span className="text-sm">챌린지</span>
+        </a>
+        <a href="/" className="flex flex-col items-center">
+          <img
+            src="https://cdn.inflearn.com/assets/images/header/mentoring.png"
+            alt="멘토링"
+            width={26}
+            height={26}
+          />
+          <span className="text-sm">멘토링</span>
+        </a>
+        <a href="/" className="flex flex-col items-center">
+          <img
+            src="https://cdn.inflearn.com/assets/images/header/roadmap.png"
+            alt="로드맵"
+            width={26}
+            height={26}
+          />
+          <span className="text-sm">로드맵</span>
+        </a>
+      </div>
+    </nav>
+  );
+};
+
 const LearningPage = () => {
   const [clips, setClips] = useState<Tts[]>([]);
   useEffect(() => {
@@ -223,6 +272,7 @@ const LearningPage = () => {
     };
 
     fetchData();
+    console.log(`클립 확인용 : ${clips}`);
   }, []);
   return (
     <div className="bg-white min-h-screen flex flex-col">
@@ -241,7 +291,7 @@ const LearningPage = () => {
             <ContentCard
               key={clip.id}
               id={clip.id} // DB id 전달
-              image="https://images.unsplash.com/photo-1504384308090-c894fdcc538d" // 임시 이미지 (DB에 image 필드 있으면 교체)
+              image="https://image.tmdb.org/t/p/original/7jryPmL3F0Wqv5U51SZrGQcPXfE.jpg" // 임시 이미지 (DB에 image 필드 있으면 교체)
               title={clip.dialogue || '제목 없음'}
               subtitle={`${clip.start} ~ ${clip.end}`}
               desc={clip.english || '설명 없음'}
@@ -311,7 +361,8 @@ const LearningPage = () => {
         </div>
       </div>
 
-      <BottomNav />
+      {/* <BottomNav /> */}
+      <InflearnNav />
     </div>
   );
 };
