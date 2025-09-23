@@ -980,6 +980,7 @@ const App = () => {
           <Route path="/profile" element={<ProfilePage />}></Route>
           <Route path="/studyList" element={<LearningPage />}></Route>
           <Route path="/studyList/:id" element={<StudyListPage />}></Route>
+          <Route path="/study" element={<StudyPage />}></Route>
           <Route path="/voca" element={<VocaPage />}></Route>
           <Route path="/communitywrite" element={<CommunityWritePage />}></Route>
           <Route path="/communitylist" element={<CommunityListPage />}></Route>
@@ -990,6 +991,7 @@ const App = () => {
 
       {/* <Footer /> */}
       <div className="h-[calc(4rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden />
+
       {/* </div> */}
     </Router>
   );
