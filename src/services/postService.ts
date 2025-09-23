@@ -34,9 +34,9 @@ export const createPost = async (newPost: Omit<PostInsert, 'user_id'>): Promise<
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
-      throw new Error('로그인이 필요합니다.');
-    }
+    // if (!user) {
+    //   throw new Error('로그인이 필요합니다.');
+    // }
     const { data, error } = await supabase
       .from('posts')
       .insert([
@@ -50,7 +50,7 @@ export const createPost = async (newPost: Omit<PostInsert, 'user_id'>): Promise<
           view: newPost.view ?? null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          user_id: user.id,
+          // user_id: user.id,
         },
       ])
       .select()
