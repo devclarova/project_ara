@@ -37,6 +37,10 @@ import CommunityWritePage from './pages/CommunityWritePage';
 import CommunityDetailPage from './pages/CommunityDetailPage';
 import NotFound from './pages/NotFound';
 import StudyListPage from './pages/StudyListPage';
+
+import SignUpPage from './pages/SignUpPage';
+import { PostProvider } from './contexts/PostContext';
+
 import CommunityListPage from './pages/CommunityListPage';
 import LearningPage, { InflearnNav } from './pages/LearningPage';
 import Modal from './components/Modal';
@@ -996,7 +1000,7 @@ const App = () => {
               <Route path="/voca" element={<VocaPage />}></Route>
               <Route path="/communitywrite" element={<CommunityWritePage />}></Route>
               <Route path="/communitylist" element={<CommunityListPage />}></Route>
-              <Route path="/communitydetail" element={<CommunityDetailPage />}></Route>
+              <Route path="/communitydetail/:id" element={<CommunityDetailPage />}></Route>
               <Route path="/notfound" element={<NotFound />}></Route>
             </Routes>
           </main>

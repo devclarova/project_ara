@@ -1,36 +1,24 @@
-import { useEffect, useState } from 'react';
-import type { Dialogues } from '../types/database';
-import { getClips, getDialogues } from '../services/ClipService';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import PostList from '../components/posts/PostList';
 
-function CommunityListPage() {
-  const [dialogues, setDialogues] = useState<Dialogues[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await getDialogues();
-        setDialogues(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  if (loading) return <p>Loading...</p>;
+const CommunityListPage = () => {
+  const navigate = useNavigate();
 
   return (
-    <ul className="space-y-3">
-      {dialogues.map(item => (
-        <li key={item.id} className="border rounded p-3">
-          <h2 className="font-bold">{item.id}</h2>
-          <p>{item.dialogue}</p>
-        </li>
-      ))}
-    </ul>
+    <div className="max-w-4xl mx-auto p-4">
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">게시글 목록</h1>
+
+      <button
+        onClick={() => navigate('/communitywrite')}
+        className="mb-6 px-4 py-2 bg-primary text-white rounded hover:brightness-90 transition duration-200"
+      >
+        게시글 작성
+      </button>
+
+      <PostList />
+    </div>
   );
-}
+};
 
 export default CommunityListPage;
