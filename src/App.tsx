@@ -37,8 +37,6 @@ import CommunityWritePage from './pages/CommunityWritePage';
 import CommunityDetailPage from './pages/CommunityDetailPage';
 import NotFound from './pages/NotFound';
 import StudyListPage from './pages/StudyListPage';
-
-import SignUpPage from './pages/SignUpPage';
 import { PostProvider } from './contexts/PostContext';
 
 import CommunityListPage from './pages/CommunityListPage';
