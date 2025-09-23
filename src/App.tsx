@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, NavLink, Route, Routes, useLocation } from 'react-router-dom';
-import SignUpPage from './pages/SignupPage';
 import SignInPage from './pages/SignInPage';
 import ProfilePage from './pages/ProfilePage';
 import StudyPage from './pages/StudyPage';
@@ -28,6 +27,8 @@ import CommunityListPage from './pages/CommunityListPage';
 import CommunityDetailPage from './pages/CommunityDetailPage';
 import NotFound from './pages/NotFound';
 import StudyListPage from './pages/StudyListPage';
+import SignUpPage from './pages/SignUpPage';
+import { PostProvider } from './contexts/PostContext';
 
 const TopHeader = () => {
   const linkActive = 'text-primary font-medium';
@@ -956,32 +957,34 @@ const HomePage = () => {
 const App = () => {
   const [a, setA] = useState('');
   return (
-    <Router>
-      {/* <div className="min-h-screen flex flex-col bg-[#f9fbf9]"> */}
-      {/* 공통 헤더 */}
-      <TopHeader />
+    <PostProvider>
+      <Router>
+        {/* <div className="min-h-screen flex flex-col bg-[#f9fbf9]"> */}
+        {/* 공통 헤더 */}
+        <TopHeader />
 
-      <main className="flex-1 pb-20 md:pb-0">
-        <Routes>
-          <Route path="/" element={<LandingPage />}></Route>
-          <Route path="/landing" element={<LandingPage />}></Route>
-          <Route path="/signup" element={<SignUpPage />}></Route>
-          <Route path="/signin" element={<SignInPage />}></Route>
-          <Route path="/profile" element={<ProfilePage />}></Route>
-          <Route path="/studyList" element={<StudyListPage />}></Route>
-          <Route path="/study" element={<StudyPage />}></Route>
-          <Route path="/voca" element={<VocaPage />}></Route>
-          <Route path="/communitywrite" element={<CommunityWritePage />}></Route>
-          <Route path="/communitylist" element={<CommunityListPage />}></Route>
-          <Route path="/communitydetail" element={<CommunityDetailPage />}></Route>
-          <Route path="/notfound" element={<NotFound />}></Route>
-        </Routes>
-      </main>
+        <main className="flex-1 pb-20 md:pb-0">
+          <Routes>
+            <Route path="/" element={<LandingPage />}></Route>
+            <Route path="/landing" element={<LandingPage />}></Route>
+            <Route path="/signup" element={<SignUpPage />}></Route>
+            <Route path="/signin" element={<SignInPage />}></Route>
+            <Route path="/profile" element={<ProfilePage />}></Route>
+            <Route path="/studyList" element={<StudyListPage />}></Route>
+            <Route path="/study" element={<StudyPage />}></Route>
+            <Route path="/voca" element={<VocaPage />}></Route>
+            <Route path="/communitywrite" element={<CommunityWritePage />}></Route>
+            <Route path="/communitylist" element={<CommunityListPage />}></Route>
+            <Route path="/communitydetail/:id" element={<CommunityDetailPage />}></Route>
+            <Route path="/notfound" element={<NotFound />}></Route>
+          </Routes>
+        </main>
 
-      {/* <Footer /> */}
-      <div className="h-[calc(4rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden />
-      {/* </div> */}
-    </Router>
+        {/* <Footer /> */}
+        <div className="h-[calc(4rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden />
+        {/* </div> */}
+      </Router>
+    </PostProvider>
   );
 };
 
