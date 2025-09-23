@@ -28,7 +28,6 @@ import {
   useLocation,
   useNavigate,
 } from 'react-router-dom';
-import SignUpPage from './pages/SignupPage';
 import SignInPage from './pages/SignInPage';
 import ProfilePage from './pages/ProfilePage';
 import StudyPage from './pages/StudyPage';
