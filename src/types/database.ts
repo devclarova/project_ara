@@ -1,6 +1,20 @@
+// 게시판
+export type PostType = { id: string; title: string; completed: boolean };
+export type Post = Database['public']['Tables']['posts']['Row'];
+export type PostInsert = Database['public']['Tables']['posts']['Insert'];
+export type PostUpdate = Database['public']['Tables']['posts']['Update'];
+
+// 사용자 정보
+export type Profile = Database['public']['Tables']['users']['Row'];
+export type ProfileInsert = Database['public']['Tables']['users']['Insert'];
+export type ProfileUpdate = Database['public']['Tables']['users']['Update'];
+
+export type TodoType = { id: string; title: string; completed: boolean };
+
 export type Clip = Database['public']['Tables']['clip']['Row'];
 export type Dialogues = Database['public']['Tables']['dialogues']['Row'];
 export type Tts = Database['public']['Tables']['temptts']['Row'];
+
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 

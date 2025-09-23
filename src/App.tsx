@@ -1,13 +1,16 @@
 import {
   Badge,
+  Bookmark,
   BookMarked,
   BookOpen,
   Circle,
   Clock,
+  Compass,
   Film,
   Flame,
   Home,
   Languages,
+  Link,
   Menu,
   Plus,
   RefreshCw,
@@ -34,16 +37,35 @@ import CommunityWritePage from './pages/CommunityWritePage';
 import CommunityDetailPage from './pages/CommunityDetailPage';
 import NotFound from './pages/NotFound';
 import StudyListPage from './pages/StudyListPage';
+
+import SignUpPage from './pages/SignUpPage';
+import { PostProvider } from './contexts/PostContext';
+
 import CommunityListPage from './pages/CommunityListPage';
-import LearningPage from './pages/LearningPage';
+import LearningPage, { InflearnNav } from './pages/LearningPage';
+import Modal from './components/Modal';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import styles from './components/Layout.module.css';
+import textLogo from './assets/text-logo.svg';
 
 const TopHeader = () => {
   const linkActive = 'text-primary font-medium';
   const linkBase = 'text-gray-600 hover:text-gray-900';
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const [authOpen, setAuthOpen] = useState(false); // 로그인 모달용 (기존 setIsOpen 대체)
   const [mobileOpen, setMobileOpen] = useState(false); // 모바일 드로어 상태
   const location = useLocation();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/'); // 로그아웃 후 홈으로 이동
+    } catch (err) {
+      console.error('로그아웃 실패:', err);
+    }
+  };
 
   // 라우트 변경 시 모바일 드로어 자동 닫기
   useEffect(() => {
@@ -51,7 +73,7 @@ const TopHeader = () => {
   }, [location.pathname]);
 
   return (
-    <nav className="bg-white border-b sticky top-0 z-50">
+    <nav className="bg-white border-b sticky top-0 z-50 w-full inset-x-0">
       <div className="max-w-screen-2xl mx-auto">
         <div className="flex justify-between items-center px-4 sm:px-6 lg:px-8 h-20">
           {/* 좌측: 로고 */}
@@ -59,12 +81,12 @@ const TopHeader = () => {
             <div className="font-gungsuh text-2xl text-primary">아라</div>
 
             {/* 데스크톱 메뉴 (유지) */}
-            <div className="hidden sm:flex items-center gap-6">
+            <div className="hidden sm:flex items-center gap-4 md:gap-6">
               <NavLink
                 to="/"
                 end
                 className={({ isActive }) =>
-                  isActive ? linkActive : 'text-gray-600 hover:text-gray-900'
+                  `${isActive ? linkActive : linkBase} text-sm md:text-base`
                 }
               >
                 홈
@@ -72,7 +94,7 @@ const TopHeader = () => {
               <NavLink
                 to="/studyList"
                 className={({ isActive }) =>
-                  isActive ? linkActive : 'text-gray-600 hover:text-gray-900'
+                  `${isActive ? linkActive : linkBase} text-sm md:text-base`
                 }
               >
                 학습
@@ -80,7 +102,7 @@ const TopHeader = () => {
               <NavLink
                 to="/voca"
                 className={({ isActive }) =>
-                  isActive ? linkActive : 'text-gray-600 hover:text-gray-900'
+                  `${isActive ? linkActive : linkBase} text-sm md:text-base`
                 }
               >
                 단어장
@@ -88,7 +110,7 @@ const TopHeader = () => {
               <NavLink
                 to="/communitylist"
                 className={({ isActive }) =>
-                  isActive ? linkActive : 'text-gray-600 hover:text-gray-900'
+                  `${isActive ? linkActive : linkBase} text-sm md:text-base`
                 }
               >
                 커뮤니티
@@ -96,7 +118,7 @@ const TopHeader = () => {
               <NavLink
                 to="/profile"
                 className={({ isActive }) =>
-                  isActive ? linkActive : 'text-gray-600 hover:text-gray-900'
+                  `${isActive ? linkActive : linkBase} text-sm md:text-base`
                 }
               >
                 프로필
@@ -113,12 +135,68 @@ const TopHeader = () => {
               <i className="ri-notification-3-line text-gray-600" />
             </button>
 
-            <button
-              onClick={() => setAuthOpen(true)}
+            {/* <button
+              // onClick={() => setAuthOpen(true)}
+              onClick={() => {
+                console.log('로그인 버튼 클릭됨'); // 🟢 반드시 떠야 함
+                setAuthOpen(true);
+              }}
               className="hidden sm:inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-button text-white bg-primary hover:bg-primary/90"
             >
               로그인
             </button>
+            <Modal title="🔑 로그인" isOpen={authOpen} onClose={() => setAuthOpen(false)}>
+              <SignInPage onSuccess={() => setAuthOpen(false)} />
+            </Modal> */}
+
+            {user ? (
+              <>
+                {/* <NavLink
+                  to="/profile"
+                  className="hidden sm:inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-button text-white bg-primary hover:bg-primary/90"
+                >
+                  김샛별
+                </NavLink> */}
+                <NavLink
+                  to="/profile"
+                  className="hidden sm:flex"
+                  style={{
+                    width: '60px',
+                    height: '60px',
+                    backgroundColor: 'var(--gray-50)',
+                    borderRadius: '50%',
+                    // display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '3px dashed var(--gray-400)',
+                    margin: '0 auto',
+                  }}
+                >
+                  <div style={{ fontSize: '12px', color: 'var(--gray-500)', fontWeight: 'bold' }}>
+                    김샛별
+                  </div>
+                </NavLink>
+
+                <button
+                  onClick={handleLogout}
+                  className="hidden sm:inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-button text-gray-700 hover:bg-gray-50"
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setAuthOpen(true)}
+                  className="hidden sm:inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-button text-white bg-primary hover:bg-primary/90"
+                >
+                  로그인
+                </button>
+                <Modal title="🔑 로그인" isOpen={authOpen} onClose={() => setAuthOpen(false)}>
+                  <SignInPage onSuccess={() => setAuthOpen(false)} />
+                </Modal>
+              </>
+            )}
 
             {/* 모바일 햄버거 */}
             <button
@@ -217,7 +295,7 @@ const TopHeader = () => {
 
               <div className="h-px bg-gray-200 my-3" />
 
-              <button
+              {/* <button
                 onClick={() => {
                   setAuthOpen(true);
                   setMobileOpen(false);
@@ -225,7 +303,29 @@ const TopHeader = () => {
                 className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-button text-white bg-primary hover:bg-primary/90"
               >
                 로그인
-              </button>
+              </button> */}
+
+              {user ? (
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMobileOpen(false);
+                  }}
+                  className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-button text-white bg-primary hover:bg-primary/90"
+                >
+                  로그아웃
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setAuthOpen(true);
+                    setMobileOpen(false);
+                  }}
+                  className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-button text-white bg-primary hover:bg-primary/90"
+                >
+                  로그인
+                </button>
+              )}
             </div>
             {/* === 아이콘 메뉴 끝 === */}
           </div>
@@ -877,123 +977,48 @@ const HomePage = () => {
   );
 };
 
-// 진정한 홈페이지입니다. end
-
-// const LearningPage = () => {
-//   const [selected, setSelected] = useState<Dialogue | null>(null);
-//   const [activeTab, setActiveTab] = useState<'words' | 'culture'>('words');
-
-//   return (
-//     <div className="max-w-4xl mx-auto p-6 space-y-6">
-//       {/* 영상 플레이어 */}
-//       <div className="w-full h-64 bg-gray-200 flex items-center justify-center rounded-xl">
-//         🎬 영상 플레이어 (데모)
-//       </div>
-
-//       {/* 자막 리스트 */}
-//       <div>
-//         <h2 className="text-xl font-bold mb-2">자막</h2>
-//         <ul className="space-y-2">
-//           {initialDialogues.map((d, idx) => (
-//             <li
-//               key={idx}
-//               onClick={() => setSelected(selected?.dialogue === d.dialogue ? null : d)}
-//               className="p-3 bg-white rounded-lg shadow cursor-pointer hover:bg-primary/5"
-//             >
-//               <p className="font-medium">{d.dialogue}</p>
-//               <p className="text-sm text-gray-500">
-//                 {d.character} · {d.timestamp}
-//               </p>
-//             </li>
-//           ))}
-//         </ul>
-//       </div>
-
-//       {/* 학습 카드 */}
-//       {selected && (
-//         <div className="p-4 bg-primary/5 rounded-xl shadow-md space-y-4">
-//           <h3 className="text-lg font-semibold">학습 카드</h3>
-//           <p>
-//             <strong>한국어:</strong> {selected.dialogue}
-//           </p>
-//           <p>
-//             <strong>영어:</strong> (자동 번역 자리)
-//           </p>
-//           <p>
-//             <strong>학습 포인트:</strong> {selected.category}
-//           </p>
-
-//           {/* 탭 메뉴 */}
-//           <div className="flex space-x-4 mt-4">
-//             <button
-//               onClick={() => setActiveTab('words')}
-//               className={`px-4 py-2 rounded-lg ${
-//                 activeTab === 'words' ? 'bg-primary text-white' : 'bg-white text-gray-600 border'
-//               }`}
-//             >
-//               단어 설명
-//             </button>
-//             <button
-//               onClick={() => setActiveTab('culture')}
-//               className={`px-4 py-2 rounded-lg ${
-//                 activeTab === 'culture' ? 'bg-primary text-white' : 'bg-white text-gray-600 border'
-//               }`}
-//             >
-//               문화 노트
-//             </button>
-//           </div>
-
-//           {/* 탭 내용 */}
-//           {activeTab === 'words' ? (
-//             <WordExplanation words={selected.words} />
-//           ) : (
-//             <CultureNote note={selected.cultureNote} />
-//           )}
-
-//           <button
-//             onClick={() => setSelected(null)}
-//             className="mt-3 px-4 py-2 bg-primary text-white rounded-lg"
-//           >
-//             닫기
-//           </button>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
 const App = () => {
   const [a, setA] = useState('');
   return (
-    <Router>
-      {/* <div className="min-h-screen flex flex-col bg-[#f9fbf9]"> */}
-      {/* 공통 헤더 */}
-      <TopHeader />
+    <AuthProvider>
+      <Router>
+        <div className="layout min-h-screen flex flex-col">
+          {/* 공통 헤더 */}
+          <TopHeader />
+          {/* <Header /> */}
 
-      <main className="flex-1 pb-20 md:pb-0">
-        <Routes>
-          <Route path="/" element={<LandingPage />}></Route>
-          <Route path="/landing" element={<LandingPage />}></Route>
-          <Route path="/home" element={<HomePage />}></Route>
-          <Route path="/signup" element={<SignUpPage />}></Route>
-          <Route path="/signin" element={<SignInPage />}></Route>
-          <Route path="/profile" element={<ProfilePage />}></Route>
-          <Route path="/studyList" element={<LearningPage />}></Route>
-          <Route path="/studyList/:id" element={<StudyListPage />}></Route>
-          <Route path="/study" element={<StudyPage />}></Route>
-          <Route path="/voca" element={<VocaPage />}></Route>
-          <Route path="/communitywrite" element={<CommunityWritePage />}></Route>
-          <Route path="/communitylist" element={<CommunityListPage />}></Route>
-          <Route path="/communitydetail" element={<CommunityDetailPage />}></Route>
-          <Route path="/notfound" element={<NotFound />}></Route>
-        </Routes>
-      </main>
+          <main className="flex-1">
+            <Routes>
+              <Route path="/" element={<LandingPage />}></Route>
+              <Route path="/landing" element={<LandingPage />}></Route>
+              <Route path="/home" element={<HomePage />}></Route>
+              <Route path="/signup" element={<SignUpPage />}></Route>
+              <Route path="/signin" element={<SignInPage />}></Route>
+              <Route path="/profile" element={<ProfilePage />}></Route>
+              <Route path="/study" element={<StudyPage />}></Route>
+              <Route path="/studyList" element={<LearningPage />}></Route>
+              <Route path="/studyList/:id" element={<StudyListPage />}></Route>
+              <Route path="/voca" element={<VocaPage />}></Route>
+              <Route path="/communitywrite" element={<CommunityWritePage />}></Route>
+              <Route path="/communitylist" element={<CommunityListPage />}></Route>
+              <Route path="/communitydetail/:id" element={<CommunityDetailPage />}></Route>
+              <Route path="/notfound" element={<NotFound />}></Route>
+            </Routes>
+          </main>
 
-      {/* <Footer /> */}
-      <div className="h-[calc(4rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden />
-
-      {/* </div> */}
-    </Router>
+          {/* <Footer /> */}
+          <div className={`${styles.footer} mb-16 md:mb-0`}>
+            <div className={styles.footerContent}>
+              <img className={styles.textLogo} src={textLogo} alt="Foodit" />
+              <span>서비스 이용약관 | 개인정보 처리방침</span>
+            </div>
+          </div>
+          {/* 햄버거 */}
+          {/* <div className="h-[calc(4rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden /> */}
+        </div>
+        <InflearnNav />
+      </Router>
+    </AuthProvider>
   );
 };
 
