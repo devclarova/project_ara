@@ -1,6 +1,6 @@
 import { Progress } from 'antd';
 import { useEffect, useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useParams } from 'react-router-dom';
 import StudyCard from '../components/study/StudyCard';
 import VideoPlayer from '../components/study/VideoPlayer';
 import type { Dialogue } from '../types/study';
@@ -62,8 +62,6 @@ const StudyPage = () => {
           setViewCount(updatedData?.view_count || 0);
           console.log('조회수 업데이트 성공:', updatedData?.view_count);
         }
-      } else {
-        console.log('조회수 데이터가 존재하지 않거나 view_count 없음');
       }
     };
 
@@ -141,6 +139,21 @@ const StudyPage = () => {
 
       {/* 학습 카드 */}
       {selected && <StudyCard dialogue={selected} onClose={() => setSelected(null)} />}
+
+      {/* 총 회차 진행률 */}
+      <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-md">
+        <button className="text-sm bg-gray-200 text-gray-600 hover:bg-gray-300 px-4 py-2">
+          이전 에피소드
+        </button>
+        <div className="text-center flex flex-col justify-center items-center flex-grow">
+          <span className="text-lg font-semibold text-gray-600">
+            총 회차 진행률 <span className="text-m font-semibold text-red-400">35%</span>
+          </span>
+        </div>
+        <div className="text-sm bg-gray-200 text-gray-600 hover:bg-gray-300 px-4 py-2">
+          다음 에피소드
+        </div>
+      </div>
     </div>
   );
 };
