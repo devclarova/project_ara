@@ -25,7 +25,7 @@ const PostWrite = () => {
       await addPost({
         title,
         content,
-        category: 'Notice, Reviews, Q&A, Study tips, Communication',
+        category,
         comments: 0,
         like: 0,
         unlike: 0,
