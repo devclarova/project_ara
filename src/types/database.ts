@@ -15,7 +15,6 @@ export type Clip = Database['public']['Tables']['clip']['Row'];
 export type Dialogues = Database['public']['Tables']['dialogues']['Row'];
 export type Tts = Database['public']['Tables']['temptts']['Row'];
 
-
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
@@ -231,43 +230,43 @@ export type Database = {
       };
       posts: {
         Row: {
-          category: string | null;
+          category: string;
           comments: number | null;
-          content: string | null;
-          created_at: string | null;
+          content: string;
+          created_at: string;
           id: number;
-          like: number | null;
-          title: string | null;
-          unlike: number | null;
+          like: number;
+          title: string;
+          unlike: number;
           updated_at: string | null;
           user_id: number;
-          view: number | null;
+          view: number;
         };
         Insert: {
-          category?: string | null;
+          category: string;
           comments?: number | null;
-          content?: string | null;
-          created_at?: string | null;
+          content: string;
+          created_at?: string;
           id?: number;
-          like?: number | null;
-          title?: string | null;
-          unlike?: number | null;
+          like?: number;
+          title: string;
+          unlike?: number;
           updated_at?: string | null;
           user_id: number;
-          view?: number | null;
+          view?: number;
         };
         Update: {
-          category?: string | null;
+          category?: string;
           comments?: number | null;
-          content?: string | null;
-          created_at?: string | null;
+          content?: string;
+          created_at?: string;
           id?: number;
-          like?: number | null;
-          title?: string | null;
-          unlike?: number | null;
+          like?: number;
+          title?: string;
+          unlike?: number;
           updated_at?: string | null;
           user_id?: number;
-          view?: number | null;
+          view?: number;
         };
         Relationships: [
           {
@@ -362,6 +361,30 @@ export type Database = {
             referencedColumns: ['id'];
           },
         ];
+      };
+      study_progress: {
+        Row: {
+          created_at: string | null;
+          episode: string;
+          id: number;
+          updated_at: string | null;
+          view_count: number | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          episode: string;
+          id?: number;
+          updated_at?: string | null;
+          view_count?: number | null;
+        };
+        Update: {
+          created_at?: string | null;
+          episode?: string;
+          id?: number;
+          updated_at?: string | null;
+          view_count?: number | null;
+        };
+        Relationships: [];
       };
       temptts: {
         Row: {

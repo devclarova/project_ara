@@ -28,7 +28,6 @@ import {
   useLocation,
   useNavigate,
 } from 'react-router-dom';
-import SignUpPage from './pages/SignupPage';
 import SignInPage from './pages/SignInPage';
 import ProfilePage from './pages/ProfilePage';
 import StudyPage from './pages/StudyPage';
@@ -979,43 +978,45 @@ const App = () => {
   const [a, setA] = useState('');
   return (
     <AuthProvider>
-      <Router>
-        <div className="layout min-h-screen flex flex-col">
-          {/* 공통 헤더 */}
-          <TopHeader />
-          {/* <Header /> */}
+      <PostProvider>
+        <Router>
+          <div className="layout min-h-screen flex flex-col">
+            {/* 공통 헤더 */}
+            <TopHeader />
+            {/* <Header /> */}
 
-          <main className="flex-1">
-            <Routes>
-              <Route path="/" element={<LandingPage />}></Route>
-              <Route path="/landing" element={<LandingPage />}></Route>
-              <Route path="/home" element={<HomePage />}></Route>
-              <Route path="/signup" element={<SignUpPage />}></Route>
-              <Route path="/signin" element={<SignInPage />}></Route>
-              <Route path="/profile" element={<ProfilePage />}></Route>
-              <Route path="/studyList" element={<LearningPage />}></Route>
-              <Route path="/study" element={<StudyPage />}></Route>
-              <Route path="/studyList/:id" element={<StudyListPage />}></Route>
-              <Route path="/voca" element={<VocaPage />}></Route>
-              <Route path="/communitywrite" element={<CommunityWritePage />}></Route>
-              <Route path="/communitylist" element={<CommunityListPage />}></Route>
-              <Route path="/communitydetail/:id" element={<CommunityDetailPage />}></Route>
-              <Route path="/notfound" element={<NotFound />}></Route>
-            </Routes>
-          </main>
+            <main className="flex-1">
+              <Routes>
+                <Route path="/" element={<LandingPage />}></Route>
+                <Route path="/landing" element={<LandingPage />}></Route>
+                <Route path="/home" element={<HomePage />}></Route>
+                <Route path="/signup" element={<SignUpPage />}></Route>
+                <Route path="/signin" element={<SignInPage />}></Route>
+                <Route path="/profile" element={<ProfilePage />}></Route>
+                <Route path="/study" element={<StudyPage />}></Route>
+                <Route path="/studyList" element={<LearningPage />}></Route>
+                <Route path="/studyList/:id" element={<StudyListPage />}></Route>
+                <Route path="/voca" element={<VocaPage />}></Route>
+                <Route path="/communitywrite" element={<CommunityWritePage />}></Route>
+                <Route path="/communitylist" element={<CommunityListPage />}></Route>
+                <Route path="/communitydetail/:id" element={<CommunityDetailPage />}></Route>
+                <Route path="/notfound" element={<NotFound />}></Route>
+              </Routes>
+            </main>
 
-          {/* <Footer /> */}
-          <div className={`${styles.footer} mb-16 md:mb-0`}>
-            <div className={styles.footerContent}>
-              <img className={styles.textLogo} src={textLogo} alt="Foodit" />
-              <span>서비스 이용약관 | 개인정보 처리방침</span>
+            {/* <Footer /> */}
+            <div className={`${styles.footer} mb-16 md:mb-0`}>
+              <div className={styles.footerContent}>
+                <img className={styles.textLogo} src={textLogo} alt="Foodit" />
+                <span>서비스 이용약관 | 개인정보 처리방침</span>
+              </div>
             </div>
+            {/* 햄버거 */}
+            {/* <div className="h-[calc(4rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden /> */}
           </div>
-          {/* 햄버거 */}
-          {/* <div className="h-[calc(4rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden /> */}
-        </div>
-        <InflearnNav />
-      </Router>
+          <InflearnNav />
+        </Router>
+      </PostProvider>
     </AuthProvider>
   );
 };
