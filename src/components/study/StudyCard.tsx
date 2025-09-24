@@ -51,9 +51,9 @@ const StudyCard: React.FC<StudyCardProps> = ({ dialogue, onClose }) => {
         <StudyCultureNote note={dialogue.cultureNote} />
       )}
 
-      <button onClick={onClose} className="mt-3 px-4 py-2 bg-primary text-white rounded-lg">
+      {/* <button onClick={onClose} className="mt-3 px-4 py-2 bg-primary text-white rounded-lg">
         닫기
-      </button>
+      </button> */}
     </div>
   );
 };

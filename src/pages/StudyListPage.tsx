@@ -92,6 +92,7 @@ type VideoMap = {
 //   '4': 'https://youtu.be/mhfacjgHrMY?...',
 //   default: 'https://youtu.be/jJAIFMiPdds?si=EGEHykwWqDMzMqhu',
 // };
+
 const VideoS = () => {
   const playerRef = useRef<HTMLVideoElement | null>(null);
   const [playing, setPlaying] = useState(true);
@@ -143,6 +144,7 @@ const VideoS = () => {
       }
     })();
   }, []);
+
   const videoUrl =
     id && videoMapTest[id]
       ? videoMapTest[id]
