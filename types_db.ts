@@ -219,43 +219,43 @@ export type Database = {
       }
       posts: {
         Row: {
-          category: string | null
+          category: Database["public"]["Enums"]["category_type"]
           comments: number | null
-          content: string | null
-          created_at: string | null
+          content: string
+          created_at: string
           id: number
-          like: number | null
-          title: string | null
-          unlike: number | null
+          like: number
+          title: string
+          unlike: number
           updated_at: string | null
           user_id: number
-          view: number | null
+          view: number
         }
         Insert: {
-          category?: string | null
+          category: Database["public"]["Enums"]["category_type"]
           comments?: number | null
-          content?: string | null
-          created_at?: string | null
+          content: string
+          created_at?: string
           id?: number
-          like?: number | null
-          title?: string | null
-          unlike?: number | null
+          like?: number
+          title: string
+          unlike?: number
           updated_at?: string | null
           user_id: number
-          view?: number | null
+          view?: number
         }
         Update: {
-          category?: string | null
+          category?: Database["public"]["Enums"]["category_type"]
           comments?: number | null
-          content?: string | null
-          created_at?: string | null
+          content?: string
+          created_at?: string
           id?: number
-          like?: number | null
-          title?: string | null
-          unlike?: number | null
+          like?: number
+          title?: string
+          unlike?: number
           updated_at?: string | null
           user_id?: number
-          view?: number | null
+          view?: number
         }
         Relationships: [
           {
@@ -351,6 +351,30 @@ export type Database = {
           },
         ]
       }
+      study_progress: {
+        Row: {
+          created_at: string | null
+          episode: string
+          id: number
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          episode: string
+          id?: number
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          episode?: string
+          id?: number
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
       temptts: {
         Row: {
           culture_note: string | null
@@ -358,6 +382,7 @@ export type Database = {
           end: string
           english: string | null
           id: number
+          imgUrl: string | null
           src: string | null
           start: string
         }
@@ -367,6 +392,7 @@ export type Database = {
           end: string
           english?: string | null
           id: number
+          imgUrl?: string | null
           src?: string | null
           start: string
         }
@@ -376,6 +402,7 @@ export type Database = {
           end?: string
           english?: string | null
           id?: number
+          imgUrl?: string | null
           src?: string | null
           start?: string
         }
@@ -554,6 +581,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      category_type:
+        | "Notice"
+        | "Reviews"
+        | "Q&A"
+        | "Study tips"
+        | "Communication"
       gender_enum: "남" | "여"
     }
     CompositeTypes: {
@@ -682,6 +715,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      category_type: [
+        "Notice",
+        "Reviews",
+        "Q&A",
+        "Study tips",
+        "Communication",
+      ],
       gender_enum: ["남", "여"],
     },
   },
