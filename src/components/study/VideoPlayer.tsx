@@ -3,6 +3,7 @@ import { getTts } from '../../services/ClipService';
 import { useParams } from 'react-router-dom';
 import ReactPlayer from 'react-player';
 import type { Tts } from '../../types/database';
+import { supabase } from '../../lib/supabase';
 
 type VideoMap = {
   [key: string]: string;
@@ -22,7 +23,7 @@ interface ProgressState {
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = () => {
-  const playerRef = useRef<ReactPlayer | null>(null);
+  const playerRef = useRef<HTMLVideoElement | null>(null);
   const [playing, setPlaying] = useState(false);
   const { id } = useParams<{ id: string }>();
   // const [clip, setClip] = useState<Tts[] | null>(null);
@@ -53,45 +54,63 @@ const VideoPlayer: React.FC<VideoPlayerProps> = () => {
   //   }
   // };
 
+  // useEffect(() => {
+  //   (async () => {
+  //     try {
+  //       const data = await getTts();
+  //       console.log(data);
+
+  //       const map = data.reduce(
+  //         (acc, cur) => {
+  //           if (cur.id && cur.src) {
+  //             acc[cur.id.toString()] = cur.src;
+  //           }
+  //           return acc;
+  //         },
+  //         {} as Record<string, string>,
+  //       );
+
+  //       setVideoMapTest(map);
+  //     } catch (err) {
+  //       console.error(err);
+  //     }
+  //   })();
+  // }, []);
+
+  // 영상 불러오기
   useEffect(() => {
     (async () => {
       try {
-        const data = await getTts();
-        console.log(data);
+        const { data, error } = await supabase.from('study').select('id, video_url').eq('id', id);
 
-        const map = data.reduce(
-          (acc, cur) => {
-            if (cur.id && cur.src) {
-              acc[cur.id.toString()] = cur.src;
-            }
-            return acc;
-          },
-          {} as Record<string, string>,
-        );
+        if (error) {
+          console.error('영상 가져오기 오류:', error);
+        } else {
+          // videoMap에 id와 video_url 저장
+          const map = data.reduce(
+            (acc, cur) => {
+              if (cur.id && cur.video_url) {
+                acc[cur.id.toString()] = cur.video_url;
+              }
+              return acc;
+            },
+            {} as Record<string, string>,
+          );
 
-        setVideoMapTest(map);
+          setVideoMapTest(map);
+        }
       } catch (err) {
-        console.error(err);
+        console.error('데이터 불러오기 에러:', err);
       }
     })();
-  }, []);
+  }, [id]);
 
   const videoUrl =
     id && videoMapTest[id] ? videoMapTest[id] : 'https://www.youtube.com/watch?v=5d0nzj_99ac';
 
   // 영상 구간 이동
-  const jumpForward = () => {
-    if (playerRef.current) {
-      const currentTime = (playerRef.current as any).getCurrentTime();
-      (playerRef.current as any).seekTo(currentTime + jumpSeconds, 'seconds');
-    }
-  };
-  const jumpBackward = () => {
-    if (playerRef.current) {
-      const currentTime = (playerRef.current as any).getCurrentTime();
-      (playerRef.current as any).seekTo(Math.max(currentTime - jumpSeconds, 0), 'seconds');
-    }
-  };
+  const jumpForward = () => {};
+  const jumpBackward = () => {};
 
   return (
     <div style={{ maxWidth: '100%' }}>
