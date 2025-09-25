@@ -14,6 +14,15 @@ import styles from './components/Layout.module.css';
 import Modal from './components/Modal';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import CommunityDetailPage from './pages/CommunityDetailPage';
+import SignInPage from './pages/SignInPage';
+import ProfilePage from './pages/ProfilePage';
+import StudyPage from './pages/StudyPage';
+import VocaPage from './pages/VocaPage';
+import CommunityWritePage from './pages/CommunityWritePage';
+import CommunityDetailPage from './pages/CommunityDetailPage';
+import NotFound from './pages/NotFound';
+import StudyListPage from './pages/StudyListPage';
+import { PostProvider } from './contexts/PostContext';
 import CommunityListPage from './pages/CommunityListPage';
 import CommunityWritePage from './pages/CommunityWritePage';
 import HomePage from './pages/HomePage';
@@ -30,6 +39,7 @@ import TopHeader from './components/TopHeader';
 const App = () => {
   return (
     <AuthProvider>
+     <PostProvider>
       <Router>
         <div className="layout min-h-screen flex flex-col">
           {/* 공통 헤더 */}
@@ -43,6 +53,7 @@ const App = () => {
               <Route path="/signup" element={<SignUpPage />}></Route>
               <Route path="/signin" element={<SignInPage />}></Route>
               <Route path="/profile" element={<ProfilePage />}></Route>
+              <Route path="/study" element={<StudyPage />}></Route>
               <Route path="/studyList" element={<LearningPage />}></Route>
               <Route path="/studyList/:id" element={<StudyListPage />}></Route>
               <Route path="/voca" element={<VocaPage />}></Route>
@@ -58,11 +69,17 @@ const App = () => {
             <div className={styles.footerContent}>
               <img className={styles.textLogo} src={textLogo} alt="Foodit" />
               <span>서비스 이용약관 | 개인정보 처리방침</span>
+
             </div>
+            {/* 햄버거 */}
+            {/* <div className="h-[calc(4rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden /> */}
           </div>
+
         </div>
         <InflearnNav />
-      </Router>
+       </Router>
+      </PostProvider>
+
     </AuthProvider>
   );
 };

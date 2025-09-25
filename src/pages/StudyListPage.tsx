@@ -85,6 +85,14 @@ type VideoMap = {
   [key: string]: string;
 };
 
+// const videoMap: VideoMap = {
+//   '1': 'https://youtu.be/SFg64eR3aKA?...',
+//   '2': 'https://youtu.be/f1ZJlT0yASs?...',
+//   '3': 'https://youtu.be/12o0jwxBcJI?...',
+//   '4': 'https://youtu.be/mhfacjgHrMY?...',
+//   default: 'https://youtu.be/jJAIFMiPdds?si=EGEHykwWqDMzMqhu',
+// };
+
 const VideoS = () => {
   const playerRef = useRef<HTMLVideoElement | null>(null);
   const [playing, setPlaying] = useState(true);
