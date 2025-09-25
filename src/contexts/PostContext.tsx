@@ -109,10 +109,10 @@ export const PostProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const newPost = await createPost(post);
       if (!newPost) throw new Error('게시글 생성 실패');
-
       dispatch({ type: PostActionType.ADD, payload: { post: newPost } });
     } catch (err) {
       console.log(err);
+      // dispatch({ type: PostActionType.SET_ERROR, payload: '게시글 생성 중 오류가 발생했습니다.' });
     }
   };
 
