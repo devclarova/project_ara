@@ -213,44 +213,44 @@ export type Database = {
       };
       posts: {
         Row: {
-          category: string;
-          comments: number | null;
-          content: string;
-          created_at: string;
-          id: number;
-          like: number;
-          title: string;
-          unlike: number;
-          updated_at: string | null;
-          user_id: number;
-          view: number;
-        };
+          category: Database["public"]["Enums"]["category_type"]
+          comments: number | null
+          content: string
+          created_at: string
+          id: number
+          like: number
+          title: string
+          unlike: number
+          updated_at: string | null
+          user_id: number
+          view: number
+        }
         Insert: {
-          category: string;
-          comments?: number | null;
-          content: string;
-          created_at?: string;
-          id?: number;
-          like?: number;
-          title: string;
-          unlike?: number;
-          updated_at?: string | null;
-          user_id: number;
-          view?: number;
-        };
+          category: Database["public"]["Enums"]["category_type"]
+          comments?: number | null
+          content: string
+          created_at?: string
+          id?: number
+          like?: number
+          title: string
+          unlike?: number
+          updated_at?: string | null
+          user_id: number
+          view?: number
+        }
         Update: {
-          category?: string;
-          comments?: number | null;
-          content?: string;
-          created_at?: string;
-          id?: number;
-          like?: number;
-          title?: string;
-          unlike?: number;
-          updated_at?: string | null;
-          user_id?: number;
-          view?: number;
-        };
+          category?: Database["public"]["Enums"]["category_type"]
+          comments?: number | null
+          content?: string
+          created_at?: string
+          id?: number
+          like?: number
+          title?: string
+          unlike?: number
+          updated_at?: string | null
+          user_id?: number
+          view?: number
+        }
         Relationships: [
           {
             foreignKeyName: 'posts_user_id_fkey';
@@ -343,62 +343,65 @@ export type Database = {
             referencedRelation: 'users';
             referencedColumns: ['id'];
           },
-        ];
-      };
+        ]
+      }
       study_progress: {
         Row: {
-          created_at: string | null;
-          episode: string;
-          id: number;
-          updated_at: string | null;
-          view_count: number | null;
-        };
+          created_at: string | null
+          episode: string
+          id: number
+          updated_at: string | null
+          view_count: number | null
+        }
         Insert: {
-          created_at?: string | null;
-          episode: string;
-          id?: number;
-          updated_at?: string | null;
-          view_count?: number | null;
-        };
+          created_at?: string | null
+          episode: string
+          id?: number
+          updated_at?: string | null
+          view_count?: number | null
+        }
         Update: {
-          created_at?: string | null;
-          episode?: string;
-          id?: number;
-          updated_at?: string | null;
-          view_count?: number | null;
-        };
-        Relationships: [];
-      };
+          created_at?: string | null
+          episode?: string
+          id?: number
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
       temptts: {
         Row: {
-          culture_note: string | null;
-          dialogue: string | null;
-          end: string;
-          english: string | null;
-          id: number;
-          src: string | null;
-          start: string;
-        };
+          culture_note: string | null
+          dialogue: string | null
+          end: string
+          english: string | null
+          id: number
+          imgUrl: string | null
+          src: string | null
+          start: string
+        }
         Insert: {
-          culture_note?: string | null;
-          dialogue?: string | null;
-          end: string;
-          english?: string | null;
-          id: number;
-          src?: string | null;
-          start: string;
-        };
+          culture_note?: string | null
+          dialogue?: string | null
+          end: string
+          english?: string | null
+          id: number
+          imgUrl?: string | null
+          src?: string | null
+          start: string
+        }
         Update: {
-          culture_note?: string | null;
-          dialogue?: string | null;
-          end?: string;
-          english?: string | null;
-          id?: number;
-          src?: string | null;
-          start?: string;
-        };
-        Relationships: [];
-      };
+          culture_note?: string | null
+          dialogue?: string | null
+          end?: string
+          english?: string | null
+          id?: number
+          imgUrl?: string | null
+          src?: string | null
+          start?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           avatar_url: string | null;
@@ -572,8 +575,14 @@ export type Database = {
       [_ in never]: never;
     };
     Enums: {
-      gender_enum: '남' | '여';
-    };
+      category_type:
+        | "Notice"
+        | "Reviews"
+        | "Q&A"
+        | "Study tips"
+        | "Communication"
+      gender_enum: "남" | "여"
+    }
     CompositeTypes: {
       [_ in never]: never;
     };
@@ -698,7 +707,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      gender_enum: ['남', '여'],
+      category_type: [
+        "Notice",
+        "Reviews",
+        "Q&A",
+        "Study tips",
+        "Communication",
+      ],
+      gender_enum: ["남", "여"],
     },
   },
 } as const;

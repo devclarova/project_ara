@@ -3,7 +3,7 @@ import ReactPlayer from 'react-player';
 import { useParams } from 'react-router-dom';
 import type { Tts } from '../types/database';
 import { supabase } from '../lib/supabase';
-import { getTts } from '../services/ClipService';
+import { getTts, getTtsById } from '../services/ClipService';
 
 type Dialogue = {
   character: string;
@@ -97,37 +97,31 @@ const VideoS = () => {
   const playerRef = useRef<HTMLVideoElement | null>(null);
   const [playing, setPlaying] = useState(true);
   const { id } = useParams<{ id: string }>();
-  const [clip, setClip] = useState<Tts[] | null>(null);
+  const [clip, setClip] = useState<Tts | null>(null);
   const [videoMapTest, setVideoMapTest] = useState<VideoMap>({});
 
-  // 반복 구간: 10초 ~ 20초
-  const START_TIME = 10;
-  const END_TIME = 30;
-
-  // 영상이 준비되면 시작 지점으로 이동
-  const handleReady = () => {
-    if (playerRef.current) {
-      playerRef.current.currentTime = START_TIME;
-    }
-  };
-
-  const handleTimeUpdate = () => {
-    if (!playerRef.current) return;
-    if (playerRef.current.currentTime >= END_TIME) {
-      playerRef.current.currentTime = START_TIME;
-    }
-    if (playerRef.current.currentTime < START_TIME) {
-      playerRef.current.currentTime = START_TIME;
+  // 유틸 함수: HH:MM:SS -> 초
+  const timeStringToSeconds = (time: string): number => {
+    const parts = time.split(':').map(Number);
+    if (parts.length === 3) {
+      const [h, m, s] = parts;
+      return h * 3600 + m * 60 + s;
+    } else if (parts.length === 2) {
+      const [m, s] = parts;
+      return m * 60 + s;
+    } else {
+      return Number(parts[0]) || 0;
     }
   };
 
   useEffect(() => {
-    (async () => {
-      try {
+    try {
+      (async () => {
         const data = await getTts();
-        console.log(data);
-        // setClip(data);
-
+        const target = data.find(cur => cur.id.toString() === id); // 현재 페이지 id 매칭
+        if (target) {
+          setClip(target);
+        }
         const map = data.reduce(
           (acc, cur) => {
             if (cur.id && cur.src) {
@@ -137,18 +131,38 @@ const VideoS = () => {
           },
           {} as Record<string, string>,
         );
-
         setVideoMapTest(map);
-      } catch (err) {
-        console.error(err);
-      }
-    })();
-  }, []);
+      })();
+    } catch (err) {
+      console.error(err);
+    }
+  }, [id]);
 
   const videoUrl =
     id && videoMapTest[id]
       ? videoMapTest[id]
       : 'https://www.youtube.com/watch?v=jJAIFMiPdds&t=538s';
+
+  const START_TIME_TEST = clip ? timeStringToSeconds(clip.start) : 0;
+  const END_TIME_TEST = clip ? timeStringToSeconds(clip.end) : 30;
+  console.log('시작:', START_TIME_TEST, '끝:', END_TIME_TEST);
+
+  // 영상이 준비되면 시작 지점으로 이동
+  const handleReady = () => {
+    if (playerRef.current) {
+      playerRef.current.currentTime = START_TIME_TEST;
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (!playerRef.current) return;
+    if (playerRef.current.currentTime >= END_TIME_TEST) {
+      playerRef.current.currentTime = START_TIME_TEST;
+    }
+    if (playerRef.current.currentTime < START_TIME_TEST) {
+      playerRef.current.currentTime = START_TIME_TEST;
+    }
+  };
 
   return (
     <div style={{ maxWidth: '100%', margin: '2rem auto' }}>

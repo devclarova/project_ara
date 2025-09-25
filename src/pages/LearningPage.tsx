@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Tts } from '../types/database';
 import { supabase } from '../lib/supabase';
+import placeholder from '../assets/placeholder.png';
+import Input from '../components/Input';
 
 const FilterDropdown = () => {
   const [open, setOpen] = useState(false);
@@ -109,7 +111,7 @@ const CategoryTabs = () => {
 // components/ContentCard.tsx
 type Props = {
   id: number;
-  image: string;
+  image: string | null;
   title: string;
   subtitle: string;
   desc: string;
@@ -138,7 +140,11 @@ const ContentCard = ({
       className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 card-hover cursor-pointer"
     >
       <div className="relative">
-        <img src={image} alt={title} className="w-full h-48 object-cover object-top" />
+        <img
+          src={image ? image : placeholder}
+          alt={title}
+          className="w-full h-48 object-cover object-top"
+        />
         <div
           className={`absolute top-3 right-3 ${levelColor} text-white px-2 py-1 rounded text-xs font-medium`}
         >
@@ -211,10 +217,7 @@ export const InflearnNav = () => {
   return (
     <nav className="fixed bottom-0 inset-x-0 bg-white border-t block md:hidden">
       <div className="flex justify-around items-center h-16">
-        <a
-          href="/"
-          className="flex flex-col items-center"
-        >
+        <a href="/" className="flex flex-col items-center">
           <img
             src="https://cdn.inflearn.com/assets/images/header/course.png"
             alt="강의"
@@ -257,6 +260,8 @@ export const InflearnNav = () => {
 
 const LearningPage = () => {
   const [clips, setClips] = useState<Tts[]>([]);
+  const [keyword, setKeyword] = useState('');
+
   useEffect(() => {
     const fetchData = async () => {
       const { data, error } = await supabase
@@ -274,16 +279,27 @@ const LearningPage = () => {
     fetchData();
     console.log(`클립 확인용 : ${clips}`);
   }, []);
+
+  const handleKeywordChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setKeyword(e.target.value);
+
   return (
     <div className="bg-white min-h-screen flex flex-col">
       <div className="max-w-7xl mx-auto px-6 py-8 flex-1">
         {/* 헤더 */}
-        <div className="flex justify-between items-center mb-8">
+        {/* <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">학습하기</h1>
           <FilterDropdown />
-        </div>
+        </div> */}
         {/* 탭 */}
-        <CategoryTabs />
+        {/* <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <CategoryTabs />
+          <Input
+            variant="search"
+            onChange={handleKeywordChange}
+            placeholder="검색어를 입력해주세요"
+          />
+        </div> */}
         {/* 카드 그리드 */}
         <div className="grid gap-6 mb-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {/* DB 에서 카드 불러오기 */}
@@ -291,7 +307,9 @@ const LearningPage = () => {
             <ContentCard
               key={clip.id}
               id={clip.id} // DB id 전달
-              image="https://image.tmdb.org/t/p/original/7jryPmL3F0Wqv5U51SZrGQcPXfE.jpg" // 임시 이미지 (DB에 image 필드 있으면 교체)
+              // image="https://image.tmdb.org/t/p/original/7jryPmL3F0Wqv5U51SZrGQcPXfE.jpg" // 임시 이미지 (DB에 image 필드 있으면 교체)
+              // image="https://image.tmdb.org/t/p/original/57I1A2oQeVDZtfcKKVPJHffYTU3.jpg" // 임시 이미지 (DB에 image 필드 있으면 교체)
+              image={clip.imgUrl} // 임시 이미지 (DB에 image 필드 있으면 교체)
               title={clip.dialogue || '제목 없음'}
               subtitle={`${clip.start} ~ ${clip.end}`}
               desc={clip.english || '설명 없음'}
@@ -302,61 +320,6 @@ const LearningPage = () => {
             />
           ))}
 
-          <ContentCard
-            id={1}
-            image="https://images.unsplash.com/photo-1504384308090-c894fdcc538d"
-            title="사랑의 불시착"
-            subtitle="Episode 1 - Scene 1"
-            desc="첫 만남의 순간, 운명적인 대화가 시작됩니다."
-            level="초급"
-            levelColor="bg-primary"
-            duration="5분"
-            comments="20개 댓글"
-          />
-          <ContentCard
-            id={2}
-            image="https://images.unsplash.com/photo-1504384308090-c894fdcc538d"
-            title="런닝맨"
-            subtitle="Episode 580 - Scene 3"
-            desc="재미있는 게임 속 다양한 한국어 표현을 배워보세요."
-            level="중급"
-            levelColor="bg-orange-400"
-            duration="8분"
-            comments="30개 댓글"
-          />
-          <ContentCard
-            id={3}
-            image="https://images.unsplash.com/photo-1504384308090-c894fdcc538d"
-            title="기생충"
-            subtitle="Episode 1 - Scene 5"
-            desc="깊이 있는 대화를 통해 고급 한국어를 학습합니다."
-            level="고급"
-            levelColor="bg-red-500"
-            duration="12분"
-            comments="45개 댓글"
-          />
-          <ContentCard
-            id={4}
-            image="https://images.unsplash.com/photo-1504384308090-c894fdcc538d"
-            title="기생충"
-            subtitle="Episode 1 - Scene 5"
-            desc="깊이 있는 대화를 통해 고급 한국어를 학습합니다."
-            level="고급"
-            levelColor="bg-red-500"
-            duration="12분"
-            comments="45개 댓글"
-          />
-          <ContentCard
-            id={5}
-            image="https://images.unsplash.com/photo-1504384308090-c894fdcc538d"
-            title="기생충"
-            subtitle="Episode 1 - Scene 5"
-            desc="깊이 있는 대화를 통해 고급 한국어를 학습합니다."
-            level="고급"
-            levelColor="bg-red-500"
-            duration="12분"
-            comments="45개 댓글"
-          />
           {/* ...추가 카드 */}
         </div>
       </div>

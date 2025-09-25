@@ -230,7 +230,7 @@ export type Database = {
       };
       posts: {
         Row: {
-          category: string;
+          category: Database['public']['Enums']['category_type'];
           comments: number | null;
           content: string;
           created_at: string;
@@ -243,7 +243,7 @@ export type Database = {
           view: number;
         };
         Insert: {
-          category: string;
+          category: Database['public']['Enums']['category_type'];
           comments?: number | null;
           content: string;
           created_at?: string;
@@ -256,7 +256,7 @@ export type Database = {
           view?: number;
         };
         Update: {
-          category?: string;
+          category?: Database['public']['Enums']['category_type'];
           comments?: number | null;
           content?: string;
           created_at?: string;
@@ -393,6 +393,7 @@ export type Database = {
           end: string;
           english: string | null;
           id: number;
+          imgUrl: string | null;
           src: string | null;
           start: string;
         };
@@ -402,6 +403,7 @@ export type Database = {
           end: string;
           english?: string | null;
           id: number;
+          imgUrl?: string | null;
           src?: string | null;
           start: string;
         };
@@ -411,6 +413,7 @@ export type Database = {
           end?: string;
           english?: string | null;
           id?: number;
+          imgUrl?: string | null;
           src?: string | null;
           start?: string;
         };
@@ -589,6 +592,7 @@ export type Database = {
       [_ in never]: never;
     };
     Enums: {
+      category_type: 'Notice' | 'Reviews' | 'Q&A' | 'Study tips' | 'Communication';
       gender_enum: '남' | '여';
     };
     CompositeTypes: {
@@ -715,6 +719,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      category_type: ['Notice', 'Reviews', 'Q&A', 'Study tips', 'Communication'],
       gender_enum: ['남', '여'],
     },
   },

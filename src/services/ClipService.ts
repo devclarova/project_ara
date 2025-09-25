@@ -35,3 +35,12 @@ export const getTts = async (): Promise<Tts[]> => {
   }
   return data || [];
 };
+
+// 디테일 부분 id 가져오기
+// services/ClipService.ts
+export async function getTtsById(id: number) {
+  const { data, error } = await supabase.from('tts').select('*').eq('id', id).single();
+
+  if (error) throw error;
+  return data;
+}
