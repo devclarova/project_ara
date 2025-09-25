@@ -1,4 +1,12 @@
-function StudyVoca({ words }: { words: { term: string; meaning: string; example?: string }[] }) {
+function StudyVoca({
+  words = [],
+}: {
+  words: { term: string; meaning: string; example?: string }[];
+}) {
+  if (!words || words.length === 0) {
+    return <p>자막이 없습니다.</p>; // 자막이 없을 때 메시지 표시
+  }
+
   return (
     <div className="grid grid-cols-2 gap-4">
       {words.map((w, i) => (

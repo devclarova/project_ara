@@ -27,7 +27,7 @@ import HomePage from './pages/HomePage';
 import LandingPage from './pages/LandingPage';
 import LearningPage, { InflearnNav } from './pages/LearningPage';
 import TopHeader from './components/TopHeader';
-import SignUpPage from './pages/SignUpPage';
+import SignUpPage from './pages/SignupPage';
 
 const App = () => {
   return (

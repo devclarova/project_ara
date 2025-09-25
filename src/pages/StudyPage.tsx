@@ -23,15 +23,9 @@ const initialDialogues: Dialogue[] = [
   },
 ];
 
-interface StudyProgress {
-  view_count: number;
-  episode: string;
-  updated_at: string;
-  created_at: string;
-}
-
 const StudyPage = () => {
-  const [selected, setSelected] = useState<Dialogue | null>(null);
+  const [selected, setSelected] = useState<Dialogue | null>(initialDialogues[0]);
+  const [dialogues, setDialogues] = useState<any[]>([]);
   const [viewCount, setViewCount] = useState(0);
 
   // 페이지 클릭시 조회수 증가
@@ -41,7 +35,7 @@ const StudyPage = () => {
         .from('study_progress')
         .select('view_count')
         .eq('episode', 'Episode 1')
-        .single();
+        .single(); // 단일 데이터 반환
 
       if (error) {
         // console.log('조회수 카운트 에러:', error);
@@ -52,20 +46,44 @@ const StudyPage = () => {
         // 조회수 업데이트
         const { data: updatedData, error: updateError } = await supabase
           .from('study_progress')
-          .update({ view_count: updatedViewCount, updated_at: new Date() })
-          .eq('episode', 'Episode 1');
+          .update({ view_count: updatedViewCount, updated_at: new Date().toISOString() })
+          .eq('episode', 'Episode 1'); // episode에 해당하는 데이터 업데이트
 
         if (updateError) {
           // console.log('조회수 업데이트 카운트 에러:', updateError);
         } else {
           // 조회수 업데이트가 성공적으로 이루어졌으면 화면에 반영
-          setViewCount(updatedData?.view_count || 0);
-          console.log('조회수 업데이트 성공:', updatedData?.view_count);
+          setViewCount(updatedViewCount);
+          // console.log('조회수 업데이트 성공:', updatedViewCount);
         }
       }
     };
 
     incrementViewCount();
+  }, []);
+
+  // 자막 데이터
+  useEffect(() => {
+    const fetchDialogues = async () => {
+      const { data, error } = await supabase
+        .from('study') // study 테이블에서 자막 데이터 가져오기
+        .select('*')
+        .eq('episode', 'Episode 1'); // 해당 에피소드의 대사만 필터링
+
+      if (error) {
+        console.log('자막 데이터 가져오기 오류:', error);
+      } else {
+        console.log('자막 데이터:', data); // 데이터를 콘솔에 출력
+        if (data.length > 0) {
+          setDialogues(data); // 데이터를 상태로 저장
+          setSelected(data[0]); // 첫 번째 자막을 선택된 상태로 설정
+        } else {
+          console.log('자막 데이터가 없습니다.');
+        }
+      }
+    };
+
+    fetchDialogues(); // 자막 데이터 로드
   }, []);
 
   return (
@@ -121,20 +139,27 @@ const StudyPage = () => {
       {/* 자막 리스트 */}
       <div>
         <h2 className="text-xl font-bold mb-2">자막</h2>
-        <ul className="space-y-2">
-          {initialDialogues.map((d, idx) => (
-            <li
-              key={idx}
-              onClick={() => setSelected(selected?.dialogue === d.dialogue ? null : d)}
-              className="p-3 bg-white rounded-lg shadow cursor-pointer hover:bg-primary/5"
-            >
-              <p className="font-medium">{d.dialogue}</p>
-              <p className="text-sm text-gray-500">
-                {d.character} · {d.timestamp}
-              </p>
-            </li>
-          ))}
-        </ul>
+        {dialogues.length > 0 ? (
+          <ul className="space-y-2">
+            {dialogues.map((d, idx) => (
+              <li
+                key={idx}
+                onClick={() => setSelected(d)} // 자막 클릭 시 상태 변경
+                className="p-3 bg-white rounded-lg shadow cursor-pointer hover:bg-primary/5"
+              >
+                <p className="text-lg font-medium">{d.dialogue}</p>
+                <p className="text-lg font-medium text-gray-400">{d.pronunciation}</p>
+                <p className="text-lg">{d.english_subtitle}</p>
+
+                <p className="text-sm text-gray-500">
+                  {d.character} · {d.timestamp_start} → {d.timestamp_end}
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>자막 로딩 중...</p> // 자막이 없거나 로딩 중일 때 표시할 메시지
+        )}
       </div>
 
       {/* 학습 카드 */}
