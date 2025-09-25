@@ -12,17 +12,17 @@ export type Database = {
         Row: {
           created_at: string;
           id: number;
-          name: string;
+          name: Database['public']['Enums']['category_type'];
         };
         Insert: {
           created_at?: string;
           id?: number;
-          name: string;
+          name: Database['public']['Enums']['category_type'];
         };
         Update: {
           created_at?: string;
           id?: number;
-          name?: string;
+          name?: Database['public']['Enums']['category_type'];
         };
         Relationships: [];
       };
@@ -63,15 +63,7 @@ export type Database = {
           study_id?: number;
           title?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: 'clip_study_id_fkey';
-            columns: ['study_id'];
-            isOneToOne: false;
-            referencedRelation: 'study';
-            referencedColumns: ['id'];
-          },
-        ];
+        Relationships: [];
       };
       clip_words: {
         Row: {
@@ -116,13 +108,6 @@ export type Database = {
             columns: ['clip_id'];
             isOneToOne: false;
             referencedRelation: 'clip';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'fk_clip_words_study';
-            columns: ['study_id'];
-            isOneToOne: false;
-            referencedRelation: 'study';
             referencedColumns: ['id'];
           },
           {
@@ -213,44 +198,44 @@ export type Database = {
       };
       posts: {
         Row: {
-          category: Database["public"]["Enums"]["category_type"]
-          comments: number | null
-          content: string
-          created_at: string
-          id: number
-          like: number
-          title: string
-          unlike: number
-          updated_at: string | null
-          user_id: number
-          view: number
-        }
+          category: Database['public']['Enums']['category_type'];
+          comments: number | null;
+          content: string;
+          created_at: string;
+          id: number;
+          like: number;
+          title: string;
+          unlike: number;
+          updated_at: string | null;
+          user_id: number;
+          view: number;
+        };
         Insert: {
-          category: Database["public"]["Enums"]["category_type"]
-          comments?: number | null
-          content: string
-          created_at?: string
-          id?: number
-          like?: number
-          title: string
-          unlike?: number
-          updated_at?: string | null
-          user_id: number
-          view?: number
-        }
+          category: Database['public']['Enums']['category_type'];
+          comments?: number | null;
+          content: string;
+          created_at?: string;
+          id?: number;
+          like?: number;
+          title: string;
+          unlike?: number;
+          updated_at?: string | null;
+          user_id: number;
+          view?: number;
+        };
         Update: {
-          category?: Database["public"]["Enums"]["category_type"]
-          comments?: number | null
-          content?: string
-          created_at?: string
-          id?: number
-          like?: number
-          title?: string
-          unlike?: number
-          updated_at?: string | null
-          user_id?: number
-          view?: number
-        }
+          category?: Database['public']['Enums']['category_type'];
+          comments?: number | null;
+          content?: string;
+          created_at?: string;
+          id?: number;
+          like?: number;
+          title?: string;
+          unlike?: number;
+          updated_at?: string | null;
+          user_id?: number;
+          view?: number;
+        };
         Relationships: [
           {
             foreignKeyName: 'posts_user_id_fkey';
@@ -282,13 +267,6 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'fk_saves_study';
-            columns: ['study_id'];
-            isOneToOne: false;
-            referencedRelation: 'study';
-            referencedColumns: ['id'];
-          },
-          {
             foreignKeyName: 'fk_saves_user';
             columns: ['user_id'];
             isOneToOne: false;
@@ -299,109 +277,100 @@ export type Database = {
       };
       study: {
         Row: {
-          categories_id: number | null;
-          created_at: string;
-          explain: string | null;
+          culture_note: string | null;
+          dialogue: string;
+          difficulty: string | null;
+          english_subtitle: string;
           id: number;
-          note: string | null;
-          save: boolean | null;
-          user_id: number;
-          view: number | null;
+          timestamp_end: unknown | null;
+          timestamp_start: unknown | null;
+          video_end_time: number | null;
+          video_start_time: number | null;
+          video_url: string | null;
         };
         Insert: {
-          categories_id?: number | null;
-          created_at?: string;
-          explain?: string | null;
+          culture_note?: string | null;
+          dialogue: string;
+          difficulty?: string | null;
+          english_subtitle: string;
           id?: number;
-          note?: string | null;
-          save?: boolean | null;
-          user_id: number;
-          view?: number | null;
+          timestamp_end?: unknown | null;
+          timestamp_start?: unknown | null;
+          video_end_time?: number | null;
+          video_start_time?: number | null;
+          video_url?: string | null;
         };
         Update: {
-          categories_id?: number | null;
-          created_at?: string;
-          explain?: string | null;
+          culture_note?: string | null;
+          dialogue?: string;
+          difficulty?: string | null;
+          english_subtitle?: string;
           id?: number;
-          note?: string | null;
-          save?: boolean | null;
-          user_id?: number;
-          view?: number | null;
+          timestamp_end?: unknown | null;
+          timestamp_start?: unknown | null;
+          video_end_time?: number | null;
+          video_start_time?: number | null;
+          video_url?: string | null;
         };
-        Relationships: [
-          {
-            foreignKeyName: 'study_categories_id_fkey';
-            columns: ['categories_id'];
-            isOneToOne: false;
-            referencedRelation: 'categories';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'study_user_id_fkey';
-            columns: ['user_id'];
-            isOneToOne: false;
-            referencedRelation: 'users';
-            referencedColumns: ['id'];
-          },
-        ]
-      }
+        Relationships: [];
+      };
       study_progress: {
         Row: {
-          created_at: string | null
-          episode: string
-          id: number
-          updated_at: string | null
-          view_count: number | null
-        }
+          created_at: string | null;
+          episode: string;
+          id: number;
+          updated_at: string | null;
+          view_count: number | null;
+        };
         Insert: {
-          created_at?: string | null
-          episode: string
-          id?: number
-          updated_at?: string | null
-          view_count?: number | null
-        }
+          created_at?: string | null;
+          episode: string;
+          id?: number;
+          updated_at?: string | null;
+          view_count?: number | null;
+        };
         Update: {
-          created_at?: string | null
-          episode?: string
-          id?: number
-          updated_at?: string | null
-          view_count?: number | null
-        }
-        Relationships: []
-      }
+          created_at?: string | null;
+          episode?: string;
+          id?: number;
+          updated_at?: string | null;
+          view_count?: number | null;
+        };
+        Relationships: [];
+      };
       temptts: {
         Row: {
-          culture_note: string | null
-          dialogue: string | null
-          end: string
-          english: string | null
-          id: number
-          imgUrl: string | null
-          src: string | null
-          start: string
-        }
+          culture_note: string | null;
+          dialogue: string | null;
+          end: string;
+          english: string | null;
+          id: number;
+          imgUrl: string | null;
+          src: string | null;
+          start: string;
+        };
         Insert: {
-          culture_note?: string | null
-          dialogue?: string | null
-          end: string
-          english?: string | null
-          id: number
-          imgUrl?: string | null
-          src?: string | null
-          start: string
-        }
+          culture_note?: string | null;
+          dialogue?: string | null;
+          end: string;
+          english?: string | null;
+          id: number;
+          imgUrl?: string | null;
+          src?: string | null;
+          start: string;
+        };
         Update: {
-          culture_note?: string | null
-          dialogue?: string | null
-          end?: string
-          english?: string | null
-          id?: number
-          imgUrl?: string | null
-          src?: string | null
-          start?: string
-        }
-        Relationships: []
-      }
+          culture_note?: string | null;
+          dialogue?: string | null;
+          end?: string;
+          english?: string | null;
+          id?: number;
+          imgUrl?: string | null;
+          src?: string | null;
+          start?: string;
+        };
+        Relationships: [];
+      };
       users: {
         Row: {
           avatar_url: string | null;
@@ -507,13 +476,6 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'users_study_review_study_id_fkey';
-            columns: ['study_id'];
-            isOneToOne: false;
-            referencedRelation: 'study';
-            referencedColumns: ['id'];
-          },
-          {
             foreignKeyName: 'users_study_review_user_id_fkey';
             columns: ['user_id'];
             isOneToOne: false;
@@ -552,13 +514,6 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'words_study_id_fkey';
-            columns: ['study_id'];
-            isOneToOne: false;
-            referencedRelation: 'study';
-            referencedColumns: ['id'];
-          },
-          {
             foreignKeyName: 'words_user_id_fkey';
             columns: ['user_id'];
             isOneToOne: false;
@@ -575,14 +530,9 @@ export type Database = {
       [_ in never]: never;
     };
     Enums: {
-      category_type:
-        | "Notice"
-        | "Reviews"
-        | "Q&A"
-        | "Study tips"
-        | "Communication"
-      gender_enum: "남" | "여"
-    }
+      category_type: 'Notice' | 'Reviews' | 'Q&A' | 'Study tips' | 'Communication';
+      gender_enum: '남' | '여';
+    };
     CompositeTypes: {
       [_ in never]: never;
     };
@@ -707,14 +657,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      category_type: [
-        "Notice",
-        "Reviews",
-        "Q&A",
-        "Study tips",
-        "Communication",
-      ],
-      gender_enum: ["남", "여"],
+      category_type: ['Notice', 'Reviews', 'Q&A', 'Study tips', 'Communication'],
+      gender_enum: ['남', '여'],
     },
   },
 } as const;
