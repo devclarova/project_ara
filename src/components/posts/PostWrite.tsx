@@ -17,7 +17,7 @@ const PostWrite = () => {
     e.preventDefault();
 
     if (!title || !content) {
-      alert('제목과 내용을 입력해주세요.');
+      alert('Please provide a title and content.');
       return;
     }
 
@@ -36,19 +36,19 @@ const PostWrite = () => {
       navigate('/communitylist');
     } catch (error) {
       console.log(error);
-      alert('게시글 작성 중 오류가 발생했습니다.');
+      alert('Unable to create the post.');
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex justify-center items-start pt-6 pb-6">
       <div className="w-full max-w-3xl bg-white shadow-md rounded-md p-10">
-        <h2 className="text-3xl font-bold mb-8 text-center">게시글 작성</h2>
+        <h2 className="text-3xl font-bold mb-8 text-center">Create Post</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 카테고리 선택 */}
           <div>
-            <label className="block text-gray-700 font-medium mb-2">카테고리</label>
+            <label className="block text-gray-700 font-medium mb-2">Category</label>
             <select
               className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-primary"
               value={category}
@@ -63,23 +63,23 @@ const PostWrite = () => {
 
           {/* 제목 입력 */}
           <div>
-            <label className="block text-gray-700 font-medium mb-2">제목</label>
+            <label className="block text-gray-700 font-medium mb-2">Title</label>
             <input
               className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-primary"
               value={title}
               onChange={e => setTitle(e.target.value)}
-              placeholder="제목을 입력하세요"
+              placeholder="Enter a title"
             />
           </div>
 
           {/* 내용 입력 */}
           <div>
-            <label className="block text-gray-700 font-medium mb-2">내용</label>
+            <label className="block text-gray-700 font-medium mb-2">Content</label>
             <textarea
               className="w-full border border-gray-300 rounded-md p-3 h-60 resize-none focus:outline-none focus:ring-2 focus:ring-primary"
               value={content}
               onChange={e => setContent(e.target.value)}
-              placeholder="내용을 입력하세요"
+              placeholder="Please enter the content."
             />
           </div>
 
@@ -88,7 +88,7 @@ const PostWrite = () => {
             type="submit"
             className="w-full bg-primary text-white font-semibold py-3 rounded-md hover:brightness-90 transition duration-200"
           >
-            작성 완료
+            Submit
           </button>
         </form>
       </div>
