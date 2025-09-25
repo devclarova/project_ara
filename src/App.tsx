@@ -52,7 +52,7 @@ const App = () => {
                 <Route path="/voca" element={<VocaPage />}></Route>
                 <Route path="/communitywrite" element={<CommunityWritePage />}></Route>
                 <Route path="/communitylist" element={<CommunityListPage />}></Route>
-                <Route path="/communitydetail" element={<CommunityDetailPage />}></Route>
+                <Route path="/communitydetail/:id" element={<CommunityDetailPage />}></Route>
                 <Route path="/notfound" element={<NotFound />}></Route>
               </Routes>
             </main>

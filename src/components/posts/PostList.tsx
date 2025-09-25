@@ -1,6 +1,7 @@
 import React from 'react';
 import { usePosts } from '../../contexts/PostContext';
 import PostItem from './PostItem';
+import { Navigate } from 'react-router-dom';
 
 const PostList = () => {
   const { state } = usePosts();
