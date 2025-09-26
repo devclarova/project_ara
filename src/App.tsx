@@ -20,14 +20,14 @@ import StudyPage from './pages/StudyPage';
 import VocaPage from './pages/VocaPage';
 import CommunityWritePage from './pages/CommunityWritePage';
 import NotFound from './pages/NotFound';
-import StudyListPage from './pages/StudyListPage';
+import StudyListPage, { InflearnNav } from './pages/StudyListPage';
 import { PostProvider } from './contexts/PostContext';
 import CommunityListPage from './pages/CommunityListPage';
 import HomePage from './pages/HomePage';
 import LandingPage from './pages/LandingPage';
-import LearningPage, { InflearnNav } from './pages/LearningPage';
 import TopHeader from './components/TopHeader';
 import SignUpPage from './pages/SignupPage';
+import LearningPage from './pages/LearningPage';
 
 const App = () => {
   return (
@@ -46,9 +46,9 @@ const App = () => {
                 <Route path="/signup" element={<SignUpPage />}></Route>
                 <Route path="/signin" element={<SignInPage />}></Route>
                 <Route path="/profile" element={<ProfilePage />}></Route>
-                <Route path="/study" element={<StudyPage />}></Route>
-                <Route path="/studyList" element={<LearningPage />}></Route>
-                <Route path="/studyList/:id" element={<StudyListPage />}></Route>
+                <Route path="/studyList" element={<StudyListPage />}></Route>
+                <Route path="/studyList/:id" element={<LearningPage />}></Route>
+                <Route path="/study/:id" element={<StudyPage />}></Route>
                 <Route path="/voca" element={<VocaPage />}></Route>
                 <Route path="/communitywrite" element={<CommunityWritePage />}></Route>
                 <Route path="/communitylist" element={<CommunityListPage />}></Route>

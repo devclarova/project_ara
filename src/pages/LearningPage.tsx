@@ -1,331 +1,275 @@
-// components/FilterDropdown.tsx
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import ReactPlayer from 'react-player';
+import { useParams } from 'react-router-dom';
 import type { Tts } from '../types/database';
 import { supabase } from '../lib/supabase';
-import placeholder from '../assets/placeholder.png';
-import Input from '../components/Input';
+import { getTts, getTtsById } from '../services/ClipService';
 
-const FilterDropdown = () => {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-4 py-2 text-primary border border-primary rounded-button hover:bg-primary hover:text-white transition-all whitespace-nowrap"
-      >
-        <i className="ri-filter-line text-sm" />
-        필터
-      </button>
-
-      {open && (
-        <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
-          <div className="p-4 space-y-4">
-            {/* 난이도 */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-2">난이도</h3>
-              <div className="space-y-2">
-                {['초급', '중급', '고급'].map(label => (
-                  <label key={label} className="flex items-center">
-                    <input type="checkbox" className="form-checkbox text-primary" />
-                    <span className="ml-2 text-sm text-gray-600">{label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* 콘텐츠 유형 */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-2">콘텐츠 유형</h3>
-              <div className="space-y-2">
-                {['드라마', '예능', '영화', '뉴스', '요리'].map(label => (
-                  <label key={label} className="flex items-center">
-                    <input type="checkbox" className="form-checkbox text-primary" />
-                    <span className="ml-2 text-sm text-gray-600">{label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* 학습 시간 */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-2">학습 시간</h3>
-              <div className="space-y-2">
-                {['5분 이하', '5-10분', '10분 이상'].map(label => (
-                  <label key={label} className="flex items-center">
-                    <input type="radio" name="duration" className="form-radio text-primary" />
-                    <span className="ml-2 text-sm text-gray-600">{label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* 정렬 */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-2">정렬</h3>
-              <select className="w-full text-sm text-gray-600 border border-gray-200 rounded-button px-3 py-2">
-                <option>최신순</option>
-                <option>인기순</option>
-                <option>댓글순</option>
-              </select>
-            </div>
-
-            <div className="flex justify-end pt-2 border-t border-gray-100">
-              <button
-                onClick={() => setOpen(false)}
-                className="px-4 py-2 text-sm text-white bg-primary rounded-button whitespace-nowrap"
-              >
-                적용하기
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+type Dialogue = {
+  character: string;
+  timestamp: string;
+  dialogue: string;
+  category: string;
+  words: { term: string; meaning: string; example?: string }[];
+  cultureNote: string;
 };
 
-const categories = ['전체', '드라마', '예능', '영화'];
-const CategoryTabs = () => {
-  const [active, setActive] = useState('전체');
+const initialDialogues: Dialogue[] = [
+  {
+    character: '타요',
+    timestamp: '00:32:58 → 00:34:11',
+    dialogue: '지금쯤 영화는 끝났겠지 얼마나 재미있었을까',
+    category: '추측/가정; 감탄문',
+    words: [
+      { term: '지금쯤', meaning: 'by now / at this time', example: '지금쯤 집에 도착했겠지.' },
+      { term: '끝났겠지', meaning: 'must have ended (추측)', example: '수업은 끝났겠지.' },
+      { term: '얼마나', meaning: 'how much / how', example: '얼마나 예뻤을까.' },
+    ],
+    cultureNote:
+      '‘~겠지’는 추측을 나타내는 표현으로, 누군가의 상태나 상황을 조심스럽게 예상할 때 사용합니다. ‘얼마나 ~었을까’는 감탄과 궁금증을 동시에 표현합니다.',
+  },
+  {
+    character: '라니',
+    timestamp: '00:09:34 → 00:10:23',
+    dialogue: '용기의 하트 덕분이에요',
+    category: '감사 표현',
+    words: [
+      { term: '덕분이에요', meaning: 'thanks to (you/it)', example: '친구 덕분이에요.' },
+      { term: '용기', meaning: 'courage', example: '용기를 내서 발표했어요.' },
+    ],
+    cultureNote:
+      '‘~덕분이에요’는 한국어에서 상대방에게 감사할 때 자주 쓰이는 표현입니다. 단순한 고마움이 아니라, 상대방의 도움으로 긍정적인 결과가 생겼다는 뉘앙스를 담고 있습니다.',
+  },
+  {
+    character: '기타',
+    timestamp: '01:33:50 → 01:34:42',
+    dialogue: '열심히 일한 뒤에 씻으니까',
+    category: '시간 표현',
+    words: [
+      { term: '뒤에', meaning: 'after', example: '수업이 끝난 뒤에 밥을 먹었어요.' },
+      { term: '씻다', meaning: 'to wash', example: '손을 씻으세요.' },
+    ],
+    cultureNote:
+      '‘~한 뒤에’는 어떤 행동이 끝난 후 다음 행동이 이어짐을 나타냅니다. 일상 회화에서 시간 순서를 설명할 때 자주 쓰입니다.',
+  },
+];
+
+function WordExplanation({
+  words,
+}: {
+  words: { term: string; meaning: string; example?: string }[];
+}) {
   return (
-    <div className="flex gap-4 mb-8">
-      {categories.map(c => (
-        <button
-          key={c}
-          onClick={() => setActive(c)}
-          className={`px-6 py-3 font-medium whitespace-nowrap !rounded-button ${
-            active === c
-              ? 'bg-primary text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors'
-          }`}
-        >
-          {c}
-        </button>
+    <div className="grid grid-cols-2 gap-4">
+      {words.map((w, i) => (
+        <div key={i} className="p-3 border rounded-lg bg-white shadow-sm hover:bg-gray-50">
+          <h4 className="font-semibold">{w.term}</h4>
+          <p className="text-sm text-gray-600">{w.meaning}</p>
+          {w.example && <p className="text-xs text-gray-400 mt-1">예: {w.example}</p>}
+        </div>
       ))}
     </div>
   );
-};
+}
 
-// components/ContentCard.tsx
-type Props = {
-  id: number;
-  image: string | null;
-  title: string;
-  subtitle: string;
-  desc: string;
-  level: string;
-  levelColor: string;
-  duration: string;
-  comments: string;
-};
-
-const ContentCard = ({
-  id,
-  image,
-  title,
-  subtitle,
-  desc,
-  level,
-  levelColor,
-  duration,
-  comments,
-}: Props) => {
-  const navigate = useNavigate();
-
+function CultureNote({ note }: { note: string }) {
   return (
-    <div
-      onClick={() => navigate(`/studyList/${id}`)}
-      className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 card-hover cursor-pointer"
-    >
-      <div className="relative">
-        <img
-          src={image ? image : placeholder}
-          alt={title}
-          className="w-full h-48 object-cover object-top"
-        />
-        <div
-          className={`absolute top-3 right-3 ${levelColor} text-white px-2 py-1 rounded text-xs font-medium`}
-        >
-          {level}
-        </div>
-      </div>
-      <div className="p-4">
-        <h3 className="font-bold text-lg text-gray-900 mb-1 truncate">{title}</h3>
-        <p className="text-sm text-gray-500 mb-2">{subtitle}</p>
-        <p className="text-sm text-gray-700 mb-3 truncate">{desc}</p>
-        <div className="flex items-center gap-4 text-xs text-gray-400">
-          <div className="flex items-center gap-1">
-            <i className="ri-time-line" />
-            {duration}
-          </div>
-          <div className="flex items-center gap-1">
-            <i className="ri-chat-3-line" />
-            {comments}
-          </div>
-        </div>
-      </div>
+    <div className="p-4 bg-white border rounded-lg shadow-sm">
+      <h4 className="font-semibold mb-2">문화 노트</h4>
+      <p className="text-sm text-gray-700">{note}</p>
     </div>
   );
+}
+
+type VideoMap = {
+  [key: string]: string;
 };
 
-// components/BottomNav.tsx
-const items = [
-  { icon: 'ri-home-line', label: '홈' },
-  { icon: 'ri-book-open-line', label: '학습' },
-  { icon: 'ri-bookmark-line', label: '단어장' },
-  { icon: 'ri-chat-3-line', label: '커뮤니티' },
-  { icon: 'ri-user-line', label: '프로필' },
-];
+// const videoMap: VideoMap = {
+//   '1': 'https://youtu.be/SFg64eR3aKA?...',
+//   '2': 'https://youtu.be/f1ZJlT0yASs?...',
+//   '3': 'https://youtu.be/12o0jwxBcJI?...',
+//   '4': 'https://youtu.be/mhfacjgHrMY?...',
+//   default: 'https://youtu.be/jJAIFMiPdds?si=EGEHykwWqDMzMqhu',
+// };
 
-const BottomNav = () => {
-  const [active, setActive] = useState('학습');
-  return (
-    <nav className="w-full bg-white border-t border-gray-100 px-6 py-4 mt-12">
-      <div className="max-w-7xl mx-auto flex justify-center">
-        <div className="flex gap-12">
-          {items.map(item => (
-            <div
-              key={item.label}
-              onClick={() => setActive(item.label)}
-              className="flex flex-col items-center gap-1 cursor-pointer group"
-            >
-              <div
-                className={`w-6 h-6 flex items-center justify-center transition-colors ${
-                  active === item.label ? 'text-primary' : 'text-gray-400 group-hover:text-primary'
-                }`}
-              >
-                <i className={item.icon} />
-              </div>
-              <span
-                className={`text-xs transition-colors ${
-                  active === item.label ? 'text-primary' : 'text-gray-400 group-hover:text-primary'
-                }`}
-              >
-                {item.label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </nav>
-  );
-};
+const VideoS = () => {
+  const playerRef = useRef<HTMLVideoElement | null>(null);
+  const [playing, setPlaying] = useState(true);
+  const { id } = useParams<{ id: string }>();
+  const [clip, setClip] = useState<Tts | null>(null);
+  const [videoMapTest, setVideoMapTest] = useState<VideoMap>({});
 
-export const InflearnNav = () => {
+  // 유틸 함수: HH:MM:SS -> 초
+  const timeStringToSeconds = (time: string): number => {
+    const parts = time.split(':').map(Number);
+    if (parts.length === 3) {
+      const [h, m, s] = parts;
+      return h * 3600 + m * 60 + s;
+    } else if (parts.length === 2) {
+      const [m, s] = parts;
+      return m * 60 + s;
+    } else {
+      return Number(parts[0]) || 0;
+    }
+  };
+
+  useEffect(() => {
+    try {
+      (async () => {
+        const data = await getTts();
+        const target = data.find(cur => cur.id.toString() === id); // 현재 페이지 id 매칭
+        if (target) {
+          setClip(target);
+        }
+        const map = data.reduce(
+          (acc, cur) => {
+            if (cur.id && cur.src) {
+              acc[cur.id.toString()] = cur.src;
+            }
+            return acc;
+          },
+          {} as Record<string, string>,
+        );
+        setVideoMapTest(map);
+      })();
+    } catch (err) {
+      console.error(err);
+    }
+  }, [id]);
+
+  const videoUrl =
+    id && videoMapTest[id]
+      ? videoMapTest[id]
+      : 'https://www.youtube.com/watch?v=jJAIFMiPdds&t=538s';
+
+  const START_TIME_TEST = clip ? timeStringToSeconds(clip.start) : 0;
+  const END_TIME_TEST = clip ? timeStringToSeconds(clip.end) : 30;
+  console.log('시작:', START_TIME_TEST, '끝:', END_TIME_TEST);
+
+  // 영상이 준비되면 시작 지점으로 이동
+  const handleReady = () => {
+    if (playerRef.current) {
+      playerRef.current.currentTime = START_TIME_TEST;
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (!playerRef.current) return;
+    if (playerRef.current.currentTime >= END_TIME_TEST) {
+      playerRef.current.currentTime = START_TIME_TEST;
+    }
+    if (playerRef.current.currentTime < START_TIME_TEST) {
+      playerRef.current.currentTime = START_TIME_TEST;
+    }
+  };
+
   return (
-    <nav className="fixed bottom-0 inset-x-0 bg-white border-t block md:hidden">
-      <div className="flex justify-around items-center h-16">
-        <a href="/" className="flex flex-col items-center">
-          <img
-            src="https://cdn.inflearn.com/assets/images/header/course.png"
-            alt="강의"
-            width={26}
-            height={26}
-          />
-          <span className="text-sm">강의</span>
-        </a>
-        <a href="/" className="flex flex-col items-center">
-          <img
-            src="https://cdn.inflearn.com/assets/images/header/challenge.png"
-            alt="챌린지"
-            width={26}
-            height={26}
-          />
-          <span className="text-sm">챌린지</span>
-        </a>
-        <a href="/" className="flex flex-col items-center">
-          <img
-            src="https://cdn.inflearn.com/assets/images/header/mentoring.png"
-            alt="멘토링"
-            width={26}
-            height={26}
-          />
-          <span className="text-sm">멘토링</span>
-        </a>
-        <a href="/" className="flex flex-col items-center">
-          <img
-            src="https://cdn.inflearn.com/assets/images/header/roadmap.png"
-            alt="로드맵"
-            width={26}
-            height={26}
-          />
-          <span className="text-sm">로드맵</span>
-        </a>
+    <div style={{ maxWidth: '100%', margin: '2rem auto' }}>
+      <h2>ReactPlayer v3 구간 반복 테스트용, 크기 상관 고려 안함</h2>
+      <ReactPlayer
+        ref={playerRef}
+        src={videoUrl}
+        playing={playing}
+        controls={true}
+        width="100%"
+        height="360px"
+        onReady={handleReady}
+        onPlay={() => {
+          playerRef.current?.addEventListener('timeupdate', handleTimeUpdate);
+        }}
+        onPause={() => {
+          playerRef.current?.removeEventListener('timeupdate', handleTimeUpdate);
+        }}
+      />
+
+      {/* 커스텀 컨트롤 */}
+      <div style={{ marginTop: '1rem' }}>
+        <button onClick={() => setPlaying(p => !p)}>{playing ? '⏸ Pause' : '▶️ Play'}</button>
       </div>
-    </nav>
+    </div>
   );
 };
 
 const LearningPage = () => {
-  const [clips, setClips] = useState<Tts[]>([]);
-  const [keyword, setKeyword] = useState('');
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const { data, error } = await supabase
-        .from('temptts')
-        .select('*')
-        .order('id', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching data:', error);
-        return;
-      }
-      setClips(data || []);
-    };
-
-    fetchData();
-    console.log(`클립 확인용 : ${clips}`);
-  }, []);
-
-  const handleKeywordChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setKeyword(e.target.value);
-
+  const { id } = useParams<{ id: string }>();
+  const [selected, setSelected] = useState<Dialogue | null>(null);
+  const [activeTab, setActiveTab] = useState<'words' | 'culture'>('words');
   return (
-    <div className="bg-white min-h-screen flex flex-col">
-      <div className="max-w-7xl mx-auto px-6 py-8 flex-1">
-        {/* 헤더 */}
-        {/* <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">학습하기</h1>
-          <FilterDropdown />
-        </div> */}
-        {/* 탭 */}
-        {/* <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <CategoryTabs />
-          <Input
-            variant="search"
-            onChange={handleKeywordChange}
-            placeholder="검색어를 입력해주세요"
-          />
-        </div> */}
-        {/* 카드 그리드 */}
-        <div className="grid gap-6 mb-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {/* DB 에서 카드 불러오기 */}
-          {clips.map(clip => (
-            <ContentCard
-              key={clip.id}
-              id={clip.id} // DB id 전달
-              // image="https://image.tmdb.org/t/p/original/7jryPmL3F0Wqv5U51SZrGQcPXfE.jpg" // 임시 이미지 (DB에 image 필드 있으면 교체)
-              // image="https://image.tmdb.org/t/p/original/57I1A2oQeVDZtfcKKVPJHffYTU3.jpg" // 임시 이미지 (DB에 image 필드 있으면 교체)
-              image={clip.imgUrl} // 임시 이미지 (DB에 image 필드 있으면 교체)
-              title={clip.dialogue || '제목 없음'}
-              subtitle={`${clip.start} ~ ${clip.end}`}
-              desc={clip.english || '설명 없음'}
-              level="초급" // 필요하다면 clip.difficulty_level 활용
-              levelColor="bg-primary"
-              duration="10분" // runtime 같은 필드 있으면 대체 가능
-              comments="0개 댓글"
-            />
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      {/* 영상 플레이어 */}
+      <div className="w-full h-64 bg-gray-200 flex items-center justify-center rounded-xl">
+        🎬 영상 플레이어 (데모)
+      </div>
+      <VideoS />
+      {/* 자막 리스트 */}
+      <div>
+        <h2 className="text-xl font-bold mb-2">자막</h2>
+        <ul className="space-y-2">
+          {initialDialogues.map((d, idx) => (
+            <li
+              key={idx}
+              onClick={() => setSelected(selected?.dialogue === d.dialogue ? null : d)}
+              className="p-3 bg-white rounded-lg shadow cursor-pointer hover:bg-primary/5"
+            >
+              <p className="font-medium">{d.dialogue}</p>
+              <p className="text-sm text-gray-500">
+                {d.character} · {d.timestamp}
+              </p>
+            </li>
           ))}
-
-          {/* ...추가 카드 */}
-        </div>
+        </ul>
       </div>
 
-      {/* <BottomNav /> */}
-      <InflearnNav />
+      {/* 학습 카드 */}
+      {selected && (
+        <div className="p-4 bg-primary/5 rounded-xl shadow-md space-y-4">
+          <h3 className="text-lg font-semibold">학습 카드</h3>
+          <p>
+            <strong>한국어:</strong> {selected.dialogue}
+          </p>
+          <p>
+            <strong>영어:</strong> (자동 번역 자리)
+          </p>
+          <p>
+            <strong>학습 포인트:</strong> {selected.category}
+          </p>
+
+          {/* 탭 메뉴 */}
+          <div className="flex space-x-4 mt-4">
+            <button
+              onClick={() => setActiveTab('words')}
+              className={`px-4 py-2 rounded-lg ${
+                activeTab === 'words' ? 'bg-primary text-white' : 'bg-white text-gray-600 border'
+              }`}
+            >
+              단어 설명
+            </button>
+            <button
+              onClick={() => setActiveTab('culture')}
+              className={`px-4 py-2 rounded-lg ${
+                activeTab === 'culture' ? 'bg-primary text-white' : 'bg-white text-gray-600 border'
+              }`}
+            >
+              문화 노트
+            </button>
+          </div>
+
+          {/* 탭 내용 */}
+          {activeTab === 'words' ? (
+            <WordExplanation words={selected.words} />
+          ) : (
+            <CultureNote note={selected.cultureNote} />
+          )}
+
+          <button
+            onClick={() => setSelected(null)}
+            className="mt-3 px-4 py-2 bg-primary text-white rounded-lg"
+          >
+            닫기
+          </button>
+        </div>
+      )}
     </div>
   );
 };

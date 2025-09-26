@@ -34,7 +34,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = () => {
   const END_TIME = 122;
 
   // 영상 이동
-  const jumpSeconds = 1;
+  // const jumpSeconds = 1;
 
   // 영상이 준비되면 시작 지점으로 이동
   const handleReady = () => {
