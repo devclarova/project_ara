@@ -141,7 +141,7 @@ const StudyPage = () => {
           </NavLink>
         </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-4">도깨비 Episode 1 - Scene 1</h1>
-        <Progress percent={30} strokeWidth={8} strokeColor="#ff5733" />
+        <Progress percent={30} size="default" strokeColor="#ff5733" />
         <div className="flex space-x-4 text-sm text-gray-600">
           <span>시간: 1:50</span>
           <span>레벨: 초급</span>

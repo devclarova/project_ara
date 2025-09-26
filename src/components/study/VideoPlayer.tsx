@@ -15,16 +15,17 @@ interface VideoPlayerProps {
   autoPlay?: boolean;
 }
 
-interface ProgressState {
-  played: number;
-  playedSeconds: number;
-  loaded: number;
-  loadedSeconds: number;
-}
+// interface ProgressState {
+//   played: number;
+//   playedSeconds: number;
+//   loaded: number;
+//   loadedSeconds: number;
+// }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = () => {
   const playerRef = useRef<HTMLVideoElement | null>(null);
   const [playing, setPlaying] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const { id } = useParams<{ id: string }>();
   // const [clip, setClip] = useState<Tts[] | null>(null);
   const [videoMapTest, setVideoMapTest] = useState<VideoMap>({});
@@ -78,35 +79,61 @@ const VideoPlayer: React.FC<VideoPlayerProps> = () => {
   // }, []);
 
   // 영상 불러오기
+  
+  // useEffect(() => {
+  //   (async () => {
+  //     try {
+  //       const { data, error } = await supabase.from('study').select('id, video_url').eq('id', id);
+
+  //       if (error) {
+  //         console.error('영상 가져오기 오류:', error);
+  //       } else {
+  //         // videoMap에 id와 video_url 저장
+  //         const map = data.reduce(
+  //           (acc, cur) => {
+  //             if (cur.id && cur.video_url) {
+  //               acc[cur.id.toString()] = cur.video_url;
+  //             }
+  //             return acc;
+  //           },
+  //           {} as Record<string, string>,
+  //         );
+
+  //         setVideoMapTest(map);
+  //       }
+  //     } catch (err) {
+  //       console.error('데이터 불러오기 에러:', err);
+  //     }
+  //   })();
+  // }, [id]);
+
+  // 영상 불러오기
   useEffect(() => {
-    (async () => {
+    const fetchVideoUrl = async () => {
       try {
-        const { data, error } = await supabase.from('study').select('id, video_url').eq('id', id);
+        const { data, error } = await supabase
+          .from('study')
+          .select('id, video_url')
+          .eq('id', id)
+          .single(); // id에 해당하는 영상 URL 가져오기
 
         if (error) {
           console.error('영상 가져오기 오류:', error);
         } else {
-          // videoMap에 id와 video_url 저장
-          const map = data.reduce(
-            (acc, cur) => {
-              if (cur.id && cur.video_url) {
-                acc[cur.id.toString()] = cur.video_url;
-              }
-              return acc;
-            },
-            {} as Record<string, string>,
-          );
-
-          setVideoMapTest(map);
+          if (data?.video_url) {
+            setVideoUrl(data.video_url); // video_url 상태 업데이트
+          }
         }
       } catch (err) {
         console.error('데이터 불러오기 에러:', err);
       }
-    })();
-  }, [id]);
+    };
 
-  const videoUrl =
-    id && videoMapTest[id] ? videoMapTest[id] : 'https://www.youtube.com/watch?v=5d0nzj_99ac';
+    fetchVideoUrl();
+  }, [id]); // id가 변경될 때마다 호출
+
+  // const videoUrl =
+  //   id && videoMapTest[id] ? videoMapTest[id] : 'https://www.youtube.com/watch?v=5d0nzj_99ac';
 
   // 영상 구간 이동
   const jumpForward = () => {};
