@@ -12,14 +12,38 @@ const categoryColors: Record<string, string> = {
     'text-sm text-purple-600 border border-purple-100 rounded-md px-2 py-0 bg-purple-100',
 };
 
+// ✅ 상대적/절대적 시간 포맷 함수
+function formatDate(dateString: string, timeZone = 'Asia/Seoul') {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diff = (now.getTime() - date.getTime()) / 1000; // 초 단위 차이
+
+  if (diff < 60) return '방금 전';
+  if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+  if (diff < 86400 * 3) return `${Math.floor(diff / 86400)}일 전`;
+
+  // 3일 이상 → 절대적 시간 표시
+  return date.toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone,
+  });
+}
+
 const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
   return (
     <div className="max-w-3xl mx-auto bg-white shadow-md rounded-lg p-6 mt-8 mb-8">
       {/* 카테고리와 작성일 */}
       <div className="flex justify-start gap-5 items-center text-gray-500 text-sm mb-4">
         <p className={categoryColors[post.category || '']}>{post.category}</p>
-        <span>작성일: {new Date(post.created_at).toLocaleDateString()}</span>
-        <div className="text-gray-500 text-sm">조회수: {post.view}</div>
+
+        {/* 추후 로그인 구현 시 각 나라대 시간으로 출력되도록 수정 필요  */}
+        <span>작성일: {new Date(post.created_at).toLocaleString()}</span>
+        <div className="text-gray-500 text-sm"> : {post.view}</div>
       </div>
 
       {/* 제목 */}
@@ -27,12 +51,6 @@ const PostDetail: React.FC<PostDetailProps> = ({ post }) => {
 
       {/* 내용 */}
       <p className="text-gray-700 leading-relaxed mb-6">{post.content}</p>
-
-      {/* 조회수 */}
-      {/* <div className="flex gap-5 justify-end pr-3">
-        <div className="text-gray-500 text-sm">조회수: {post.view}</div>
-        <div className="text-gray-500 text-sm">댓글수: {post.comments}</div>
-      </div> */}
 
       {/* 댓글 영역 */}
       <div className="mt-8 pt-3 border-t border-gray-300">
