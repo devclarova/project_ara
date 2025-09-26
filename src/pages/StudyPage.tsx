@@ -3,30 +3,44 @@ import { useEffect, useState } from 'react';
 import { NavLink, useParams } from 'react-router-dom';
 import StudyCard from '../components/study/StudyCard';
 import VideoPlayer from '../components/study/VideoPlayer';
-import type { Dialogue } from '../types/study';
 import { supabase } from '../lib/supabase';
+import StudySubtitles from '../components/study/StudySubtitles';
+import { getTts } from '../services/ClipService';
+import type { Dialogues } from '../types/study';
+import type { Tts } from '../types/database';
 
 // 더미데이터
-const initialDialogues: Dialogue[] = [
-  {
-    character: '도깨비',
-    timestamp: '00:01:50 → 00:01:53',
-    dialogue: '매우 상스러운 갓을 썼군',
-    category: '추측/가정; 감탄문',
-    words: [
-      { term: '지금쯤', meaning: 'by now / at this time', example: '지금쯤 집에 도착했겠지.' },
-      { term: '끝났겠지', meaning: 'must have ended (추측)', example: '수업은 끝났겠지.' },
-      { term: '얼마나', meaning: 'how much / how', example: '얼마나 예뻤을까.' },
-    ],
-    cultureNote:
-      '‘~겠지’는 추측을 나타내는 표현으로, 누군가의 상태나 상황을 조심스럽게 예상할 때 사용합니다. ‘얼마나 ~었을까’는 감탄과 궁금증을 동시에 표현합니다.',
-  },
-];
+// const initialDialogues: Dialogue[] = [
+//   {
+//     character: '도깨비',
+//     timestamp: '00:01:50 → 00:01:53',
+//     dialogue: '매우 상스러운 갓을 썼군',
+//     category: '추측/가정; 감탄문',
+//     words: [
+//       { term: '지금쯤', meaning: 'by now / at this time', example: '지금쯤 집에 도착했겠지.' },
+//       { term: '끝났겠지', meaning: 'must have ended (추측)', example: '수업은 끝났겠지.' },
+//       { term: '얼마나', meaning: 'how much / how', example: '얼마나 예뻤을까.' },
+//     ],
+//     cultureNote:
+//       '‘~겠지’는 추측을 나타내는 표현으로, 누군가의 상태나 상황을 조심스럽게 예상할 때 사용합니다. ‘얼마나 ~었을까’는 감탄과 궁금증을 동시에 표현합니다.',
+//   },
+// ];
+
+type VideoMap = {
+  [key: string]: string;
+};
 
 const StudyPage = () => {
-  const [selected, setSelected] = useState<Dialogue | null>(initialDialogues[0]);
-  const [dialogues, setDialogues] = useState<any[]>([]);
+  const { id } = useParams<{ id: string }>();
+  const [selected, setSelected] = useState<Dialogues | null>();
   const [viewCount, setViewCount] = useState(0);
+  const [clip, setClip] = useState<Tts | null>(null);
+  const [videoMapTest, setVideoMapTest] = useState<VideoMap>({});
+
+  // 자막 선택시 상태 업로드
+  const handleSelectDialogue = (dialogue: Dialogues) => {
+    setSelected(dialogue); // 상태 업데이트
+  };
 
   // 페이지 클릭시 조회수 증가
   useEffect(() => {
@@ -62,29 +76,30 @@ const StudyPage = () => {
     incrementViewCount();
   }, []);
 
-  // 자막 데이터
+  // id 불러오기
   useEffect(() => {
-    const fetchDialogues = async () => {
-      const { data, error } = await supabase
-        .from('study') // study 테이블에서 자막 데이터 가져오기
-        .select('*')
-        .eq('episode', 'Episode 1'); // 해당 에피소드의 대사만 필터링
-
-      if (error) {
-        console.log('자막 데이터 가져오기 오류:', error);
-      } else {
-        console.log('자막 데이터:', data); // 데이터를 콘솔에 출력
-        if (data.length > 0) {
-          setDialogues(data); // 데이터를 상태로 저장
-          setSelected(data[0]); // 첫 번째 자막을 선택된 상태로 설정
-        } else {
-          console.log('자막 데이터가 없습니다.');
+    try {
+      (async () => {
+        const data = await getTts();
+        const target = data.find(cur => cur.id.toString() === id); // 현재 페이지 id 매칭
+        if (target) {
+          setClip(target);
         }
-      }
-    };
-
-    fetchDialogues(); // 자막 데이터 로드
-  }, []);
+        const map = data.reduce(
+          (acc, cur) => {
+            if (cur.id && cur.src) {
+              acc[cur.id.toString()] = cur.src;
+            }
+            return acc;
+          },
+          {} as Record<string, string>,
+        );
+        setVideoMapTest(map);
+      })();
+    } catch (err) {
+      console.error(err);
+    }
+  }, [id]);
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -137,30 +152,7 @@ const StudyPage = () => {
       <VideoPlayer />
 
       {/* 자막 리스트 */}
-      <div>
-        <h2 className="text-xl font-bold mb-2">자막</h2>
-        {dialogues.length > 0 ? (
-          <ul className="space-y-2">
-            {dialogues.map((d, idx) => (
-              <li
-                key={idx}
-                onClick={() => setSelected(d)} // 자막 클릭 시 상태 변경
-                className="p-3 bg-white rounded-lg shadow cursor-pointer hover:bg-primary/5"
-              >
-                <p className="text-lg font-medium">{d.dialogue}</p>
-                <p className="text-lg font-medium text-gray-400">{d.pronunciation}</p>
-                <p className="text-lg">{d.english_subtitle}</p>
-
-                <p className="text-sm text-gray-500">
-                  {d.character} · {d.timestamp_start} → {d.timestamp_end}
-                </p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>자막 로딩 중...</p> // 자막이 없거나 로딩 중일 때 표시할 메시지
-        )}
-      </div>
+      <StudySubtitles onSelectDialogue={handleSelectDialogue} />
 
       {/* 학습 카드 */}
       {selected && <StudyCard dialogue={selected} onClose={() => setSelected(null)} />}
@@ -175,9 +167,9 @@ const StudyPage = () => {
             총 회차 진행률 <span className="text-m font-semibold text-red-400">35%</span>
           </span>
         </div>
-        <div className="text-sm bg-gray-200 text-gray-600 hover:bg-gray-300 px-4 py-2">
+        <button className="text-sm bg-gray-200 text-gray-600 hover:bg-gray-300 px-4 py-2">
           다음 에피소드
-        </div>
+        </button>
       </div>
     </div>
   );

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import StudyCultureNote from './StudyCultureNote';
 import StudyVoca from './StudyVoca';
-import type { Dialogue } from '../../types/study';
+import type { CardDialogue } from '../../types/study';
 
 interface StudyCardProps {
-  dialogue: Dialogue;
+  dialogue: CardDialogue;
   onClose: () => void;
 }
 
