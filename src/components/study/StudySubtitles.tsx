@@ -52,9 +52,9 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({ onSelectDialogue }) => {
               </p>
               <p className="text-lg cursor-pointer hover:bg-gray-100">{d.english}</p>
 
-              <p className="text-sm text-gray-500">
+              {/* <p className="text-sm text-gray-500">
                 {d.start} → {d.end}
-              </p>
+              </p> */}
             </li>
           ))}
         </ul>
