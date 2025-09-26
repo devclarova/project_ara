@@ -14,7 +14,7 @@ interface VideoPlayerProps {
 const VideoPlayer: React.FC<VideoPlayerProps> = () => {
   const playerRef = useRef<any>(null);
   const [playing, setPlaying] = useState(false);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | undefined>(undefined);
   const { id } = useParams<{ id: string }>();
 
   // 반복 구간
