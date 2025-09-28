@@ -1,59 +1,87 @@
 import React, { useState } from 'react';
 import StudyCultureNote from './StudyCultureNote';
 import StudyVoca from './StudyVoca';
-import type { CardDialogue } from '../../types/study';
+import type { Subtitle } from '../../types/study';
 
 interface StudyCardProps {
-  dialogue: CardDialogue;
-  onClose: () => void;
+  subtitle: Subtitle | null;
+  studyId: number;
+  noteText?: string;
 }
 
-const StudyCard: React.FC<StudyCardProps> = ({ dialogue, onClose }) => {
+const secToMMSS = (sec: number | null | undefined) => {
+  if (sec == null || Number.isNaN(sec)) return '';
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+};
+
+const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) => {
   const [activeTab, setActiveTab] = useState<'words' | 'culture'>('words');
 
   return (
-    <div className="p-4 bg-primary/5 rounded-xl shadow-md space-y-4">
-      <h3 className="text-lg font-semibold">학습 카드</h3>
-      <p>
-        <strong>한국어:</strong> {dialogue.dialogue}
-      </p>
-      <p>
-        <strong>영어:</strong> (자동 번역 자리)
-      </p>
-      <p>
-        <strong>학습 포인트:</strong> {dialogue.category}
-      </p>
+    <div>
+      {/* 상단 정보 카드 */}
+      <div className="p-4 bg-primary/5 rounded-xl shadow-md space-y-3 mb-4">
+        <h3 className="text-lg font-semibold">학습 카드</h3>
 
-      {/* 탭 메뉴 */}
-      <div className="flex space-x-4 mt-4">
-        <button
-          onClick={() => setActiveTab('words')}
-          className={`px-4 py-2 rounded-lg ${
-            activeTab === 'words' ? 'bg-primary text-white' : 'bg-white text-gray-600 border'
-          }`}
-        >
-          단어 설명
-        </button>
-        <button
-          onClick={() => setActiveTab('culture')}
-          className={`px-4 py-2 rounded-lg ${
-            activeTab === 'culture' ? 'bg-primary text-white' : 'bg-white text-gray-600 border'
-          }`}
-        >
-          문화 노트
-        </button>
+        {subtitle ? (
+          <>
+            {subtitle.korean_subtitle && (
+              <p>
+                <strong>한국어:</strong> {subtitle.korean_subtitle}
+              </p>
+            )}
+            {subtitle.pronunciation && (
+              <p className="text-sm text-gray-600">
+                <strong>발음:</strong> {subtitle.pronunciation}
+              </p>
+            )}
+            {subtitle.english_subtitle && (
+              <p>
+                <strong>영어:</strong> {subtitle.english_subtitle}
+              </p>
+            )}
+            <p className="text-sm text-gray-500">
+              {secToMMSS(subtitle.subtitle_start_time)} → {secToMMSS(subtitle.subtitle_end_time)}
+              {subtitle.level ? ` · ${subtitle.level}` : ''}
+            </p>
+          </>
+        ) : (
+          <p className="text-sm text-gray-500">선택된 자막이 없습니다.</p>
+        )}
       </div>
 
-      {/* 탭 내용 */}
-      {activeTab === 'words' ? (
-        <StudyVoca words={dialogue.words} />
-      ) : (
-        <StudyCultureNote note={dialogue.cultureNote} />
-      )}
+      {/* 탭 */}
+      <div className="p-4 rounded-xl shadow-md space-y-4">
+        <div className="flex space-x-2 mt-2">
+          <button
+            onClick={() => setActiveTab('words')}
+            className={`px-4 py-2 rounded-lg transition ${
+              activeTab === 'words' ? 'bg-primary text-white' : 'bg-white text-gray-700 border'
+            }`}
+          >
+            단어 설명
+          </button>
+          <button
+            onClick={() => setActiveTab('culture')}
+            className={`px-4 py-2 rounded-lg transition ${
+              activeTab === 'culture' ? 'bg-primary text-white' : 'bg-white text-gray-700 border'
+            }`}
+          >
+            문화 노트
+          </button>
+        </div>
 
-      {/* <button onClick={onClose} className="mt-3 px-4 py-2 bg-primary text-white rounded-lg">
-        닫기
-      </button> */}
+        {/* 탭 내용 */}
+        {activeTab === 'words' ? (
+          <StudyVoca studyId={studyId} subscribeRealtime />
+        ) : noteText && noteText.trim() !== '' ? (
+          <StudyCultureNote note={noteText} />
+        ) : (
+          <StudyCultureNote studyId={studyId} />
+        )}
+      </div>
     </div>
   );
 };

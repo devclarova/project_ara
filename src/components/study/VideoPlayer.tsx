@@ -46,7 +46,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = () => {
     const fetchVideoUrl = async () => {
       try {
         const { data, error } = await supabase
-          .from('study')
+          .from('study_contents')
           .select('id, video_url')
           .eq('id', id)
           .single(); // id에 해당하는 영상 URL 가져오기
@@ -66,39 +66,53 @@ const VideoPlayer: React.FC<VideoPlayerProps> = () => {
     fetchVideoUrl();
   }, [id]); // id가 변경될 때마다 호출
 
+  // 재생/일시 정지 버튼 토글
+  const handlePlayPause = () => {
+    setPlaying(!playing);
+  };
+
   // 영상 구간 이동
   const jumpForward = () => {};
   const jumpBackward = () => {};
 
   return (
-    <div style={{ maxWidth: '100%' }}>
-      <ReactPlayer
-        ref={playerRef}
-        src={videoUrl || undefined}
-        playing={playing}
-        controls={false}
-        width="100%"
-        height="360px"
-        config={{
-          youtube: {
-            origin: window.location.origin,
-          },
-        }}
-        onReady={handleReady}
-        onPlay={() => {
-          playerRef.current?.addEventListener('timeupdate', handleTimeUpdate);
-        }}
-        onPause={() => {
-          playerRef.current?.removeEventListener('timeupdate', handleTimeUpdate);
-        }}
-      />
+    <div className="w-full max-w-4xl mx-auto">
+      <div className="rounded-xl overflow-hidden shadow-md bg-gray-100 border-2 border-gray-300">
+        <div className="rounded-t-1 overflow-hidden shadow-md bg-black/5">
+          <ReactPlayer
+            ref={playerRef}
+            src={videoUrl || undefined}
+            playing={playing}
+            controls={false}
+            width="100%"
+            height="400px"
+            config={{
+              youtube: {
+                origin: window.location.origin,
+              },
+            }}
+            onReady={handleReady}
+            onPlay={() => {
+              playerRef.current?.addEventListener('timeupdate', handleTimeUpdate);
+            }}
+            onPause={() => {
+              playerRef.current?.removeEventListener('timeupdate', handleTimeUpdate);
+            }}
+          />
+        </div>
 
-      {/* 커스텀 컨트롤 */}
-      <div className="flex space-x-2 mt-2">
-        <button onClick={() => setPlaying(true)}>▶ Play</button>
-        <button onClick={() => setPlaying(false)}>⏸ Pause</button>
-        <button onClick={jumpBackward}>⏪ -1s</button>
-        <button onClick={jumpForward}>⏩ +1s</button>
+        {/* 커스텀 컨트롤 */}
+        <div className="flex justify-center items-center gap-3">
+          <button onClick={jumpBackward} aria-label="Backward 1 second" className="p-5 text-2xl">
+            ⏪
+          </button>
+          <button onClick={handlePlayPause} aria-label="Pause:Play" className="p-5 text-2xl">
+            {playing ? '⏸' : '▶'}
+          </button>
+          <button onClick={jumpForward} aria-label="Forward 1 second" className="p-5 text-2xl">
+            ⏩
+          </button>
+        </div>
       </div>
     </div>
   );

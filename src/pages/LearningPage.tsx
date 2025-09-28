@@ -5,7 +5,7 @@ import type { Tts } from '../types/database';
 import { supabase } from '../lib/supabase';
 import { getTts, getTtsById } from '../services/ClipService';
 
-type Dialogue = {
+export type Dialogue = {
   character: string;
   timestamp: string;
   dialogue: string;
@@ -14,7 +14,7 @@ type Dialogue = {
   cultureNote: string;
 };
 
-const initialDialogues: Dialogue[] = [
+export const initialDialogues: Dialogue[] = [
   {
     character: '타요',
     timestamp: '00:32:58 → 00:34:11',

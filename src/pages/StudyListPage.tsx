@@ -1,4 +1,3 @@
-// components/FilterDropdown.tsx
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Tts } from '../types/database';
@@ -265,7 +264,7 @@ const StudyListPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       const { data, error } = await supabase
-        .from('study')
+        .from('study_contents')
         .select('*')
         .order('id', { ascending: true });
 
