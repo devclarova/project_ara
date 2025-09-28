@@ -4,6 +4,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import SignInPage from '../pages/SignInPage';
 import Modal from './Modal';
+import SignUpPage from '../pages/SignUpPage';
 
 const TopHeader = () => {
   const linkActive = 'text-primary font-medium';
@@ -18,10 +19,25 @@ const TopHeader = () => {
   const handleLogout = async () => {
     try {
       await signOut();
-      navigate('/'); // 로그아웃 후 홈으로 이동
+      // navigate('/'); // 로그아웃 후 홈으로 이동
+      navigate('/landing'); // 로그아웃 후 랜딩 페이지로 이동
     } catch (err) {
       console.error('로그아웃 실패:', err);
     }
+  };
+
+  const Logo = () => {
+    const [isSmUp, setIsSmUp] = useState(window.innerWidth >= 640);
+
+    useEffect(() => {
+      const handleResize = () => setIsSmUp(window.innerWidth >= 640);
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const logoSrc = isSmUp ? '/images/sample_font_logo.png' : '/images/sample_logo.png';
+
+    return <img src={logoSrc} alt="Ara" className="h-12 sm:h-16 w-auto" />;
   };
 
   // 라우트 변경 시 모바일 드로어 자동 닫기
@@ -34,8 +50,22 @@ const TopHeader = () => {
       <div className="max-w-screen-2xl mx-auto">
         <div className="flex justify-between items-center px-4 sm:px-6 lg:px-8 h-20">
           {/* 좌측: 로고 */}
-          <div className="flex items-center gap-8">
-            <div className="font-gungsuh text-2xl text-primary">아라</div>
+          <div className="flex items-center gap-4 md:gap-6">
+            {/* <div className="h-12 w-auto bg-[url('/images/sample_icon_logo.png')] sm:bg-[url('/images/sample_font_logo.png')] bg-contain bg-no-repeat"> */}
+            <div className="font-gungsuh text-2xl">
+              <NavLink
+                to="/"
+                className="inline-block cursor-pointer"
+                end // 홈일 때 active 적용
+              >
+                <Logo />
+              </NavLink>
+              {/* <img
+                src="/images/sample_font_logo.png"
+                alt="Ara"
+                className="h-8 sm:h-10 md:h-12 lg:h-16 w-auto"
+              /> */}
+            </div>
 
             {/* 데스크톱 메뉴 (유지) */}
             <div className="hidden sm:flex items-center gap-4 md:gap-6">
@@ -124,13 +154,15 @@ const TopHeader = () => {
             ) : (
               <>
                 <button
-                  onClick={() => setAuthOpen(true)}
+                  // onClick={() => setAuthOpen(true)}
+                  onClick={e => navigate('/signin')}
                   className="hidden sm:inline-flex items-center justify-center border border-transparent text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-[32px] px-[22px] h-[42px]"
                 >
                   로그인
                 </button>
                 <Modal title="🔑 로그인" isOpen={authOpen} onClose={() => setAuthOpen(false)}>
-                  <SignInPage onSuccess={() => setAuthOpen(false)} />
+                  <SignInPage />
+                  <SignUpPage />
                 </Modal>
               </>
             )}
