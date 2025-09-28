@@ -26,7 +26,7 @@ import CommunityListPage from './pages/CommunityListPage';
 import HomePage from './pages/HomePage';
 import LandingPage from './pages/LandingPage';
 import TopHeader from './components/TopHeader';
-import SignUpPage from './pages/SignupPage';
+import SignUpPage from './pages/SignUpPage';
 import LearningPage from './pages/LearningPage';
 
 const App = () => {

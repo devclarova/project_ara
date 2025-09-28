@@ -11,7 +11,9 @@
 }
 
 .footer {
-  background: #ff6b6b;
+  /* background: #ff6b6b; */
+  background: #00bfa5;
+  /* background: #1c1c3c; */
   padding: 0 30px;
 }
 
