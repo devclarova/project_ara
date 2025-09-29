@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Tts } from '../types/database';
+
 import { supabase } from '../lib/supabase';
 import placeholder from '../assets/placeholder.png';
 import Input from '../components/Input';
+import type { Study } from '../types/study';
 
 const FilterDropdown = () => {
   const [open, setOpen] = useState(false);
@@ -107,13 +108,12 @@ const CategoryTabs = () => {
   );
 };
 
-// components/ContentCard.tsx
 type Props = {
   id: number;
-  image: string | null;
+  image?: string | null;
   title: string;
-  subtitle: string;
-  desc: string;
+  // subtitle: string;
+  // desc: string;
   level: string;
   levelColor: string;
   duration: string;
@@ -124,8 +124,8 @@ const ContentCard = ({
   id,
   image,
   title,
-  subtitle,
-  desc,
+  // subtitle,
+  // desc,
   level,
   levelColor,
   duration,
@@ -136,13 +136,14 @@ const ContentCard = ({
   return (
     <div
       onClick={() => navigate(`/study/${id}`)}
-      className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 card-hover cursor-pointer"
+      className="group relative bg-gray-50 rounded-xl p-6 cursor-pointer shadow-sm hover:shadow-md transition"
     >
-      <div className="relative">
+      {/* 이미지 */}
+      <div className="w-44 h-32 sm:w-52 sm:h-36 bg-white rounded-md mx-auto flex items-center justify-center overflow-hidden">
         <img
           src={image ? image : placeholder}
           alt={title}
-          className="w-full h-48 object-cover object-top"
+          className="w-full h-full object-cover object-center"
         />
         <div
           className={`absolute top-3 right-3 ${levelColor} text-white px-2 py-1 rounded text-xs font-medium`}
@@ -150,26 +151,31 @@ const ContentCard = ({
           {level}
         </div>
       </div>
-      <div className="p-4">
-        <h3 className="font-bold text-lg text-gray-900 mb-1 truncate">{title}</h3>
-        <p className="text-sm text-gray-500 mb-2">{subtitle}</p>
-        <p className="text-sm text-gray-700 mb-3 truncate">{desc}</p>
-        <div className="flex items-center gap-4 text-xs text-gray-400">
-          <div className="flex items-center gap-1">
-            <i className="ri-time-line" />
-            {duration}
-          </div>
-          <div className="flex items-center gap-1">
-            <i className="ri-chat-3-line" />
-            {comments}
-          </div>
+
+      {/* 본문 */}
+      <div className="mt-4 text-center">
+        <h3 className="font-semibold text-gray-900 truncate">{title}</h3>
+        <p className="mt-1 text-sm text-gray-500">
+          난이도: {level} · 시간: {duration}
+        </p>
+      </div>
+
+      {/* Hover 오버레이 */}
+      <div className="pointer-events-none absolute inset-0 rounded-xl bg-primary/10 opacity-0 group-hover:opacity-100 transition" />
+
+      {/* Hover 내용(중앙 요약 박스) */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+        <div className="bg-white/70 backdrop-blur-sm rounded-lg px-4 py-3 text-center">
+          <div className="text-sm font-semibold text-gray-900 truncate">{title}</div>
+          <div className="mt-1 text-xs text-gray-600">짧은 소개</div>
+          <div className="mt-1 text-xs text-gray-500">난이도: {level}</div>
+          <div className="text-xs text-gray-500">시간: {duration}</div>
         </div>
       </div>
     </div>
   );
 };
 
-// components/BottomNav.tsx
 const items = [
   { icon: 'ri-home-line', label: '홈' },
   { icon: 'ri-book-open-line', label: '학습' },
@@ -258,13 +264,13 @@ export const InflearnNav = () => {
 };
 
 const StudyListPage = () => {
-  const [clips, setClips] = useState<Tts[]>([]);
+  const [clips, setClips] = useState<Study[]>([]);
   const [keyword, setKeyword] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       const { data, error } = await supabase
-        .from('study_contents')
+        .from('study')
         .select('*')
         .order('id', { ascending: true });
 
@@ -300,18 +306,18 @@ const StudyListPage = () => {
           />
         </div> */}
         {/* 카드 그리드 */}
-        <div className="grid gap-6 mb-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 p-6">
           {/* DB 에서 카드 불러오기 */}
-          {clips.map(clip => (
+          {clips.map(study => (
             <ContentCard
-              key={clip.id}
-              id={clip.id} // DB id 전달
+              key={study.id}
+              id={study.id} // DB id 전달
               // image="https://image.tmdb.org/t/p/original/7jryPmL3F0Wqv5U51SZrGQcPXfE.jpg" // 임시 이미지 (DB에 image 필드 있으면 교체)
               // image="https://image.tmdb.org/t/p/original/57I1A2oQeVDZtfcKKVPJHffYTU3.jpg" // 임시 이미지 (DB에 image 필드 있으면 교체)
-              image={clip.imgUrl} // 임시 이미지 (DB에 image 필드 있으면 교체)
-              title={clip.dialogue || '제목 없음'}
-              subtitle={`${clip.start} ~ ${clip.end}`}
-              desc={clip.english || '설명 없음'}
+              image={study.poster_image_url} // 임시 이미지 (DB에 image 필드 있으면 교체)
+              title={study.title || '제목 없음'}
+              // subtitle={`${study.start} ~ ${study.end}`}
+              // desc={study.english || '설명 없음'}
               level="초급" // 필요하다면 clip.difficulty_level 활용
               levelColor="bg-primary"
               duration="10분" // runtime 같은 필드 있으면 대체 가능
