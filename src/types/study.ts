@@ -6,6 +6,7 @@ export interface Study {
   id: number;
   title: string;
   created_at: string; // ISO timestamp
+  poster_image_url: string;
 }
 
 // 2. Subtitle (자막)

@@ -22,10 +22,10 @@ const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) =>
   return (
     <div>
       {/* 상단 정보 카드 */}
-      <div className="p-4 bg-primary/5 rounded-xl shadow-md space-y-3 mb-4">
+      <div className="p-4 rounded-xl shadow-md space-y-3 mb-4">
         <h3 className="text-lg font-semibold">학습 카드</h3>
 
-        {subtitle ? (
+        {/* {subtitle ? (
           <>
             {subtitle.korean_subtitle && (
               <p>
@@ -49,38 +49,38 @@ const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) =>
           </>
         ) : (
           <p className="text-sm text-gray-500">선택된 자막이 없습니다.</p>
-        )}
-      </div>
+        )} */}
 
-      {/* 탭 */}
-      <div className="p-4 rounded-xl shadow-md space-y-4">
-        <div className="flex space-x-2 mt-2">
-          <button
-            onClick={() => setActiveTab('words')}
-            className={`px-4 py-2 rounded-lg transition ${
-              activeTab === 'words' ? 'bg-primary text-white' : 'bg-white text-gray-700 border'
-            }`}
-          >
-            단어 설명
-          </button>
-          <button
-            onClick={() => setActiveTab('culture')}
-            className={`px-4 py-2 rounded-lg transition ${
-              activeTab === 'culture' ? 'bg-primary text-white' : 'bg-white text-gray-700 border'
-            }`}
-          >
-            문화 노트
-          </button>
+        {/* 탭 */}
+        <div className="p-4 space-y-4">
+          <div className="flex space-x-2 mt-2">
+            <button
+              onClick={() => setActiveTab('words')}
+              className={`px-4 py-2 rounded-lg transition ${
+                activeTab === 'words' ? 'bg-primary text-white' : 'bg-white text-gray-700 border'
+              }`}
+            >
+              단어 설명
+            </button>
+            <button
+              onClick={() => setActiveTab('culture')}
+              className={`px-4 py-2 rounded-lg transition ${
+                activeTab === 'culture' ? 'bg-primary text-white' : 'bg-white text-gray-700 border'
+              }`}
+            >
+              문화 노트
+            </button>
+          </div>
+
+          {/* 탭 내용 */}
+          {activeTab === 'words' ? (
+            <StudyVoca studyId={studyId} subscribeRealtime />
+          ) : noteText && noteText.trim() !== '' ? (
+            <StudyCultureNote note={noteText} />
+          ) : (
+            <StudyCultureNote studyId={studyId} />
+          )}
         </div>
-
-        {/* 탭 내용 */}
-        {activeTab === 'words' ? (
-          <StudyVoca studyId={studyId} subscribeRealtime />
-        ) : noteText && noteText.trim() !== '' ? (
-          <StudyCultureNote note={noteText} />
-        ) : (
-          <StudyCultureNote studyId={studyId} />
-        )}
       </div>
     </div>
   );

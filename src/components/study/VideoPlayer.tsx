@@ -46,9 +46,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = () => {
     const fetchVideoUrl = async () => {
       try {
         const { data, error } = await supabase
-          .from('study_contents')
+          .from('video')
           .select('id, video_url')
-          .eq('id', id)
+          .eq('study_id', id)
           .single(); // id에 해당하는 영상 URL 가져오기
 
         if (error) {
