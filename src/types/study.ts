@@ -7,6 +7,7 @@ export interface Study {
   title: string;
   created_at: string; // ISO timestamp
   poster_image_url: string;
+  short_description: string;
 }
 
 // 2. Subtitle (자막)
@@ -27,12 +28,12 @@ export interface Video {
   study_id: number;
   categories: string | null;
   contents: string | null;
-  episode: number | null;
-  scene: string | null;
-  start_time: number | null; // 초 단위
-  end_time: number | null; // 초 단위
-  video_url: string | null;
-  runtime: number | null; // 자동 계산된 러닝타임
+  episode?: number | null;
+  scene?: string | null;
+  start_time?: number | null; // 초 단위
+  end_time?: number | null; // 초 단위
+  video_url?: string | null;
+  runtime?: number | null; // 자동 계산된 러닝타임
 }
 
 // 4. Culture Note (문화포인트)

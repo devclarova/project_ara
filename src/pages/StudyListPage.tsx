@@ -114,6 +114,7 @@ type Props = {
   title: string;
   // subtitle: string;
   // desc: string;
+  short_description: string;
   level: string;
   levelColor: string;
   duration: string;
@@ -126,6 +127,7 @@ const ContentCard = ({
   title,
   // subtitle,
   // desc,
+  short_description,
   level,
   levelColor,
   duration,
@@ -156,7 +158,7 @@ const ContentCard = ({
       <div className="mt-4 text-center">
         <h3 className="font-semibold text-gray-900 truncate">{title}</h3>
         <p className="mt-1 text-sm text-gray-500">
-          난이도: {level} · 시간: {duration}
+          {level} · {duration}
         </p>
       </div>
 
@@ -165,11 +167,11 @@ const ContentCard = ({
 
       {/* Hover 내용(중앙 요약 박스) */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-        <div className="bg-white/70 backdrop-blur-sm rounded-lg px-4 py-3 text-center">
+        <div className="bg-white/85 backdrop-blur-sm rounded-lg w-56 h-56 p-4 text-center flex flex-col justify-center">
           <div className="text-sm font-semibold text-gray-900 truncate">{title}</div>
-          <div className="mt-1 text-xs text-gray-600">짧은 소개</div>
-          <div className="mt-1 text-xs text-gray-500">난이도: {level}</div>
-          <div className="text-xs text-gray-500">시간: {duration}</div>
+          <div className="mt-1 text-xs text-gray-600 line-clamp-2">설명 : {short_description}</div>
+          <div className="mt-1 text-xs text-gray-500">난이도 : {level}</div>
+          <div className="text-xs text-gray-500">시간 : {duration}</div>
         </div>
       </div>
     </div>
@@ -306,7 +308,7 @@ const StudyListPage = () => {
           />
         </div> */}
         {/* 카드 그리드 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 p-6">
           {/* DB 에서 카드 불러오기 */}
           {clips.map(study => (
             <ContentCard
@@ -318,6 +320,7 @@ const StudyListPage = () => {
               title={study.title || '제목 없음'}
               // subtitle={`${study.start} ~ ${study.end}`}
               // desc={study.english || '설명 없음'}
+              short_description={study.short_description}
               level="초급" // 필요하다면 clip.difficulty_level 활용
               levelColor="bg-primary"
               duration="10분" // runtime 같은 필드 있으면 대체 가능

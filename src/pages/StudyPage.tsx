@@ -5,60 +5,61 @@ import StudyCard from '../components/study/StudyCard';
 import StudySubtitles from '../components/study/StudySubtitles';
 import VideoPlayer from '../components/study/VideoPlayer';
 import { supabase } from '../lib/supabase';
-import { getTts } from '../services/ClipService';
-import type { Tts } from '../types/database';
+// import { getTts } from '../services/ClipService';
+// import type { Tts } from '../types/database';
 import type { Subtitle } from '../types/study';
 
-type VideoMap = Record<string, string>;
+// 이 페이지에서 실제로 사용하는 video 행 타입을 로컬로 정의(컬럼명과 일치)
+type VideoRow = {
+  id: number;
+  categories: string | null;
+  contents: string | null; // 작품/콘텐츠 이름
+  episode: string | null; // ← 오타 주의: epsode 아님
+  scene: string | number | null;
+  runtime: string | null; // 예: "1:50" 등
+  image_url: string | null;
+};
 
 const StudyPage = () => {
   const { id } = useParams<{ id: string }>();
 
-  // ✅ 라우트 파라미터 → 숫자 studyId로 변환 (NaN 방지용 가드 포함)
+  // 숫자 변환 가드
   const studyId = useMemo(() => {
     const n = Number(id);
     return Number.isFinite(n) ? n : undefined;
   }, [id]);
 
-  const [viewCount, setViewCount] = useState(0);
-  // 현재는 미사용이면 일단 주석 처리해도 됩니다.
-  // const [clip, setClip] = useState<Tts | null>(null);
-  // const [videoMapTest, setVideoMapTest] = useState<VideoMap>({});
   const [selectedSubtitle, setSelectedSubtitle] = useState<Subtitle | null>(null);
+  const [study, setStudy] = useState<VideoRow | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleSelectDialogue = (s: Subtitle) => {
-    setSelectedSubtitle(s);
-  };
+  const handleSelectDialogue = (s: Subtitle) => setSelectedSubtitle(s);
 
-  // 페이지 클릭시 조회수 증가
+  // video 단건 조회
   useEffect(() => {
-    const incrementViewCount = async () => {
+    if (studyId === undefined) return;
+
+    const fetchStudy = async () => {
+      setLoading(true);
       const { data, error } = await supabase
-        .from('study_progress')
-        .select('view_count')
-        .eq('episode', 'Episode 1')
-        .single();
+        .from('video')
+        .select('id,categories,contents,episode,scene,runtime,image_url')
+        .eq('id', studyId)
+        .maybeSingle();
 
-      if (error) return;
-
-      if (data && typeof data.view_count === 'number') {
-        const updatedViewCount = data.view_count + 1;
-        const { error: updateError } = await supabase
-          .from('study_progress')
-          .update({ view_count: updatedViewCount, updated_at: new Date().toISOString() })
-          .eq('episode', 'Episode 1');
-
-        if (!updateError) setViewCount(updatedViewCount);
+      if (error) {
+        console.error('study fetch error:', error);
       }
+      setStudy((data as VideoRow) ?? null);
+      setLoading(false);
     };
 
-    incrementViewCount();
-  }, []);
+    fetchStudy();
+  }, [studyId]);
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="p-1 max-w-5xl mx-auto">
-        {/* 카테고리 */}
         <div className="flex items-center mb-3 gap-1">
           <NavLink
             to="/studyList"
@@ -70,6 +71,8 @@ const StudyPage = () => {
           >
             카테고리
           </NavLink>
+
+          {/* 두 번째 탭: 작품(콘텐츠)명 */}
           <NavLink
             to="/dramaList"
             className={({ isActive }) =>
@@ -78,8 +81,10 @@ const StudyPage = () => {
                 : 'text-gray-600 hover:text-gray-900 text-m mr-6'
             }
           >
-            도깨비
+            {loading ? '로딩 중' : (study?.contents ?? '제목 없음')}
           </NavLink>
+
+          {/* 세 번째 탭: 에피소드 */}
           <NavLink
             to="/study"
             className={({ isActive }) =>
@@ -88,15 +93,26 @@ const StudyPage = () => {
                 : 'text-gray-600 hover:text-gray-900 text-m mr-6'
             }
           >
-            Episode 1
+            {loading ? '로딩 중' : (study?.episode ?? 'Episode 1')}
           </NavLink>
         </div>
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">도깨비 Episode 1 - Scene 1</h1>
+        {/* 상단 타이틀 */}
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">
+          {loading
+            ? '로딩 중...'
+            : `${study?.contents ?? '제목 없음'} ${study?.episode ? `- ${study.episode}` : ''}${
+                study?.scene ? ` - Scene ${study.scene}` : ''
+              }`}
+        </h1>
 
+        {/* 진행바: 임시 고정 */}
         <Progress percent={30} size="default" strokeColor="#ff5733" />
+
+        {/* 메타 정보 라인: 시간/난이도(임시)/카테고리 */}
         <div className="flex items-center gap-5 text-sm text-gray-600">
           <span className="flex items-center gap-1">
+            {/* 시간(runtime) */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -109,9 +125,10 @@ const StudyPage = () => {
                 fill="#4B5563"
               />
             </svg>
-            1:50
+            {loading ? '—' : (study?.runtime ?? '—')}
           </span>
           <span className="flex items-center gap-1">
+            {/* 난이도: video에 없으면 임시로 표기 */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -126,6 +143,7 @@ const StudyPage = () => {
             </svg>
             초급
           </span>
+
           <span className="flex items-center gap-1">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -139,7 +157,7 @@ const StudyPage = () => {
                 fill="#4B5563"
               />
             </svg>
-            {viewCount} 회 시청
+            조회수
           </span>
         </div>
       </div>
@@ -147,14 +165,10 @@ const StudyPage = () => {
       {/* 영상 플레이어 */}
       <VideoPlayer />
 
-      {/* 자막 리스트: studyId가 유효할 때만 전달 */}
-      <StudySubtitles
-        onSelectDialogue={handleSelectDialogue}
-        studyId={studyId} // undefined면 내부에서 useParams로 처리 가능하도록 구현
-        subscribeRealtime
-      />
+      {/* 자막 리스트 */}
+      <StudySubtitles onSelectDialogue={handleSelectDialogue} studyId={studyId} subscribeRealtime />
 
-      {/* 학습 카드: studyId 필수이므로 가드 */}
+      {/* 학습 카드 */}
       {studyId !== undefined && <StudyCard subtitle={selectedSubtitle} studyId={studyId} />}
 
       {/* 총 회차 진행률 */}
@@ -165,9 +179,7 @@ const StudyPage = () => {
             총 회차 진행률 <span className="text-m font-semibold text-red-400">35%</span>
           </span>
         </div>
-        <button className="text-sm text-gray-600 hover:text-gray-900 px-4 py-2 flex items-center gap-2 hover:scale-110 transition-transform duration-200">
-          {/* 아이콘 생략 */}
-        </button>
+        <button className="text-sm text-gray-600 hover:text-gray-900 px-4 py-2 flex items-center gap-2 hover:scale-110 transition-transform duration-200"></button>
       </div>
     </div>
   );
