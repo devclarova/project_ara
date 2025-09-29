@@ -60,37 +60,69 @@ const StudyPage = () => {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="p-1 max-w-5xl mx-auto">
-        <div className="flex items-center mb-3 gap-1">
-          <NavLink
-            to="/studyList"
-            className={({ isActive }) =>
-              isActive
-                ? 'text-primary font-medium text-m mr-6'
-                : 'text-gray-600 hover:text-gray-900 text-m mr-6'
-            }
-          >
-            카테고리
-          </NavLink>
+        <div className="flex items-center mb-2 gap-1">
+          <div className="flex items-center gap-1">
+            <NavLink
+              to="/studyList"
+              className={({ isActive }) =>
+                isActive
+                  ? 'text-primary font-medium text-m'
+                  : 'text-gray-600 hover:text-gray-900 text-m'
+              }
+            >
+              카테고리
+            </NavLink>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M9 5L16 12L9 19"
+                stroke="gray"
+                strokeWidth="1"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
 
-          {/* 두 번째 탭: 작품(콘텐츠)명 */}
-          <NavLink
-            to="/dramaList"
-            className={({ isActive }) =>
-              isActive
-                ? 'text-primary font-medium text-m mr-6'
-                : 'text-gray-600 hover:text-gray-900 text-m mr-6'
-            }
-          >
-            {loading ? '로딩 중' : (study?.contents ?? '제목 없음')}
-          </NavLink>
+          <div className="flex items-center gap-1">
+            <NavLink
+              to="/dramaList"
+              className={({ isActive }) =>
+                isActive
+                  ? 'text-primary font-medium text-m'
+                  : 'text-gray-600 hover:text-gray-900 text-m'
+              }
+            >
+              {loading ? '로딩 중' : (study?.contents ?? '제목 없음')}
+            </NavLink>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M9 5L16 12L9 19"
+                stroke="gray"
+                strokeWidth="1"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
 
-          {/* 세 번째 탭: 에피소드 */}
           <NavLink
             to="/study"
             className={({ isActive }) =>
               isActive
-                ? 'text-primary font-medium text-m mr-6'
-                : 'text-gray-600 hover:text-gray-900 text-m mr-6'
+                ? 'text-primary font-medium text-m'
+                : 'text-gray-600 hover:text-gray-900 text-m'
             }
           >
             {loading ? '로딩 중' : (study?.episode ?? 'Episode 1')}
