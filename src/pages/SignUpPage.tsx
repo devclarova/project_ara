@@ -24,43 +24,56 @@ function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+    <div className="min-h-16 flex items-center justify-center p-10">
+      <div className="w-full max-w-2xl rounded-2xl p-8">
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Create an Ara Account</h2>
         <div>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="Email"
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <input
               type="password"
               value={pw}
               onChange={e => setPw(e.target.value)}
               placeholder="Password"
-              className="px-4 py-3 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <input
+              type="password"
+              value={pw}
+              onChange={e => setPw(e.target.value)}
+              placeholder="Password"
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <input
               type="text"
               value={nickname}
               onChange={e => setNickname(e.target.value)}
               placeholder="Nickname"
-              className="px-4 py-3 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <input
               type="date"
               value={birth}
               onChange={e => setBirth(e.target.value)}
               placeholder="Birth"
-              className="px-4 py-3 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <CountrySelect value={country} onChange={setCountry} />
+
+            <div className="flex flex-col items-center mt-4">
+              <label className="mb-2 font-semibold text-gray-700">Select Profile Picture</label>
+              <input type="file" accept="image/*" className="border p-2 rounded" />
+            </div>
+
             <button
               type="submit"
-              className="bg-primary text-white font-semibold py-3 rounded-lg hover:bg-secondary transition-colors"
+              className="bg-primary text-white font-semibold py-3 rounded-lg hover:opacity-75 transition-colors"
             >
               회원가입
             </button>

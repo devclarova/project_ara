@@ -24,7 +24,7 @@ export default function CountrySelect({ value, onChange }: CountrySelectProps) {
     <select
       value={value}
       onChange={e => onChange(e.target.value)}
-      className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+      className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
     >
       <option value="">Select country</option>
       {countries.map(c => (
