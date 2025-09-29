@@ -8,7 +8,7 @@ import SignUpPage from '../pages/SignUpPage';
 
 const TopHeader = () => {
   const linkActive = 'text-primary font-medium';
-  const linkBase = 'text-gray-600 hover:text-gray-900';
+  const linkBase = 'text-gray-600 hover:text-secondary focus:text-primary';
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 

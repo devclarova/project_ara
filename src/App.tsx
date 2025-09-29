@@ -28,6 +28,7 @@ import LandingPage from './pages/LandingPage';
 import TopHeader from './components/TopHeader';
 import SignUpPage from './pages/SignUpPage';
 import LearningPage from './pages/LearningPage';
+import Header from './components/common/Header';
 
 const App = () => {
   return (
@@ -36,7 +37,7 @@ const App = () => {
         <Router>
           <div className="layout min-h-screen flex flex-col">
             {/* 공통 헤더 */}
-            <TopHeader />
+            <Header />
 
             <main className="flex-1">
               <Routes>

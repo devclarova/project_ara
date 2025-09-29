@@ -38,12 +38,14 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 function SignInPage() {
   const { signIn } = useAuth();
   const [email, setEmail] = useState<string>('');
   const [pw, setPw] = useState<string>('');
   const [msg, setMsg] = useState<string>('');
+  const navigate = useNavigate();
 
   const handleSumit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -97,7 +99,7 @@ function SignInPage() {
           </div>
           <button
             type="submit"
-            className="w-full bg-primary text-white py-2 sm:py-3 rounded-lg font-semibold hover:bg-red-500 transition-colors text-sm sm:text-base"
+            className="w-full bg-primary text-white py-2 sm:py-3 rounded-lg font-semibold hover:opacity-80 text-sm sm:text-base"
           >
             Sign In
           </button>
@@ -105,7 +107,12 @@ function SignInPage() {
 
         <p className="mt-4 text-center text-sm sm:text-base text-gray-500">
           New here? Create an account.{' '}
-          <span className="text-primary font-medium cursor-pointer">Sign Up</span>
+          <span
+            onClick={e => navigate('/signup')}
+            className="text-primary font-medium cursor-pointer"
+          >
+            Sign Up
+          </span>
         </p>
 
         <div className="mt-4 flex items-center justify-center text-gray-400 text-sm sm:text-base">

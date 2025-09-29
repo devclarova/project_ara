@@ -58,7 +58,8 @@ a:hover {
 a:focus {
   color: #1e40af;
   /* var 는 css 에서 변수 사용하는 경우 */
-  outline: 2px solid var(--primary-500);
+  /* outline: 2px solid var(--primary-500); */
+  outline: none;
   outline-offset: 2px;
 }
 
