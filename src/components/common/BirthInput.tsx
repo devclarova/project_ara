@@ -9,47 +9,30 @@ function pad(n: number) {
 interface BirthInputProps {
   value: Date | null;
   onChange: (date: Date | null) => void;
-  error?: boolean; // 추가
+  error?: boolean;
+  errorMessage?: string;
 }
 
-export default function BirthInput({ value, onChange, error }: BirthInputProps): JSX.Element {
-  const [inputValue, setInputValue] = useState('');
+export default function BirthInput({
+  value,
+  onChange,
+  error = false,
+  errorMessage = 'Enter your date of birth.',
+}: BirthInputProps): JSX.Element {
+  const [inputValue, setInputValue] = useState(value ? formatFromDate(value) : '');
   const inputRef = useRef<HTMLInputElement>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(value);
   const [open, setOpen] = useState<boolean>(false);
-
   const [viewYear, setViewYear] = useState<number>(new Date().getFullYear());
   const [viewMonth, setViewMonth] = useState<number>(new Date().getMonth());
-
   const rootRef = useRef<HTMLDivElement | null>(null);
 
-  const formatFromDate = (d: Date) =>
-    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  function formatFromDate(d: Date) {
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
 
-  const formatInput = (raw: string) => {
+  const parseInputToDate = (raw: string): Date | null => {
     const digits = raw.replace(/[^0-9]/g, '');
-    let res = digits;
-    if (digits.length > 4) res = digits.slice(0, 4) + '-' + res.slice(4);
-    if (digits.length > 6) res = res.slice(0, 7) + '-' + res.slice(7, 9);
-    if (res.length > 10) res = res.slice(0, 10);
-    return res;
-  };
-
-  const handleDateChange = (date: Date | null) => {
-    onChange(date);
-    if (date) {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, '0');
-      const d = String(date.getDate()).padStart(2, '0');
-      setInputValue(`${y}-${m}-${d}`);
-    } else {
-      setInputValue('');
-    }
-    (document.activeElement as HTMLElement)?.blur();
-  };
-
-  const parsePartialToDate = (formatted: string): Date | null => {
-    const digits = formatted.replace(/[^0-9]/g, '');
     if (digits.length < 4) return null;
     const y = Number(digits.slice(0, 4));
     if (Number.isNaN(y)) return null;
@@ -65,66 +48,25 @@ export default function BirthInput({ value, onChange, error }: BirthInputProps):
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatInput(e.target.value);
-    setInputValue(formatted);
-
-    const maybeDate = parsePartialToDate(formatted);
-    if (maybeDate) {
-      setSelectedDate(maybeDate);
-      setViewYear(maybeDate.getFullYear());
-      setViewMonth(maybeDate.getMonth());
-    } else {
-      const digits = formatted.replace(/[^0-9]/g, '');
-      if (digits.length >= 4) {
-        const y = Number(digits.slice(0, 4));
-        if (!Number.isNaN(y)) {
-          setViewYear(y);
-          if (digits.length >= 6) {
-            const m = Number(digits.slice(4, 6));
-            if (!Number.isNaN(m) && m >= 1 && m <= 12) setViewMonth(m - 1);
-          }
-        }
-      }
-    }
+    const raw = e.target.value;
+    setInputValue(raw);
+    const parsed = parseInputToDate(raw);
+    setSelectedDate(parsed);
+    onChange(parsed);
     setOpen(true);
-  };
-
-  const handleInputFocus = () => {
-    if (!open) {
-      // 달력이 이미 열려 있으면 다시 열지 않음
-      setOpen(true);
-    }
-
-    const parsed = parsePartialToDate(inputValue);
     if (parsed) {
       setViewYear(parsed.getFullYear());
       setViewMonth(parsed.getMonth());
-    } else if (selectedDate) {
-      setViewYear(selectedDate.getFullYear());
-      setViewMonth(selectedDate.getMonth());
-    } else {
-      const now = new Date();
-      setViewYear(now.getFullYear());
-      setViewMonth(now.getMonth());
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      const parsed = parsePartialToDate(inputValue);
-      if (parsed) setSelectedDate(parsed);
-      setOpen(false);
-      inputRef.current?.blur();
     }
   };
 
   const handleDateClick = (d: Date) => {
     setSelectedDate(d);
     setInputValue(formatFromDate(d));
+    onChange(d);
     setViewYear(d.getFullYear());
     setViewMonth(d.getMonth());
-    setOpen(false); // 달력 닫기
-    // inputRef.current?.focus(); <-- 이 줄 제거!
+    setOpen(false);
   };
 
   const prevMonth = () => {
@@ -132,6 +74,7 @@ export default function BirthInput({ value, onChange, error }: BirthInputProps):
     setViewYear(date.getFullYear());
     setViewMonth(date.getMonth());
   };
+
   const nextMonth = () => {
     const date = new Date(viewYear, viewMonth + 1, 1);
     setViewYear(date.getFullYear());
@@ -141,6 +84,7 @@ export default function BirthInput({ value, onChange, error }: BirthInputProps):
   const handleClear = () => {
     setInputValue('');
     setSelectedDate(null);
+    onChange(null);
     setOpen(false);
     inputRef.current?.focus();
   };
@@ -172,59 +116,52 @@ export default function BirthInput({ value, onChange, error }: BirthInputProps):
   };
 
   const days = buildDaysGrid(viewYear, viewMonth);
-  useEffect(() => {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(inputValue)) {
-      const y = Number(inputValue.slice(0, 4));
-      const m = Number(inputValue.slice(5, 7));
-      const d = Number(inputValue.slice(8, 10));
-      const date = new Date(y, m - 1, d);
-      if (
-        !Number.isNaN(date.getTime()) &&
-        date.getFullYear() === y &&
-        date.getMonth() === m - 1 &&
-        date.getDate() === d
-      ) {
-        setSelectedDate(date);
-        setViewYear(date.getFullYear());
-        setViewMonth(date.getMonth());
-      }
-    }
-  }, [inputValue]);
 
   return (
-    <div className="relative w-full max-w-full" ref={rootRef}>
-      <div className="relative">
+    <div className="w-full relative" ref={rootRef}>
+      <div className="relative w-full">
         <input
           ref={inputRef}
           type="text"
           value={inputValue}
-          placeholder="yyyy-mm-dd"
           onChange={handleInputChange}
-          onFocus={handleInputFocus}
-          onKeyDown={handleKeyDown}
-          className={`w-full px-4 h-12 rounded-lg border text-gray-900 focus:outline-none focus:ring-0
-    ${error ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300 focus:border-[#00BFA5] focus:shadow-[0_0_0_2px_rgba(0,191,165,0.5)]'}`}
+          onFocus={() => setOpen(true)}
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              const parsed = parseInputToDate(inputValue);
+              if (parsed) {
+                setSelectedDate(parsed);
+                setInputValue(formatFromDate(parsed));
+                onChange(parsed);
+                setViewYear(parsed.getFullYear());
+                setViewMonth(parsed.getMonth());
+                setOpen(false);
+                inputRef.current?.blur();
+              } else {
+                console.warn('Please enter the date in a valid format.');
+              }
+            }
+          }}
+          placeholder=" "
+          className={`peer w-full px-3 py-3 border rounded-lg bg-white text-black text-sm
+      focus:outline-none focus:ring-2 focus:ring-primary
+      ${error ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300'}`}
         />
-        {/* 달력 아이콘 */}
+        <label
+          className={`absolute left-3 transition-all text-gray-400 bg-white/95 px-1 rounded
+      ${inputValue ? '-top-2 text-xs' : 'top-3 text-sm'}
+      peer-focus:-top-3 peer-focus:text-xs peer-focus:text-primary`}
+        >
+          Birthday
+        </label>
         <button
           type="button"
-          onClick={() => {
-            setOpen(o => !o);
-            const parsed = parsePartialToDate(inputValue);
-            if (parsed) {
-              setViewYear(parsed.getFullYear());
-              setViewMonth(parsed.getMonth());
-            } else if (selectedDate) {
-              setViewYear(selectedDate.getFullYear());
-              setViewMonth(selectedDate.getMonth());
-            }
-            inputRef.current?.focus();
-          }}
+          onClick={() => setOpen(o => !o)}
           className="absolute right-8 top-1/2 -translate-y-1/2 px-1 text-gray-500 hover:text-gray-700"
         >
           📅
         </button>
-        {/* X 버튼: 입력이 있을 때만 */}
         {inputValue && (
           <button
             type="button"
@@ -236,11 +173,12 @@ export default function BirthInput({ value, onChange, error }: BirthInputProps):
         )}
       </div>
 
-      {/* Calendar popup */}
+      {error && <p className="text-red-500 text-xs sm:text-sm mt-1">{errorMessage}</p>}
+
       {open && (
         <div
           className="absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg z-20"
-          onMouseDown={e => e.stopPropagation()} // 이게 핵심!
+          onMouseDown={e => e.stopPropagation()}
         >
           <div className="flex items-center justify-between px-3 py-2 border-b">
             <button onClick={prevMonth} className="px-2 py-1 rounded hover:bg-gray-100">
@@ -286,21 +224,6 @@ export default function BirthInput({ value, onChange, error }: BirthInputProps):
                 </button>
               );
             })}
-          </div>
-          <div className="flex items-center justify-between px-3 py-2 border-t">
-            <button
-              type="button"
-              onClick={() => {
-                const t = new Date();
-                setViewYear(t.getFullYear());
-                setViewMonth(t.getMonth());
-                handleDateClick(t);
-              }}
-              className="text-sm px-2 py-1 rounded hover:bg-gray-100"
-            >
-              Today
-            </button>
-            <div className="text-xs text-gray-500">Type to jump months/years</div>
           </div>
         </div>
       )}

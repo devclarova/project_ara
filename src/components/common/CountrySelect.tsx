@@ -1,4 +1,4 @@
-import Select, { components } from 'react-select';
+import Select, { components, type SingleValue } from 'react-select';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { ChevronDown, ChevronUp } from 'lucide-react';
@@ -14,7 +14,7 @@ interface Country {
 interface CountrySelectProps {
   value: string;
   onChange: (value: string) => void;
-  className?: string;
+  error?: boolean;
 }
 
 const CustomDropdownIndicator = (props: any) => {
@@ -27,63 +27,9 @@ const CustomDropdownIndicator = (props: any) => {
   );
 };
 
-const customStyles = {
-  // Select 컨트롤 전체
-  control: (provided: any, state: any) => ({
-    ...provided,
-    minHeight: '3rem', // input py-3 기준 높이
-    height: '3rem',
-    padding: '0 1rem', // px-4
-    borderColor: state.isFocused ? '#00BFA5' : '#D1D5DB', // focus ring color / default gray
-    borderRadius: '1rem', // rounded-lg
-    boxShadow: state.isFocused ? '0 0 0 2px rgba(0,191,165,0.5)' : 'none',
-    '&:hover': {
-      borderColor: state.isFocused ? '#00BFA5' : '#D1D5DB',
-    },
-  }),
-
-  // 값 영역
-  valueContainer: (provided: any) => ({
-    ...provided,
-    height: '3rem',
-    padding: '0 0', // padding은 control에서 처리
-    display: 'flex',
-    alignItems: 'center', // 텍스트 수직 가운데 정렬
-  }),
-
-  // 실제 입력 텍스트
-  input: (provided: any) => ({
-    ...provided,
-    margin: 0,
-    padding: 0,
-  }),
-
-  // 선택된 단일 값 텍스트
-  singleValue: (provided: any) => ({
-    ...provided,
-    color: '#111827', // text-gray-800
-  }),
-
-  // 오른쪽 화살표 컨테이너
-  indicatorsContainer: (provided: any) => ({
-    ...provided,
-    height: '3rem', // 전체 높이 맞춤
-  }),
-
-  // dropdown 화살표
-  dropdownIndicator: (provided: any) => ({
-    ...provided,
-    marginLeft: '0.5rem', // 화살표만 오른쪽으로 이동
-  }),
-
-  // 구분선 바는 그대로
-  indicatorSeparator: (provided: any) => ({
-    ...provided,
-  }),
-};
-
-export default function CountrySelect({ value, onChange }: CountrySelectProps) {
+export default function CountrySelect({ value, onChange, error = false }: CountrySelectProps) {
   const [countries, setCountries] = useState<Country[]>([]);
+  const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
     const fetchCountries = async () => {
@@ -106,29 +52,85 @@ export default function CountrySelect({ value, onChange }: CountrySelectProps) {
 
   const selectedOption = options.find(o => o.value === value) || null;
 
+  const customStyles = {
+    control: (provided: any) => ({
+      ...provided,
+      minHeight: 48,
+      height: 48,
+      padding: '0 12px',
+      borderRadius: 14,
+      borderColor: isFocused ? '#00BFA5' : error && !value ? 'red' : '#D1D5DB',
+      borderWidth: isFocused ? 1 : error && !value ? 3 : 1,
+      boxShadow: isFocused ? '0 0 0 2px rgba(0,191,165,0.3)' : 'none',
+      '&:hover': {
+        borderColor: isFocused ? '#00BFA5' : error && !value ? 'red' : '#D1D5DB',
+      },
+    }),
+    valueContainer: (provided: any) => ({
+      ...provided,
+      height: 48,
+      padding: 0,
+      display: 'flex',
+      alignItems: 'center',
+    }),
+    input: (provided: any) => ({ ...provided, margin: 0, padding: 0 }),
+    singleValue: (provided: any) => ({ ...provided, color: '#111827' }),
+    indicatorsContainer: (provided: any) => ({ ...provided, height: 48 }),
+    dropdownIndicator: (provided: any) => ({ ...provided, marginLeft: 8 }),
+    indicatorSeparator: (provided: any) => ({ ...provided }),
+  };
+
+  const handleChange = (opt: SingleValue<any>) => {
+    onChange(opt?.value || '');
+    setIsFocused(false);
+    (document.activeElement as HTMLElement)?.blur();
+  };
+
   return (
-    <Select
-      value={selectedOption}
-      onChange={opt => {
-        onChange(opt?.value || '');
-        // 선택 후 focus 해제
-        (document.activeElement as HTMLElement)?.blur();
-      }}
-      onMenuClose={() => (document.activeElement as HTMLElement)?.blur()}
-      options={options}
-      formatOptionLabel={opt => (
-        <div className="flex items-center gap-2">
-          <img src={opt.flag_url} alt={opt.label} className="w-5 h-3" />
-          <span>
-            {opt.label} (+{opt.phone_code})
-          </span>
-        </div>
+    <div className="w-full relative">
+      <Select
+        value={selectedOption}
+        onChange={handleChange}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        onMenuOpen={() => setIsFocused(true)}
+        onMenuClose={() => {
+          setIsFocused(false);
+          (document.activeElement as HTMLElement)?.blur();
+        }}
+        options={options}
+        formatOptionLabel={opt => (
+          <div className="flex items-center gap-2">
+            <img src={opt.flag_url} alt={opt.label} className="w-5 h-3" />
+            <span>
+              {opt.label} (+{opt.phone_code})
+            </span>
+          </div>
+        )}
+        styles={customStyles}
+        components={{ DropdownIndicator: CustomDropdownIndicator }}
+        className="w-full"
+        classNamePrefix="react-select"
+        placeholder=" "
+      />
+
+      <label
+        className={`absolute left-3 px-1 bg-white/95 rounded transition-all
+          ${
+            isFocused
+              ? '-top-2 text-xs text-primary'
+              : value
+                ? '-top-2 text-xs text-gray-400'
+                : 'top-3 text-sm text-gray-400'
+          }
+        `}
+      >
+        Nationality
+      </label>
+
+      {error && !value && (
+        <p className="text-red-500 text-sm mt-1">Please select your nationality.</p>
       )}
-      styles={customStyles}
-      components={{ DropdownIndicator: CustomDropdownIndicator }}
-      className="w-full"
-      classNamePrefix="react-select"
-      placeholder="Nationality"
-    />
+    </div>
   );
 }
