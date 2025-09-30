@@ -125,7 +125,7 @@ const StudyPage = () => {
                 : 'text-gray-600 hover:text-gray-900 text-m'
             }
           >
-            {loading ? '로딩 중' : (study?.episode ?? 'Episode 1')}
+            {loading ? '로딩 중' : (study?.episode ?? '없음')}
           </NavLink>
         </div>
 

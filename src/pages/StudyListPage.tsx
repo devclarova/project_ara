@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
 import { supabase } from '../lib/supabase';
 import placeholder from '../assets/placeholder.png';
 import Input from '../components/Input';
@@ -138,36 +137,39 @@ const ContentCard = ({
   return (
     <div
       onClick={() => navigate(`/study/${id}`)}
-      className="group relative bg-gray-50 rounded-xl p-6 cursor-pointer shadow-sm hover:shadow-md transition"
+      className="group relative bg-gray-50 rounded-xl p-6 cursor-pointer shadow-sm hover:shadow-md transition h-80 flex flex-col justify-start pt-6"
     >
-      {/* 이미지 */}
-      <div className="w-44 h-32 sm:w-52 sm:h-36 bg-white rounded-md mx-auto flex items-center justify-center overflow-hidden">
-        <img
-          src={image ? image : placeholder}
-          alt={title}
-          className="w-full h-full object-cover object-center"
-        />
-        <div
-          className={`absolute top-3 right-3 ${levelColor} text-white px-2 py-1 rounded text-xs font-medium`}
-        >
-          {level}
+      <div>
+        {/* 이미지 */}
+        <div className="mt-6 w-44 h-48 sm:w-52 sm:h-54 bg-white rounded-md mx-auto flex items-center justify-center overflow-hidden">
+          <img
+            src={image ? image : placeholder}
+            alt={title}
+            className="w-full h-full object-cover object-center"
+          />
+          <div
+            className={`absolute top-3 right-3 ${levelColor} text-white px-2 py-1 rounded text-xs font-medium`}
+          >
+            {level}
+          </div>
+        </div>
+
+        {/* 본문 */}
+        <div className="mt-4 text-center">
+          <h3 className="font-semibold text-gray-900 truncate">{title}</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            {level} · {duration}
+          </p>
         </div>
       </div>
 
-      {/* 본문 */}
-      <div className="mt-4 text-center">
-        <h3 className="font-semibold text-gray-900 truncate">{title}</h3>
-        <p className="mt-1 text-sm text-gray-500">
-          {level} · {duration}
-        </p>
-      </div>
-
       {/* Hover 오버레이 */}
-      <div className="pointer-events-none absolute inset-0 rounded-xl bg-primary/10 opacity-0 group-hover:opacity-100 transition" />
-
+      <div className="pointer-events-none absolute inset-0 rounded-xl bg-white/90 opacity-0 group-hover:opacity-100 transition">
+        <div className="pointer-events-none absolute inset-0 rounded-xl bg-primary/30 opacity-0 group-hover:opacity-100 transition" />
+      </div>
       {/* Hover 내용(중앙 요약 박스) */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-        <div className="bg-white/85 backdrop-blur-sm rounded-lg w-56 h-56 p-4 text-center flex flex-col justify-center">
+        <div className="bg-white/85 backdrop-blur-sm rounded-lg w-56 h-72 p-4 text-center flex flex-col justify-center">
           <div className="text-sm font-semibold text-gray-900 truncate">{title}</div>
           <div className="mt-1 text-xs text-gray-600 line-clamp-2">설명 : {short_description}</div>
           <div className="mt-1 text-xs text-gray-500">난이도 : {level}</div>
@@ -314,8 +316,6 @@ const StudyListPage = () => {
             <ContentCard
               key={study.id}
               id={study.id} // DB id 전달
-              // image="https://image.tmdb.org/t/p/original/7jryPmL3F0Wqv5U51SZrGQcPXfE.jpg" // 임시 이미지 (DB에 image 필드 있으면 교체)
-              // image="https://image.tmdb.org/t/p/original/57I1A2oQeVDZtfcKKVPJHffYTU3.jpg" // 임시 이미지 (DB에 image 필드 있으면 교체)
               image={study.poster_image_url} // 임시 이미지 (DB에 image 필드 있으면 교체)
               title={study.title || '제목 없음'}
               // subtitle={`${study.start} ~ ${study.end}`}
