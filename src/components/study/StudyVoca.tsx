@@ -19,14 +19,14 @@ export type WordItem = {
   pron?: string;
 };
 
-type Props = {
+type StudyVocaProps = {
   words?: WordItem[];
   studyId?: number;
   subscribeRealtime?: boolean;
   className?: string;
 };
 
-const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: Props) => {
+const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: StudyVocaProps) => {
   const controlled = Array.isArray(words) && words.length > 0;
 
   const [localWords, setLocalWords] = useState<WordItem[]>([]);
@@ -127,6 +127,10 @@ const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: Pro
     return <p className="p-3 text-sm text-gray-500">단어가 없습니다.</p>;
   }
 
+  // 마지막 페이지 여부 확인
+  const isLastPage = currentPage * pageSize + pageSize >= data.length;
+  const isFirstPage = currentPage === 0;
+
   return (
     <div>
       <div className={`grid grid-cols-2 gap-4 ${className ?? ''}`}>
@@ -148,74 +152,81 @@ const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: Pro
           </div>
         ))}
       </div>
+
       {/* 페이지네이션 버튼 */}
-      <div className="flex justify-center mt-4">
-        <button
-          onClick={handlePrevPage}
-          disabled={currentPage === 0}
-          className="px-4 py-2 rounded disabled:opacity-50 ml-4 cursor-pointer"
-          style={{ pointerEvents: currentPage === 0 ? 'none' : 'auto' }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
+      {data.length > pageSize && (
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={handlePrevPage}
+            disabled={currentPage === 0}
+            className="px-4 py-2 rounded disabled:opacity-50 ml-4 cursor-pointer"
+            style={{
+              pointerEvents: isFirstPage ? 'none' : 'auto',
+              cursor: isFirstPage ? 'default' : 'pointer',
+            }}
           >
-            <g>
-              <path
-                d="M0.75 12C0.75 14.9837 1.93526 17.8452 4.04505 19.955C6.15483 22.0647 9.01631 23.25 12 23.25C14.9837 23.25 17.8452 22.0647 19.955 19.955C22.0647 17.8452 23.25 14.9837 23.25 12C23.25 9.01631 22.0647 6.15483 19.955 4.04505C17.8452 1.93526 14.9837 0.75 12 0.75C9.01631 0.75 6.15483 1.93526 4.04505 4.04505C1.93526 6.15483 0.75 9.01631 0.75 12Z"
-                stroke="black"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M15.7501 16.819V7.183C15.7501 6.633 15.2751 6.27 14.8621 6.504L6.36209 11.322C6.25195 11.3976 6.16187 11.4989 6.09964 11.6171C6.0374 11.7353 6.00488 11.8669 6.00488 12.0005C6.00488 12.1341 6.0374 12.2657 6.09964 12.3839C6.16187 12.5021 6.25195 12.6034 6.36209 12.679L14.8621 17.498C15.2751 17.732 15.7501 17.369 15.7501 16.819Z"
-                stroke="black"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </g>
-          </svg>
-        </button>
-        <button
-          onClick={handleNextPage}
-          disabled={currentPage * pageSize + pageSize >= data.length}
-          className="px-4 py-2 rounded disabled:opacity-50 ml-4 cursor-pointer"
-          style={{
-            pointerEvents: currentPage * pageSize + pageSize >= data.length ? 'none' : 'auto',
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            className="rotate-180"
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <g>
+                <path
+                  d="M0.75 12C0.75 14.9837 1.93526 17.8452 4.04505 19.955C6.15483 22.0647 9.01631 23.25 12 23.25C14.9837 23.25 17.8452 22.0647 19.955 19.955C22.0647 17.8452 23.25 14.9837 23.25 12C23.25 9.01631 22.0647 6.15483 19.955 4.04505C17.8452 1.93526 14.9837 0.75 12 0.75C9.01631 0.75 6.15483 1.93526 4.04505 4.04505C1.93526 6.15483 0.75 9.01631 0.75 12Z"
+                  stroke="black"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M15.7501 16.819V7.183C15.7501 6.633 15.2751 6.27 14.8621 6.504L6.36209 11.322C6.25195 11.3976 6.16187 11.4989 6.09964 11.6171C6.0374 11.7353 6.00488 11.8669 6.00488 12.0005C6.00488 12.1341 6.0374 12.2657 6.09964 12.3839C6.16187 12.5021 6.25195 12.6034 6.36209 12.679L14.8621 17.498C15.2751 17.732 15.7501 17.369 15.7501 16.819Z"
+                  stroke="black"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </g>
+            </svg>
+          </button>
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage * pageSize + pageSize >= data.length}
+            className="px-4 py-2 rounded disabled:opacity-50 ml-4 cursor-pointer"
+            style={{
+              pointerEvents: isLastPage ? 'none' : 'auto',
+              cursor: isLastPage ? 'default' : 'pointer',
+            }}
           >
-            <g>
-              <path
-                d="M0.75 12C0.75 14.9837 1.93526 17.8452 4.04505 19.955C6.15483 22.0647 9.01631 23.25 12 23.25C14.9837 23.25 17.8452 22.0647 19.955 19.955C22.0647 17.8452 23.25 14.9837 23.25 12C23.25 9.01631 22.0647 6.15483 19.955 4.04505C17.8452 1.93526 14.9837 0.75 12 0.75C9.01631 0.75 6.15483 1.93526 4.04505 4.04505C1.93526 6.15483 0.75 9.01631 0.75 12Z"
-                stroke="black"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M15.7501 16.819V7.183C15.7501 6.633 15.2751 6.27 14.8621 6.504L6.36209 11.322C6.25195 11.3976 6.16187 11.4989 6.09964 11.6171C6.0374 11.7353 6.00488 11.8669 6.00488 12.0005C6.00488 12.1341 6.0374 12.2657 6.09964 12.3839C6.16187 12.5021 6.25195 12.6034 6.36209 12.679L14.8621 17.498C15.2751 17.732 15.7501 17.369 15.7501 16.819Z"
-                stroke="black"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </g>
-          </svg>
-        </button>
-      </div>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              className="rotate-180"
+            >
+              <g>
+                <path
+                  d="M0.75 12C0.75 14.9837 1.93526 17.8452 4.04505 19.955C6.15483 22.0647 9.01631 23.25 12 23.25C14.9837 23.25 17.8452 22.0647 19.955 19.955C22.0647 17.8452 23.25 14.9837 23.25 12C23.25 9.01631 22.0647 6.15483 19.955 4.04505C17.8452 1.93526 14.9837 0.75 12 0.75C9.01631 0.75 6.15483 1.93526 4.04505 4.04505C1.93526 6.15483 0.75 9.01631 0.75 12Z"
+                  stroke="black"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M15.7501 16.819V7.183C15.7501 6.633 15.2751 6.27 14.8621 6.504L6.36209 11.322C6.25195 11.3976 6.16187 11.4989 6.09964 11.6171C6.0374 11.7353 6.00488 11.8669 6.00488 12.0005C6.00488 12.1341 6.0374 12.2657 6.09964 12.3839C6.16187 12.5021 6.25195 12.6034 6.36209 12.679L14.8621 17.498C15.2751 17.732 15.7501 17.369 15.7501 16.819Z"
+                  stroke="black"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </g>
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

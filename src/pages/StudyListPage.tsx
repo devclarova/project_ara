@@ -139,32 +139,29 @@ const ContentCard = ({
       onClick={() => navigate(`/study/${id}`)}
       className="group relative bg-gray-50 rounded-xl p-6 cursor-pointer shadow-sm hover:shadow-md transition h-80 flex flex-col justify-start pt-6"
     >
-      <div>
+      <div className="flex justify-center items-center overflow-hidden">
         {/* 이미지 */}
-        <div className="sm:w-52 sm:h-56 bg-white rounded-md mx-auto flex items-center justify-center overflow-hidden">
+        <div className="w-full sm:w-52 sm:h-56 bg-white rounded-t-lg mx-auto flex items-center justify-center overflow-hidden">
           <img
             src={image ? image : placeholder}
             alt={title}
             className="w-full h-full object-cover object-center"
           />
         </div>
-
-        {/* 본문 */}
-        <div className="mt-3 text-center">
-          <h3 className="font-semibold text-gray-900 truncate">{title}</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            {level} · {duration}
-          </p>
-        </div>
       </div>
-
+      {/* 본문 */}
+      <div className="mt-3 text-center">
+        <h3 className="font-semibold text-gray-900 truncate">{title}</h3>
+        <p className="mt-1 text-sm text-gray-500">
+          {level} · {duration}
+        </p>
+      </div>
       {/* Hover 오버레이 */}
-      <div className="pointer-events-none absolute inset-0 rounded-xl bg-white/90 opacity-0 group-hover:opacity-100 transition">
-        <div className="pointer-events-none absolute inset-0 rounded-xl bg-primary/30 opacity-0 group-hover:opacity-100 transition" />
-      </div>
+      <div className="pointer-events-none absolute inset-0 rounded-xl bg-white/90 opacity-0 group-hover:opacity-100 transition"></div>{' '}
+      <div className="pointer-events-none absolute inset-0 rounded-xl bg-primary/30 opacity-0 group-hover:opacity-100 transition"></div>{' '}
       {/* Hover 내용(중앙 요약 박스) */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-        <div className="bg-white/85 backdrop-blur-sm rounded-lg w-56 h-72 p-4 text-center flex flex-col justify-center">
+        <div className="bg-white/85 backdrop-blur-sm rounded-lg w-56 sm:w-64 md:w-72 h-72 sm:h-80 p-4 text-center flex flex-col justify-center">
           <div className="text-sm font-semibold text-gray-900 truncate">{title}</div>
           <div className="mt-1 text-xs text-gray-600 line-clamp-2">설명 : {short_description}</div>
           <div className="mt-1 text-xs text-gray-500">난이도 : {level}</div>
