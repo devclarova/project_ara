@@ -141,21 +141,16 @@ const ContentCard = ({
     >
       <div>
         {/* 이미지 */}
-        <div className="mt-6 w-44 h-48 sm:w-52 sm:h-54 bg-white rounded-md mx-auto flex items-center justify-center overflow-hidden">
+        <div className="sm:w-52 sm:h-56 bg-white rounded-md mx-auto flex items-center justify-center overflow-hidden">
           <img
             src={image ? image : placeholder}
             alt={title}
             className="w-full h-full object-cover object-center"
           />
-          <div
-            className={`absolute top-3 right-3 ${levelColor} text-white px-2 py-1 rounded text-xs font-medium`}
-          >
-            {level}
-          </div>
         </div>
 
         {/* 본문 */}
-        <div className="mt-4 text-center">
+        <div className="mt-3 text-center">
           <h3 className="font-semibold text-gray-900 truncate">{title}</h3>
           <p className="mt-1 text-sm text-gray-500">
             {level} · {duration}

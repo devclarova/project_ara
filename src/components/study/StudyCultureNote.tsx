@@ -87,15 +87,34 @@ const StudyCultureNote = (props: Props) => {
     );
   }
 
+  // contents가 문자열이면 배열로 변환
+  const contentsList = data.contents ? data.contents.split('\n') : [];
+
   return (
     <div className="p-4 bg-white border rounded-lg shadow-sm">
       <h4 className="font-semibold mb-1">{data.title || '문화 노트'}</h4>
-      {data.subtitle && <p className="text-xs text-gray-500 mb-1">{data.subtitle}</p>}
-      {data.contents ? (
-        <p className="text-sm text-gray-700 whitespace-pre-line">{data.contents}</p>
+      {/* {data.subtitle && <p className="text-xs text-gray-500 mb-1">{data.subtitle}</p>} */}
+      {data.subtitle ? (
+        <p className="text-sm text-gray-700 whitespace-pre-line p-1">{data.subtitle}</p>
       ) : (
         <p className="text-sm text-gray-500">내용이 없습니다.</p>
       )}
+
+      <ul className="mt-4 space-y-2">
+        {contentsList.length > 0 ? (
+          contentsList.map((point, index) => (
+            <li key={index} className="flex items-start">
+              <span className="text-pink-500 mr-2">•</span>
+              <span>{point}</span>
+            </li>
+          ))
+        ) : (
+          <li className="flex items-start">
+            <span className="text-pink-500 mr-2">•</span>
+            <span>리스트 항목이 없습니다.</span>
+          </li>
+        )}
+      </ul>
     </div>
   );
 };
