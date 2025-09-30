@@ -1,22 +1,60 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 function SignInPage() {
   const { signIn } = useAuth();
   const [email, setEmail] = useState<string>('');
   const [pw, setPw] = useState<string>('');
   const [msg, setMsg] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; pw?: string }>({});
   const navigate = useNavigate();
 
-  const handleSumit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const { error } = await signIn(email, pw);
-    if (error) {
-      setMsg(`로그인 오류: ${error}`);
+  const handleChange = (field: 'email' | 'pw', value: string) => {
+    if (field === 'email') {
+      setEmail(value);
+      if (errors.email) setErrors(prev => ({ ...prev, email: '' }));
     } else {
-      setMsg('로그인 성공');
+      setPw(value);
+      if (errors.pw) setErrors(prev => ({ ...prev, pw: '' }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrors({}); // 초기화
+
+    // 필수 입력 체크
+    if (!email || !pw) {
+      setErrors({
+        email: !email ? 'Please enter your email.' : '',
+        pw: !pw ? 'Please enter your password.' : '',
+      });
+      setLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
+
+    if (error) {
+      // 오류를 email/pw 모두에 안전하게 반영
+      setErrors(prev => ({
+        ...prev,
+        email:
+          error.message.includes('email') || !error.message.includes('password')
+            ? error.message
+            : prev.email,
+        pw:
+          error.message.includes('password') || !error.message.includes('email')
+            ? error.message
+            : prev.pw,
+      }));
+      setLoading(false);
+    } else {
+      navigate('/home');
     }
   };
 
@@ -37,50 +75,63 @@ function SignInPage() {
           </h2>
         </div>
         {/* 로그인 폼 */}
-        <form onSubmit={handleSumit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Email */}
           <div className="relative">
             <input
               type="email"
               id="email"
               value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder=" " // floating label용
-              className="peer w-full px-4 py-2 sm:py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-800 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#00BFA5]"
+              onChange={e => handleChange('email', e.target.value)}
+              placeholder=" "
+              className={`peer w-full px-4 py-2 rounded-lg border
+      ${errors.email ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-200 focus:ring-[#00BFA5]'}
+      bg-gray-50 text-gray-800 text-sm focus:outline-none`}
             />
             <label
               htmlFor="email"
-              className="absolute left-4 top-2.5 sm:top-3 text-gray-400 text-sm sm:text-base transition-all
-      peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-sm
-      peer-focus:-top-3 peer-focus:left-3 peer-focus:text-sm peer-focus:text-[#00BFA5]
-      bg-white px-1"
+              className={`absolute left-4 text-sm transition-all
+    ${email || errors.email ? '-top-3 text-sm' : 'top-2.5 text-gray-400 text-sm'}
+    ${errors.email ? 'text-red-500' : 'peer-focus:text-[#00BFA5]'}
+    peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-gray-400
+    peer-focus:-top-3 peer-focus:text-sm peer-focus:text-[#00BFA5]
+    bg-white px-1`}
             >
               Email
             </label>
+            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
           </div>
+          {/* Password */}
           <div className="relative">
             <input
               type="password"
               id="password"
               value={pw}
-              onChange={e => setPw(e.target.value)}
-              placeholder=" " // floating label용
-              className="peer w-full px-4 py-2 sm:py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-800 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary"
+              onChange={e => handleChange('pw', e.target.value)}
+              placeholder=" "
+              className={`peer w-full px-4 py-2 rounded-lg border
+      ${errors.pw ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-200 focus:ring-[#00BFA5]'}
+      bg-gray-50 text-gray-800 text-sm focus:outline-none`}
             />
             <label
               htmlFor="password"
-              className="absolute left-4 top-2.5 sm:top-3 text-gray-400 text-sm sm:text-base transition-all
-      peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-sm
-      peer-focus:-top-3 peer-focus:left-3 peer-focus:text-sm peer-focus:text-primary
-      bg-white px-1"
+              className={`absolute left-4 text-sm transition-all
+    ${pw || errors.pw ? '-top-3 text-sm' : 'top-2.5 text-gray-400 text-sm'}
+    ${errors.pw ? 'text-red-500' : 'peer-focus:text-[#00BFA5]'}
+    peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-gray-400
+    peer-focus:-top-3 peer-focus:text-sm peer-focus:text-[#00BFA5]
+    bg-white px-1`}
             >
               Password
             </label>
+            {errors.pw && <p className="text-red-500 text-xs mt-1">{errors.pw}</p>}
           </div>
           <button
             type="submit"
-            className="w-full bg-primary text-white py-2 sm:py-3 rounded-lg font-semibold hover:opacity-80 text-sm sm:text-base"
+            className="w-full bg-primary text-white py-2 sm:py-3 rounded-lg font-semibold hover:opacity-80 text-sm sm:text-base disabled:opacity-50"
+            disabled={loading}
           >
-            Sign In
+            {loading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
 
