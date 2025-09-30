@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import ReactPlayer from 'react-player';
 import { useParams } from 'react-router-dom';
-import type { Tts } from '../types/database';
-import { supabase } from '../lib/supabase';
-import { getTts, getTtsById } from '../services/ClipService';
+import { getTts } from '../services/ClipService';
+
+type Tts = {
+  id: number;
+  start: string;
+  end: string;
+  src?: string;
+};
 
 export type Dialogue = {
   character: string;
@@ -81,26 +86,15 @@ function CultureNote({ note }: { note: string }) {
   );
 }
 
-type VideoMap = {
-  [key: string]: string;
-};
-
-// const videoMap: VideoMap = {
-//   '1': 'https://youtu.be/SFg64eR3aKA?...',
-//   '2': 'https://youtu.be/f1ZJlT0yASs?...',
-//   '3': 'https://youtu.be/12o0jwxBcJI?...',
-//   '4': 'https://youtu.be/mhfacjgHrMY?...',
-//   default: 'https://youtu.be/jJAIFMiPdds?si=EGEHykwWqDMzMqhu',
-// };
+type VideoMap = { [key: string]: string };
 
 const VideoS = () => {
-  const playerRef = useRef<HTMLVideoElement | null>(null);
+  const playerRef = useRef<ReactPlayer | null>(null);
   const [playing, setPlaying] = useState(true);
   const { id } = useParams<{ id: string }>();
   const [clip, setClip] = useState<Tts | null>(null);
   const [videoMapTest, setVideoMapTest] = useState<VideoMap>({});
 
-  // 유틸 함수: HH:MM:SS -> 초
   const timeStringToSeconds = (time: string): number => {
     const parts = time.split(':').map(Number);
     if (parts.length === 3) {
@@ -115,16 +109,15 @@ const VideoS = () => {
   };
 
   useEffect(() => {
-    try {
-      (async () => {
-        const data = await getTts();
-        const target = data.find(cur => cur.id.toString() === id); // 현재 페이지 id 매칭
-        if (target) {
-          setClip(target);
-        }
+    (async () => {
+      try {
+        const data: Tts[] = await getTts();
+        const target = data.find(cur => cur.id.toString() === id);
+        if (target) setClip(target);
+
         const map = data.reduce(
           (acc, cur) => {
-            if (cur.id && cur.src) {
+            if (cur.id != null && cur.src != null) {
               acc[cur.id.toString()] = cur.src;
             }
             return acc;
@@ -132,58 +125,51 @@ const VideoS = () => {
           {} as Record<string, string>,
         );
         setVideoMapTest(map);
-      })();
-    } catch (err) {
-      console.error(err);
-    }
+      } catch (err) {
+        console.error(err);
+      }
+    })();
   }, [id]);
 
-  const videoUrl =
-    id && videoMapTest[id]
-      ? videoMapTest[id]
-      : 'https://www.youtube.com/watch?v=jJAIFMiPdds&t=538s';
+  const videoUrl = clip?.src ?? 'https://www.youtube.com/watch?v=jJAIFMiPdds&t=538s';
 
   const START_TIME_TEST = clip ? timeStringToSeconds(clip.start) : 0;
   const END_TIME_TEST = clip ? timeStringToSeconds(clip.end) : 30;
-  console.log('시작:', START_TIME_TEST, '끝:', END_TIME_TEST);
 
-  // 영상이 준비되면 시작 지점으로 이동
   const handleReady = () => {
     if (playerRef.current) {
-      playerRef.current.currentTime = START_TIME_TEST;
+      playerRef.current.seekTo(START_TIME_TEST, 'seconds');
     }
   };
 
   const handleTimeUpdate = () => {
     if (!playerRef.current) return;
-    if (playerRef.current.currentTime >= END_TIME_TEST) {
-      playerRef.current.currentTime = START_TIME_TEST;
-    }
-    if (playerRef.current.currentTime < START_TIME_TEST) {
-      playerRef.current.currentTime = START_TIME_TEST;
+    const currentTime = playerRef.current.getCurrentTime();
+    if (currentTime >= END_TIME_TEST || currentTime < START_TIME_TEST) {
+      playerRef.current.seekTo(START_TIME_TEST, 'seconds');
     }
   };
 
   return (
     <div style={{ maxWidth: '100%', margin: '2rem auto' }}>
-      <h2>ReactPlayer v3 구간 반복 테스트용, 크기 상관 고려 안함</h2>
+      <h2>ReactPlayer v3 구간 반복 테스트용</h2>
       <ReactPlayer
         ref={playerRef}
-        src={videoUrl}
+        url={videoUrl}
         playing={playing}
-        controls={true}
+        controls
         width="100%"
         height="360px"
         onReady={handleReady}
         onPlay={() => {
-          playerRef.current?.addEventListener('timeupdate', handleTimeUpdate);
+          const el = playerRef.current;
+          if (el) el.getInternalPlayer()?.addEventListener('timeupdate', handleTimeUpdate);
         }}
         onPause={() => {
-          playerRef.current?.removeEventListener('timeupdate', handleTimeUpdate);
+          const el = playerRef.current;
+          if (el) el.getInternalPlayer()?.removeEventListener('timeupdate', handleTimeUpdate);
         }}
       />
-
-      {/* 커스텀 컨트롤 */}
       <div style={{ marginTop: '1rem' }}>
         <button onClick={() => setPlaying(p => !p)}>{playing ? '⏸ Pause' : '▶️ Play'}</button>
       </div>
@@ -195,14 +181,13 @@ const LearningPage = () => {
   const { id } = useParams<{ id: string }>();
   const [selected, setSelected] = useState<Dialogue | null>(null);
   const [activeTab, setActiveTab] = useState<'words' | 'culture'>('words');
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* 영상 플레이어 */}
       <div className="w-full h-64 bg-gray-200 flex items-center justify-center rounded-xl">
         🎬 영상 플레이어 (데모)
       </div>
       <VideoS />
-      {/* 자막 리스트 */}
       <div>
         <h2 className="text-xl font-bold mb-2">자막</h2>
         <ul className="space-y-2">
@@ -221,7 +206,6 @@ const LearningPage = () => {
         </ul>
       </div>
 
-      {/* 학습 카드 */}
       {selected && (
         <div className="p-4 bg-primary/5 rounded-xl shadow-md space-y-4">
           <h3 className="text-lg font-semibold">학습 카드</h3>
@@ -235,7 +219,6 @@ const LearningPage = () => {
             <strong>학습 포인트:</strong> {selected.category}
           </p>
 
-          {/* 탭 메뉴 */}
           <div className="flex space-x-4 mt-4">
             <button
               onClick={() => setActiveTab('words')}
@@ -255,7 +238,6 @@ const LearningPage = () => {
             </button>
           </div>
 
-          {/* 탭 내용 */}
           {activeTab === 'words' ? (
             <WordExplanation words={selected.words} />
           ) : (

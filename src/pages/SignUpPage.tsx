@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import CountrySelect from '../components/common/CountrySelect';
-import BirthInput from '../components/common/BirthInput';
-import GenderSelect from '../components/common/GenderSelect';
+import CountrySelect from '../components/auth/CountrySelect';
+import BirthInput from '../components/auth/BirthInput';
+import GenderSelect from '../components/auth/GenderSelect';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import InputField from '../components/auth/InputField';
