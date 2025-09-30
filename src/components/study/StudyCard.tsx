@@ -22,7 +22,7 @@ const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) =>
   return (
     <div>
       {/* 상단 정보 카드 */}
-      <div className="p-4 rounded-xl shadow-md space-y-3 mb-4">
+      <div className="p-4 rounded-xl space-y-3 mb-4 border bg-white/50 shadow-sm">
         <h3 className="text-lg font-semibold">학습 카드</h3>
 
         {/* 탭 */}

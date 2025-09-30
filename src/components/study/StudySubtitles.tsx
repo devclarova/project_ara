@@ -27,6 +27,8 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
   const [dialogues, setDialogues] = useState<Subtitle[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 3; // 한번에 보여줄 자막 수
 
   useEffect(() => {
     if (!Number.isFinite(resolvedStudyId)) {
@@ -89,6 +91,16 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
     };
   }, [resolvedStudyId, subscribeRealtime]);
 
+  // 자막 n개씩 보여주기
+  const handleNextPage = () => {
+    setCurrentPage(prevPage => prevPage + 1);
+  };
+  const handlePrevPage = () => {
+    setCurrentPage(prevPage => Math.max(prevPage - 1, 0));
+  };
+  const currentDialogues = dialogues.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
+  const showPaginationButtons = dialogues.length > pageSize; // 자막 3개 초과일 때 버튼 보이기
+
   return (
     <div>
       <h2 className="text-xl font-bold mb-2">자막</h2>
@@ -96,28 +108,110 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
       {loading && <p>자막 로딩 중...</p>}
       {error && <p className="text-red-600">오류: {error}</p>}
 
-      {!loading && !error && dialogues.length > 0 ? (
-        <ul className="space-y-2">
-          {dialogues.map(d => (
-            <li
-              key={d.id} // 안정적인 key
-              onClick={() => onSelectDialogue(d)}
-              className="p-3 bg-white rounded-lg shadow cursor-pointer hover:bg-gray-50"
-            >
-              {d.korean_subtitle && (
-                <p className="text-lg text-gray-700 hover:text-gray-900">{d.korean_subtitle}</p>
-              )}
-              {d.pronunciation && <p className="text-sm text-gray-500">{d.pronunciation}</p>}
-              {d.english_subtitle && (
-                <p className="text-base text-gray-700">{d.english_subtitle}</p>
-              )}
-              <p className="text-xs text-gray-400 mt-1">
-                {secToMMSS(d.subtitle_start_time)} → {secToMMSS(d.subtitle_end_time)}
-                {d.level ? ` · ${d.level}` : ''}
-              </p>
-            </li>
-          ))}
-        </ul>
+      {!loading && !error && currentDialogues.length > 0 ? (
+        <>
+          <ul className="space-y-2">
+            {currentDialogues.map(d => (
+              <li
+                key={d.id} // 안정적인 key
+                onClick={() => onSelectDialogue(d)}
+                className="p-3 bg-white rounded-lg shadow cursor-pointer hover:bg-gray-50"
+              >
+                {d.korean_subtitle && (
+                  <p className="text-lg text-gray-700 hover:text-gray-900">{d.korean_subtitle}</p>
+                )}
+                {d.pronunciation && <p className="text-sm text-gray-500">{d.pronunciation}</p>}
+                {d.english_subtitle && (
+                  <p className="text-base text-gray-700">{d.english_subtitle}</p>
+                )}
+                <p className="text-xs text-gray-400 mt-1">
+                  {secToMMSS(d.subtitle_start_time)} → {secToMMSS(d.subtitle_end_time)}
+                  {d.level ? ` · ${d.level}` : ''}
+                </p>
+              </li>
+            ))}
+          </ul>
+          {showPaginationButtons && (
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 0}
+                className="px-4 py-2 disabled:opacity-50 ml-4 cursor-pointer"
+                style={{ pointerEvents: currentPage === 0 ? 'none' : 'auto' }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <g clip-path="url(#clip0_108_493)">
+                    <path
+                      d="M0.75 12C0.75 14.9837 1.93526 17.8452 4.04505 19.955C6.15483 22.0647 9.01631 23.25 12 23.25C14.9837 23.25 17.8452 22.0647 19.955 19.955C22.0647 17.8452 23.25 14.9837 23.25 12C23.25 9.01631 22.0647 6.15483 19.955 4.04505C17.8452 1.93526 14.9837 0.75 12 0.75C9.01631 0.75 6.15483 1.93526 4.04505 4.04505C1.93526 6.15483 0.75 9.01631 0.75 12Z"
+                      stroke="black"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M15.7501 16.819V7.183C15.7501 6.633 15.2751 6.27 14.8621 6.504L6.36209 11.322C6.25195 11.3976 6.16187 11.4989 6.09964 11.6171C6.0374 11.7353 6.00488 11.8669 6.00488 12.0005C6.00488 12.1341 6.0374 12.2657 6.09964 12.3839C6.16187 12.5021 6.25195 12.6034 6.36209 12.679L14.8621 17.498C15.2751 17.732 15.7501 17.369 15.7501 16.819Z"
+                      stroke="black"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </g>
+                  <defs>
+                    <clipPath id="clip0_108_493">
+                      <rect width="24" height="24" fill="white" />
+                    </clipPath>
+                  </defs>
+                </svg>
+              </button>
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage * pageSize + pageSize >= dialogues.length}
+                className="px-4 py-2 rounded disabled:opacity-50 ml-4 cursor-pointer"
+                style={{
+                  pointerEvents:
+                    currentPage * pageSize + pageSize >= dialogues.length ? 'none' : 'auto',
+                }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="rotate-180"
+                >
+                  <g clip-path="url(#clip0_108_493)">
+                    <path
+                      d="M0.75 12C0.75 14.9837 1.93526 17.8452 4.04505 19.955C6.15483 22.0647 9.01631 23.25 12 23.25C14.9837 23.25 17.8452 22.0647 19.955 19.955C22.0647 17.8452 23.25 14.9837 23.25 12C23.25 9.01631 22.0647 6.15483 19.955 4.04505C17.8452 1.93526 14.9837 0.75 12 0.75C9.01631 0.75 6.15483 1.93526 4.04505 4.04505C1.93526 6.15483 0.75 9.01631 0.75 12Z"
+                      stroke="black"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M15.7501 16.819V7.183C15.7501 6.633 15.2751 6.27 14.8621 6.504L6.36209 11.322C6.25195 11.3976 6.16187 11.4989 6.09964 11.6171C6.0374 11.7353 6.00488 11.8669 6.00488 12.0005C6.00488 12.1341 6.0374 12.2657 6.09964 12.3839C6.16187 12.5021 6.25195 12.6034 6.36209 12.679L14.8621 17.498C15.2751 17.732 15.7501 17.369 15.7501 16.819Z"
+                      stroke="black"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </g>
+                  <defs>
+                    <clipPath id="clip0_108_493">
+                      <rect width="24" height="24" fill="white" />
+                    </clipPath>
+                  </defs>
+                </svg>
+              </button>
+            </div>
+          )}
+        </>
       ) : (
         !loading && !error && <p>자막 데이터가 없습니다.</p>
       )}
