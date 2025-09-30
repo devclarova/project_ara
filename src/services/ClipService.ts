@@ -1,5 +1,15 @@
 import { supabase } from '../lib/supabase';
-import type { Clip, Dialogues, Tts } from '../types/database';
+import type { Dialogues } from '../types/database';
+
+type Clip = {
+  id: number;
+};
+
+type Tts = {
+  id: number;
+  start: string;
+  end: string;
+};
 
 // Clip 목록 조회
 export const getClips = async (): Promise<Clip[]> => {
