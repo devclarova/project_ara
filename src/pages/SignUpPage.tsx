@@ -1,148 +1,233 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import CountrySelect from '../components/common/CountrySelect';
+import BirthInput from '../components/common/BirthInput';
+import GenderSelect from '../components/common/GenderSelect';
 
-const WEEK_DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+function SignUpPage() {
+  const { signUp } = useAuth();
 
-function pad(n: number) {
-  return String(n).padStart(2, '0');
-}
+  // form state
+  const [email, setEmail] = useState<string>('');
+  const [pw, setPw] = useState<string>('');
+  const [confirmPw, setConfirmPw] = useState<string>('');
+  const [nickname, setNickname] = useState<string>('');
+  const [gender, setGender] = useState<string>('');
+  const [birth, setBirth] = useState<Date | null>(null);
+  const [country, setCountry] = useState<string>('');
+  const [msg, setMsg] = useState<string>('');
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
-interface BirthInputProps {
-  value: Date | null;
-  onChange: (date: Date | null) => void;
-  submitAttempted: boolean; // <- submit 여부
-}
+  // error state
+  const [errors, setErrors] = useState<{
+    email?: string;
+    pw?: string;
+    confirmPw?: string;
+    nickname?: string;
+  }>({});
 
-export default function BirthInput({
-  value,
-  onChange,
-  submitAttempted,
-}: BirthInputProps): JSX.Element {
-  const [inputValue, setInputValue] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [open, setOpen] = useState<boolean>(false);
-
-  const [viewYear, setViewYear] = useState<number>(new Date().getFullYear());
-  const [viewMonth, setViewMonth] = useState<number>(new Date().getMonth());
-
-  const rootRef = useRef<HTMLDivElement | null>(null);
-
-  const formatFromDate = (d: Date) =>
-    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-
-  const formatInput = (raw: string) => {
-    const digits = raw.replace(/[^0-9]/g, '');
-    let res = digits;
-    if (digits.length > 4) res = digits.slice(0, 4) + '-' + res.slice(4);
-    if (digits.length > 6) res = res.slice(0, 7) + '-' + res.slice(7, 9);
-    if (res.length > 10) res = res.slice(0, 10);
-    return res;
-  };
-
-  const parsePartialToDate = (formatted: string): Date | null => {
-    const digits = formatted.replace(/[^0-9]/g, '');
-    if (digits.length < 4) return null;
-    const y = Number(digits.slice(0, 4));
-    if (Number.isNaN(y)) return null;
-    if (digits.length < 6) return new Date(y, 0, 1);
-    const m = Number(digits.slice(4, 6));
-    if (Number.isNaN(m) || m < 1 || m > 12) return null;
-    if (digits.length < 8) return new Date(y, m - 1, 1);
-    const d = Number(digits.slice(6, 8));
-    if (Number.isNaN(d) || d < 1 || d > 31) return null;
-    const date = new Date(y, m - 1, d);
-    if (date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d) return date;
-    return null;
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatInput(e.target.value);
-    setInputValue(formatted);
-
-    const maybeDate = parsePartialToDate(formatted);
-    if (maybeDate) {
-      setSelectedDate(maybeDate);
-      setViewYear(maybeDate.getFullYear());
-      setViewMonth(maybeDate.getMonth());
+  // 입력값 변경 시 오류 제거
+  const handleChange = (field: keyof typeof errors, value: any) => {
+    setErrors(prev => ({ ...prev, [field]: '' }));
+    switch (field) {
+      case 'email':
+        setEmail(value);
+        break;
+      case 'pw':
+        setPw(value);
+        break;
+      case 'confirmPw':
+        setConfirmPw(value);
+        break;
+      case 'nickname':
+        setNickname(value);
+        break;
+      default:
+        break;
     }
-    setOpen(true);
   };
 
-  const handleInputFocus = () => {
-    setOpen(true);
-  };
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-  const handleDateClick = (d: Date) => {
-    setSelectedDate(d);
-    setInputValue(formatFromDate(d));
-    setViewYear(d.getFullYear());
-    setViewMonth(d.getMonth());
-    setOpen(false);
-    onChange(d);
-  };
+    setSubmitAttempted(true);
 
-  const handleClear = () => {
-    setInputValue('');
-    setSelectedDate(null);
-    setOpen(false);
-    onChange(null);
-    inputRef.current?.focus();
-  };
+    let tempErrors: typeof errors = {};
 
-  useEffect(() => {
-    const onDocClick = (ev: MouseEvent) => {
-      if (!rootRef.current) return;
-      if (!rootRef.current.contains(ev.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', onDocClick);
-    return () => document.removeEventListener('mousedown', onDocClick);
-  }, []);
+    if (!email) tempErrors.email = '이메일을 입력해주세요.';
+    if (!pw) tempErrors.pw = '비밀번호를 입력해주세요.';
+    if (!confirmPw) tempErrors.confirmPw = '비밀번호 확인을 입력해주세요.';
+    if (pw && confirmPw && pw !== confirmPw) tempErrors.confirmPw = '비밀번호가 일치하지 않습니다.';
+    if (!nickname) tempErrors.nickname = '닉네임을 입력해주세요.';
+
+    if (Object.keys(tempErrors).length > 0) {
+      setErrors(tempErrors);
+      return;
+    }
+
+    // 회원가입 로직
+    const { error } = await signUp(email, pw);
+    if (error) {
+      setMsg(`회원가입 오류: ${error}`);
+    } else {
+      setMsg('회원가입이 성공했습니다. 이메일 인증 링크를 확인해 주세요.');
+    }
+  };
 
   return (
-    <div className="relative w-full max-w-full" ref={rootRef}>
-      <div className="relative w-full">
-        <input
-          ref={inputRef}
-          type="text"
-          value={inputValue}
-          placeholder="yyyy-mm-dd"
-          onChange={handleInputChange}
-          onFocus={handleInputFocus}
-          className={`w-full px-4 h-12 rounded-lg border text-gray-900
-            focus:outline-none focus:ring-0
-            ${submitAttempted && !selectedDate ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300'}
-          `}
-        />
-        {/* 달력 아이콘 */}
-        <button
-          type="button"
-          onClick={() => setOpen(o => !o)}
-          className="absolute right-8 top-1/2 -translate-y-1/2 px-1 text-gray-500 hover:text-gray-700"
-        >
-          📅
-        </button>
-        {/* X 버튼 */}
-        {inputValue && (
-          <button
-            type="button"
-            onClick={handleClear}
-            className="absolute right-2 top-1/2 -translate-y-1/2 px-1 text-gray-500 hover:text-gray-700"
-          >
-            ✖
-          </button>
-        )}
-        {/* 안내문구 바로 아래 표시 */}
-        {submitAttempted && !selectedDate && (
-          <p className="text-red-500 text-sm mt-1">생년월일을 입력해주세요.</p>
-        )}
-      </div>
+    <div className="min-h-16 flex items-center justify-center p-4 sm:p-6 md:p-10">
+      <div className="w-full max-w-md sm:max-w-lg md:max-w-2xl rounded-2xl p-4 sm:p-6 md:p-8">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-800 mb-4 sm:mb-6">
+          Create an Ara Account
+        </h2>
 
-      {/* Calendar popup */}
-      {open && (
-        <div className="absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg z-20">
-          {/* 달력 내용 생략 가능 */}
-        </div>
-      )}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-5 md:gap-6">
+          {/* 이메일 */}
+          <div className="relative">
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={e => handleChange('email', e.target.value)}
+              placeholder=" "
+              className={`peer w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white text-black text-sm sm:text-base
+                ${errors.email ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300'}`}
+            />
+            <label
+              htmlFor="email"
+              className={`absolute left-3 sm:left-4 transition-all
+                ${email ? '-top-3 text-xs sm:text-sm' : 'top-2 sm:top-3 text-sm sm:text-base'}
+                peer-focus:-top-3 peer-focus:text-xs sm:peer-focus:text-sm peer-focus:text-primary
+                text-gray-400 bg-white/95 px-1 rounded`}
+            >
+              Email
+            </label>
+            {errors.email && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.email}</p>}
+          </div>
+
+          {/* 비밀번호 */}
+          <div className="relative">
+            <input
+              type="password"
+              id="pw"
+              value={pw}
+              onChange={e => handleChange('pw', e.target.value)}
+              placeholder=" "
+              className={`peer w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white text-black text-sm sm:text-base
+                ${errors.pw ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300'}`}
+            />
+            <label
+              htmlFor="pw"
+              className={`absolute left-3 sm:left-4 transition-all
+                ${pw ? '-top-3 text-xs sm:text-sm' : 'top-2 sm:top-3 text-sm sm:text-base'}
+                peer-focus:-top-3 peer-focus:text-xs sm:peer-focus:text-sm peer-focus:text-primary
+                text-gray-400 bg-white/95 px-1 rounded`}
+            >
+              Password
+            </label>
+            {errors.pw && <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.pw}</p>}
+          </div>
+
+          {/* 비밀번호 확인 */}
+          <div className="relative">
+            <input
+              type="password"
+              id="confirmPw"
+              value={confirmPw}
+              onChange={e => handleChange('confirmPw', e.target.value)}
+              placeholder=" "
+              className={`peer w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white text-black text-sm sm:text-base
+                ${errors.confirmPw ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300'}`}
+            />
+            <label
+              htmlFor="confirmPw"
+              className={`absolute left-3 sm:left-4 transition-all
+                ${confirmPw ? '-top-3 text-xs sm:text-sm' : 'top-2 sm:top-3 text-sm sm:text-base'}
+                peer-focus:-top-3 peer-focus:text-xs sm:peer-focus:text-sm peer-focus:text-primary
+                text-gray-400 bg-white/95 px-1 rounded`}
+            >
+              Confirm Password
+            </label>
+            {errors.confirmPw && (
+              <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.confirmPw}</p>
+            )}
+          </div>
+
+          {/* 닉네임 */}
+          <div className="relative">
+            <input
+              type="text"
+              id="nickname"
+              value={nickname}
+              onChange={e => handleChange('nickname', e.target.value)}
+              placeholder=" "
+              className={`peer w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white text-black text-sm sm:text-base
+                ${errors.nickname ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300'}`}
+            />
+            <label
+              htmlFor="nickname"
+              className={`absolute left-3 sm:left-4 transition-all
+                ${nickname ? '-top-3 text-xs sm:text-sm' : 'top-2 sm:top-3 text-sm sm:text-base'}
+                peer-focus:-top-3 peer-focus:text-xs sm:peer-focus:text-sm peer-focus:text-primary
+                text-gray-400 bg-white/95 px-1 rounded`}
+            >
+              Nickname
+            </label>
+            {errors.nickname && (
+              <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.nickname}</p>
+            )}
+          </div>
+
+          {/* 성별, 생년월일, 국가 (ring 제거) */}
+          <GenderSelect
+            value={gender}
+            onChange={setGender}
+            error={submitAttempted && gender === ''}
+          />
+          <BirthInput value={birth} onChange={setBirth} error={submitAttempted && !birth} />
+          {submitAttempted && !birth && (
+            <p className="mt-1 text-red-500 text-sm">생년월일을 입력해주세요.</p>
+          )}
+          <CountrySelect value={country} onChange={setCountry} />
+
+          {/* 프로필 사진 */}
+          <div className="flex flex-col items-center mt-3 sm:mt-4">
+            <label className="mb-2 font-semibold text-gray-700 text-sm sm:text-base">
+              Select Profile Picture
+            </label>
+
+            <div className="relative">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
+                <span className="text-gray-400 text-xs sm:text-sm">No Image</span>
+              </div>
+              <input type="file" accept="image/*" id="profile-upload" className="hidden" />
+              <label
+                htmlFor="profile-upload"
+                className="absolute bottom-0 right-0 bg-primary opacity-70 text-white w-8 h-8 sm:w-9 sm:h-9 rounded-full cursor-pointer shadow flex items-center justify-center hover:opacity-90"
+              >
+                <img
+                  src="/images/photo_icon.png"
+                  alt="Select Profile Picture"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
+                />
+              </label>
+            </div>
+            <p className="text-gray-500 text-xs sm:text-sm mt-2">
+              JPG, PNG, GIF 등 모든 이미지 최대 2MB
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            className="bg-primary text-white font-semibold py-2 sm:py-3 rounded-lg hover:opacity-75 transition-colors text-sm sm:text-base"
+          >
+            Sign Up
+          </button>
+        </form>
+        {msg && <p className="mt-3 sm:mt-4 text-center text-red-500 text-sm sm:text-base">{msg}</p>}
+      </div>
     </div>
   );
 }
+
+export default SignUpPage;

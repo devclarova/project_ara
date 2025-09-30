@@ -203,7 +203,7 @@ export default function BirthInput({ value, onChange, error }: BirthInputProps):
           onFocus={handleInputFocus}
           onKeyDown={handleKeyDown}
           className={`w-full px-4 h-12 rounded-lg border text-gray-900 focus:outline-none focus:ring-0
-  ${error ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300 focus:border-[#00BFA5] focus:shadow-[0_0_0_2px_rgba(0,191,165,0.5)]'}`}
+    ${error ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300 focus:border-[#00BFA5] focus:shadow-[0_0_0_2px_rgba(0,191,165,0.5)]'}`}
         />
         {/* 달력 아이콘 */}
         <button
