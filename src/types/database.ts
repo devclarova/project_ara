@@ -5,15 +5,11 @@ export type PostInsert = Database['public']['Tables']['posts']['Insert'];
 export type PostUpdate = Database['public']['Tables']['posts']['Update'];
 
 // 사용자 정보
-export type Profile = Database['public']['Tables']['users']['Row'];
-export type ProfileInsert = Database['public']['Tables']['users']['Insert'];
-export type ProfileUpdate = Database['public']['Tables']['users']['Update'];
+export type Profile = Database['public']['Tables']['profiles']['Row'];
+export type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
+export type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
 
-export type TodoType = { id: string; title: string; completed: boolean };
-
-export type Clip = Database['public']['Tables']['clip']['Row'];
 export type Dialogues = Database['public']['Tables']['dialogues']['Row'];
-export type Tts = Database['public']['Tables']['temptts']['Row'];
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -43,112 +39,28 @@ export type Database = {
         };
         Relationships: [];
       };
-      clip: {
-        Row: {
-          created_at: string;
-          dialogue: string;
-          difficulty_level: number | null;
-          end_time: string;
-          episode: number | null;
-          id: number;
-          runtime: number | null;
-          start_time: string;
-          study_id: number;
-          title: string;
-        };
-        Insert: {
-          created_at?: string;
-          dialogue: string;
-          difficulty_level?: number | null;
-          end_time: string;
-          episode?: number | null;
-          id?: number;
-          runtime?: number | null;
-          start_time: string;
-          study_id: number;
-          title: string;
-        };
-        Update: {
-          created_at?: string;
-          dialogue?: string;
-          difficulty_level?: number | null;
-          end_time?: string;
-          episode?: number | null;
-          id?: number;
-          runtime?: number | null;
-          start_time?: string;
-          study_id?: number;
-          title?: string;
-        };
-        Relationships: [];
-      };
-      clip_words: {
-        Row: {
-          clip_id: number;
-          created_at: string | null;
-          id: number;
-          mean: string | null;
-          parts_of_speech: string | null;
-          pronunciation: string | null;
-          study_id: number;
-          updated_at: string | null;
-          word: string;
-          words_id: number;
-        };
-        Insert: {
-          clip_id: number;
-          created_at?: string | null;
-          id?: number;
-          mean?: string | null;
-          parts_of_speech?: string | null;
-          pronunciation?: string | null;
-          study_id: number;
-          updated_at?: string | null;
-          word: string;
-          words_id: number;
-        };
-        Update: {
-          clip_id?: number;
-          created_at?: string | null;
-          id?: number;
-          mean?: string | null;
-          parts_of_speech?: string | null;
-          pronunciation?: string | null;
-          study_id?: number;
-          updated_at?: string | null;
-          word?: string;
-          words_id?: number;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'fk_clip_words_clip';
-            columns: ['clip_id'];
-            isOneToOne: false;
-            referencedRelation: 'clip';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'fk_clip_words_words';
-            columns: ['words_id'];
-            isOneToOne: false;
-            referencedRelation: 'words';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
       countries: {
         Row: {
+          flag: string | null;
+          flag_url: string | null;
           id: number;
+          iso_code: string | null;
           name: string;
           phone_code: number;
         };
         Insert: {
+          flag?: string | null;
+          flag_url?: string | null;
           id?: number;
+          iso_code?: string | null;
           name: string;
           phone_code: number;
         };
         Update: {
+          flag?: string | null;
+          flag_url?: string | null;
           id?: number;
+          iso_code?: string | null;
           name?: string;
           phone_code?: number;
         };
@@ -189,6 +101,38 @@ export type Database = {
           },
         ];
       };
+      culture_note: {
+        Row: {
+          contents: string | null;
+          id: number;
+          study_id: number | null;
+          subtitle: string | null;
+          title: string | null;
+        };
+        Insert: {
+          contents?: string | null;
+          id?: never;
+          study_id?: number | null;
+          subtitle?: string | null;
+          title?: string | null;
+        };
+        Update: {
+          contents?: string | null;
+          id?: never;
+          study_id?: number | null;
+          subtitle?: string | null;
+          title?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'culture_note_study_id_fkey';
+            columns: ['study_id'];
+            isOneToOne: false;
+            referencedRelation: 'study';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       dialogues: {
         Row: {
           culture_note: string | null;
@@ -213,6 +157,38 @@ export type Database = {
         };
         Relationships: [];
       };
+      memo: {
+        Row: {
+          created_at: string | null;
+          id: number;
+          note: string | null;
+          study_id: number | null;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          id?: never;
+          note?: string | null;
+          study_id?: number | null;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string | null;
+          id?: never;
+          note?: string | null;
+          study_id?: number | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'memo_study_id_fkey';
+            columns: ['study_id'];
+            isOneToOne: false;
+            referencedRelation: 'study';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       posts: {
         Row: {
           category: Database['public']['Enums']['category_type'];
@@ -224,7 +200,7 @@ export type Database = {
           title: string;
           unlike: number;
           updated_at: string | null;
-          user_id: number;
+          user_id: number | null;
           view: number;
         };
         Insert: {
@@ -237,7 +213,7 @@ export type Database = {
           title: string;
           unlike?: number;
           updated_at?: string | null;
-          user_id: number;
+          user_id?: number | null;
           view?: number;
         };
         Update: {
@@ -250,7 +226,7 @@ export type Database = {
           title?: string;
           unlike?: number;
           updated_at?: string | null;
-          user_id?: number;
+          user_id?: number | null;
           view?: number;
         };
         Relationships: [
@@ -259,6 +235,91 @@ export type Database = {
             columns: ['user_id'];
             isOneToOne: false;
             referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      profiles: {
+        Row: {
+          avatar_url: string | null;
+          bio: string | null;
+          birthday: string | null;
+          country: string | null;
+          created_at: string | null;
+          gender: string | null;
+          id: number;
+          nickname: string | null;
+          updated_at: string | null;
+          user_id: number;
+        };
+        Insert: {
+          avatar_url?: string | null;
+          bio?: string | null;
+          birthday?: string | null;
+          country?: string | null;
+          created_at?: string | null;
+          gender?: string | null;
+          id?: never;
+          nickname?: string | null;
+          updated_at?: string | null;
+          user_id: number;
+        };
+        Update: {
+          avatar_url?: string | null;
+          bio?: string | null;
+          birthday?: string | null;
+          country?: string | null;
+          created_at?: string | null;
+          gender?: string | null;
+          id?: never;
+          nickname?: string | null;
+          updated_at?: string | null;
+          user_id?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'profile_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      progress: {
+        Row: {
+          completed_lessons: number | null;
+          id: number;
+          progress_rate: number | null;
+          study_id: number | null;
+          total_lessons: number | null;
+          updated_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          completed_lessons?: number | null;
+          id?: never;
+          progress_rate?: number | null;
+          study_id?: number | null;
+          total_lessons?: number | null;
+          updated_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          completed_lessons?: number | null;
+          id?: never;
+          progress_rate?: number | null;
+          study_id?: number | null;
+          total_lessons?: number | null;
+          updated_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'progress_study_id_fkey';
+            columns: ['study_id'];
+            isOneToOne: false;
+            referencedRelation: 'study';
             referencedColumns: ['id'];
           },
         ];
@@ -294,40 +355,25 @@ export type Database = {
       };
       study: {
         Row: {
-          culture_note: string | null;
-          dialogue: string;
-          difficulty: string | null;
-          english_subtitle: string;
+          created_at: string | null;
           id: number;
-          timestamp_end: unknown | null;
-          timestamp_start: unknown | null;
-          video_end_time: number | null;
-          video_start_time: number | null;
-          video_url: string | null;
+          poster_image_url: string | null;
+          short_description: string | null;
+          title: string;
         };
         Insert: {
-          culture_note?: string | null;
-          dialogue: string;
-          difficulty?: string | null;
-          english_subtitle: string;
-          id?: number;
-          timestamp_end?: unknown | null;
-          timestamp_start?: unknown | null;
-          video_end_time?: number | null;
-          video_start_time?: number | null;
-          video_url?: string | null;
+          created_at?: string | null;
+          id?: never;
+          poster_image_url?: string | null;
+          short_description?: string | null;
+          title: string;
         };
         Update: {
-          culture_note?: string | null;
-          dialogue?: string;
-          difficulty?: string | null;
-          english_subtitle?: string;
-          id?: number;
-          timestamp_end?: unknown | null;
-          timestamp_start?: unknown | null;
-          video_end_time?: number | null;
-          video_start_time?: number | null;
-          video_url?: string | null;
+          created_at?: string | null;
+          id?: never;
+          poster_image_url?: string | null;
+          short_description?: string | null;
+          title?: string;
         };
         Relationships: [];
       };
@@ -355,71 +401,67 @@ export type Database = {
         };
         Relationships: [];
       };
-      temptts: {
+      subtitle: {
         Row: {
-          culture_note: string | null;
-          dialogue: string | null;
-          end: string;
-          english: string | null;
+          english_subtitle: string | null;
           id: number;
-          imgUrl: string | null;
-          src: string | null;
-          start: string;
+          korean_subtitle: string | null;
+          level: Database['public']['Enums']['difficulty_level'] | null;
+          pronunciation: string | null;
+          study_id: number | null;
+          subtitle_end_time: number | null;
+          subtitle_start_time: number | null;
         };
         Insert: {
-          culture_note?: string | null;
-          dialogue?: string | null;
-          end: string;
-          english?: string | null;
-          id: number;
-          imgUrl?: string | null;
-          src?: string | null;
-          start: string;
+          english_subtitle?: string | null;
+          id?: never;
+          korean_subtitle?: string | null;
+          level?: Database['public']['Enums']['difficulty_level'] | null;
+          pronunciation?: string | null;
+          study_id?: number | null;
+          subtitle_end_time?: number | null;
+          subtitle_start_time?: number | null;
         };
         Update: {
-          culture_note?: string | null;
-          dialogue?: string | null;
-          end?: string;
-          english?: string | null;
-          id?: number;
-          imgUrl?: string | null;
-          src?: string | null;
-          start?: string;
+          english_subtitle?: string | null;
+          id?: never;
+          korean_subtitle?: string | null;
+          level?: Database['public']['Enums']['difficulty_level'] | null;
+          pronunciation?: string | null;
+          study_id?: number | null;
+          subtitle_end_time?: number | null;
+          subtitle_start_time?: number | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'subtitle_study_id_fkey';
+            columns: ['study_id'];
+            isOneToOne: false;
+            referencedRelation: 'study';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       users: {
         Row: {
-          avatar_url: string | null;
-          birth: string;
           created_at: string;
           email: string;
-          gender: Database['public']['Enums']['gender_enum'] | null;
           id: number;
-          nationality: string | null;
-          nickname: string;
+          last_login: string | null;
           password: string;
         };
         Insert: {
-          avatar_url?: string | null;
-          birth: string;
           created_at?: string;
           email?: string;
-          gender?: Database['public']['Enums']['gender_enum'] | null;
           id?: number;
-          nationality?: string | null;
-          nickname?: string;
+          last_login?: string | null;
           password?: string;
         };
         Update: {
-          avatar_url?: string | null;
-          birth?: string;
           created_at?: string;
           email?: string;
-          gender?: Database['public']['Enums']['gender_enum'] | null;
           id?: number;
-          nationality?: string | null;
-          nickname?: string;
+          last_login?: string | null;
           password?: string;
         };
         Relationships: [];
@@ -501,6 +543,94 @@ export type Database = {
           },
         ];
       };
+      video: {
+        Row: {
+          categories: string | null;
+          contents: string | null;
+          episode: string | null;
+          id: number;
+          image_url: string | null;
+          runtime: number | null;
+          scene: string | null;
+          study_id: number | null;
+          video_end_time: number | null;
+          video_start_time: number | null;
+          video_url: string | null;
+        };
+        Insert: {
+          categories?: string | null;
+          contents?: string | null;
+          episode?: string | null;
+          id?: never;
+          image_url?: string | null;
+          runtime?: number | null;
+          scene?: string | null;
+          study_id?: number | null;
+          video_end_time?: number | null;
+          video_start_time?: number | null;
+          video_url?: string | null;
+        };
+        Update: {
+          categories?: string | null;
+          contents?: string | null;
+          episode?: string | null;
+          id?: never;
+          image_url?: string | null;
+          runtime?: number | null;
+          scene?: string | null;
+          study_id?: number | null;
+          video_end_time?: number | null;
+          video_start_time?: number | null;
+          video_url?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'video_study_id_fkey';
+            columns: ['study_id'];
+            isOneToOne: false;
+            referencedRelation: 'study';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      word: {
+        Row: {
+          example: string | null;
+          id: number;
+          means: string | null;
+          parts_of_speech: string | null;
+          pronunciation: string | null;
+          study_id: number | null;
+          words: string | null;
+        };
+        Insert: {
+          example?: string | null;
+          id?: never;
+          means?: string | null;
+          parts_of_speech?: string | null;
+          pronunciation?: string | null;
+          study_id?: number | null;
+          words?: string | null;
+        };
+        Update: {
+          example?: string | null;
+          id?: never;
+          means?: string | null;
+          parts_of_speech?: string | null;
+          pronunciation?: string | null;
+          study_id?: number | null;
+          words?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'word_study_id_fkey';
+            columns: ['study_id'];
+            isOneToOne: false;
+            referencedRelation: 'study';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       words: {
         Row: {
           completed: boolean | null;
@@ -544,10 +674,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      hhmmss_to_seconds: {
+        Args: { t: string };
+        Returns: number;
+      };
     };
     Enums: {
       category_type: 'Notice' | 'Reviews' | 'Q&A' | 'Study tips' | 'Communication';
+      difficulty_level: '초급' | '중급' | '고급';
       gender_enum: '남' | '여';
     };
     CompositeTypes: {
@@ -675,6 +809,7 @@ export const Constants = {
   public: {
     Enums: {
       category_type: ['Notice', 'Reviews', 'Q&A', 'Study tips', 'Communication'],
+      difficulty_level: ['초급', '중급', '고급'],
       gender_enum: ['남', '여'],
     },
   },

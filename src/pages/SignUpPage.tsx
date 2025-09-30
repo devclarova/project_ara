@@ -1,89 +1,148 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
-import CountrySelect from '../components/common/CountrySelect';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import BirthInput from '../components/common/BirthInput';
+import React, { useEffect, useRef, useState } from 'react';
 
-function SignUpPage() {
-  const { signUp } = useAuth();
+const WEEK_DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
-  const [email, setEmail] = useState<string>('');
-  const [pw, setPw] = useState<string>('');
-  const [msg, setMsg] = useState<string>('');
-  const [nickname, setNickname] = useState<string>('');
-  const [birth, setBirth] = useState<Date | null>(null);
-  const [country, setCountry] = useState<string>('');
+function pad(n: number) {
+  return String(n).padStart(2, '0');
+}
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const { error } = await signUp(email, pw);
-    if (error) {
-      setMsg(`회원가입 오류: ${error}`);
-    } else {
-      setMsg('회원가입이 성공했습니다. 이메일 인증 링크를 확인해 주세요.');
-    }
+interface BirthInputProps {
+  value: Date | null;
+  onChange: (date: Date | null) => void;
+  submitAttempted: boolean; // <- submit 여부
+}
+
+export default function BirthInput({
+  value,
+  onChange,
+  submitAttempted,
+}: BirthInputProps): JSX.Element {
+  const [inputValue, setInputValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [open, setOpen] = useState<boolean>(false);
+
+  const [viewYear, setViewYear] = useState<number>(new Date().getFullYear());
+  const [viewMonth, setViewMonth] = useState<number>(new Date().getMonth());
+
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  const formatFromDate = (d: Date) =>
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+  const formatInput = (raw: string) => {
+    const digits = raw.replace(/[^0-9]/g, '');
+    let res = digits;
+    if (digits.length > 4) res = digits.slice(0, 4) + '-' + res.slice(4);
+    if (digits.length > 6) res = res.slice(0, 7) + '-' + res.slice(7, 9);
+    if (res.length > 10) res = res.slice(0, 10);
+    return res;
   };
 
+  const parsePartialToDate = (formatted: string): Date | null => {
+    const digits = formatted.replace(/[^0-9]/g, '');
+    if (digits.length < 4) return null;
+    const y = Number(digits.slice(0, 4));
+    if (Number.isNaN(y)) return null;
+    if (digits.length < 6) return new Date(y, 0, 1);
+    const m = Number(digits.slice(4, 6));
+    if (Number.isNaN(m) || m < 1 || m > 12) return null;
+    if (digits.length < 8) return new Date(y, m - 1, 1);
+    const d = Number(digits.slice(6, 8));
+    if (Number.isNaN(d) || d < 1 || d > 31) return null;
+    const date = new Date(y, m - 1, d);
+    if (date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d) return date;
+    return null;
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatInput(e.target.value);
+    setInputValue(formatted);
+
+    const maybeDate = parsePartialToDate(formatted);
+    if (maybeDate) {
+      setSelectedDate(maybeDate);
+      setViewYear(maybeDate.getFullYear());
+      setViewMonth(maybeDate.getMonth());
+    }
+    setOpen(true);
+  };
+
+  const handleInputFocus = () => {
+    setOpen(true);
+  };
+
+  const handleDateClick = (d: Date) => {
+    setSelectedDate(d);
+    setInputValue(formatFromDate(d));
+    setViewYear(d.getFullYear());
+    setViewMonth(d.getMonth());
+    setOpen(false);
+    onChange(d);
+  };
+
+  const handleClear = () => {
+    setInputValue('');
+    setSelectedDate(null);
+    setOpen(false);
+    onChange(null);
+    inputRef.current?.focus();
+  };
+
+  useEffect(() => {
+    const onDocClick = (ev: MouseEvent) => {
+      if (!rootRef.current) return;
+      if (!rootRef.current.contains(ev.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, []);
+
   return (
-    <div className="min-h-16 flex items-center justify-center p-10">
-      <div className="w-full max-w-2xl rounded-2xl p-8">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Create an Ara Account</h2>
-        <div>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="Email"
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            <input
-              type="password"
-              value={pw}
-              onChange={e => setPw(e.target.value)}
-              placeholder="Password"
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            <input
-              type="password"
-              value={pw}
-              onChange={e => setPw(e.target.value)}
-              placeholder="Password"
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            <input
-              type="text"
-              value={nickname}
-              onChange={e => setNickname(e.target.value)}
-              placeholder="Nickname"
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            <BirthInput value={birth} onChange={setBirth} />
-            <CountrySelect
-              value={country}
-              onChange={setCountry}
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-
-            <div className="flex flex-col items-center mt-4">
-              <label className="mb-2 font-semibold text-gray-700">Select Profile Picture</label>
-              <input type="file" accept="image/*" className="border p-2 rounded" />
-            </div>
-
-            <button
-              type="submit"
-              className="bg-primary text-white font-semibold py-3 rounded-lg hover:opacity-75 transition-colors"
-            >
-              회원가입
-            </button>
-          </form>
-          {msg && <p className="mt-4 text-center text-red-500">{msg}</p>}
-        </div>
+    <div className="relative w-full max-w-full" ref={rootRef}>
+      <div className="relative w-full">
+        <input
+          ref={inputRef}
+          type="text"
+          value={inputValue}
+          placeholder="yyyy-mm-dd"
+          onChange={handleInputChange}
+          onFocus={handleInputFocus}
+          className={`w-full px-4 h-12 rounded-lg border text-gray-900
+            focus:outline-none focus:ring-0
+            ${submitAttempted && !selectedDate ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300'}
+          `}
+        />
+        {/* 달력 아이콘 */}
+        <button
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          className="absolute right-8 top-1/2 -translate-y-1/2 px-1 text-gray-500 hover:text-gray-700"
+        >
+          📅
+        </button>
+        {/* X 버튼 */}
+        {inputValue && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="absolute right-2 top-1/2 -translate-y-1/2 px-1 text-gray-500 hover:text-gray-700"
+          >
+            ✖
+          </button>
+        )}
+        {/* 안내문구 바로 아래 표시 */}
+        {submitAttempted && !selectedDate && (
+          <p className="text-red-500 text-sm mt-1">생년월일을 입력해주세요.</p>
+        )}
       </div>
+
+      {/* Calendar popup */}
+      {open && (
+        <div className="absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg z-20">
+          {/* 달력 내용 생략 가능 */}
+        </div>
+      )}
     </div>
   );
 }
-
-export default SignUpPage;

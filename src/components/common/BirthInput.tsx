@@ -9,9 +9,10 @@ function pad(n: number) {
 interface BirthInputProps {
   value: Date | null;
   onChange: (date: Date | null) => void;
+  error?: boolean; // 추가
 }
 
-export default function BirthInput({ value, onChange }: BirthInputProps): JSX.Element {
+export default function BirthInput({ value, onChange, error }: BirthInputProps): JSX.Element {
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -201,10 +202,8 @@ export default function BirthInput({ value, onChange }: BirthInputProps): JSX.El
           onChange={handleInputChange}
           onFocus={handleInputFocus}
           onKeyDown={handleKeyDown}
-          className="w-full px-4 h-12 rounded-lg border text-gray-900
-             focus:outline-none focus:ring-0
-             focus:border-[#00BFA5]
-             focus:shadow-[0_0_0_2px_rgba(0,191,165,0.5)]"
+          className={`w-full px-4 h-12 rounded-lg border text-gray-900 focus:outline-none focus:ring-0
+  ${error ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300 focus:border-[#00BFA5] focus:shadow-[0_0_0_2px_rgba(0,191,165,0.5)]'}`}
         />
         {/* 달력 아이콘 */}
         <button
