@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import CountrySelect from '../components/common/CountrySelect';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import BirthInput from '../components/common/BirthInput';
 
 function SignUpPage() {
   const { signUp } = useAuth();
@@ -10,7 +13,7 @@ function SignUpPage() {
   const [pw, setPw] = useState<string>('');
   const [msg, setMsg] = useState<string>('');
   const [nickname, setNickname] = useState<string>('');
-  const [birth, setBirth] = useState<string>('');
+  const [birth, setBirth] = useState<Date | null>(null);
   const [country, setCountry] = useState<string>('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -57,14 +60,12 @@ function SignUpPage() {
               placeholder="Nickname"
               className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
-            <input
-              type="date"
-              value={birth}
-              onChange={e => setBirth(e.target.value)}
-              placeholder="Birth"
+            <BirthInput value={birth} onChange={setBirth} />
+            <CountrySelect
+              value={country}
+              onChange={setCountry}
               className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
-            <CountrySelect value={country} onChange={setCountry} />
 
             <div className="flex flex-col items-center mt-4">
               <label className="mb-2 font-semibold text-gray-700">Select Profile Picture</label>
