@@ -128,6 +128,7 @@ export default function CountrySelect({ value, onChange }: CountrySelectProps) {
       components={{ DropdownIndicator: CustomDropdownIndicator }}
       className="w-full"
       classNamePrefix="react-select"
+      placeholder="Nationality"
     />
   );
 }

@@ -1,41 +1,3 @@
-// import React, { useState } from 'react';
-// import { useAuth } from '../contexts/AuthContext';
-
-// function SignInPage() {
-//   const { signIn } = useAuth();
-//   const [email, setEmail] = useState<string>('');
-//   const [pw, setPw] = useState<string>('');
-//   const [msg, setMsg] = useState<string>('');
-
-//   const handleSumit = async (e: React.FormEvent<HTMLFormElement>) => {
-//     // 새로고침 방지
-//     e.preventDefault;
-
-//     const { error } = await signIn(email, pw);
-//     if (error) {
-//       setMsg(`로그인 오류:${error}`);
-//     } else {
-//       setMsg('로그인 성공');
-//     }
-//   };
-
-//   return (
-//     <div>
-//       <h2>Welcome back to Ara</h2>
-//       <div>
-//         <form onSubmit={handleSumit}>
-//           <input type="email" value={email} onChange={e => setEmail(e.target.value)} />
-//           <input type="password" value={pw} onChange={e => setPw(e.target.value)} />
-//           <button type="submit">로그인</button>
-//         </form>
-//         <p>{msg}</p>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default SignInPage;
-
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -74,28 +36,45 @@ function SignInPage() {
             Welcome back to Ara
           </h2>
         </div>
-
         {/* 로그인 폼 */}
         <form onSubmit={handleSumit} className="space-y-4">
-          <div>
-            <label className="block text-sm sm:text-base text-gray-600 mb-1">Email</label>
+          <div className="relative">
             <input
               type="email"
+              id="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="w-full px-4 py-2 sm:py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-800 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-200"
+              placeholder=" " // floating label용
+              className="peer w-full px-4 py-2 sm:py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-800 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#00BFA5]"
             />
+            <label
+              htmlFor="email"
+              className="absolute left-4 top-2.5 sm:top-3 text-gray-400 text-sm sm:text-base transition-all
+      peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-sm
+      peer-focus:-top-3 peer-focus:left-3 peer-focus:text-sm peer-focus:text-[#00BFA5]
+      bg-white px-1"
+            >
+              Email
+            </label>
           </div>
-          <div>
-            <label className="block text-sm sm:text-base text-gray-600 mb-1">Password</label>
+          <div className="relative">
             <input
               type="password"
+              id="password"
               value={pw}
               onChange={e => setPw(e.target.value)}
-              placeholder="Enter your password"
-              className="w-full px-4 py-2 sm:py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-800 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-red-200"
+              placeholder=" " // floating label용
+              className="peer w-full px-4 py-2 sm:py-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-800 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary"
             />
+            <label
+              htmlFor="password"
+              className="absolute left-4 top-2.5 sm:top-3 text-gray-400 text-sm sm:text-base transition-all
+      peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-sm
+      peer-focus:-top-3 peer-focus:left-3 peer-focus:text-sm peer-focus:text-primary
+      bg-white px-1"
+            >
+              Password
+            </label>
           </div>
           <button
             type="submit"
@@ -115,13 +94,19 @@ function SignInPage() {
           </span>
         </p>
 
-        <div className="mt-4 flex items-center justify-center text-gray-400 text-sm sm:text-base">
-          <span>OR</span>
+        <div className="mt-4 flex items-center">
+          <hr className="flex-grow border-gray-300" />
+          <span className="mx-2 text-gray-400 text-sm sm:text-base">OR</span>
+          <hr className="flex-grow border-gray-300" />
         </div>
 
         <div className="mt-4 space-y-2">
-          <button className="w-full flex items-center justify-center border border-gray-300 rounded-lg py-2 sm:py-3 text-sm sm:text-base hover:bg-gray-100 transition-colors">
-            <span className="mr-2">G</span> Sign in with Google
+          <button
+            type="button"
+            className="w-full flex items-center justify-center gap-2 border border-primary rounded-lg py-2 sm:py-3 text-sm sm:text-base font-medium text-primary bg-gray-50 hover:opacity-80 transition-opacity"
+          >
+            <img src="/images/google_logo.png" alt="Sign in with Google" className="w-5 h-5" />
+            <span>Sign in with Google</span>
           </button>
         </div>
 
