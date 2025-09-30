@@ -1,109 +1,125 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { getTts } from '../../services/ClipService';
-import { useParams } from 'react-router-dom';
 import ReactPlayer from 'react-player';
-import type { Tts } from '../../types/database';
+import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 
 interface VideoPlayerProps {
-  start?: number;
-  end?: number;
   autoPlay?: boolean;
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = () => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ autoPlay = false }) => {
   const playerRef = useRef<any>(null);
-  const [playing, setPlaying] = useState(false);
-  const [videoUrl, setVideoUrl] = useState<string | undefined>(undefined);
   const { id } = useParams<{ id: string }>();
 
-  // 반복 구간
-  const START_TIME = 70;
-  const END_TIME = 122;
+  const [playing, setPlaying] = useState(autoPlay);
+  const [video, setVideo] = useState<string | undefined>(undefined);
 
-  // 영상 이동
-  // const jumpSeconds = 1;
-
-  // 영상이 준비되면 시작 지점으로 이동
-  const handleReady = () => {
-    if (playerRef.current) {
-      playerRef.current.currentTime = START_TIME;
-    }
-  };
-
-  const handleTimeUpdate = () => {
-    if (!playerRef.current) return;
-    if (playerRef.current.currentTime >= END_TIME) {
-      playerRef.current.currentTime = START_TIME;
-    }
-    if (playerRef.current.currentTime < START_TIME) {
-      playerRef.current.currentTime = START_TIME;
-    }
-  };
+  const [startSec, setStartSec] = useState<number>(); // 기본값
+  const [endSec, setEndSec] = useState<number>(); // 기본값
+  const [videoDuration, setVideoDuration] = useState<number>();
 
   // 영상 불러오기
   useEffect(() => {
-    const fetchVideoUrl = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('video')
-          .select('id, video_url')
-          .eq('study_id', id)
-          .single(); // id에 해당하는 영상 URL 가져오기
+    const fetchVideo = async () => {
+      const { data, error } = await supabase
+        .from('video')
+        .select('id, video_url,video_start_time, video_end_time')
+        .eq('study_id', Number(id))
+        .single(); // id에 해당하는 영상 URL 가져오기
 
-        if (error) {
-          console.error('영상 가져오기 오류:', error);
-        } else {
-          if (data?.video_url) {
-            setVideoUrl(data.video_url); // video_url 상태 업데이트
-          }
-        }
-      } catch (err) {
-        console.error('데이터 불러오기 에러:', err);
+      if (error) {
+        console.log('영상 가져오기 오류 : ', error);
+        return;
       }
+      if (!data) return;
+
+      if (data.video_url) setVideo(data.video_url);
+      if (typeof data.video_start_time === 'number') setStartSec(data.video_start_time);
+      if (typeof data.video_end_time === 'number') setEndSec(data.video_end_time);
     };
 
-    fetchVideoUrl();
+    if (id) fetchVideo();
   }, [id]); // id가 변경될 때마다 호출
 
-  // 재생/일시 정지 버튼 토글
+  // 영상이 준비되면 시작 지점으로 이동
+  const handleReady = () => {
+    playerRef.current?.seekTo(startSec, 'seconds');
+  };
+
+  const handleProgress = (state: { playedSeconds: number }) => {
+    // endSec 값이 있을 때만 동작
+    if (endSec !== undefined && state.playedSeconds >= endSec) {
+      setPlaying(false);
+      playerRef.current?.seekTo(endSec, 'seconds');
+    }
+  };
+
+  // 재생/일시정지
   const handlePlayPause = () => {
-    setPlaying(!playing);
+    const t = playerRef.current?.getCurrentTime?.();
+
+    // 영상 끝에 있을 때 → startSec으로 돌리고 재생 시작
+    if (
+      (endSec !== undefined && typeof t === 'number' && t >= endSec) ||
+      (endSec === undefined &&
+        typeof t === 'number' &&
+        videoDuration !== undefined &&
+        t >= videoDuration)
+    ) {
+      playerRef.current?.seekTo(startSec ?? 0, 'seconds');
+      setPlaying(true);
+      return;
+    }
+
+    // 일반적인 토글
+    setPlaying(p => !p);
   };
 
   // 영상 구간 이동
-  const jumpForward = () => {};
-  const jumpBackward = () => {};
+  const handleBackward = (seconds: number) => {
+    if (playerRef.current) {
+      const currentTime = playerRef.current.getCurrentTime();
+      playerRef.current.seekTo(currentTime - seconds, 'seconds');
+    }
+  };
+  const handleForward = (seconds: number) => {
+    if (playerRef.current) {
+      const currentTime = playerRef.current.getCurrentTime();
+      playerRef.current.seekTo(currentTime + seconds, 'seconds');
+    }
+  };
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <div className="rounded-xl overflow-hidden shadow-md bg-gray-100 border-2 border-gray-300">
-        <div className="rounded-t-1 overflow-hidden shadow-md bg-black/5">
-          <ReactPlayer
-            ref={playerRef}
-            src={videoUrl || undefined}
-            playing={playing}
-            controls={false}
-            width="100%"
-            height="400px"
-            config={{
-              youtube: {
-                origin: window.location.origin,
-              },
-            }}
-            onReady={handleReady}
-            onPlay={() => {
-              playerRef.current?.addEventListener('timeupdate', handleTimeUpdate);
-            }}
-            onPause={() => {
-              playerRef.current?.removeEventListener('timeupdate', handleTimeUpdate);
-            }}
-          />
-        </div>
+      <div className="rounded-t-xl overflow-hidden relative">
+        <ReactPlayer
+          ref={playerRef}
+          url={video || undefined}
+          playing={playing}
+          controls={false}
+          width="100%"
+          height="400px"
+          onReady={handleReady}
+          onProgress={handleProgress}
+          onDuration={d => setVideoDuration(d)}
+          progressInterval={100}
+        />
+        {/* 오버레이 (클릭 차단) */}
+        <div className="absolute inset-0 bg-transparent pointer-events-auto" />
+      </div>
 
-        {/* 커스텀 컨트롤 */}
+      {/* 커스텀 컨트롤 */}
+      <div
+        className="overflow-hidden shadow-md bg-gray-100 border-2 border-gray-300 
+                  border-t-0 rounded-b-xl"
+      >
         <div className="flex justify-center items-center gap-3">
-          <button onClick={jumpBackward} aria-label="Backward 1 second" className="p-5 text-2xl">
+          {/* 3초 전으로 이동 */}
+          <button
+            onClick={() => handleBackward(3)}
+            aria-label="Backward 1 second"
+            className="p-5 text-2xl"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="30"
@@ -150,7 +166,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = () => {
               </svg>
             )}
           </button>
-          <button onClick={jumpForward} aria-label="Forward 1 second" className="p-5 text-2xl">
+          {/* 3초 앞으로 이동 */}
+          <button
+            onClick={() => handleForward(3)}
+            aria-label="Forward 1 second"
+            className="p-5 text-2xl"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="30"
