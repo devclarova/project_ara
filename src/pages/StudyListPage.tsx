@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import placeholder from '../assets/placeholder.png';
 import Input from '../components/Input';
 import type { Study } from '../types/study';
+import { Badge, Card } from './TempHomePage';
 
 const FilterDropdown = () => {
   const [open, setOpen] = useState(false);
@@ -317,6 +318,30 @@ const StudyListPage = () => {
               levelColor="bg-primary"
               duration="10분" // runtime 같은 필드 있으면 대체 가능
               comments="0개 댓글"
+            />
+          ))}
+
+          {/* ...추가 카드 */}
+        </div>
+
+        {/* 카드 그리드 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 p-6">
+          {/* DB 에서 카드 불러오기 */}
+          {clips.map(study => (
+            <Card
+              key={study.id}
+              id={study.id} // DB id 전달
+              image={study.poster_image_url} // 임시 이미지 (DB에 image 필드 있으면 교체)
+              title={study.title || '제목 없음'}
+              // subtitle={`${study.start} ~ ${study.end}`}
+              // desc={study.english || '설명 없음'}
+              subtitle={study.short_description}
+              meta={`${'초급'} · ${'10분'}`}
+              actions={<Badge variant="brand">초급</Badge>}
+              // level="초급" // 필요하다면 clip.difficulty_level 활용
+              // levelColor="bg-primary"
+              // duration="10분" // runtime 같은 필드 있으면 대체 가능
+              // comments="0개 댓글"
             />
           ))}
 
