@@ -274,7 +274,14 @@ const StudyListPage = () => {
         console.error('Error fetching data:', error);
         return;
       }
-      setClips(data || []);
+      setClips(
+        (data ?? []).map(r => {
+          return {
+            ...r,
+            created_at: r.created_at ? new Date(r.created_at) : new Date(),
+          } as unknown as Study;
+        }),
+      );
     };
 
     fetchData();

@@ -504,7 +504,7 @@ export type Database = {
           created_at?: string;
           email: string;
           id?: number;
-          last_login: string;
+          last_login?: string;
           password: string;
         };
         Update: {
@@ -716,6 +716,10 @@ export type Database = {
       };
     };
     Functions: {
+      ensure_profile: {
+        Args: Record<PropertyKey, never>;
+        Returns: undefined;
+      };
       hhmmss_to_seconds: {
         Args: { t: string };
         Returns: number;
