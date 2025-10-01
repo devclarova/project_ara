@@ -89,10 +89,23 @@ export default function BirthInput({
     inputRef.current?.focus();
   };
 
+  // ⬇︎ (추가) 포커스가 컴포넌트 바깥으로 나가면 달력 닫기
+  const handleWrapperBlur = (e: React.FocusEvent<HTMLDivElement>) => {
+    const next = e.relatedTarget as Node | null;
+    if (!rootRef.current || !next) {
+      setOpen(false);
+      return;
+    }
+    if (!rootRef.current.contains(next)) setOpen(false);
+  };
+
   useEffect(() => {
     const onDocClick = (ev: MouseEvent) => {
       if (!rootRef.current) return;
-      if (!rootRef.current.contains(ev.target as Node)) setOpen(false);
+      if (!rootRef.current.contains(ev.target as Node)) {
+        setOpen(false);
+        inputRef.current?.blur(); // ← 포커스도 제거해서 ring 확실히 종료
+      }
     };
     document.addEventListener('mousedown', onDocClick);
     return () => document.removeEventListener('mousedown', onDocClick);
@@ -118,7 +131,11 @@ export default function BirthInput({
   const days = buildDaysGrid(viewYear, viewMonth);
 
   return (
-    <div className="w-full relative" ref={rootRef}>
+    <div
+      className="w-full relative"
+      ref={rootRef}
+      onBlur={handleWrapperBlur} // ⬅︎ (추가)
+    >
       <div className="relative w-full">
         <input
           ref={inputRef}
@@ -127,6 +144,8 @@ export default function BirthInput({
           onChange={handleInputChange}
           onFocus={() => setOpen(true)}
           onKeyDown={e => {
+            if (e.key === 'Escape') setOpen(false); // ⬅︎ (추가) ESC로 닫기
+            if (e.key === 'Tab') setOpen(false); // ⬅︎ (추가) Tab 이동 시 닫기
             if (e.key === 'Enter') {
               e.preventDefault();
               const parsed = parseInputToDate(inputValue);
@@ -144,9 +163,10 @@ export default function BirthInput({
             }
           }}
           placeholder=" "
-          className={`peer w-full px-3 py-3 border rounded-lg bg-white text-black text-sm
-      focus:outline-none focus:ring-2 focus:ring-primary
-      ${error ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300'}`}
+          aria-haspopup="dialog" // ⬅︎ (추가) a11y
+          aria-expanded={open} // ⬅︎ (추가)
+          aria-controls="birth-popover" // ⬅︎ (추가)
+          className={`peer w-full px-3 py-3 border rounded-[14px] bg-white text-black text-sm ${error ? 'border-red-500' : 'border-gray-300'} ara-focus`}
         />
         <label
           className={`absolute left-3 transition-all text-gray-400 bg-white/95 px-1 rounded
@@ -159,6 +179,7 @@ export default function BirthInput({
           type="button"
           onClick={() => setOpen(o => !o)}
           className="absolute right-8 top-1/2 -translate-y-1/2 px-1 text-gray-500 hover:text-gray-700"
+          aria-label="Toggle calendar"
         >
           📅
         </button>
@@ -167,6 +188,7 @@ export default function BirthInput({
             type="button"
             onClick={handleClear}
             className="absolute right-2 top-1/2 -translate-y-1/2 px-1 text-gray-500 hover:text-gray-700"
+            aria-label="Clear date"
           >
             ✖
           </button>
@@ -177,11 +199,17 @@ export default function BirthInput({
 
       {open && (
         <div
+          id="birth-popover" // ⬅︎ (추가)
+          role="dialog" // ⬅︎ (추가)
           className="absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg z-20"
           onMouseDown={e => e.stopPropagation()}
         >
           <div className="flex items-center justify-between px-3 py-2 border-b">
-            <button onClick={prevMonth} className="px-2 py-1 rounded hover:bg-gray-100">
+            <button
+              onClick={prevMonth}
+              className="px-2 py-1 rounded hover:bg-gray-100"
+              type="button"
+            >
               ‹
             </button>
             <div className="text-sm font-medium">
@@ -190,7 +218,11 @@ export default function BirthInput({
                 year: 'numeric',
               })}
             </div>
-            <button onClick={nextMonth} className="px-2 py-1 rounded hover:bg-gray-100">
+            <button
+              onClick={nextMonth}
+              className="px-2 py-1 rounded hover:bg-gray-100"
+              type="button"
+            >
               ›
             </button>
           </div>
@@ -219,6 +251,7 @@ export default function BirthInput({
                   ].join(' ')}
                   disabled={!cell.inMonth}
                   aria-pressed={isSelected ?? undefined}
+                  type="button"
                 >
                   <div className="text-sm text-center">{cell.date.getDate()}</div>
                 </button>

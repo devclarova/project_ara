@@ -37,23 +37,14 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
       minHeight: 48,
       height: 48,
       borderRadius: 14,
-      borderColor: state.isFocused
-        ? '#00BFA5' // 포커스 우선 → primary
-        : error
-          ? 'red' // 포커스 없을 때 에러
-          : '#D1D5DB', // 기본 회색
-      borderWidth: state.isFocused
-        ? 1 // 포커스 시 굵기 기본
-        : error
-          ? 3 // 포커스 없을 때 에러 굵게
-          : 1,
-      boxShadow: state.isFocused
-        ? '0 0 0 2px rgba(0,191,165,0.3)' // 포커스 시 primary 강조
-        : 'none',
+      borderColor: state.isFocused ? 'var(--ara-primary)' : error ? 'red' : '#D1D5DB',
+      borderWidth: 1,
+      outline: 'none',
+      boxShadow: state.isFocused ? '0 0 0 3px var(--ara-ring)' : 'none',
       paddingLeft: 12,
       paddingRight: 12,
       '&:hover': {
-        borderColor: state.isFocused ? '#00BFA5' : error ? 'red' : '#D1D5DB',
+        borderColor: state.isFocused ? 'var(--ara-primary)' : error ? 'red' : '#D1D5DB',
       },
     }),
     valueContainer: (provided: any) => ({
@@ -81,10 +72,10 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
         }}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        onMenuOpen={() => setIsFocused(true)} // 메뉴 열 때 포커스
+        onMenuOpen={() => setIsFocused(true)}
         onMenuClose={() => {
-          setIsFocused(false); // 메뉴 닫으면 포커스 해제
-          (document.activeElement as HTMLElement)?.blur(); // 커서 제거
+          setIsFocused(false);
+          (document.activeElement as HTMLElement)?.blur();
         }}
         options={options}
         styles={customStyles}
@@ -92,15 +83,16 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
         className="w-full"
         classNamePrefix="react-select"
         placeholder=" "
+        openMenuOnFocus // ⬅︎ (추가) 포커스(=Tab 이동) 시 자동 오픈
       />
       <label
         className={`absolute left-3 px-1 bg-white/95 rounded transition-all
     ${
       isFocused
-        ? '-top-2 text-xs text-primary' // 포커스 시 항상 위 + primary
+        ? '-top-2 text-xs text-primary'
         : value
-          ? '-top-2 text-xs text-gray-400' // 값 있으면 위 + 회색
-          : 'top-3 text-sm text-gray-400' // 기본 중앙
+          ? '-top-2 text-xs text-gray-400'
+          : 'top-3 text-sm text-gray-400'
     }
   `}
       >

@@ -7,8 +7,8 @@ interface Country {
   id: number;
   name: string;
   phone_code: number;
-  iso_code: string;
-  flag_url: string;
+  iso_code: string | null;
+  flag_url: string | null;
 }
 
 interface CountrySelectProps {
@@ -53,17 +53,18 @@ export default function CountrySelect({ value, onChange, error = false }: Countr
   const selectedOption = options.find(o => o.value === value) || null;
 
   const customStyles = {
-    control: (provided: any) => ({
+    control: (provided: any, state: any) => ({
       ...provided,
       minHeight: 48,
       height: 48,
       padding: '0 12px',
       borderRadius: 14,
-      borderColor: isFocused ? '#00BFA5' : error && !value ? 'red' : '#D1D5DB',
-      borderWidth: isFocused ? 1 : error && !value ? 3 : 1,
-      boxShadow: isFocused ? '0 0 0 2px rgba(0,191,165,0.3)' : 'none',
+      borderColor: isFocused ? 'var(--ara-primary)' : error && !value ? 'red' : '#D1D5DB',
+      borderWidth: 1,
+      outline: 'none',
+      boxShadow: isFocused ? '0 0 0 3px var(--ara-ring)' : 'none',
       '&:hover': {
-        borderColor: isFocused ? '#00BFA5' : error && !value ? 'red' : '#D1D5DB',
+        borderColor: isFocused ? 'var(--ara-primary)' : error && !value ? 'red' : '#D1D5DB',
       },
     }),
     valueContainer: (provided: any) => ({
@@ -101,7 +102,7 @@ export default function CountrySelect({ value, onChange, error = false }: Countr
         options={options}
         formatOptionLabel={opt => (
           <div className="flex items-center gap-2">
-            <img src={opt.flag_url} alt={opt.label} className="w-5 h-3" />
+            src={opt.flag_url ?? '/images/flag_placeholder.svg'}
             <span>
               {opt.label} (+{opt.phone_code})
             </span>
@@ -112,6 +113,7 @@ export default function CountrySelect({ value, onChange, error = false }: Countr
         className="w-full"
         classNamePrefix="react-select"
         placeholder=" "
+        openMenuOnFocus // ⬅︎ (추가) 포커스(=Tab 이동) 시 자동 오픈
       />
 
       <label

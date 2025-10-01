@@ -14,9 +14,7 @@ const InputField = ({ id, label, type = 'text', value, onChange, error }: InputF
       value={value}
       onChange={e => onChange(e.target.value)}
       placeholder=" "
-      className={`peer w-full px-3 sm:px-4 py-2 sm:py-3 border rounded-lg focus:outline-none focus:ring-2
-        ${error ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-300 focus:ring-primary'}
-        bg-white text-black text-sm sm:text-base`}
+      className={`peer w-full px-4 py-3 border bg-white text-gray-900 text-sm ${error ? 'ara-focus--error' : 'ara-focus'} ara-rounded ${error ? '' : 'border-gray-300'}`}
     />
     <label
       htmlFor={id}

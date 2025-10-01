@@ -1,15 +1,19 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 
 function Header() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
+  const homePath = user ? '/home' : '/';
+
   const menuItems = [
-    { name: 'Home', path: '/', matchPaths: ['/'] },
+    { name: 'Home', path: '/', matchPaths: ['/', '/home'] },
     { name: 'Study', path: '/studylist', matchPaths: ['/studylist', '/study'] },
     { name: 'Voca', path: '/voca', matchPaths: ['/voca'] },
     { name: 'Community', path: '/communitylist', matchPaths: ['/communitylist', '/community'] },
@@ -43,7 +47,7 @@ function Header() {
       {/* 왼쪽 로고 + 메뉴 */}
       <div className="flex items-center gap-4 sm:gap-6">
         <img
-          onClick={() => navigate('/')}
+          onClick={() => navigate(homePath)}
           src="/images/sample_font_logo.png"
           alt="Logo"
           className="w-14 sm:w-16 lg:w-20 cursor-pointer"
@@ -51,10 +55,7 @@ function Header() {
         {/* 데스크탑 메뉴 */}
         <div className="hidden md:flex gap-4 lg:gap-6">
           {menuItems.map(item => {
-            const isActive =
-              item.path === '/'
-                ? location.pathname === '/'
-                : item.matchPaths.some(p => location.pathname.startsWith(p));
+            const isActive = item.matchPaths.some(p => location.pathname.startsWith(p));
 
             return (
               <button
@@ -131,13 +132,12 @@ function Header() {
 
               return (
                 <button
-                  key={item.path}
-                  onClick={() => {
-                    navigate(item.path);
-                    setIsOpen(false);
-                  }}
-                  className={`text-left px-3 py-2 rounded ${
-                    isActive ? 'bg-primary text-white' : 'text-secondary hover:bg-gray-100'
+                  key={item.name}
+                  onClick={() => (item.name === 'Home' ? navigate(homePath) : navigate(item.path))}
+                  className={`text-base lg:text-lg font-bold p-0 ${
+                    isActive
+                      ? 'text-primary underline hover:opacity-60'
+                      : 'text-secondary hover:opacity-60'
                   }`}
                 >
                   {item.name}
