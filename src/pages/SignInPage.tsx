@@ -27,7 +27,6 @@ function SignInPage() {
     setLoading(true);
     setErrors({}); // 초기화
 
-    // 필수 입력 체크
     if (!email || !pw) {
       setErrors({
         email: !email ? 'Please enter your email.' : '',
@@ -40,7 +39,6 @@ function SignInPage() {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
 
     if (error) {
-      // 오류를 email/pw 모두에 안전하게 반영
       setErrors(prev => ({
         ...prev,
         email:
@@ -74,6 +72,7 @@ function SignInPage() {
             Welcome back to Ara
           </h2>
         </div>
+
         {/* 로그인 폼 */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email */}
@@ -84,23 +83,24 @@ function SignInPage() {
               value={email}
               onChange={e => handleChange('email', e.target.value)}
               placeholder=" "
-              className={`peer w-full px-4 py-2 rounded-lg border
-      ${errors.email ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-200 focus:ring-[#00BFA5]'}
-      bg-gray-50 text-gray-800 text-sm focus:outline-none`}
+              className={`peer w-full px-4 py-2 border bg-white text-gray-800 text-sm ara-rounded
+                ${errors.email ? 'ara-focus--error' : 'ara-focus'}
+                ${errors.email ? '' : 'border-gray-300'}`}
             />
             <label
               htmlFor="email"
               className={`absolute left-4 text-sm transition-all
-    ${email || errors.email ? '-top-3 text-sm' : 'top-2.5 text-gray-400 text-sm'}
-    ${errors.email ? 'text-red-500' : 'peer-focus:text-[#00BFA5]'}
-    peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-gray-400
-    peer-focus:-top-3 peer-focus:text-sm peer-focus:text-[#00BFA5]
-    bg-white px-1`}
+                ${email || errors.email ? '-top-3 text-sm' : 'top-2.5 text-gray-400 text-sm'}
+                ${errors.email ? 'text-red-500' : 'peer-focus:text-[#00BFA5]'}
+                peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-gray-400
+                peer-focus:-top-3 peer-focus:text-sm peer-focus:text-[#00BFA5]
+                bg-white px-1`}
             >
               Email
             </label>
             {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
           </div>
+
           {/* Password */}
           <div className="relative">
             <input
@@ -109,23 +109,24 @@ function SignInPage() {
               value={pw}
               onChange={e => handleChange('pw', e.target.value)}
               placeholder=" "
-              className={`peer w-full px-4 py-2 rounded-lg border
-      ${errors.pw ? 'border-red-500 ring-2 ring-red-500' : 'border-gray-200 focus:ring-[#00BFA5]'}
-      bg-gray-50 text-gray-800 text-sm focus:outline-none`}
+              className={`peer w-full px-4 py-2 border bg-white text-gray-800 text-sm ara-rounded
+                ${errors.pw ? 'ara-focus--error' : 'ara-focus'}
+                ${errors.pw ? '' : 'border-gray-300'}`}
             />
             <label
               htmlFor="password"
               className={`absolute left-4 text-sm transition-all
-    ${pw || errors.pw ? '-top-3 text-sm' : 'top-2.5 text-gray-400 text-sm'}
-    ${errors.pw ? 'text-red-500' : 'peer-focus:text-[#00BFA5]'}
-    peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-gray-400
-    peer-focus:-top-3 peer-focus:text-sm peer-focus:text-[#00BFA5]
-    bg-white px-1`}
+                ${pw || errors.pw ? '-top-3 text-sm' : 'top-2.5 text-gray-400 text-sm'}
+                ${errors.pw ? 'text-red-500' : 'peer-focus:text-[#00BFA5]'}
+                peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-gray-400
+                peer-focus:-top-3 peer-focus:text-sm peer-focus:text-[#00BFA5]
+                bg-white px-1`}
             >
               Password
             </label>
             {errors.pw && <p className="text-red-500 text-xs mt-1">{errors.pw}</p>}
           </div>
+
           <button
             type="submit"
             className="w-full bg-primary text-white py-2 sm:py-3 rounded-lg font-semibold hover:opacity-80 text-sm sm:text-base disabled:opacity-50"
@@ -136,9 +137,9 @@ function SignInPage() {
         </form>
 
         <p className="mt-4 text-center text-sm sm:text-base text-gray-500">
-          New here? Create an account.{' '}
+          New here? Create an account{' '}
           <span
-            onClick={e => navigate('/signup')}
+            onClick={() => navigate('/signup')}
             className="text-primary font-medium cursor-pointer"
           >
             Sign Up

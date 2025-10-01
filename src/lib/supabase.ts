@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import type { Database } from '../types/database';
 
 // CRA : process.env... 의 환경변수 호출과는 형식이 다름.
 // Vite : import.meta.env... 환경변수 호출
@@ -9,7 +10,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 // 웹브라우저 클라이언트 생성
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     // 웹 브라우저에 탭이 열려 있는 동안 인증 토큰 자동 갱신
     autoRefreshToken: true,

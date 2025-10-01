@@ -5,6 +5,8 @@
 /* 프로젝트 공통 유틸(선택) */
 :root {
   --app-max-w: 720px;
+  --ara-primary: #00bfa5;
+  --ara-ring: rgba(0, 191, 165, 0.3);
 }
 
 html,
@@ -13,6 +15,40 @@ body,
   margin: 0;
   padding: 0;
   height: 100%;
+}
+
+.ara-focus {
+  outline: none !important;
+  transition:
+    box-shadow 120ms ease,
+    border-color 120ms ease;
+}
+.ara-focus:focus,
+.ara-focus:focus-visible {
+  border-color: var(--ara-primary) !important;
+  box-shadow: 0 0 0 3px var(--ara-ring) !important;
+}
+
+/* 에러 상태 - 기본은 빨간 테두리, ring 없음 */
+.ara-focus--error {
+  outline: none !important;
+  border-color: #ef4444 !important; /* red-500 */
+  box-shadow: none !important;
+  transition:
+    box-shadow 120ms ease,
+    border-color 120ms ease;
+}
+
+/* 에러 상태에서도 "포커스"하면 ring은 primary로, 테두리도 primary로 바꿈 */
+.ara-focus--error:focus,
+.ara-focus--error:focus-visible {
+  border-color: var(--ara-primary) !important;
+  box-shadow: 0 0 0 3px var(--ara-ring) !important;
+}
+
+/* 모양도 react-select와 동일하게 */
+.ara-rounded {
+  border-radius: 14px !important;
 }
 
 .container-app {
