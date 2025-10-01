@@ -59,8 +59,13 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
         setError(error.message);
         setDialogues([]);
       } else {
-        setDialogues(data ?? []);
-        if ((data?.length ?? 0) > 0) onSelectDialogue(data![0]); // 최초 선택
+        const list = (data ?? []).filter((r): r is Subtitle => r.study_id !== null);
+
+        setDialogues(list);
+
+        if (list.length > 0) {
+          onSelectDialogue(list[0]); // 여기서도 안전하게 Subtitle로 추론됨
+        }
       }
       setLoading(false);
     };
@@ -128,13 +133,14 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
                 {d.english_subtitle && (
                   <p className="text-base text-gray-700">{d.english_subtitle}</p>
                 )}
-                <p className="text-xs text-gray-400 mt-1">
+                {/* <p className="text-xs text-gray-400 mt-1">
                   {secToMMSS(d.subtitle_start_time)} → {secToMMSS(d.subtitle_end_time)}
                   {d.level ? ` · ${d.level}` : ''}
-                </p>
+                </p> */}
               </li>
             ))}
           </ul>
+          {/* 버튼 */}
           {showPaginationButtons && (
             <div className="flex justify-center mt-4">
               <button
