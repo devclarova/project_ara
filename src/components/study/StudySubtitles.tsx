@@ -124,14 +124,16 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
               <li
                 key={d.id} // 안정적인 key
                 onClick={() => onSelectDialogue(d)}
-                className="p-3 bg-white rounded-lg shadow cursor-pointer hover:bg-gray-50"
+                className="p-3 bg-white rounded-lg shadow cursor-pointer hover:bg-gray-50 hover:border-l-4 hover:border-primary"
               >
                 {d.korean_subtitle && (
-                  <p className="text-lg text-gray-700 hover:text-gray-900">{d.korean_subtitle}</p>
+                  <p className="text-lg text-gray-600 hover:text-green-600">{d.korean_subtitle}</p>
                 )}
-                {d.pronunciation && <p className="text-sm text-gray-500">{d.pronunciation}</p>}
+                {d.pronunciation && (
+                  <p className="text-lg text-gray-500 hover:text-green-600">[{d.pronunciation}]</p>
+                )}
                 {d.english_subtitle && (
-                  <p className="text-base text-gray-700">{d.english_subtitle}</p>
+                  <p className="text-lg text-gray-700 hover:text-green-600">{d.english_subtitle}</p>
                 )}
                 {/* <p className="text-xs text-gray-400 mt-1">
                   {secToMMSS(d.subtitle_start_time)} → {secToMMSS(d.subtitle_end_time)}

@@ -5,11 +5,11 @@ export type DifficultyLevel = '초급' | '중급' | '고급';
 
 // 1. Study (학습 단위)
 export interface Study {
-  created_at: string | null;
   id: number;
-  poster_image_url: string | null;
-  short_description: string | null;
   title: string;
+  created_at: string; // ISO timestamp
+  poster_image_url: string;
+  short_description: string;
 }
 
 // 2. Subtitle (자막)

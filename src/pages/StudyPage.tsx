@@ -1,6 +1,6 @@
 import { Progress } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
-import { NavLink, useParams } from 'react-router-dom';
+import { NavLink, useNavigate, useParams } from 'react-router-dom';
 import StudyCard from '../components/study/StudyCard';
 import StudySubtitles from '../components/study/StudySubtitles';
 import VideoPlayer from '../components/study/VideoPlayer';
@@ -20,6 +20,7 @@ type VideoRow = {
 
 const StudyPage = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate(); // useNavigate 훅 사용
 
   // 숫자 변환 가드
   const studyId = useMemo(() => {
@@ -54,6 +55,25 @@ const StudyPage = () => {
 
     fetchStudy();
   }, [studyId]);
+
+  // 페이지 이동 로직
+  const [currentPage, setCurrentPage] = useState<number>(0);
+
+  const handleNextPage = () => {
+    // studyId가 undefined가 아닐 때만 처리
+    if (studyId !== undefined) {
+      setCurrentPage(prev => prev + 1);
+      navigate(`/study/${studyId + 1}`); // studyId + 1로 이동
+    }
+  };
+
+  const handlePrevPage = () => {
+    // studyId가 undefined가 아니고 studyId가 1보다 클 때만 처리
+    if (studyId !== undefined && studyId > 1) {
+      setCurrentPage(prev => Math.max(prev - 1, 0));
+      navigate(`/study/${studyId - 1}`); // studyId - 1로 이동
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -206,7 +226,10 @@ const StudyPage = () => {
 
       {/* 총 회차 진행률 */}
       <div className="flex justify-between items-center">
-        <button className="text-sm text-gray-600 hover:text-gray-900 px-4 py-2 flex items-center gap-2 hover:scale-110 transition-transform duration-200">
+        <button
+          onClick={handlePrevPage}
+          className="text-sm text-gray-600 hover:text-gray-900 px-4 py-2 flex items-center gap-2 hover:scale-110 transition-transform duration-200"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="18"
@@ -225,7 +248,10 @@ const StudyPage = () => {
             총 회차 진행률 <span className="text-m font-semibold text-primary">35%</span>
           </span>
         </div>
-        <button className="text-sm text-gray-600 hover:text-gray-900 px-4 py-2 flex items-center gap-2 hover:scale-110 transition-transform duration-200">
+        <button
+          onClick={handleNextPage}
+          className="text-sm text-gray-600 hover:text-gray-900 px-4 py-2 flex items-center gap-2 hover:scale-110 transition-transform duration-200"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="18"
