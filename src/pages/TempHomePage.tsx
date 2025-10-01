@@ -93,6 +93,7 @@ export function Badge({ children, variant = 'default' }: BadgeProps) {
   return <span className={classes}>{children}</span>;
 }
 
+// 홈페이지 Mock
 const mockCourses = [
   {
     id: 1,
