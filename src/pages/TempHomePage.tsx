@@ -94,6 +94,7 @@ export function Badge({ children, variant = 'default' }: BadgeProps) {
 }
 
 // 홈페이지 Mock
+// Mock 이미지 찾음, 적절한 600 x 400 TMDB
 const mockCourses = [
   {
     id: 1,
