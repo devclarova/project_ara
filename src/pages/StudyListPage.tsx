@@ -312,7 +312,7 @@ const StudyListPage = () => {
               title={study.title || '제목 없음'}
               // subtitle={`${study.start} ~ ${study.end}`}
               // desc={study.english || '설명 없음'}
-              short_description={study.short_description}
+              short_description={study.short_description ?? '설명 없음'}
               level="초급" // 필요하다면 clip.difficulty_level 활용
               levelColor="bg-primary"
               duration="10분" // runtime 같은 필드 있으면 대체 가능
