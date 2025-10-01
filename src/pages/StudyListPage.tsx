@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import placeholder from '../assets/placeholder.png';
 import Input from '../components/Input';
 import type { Study } from '../types/study';
+import { Badge, Card } from './TempHomePage';
 
 const FilterDropdown = () => {
   const [open, setOpen] = useState(false);
@@ -137,31 +138,31 @@ const ContentCard = ({
   return (
     <div
       onClick={() => navigate(`/study/${id}`)}
-      className="group relative bg-gray-50 rounded-xl p-6 cursor-pointer shadow-sm hover:shadow-md transition h-80 flex flex-col justify-start pt-6"
+      className="group relative border border-gray-300 rounded-xl shadow-lg"
     >
-      <div className="flex justify-center items-center overflow-hidden">
-        {/* 이미지 */}
-        <div className="w-full sm:w-52 sm:h-56 bg-white rounded-t-lg mx-auto flex items-center justify-center overflow-hidden">
-          <img
-            src={image ? image : placeholder}
-            alt={title}
-            className="w-full h-full object-cover object-center"
-          />
-        </div>
+      <div className="card__media">
+        {image ? (
+          <img src={image} alt={title} className="w-full h-full object-cover rounded-t-xl" />
+        ) : (
+          <div className="bg-gray-200 w-full h-full" />
+        )}
       </div>
-      {/* 본문 */}
-      <div className="mt-3 text-center">
-        <h3 className="font-semibold text-gray-900 truncate">{title}</h3>
-        <p className="mt-1 text-sm text-gray-500">
-          {level} · {duration}
-        </p>
+      <div className="card__body">
+        <div className="card__content">
+          <h3 className="card__title">{title}</h3>
+          <p className="card__subtitle">
+            {level} · {duration}
+          </p>
+        </div>
+        {level && <p className="card__meta">{level}</p>}
+        {duration}
       </div>
       {/* Hover 오버레이 */}
-      <div className="pointer-events-none absolute inset-0 rounded-xl bg-white/90 opacity-0 group-hover:opacity-100 transition"></div>{' '}
-      <div className="pointer-events-none absolute inset-0 rounded-xl bg-primary/30 opacity-0 group-hover:opacity-100 transition"></div>{' '}
+      <div className="pointer-events-none absolute inset-0 rounded-xl bg-white/90 opacity-0 group-hover:opacity-100 transition"></div>
+      <div className="pointer-events-none absolute inset-0 rounded-xl bg-primary/30 opacity-0 group-hover:opacity-100 transition"></div>
       {/* Hover 내용(중앙 요약 박스) */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-        <div className="bg-white/85 backdrop-blur-sm rounded-lg w-56 sm:w-64 md:w-72 h-72 sm:h-80 p-4 text-center flex flex-col justify-center">
+        <div className="bg-white/85 backdrop-blur-sm rounded-lg md:w-56 md:h-72 sm:w-56 sm:h-72 p-4 text-center flex flex-col justify-center gap-4">
           <div className="text-sm font-semibold text-gray-900 truncate">{title}</div>
           <div className="mt-1 text-xs text-gray-600 line-clamp-2">설명 : {short_description}</div>
           <div className="mt-1 text-xs text-gray-500">난이도 : {level}</div>
@@ -275,12 +276,10 @@ const StudyListPage = () => {
         return;
       }
       setClips(
-        (data ?? []).map(r => {
-          return {
-            ...r,
-            created_at: r.created_at ? new Date(r.created_at) : new Date(),
-          } as unknown as Study;
-        }),
+        (data ?? []).map(r => ({
+          ...r,
+          created_at: r.created_at ? new Date(r.created_at) : new Date(),
+        })) as unknown as Study[],
       );
     };
 
@@ -296,18 +295,18 @@ const StudyListPage = () => {
       <div className="max-w-7xl mx-auto px-6 py-8 flex-1">
         {/* 헤더 */}
         {/* <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">학습하기</h1>
-          <FilterDropdown />
-        </div> */}
+         <h1 className="text-3xl font-bold text-gray-900">학습하기</h1>
+         <FilterDropdown />
+       </div> */}
         {/* 탭 */}
         {/* <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <CategoryTabs />
-          <Input
-            variant="search"
-            onChange={handleKeywordChange}
-            placeholder="검색어를 입력해주세요"
-          />
-        </div> */}
+         <CategoryTabs />
+         <Input
+           variant="search"
+           onChange={handleKeywordChange}
+           placeholder="검색어를 입력해주세요"
+         />
+       </div> */}
         {/* 카드 그리드 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 p-6">
           {/* DB 에서 카드 불러오기 */}
@@ -319,7 +318,7 @@ const StudyListPage = () => {
               title={study.title || '제목 없음'}
               // subtitle={`${study.start} ~ ${study.end}`}
               // desc={study.english || '설명 없음'}
-              short_description={study.short_description}
+              short_description={study.short_description ?? '설명 없음'}
               level="초급" // 필요하다면 clip.difficulty_level 활용
               levelColor="bg-primary"
               duration="10분" // runtime 같은 필드 있으면 대체 가능
@@ -329,6 +328,30 @@ const StudyListPage = () => {
 
           {/* ...추가 카드 */}
         </div>
+
+        {/* 카드 그리드
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 p-6">
+          DB 에서 카드 불러오기
+          {clips.map(study => (
+            <Card
+              key={study.id}
+              id={study.id} // DB id 전달
+              image={study.poster_image_url} // 임시 이미지 (DB에 image 필드 있으면 교체)
+              title={study.title || '제목 없음'}
+              // subtitle={`${study.start} ~ ${study.end}`}
+              // desc={study.english || '설명 없음'}
+              subtitle={study.short_description}
+              meta={`${'초급'} · ${'10분'}`}
+              actions={<Badge variant="brand">초급</Badge>}
+              // level="초급" // 필요하다면 clip.difficulty_level 활용
+              // levelColor="bg-primary"
+              // duration="10분" // runtime 같은 필드 있으면 대체 가능
+              // comments="0개 댓글"
+            />
+          ))}
+
+          ...추가 카드
+        </div> */}
       </div>
 
       {/* <BottomNav /> */}

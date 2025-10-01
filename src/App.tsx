@@ -26,6 +26,8 @@ import LandingPage from './pages/LandingPage';
 import SignUpPage from './pages/SignUpPage';
 import Header from './components/common/Header';
 import SignInPage from './pages/SignInPage';
+import TempHomePage from './pages/TempHomePage';
+import TempCommunityPage from './pages/temps/TempCommunityPage';
 
 const App = () => {
   return (
@@ -51,6 +53,8 @@ const App = () => {
                 <Route path="/communitylist" element={<CommunityListPage />}></Route>
                 <Route path="/communitydetail/:id" element={<CommunityDetailPage />}></Route>
                 <Route path="/notfound" element={<NotFound />}></Route>
+                <Route path="/test" element={<TempHomePage />}></Route>
+                <Route path="/testC" element={<TempCommunityPage />}></Route>
               </Routes>
             </main>
 
