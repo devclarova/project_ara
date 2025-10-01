@@ -5,8 +5,6 @@ import StudyCard from '../components/study/StudyCard';
 import StudySubtitles from '../components/study/StudySubtitles';
 import VideoPlayer from '../components/study/VideoPlayer';
 import { supabase } from '../lib/supabase';
-// import { getTts } from '../services/ClipService';
-// import type { Tts } from '../types/database';
 import type { Subtitle } from '../types/study';
 
 // 이 페이지에서 실제로 사용하는 video 행 타입을 로컬로 정의(컬럼명과 일치)
@@ -142,7 +140,7 @@ const StudyPage = () => {
         </h1>
 
         {/* 진행바: 임시 고정 */}
-        <Progress percent={30} size="default" strokeColor="#ff5733" />
+        <Progress percent={30} size="default" strokeColor="bg-primary" />
 
         {/* 메타 정보 라인: 시간/난이도(임시)/카테고리 */}
         <div className="flex items-center gap-5 text-sm text-gray-600">
@@ -224,7 +222,7 @@ const StudyPage = () => {
         </button>
         <div className="text-center flex flex-col justify-center items-center flex-grow">
           <span className="text-lg font-semibold text-gray-600">
-            총 회차 진행률 <span className="text-m font-semibold text-red-400">35%</span>
+            총 회차 진행률 <span className="text-m font-semibold text-primary">35%</span>
           </span>
         </div>
         <button className="text-sm text-gray-600 hover:text-gray-900 px-4 py-2 flex items-center gap-2 hover:scale-110 transition-transform duration-200">

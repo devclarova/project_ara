@@ -9,25 +9,18 @@ interface StudyCardProps {
   noteText?: string;
 }
 
-// const secToMMSS = (sec: number | null | undefined) => {
-//   if (sec == null || Number.isNaN(sec)) return '';
-//   const m = Math.floor(sec / 60);
-//   const s = Math.floor(sec % 60);
-//   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-// };
-
 const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) => {
   const [activeTab, setActiveTab] = useState<'words' | 'culture'>('words');
 
   return (
     <div>
       {/* 상단 정보 카드 */}
-      <div className="p-4 rounded-xl space-y-3 mb-4 border bg-white/50 shadow-sm">
-        <h3 className="text-lg font-semibold">학습 카드</h3>
+      <div className="p-5 rounded-xl space-y-1 mb-4 border bg-white/50 shadow-sm">
+        <h3 className="text-lg ml-2 font-semibold">학습 카드</h3>
 
         {/* 탭 */}
-        <div className="p-4 space-y-4">
-          <div className="flex space-x-2 mt-2">
+        <div className="p-2 space-y-4">
+          <div className="flex space-x-2 mt-1">
             <button
               onClick={() => setActiveTab('words')}
               className={`px-4 py-2 rounded-lg transition ${

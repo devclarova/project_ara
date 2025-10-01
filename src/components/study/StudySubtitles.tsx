@@ -101,9 +101,13 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
   const currentDialogues = dialogues.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
   const showPaginationButtons = dialogues.length > pageSize; // 자막 3개 초과일 때 버튼 보이기
 
+  // 마지막 페이지 여부
+  const isLastPage = currentPage * pageSize + pageSize >= dialogues.length;
+  const isFirstPage = currentPage === 0;
+
   return (
     <div>
-      <h2 className="text-xl font-bold mb-2">자막</h2>
+      <h2 className="text-xl font-bold ml-2 mb-2">자막</h2>
 
       {loading && <p>자막 로딩 중...</p>}
       {error && <p className="text-red-600">오류: {error}</p>}
@@ -174,8 +178,8 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
                 disabled={currentPage * pageSize + pageSize >= dialogues.length}
                 className="px-4 py-2 rounded disabled:opacity-50 ml-4 cursor-pointer"
                 style={{
-                  pointerEvents:
-                    currentPage * pageSize + pageSize >= dialogues.length ? 'none' : 'auto',
+                  pointerEvents: isLastPage ? 'none' : 'auto',
+                  cursor: isLastPage ? 'default' : 'pointer',
                 }}
               >
                 <svg
