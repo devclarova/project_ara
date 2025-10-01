@@ -62,7 +62,7 @@ const StudyPage = () => {
   const handleNextPage = () => {
     // 페이지 +1 이동
     setCurrentPage(prev => prev + 1);
-    navigate(`/study/${studyId} + 1`); // 페이지 이동
+    navigate(`/study/${studyId} + 1`); // 페이지 이동.
   };
 
   const handlePrevPage = () => {
