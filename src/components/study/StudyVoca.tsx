@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 
 type WordRow = {
   id: number;
-  study_id: number;
+  study_id: number | null;
   words: string | null;
   means: string | null;
   example: string | null;

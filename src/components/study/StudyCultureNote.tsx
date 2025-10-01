@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import type { CultureNote } from '../../types/study';
 
 // DB 테이블 타입
 type CultureNoteRow = {
@@ -53,7 +54,7 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
         return;
       }
 
-      setData(notesData ?? []);
+      setData((notesData ?? []) as CultureNote[]);
 
       if (!notesData || notesData.length === 0) {
         setContents([]);
@@ -74,7 +75,7 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
         setError(contentsError.message);
         setContents([]);
       } else {
-        setContents(contentsData ?? []); // 여러 콘텐츠 항목을 상태에 저장
+        setContents((contentsData ?? []) as CultureNoteContent[]); // 여러 콘텐츠 항목을 상태에 저장
       }
 
       setLoading(false);
