@@ -11,6 +11,8 @@ function SignInPage() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; pw?: string }>({});
   const navigate = useNavigate();
+  const [notConfirmed, setNotConfirmed] = useState(false);
+  const [resendMsg, setResendMsg] = useState('');
 
   const handleChange = (field: 'email' | 'pw', value: string) => {
     if (field === 'email') {
@@ -20,6 +22,12 @@ function SignInPage() {
       setPw(value);
       if (errors.pw) setErrors(prev => ({ ...prev, pw: '' }));
     }
+  };
+
+  const handleResend = async () => {
+    setResendMsg('');
+    const { error } = await supabase.auth.resend({ type: 'signup', email });
+    setResendMsg(error ? error.message : 'Verification email sent. Please check your inbox.');
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -39,21 +47,43 @@ function SignInPage() {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
 
     if (error) {
+      const msg = (error.message || '').toLowerCase();
+      const unverified =
+        msg.includes('confirm') || msg.includes('not confirmed') || msg.includes('verify');
+
+      setNotConfirmed(unverified);
+
+      // ✅ 미인증이면 인증 메일 재발송
+      if (unverified) {
+        const { error: resendErr } = await supabase.auth.resend({ type: 'signup', email });
+        if (resendErr) {
+          console.warn('resend failed:', resendErr.message);
+        } else {
+          setMsg('Verification email re-sent. Please check your inbox.');
+        }
+      }
+
       setErrors(prev => ({
         ...prev,
-        email:
-          error.message.includes('email') || !error.message.includes('password')
-            ? error.message
-            : prev.email,
-        pw:
-          error.message.includes('password') || !error.message.includes('email')
-            ? error.message
-            : prev.pw,
+        email: unverified ? 'Email is not confirmed. Please check your inbox.' : prev.email,
+        pw: unverified ? '' : prev.pw,
       }));
+      if (!unverified) setMsg(error.message);
+
       setLoading(false);
-    } else {
-      navigate('/home');
+      return;
     }
+
+    // ✅ 로그인 성공: 프로필 보장 RPC (실패해도 로그인은 진행)
+    try {
+      // 타입 오류가 뜨면 as any 캐스팅 사용
+      const { error: rpcErr } = await (supabase as any).rpc('ensure_profile');
+      if (rpcErr) console.warn('ensure_profile RPC failed:', rpcErr.message);
+    } catch (e: any) {
+      console.warn('ensure_profile RPC exception:', e?.message);
+    }
+
+    navigate('/home');
   };
 
   return (
@@ -135,6 +165,19 @@ function SignInPage() {
             {loading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
+
+        {notConfirmed && (
+          <div className="mt-3 text-center">
+            <button
+              type="button"
+              onClick={handleResend}
+              className="text-primary underline hover:opacity-80"
+            >
+              Resend verification email
+            </button>
+            {resendMsg && <p className="mt-2 text-sm text-gray-600">{resendMsg}</p>}
+          </div>
+        )}
 
         <p className="mt-4 text-center text-sm sm:text-base text-gray-500">
           New here? Create an account{' '}

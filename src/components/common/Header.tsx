@@ -128,6 +128,7 @@ function Header() {
                     navigate(target);
                     setIsOpen(false);
                   }}
+                  aria-current={active ? 'page' : undefined}
                   className={`text-left px-3 py-2 rounded ${
                     active ? 'bg-primary text-white' : 'text-secondary hover:bg-gray-100'
                   }`}
