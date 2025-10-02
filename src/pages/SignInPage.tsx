@@ -13,8 +13,11 @@ function SignInPage() {
   const navigate = useNavigate();
   const [notConfirmed, setNotConfirmed] = useState(false);
   const [resendMsg, setResendMsg] = useState('');
+  const [suppressEffects, setSuppressEffects] = useState(false);
 
   const handleChange = (field: 'email' | 'pw', value: string) => {
+    setSuppressEffects(false);
+
     if (field === 'email') {
       setEmail(value);
       if (errors.email) setErrors(prev => ({ ...prev, email: '' }));
@@ -26,68 +29,102 @@ function SignInPage() {
 
   const handleResend = async () => {
     setResendMsg('');
-    const { error } = await supabase.auth.resend({ type: 'signup', email });
-    setResendMsg(error ? error.message : 'Verification email sent. Please check your inbox.');
+    const normalizedEmail = email.trim().toLowerCase();
+    const { error } = await supabase.auth.resend({ type: 'signup', email: normalizedEmail });
+    setResendMsg(error ? error.message : '인증 메일이 발송되었습니다. 이메일을 확인해주세요.');
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setMsg('');
+    setNotConfirmed(false);
     setLoading(true);
-    setErrors({}); // 초기화
+    setErrors({});
+    setSuppressEffects(false);
 
-    if (!email || !pw) {
+    // 입력 정규화(공백 제거 + 이메일 소문자)
+    const normalizedEmail = email.trim().toLowerCase();
+    const pwValue = pw;
+
+    // 필수 입력 체크
+    if (!normalizedEmail || !pwValue) {
       setErrors({
-        email: !email ? 'Please enter your email.' : '',
-        pw: !pw ? 'Please enter your password.' : '',
+        email: !normalizedEmail ? '이메일을 입력해주세요.' : '',
+        pw: !pwValue ? '패스워드를 입력해주세요.' : '',
       });
       setLoading(false);
       return;
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
+    // 로그인 시도
+    const { error } = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password: pwValue,
+    });
 
     if (error) {
-      const msg = (error.message || '').toLowerCase();
-      const unverified =
-        msg.includes('confirm') || msg.includes('not confirmed') || msg.includes('verify');
+      // 상태코드/원문 기반으로 “정확히” 분기
+      // supabase-js v2에선 AuthApiError 형태로 status가 들어옵니다.
+      // (타입 임포트 안 해도 사용 가능: 런타임 속성만 읽음)
+      const status = (error as { status?: number }).status ?? 0;
+      const raw = error.message ?? '';
+      const low = raw.toLowerCase();
 
-      setNotConfirmed(unverified);
+      // 미인증
+      const isUnverified =
+        low.includes('email not confirmed') ||
+        low === 'not confirmed' ||
+        (status === 400 && low.includes('not confirmed'));
 
-      // ✅ 미인증이면 인증 메일 재발송
-      if (unverified) {
-        const { error: resendErr } = await supabase.auth.resend({ type: 'signup', email });
-        if (resendErr) {
-          console.warn('resend failed:', resendErr.message);
-        } else {
-          setMsg('Verification email re-sent. Please check your inbox.');
+      if (isUnverified) {
+        setNotConfirmed(true);
+        // 인증 메일 자동 재발송
+        try {
+          await supabase.auth.resend({ type: 'signup', email: normalizedEmail });
+        } catch {
+          /* no-op */
         }
+        setErrors(prev => ({
+          ...prev,
+          email: '이메일 인증 실패, 이메일을 확인해주세요.',
+          pw: '',
+        }));
+        setMsg('로그인 전 이메일 인증을 해주세요.');
+        setLoading(false);
+        return;
       }
 
-      setErrors(prev => ({
-        ...prev,
-        email: unverified ? 'Email is not confirmed. Please check your inbox.' : prev.email,
-        pw: unverified ? '' : prev.pw,
-      }));
-      if (!unverified) setMsg(error.message);
+      // 잘못된 자격증명(이메일/비밀번호 불일치)
+      const isInvalidCred =
+        status === 400 ||
+        low.includes('invalid login') ||
+        low.includes('invalid credentials') ||
+        low.includes('invalid email or password') ||
+        low.includes('invalid password') ||
+        low.includes('invalid email') ||
+        low.includes('invalid_grant');
 
+      if (isInvalidCred) {
+        setErrors(prev => ({ ...prev, email: '', pw: '' }));
+        setMsg('이메일 또는 비밀번호가 올바르지 않습니다.');
+        setSuppressEffects(false);
+        setLoading(false);
+        return;
+      }
+
+      // 기타 오류 노출
+      setMsg(raw || '알 수 없는 오류로 인해 로그인에 실패했습니다.');
       setLoading(false);
       return;
     }
 
-    // ✅ 로그인 성공: 프로필 보장 RPC (실패해도 로그인은 진행)
-    try {
-      // 타입 오류가 뜨면 as any 캐스팅 사용
-      const { error: rpcErr } = await (supabase as any).rpc('ensure_profile');
-      if (rpcErr) console.warn('ensure_profile RPC failed:', rpcErr.message);
-    } catch (e: any) {
-      console.warn('ensure_profile RPC exception:', e?.message);
-    }
-
+    // 성공
+    setLoading(false);
     navigate('/home');
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="flex items-center justify-center bg-gray-50 pt-12 px-4">
       <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 md:p-10 lg:p-12 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl">
         {/* 로고 및 제목 */}
         <div className="text-center mb-6">
@@ -99,7 +136,7 @@ function SignInPage() {
             />
           </span>
           <h2 className="mt-2 text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">
-            Welcome back to Ara
+            아라에 오신 것을 환영합니다!
           </h2>
         </div>
 
@@ -173,19 +210,19 @@ function SignInPage() {
               onClick={handleResend}
               className="text-primary underline hover:opacity-80"
             >
-              Resend verification email
+              인증 메일 재발송
             </button>
             {resendMsg && <p className="mt-2 text-sm text-gray-600">{resendMsg}</p>}
           </div>
         )}
 
         <p className="mt-4 text-center text-sm sm:text-base text-gray-500">
-          New here? Create an account{' '}
+          처음 오시나요? 계정을 생성해보세요.{' '}
           <span
             onClick={() => navigate('/signup')}
             className="text-primary font-medium cursor-pointer"
           >
-            Sign Up
+            회원가입
           </span>
         </p>
 
@@ -201,7 +238,7 @@ function SignInPage() {
             className="w-full flex items-center justify-center gap-2 border border-primary rounded-lg py-2 sm:py-3 text-sm sm:text-base font-medium text-primary bg-gray-50 hover:opacity-80 transition-opacity"
           >
             <img src="/images/google_logo.png" alt="Sign in with Google" className="w-5 h-5" />
-            <span>Sign in with Google</span>
+            <span>Google로 로그인하기</span>
           </button>
         </div>
 

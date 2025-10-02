@@ -3,6 +3,13 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
+type Option = {
+  value: string;
+  label: string;
+  flag_url?: string | null;
+  phone_code: number;
+};
+
 interface Country {
   id: number;
   name: string;
@@ -16,6 +23,13 @@ interface CountrySelectProps {
   onChange: (value: string) => void;
   error?: boolean;
 }
+
+type Options = {
+  value: string;
+  label: string;
+  flag_url?: string | null;
+  phone_code: number;
+};
 
 const CustomDropdownIndicator = (props: any) => {
   const { selectProps } = props;
@@ -43,8 +57,8 @@ export default function CountrySelect({ value, onChange, error = false }: Countr
     fetchCountries();
   }, []);
 
-  const options = countries.map(c => ({
-    value: c.id.toString(),
+  const options: Option[] = countries.map(c => ({
+    value: String(c.id),
     label: c.name,
     flag_url: c.flag_url,
     phone_code: c.phone_code,
@@ -100,9 +114,13 @@ export default function CountrySelect({ value, onChange, error = false }: Countr
           (document.activeElement as HTMLElement)?.blur();
         }}
         options={options}
-        formatOptionLabel={opt => (
+        formatOptionLabel={(opt: Option) => (
           <div className="flex items-center gap-2">
-            src={opt.flag_url ?? '/images/flag_placeholder.svg'}
+            <img
+              src={opt.flag_url ?? '/images/flag_placeholder.svg'}
+              alt=""
+              className="w-5 h-4 rounded-sm object-cover"
+            />
             <span>
               {opt.label} (+{opt.phone_code})
             </span>
