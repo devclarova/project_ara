@@ -95,7 +95,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       password,
       options: {
         // 회원 가입 후 이메일로 인증 확인시 리다이렉트 될 URL
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/signin`,
       },
     });
     if (error) {
