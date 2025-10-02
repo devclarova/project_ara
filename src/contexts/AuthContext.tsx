@@ -19,13 +19,48 @@ type AuthContextType = {
   // 회원 가입 함수(이메일, 비밀번호) : 비동기라서
   signUp: (email: string, password: string) => Promise<{ error?: string }>;
   // 회원 로그인 함수(이메일, 비밀번호) : 비동기라서
-  signIn: (email: string, password: string) => Promise<{ error?: string }>;
+  signIn: (email: string, password: string) => Promise<{ error?: string; unverified?: boolean }>;
   // 회원 로그아웃
   signOut: () => Promise<void>;
 };
 
 // 2. 인증 컨텍스트 생성 (인증 기능을 컴포넌트에서 활용하게 해줌.)
 const AuthContext = createContext<AuthContextType | null>(null);
+
+async function ensureProfileClient(user: User) {
+  const { data: existing, error: selErr } = await supabase
+    .from('profiles')
+    .select('user_id')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (selErr) {
+    console.warn('profiles select error:', selErr.message);
+    return;
+  }
+  if (existing) return;
+
+  // 메타데이터 기반 기본값
+  const md = (user as any).user_metadata ?? {}; // Supabase 타입상 user_metadata는 any 유사
+  const emailLocal = (user.email || '').split('@')[0] || 'user';
+  const nickname = md.nickname || emailLocal;
+
+  // gender는 enum 강제: 'Male' | 'Female' 만 허용
+  let gender = md.gender;
+  if (gender !== 'Male' && gender !== 'Female') gender = 'Male';
+
+  // 나머지는 테이블 기본값을 사용하므로 최소 필드만 넣자
+  const { error: insErr } = await supabase.from('profiles').insert([
+    {
+      user_id: user.id,
+      nickname,
+      gender,
+      // birthday/country/avatar_url 등은 DB DEFAULT가 있다면 생략
+    },
+  ]);
+
+  if (insErr) console.warn('profiles insert error:', insErr.message);
+}
 
 // 3. 인증 컨텍스트 프로바이더
 export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
@@ -75,8 +110,20 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const signIn: AuthContextType['signIn'] = async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password, options: {} });
     if (error) {
+      const msg = (error.message || '').toLowerCase();
+      const unverified =
+        msg.includes('confirm') || msg.includes('not confirmed') || msg.includes('verify');
+
+      if (unverified) {
+        try {
+          await supabase.auth.resend({ type: 'signup', email });
+        } catch (error) {}
+      }
       return { error: error.message };
     }
+    try {
+      await (supabase as any).rpc('ensure_profile');
+    } catch (error) {}
     return {};
   };
   // 회원 로그아웃

@@ -41,11 +41,11 @@ export interface Video {
 
 // 4. Culture Note (문화포인트)
 export interface CultureNote {
-  id: number;
-  study_id: number;
-  title: string | null;
-  subtitle: string | null;
   contents: string | null;
+  id: number;
+  study_id: number | null;
+  subtitle: string | null;
+  title: string | null;
 }
 
 // 5. Word (단어장)

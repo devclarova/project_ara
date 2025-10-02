@@ -110,6 +110,8 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
   const isLastPage = currentPage * pageSize + pageSize >= dialogues.length;
   const isFirstPage = currentPage === 0;
 
+  
+
   return (
     <div>
       <h2 className="text-xl font-bold ml-2 mb-2">자막</h2>

@@ -11,10 +11,8 @@ import {
 } from 'react-router-dom';
 import textLogo from './assets/text-logo.svg';
 import styles from './components/Layout.module.css';
-import Modal from './components/Modal';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import CommunityDetailPage from './pages/CommunityDetailPage';
-import SignInPage from './pages/SignInPage';
 import ProfilePage from './pages/ProfilePage';
 import StudyPage from './pages/StudyPage';
 import VocaPage from './pages/VocaPage';
@@ -25,10 +23,9 @@ import { PostProvider } from './contexts/PostContext';
 import CommunityListPage from './pages/CommunityListPage';
 import HomePage from './pages/HomePage';
 import LandingPage from './pages/LandingPage';
-import TopHeader from './components/TopHeader';
 import SignUpPage from './pages/SignUpPage';
-import LearningPage from './pages/LearningPage';
 import Header from './components/common/Header';
+import SignInPage from './pages/SignInPage';
 import TempHomePage from './pages/TempHomePage';
 import TempCommunityPage from './pages/temps/TempCommunityPage';
 
@@ -50,7 +47,6 @@ const App = () => {
                 <Route path="/signin" element={<SignInPage />}></Route>
                 <Route path="/profile" element={<ProfilePage />}></Route>
                 <Route path="/studyList" element={<StudyListPage />}></Route>
-                <Route path="/studyList/:id" element={<LearningPage />}></Route>
                 <Route path="/study/:id" element={<StudyPage />}></Route>
                 <Route path="/voca" element={<VocaPage />}></Route>
                 <Route path="/communitywrite" element={<CommunityWritePage />}></Route>

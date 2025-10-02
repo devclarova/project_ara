@@ -34,27 +34,21 @@ export const createPost = async (newPost: Omit<PostInsert, 'user_id'>): Promise<
       data: { user },
     } = await supabase.auth.getUser();
 
+    const payload /* : TablesInsert<'posts'> */ = {
+      title: newPost.title.trim(),
+      content: newPost.content.trim(),
+      category: newPost.category /* as Enums['category_type'] */,
+      user_id: user!.id,
+      // comments는 nullable이지만 0으로 시작하고 싶으면 아래처럼:
+      // comments: newPost.comments ?? 0,
+      // updated_at만 직접 찍고 싶으면(선택):
+      updated_at: new Date().toISOString(),
+    };
+
     // if (!user) {
     //   throw new Error('로그인이 필요합니다.');
     // }
-    const { data, error } = await supabase
-      .from('posts')
-      .insert([
-        {
-          ...newPost,
-          category: newPost.category ?? null,
-          comments: newPost.comments ?? null,
-          content: newPost.content ?? null,
-          like: newPost.like ?? null,
-          unlike: newPost.unlike ?? null,
-          view: newPost.view ?? null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          // user_id: user.id,
-        },
-      ])
-      .select()
-      .single();
+    const { data, error } = await supabase.from('posts').insert(payload).select().single();
     if (error) {
       throw new Error(`createPost 오류: ${error.message}`);
     }
