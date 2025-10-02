@@ -5,7 +5,7 @@ import type { CultureNote } from '../../types/study';
 // DB 테이블 타입
 type CultureNoteRow = {
   id: number;
-  study_id: number;
+  study_id: number | null;
   title: string | null;
   subtitle: string | null;
 };

@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import placeholder from '../assets/placeholder.png';
 import Input from '../components/Input';
+import { supabase } from '../lib/supabase';
 import type { Study } from '../types/study';
-import { Badge, Card } from './TempHomePage';
 
 const FilterDropdown = () => {
   const [open, setOpen] = useState(false);
@@ -39,7 +37,7 @@ const FilterDropdown = () => {
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-2">콘텐츠 유형</h3>
               <div className="space-y-2">
-                {['드라마', '예능', '영화', '뉴스', '요리'].map(label => (
+                {['드라마', '예능', '영화', '음악'].map(label => (
                   <label key={label} className="flex items-center">
                     <input type="checkbox" className="form-checkbox text-primary" />
                     <span className="ml-2 text-sm text-gray-600">{label}</span>
@@ -86,7 +84,7 @@ const FilterDropdown = () => {
   );
 };
 
-const categories = ['전체', '드라마', '예능', '영화'];
+const categories = ['전체', '드라마', '영화', '예능', '음악'];
 const CategoryTabs = () => {
   const [active, setActive] = useState('전체');
   return (
@@ -298,19 +296,19 @@ const StudyListPage = () => {
     <div className="bg-white min-h-screen flex flex-col">
       <div className="max-w-7xl mx-auto px-6 py-8 flex-1">
         {/* 헤더 */}
-        {/* <div className="flex justify-between items-center mb-8">
-         <h1 className="text-3xl font-bold text-gray-900">학습하기</h1>
-         <FilterDropdown />
-       </div> */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">학습하기</h1>
+          <FilterDropdown />
+        </div>
         {/* 탭 */}
-        {/* <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-         <CategoryTabs />
-         <Input
-           variant="search"
-           onChange={handleKeywordChange}
-           placeholder="검색어를 입력해주세요"
-         />
-       </div> */}
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <CategoryTabs />
+          <Input
+            variant="search"
+            onChange={handleKeywordChange}
+            placeholder="검색어를 입력해주세요"
+          />
+        </div>
         {/* 카드 그리드 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 p-6">
           {/* DB 에서 카드 불러오기 */}

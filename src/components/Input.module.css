@@ -14,7 +14,7 @@
 }
 
 .search {
-  background-image: url('../../public/searchTwo.svg');
+  background-image: url('../../public/searchT.svg');
   background-repeat: no-repeat;
   background-position: right 20px center;
   background-size: 20px;
@@ -22,7 +22,7 @@
 }
 
 .input:focus {
-  border-color: #ff6b6b;
+  border-color: #00bfa5;
   outline: none;
 }
 
