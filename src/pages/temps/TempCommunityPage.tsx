@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { PostListDetail } from './TempPostListDetail';
 import { Sidebar } from './TempSidebar';
 import { Button } from '../TempHomePage';
-import { Search } from 'lucide-react';
+import { Menu, Search } from 'lucide-react';
 import clsx from 'clsx';
 
 type SearchBarProps = {
@@ -16,20 +16,13 @@ type FilterBarProps<T extends string> = {
   onChange: (value: T) => void;
 };
 
-export function FilterBar<T extends string>({
-  options,
-  active,
-  onChange,
-}: FilterBarProps<T>) {
+export function FilterBar<T extends string>({ options, active, onChange }: FilterBarProps<T>) {
   return (
     <div className="filter-bar flex gap-3 py-2 border-b border-gray-200">
-      {options.map((opt) => (
+      {options.map(opt => (
         <button
           key={opt}
-          className={clsx(
-            'tab',
-            active === opt ? 'tab--active' : 'tab--inactive'
-          )}
+          className={clsx('tab', active === opt ? 'tab--active' : 'tab--inactive')}
           onClick={() => onChange(opt)}
         >
           {opt}
@@ -38,7 +31,6 @@ export function FilterBar<T extends string>({
     </div>
   );
 }
-
 
 export function SearchBar({ value, onChange }: SearchBarProps) {
   return (
@@ -54,7 +46,6 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
     </div>
   );
 }
-
 
 // 게시판별 mock 데이터
 const mockPosts = {
@@ -185,6 +176,8 @@ const TempCommunityPage = () => {
   const [sortOrder, setSortOrder] = useState<'최신순' | '추천순'>('최신순');
   const [isSortOpen, setIsSortOpen] = useState(false);
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   // 게시판별 posts 가져오기
   const allPosts = mockPosts[activeMenu];
 
@@ -299,6 +292,158 @@ const TempCommunityPage = () => {
       </main>
     </div>
   );
+
+  // return (
+  //   <div className="container mx-auto max-w-6xl px-4 py-6 flex flex-col lg:flex-row gap-6 lg:gap-8">
+  //     {/* 사이드바: 모바일에서는 상단에, lg 이상에서만 좌측 고정 */}
+  //     <aside className="mb-4 lg:mb-0 lg:w-64 shrink-0">
+  //       <Sidebar
+  //         items={['질문/답변', '자유게시판', '고민나누기']}
+  //         activeItem={activeMenu}
+  //         onSelect={setActiveMenu}
+  //       />
+  //     </aside>
+
+  //     <main className="flex-1">
+  //       {/* 제목 / 검색 / 버튼 */}
+  //       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+  //         <h2 className="text-xl font-bold">{activeMenu}</h2>
+  //         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+  //           {/* 검색창은 모바일에서 full-width, md 이상에서 고정폭 */}
+  //           <div className="w-full sm:w-64">
+  //             <SearchBar value={search} onChange={setSearch} />
+  //           </div>
+  //           <Button variant="primary" className="w-full sm:w-auto">
+  //             {activeMenu === '질문/답변'
+  //               ? '질문하기'
+  //               : activeMenu === '자유게시판'
+  //                 ? '글쓰기'
+  //                 : '고민 올리기'}
+  //           </Button>
+  //         </div>
+  //       </div>
+
+  //       {/* 필터바 */}
+  //       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+  //         <FilterBar
+  //           options={['전체보기', '답변대기']}
+  //           active={activeFilter}
+  //           onChange={setActiveFilter}
+  //         />
+  //         <div className="flex gap-3 text-sm text-gray-600 self-end sm:self-auto">
+  //           {/* 최신순 드롭다운 */}
+  //           <div className="relative sort-dropdown">
+  //             <button
+  //               onClick={() => setIsSortOpen(prev => !prev)}
+  //               className="flex items-center gap-1 hover:text-[var(--color-brand)]"
+  //             >
+  //               {sortOrder}
+  //               <span className="text-xs">↕</span>
+  //             </button>
+
+  //             {isSortOpen && (
+  //               <div className="absolute mt-2 w-24 bg-white border rounded shadow-md text-sm z-10">
+  //                 {(['최신순', '추천순'] as const).map(opt => (
+  //                   <button
+  //                     key={opt}
+  //                     onClick={() => {
+  //                       setSortOrder(opt);
+  //                       setIsSortOpen(false);
+  //                     }}
+  //                     className={`block w-full px-3 py-2 text-left ${
+  //                       sortOrder === opt
+  //                         ? 'text-purple-600 font-semibold bg-purple-50'
+  //                         : 'hover:bg-gray-100'
+  //                     }`}
+  //                   >
+  //                     {opt}
+  //                   </button>
+  //                 ))}
+  //               </div>
+  //             )}
+  //           </div>
+
+  //           <button className="hover:text-[var(--color-brand)]">필터</button>
+  //         </div>
+  //       </div>
+
+  //       {/* 리스트 */}
+  //       <PostListDetail posts={sortedPosts} />
+  //     </main>
+  //   </div>
+  // );
+
+  // return (
+  //   <div className="container mx-auto max-w-6xl px-4 py-6 flex lg:flex-row gap-6 lg:gap-8">
+  //     {/* 데스크탑 사이드바 */}
+  //     <aside className="hidden lg:block lg:w-64 shrink-0">
+  //       <Sidebar
+  //         items={['질문/답변', '자유게시판', '고민나누기']}
+  //         activeItem={activeMenu}
+  //         onSelect={setActiveMenu}
+  //       />
+  //     </aside>
+
+  //     {/* 모바일: 햄버거 메뉴 */}
+  //     <div className="lg:hidden mb-4">
+  //       <button
+  //         onClick={() => setIsSidebarOpen(true)}
+  //         className="flex items-center gap-2 text-gray-700 hover:text-[var(--color-brand)]"
+  //       >
+  //         <Menu className="w-5 h-5" />
+  //         메뉴
+  //       </button>
+  //     </div>
+
+  //     {/* 사이드바 Drawer (모바일 전용) */}
+  //     {isSidebarOpen && (
+  //       <div className="fixed inset-0 z-50 bg-black/40 lg:hidden">
+  //         <div className="absolute left-0 top-0 h-full w-64 bg-white shadow-lg p-4">
+  //           <button
+  //             onClick={() => setIsSidebarOpen(false)}
+  //             className="mb-4 text-sm text-gray-500 hover:text-gray-700"
+  //           >
+  //             닫기 ✕
+  //           </button>
+  //           <Sidebar
+  //             items={['질문/답변', '자유게시판', '고민나누기']}
+  //             activeItem={activeMenu}
+  //             onSelect={item => {
+  //               setActiveMenu(item);
+  //               setIsSidebarOpen(false);
+  //             }}
+  //           />
+  //         </div>
+  //       </div>
+  //     )}
+
+  //     {/* 메인 컨텐츠 */}
+  //     <main className="flex-1">
+  //       {/* 제목 / 검색 / 버튼 */}
+  //       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+  //         <h2 className="text-xl font-bold">{activeMenu}</h2>
+  //         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+  //           <div className="w-full sm:w-64">
+  //             <SearchBar value={search} onChange={setSearch} />
+  //           </div>
+  //           <Button variant="primary" className="w-full sm:w-auto">
+  //             {activeMenu === '질문/답변'
+  //               ? '질문하기'
+  //               : activeMenu === '자유게시판'
+  //                 ? '글쓰기'
+  //                 : '고민 올리기'}
+  //           </Button>
+  //         </div>
+  //       </div>
+
+  //       {/* 필터 + 정렬 */}
+  //       {/* 그대로 유지 */}
+
+  //       {/* 리스트 */}
+  //       <PostListDetail posts={sortedPosts} />
+  //     </main>
+  //   </div>
+  // );
 };
 
 export default TempCommunityPage;

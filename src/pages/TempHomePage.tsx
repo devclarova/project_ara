@@ -241,9 +241,9 @@ const TempHomePage = () => {
         <div className="flex justify-between items-center mb-6">
           <h2 className="h2">최근 학습한 강의</h2>
           <Link to="/studylist">
-            <Button variant="outline" size="sm">
+            {/* <Button variant="outline" size="sm">
               모두 보기
-            </Button>
+            </Button> */}
           </Link>
         </div>
         <div className="grid-cards">

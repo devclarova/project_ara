@@ -298,19 +298,19 @@ const StudyListPage = () => {
     <div className="bg-white min-h-screen flex flex-col">
       <div className="max-w-7xl mx-auto px-6 py-8 flex-1">
         {/* 헤더 */}
-        {/* <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-8">
          <h1 className="text-3xl font-bold text-gray-900">학습하기</h1>
          <FilterDropdown />
-       </div> */}
+       </div>
         {/* 탭 */}
-        {/* <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
          <CategoryTabs />
          <Input
            variant="search"
            onChange={handleKeywordChange}
            placeholder="검색어를 입력해주세요"
          />
-       </div> */}
+       </div>
         {/* 카드 그리드 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 p-6">
           {/* DB 에서 카드 불러오기 */}
