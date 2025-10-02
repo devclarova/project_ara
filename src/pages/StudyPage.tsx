@@ -60,15 +60,19 @@ const StudyPage = () => {
   const [currentPage, setCurrentPage] = useState<number>(0);
 
   const handleNextPage = () => {
-    // 페이지 +1 이동
-    setCurrentPage(prev => prev + 1);
-    navigate(`/study/${studyId} + 1`); // 페이지 이동.
+    // studyId가 undefined가 아닐 때만 처리
+    if (studyId !== undefined) {
+      setCurrentPage(prev => prev + 1);
+      navigate(`/study/${studyId + 1}`); // studyId + 1로 이동
+    }
   };
 
   const handlePrevPage = () => {
-    // 페이지 -1 이동
-    setCurrentPage(prev => Math.max(prev - 1, 0));
-    navigate(`/study/${studyId} - 1`); // 페이지 이동
+    // studyId가 undefined가 아니고 studyId가 1보다 클 때만 처리
+    if (studyId !== undefined && studyId > 1) {
+      setCurrentPage(prev => Math.max(prev - 1, 0));
+      navigate(`/study/${studyId - 1}`); // studyId - 1로 이동
+    }
   };
 
   return (
