@@ -1,5 +1,6 @@
 import { Badge, Film, Languages, Users } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Card } from './TempHomePage';
 
 type HeroProps = {
   onSignup?: () => void;
@@ -20,12 +21,20 @@ const Hero = ({ onSignup }: HeroProps) => {
             <br />
             지금 시작해보세요!
           </p>
-          <button
-            onClick={() => navigate('/home')}
-            className="px-8 py-4 bg-primary text-white rounded-[8px] text-lg font-medium"
-          >
-            무료로 시작하기
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={() => navigate('/test')}
+              className="px-8 py-4 bg-primary text-white rounded-[8px] text-lg font-medium"
+            >
+              시작하기
+            </button>
+            <button
+              onClick={() => navigate('/studylist')}
+              className="px-8 py-4 bg-primary text-white rounded-[8px] text-lg font-medium"
+            >
+              둘러보기
+            </button>
+          </div>
         </div>
 
         <div className="hidden lg:flex w-full lg:w-1/2 justify-center lg:justify-end">
@@ -84,28 +93,40 @@ const Features = () => {
 const ContentGrid = () => {
   const contents = [
     {
+      id: 1,
       level: '초급',
       title: '사랑의 불시착',
-      desc: '운명적인 만남으로 시작되는 달달한 로맨스',
-      img: 'https://readdy.ai/api/search-image?query=korean%20drama%20scene%2C%20romantic%20moment%2C%20high%20quality%20cinematic%2C%20emotional&width=600&height=320&seq=2&orientation=landscape',
+      subtitle: '운명적인 만남으로 시작되는 달달한 로맨스',
+      image: 'https://media.themoviedb.org/t/p/w500_and_h282_face/wgwl0HLr2SfLshntt0krZgu7GWn.jpg',
       time: '5분',
-      chats: '20개 대화',
+      meta: '20개 대화',
     },
     {
+      id: 2,
       level: '중급',
       title: '런닝맨',
-      desc: '재미있는 예능 속 다양한 한국어 표현',
-      img: 'https://readdy.ai/api/search-image?query=korean%20variety%20show%20scene%2C%20fun%20moment%2C%20high%20quality%20entertainment&width=600&height=320&seq=3&orientation=landscape',
+      subtitle: '재미있는 예능 속 다양한 한국어 표현',
+      image: 'https://media.themoviedb.org/t/p/w500_and_h282_face/3SRAHhwS8B08GnjkRR4Otf8kEWK.jpg',
       time: '8분',
-      chats: '30개 대화',
+      meta: '30개 대화',
     },
     {
+      id: 3,
       level: '고급',
       title: '기생충',
-      desc: '긴장감 넘치는 스토리 속 고급 한국어',
-      img: 'https://readdy.ai/api/search-image?query=korean%20movie%20scene%2C%20dramatic%20moment%2C%20high%20quality%20cinematic%20shot&width=600&height=320&seq=4&orientation=landscape',
+      subtitle: '긴장감 넘치는 스토리 속 고급 한국어',
+      image: 'https://media.themoviedb.org/t/p/w500_and_h282_face/hiKmpZMGZsrkA3cdce8a7Dpos1j.jpg',
       time: '10분',
-      chats: '40개 대화',
+      meta: '40개 대화',
+    },
+    {
+      id: 4,
+      level: '고급',
+      title: '자이언트',
+      subtitle: '악역의 명대사로 배우는 고급 한국어',
+      image: 'https://media.themoviedb.org/t/p/w500_and_h282_face/oYXxJqTEBL10zIgLlyb4K1PQEKM.jpg',
+      time: '10분',
+      meta: '17개 대화',
     },
   ];
 
@@ -114,7 +135,7 @@ const ContentGrid = () => {
       <div className="max-w-screen-xl mx-auto px-6">
         <h2 className="text-3xl font-bold text-center mb-4">인기 학습 콘텐츠</h2>
         <p className="text-gray-600 text-center mb-12">많은 학습자들이 선택한 인기 콘텐츠</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {contents.map(c => (
             <div key={c.title} className="bg-white rounded-xl overflow-hidden">
               <img src={c.img} alt={c.title} className="w-full h-48 object-cover" />
@@ -134,6 +155,20 @@ const ContentGrid = () => {
                 </div>
               </div>
             </div>
+          ))}
+        </div> */}
+
+        <div className="grid-cards">
+          {contents.map(course => (
+            <Link key={course.id} to={`/courses/${course.id}`}>
+              <Card
+                id={course.id}
+                image={course.image}
+                title={course.title}
+                subtitle={course.subtitle}
+                meta={`${course.time} · ${course.meta}`}
+              />
+            </Link>
           ))}
         </div>
       </div>
@@ -197,12 +232,27 @@ const CTA = ({ onSignup }: CTAProps) => {
       <div className="max-w-screen-xl mx-auto px-6 text-center">
         <h2 className="text-3xl font-bold mb-4">지금 바로 시작하세요</h2>
         <p className="text-gray-600 mb-8">재미있고 효과적인 한국어 학습이 여러분을 기다립니다</p>
-        <button
+        {/* <button
           onClick={() => navigate('/home')}
           className="px-8 py-4 bg-primary text-white rounded-[8px] text-lg font-medium"
         >
           무료로 시작하기
-        </button>
+        </button> */}
+
+        <div className="flex gap-4 justify-center">
+          <button
+            onClick={() => navigate('/test')}
+            className="px-8 py-4 bg-primary text-white rounded-[8px] text-lg font-medium"
+          >
+            시작하기
+          </button>
+          <button
+            onClick={() => navigate('/studylist')}
+            className="px-8 py-4 bg-primary text-white rounded-[8px] text-lg font-medium"
+          >
+            둘러보기
+          </button>
+        </div>
       </div>
     </section>
   );
