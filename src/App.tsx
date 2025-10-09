@@ -28,12 +28,14 @@ import Header from './components/common/Header';
 import SignInPage from './pages/SignInPage';
 import TempHomePage from './pages/TempHomePage';
 import TempCommunityPage from './pages/temps/TempCommunityPage';
+import ScrollToTop from './components/common/ScrollToTop';
 
 const App = () => {
   return (
     <AuthProvider>
       <PostProvider>
         <Router>
+          <ScrollToTop />
           <div className="layout min-h-screen flex flex-col">
             {/* 공통 헤더 */}
             <Header />
