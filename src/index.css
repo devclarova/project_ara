@@ -2,7 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 프로젝트 공통 유틸(선택) */
+/* Chrome/Edge/Safari 자동완성 배경 제거 + 글자색 통일 */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #fff inset !important; /* 흰 배경으로 채우기 */
+  box-shadow: 0 0 0px 1000px #fff inset !important;
+  -webkit-text-fill-color: #111827 !important; /* Tailwind gray-900 정도 */
+  transition: background-color 9999s ease-out 0s; /* 깜빡임 방지 */
+}
+
+/* Firefox (효과는 제한적) */
+input:-moz-ui-valid {
+  box-shadow: none !important;
+  background-color: #fff !important;
+  color: #111827 !important;
+}
+
+/* 프로젝트 공통 유틸 */
 :root {
   --app-max-w: 720px;
   --ara-primary: #00bfa5;
@@ -64,7 +81,6 @@ body,
 }
 
 html {
-  /* 가로 스크롤은 일반적으로 x 만 가림 */
   overflow-x: hidden;
   font-size: 16px;
 }
@@ -83,7 +99,6 @@ body {
 a {
   text-decoration: none;
   color: #3b82f6;
-  /* 중간단계에서 color은 0.2초 동안 부드럽게 변함 */
   transition: color 0.2s ease;
 }
 
@@ -93,15 +108,11 @@ a:hover {
 
 a:focus {
   color: #1e40af;
-  /* var 는 css 에서 변수 사용하는 경우 */
-  /* outline: 2px solid var(--primary-500); */
   outline: none;
   outline-offset: 2px;
 }
 
-/* 버튼 클래스를 가진 링크는 색상 변경하지 않음 */
 a.btn {
-  /* inherit 은 상속으로서 색상을 지정된 것을 사용 */
   color: inherit;
 }
 
@@ -114,8 +125,6 @@ a.btn:focus {
 }
 
 /* ===== List Styles ===== */
-/* 통상 ul 은 모양없이 진행함. */
-/* ol 은 order List 로서 순서가 있는 목록 */
 ul,
 li {
   list-style: none;
@@ -124,18 +133,15 @@ li {
 /* ===== Button Base Styles ===== */
 button {
   font-family: inherit;
-  /* 버튼은 보통 마우스 커서를 pointer 설정 */
   cursor: pointer;
   border: none;
   border-radius: 8px;
-  /* color 뿐만 아니라 모든 css 속성을 0.2s 동안 효과 */
   transition: all 0.2s ease;
 }
 
 /* 버튼이 비활성화시 처리 */
 button:disabled {
   opacity: 0.6;
-  /* 버튼의 마우스 커서 오버시 보이는 모양 */
   cursor: not-allowed;
 }
 
@@ -146,7 +152,6 @@ textarea {
   border: 1px solid #d1d5db;
   border-radius: 8px;
   padding: 8px 12px;
-  /* 중간모션 설정에서 여러개를 조금씩 적용이 다를때 */
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
@@ -256,7 +261,7 @@ textarea:focus {
 }
 
 /* Dark mode */
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   :root {
     --color-bg: #0b0f14;
     --color-surface: #0f141a;
@@ -278,7 +283,7 @@ textarea:focus {
     --shadow-2: 0 6px 16px rgba(0, 0, 0, 0.4);
     --shadow-3: 0 12px 28px rgba(0, 0, 0, 0.55);
   }
-}
+} */
 
 /* 2) Base & Primitives */
 * {

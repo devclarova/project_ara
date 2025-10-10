@@ -194,6 +194,8 @@ function SignInPage() {
             {errors.pw && <p className="text-red-500 text-xs mt-1">{errors.pw}</p>}
           </div>
 
+          {msg && <p className="my-4 text-center text-red-400 text-sm sm:text-base">{msg}</p>}
+
           <button
             type="submit"
             className="w-full bg-primary text-white py-2 sm:py-3 rounded-lg font-semibold hover:opacity-80 text-sm sm:text-base disabled:opacity-50"
@@ -241,8 +243,6 @@ function SignInPage() {
             <span>Google로 로그인하기</span>
           </button>
         </div>
-
-        {msg && <p className="mt-4 text-center text-red-400 text-sm sm:text-base">{msg}</p>}
       </div>
     </div>
   );
