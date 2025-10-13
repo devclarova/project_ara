@@ -136,12 +136,24 @@ export default function HomeFeed() {
       {/* Left Sidebar */}
       <aside className="hidden md:flex flex-col w-60 border-r border-gray-200 bg-gray-50 p-4 gap-4 text-sm shadow-sm sticky top-0 h-screen overflow-y-auto">
         <nav className="flex flex-col gap-3 font-medium">
-          <a href="#" className="text-primary font-semibold">Home</a>
-          <a href="#" className="hover:text-primary">Explore</a>
-          <a href="#" className="hover:text-primary">Notifications</a>
-          <a href="#" className="hover:text-primary">Messages</a>
-          <a href="#" className="hover:text-primary">Bookmarks</a>
-          <a href="#" className="hover:text-primary">Profile</a>
+          <a href="#" className="text-primary font-semibold">
+            Home
+          </a>
+          <a href="#" className="hover:text-primary">
+            Explore
+          </a>
+          <a href="#" className="hover:text-primary">
+            Notifications
+          </a>
+          <a href="#" className="hover:text-primary">
+            Messages
+          </a>
+          <a href="#" className="hover:text-primary">
+            Bookmarks
+          </a>
+          <a href="#" className="hover:text-primary">
+            Profile
+          </a>
         </nav>
         <button
           onClick={() => setIsComposerOpen(true)}
@@ -152,7 +164,10 @@ export default function HomeFeed() {
       </aside>
 
       {/* Main Feed */}
-      <div id="scrollableFeed" className="flex-1 border-x border-gray-200 max-w-xl bg-white overflow-y-auto h-screen">
+      <div
+        id="scrollableFeed"
+        className="flex-1 border-x border-gray-200 max-w-xl bg-white overflow-y-auto h-screen"
+      >
         <header className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-gray-200 px-4 py-3 flex items-center justify-between">
           <h1 className="text-lg font-bold">Home</h1>
         </header>
@@ -162,16 +177,23 @@ export default function HomeFeed() {
           next={fetchMorePosts}
           hasMore={hasMore}
           loader={<p className="text-center text-gray-500 py-4">로딩 중...</p>}
-          endMessage={<p className="text-center text-gray-400 py-4">모든 게시물을 불러왔습니다 🎉</p>}
+          endMessage={
+            <p className="text-center text-gray-400 py-4">모든 게시물을 불러왔습니다 🎉</p>
+          }
           scrollableTarget="scrollableFeed"
         >
           {displayedPosts.map(post => (
-            <article key={post.id} className="flex gap-3 p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition">
+            <article
+              key={post.id}
+              className="flex gap-3 p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition"
+            >
               <div className="flex-shrink-0 w-10 h-10 bg-gray-200 rounded-full" />
               <div className="flex-1 flex flex-col gap-2">
                 <div className="flex items-center gap-2 text-sm">
                   <span className="font-semibold">{post.author}</span>
-                  <span className="text-gray-500">{post.username} · {post.time}</span>
+                  <span className="text-gray-500">
+                    {post.username} · {post.time}
+                  </span>
                 </div>
                 <p className="text-[15px] leading-relaxed whitespace-pre-line">{post.content}</p>
                 {post.imageUrl && (
@@ -210,7 +232,10 @@ export default function HomeFeed() {
           <h2 className="font-bold text-lg mb-3">Who to follow</h2>
           <ul className="flex flex-col gap-4">
             {['@soohaha', '@roa_dev', '@jiminyoon'].map((user, i) => (
-              <li key={i} className="flex items-center justify-between hover:bg-gray-50 p-1 rounded-md cursor-pointer">
+              <li
+                key={i}
+                className="flex items-center justify-between hover:bg-gray-50 p-1 rounded-md cursor-pointer"
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-gray-200" />
                   <div>

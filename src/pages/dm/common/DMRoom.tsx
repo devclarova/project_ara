@@ -1,7 +1,6 @@
 // 오른쪽 메인 패널(헤더/MessageList/MessageInput 조합)
 
 import { useEffect, useMemo, useState } from 'react';
-
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import type { Message } from '../../../types/dm';
@@ -33,7 +32,6 @@ function DMRoom({ chatId, title, onAfterSend }: Props) {
     };
   }, [chatId]);
 
-  const myId = 'me';
   const sorted = useMemo(
     () => [...msgs].sort((a, b) => +new Date(a.created_at) - +new Date(b.created_at)),
     [msgs],

@@ -24,7 +24,7 @@ const DMChatListItem: React.FC<Props> = ({ chat, selected = false, onClick, clas
         'flex items-center py-[18px] px-5 cursor-pointer border-b border-[#f5f5f5]',
         'transition-all duration-200 ease-in-out bg-white hover:bg-[#f9f9f9]',
         // selected state (data-variant)
-        'data-[selected=true]:bg-[#e3f2fd] data-[selected=true]:border-r-[3px] data-[selected=true]:border-r-[#007bff]',
+        'data-[selected=true]:bg-[#00BFA5] data-[selected=true]:bg-opacity-20 data-[selected=true]:border-r-[3px] data-[selected=true]:border-r-[#007bff]',
         className,
       ].join(' ')}
     >

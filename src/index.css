@@ -739,3 +739,29 @@ hr {
   -webkit-line-clamp: 2; /* 최대 2줄 */
   -webkit-box-orient: vertical;
 }
+
+/* 메시지 전송 로딩 */
+@keyframes planeLaunch {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(8px, -8px) rotate(-28deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(16px, -16px) rotate(28deg);
+    opacity: 0;
+  }
+}
+.plane-launch .plane {
+  animation: planeLaunch 0.45s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+/* 접근성: 모션 최소화 설정 시 애니메이션 제거 */
+@media (prefers-reduced-motion: reduce) {
+  .plane-launch .plane {
+    animation: none !important;
+  }
+}

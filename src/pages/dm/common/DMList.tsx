@@ -1,4 +1,3 @@
-// DMList.tsx (수정본)
 /* 채팅리스트 (왼쪽 - 검색+목록)
    - Tailwind 토큰으로 색상 정리(bg-gray-50 / border-gray-200)
    - DMUserSearch에 "사용자" 목록을 따로 전달
