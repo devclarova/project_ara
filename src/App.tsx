@@ -30,6 +30,7 @@ import TempHomePage from './pages/TempHomePage';
 import TempCommunityPage from './pages/temps/TempCommunityPage';
 import ScrollToTop from './components/common/ScrollToTop';
 import DMPage from './pages/dm/common/DMPage';
+import HomeFeed from './pages/temps/HomeFeed';
 
 const App = () => {
   return (
@@ -59,6 +60,7 @@ const App = () => {
                 <Route path="/test" element={<TempHomePage />}></Route>
                 <Route path="/testC" element={<TempCommunityPage />}></Route>
                 <Route path="/dm" element={<DMPage />}></Route>
+                <Route path="/social" element={<HomeFeed />}></Route>
               </Routes>
             </main>
 
