@@ -43,6 +43,7 @@ export const mockChats: Chat[] = [
     lastMessage: '죄송합니다........',
     time: '오후 2:30',
     unread: 2,
+    avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=재현님`,
   },
   {
     id: 2,
@@ -50,6 +51,7 @@ export const mockChats: Chat[] = [
     lastMessage: '집가요~~',
     time: '오전 11:15',
     unread: 0,
+    avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=수하님`,
   },
   {
     id: 3,
@@ -57,6 +59,7 @@ export const mockChats: Chat[] = [
     lastMessage: '자고싶어요',
     time: '오후 12:25',
     unread: 1,
+    avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=아악`,
   },
   {
     id: 4,
@@ -64,5 +67,6 @@ export const mockChats: Chat[] = [
     lastMessage: 'Hello',
     time: '오전 09:05',
     unread: 0,
+    avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=aaa`,
   },
 ];

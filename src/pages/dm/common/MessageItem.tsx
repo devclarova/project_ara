@@ -1,5 +1,4 @@
 // 개별 메시지 버블(내/상대 구분 + 시간 표시)
-
 import type { Message } from '../../../types/dm';
 
 function formatTime(iso?: string) {
@@ -16,19 +15,19 @@ function MessageItem({ msg, showTime = true }: { msg: Message; showTime?: boolea
     <div className={`w-full flex ${mine ? 'justify-end' : 'justify-start'} mb-1`}>
       <div className="max-w-[70%] flex flex-col">
         <div
-          className={`rounded-2xl px-3 py-2 text-sm leading-5 ${
-            mine ? 'bg-[#e3f2fd] text-gray-800 self-end' : 'bg-gray-100 text-gray-800 self-start'
-          }`}
+          className={[
+            'rounded-2xl px-3 py-2 text-sm leading-5',
+            // 줄바꿈/공백 보존 + 긴 단어 줄바꿈
+            'whitespace-pre-wrap overflow-anywhere',
+            mine ? 'bg-primary/20 text-gray-800 self-end' : 'bg-gray-100 text-gray-800 self-start',
+          ].join(' ')}
         >
           {msg.content}
         </div>
 
-        {/* 같은 시간대의 마지막 메시지만 시간 표시 */}
         {showTime && (
           <div
-            className={`mt-1 text-[11px] leading-4 text-gray-400 ${
-              mine ? 'self-end pr-1' : 'self-start pl-1'
-            }`}
+            className={`mt-1 text-[11px] leading-4 text-gray-400 ${mine ? 'self-end pr-1' : 'self-start pl-1'}`}
           >
             {timeLabel}
           </div>

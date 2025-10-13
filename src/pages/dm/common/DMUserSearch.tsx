@@ -93,7 +93,7 @@ function DMUserSearch({
           }}
           onKeyDown={onKeyDown}
           placeholder={placeholder}
-          className="w-full px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:ring-2 focus-visible:ring-primary"
           role="combobox"
           aria-expanded={!!debouncedQ && filtered.length > 0}
           aria-controls="dm-user-search-listbox"
@@ -124,11 +124,11 @@ function DMUserSearch({
                 onClick={() => onSelectUser(u)}
                 className="
                   w-full flex items-center p-2 rounded text-left transition
-                  hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500
+                  hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
                   data-[active=true]:bg-blue-50
                 "
               >
-                <div className="mr-3 w-8 h-8 rounded-full overflow-hidden bg-blue-500 shrink-0">
+                <div className="mr-3 w-8 h-8 rounded-full overflow-hidden bg-gray-300 shrink-0">
                   <img
                     src={u.avatarUrl || 'https://api.dicebear.com/7.x/adventurer/svg?seed=tmp'}
                     alt={u.nickname}
