@@ -10,7 +10,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 type MessageInputProps = {
-  onSend?: (text: string) => Promise<void> | void; // 상위로 전송 콜백
+  onSend?: (text: string) => Promise<void> | void;
   placeholder?: string;
   submitLabel: string;
 };
@@ -22,14 +22,14 @@ const MessageInput: React.FC<MessageInputProps> = ({
 }) => {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [launching, setLaunching] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
-  // 자동 높이 조절 (min 40px, max 120px에 해당하는 Tailwind 클래스를 이미 사용)
   const autoResize = useCallback(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = 'auto';
-    // 최대 높이(120px)를 넘으면 스크롤, 아니면 내용에 맞춰 확장
     const next = Math.min(el.scrollHeight, 120);
     el.style.height = `${next}px`;
   }, []);
@@ -38,6 +38,12 @@ const MessageInput: React.FC<MessageInputProps> = ({
     autoResize();
   }, [text, autoResize]);
 
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
   const canSend = text.trim().length > 0 && !sending;
 
   const doSend = useCallback(
@@ -45,15 +51,14 @@ const MessageInput: React.FC<MessageInputProps> = ({
       if (!message.trim()) return;
       try {
         setSending(true);
+        setLaunching(true); // 애니메이션 시작
         await onSend?.(message.trim());
-        // 전송 후 초기화
         setText('');
-        // 높이 초기화
         const el = textareaRef.current;
-        if (el) {
-          el.style.height = 'auto';
-        }
+        if (el) el.style.height = 'auto';
       } finally {
+        if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+        timeoutRef.current = window.setTimeout(() => setLaunching(false), 450); // 애니메이션 종료
         setSending(false);
       }
     },
@@ -72,10 +77,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const onKeyDown = useCallback(
     async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault(); // 줄바꿈 방지
-        if (canSend) {
-          await doSend(text);
-        }
+        e.preventDefault();
+        if (canSend) await doSend(text);
       }
     },
     [canSend, doSend, text],
@@ -87,7 +90,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         <div className="flex gap-2">
           <textarea
             ref={textareaRef}
-            className="message-textarea flex-1 min-h-10 max-h-[120px] border border-[#ddd] rounded-full resize-none text-sm leading-[1.4] focus:outline-none focus:border-[#007bff] px-3 py-2"
+            className="message-textarea flex-1 min-h-[40px] max-h-[120px] border border-[#ddd] rounded-full resize-none text-sm leading-[1.4] focus:outline-none focus:border-brand-400 px-3 py-2"
             rows={1}
             value={text}
             onChange={e => setText(e.target.value)}
@@ -97,14 +100,14 @@ const MessageInput: React.FC<MessageInputProps> = ({
           />
           <button
             type="submit"
-            className="send-button w-10 h-10 border-0 rounded-full bg-primary text-white cursor-pointer flex items-center justify-center transition-all duration-200 ease-in-out enabled:hover:bg-[#0056b3] disabled:bg-[#cccccc] disabled:cursor-not-allowed"
+            className={`send-button w-10 h-10 border-0 rounded-full bg-primary text-white cursor-pointer flex items-center justify-center transition-all duration-200 ease-in-out enabled:hover:bg-[#0056b3] disabled:bg-[#cccccc] disabled:cursor-not-allowed ${launching ? 'plane-launch' : ''}`}
             disabled={!canSend}
             aria-label="메시지 전송"
           >
             {sending ? (
               <div className="loading-spinner w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
-              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" className="plane">
                 <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor" />
               </svg>
             )}
