@@ -300,10 +300,8 @@ export type Database = {
           file_size: number | null;
           file_type: string | null;
           file_url: string;
-          height: number | null;
           id: string;
           message_id: string;
-          width: number | null;
         };
         Insert: {
           created_at?: string;
@@ -311,10 +309,8 @@ export type Database = {
           file_size?: number | null;
           file_type?: string | null;
           file_url: string;
-          height?: number | null;
           id?: string;
           message_id: string;
-          width?: number | null;
         };
         Update: {
           created_at?: string;
@@ -322,10 +318,8 @@ export type Database = {
           file_size?: number | null;
           file_type?: string | null;
           file_url?: string;
-          height?: number | null;
           id?: string;
           message_id?: string;
-          width?: number | null;
         };
         Relationships: [
           {
@@ -517,7 +511,7 @@ export type Database = {
       };
       profiles: {
         Row: {
-          avatar_url: string;
+          avatar_url: string | null;
           birthday: string;
           country: string;
           created_at: string;
@@ -530,7 +524,7 @@ export type Database = {
           user_id: string;
         };
         Insert: {
-          avatar_url?: string;
+          avatar_url?: string | null;
           birthday?: string;
           country?: string;
           created_at?: string;
@@ -543,7 +537,7 @@ export type Database = {
           user_id: string;
         };
         Update: {
-          avatar_url?: string;
+          avatar_url?: string | null;
           birthday?: string;
           country?: string;
           created_at?: string;
