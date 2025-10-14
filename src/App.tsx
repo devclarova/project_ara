@@ -74,7 +74,7 @@ const App = () => {
               {/* <div className="h-[calc(4rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden /> */}
             </div>
           </div>
-          <InflearnNav />
+          {/* <InflearnNav /> */}
         </Router>
       </PostProvider>
     </AuthProvider>
