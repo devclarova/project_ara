@@ -19,7 +19,11 @@ const InputField = ({ id, label, type = 'text', value, onChange, error }: InputF
     <label
       htmlFor={id}
       className={`absolute left-3 sm:left-4 transition-all
-        ${value ? '-top-3 text-xs sm:text-sm' : 'top-2 sm:top-3 text-sm sm:text-base'}
+        ${
+          value
+            ? '-top-3 text-sm sm:-top-3 sm:text-sm md:-top-2.5 md:text-sm lg:-top-3 lg:text-sm xl:-top-[14px]'
+            : 'top-3 text-sm sm:top-3 sm:text-sm md:top-3 md:text-sm lg:top-3 lg:text-sm'
+        }
         peer-focus:-top-3 peer-focus:text-xs sm:peer-focus:text-sm peer-focus:text-primary
         text-gray-400 bg-white/95 px-1 rounded`}
     >
