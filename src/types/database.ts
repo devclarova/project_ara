@@ -54,6 +54,87 @@ export type Database = {
         };
         Relationships: [];
       };
+      chat_user_state: {
+        Row: {
+          chat_id: string;
+          is_archived: boolean;
+          is_pinned: boolean;
+          left_at: string | null;
+          muted_until: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          chat_id: string;
+          is_archived?: boolean;
+          is_pinned?: boolean;
+          left_at?: string | null;
+          muted_until?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          chat_id?: string;
+          is_archived?: boolean;
+          is_pinned?: boolean;
+          left_at?: string | null;
+          muted_until?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'chat_user_state_chat_id_fkey';
+            columns: ['chat_id'];
+            isOneToOne: false;
+            referencedRelation: 'chats';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'chat_user_state_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      chats: {
+        Row: {
+          created_at: string;
+          id: string;
+          user1_id: string;
+          user2_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          user1_id: string;
+          user2_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          user1_id?: string;
+          user2_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'chats_user1_id_fkey';
+            columns: ['user1_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'chats_user2_id_fkey';
+            columns: ['user2_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       countries: {
         Row: {
           flag: string | null;
@@ -225,6 +306,134 @@ export type Database = {
           },
         ];
       };
+      message_files: {
+        Row: {
+          created_at: string;
+          file_name: string | null;
+          file_size: number | null;
+          file_type: string | null;
+          file_url: string;
+          height: number | null;
+          id: string;
+          message_id: string;
+          width: number | null;
+        };
+        Insert: {
+          created_at?: string;
+          file_name?: string | null;
+          file_size?: number | null;
+          file_type?: string | null;
+          file_url: string;
+          height?: number | null;
+          id?: string;
+          message_id: string;
+          width?: number | null;
+        };
+        Update: {
+          created_at?: string;
+          file_name?: string | null;
+          file_size?: number | null;
+          file_type?: string | null;
+          file_url?: string;
+          height?: number | null;
+          id?: string;
+          message_id?: string;
+          width?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'message_files_message_id_fkey';
+            columns: ['message_id'];
+            isOneToOne: false;
+            referencedRelation: 'messages';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      message_receipts: {
+        Row: {
+          message_id: string;
+          read_at: string;
+          user_id: string;
+        };
+        Insert: {
+          message_id: string;
+          read_at?: string;
+          user_id: string;
+        };
+        Update: {
+          message_id?: string;
+          read_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'message_receipts_message_id_fkey';
+            columns: ['message_id'];
+            isOneToOne: false;
+            referencedRelation: 'messages';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'message_receipts_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      messages: {
+        Row: {
+          chat_id: string;
+          content: string | null;
+          content_tsv: unknown | null;
+          created_at: string;
+          id: string;
+          sender_id: string;
+          translated_lang: string | null;
+          translated_text: string | null;
+          type: string;
+        };
+        Insert: {
+          chat_id: string;
+          content?: string | null;
+          content_tsv?: unknown | null;
+          created_at?: string;
+          id?: string;
+          sender_id: string;
+          translated_lang?: string | null;
+          translated_text?: string | null;
+          type?: string;
+        };
+        Update: {
+          chat_id?: string;
+          content?: string | null;
+          content_tsv?: unknown | null;
+          created_at?: string;
+          id?: string;
+          sender_id?: string;
+          translated_lang?: string | null;
+          translated_text?: string | null;
+          type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'messages_chat_id_fkey';
+            columns: ['chat_id'];
+            isOneToOne: false;
+            referencedRelation: 'chats';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'messages_sender_id_fkey';
+            columns: ['sender_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       post_dislikes: {
         Row: {
           created_at: string;
@@ -326,7 +535,10 @@ export type Database = {
           country: string;
           created_at: string;
           gender: Database['public']['Enums']['gender_enum'];
-          id: number;
+          id: string;
+          id_old: number;
+          is_online: boolean;
+          last_active_at: string | null;
           nickname: string;
           updated_at: string;
           user_id: string;
@@ -337,7 +549,10 @@ export type Database = {
           country?: string;
           created_at?: string;
           gender: Database['public']['Enums']['gender_enum'];
-          id?: never;
+          id: string;
+          id_old?: never;
+          is_online?: boolean;
+          last_active_at?: string | null;
           nickname: string;
           updated_at?: string;
           user_id: string;
@@ -348,7 +563,10 @@ export type Database = {
           country?: string;
           created_at?: string;
           gender?: Database['public']['Enums']['gender_enum'];
-          id?: never;
+          id?: string;
+          id_old?: never;
+          is_online?: boolean;
+          last_active_at?: string | null;
           nickname?: string;
           updated_at?: string;
           user_id?: string;
@@ -438,30 +656,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      study_progress: {
-        Row: {
-          created_at: string | null;
-          episode: string;
-          id: number;
-          updated_at: string | null;
-          view_count: number | null;
-        };
-        Insert: {
-          created_at?: string | null;
-          episode: string;
-          id?: number;
-          updated_at?: string | null;
-          view_count?: number | null;
-        };
-        Update: {
-          created_at?: string | null;
-          episode?: string;
-          id?: number;
-          updated_at?: string | null;
-          view_count?: number | null;
-        };
-        Relationships: [];
-      };
       subtitle: {
         Row: {
           english_subtitle: string | null;
@@ -503,6 +697,84 @@ export type Database = {
           },
         ];
       };
+      user_blocks: {
+        Row: {
+          blocked_id: string;
+          blocker_id: string;
+          created_at: string;
+          ended_at: string | null;
+          id: string;
+        };
+        Insert: {
+          blocked_id: string;
+          blocker_id: string;
+          created_at?: string;
+          ended_at?: string | null;
+          id?: string;
+        };
+        Update: {
+          blocked_id?: string;
+          blocker_id?: string;
+          created_at?: string;
+          ended_at?: string | null;
+          id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'user_blocks_blocked_id_fkey';
+            columns: ['blocked_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'user_blocks_blocker_id_fkey';
+            columns: ['blocker_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      user_reports: {
+        Row: {
+          created_at: string;
+          id: string;
+          reason: string | null;
+          reported_id: string;
+          reporter_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          reason?: string | null;
+          reported_id: string;
+          reporter_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          reason?: string | null;
+          reported_id?: string;
+          reporter_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'user_reports_reported_id_fkey';
+            columns: ['reported_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'user_reports_reporter_id_fkey';
+            columns: ['reporter_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       users: {
         Row: {
           auth_user_id: string;
@@ -510,7 +782,7 @@ export type Database = {
           email: string;
           id: number;
           last_login: string;
-          password: string;
+          password: string | null;
         };
         Insert: {
           auth_user_id: string;
@@ -518,7 +790,7 @@ export type Database = {
           email: string;
           id?: number;
           last_login?: string;
-          password: string;
+          password?: string | null;
         };
         Update: {
           auth_user_id?: string;
@@ -526,7 +798,7 @@ export type Database = {
           email?: string;
           id?: number;
           last_login?: string;
-          password?: string;
+          password?: string | null;
         };
         Relationships: [];
       };
@@ -594,11 +866,12 @@ export type Database = {
       };
       video: {
         Row: {
-          categories: string | null;
+          categories: Database['public']['Enums']['category_enum'] | null;
           contents: string | null;
           episode: string | null;
           id: number;
           image_url: string | null;
+          level: Database['public']['Enums']['level_enum'] | null;
           runtime: number | null;
           scene: string | null;
           study_id: number | null;
@@ -607,11 +880,12 @@ export type Database = {
           video_url: string | null;
         };
         Insert: {
-          categories?: string | null;
+          categories?: Database['public']['Enums']['category_enum'] | null;
           contents?: string | null;
           episode?: string | null;
           id?: never;
           image_url?: string | null;
+          level?: Database['public']['Enums']['level_enum'] | null;
           runtime?: number | null;
           scene?: string | null;
           study_id?: number | null;
@@ -620,11 +894,12 @@ export type Database = {
           video_url?: string | null;
         };
         Update: {
-          categories?: string | null;
+          categories?: Database['public']['Enums']['category_enum'] | null;
           contents?: string | null;
           episode?: string | null;
           id?: never;
           image_url?: string | null;
+          level?: Database['public']['Enums']['level_enum'] | null;
           runtime?: number | null;
           scene?: string | null;
           study_id?: number | null;
@@ -733,6 +1008,26 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: undefined;
       };
+      gtrgm_compress: {
+        Args: { '': unknown };
+        Returns: unknown;
+      };
+      gtrgm_decompress: {
+        Args: { '': unknown };
+        Returns: unknown;
+      };
+      gtrgm_in: {
+        Args: { '': unknown };
+        Returns: unknown;
+      };
+      gtrgm_options: {
+        Args: { '': unknown };
+        Returns: undefined;
+      };
+      gtrgm_out: {
+        Args: { '': unknown };
+        Returns: unknown;
+      };
       hhmmss_to_seconds: {
         Args: { t: string };
         Returns: number;
@@ -741,11 +1036,33 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
       };
+      set_limit: {
+        Args: { '': number };
+        Returns: number;
+      };
+      show_limit: {
+        Args: Record<PropertyKey, never>;
+        Returns: number;
+      };
+      show_trgm: {
+        Args: { '': string };
+        Returns: string[];
+      };
+      unaccent: {
+        Args: { '': string };
+        Returns: string;
+      };
+      unaccent_init: {
+        Args: { '': unknown };
+        Returns: unknown;
+      };
     };
     Enums: {
+      category_enum: '영화' | '드라마' | '예능' | '음악';
       category_type: 'Notice' | 'Reviews' | 'Q&A' | 'Study tips' | 'Communication';
       difficulty_level: '초급' | '중급' | '고급';
       gender_enum: 'Male' | 'Female';
+      level_enum: '초급' | '중급' | '고급';
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -871,9 +1188,11 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      category_enum: ['영화', '드라마', '예능', '음악'],
       category_type: ['Notice', 'Reviews', 'Q&A', 'Study tips', 'Communication'],
       difficulty_level: ['초급', '중급', '고급'],
       gender_enum: ['Male', 'Female'],
+      level_enum: ['초급', '중급', '고급'],
     },
   },
 } as const;
