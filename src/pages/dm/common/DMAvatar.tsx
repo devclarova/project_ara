@@ -12,6 +12,7 @@ const DMAvatar: React.FC<Props> = ({ name, src, size = 50, unread = 0 }) => {
       <img
         src={src ?? `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(name)}`}
         alt={name}
+        // 확인용 임시 테두리 / 테스트 후 지우기
         className="rounded-full object-cover border-2 border-[#f0f0f0]"
         style={{ width: size, height: size }}
       />
