@@ -536,7 +536,6 @@ export type Database = {
           created_at: string;
           gender: Database['public']['Enums']['gender_enum'];
           id: string;
-          id_old: number;
           is_online: boolean;
           last_active_at: string | null;
           nickname: string;
@@ -549,8 +548,7 @@ export type Database = {
           country?: string;
           created_at?: string;
           gender: Database['public']['Enums']['gender_enum'];
-          id: string;
-          id_old?: never;
+          id?: string;
           is_online?: boolean;
           last_active_at?: string | null;
           nickname: string;
@@ -564,7 +562,6 @@ export type Database = {
           created_at?: string;
           gender?: Database['public']['Enums']['gender_enum'];
           id?: string;
-          id_old?: never;
           is_online?: boolean;
           last_active_at?: string | null;
           nickname?: string;
