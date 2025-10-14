@@ -4,6 +4,14 @@ import { useEffect, useRef } from 'react';
 import type { Message } from '../../../types/dm';
 import MessageItem from './MessageItem';
 
+type Props = {
+  messages: Message[];
+  /** 'never' | 'onSend' | 'always' */
+  autoScrollMode?: 'never' | 'onSend' | 'always';
+  /** 내가 방금 보냈다면 true */
+  justSent?: boolean;
+};
+
 function sameMinute(a: Date, b: Date) {
   return a.getHours() === b.getHours() && a.getMinutes() === b.getMinutes();
 }
@@ -13,9 +21,18 @@ function authorKey(m: Message) {
   return m.isMe !== undefined ? String(m.isMe) : String(m.author_id);
 }
 
-function MessageList({ messages }: { messages: Message[] }) {
+function MessageList({ messages, autoScrollMode = 'onSend', justSent = false }: Props) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), [messages]);
+
+  // 자동 스크롤
+  useEffect(() => {
+    if (autoScrollMode === 'always') {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    } else if (autoScrollMode === 'onSend' && justSent) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+    // 'never'면 아무것도 하지 않음
+  }, [messages, autoScrollMode, justSent]);
 
   return (
     <div className="flex-1 overflow-y-auto p-4 bg-white">

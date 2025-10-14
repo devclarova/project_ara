@@ -90,7 +90,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         <div className="flex gap-2">
           <textarea
             ref={textareaRef}
-            className="message-textarea flex-1 min-h-[40px] max-h-[120px] border border-[#ddd] rounded-full resize-none text-sm leading-[1.4] focus:outline-none focus:border-brand-400 px-3 py-2"
+            className="message-textarea flex-1 min-h-[40px] max-h-[120px] border border-[#ddd] rounded-full resize-none text-sm leading-[1.4] focus:outline-none focus:border-primary px-3 py-2"
             rows={1}
             value={text}
             onChange={e => setText(e.target.value)}
@@ -100,7 +100,14 @@ const MessageInput: React.FC<MessageInputProps> = ({
           />
           <button
             type="submit"
-            className={`send-button w-10 h-10 border-0 rounded-full bg-primary text-white cursor-pointer flex items-center justify-center transition-all duration-200 ease-in-out enabled:hover:bg-[#0056b3] disabled:bg-[#cccccc] disabled:cursor-not-allowed ${launching ? 'plane-launch' : ''}`}
+            className={[
+              'send-button w-10 h-10 border-0 rounded-full bg-primary text-white cursor-pointer flex items-center justify-center transition-all duration-200 ease-in-out',
+              // 활성화 상태에서만 호버 효과
+              canSend
+                ? 'enabled:hover:bg-[#00BFA5] enabled:hover:bg-opacity-50 cursor-pointer'
+                : 'disabled:bg-[#cccccc] disabled:cursor-default',
+              launching ? 'plane-launch' : '',
+            ].join(' ')}
             disabled={!canSend}
             aria-label="메시지 전송"
           >
