@@ -5,6 +5,40 @@ import GenderSelect from '../components/auth/GenderSelect';
 import { useNavigate } from 'react-router-dom';
 import InputField from '../components/auth/InputField';
 import { supabase } from '../lib/supabase';
+import { v4 as uuid } from 'uuid';
+import type { Database } from '../types/database';
+
+type Gender = Database['public']['Enums']['gender_enum'];
+const GENDERS: readonly Gender[] = ['Male', 'Female'] as const;
+const isGender = (v: string): v is Gender => (GENDERS as readonly string[]).includes(v);
+
+async function uploadAvatar(file: File) {
+  // 로그인된 사용자 정보 가져오기
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData.user?.id;
+  if (!uid) throw new Error('로그인된 사용자만 업로드할 수 있습니다.');
+
+  // 확장자, 경로 설정
+  const ext = (file.name.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '') || 'jpg';
+  const path = `${uid}/${uuid()}.${ext}`; // ✅ uuid() 호출
+
+  // Supabase Storage에 업로드
+  const { error: upErr } = await supabase.storage
+    .from('avatars')
+    .upload(path, file, { upsert: true });
+  if (upErr) throw new Error(upErr.message);
+
+  // 공개 URL 얻기
+  const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+  const publicUrl = data?.publicUrl ?? null;
+
+  // 프로필 테이블에 반영
+  if (publicUrl) {
+    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('user_id', uid);
+  }
+
+  return publicUrl;
+}
 
 function SignUpPage() {
   const navigate = useNavigate();
@@ -14,12 +48,14 @@ function SignUpPage() {
   const [pw, setPw] = useState('');
   const [confirmPw, setConfirmPw] = useState('');
   const [nickname, setNickname] = useState('');
-  const [gender, setGender] = useState('');
+  const [gender, setGender] = useState<Gender | ''>('');
   const [birth, setBirth] = useState<Date | null>(null);
   const [country, setCountry] = useState('');
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  const AVATAR_BUCKET = 'avatars';
 
   // Error/UI state
   const [errors, setErrors] = useState<{
@@ -37,38 +73,50 @@ function SignUpPage() {
   const [loading, setLoading] = useState(false);
 
   // 유효성 검사
-  const validateField = (field: string, value: any) => {
+  type FieldKey =
+    | 'email'
+    | 'pw'
+    | 'confirmPw'
+    | 'nickname'
+    | 'gender'
+    | 'birth'
+    | 'country'
+    | 'profileImage';
+  const validateField = (field: FieldKey, value: string | Date | null): string => {
     switch (field) {
       case 'email': {
-        if (!value) return 'Please enter your email.';
+        const v = typeof value === 'string' ? value : '';
+        if (!v) return 'Please enter your email';
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) return 'Invalid email format.';
+        if (!emailRegex.test(v)) return 'Invalid email format.';
         return '';
       }
       case 'pw': {
-        if (!value) return 'Please enter your password.';
-        if (value.length < 6) return 'Password must be at least 6 characters.';
+        const v = typeof value === 'string' ? value : '';
+        if (!v) return 'Please enter your password.';
+        if (v.length < 6) return 'Password must be at least 6 characters.';
         return '';
       }
       case 'confirmPw': {
-        if (!value) return 'Please confirm your password.';
-        if (value !== pw) return 'Passwords do not match.';
+        const v = typeof value === 'string' ? value : '';
+        if (!v) return 'Please confirm your password.';
+        if (v !== pw) return 'Passwords do not match.';
         return '';
       }
       case 'nickname': {
-        if (!value) return 'Please enter your nickname.';
+        if (!(typeof value === 'string' && value)) return 'Please enter your nickname.';
         return '';
       }
       case 'gender': {
-        if (!value) return 'Please select your gender.';
+        if (!(typeof value === 'string' && value)) return 'Please select your gender.';
         return '';
       }
       case 'birth': {
-        if (!value) return 'Please select your birth date.';
+        if (!(value instanceof Date)) return 'Please select your birth date.';
         return '';
       }
       case 'country': {
-        if (!value) return 'Please select your country.';
+        if (!(typeof value === 'string' && value)) return 'Please select your country.';
         return '';
       }
       default:
@@ -87,7 +135,7 @@ function SignUpPage() {
     return '';
   };
 
-  const handleChange = (field: keyof typeof errors, value: any) => {
+  const handleChange = (field: keyof typeof errors, value: string) => {
     setErrors(prev => ({ ...prev, [field]: '' }));
     switch (field) {
       case 'email':
@@ -165,6 +213,20 @@ function SignUpPage() {
 
     try {
       // 2) Supabase Auth로 회원가입(메타데이터 포함)
+      // 프로필 사진 업로드 시 먼저 업로드
+      let avatarUrl: string | null = null;
+      if (profileImage) {
+        const ext =
+          (profileImage.name.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '') || 'jpg';
+        const path = `pending/${uuid()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from('avatars')
+          .upload(path, profileImage, { upsert: true });
+        if (upErr) throw new Error(upErr.message);
+        const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
+        avatarUrl = pub?.publicUrl ?? null;
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password: pw,
@@ -173,8 +235,9 @@ function SignUpPage() {
           data: {
             gender, // enum 라벨과 정확히 일치해야 함
             nickname,
-            birthday: birth ? birth.toISOString().slice(0, 10) : null,
+            birthday: birth!.toISOString().slice(0, 10),
             country,
+            avatar_url: avatarUrl,
           },
         },
       });
@@ -187,8 +250,9 @@ function SignUpPage() {
 
       // 3) 성공 모달 (이메일 인증 유도)
       setShowSuccess(true);
-    } catch (err: any) {
-      setMsg(`Unexpected error: ${err.message}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unexpected error';
+      setMsg(`Unexpected error: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -269,9 +333,15 @@ function SignUpPage() {
 
           <GenderSelect
             value={gender}
-            onChange={val => {
-              setGender(val);
-              setErrors(prev => ({ ...prev, gender: '' }));
+            onChange={(val: string) => {
+              if (isGender(val)) {
+                setGender(val); // val은 여기서 Gender로 좁혀짐
+                setErrors(prev => ({ ...prev, gender: '' }));
+              } else {
+                // 안전장치: 예상 밖 값이면 선택 해제
+                setGender('');
+                setErrors(prev => ({ ...prev, gender: 'Please select your gender.' }));
+              }
             }}
             error={!!errors.gender}
           />
