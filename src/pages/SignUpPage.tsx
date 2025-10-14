@@ -54,6 +54,8 @@ function SignUpPage() {
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
+  // const [isChecking, setIsChecking] = useState(false);
+  // const [checkResult, setCheckResult] = useState<'available' | 'taken' | ''>('');
 
   const AVATAR_BUCKET = 'avatars';
 
@@ -135,13 +137,51 @@ function SignUpPage() {
     return '';
   };
 
-  const handleChange = (field: keyof typeof errors, value: string) => {
+  async function checkEmailAvailability(email: string): Promise<boolean> {
+    if (!email) return false;
+    const { data, error } = await supabase.rpc('email_exists', { _email: email });
+    if (error) {
+      console.error('email_exists error:', error.message);
+      return false;
+    }
+    // data === true → 이미 존재 → 사용 불가
+    return data === false;
+  }
+
+  async function checkNicknameAvailability(nickname: string): Promise<boolean> {
+    if (!nickname) return false;
+
+    // 대소문자 무시(UX와 DB 유니크 정책을 맞추려면 lower 인덱스 권장)
+    const { count, error } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .ilike('nickname', nickname);
+
+    if (error) {
+      console.error('nickname check error:', error.message);
+      // 네트워크/일시 오류 시엔 일단 "사용 불가"로 보수 처리하거나 UX 메시지 표기
+      return false;
+    }
+    return (count ?? 0) === 0; // count 0이면 사용 가능
+  }
+
+  const handleChange = async (field: keyof typeof errors, value: string) => {
     setErrors(prev => ({ ...prev, [field]: '' }));
     switch (field) {
-      case 'email':
+      case 'email': {
         setEmail(value);
-        setErrors(prev => ({ ...prev, email: validateField('email', value) }));
+        const baseErr = validateField('email', value);
+        setErrors(prev => ({ ...prev, email: baseErr }));
+
+        if (!baseErr) {
+          const ok = await checkEmailAvailability(value);
+          setErrors(prev => ({
+            ...prev,
+            email: ok ? '' : 'This email is already registered.',
+          }));
+        }
         break;
+      }
       case 'pw': {
         setPw(value);
         const strengthMsg = getPasswordStrength(value);
@@ -227,6 +267,20 @@ function SignUpPage() {
         avatarUrl = pub?.publicUrl ?? null;
       }
 
+      const [emailOK, nicknameOK] = await Promise.all([
+        checkEmailAvailability(email),
+        checkNicknameAvailability(nickname),
+      ]);
+      if (!emailOK || !nicknameOK) {
+        setErrors(prev => ({
+          ...prev,
+          email: emailOK ? prev.email : 'This email is already registered.',
+          nickname: nicknameOK ? prev.nickname : 'This nickname is already taken.',
+        }));
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password: pw,
@@ -306,6 +360,14 @@ function SignUpPage() {
             value={email}
             onChange={val => handleChange('email', val)}
             error={errors.email}
+            // onCheck={async () => {
+            //   setIsChecking(true);
+            //   const ok = await checkEmailAvailability(email);
+            //   setIsChecking(false);
+            //   setCheckResult(ok ? 'available' : 'taken');
+            // }}
+            // isChecking={isChecking}
+            // checkResult={checkResult}
           />
           <InputField
             id="pw"
