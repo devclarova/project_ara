@@ -12,15 +12,18 @@ type Props = {
   chatId: number;
   title: string;
   onAfterSend?: (chatId: number, lastText: string, localTime: string) => void;
+  setSelectedChatId: (id: number | null) => void;
 };
 
-function DMRoom({ chatId, title, onAfterSend }: Props) {
+function DMRoom({ chatId, title, onAfterSend, setSelectedChatId }: Props) {
   const [msgs, setMsgs] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [justSent, setJustSent] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false); // 햄버거 메뉴 드롭다운
   const [showChatList, setShowChatList] = useState(false); // 채팅목록 보기 상태
   const [showSearch, setShowSearch] = useState(false); // 검색창 표시 여부
+  const [isAlarmOn, setIsAlarmOn] = useState(true); // 알림 상태
+  const [isPinned, setIsPinned] = useState(false); // 핀 표시 여부
 
   const chatListRef = useRef<HTMLDivElement>(null); // 채팅목록을 위한 ref
   const dropdownRef = useRef<HTMLDivElement>(null); // 채팅목록을 위한 ref
@@ -30,6 +33,11 @@ function DMRoom({ chatId, title, onAfterSend }: Props) {
   const profileImageUrl = currentChat
     ? currentChat.avatarUrl
     : 'https://api.dicebear.com/7.x/adventurer/svg?seed=sample-avatar';
+
+  // 채팅방 닫고 목록으로
+  const handleBackButton = () => {
+    setSelectedChatId(null);
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -74,10 +82,10 @@ function DMRoom({ chatId, title, onAfterSend }: Props) {
         }
         break;
       case 'alarm':
-        console.log('알람');
+        setIsAlarmOn(prev => !prev);
         break;
       case 'pin':
-        console.log('핀');
+        setIsPinned(prev => !prev);
         break;
       default:
         break;
@@ -108,46 +116,70 @@ function DMRoom({ chatId, title, onAfterSend }: Props) {
     <div className="flex flex-col h-full sm:h-[calc(100vh-120px)]">
       {/* 헤더 */}
       <header className="sm:hidden flex items-center gap-2 p-3 border-b bg-white relative">
+        <button onClick={handleBackButton} className="text-m px-2 py-1">
+          <img src="/back.svg" alt="뒤로가기" />
+        </button>
         <img src={profileImageUrl} alt="Profile" className="w-9 h-9 rounded-full" />
         <div className="font-semibold">{title}</div>
 
         {/* 오른쪽 햄버거 버튼 */}
         <div className="ml-auto relative" ref={dropdownRef}>
-          <button
-            type="button"
-            onClick={() => setDropdownOpen(prev => !prev)}
-            className="inline-flex items-center justify-center rounded-md border border-gray-200 px-3 py-2 text-sm"
-          >
-            ☰
-          </button>
+          <div>
+            <button onClick={() => setShowSearch(prev => !prev)} className="text-xs">
+              <img
+                src="/searchT.svg"
+                alt="검색"
+                className="absolute right-12 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center"
+              />
+            </button>
+            <button
+              type="button"
+              onClick={() => setDropdownOpen(prev => !prev)}
+              className="inline-flex items-center justify-center rounded-md border border-gray-200 px-3 py-2 text-xl"
+            >
+              ☰
+            </button>
+          </div>
 
           {/* 드롭다운 메뉴 */}
           {dropdownOpen && (
             <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-md shadow-lg z-50">
               <button
-                className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                className="flex w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-600"
                 onClick={() => handleSidebarAction('chatList')}
               >
+                <img src="/chatlist.svg" alt="채팅목록" className="w-7 h-7 mr-3" />
                 채팅목록보기
               </button>
               <button
-                className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                className="flex w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-600"
                 onClick={() => handleSidebarAction('leave')}
               >
+                <img src="/exit.svg" alt="나가기" className="w-6 h-6 mr-3" />
                 나가기
               </button>
-              <button
-                className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                onClick={() => handleSidebarAction('alarm')}
-              >
-                알람
-              </button>
-              <button
-                className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                onClick={() => handleSidebarAction('pin')}
-              >
-                핀
-              </button>
+              <div className="flex">
+                <button
+                  className="w-full text-left px-4 py-2"
+                  onClick={() => handleSidebarAction('alarm')}
+                >
+                  <img
+                    src={isAlarmOn ? '/alarmon.svg' : '/alaramoff.svg'}
+                    alt={isAlarmOn ? '알람 켬' : '알람 끔'}
+                    className="w-5 h-5"
+                  />
+                </button>
+                <button
+                  className="w-full text-left px-4 py-2"
+                  onClick={() => handleSidebarAction('pin')}
+                >
+                  <img
+                    src={isPinned ? '/pinon.svg' : '/pinoff.svg'}
+                    alt={isPinned ? '고정됨' : '고정해제'}
+                    className="w-5 h-5"
+                  />
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -160,26 +192,27 @@ function DMRoom({ chatId, title, onAfterSend }: Props) {
 
         {/* 오른쪽: 대화 검색 및 나가기 */}
         <div className="flex ml-auto items-center gap-4">
-          <button onClick={() => setShowSearch(prev => !prev)} className="px-3 py-1 text-xs">
-            검색
+          <button onClick={() => setShowSearch(prev => !prev)} className="text-xs">
+            <img src="/searchT.svg" alt="검색" className="w-6 h-6" />
           </button>
 
-          <button
-            onClick={() => handleSidebarAction('leave')}
-            className="bg-red-500 text-white rounded-lg px-3 py-1 text-xs"
-          >
-            나가기
+          <button onClick={() => handleSidebarAction('leave')} className="text-xs">
+            <img src="/exit.svg" alt="나가기" className="w-6 h-6" />
           </button>
         </div>
       </header>
       {/* 검색창: 검색 버튼을 클릭했을 때 보이기 */}
       {showSearch && (
-        <div className="flex items-center justify-center p-4 bg-gray-50 border-b">
-          <input
-            type="text"
-            className="w-full p-2 border rounded-md"
-            placeholder="검색어를 입력하세요..."
-          />
+        <div className="flex items-center justify-center p-2 bg-gray-50 border-b">
+          <div className="flex items-center justify-between h-10 bg-white border-b w-full border rounded-md border-gray-300 hover:border-primary focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+            <img src="/searchT.svg" alt="검색" className="w-6 h-6 m-4" />
+            <input
+              type="text"
+              placeholder="대화 내용 검색"
+              className="flex-grow p-0 m-0 border-none outline-none bg-transparent"
+            />
+            <button className="ml-2">| 검색</button>
+          </div>
         </div>
       )}
 
