@@ -77,7 +77,7 @@ function Header() {
         />
 
         {/* 데스크탑 메뉴 */}
-        <div className="hidden md:flex gap-4 lg:gap-6">
+        {/* <div className="hidden md:flex gap-4 lg:gap-6">
           {menuItems.map(item => {
             const active = isRouteActive(item);
             const target = targetOf(item);
@@ -97,7 +97,7 @@ function Header() {
               </button>
             );
           })}
-        </div>
+        </div> */}
       </div>
 
       <div className="flex items-center">

@@ -54,8 +54,10 @@ function SignUpPage() {
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
-  // const [isChecking, setIsChecking] = useState(false);
-  // const [checkResult, setCheckResult] = useState<'available' | 'taken' | ''>('');
+  const [emailChecking, setEmailChecking] = useState(false);
+  const [emailCheckResult, setEmailCheckResult] = useState<'available' | 'taken' | ''>('');
+  const [nickChecking, setNickChecking] = useState(false);
+  const [nickCheckResult, setNickCheckResult] = useState<'available' | 'taken' | ''>('');
 
   const AVATAR_BUCKET = 'avatars';
 
@@ -88,37 +90,37 @@ function SignUpPage() {
     switch (field) {
       case 'email': {
         const v = typeof value === 'string' ? value : '';
-        if (!v) return 'Please enter your email';
+        if (!v) return '이메일을 입력해주세요.';
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(v)) return 'Invalid email format.';
+        if (!emailRegex.test(v)) return '잘못된 이메일 형식입니다.';
         return '';
       }
       case 'pw': {
         const v = typeof value === 'string' ? value : '';
-        if (!v) return 'Please enter your password.';
-        if (v.length < 6) return 'Password must be at least 6 characters.';
+        if (!v) return '비밀번호를 입력해주세요.';
+        if (v.length < 6) return '비밀번호는 최소 6자 이상이어야 합니다.';
         return '';
       }
       case 'confirmPw': {
         const v = typeof value === 'string' ? value : '';
-        if (!v) return 'Please confirm your password.';
-        if (v !== pw) return 'Passwords do not match.';
+        if (!v) return '비밀번호를 확인해주세요.';
+        if (v !== pw) return '비밀번호가 일치하지 않습니다.';
         return '';
       }
       case 'nickname': {
-        if (!(typeof value === 'string' && value)) return 'Please enter your nickname.';
+        if (!(typeof value === 'string' && value)) return '닉네임을 입력해주세요.';
         return '';
       }
       case 'gender': {
-        if (!(typeof value === 'string' && value)) return 'Please select your gender.';
+        if (!(typeof value === 'string' && value)) return '성별을 선택해주세요.';
         return '';
       }
       case 'birth': {
-        if (!(value instanceof Date)) return 'Please select your birth date.';
+        if (!(value instanceof Date)) return '생년월일을 입력해주세요.';
         return '';
       }
       case 'country': {
-        if (!(typeof value === 'string' && value)) return 'Please select your country.';
+        if (!(typeof value === 'string' && value)) return '국적을 선택해주세요.';
         return '';
       }
       default:
@@ -131,9 +133,9 @@ function SignUpPage() {
     const hasNumber = /\d/.test(pwVal);
     const hasLetter = /[a-zA-Z]/.test(pwVal);
     const hasSpecial = /[!@#$%^&*]/.test(pwVal);
-    if (pwVal.length < 6) return 'Password must be at least 6 characters';
+    if (pwVal.length < 6) return '비밀번호는 최소 6자 이상이어야 합니다.';
     if (!(hasNumber && hasLetter && hasSpecial))
-      return 'Use letters, numbers, and special characters';
+      return '문자, 숫자, 특수문자(!/@/#/$/%/^/&/*)를 포함하세요.';
     return '';
   };
 
@@ -149,20 +151,17 @@ function SignUpPage() {
   }
 
   async function checkNicknameAvailability(nickname: string): Promise<boolean> {
-    if (!nickname) return false;
+    const n = nickname.trim();
+    if (!n) return false;
 
-    // 대소문자 무시(UX와 DB 유니크 정책을 맞추려면 lower 인덱스 권장)
-    const { count, error } = await supabase
-      .from('profiles')
-      .select('*', { count: 'exact', head: true })
-      .ilike('nickname', nickname);
-
+    const { data, error } = await supabase.rpc('nickname_exists', { _nickname: n });
     if (error) {
-      console.error('nickname check error:', error.message);
-      // 네트워크/일시 오류 시엔 일단 "사용 불가"로 보수 처리하거나 UX 메시지 표기
+      console.error('nickname_exists error:', error.message);
+      // 실패 시 보수적으로 "사용 불가" 처리해도 되고, 여기선 false 반환
       return false;
     }
-    return (count ?? 0) === 0; // count 0이면 사용 가능
+    // data === true → 이미 존재 → 사용 불가
+    return data === false;
   }
 
   const handleChange = async (field: keyof typeof errors, value: string) => {
@@ -170,16 +169,17 @@ function SignUpPage() {
     switch (field) {
       case 'email': {
         setEmail(value);
+        setEmailCheckResult('');
         const baseErr = validateField('email', value);
         setErrors(prev => ({ ...prev, email: baseErr }));
 
-        if (!baseErr) {
-          const ok = await checkEmailAvailability(value);
-          setErrors(prev => ({
-            ...prev,
-            email: ok ? '' : 'This email is already registered.',
-          }));
-        }
+        // if (!baseErr) {
+        //   const ok = await checkEmailAvailability(value);
+        //   setErrors(prev => ({
+        //     ...prev,
+        //     email: ok ? '' : 'This email is already registered.',
+        //   }));
+        // }
         break;
       }
       case 'pw': {
@@ -199,12 +199,13 @@ function SignUpPage() {
           confirmPw: validateField('confirmPw', value),
         }));
         break;
-      case 'nickname':
+      case 'nickname': {
         setNickname(value);
-        setErrors(prev => ({ ...prev, nickname: validateField('nickname', value) }));
+        setNickCheckResult('');
+        const baseErr = validateField('nickname', value);
+        setErrors(prev => ({ ...prev, nickname: baseErr }));
         break;
-      default:
-        break;
+      }
     }
   };
 
@@ -213,14 +214,14 @@ function SignUpPage() {
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      setErrors(prev => ({ ...prev, profileImage: 'File size must be under 2MB' }));
+      setErrors(prev => ({ ...prev, profileImage: '파일 크기는 2MB 이하만 가능합니다.' }));
       setProfileImage(null);
       setPreviewUrl(null);
       return;
     }
 
     if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
-      setErrors(prev => ({ ...prev, profileImage: 'Only JPG, PNG, GIF allowed' }));
+      setErrors(prev => ({ ...prev, profileImage: 'JPG, PNG, GIF만 등록 가능합니다.' }));
       setProfileImage(null);
       setPreviewUrl(null);
       return;
@@ -274,8 +275,8 @@ function SignUpPage() {
       if (!emailOK || !nicknameOK) {
         setErrors(prev => ({
           ...prev,
-          email: emailOK ? prev.email : 'This email is already registered.',
-          nickname: nicknameOK ? prev.nickname : 'This nickname is already taken.',
+          email: emailOK ? prev.email : '이 이메일은 사용 중입니다.',
+          nickname: nicknameOK ? prev.nickname : '이 닉네임은 사용 중입니다.',
         }));
         setLoading(false);
         return;
@@ -316,14 +317,14 @@ function SignUpPage() {
     <div className="min-h-16 flex items-center justify-center">
       <div className="w-full max-w-md sm:max-w-lg md:max-w-2xl rounded-2xl p-4 sm:p-6 md:p-8">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-800 mb-4 sm:mb-6">
-          Create an Ara Account
+          회원가입
         </h1>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:gap-4 md:gap-5">
           {/* Profile Image (프리뷰만; 업로드는 인증 후 별도 플로우) */}
           <div className="flex flex-col items-center mt-1 sm:mt-2">
             <label className="mb-2 font-semibold text-gray-700 text-sm sm:text-base">
-              Select Profile Picture
+              프로필 이미지 선택
             </label>
             <label
               htmlFor="profile-upload"
@@ -337,9 +338,7 @@ function SignUpPage() {
                   className="absolute inset-0 w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-gray-400 text-xs sm:text-sm text-center">
-                  Click to upload
-                </span>
+                <span className="text-gray-400 text-xs sm:text-sm text-center">사진 등록</span>
               )}
               <input
                 type="file"
@@ -356,22 +355,43 @@ function SignUpPage() {
 
           <InputField
             id="email"
-            label="Email"
+            label="이메일"
             value={email}
             onChange={val => handleChange('email', val)}
             error={errors.email}
-            // onCheck={async () => {
-            //   setIsChecking(true);
-            //   const ok = await checkEmailAvailability(email);
-            //   setIsChecking(false);
-            //   setCheckResult(ok ? 'available' : 'taken');
-            // }}
-            // isChecking={isChecking}
-            // checkResult={checkResult}
+            onCheck={async () => {
+              const v = email.trim();
+              if (!v) {
+                setEmailCheckResult('');
+                setErrors(prev => ({ ...prev, email: '이메일을 입력해주세요.' }));
+                return;
+              }
+              // 형식 오류면 중복체크 하지 않음
+              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+              if (!emailRegex.test(v)) {
+                setEmailCheckResult('');
+                setErrors(prev => ({ ...prev, email: '올바르지 않은 이메일 형식입니다.' }));
+                return;
+              }
+
+              setEmailChecking(true);
+              const ok = await checkEmailAvailability(v);
+              setEmailChecking(false);
+
+              if (ok) {
+                setEmailCheckResult('available');
+                setErrors(prev => ({ ...prev, email: '' })); // ✅ 에러 비워서 안내문구가 보이도록
+              } else {
+                setEmailCheckResult('taken');
+                setErrors(prev => ({ ...prev, email: '해당 이메일은 이미 사용 중입니다.' }));
+              }
+            }}
+            isChecking={emailChecking}
+            checkResult={emailCheckResult}
           />
           <InputField
             id="pw"
-            label="Password"
+            label="비밀번호"
             type="password"
             value={pw}
             onChange={val => handleChange('pw', val)}
@@ -379,7 +399,7 @@ function SignUpPage() {
           />
           <InputField
             id="confirmPw"
-            label="Confirm Password"
+            label="비밀번호 확인"
             type="password"
             value={confirmPw}
             onChange={val => handleChange('confirmPw', val)}
@@ -387,10 +407,32 @@ function SignUpPage() {
           />
           <InputField
             id="nickname"
-            label="Nickname"
+            label="닉네임"
             value={nickname}
             onChange={val => handleChange('nickname', val)}
             error={errors.nickname}
+            onCheck={async () => {
+              const n = nickname.trim();
+              if (!n) {
+                setNickCheckResult('');
+                setErrors(prev => ({ ...prev, nickname: '닉네임을 입력해주세요.' }));
+                return;
+              }
+
+              setNickChecking(true);
+              const ok = await checkNicknameAvailability(n);
+              setNickChecking(false);
+
+              if (ok) {
+                setNickCheckResult('available');
+                setErrors(prev => ({ ...prev, nickname: '' })); // ✅ 에러 비우기
+              } else {
+                setNickCheckResult('taken');
+                setErrors(prev => ({ ...prev, nickname: '해당 닉네임은 이미 사용 중입니다.' }));
+              }
+            }}
+            isChecking={nickChecking}
+            checkResult={nickCheckResult}
           />
 
           <GenderSelect
@@ -402,7 +444,7 @@ function SignUpPage() {
               } else {
                 // 안전장치: 예상 밖 값이면 선택 해제
                 setGender('');
-                setErrors(prev => ({ ...prev, gender: 'Please select your gender.' }));
+                setErrors(prev => ({ ...prev, gender: '성별을 선택해주세요.' }));
               }
             }}
             error={!!errors.gender}
@@ -429,7 +471,7 @@ function SignUpPage() {
             disabled={loading}
             className="bg-primary text-white font-semibold py-2 sm:py-3 rounded-lg hover:opacity-75 transition-colors text-sm sm:text-base disabled:opacity-50"
           >
-            {loading ? 'Signing Up...' : 'Sign Up'}
+            {loading ? '회원가입 중...' : '회원가입'}
           </button>
         </form>
 
@@ -438,8 +480,8 @@ function SignUpPage() {
         {showSuccess && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white rounded-xl p-6 w-80 text-center">
-              <h2 className="text-lg font-bold mb-4">Sign Up Successful!</h2>
-              <p className="mb-4">Please check your email to verify your account.</p>
+              <h2 className="text-lg font-bold mb-4">회원가입 완료!</h2>
+              <p className="mb-4">이메일로 발송된 인증 메일을 확인해주세요.</p>
               <button
                 onClick={() => {
                   setShowSuccess(false);
@@ -447,7 +489,7 @@ function SignUpPage() {
                 }}
                 className="bg-primary text-white py-2 px-4 rounded-lg hover:opacity-75"
               >
-                Go to Login
+                로그인으로 이동
               </button>
             </div>
           </div>
