@@ -27,11 +27,16 @@ function DMPage() {
 
   return (
     // 바디 스크롤 잠금: 외부로 넘치지 않도록
-    <div className="flex flex-col min-h-[calc(100vh-100px)] sm:min-h-[calc(100vh-120px)] bg-white text-gray-900 mx-auto w-full max-w-[1200px] px-2 sm:px-4 lg:px-8 overflow-hidden">
+    <div className="flex flex-col h-[600px] mt-2 mb-2 bg-white text-gray-900 mx-auto w-full max-w-[1200px] px-2 sm:px-4 lg:px-8 overflow-y-auto">
       <div className="flex flex-1 border border-gray-200 rounded-lg overflow-hidden shadow-sm">
         {/* 왼쪽 사이드바 (내부만 스크롤) */}
         <aside className="hidden sm:flex sm:w-[260px] md:w-[300px] lg:w-[340px] border-r border-gray-200 bg-gray-50 flex-col overflow-y-auto transition-all duration-300">
-          <DMList chats={chatList} selectedChatId={selectedChatId} onSelect={setSelectedChatId} />
+          <DMList
+            chats={chatList}
+            selectedChatId={selectedChatId}
+            onSelect={setSelectedChatId}
+            onUpdateChat={() => {}}
+          />
         </aside>
 
         {/* 오른쪽 메인 영역 (내부만 스크롤) */}
@@ -50,6 +55,7 @@ function DMPage() {
                   chats={chatList}
                   selectedChatId={selectedChatId}
                   onSelect={setSelectedChatId}
+                  onUpdateChat={() => {}}
                 />
               </div>
               {/* 안내 화면 */}
