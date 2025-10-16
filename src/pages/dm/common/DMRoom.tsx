@@ -115,7 +115,7 @@ function DMRoom({ chatId, title, onAfterSend, setSelectedChatId }: Props) {
   return (
     <div className="flex flex-col h-full sm:h-[calc(100vh-120px)]">
       {/* 헤더 */}
-      <header className="sm:hidden flex items-center gap-2 p-3 border-b bg-white relative">
+      <header className="sm:hidden flex items-center gap-2 p-3 border-b-0 bg-white relative">
         <button onClick={handleBackButton} className="text-m px-2 py-1">
           <img src="/back.svg" alt="뒤로가기" />
         </button>
@@ -203,15 +203,17 @@ function DMRoom({ chatId, title, onAfterSend, setSelectedChatId }: Props) {
       </header>
       {/* 검색창: 검색 버튼을 클릭했을 때 보이기 */}
       {showSearch && (
-        <div className="flex items-center justify-center p-2 bg-gray-50 border-b">
-          <div className="flex items-center justify-between h-10 bg-white border-b w-full border rounded-md border-gray-300 hover:border-primary focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+        <div className="flex items-center justify-center p-2 bg-white border-b">
+          <div className="flex items-center justify-between h-10 bg-white border-b w-full border rounded-md border-gray-300 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-1 focus-within:ring-offset-white focus-within:border-transparent">
             <img src="/searchT.svg" alt="검색" className="w-6 h-6 m-4" />
             <input
               type="text"
               placeholder="대화 내용 검색"
-              className="flex-grow p-0 m-0 border-none outline-none bg-transparent"
+              className="flex-grow p-0 m-0 border-none outline-none bg-transparent focus:outline-none focus:ring-0 focus:border-transparent"
             />
-            <button className="ml-2">| 검색</button>
+            <div className="text-gray-400 ml-3 mr-3">
+              | <button className="text-gray-400 hover:text-gray-700 ml-2 mr-3"> 검색</button>
+            </div>
           </div>
         </div>
       )}
@@ -253,7 +255,12 @@ function DMRoom({ chatId, title, onAfterSend, setSelectedChatId }: Props) {
               닫기
             </button>
           </div>
-          <DMList chats={mockChats} selectedChatId={chatId} onSelect={() => {}} />
+          <DMList
+            chats={mockChats}
+            selectedChatId={chatId}
+            onSelect={() => {}}
+            onUpdateChat={() => {}}
+          />
         </div>
       )}
     </div>

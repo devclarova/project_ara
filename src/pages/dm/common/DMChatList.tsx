@@ -25,7 +25,7 @@ const DMChatList = ({ chats, selectedChatId, onSelect, emptyNode }: Props) => {
     );
   }
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex-1 overflow-y-auto max-h-full">
       {chats.map(c => (
         <DMChatListItem key={c.id} chat={c} selected={selectedChatId === c.id} onClick={onSelect} />
       ))}

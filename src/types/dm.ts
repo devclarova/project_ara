@@ -11,12 +11,17 @@ export interface ChatUser {
 // 채팅 정보
 
 export interface Chat {
-  id: number;
-  name: string;
-  lastMessage?: string;
-  time?: string;
-  unread?: number;
-  avatarUrl?: string;
+  id: number; // 고유 ID
+  name: string; // 상대 이름 또는 그룹명
+  lastMessage?: string; // 마지막 메시지 내용 (없을 수도 있음)
+  time?: string; // 마지막 메시지 시각
+  unread?: number; // 읽지 않은 메시지 수
+  avatarUrl?: string; // 프로필 이미지 URL
+  pinned?: boolean; // 상단 고정 여부 (핀)
+  alarmOff?: boolean; // 알림 끔 여부 (true면 mute 상태)
+  lastUpdated?: string; // 최근 대화 여부 (정렬 시 사용 가능) ISO string 또는 "YYYY-MM-DD HH:mm"
+  participantIds?: number[]; // 참여자 ID 목록 (1:1이면 두 개, 그룹이면 여러 개)
+  isTempUpdated?: boolean; // 고정/읽음 등 상태 갱신용 로컬 플래그
 }
 
 // export interface Chat {

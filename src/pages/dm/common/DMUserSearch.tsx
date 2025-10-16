@@ -82,30 +82,36 @@ function DMUserSearch({
   };
 
   return (
-    <div className="p-4 border-b border-gray-200 bg-white">
-      <div className="relative">
-        <input
-          type="text"
-          value={q}
-          onChange={e => {
-            setQ(e.target.value);
-            setActiveIndex(-1);
-          }}
-          onKeyDown={onKeyDown}
-          placeholder={placeholder}
-          className="w-full px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:ring-2 focus-visible:ring-primary"
-          role="combobox"
-          aria-expanded={!!debouncedQ && filtered.length > 0}
-          aria-controls="dm-user-search-listbox"
-          aria-autocomplete="list"
-        />
+    <div className="p-2 border-b border-gray-200 bg-white">
+      <div className="flex items-center justify-center p-2 bg-white border-b">
+        <div className="flex items-center justify-between h-10 bg-white border-b w-full border rounded-md border-gray-300 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-1 focus-within:ring-offset-white focus-within:border-transparent relative">
+          <input
+            type="text"
+            value={q}
+            onChange={e => {
+              setQ(e.target.value);
+              setActiveIndex(-1);
+            }}
+            onKeyDown={onKeyDown}
+            placeholder={placeholder}
+            className="flex-grow p-0 m-0 border-none outline-none bg-transparent focus:outline-none focus:ring-0 focus:border-transparent"
+            role="combobox"
+            aria-expanded={!!debouncedQ && filtered.length > 0}
+            aria-controls="dm-user-search-listbox"
+            aria-autocomplete="list"
+          />
+          <div className="text-gray-400 ml-2 mr-2">
+            | <button className="text-gray-400 hover:text-gray-700 ml-2 mr-3"> 검색</button>
+          </div>
+        </div>
+        <button className="ml-3 mr-3">X</button>
       </div>
 
       <div
         id="dm-user-search-listbox"
         ref={listRef}
         role="listbox"
-        className="mt-2 max-h-[200px] overflow-y-auto rounded-md"
+        className="max-h-[200px] overflow-y-auto rounded-md"
         aria-live="polite"
         aria-label="사용자 검색 결과"
       >
