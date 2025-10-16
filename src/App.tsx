@@ -65,14 +65,14 @@ const App = () => {
             </main>
 
             {/* <Footer /> */}
-            <div className={`${styles.footer} mb-16 md:mb-0`}>
+            {/* <div className={`${styles.footer} mb-16 md:mb-0`}>
               <div className={styles.footerContent}>
                 <img className={styles.textLogo} src={textLogo} alt="Foodit" />
                 <span>서비스 이용약관 | 개인정보 처리방침</span>
               </div>
-              {/* 햄버거 */}
-              {/* <div className="h-[calc(4rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden /> */}
-            </div>
+              햄버거
+              <div className="h-[calc(4rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden />
+            </div> */}
           </div>
           {/* <InflearnNav /> */}
         </Router>

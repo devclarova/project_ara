@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Database, DatabaseWithRPC } from '../types/database';
+import type { DatabaseWithRPC } from '../types/supabase-augment';
 
 // CRA : process.env... 의 환경변수 호출과는 형식이 다름.
 // Vite : import.meta.env... 환경변수 호출
