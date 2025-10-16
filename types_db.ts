@@ -23,6 +23,27 @@ export type Database = {
         };
         Relationships: [];
       };
+      banned_words: {
+        Row: {
+          id: number;
+          is_regex: boolean;
+          lang_code: string;
+          pattern: string;
+        };
+        Insert: {
+          id?: number;
+          is_regex?: boolean;
+          lang_code: string;
+          pattern: string;
+        };
+        Update: {
+          id?: number;
+          is_regex?: boolean;
+          lang_code?: string;
+          pattern?: string;
+        };
+        Relationships: [];
+      };
       categories: {
         Row: {
           created_at: string;
@@ -520,6 +541,8 @@ export type Database = {
           is_online: boolean;
           last_active_at: string | null;
           nickname: string;
+          nickname_normalized: string | null;
+          nickname_script: string | null;
           updated_at: string;
           user_id: string;
         };
@@ -533,6 +556,8 @@ export type Database = {
           is_online?: boolean;
           last_active_at?: string | null;
           nickname: string;
+          nickname_normalized?: string | null;
+          nickname_script?: string | null;
           updated_at?: string;
           user_id: string;
         };
@@ -546,6 +571,8 @@ export type Database = {
           is_online?: boolean;
           last_active_at?: string | null;
           nickname?: string;
+          nickname_normalized?: string | null;
+          nickname_script?: string | null;
           updated_at?: string;
           user_id?: string;
         };
@@ -588,6 +615,24 @@ export type Database = {
             referencedColumns: ['id'];
           },
         ];
+      };
+      reserved_words: {
+        Row: {
+          id: number;
+          lang_code: string;
+          word: string;
+        };
+        Insert: {
+          id?: number;
+          lang_code: string;
+          word: string;
+        };
+        Update: {
+          id?: number;
+          lang_code?: string;
+          word?: string;
+        };
+        Relationships: [];
       };
       saves: {
         Row: {
@@ -982,6 +1027,10 @@ export type Database = {
       };
     };
     Functions: {
+      email_exists: {
+        Args: { _email: string };
+        Returns: boolean;
+      };
       ensure_profile: {
         Args: Record<PropertyKey, never>;
         Returns: undefined;
@@ -1012,6 +1061,10 @@ export type Database = {
       };
       is_admin: {
         Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
+      nickname_exists: {
+        Args: { _nickname: string };
         Returns: boolean;
       };
       set_limit: {
