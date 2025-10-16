@@ -31,6 +31,7 @@ import TempCommunityPage from './pages/temps/TempCommunityPage';
 import ScrollToTop from './components/common/ScrollToTop';
 import DMPage from './pages/dm/common/DMPage';
 import HomeFeed from './pages/temps/HomeFeed';
+import SignUpPage_old from './pages/SignUpPage_old';
 
 const App = () => {
   return (
@@ -48,6 +49,7 @@ const App = () => {
                 <Route path="/landing" element={<LandingPage />}></Route>
                 <Route path="/home" element={<HomePage />}></Route>
                 <Route path="/signup" element={<SignUpPage />}></Route>
+                <Route path="/signupo" element={<SignUpPage_old />}></Route>
                 <Route path="/signin" element={<SignInPage />}></Route>
                 <Route path="/profile" element={<ProfilePage />}></Route>
                 <Route path="/studyList" element={<StudyListPage />}></Route>
