@@ -101,4 +101,20 @@ export const mockChats: Chat[] = [
     unread: 0,
     avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=재현님`,
   },
+  {
+    id: 9,
+    name: '핳',
+    lastMessage: '집!!!!!!!!!!',
+    time: '오후 2:30',
+    unread: 0,
+    avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=재현님`,
+  },
+  {
+    id: 10,
+    name: '핳',
+    lastMessage: '집!!!!!!!!!!',
+    time: '오후 2:30',
+    unread: 0,
+    avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=재현님`,
+  },
 ];

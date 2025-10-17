@@ -15,6 +15,7 @@ type DMListProps = {
   selectedChatId: number | null;
   onSelect: (id: number) => void;
   onUpdateChat: (id: number, patch: Partial<Chat>) => void;
+  onSearchToggle?: () => void;
 };
 
 const DMList: React.FC<DMListProps> = ({ chats, selectedChatId, onSelect }) => {
@@ -60,10 +61,20 @@ const DMList: React.FC<DMListProps> = ({ chats, selectedChatId, onSelect }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 border-r border-gray-200">
-      <DMHeader onNewChatClick={handleNewChatClick} />
-      {isSearchOpen && <DMUserSearch users={users} onSelectUser={handleSelectUser} />}
-      <DMChatList chats={chatList} selectedChatId={selectedChatId} onSelect={onSelect} />
+    <div className="flex flex-col h-full bg-gray-50 border-r border-gray-200 overflow-hidden">
+      <div className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
+        <DMHeader onNewChatClick={handleNewChatClick} />
+        {isSearchOpen && (
+          <DMUserSearch
+            users={users}
+            onSelectUser={handleSelectUser}
+            onClose={() => setIsSearchOpen(false)}
+          />
+        )}
+      </div>
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <DMChatList chats={chatList} selectedChatId={selectedChatId} onSelect={onSelect} />
+      </div>
     </div>
   );
 };

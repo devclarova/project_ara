@@ -114,14 +114,13 @@ function DMRoom({ chatId, title, onAfterSend, setSelectedChatId }: Props) {
 
   return (
     <div className="flex flex-col h-full sm:h-[calc(100vh-120px)]">
-      {/* 헤더 */}
-      <header className="sm:hidden flex items-center gap-2 p-3 border-b-0 bg-white relative">
+      {/* 반응형 헤더 */}
+      <div className="sm:hidden flex items-center gap-2 p-3 border-b-0 bg-white relative">
         <button onClick={handleBackButton} className="text-m px-2 py-1">
           <img src="/back.svg" alt="뒤로가기" />
         </button>
         <img src={profileImageUrl} alt="Profile" className="w-9 h-9 rounded-full" />
         <div className="font-semibold">{title}</div>
-
         {/* 오른쪽 햄버거 버튼 */}
         <div className="ml-auto relative" ref={dropdownRef}>
           <div>
@@ -141,7 +140,7 @@ function DMRoom({ chatId, title, onAfterSend, setSelectedChatId }: Props) {
             </button>
           </div>
 
-          {/* 드롭다운 메뉴 */}
+          {/* 모바일 드롭다운 메뉴 */}
           {dropdownOpen && (
             <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-md shadow-lg z-50">
               <button
@@ -183,10 +182,10 @@ function DMRoom({ chatId, title, onAfterSend, setSelectedChatId }: Props) {
             </div>
           )}
         </div>
-      </header>
+      </div>
 
       {/* 고정 헤더 (태블릿 이상에서 보임) */}
-      <header className="hidden sm:flex p-3 border-b bg-white items-center gap-3">
+      <div className="hidden sm:flex p-3 border-b bg-white items-center gap-3 sticky top-0 z-30">
         <img src={profileImageUrl} alt="Profile" className="w-9 h-9 rounded-full" />
         <div className="font-semibold text-gray-900">{title}</div>
 
@@ -200,7 +199,8 @@ function DMRoom({ chatId, title, onAfterSend, setSelectedChatId }: Props) {
             <img src="/exit.svg" alt="나가기" className="w-6 h-6" />
           </button>
         </div>
-      </header>
+      </div>
+
       {/* 검색창: 검색 버튼을 클릭했을 때 보이기 */}
       {showSearch && (
         <div className="flex items-center justify-center p-2 bg-white border-b">
@@ -219,23 +219,25 @@ function DMRoom({ chatId, title, onAfterSend, setSelectedChatId }: Props) {
       )}
 
       {/* 메시지 리스트 */}
-      {loading ? (
-        <div className="flex-1 flex items-center justify-center text-gray-500">불러오는 중…</div>
-      ) : (
-        <MessageList
-          messages={sorted.map(m => ({
-            id: m.id,
-            chat_id: String(m.chat_id),
-            author_id: m.author_id,
-            author_name: m.author_name,
-            content: m.content,
-            created_at: m.created_at,
-            isMe: m.isMe,
-          }))}
-          autoScrollMode="onSend"
-          justSent={justSent}
-        />
-      )}
+      <div className="flex flex-col h-full sm:h-[calc(100vh-120px)] min-h-0">
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center text-gray-500">불러오는 중…</div>
+        ) : (
+          <MessageList
+            messages={sorted.map(m => ({
+              id: m.id,
+              chat_id: String(m.chat_id),
+              author_id: m.author_id,
+              author_name: m.author_name,
+              content: m.content,
+              created_at: m.created_at,
+              isMe: m.isMe,
+            }))}
+            autoScrollMode="onSend"
+            justSent={justSent}
+          />
+        )}
+      </div>
 
       {/* 입력창 */}
       <MessageInput onSend={handleSend} placeholder="메시지를 입력하세요…" submitLabel="전송" />
@@ -243,7 +245,7 @@ function DMRoom({ chatId, title, onAfterSend, setSelectedChatId }: Props) {
       {/* 채팅목록 슬라이드 */}
       {showChatList && (
         <div
-          className="sm:hidden absolute inset-y-0 left-0 w-[86%] max-w-[360px] bg-gray-50 border-r shadow-xl z-40"
+          className="sm:hidden absolute inset-y-0 left-0 w-[85%] max-w-[360px] bg-gray-50 border-r shadow-xl z-40"
           ref={chatListRef}
         >
           <div className="flex items-center justify-between p-3 border-b bg-white">
