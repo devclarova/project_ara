@@ -1,5 +1,4 @@
 // src/data/mockTweet.ts
-
 export interface Reply {
   id: string
   author: string
@@ -28,72 +27,32 @@ export interface Tweet {
   image?: string
   stats: TweetStats
   replies: Reply[]
+  created_at: string
 }
 
-// mock 데이터 (트윗 + 댓글)
-export const mockTweet: Tweet = {
-  id: "1",
-  author: "Sarah Chen",
-  handle: "sarahchen_dev",
-  avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
-  content:
-    "Just shipped a new feature that reduces our app load time by 40%! Sometimes the smallest optimizations make the biggest difference. 🚀 #WebDev #Performance",
-  image:
-    "https://picsum.photos/seed/performance/600/340",
-  stats: {
-    reposts: 87,
-    quotes: 12,
-    likes: 342,
-    bookmarks: 18,
+export const mockTweets: Tweet[] = [
+  {
+    id: '1',
+    author: 'Sarah Chen',
+    handle: 'sarahchen_dev',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
+    content:
+      'Just shipped a new feature that reduces our app load time by 40%! 🚀 #WebDev #Performance',
+    image: 'https://picsum.photos/seed/performance/600/340',
+    stats: { reposts: 87, quotes: 12, likes: 342, bookmarks: 18 },
+    replies: [],
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
   },
-  replies: [
-    {
-      id: "r1",
-      author: "Michael Chen",
-      handle: "michaelchen_dev",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Michael",
-      time: "1h",
-      content:
-        "This is amazing! What specific optimizations did you implement? I'm always looking for ways to improve performance.",
-      likes: 24,
-      retweets: 8,
-      comments: 3,
-    },
-    {
-      id: "r2",
-      author: "Lisa Rodriguez",
-      handle: "lisarodriguez_tech",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lisa",
-      time: "45m",
-      content:
-        "Incredible work! 40% improvement is substantial. Performance optimization often makes such a huge difference in UX. 👏",
-      likes: 67,
-      retweets: 12,
-      comments: 1,
-    },
-    {
-      id: "r3",
-      author: "James Wilson",
-      handle: "jameswilson_eng",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=James",
-      time: "30m",
-      content:
-        "Love seeing performance wins like this! Was it mainly frontend optimizations or backend work too?",
-      likes: 18,
-      retweets: 5,
-      comments: 2,
-    },
-    {
-      id: "r4",
-      author: "Emma Thompson",
-      handle: "emmathompson_pm",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emma",
-      time: "15m",
-      content:
-        "Fast loading times make a world of difference. Would love to see a blog post about your optimization process!",
-      likes: 9,
-      retweets: 3,
-      comments: 0,
-    },
-  ],
-}
+  {
+    id: '2',
+    author: 'Marcus Rivera',
+    handle: 'marcusdesigns',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Marcus',
+    content:
+      "The future of design isn't just about looks — it's about crafting experiences that solve real problems.",
+    image: 'https://picsum.photos/seed/design/600/340',
+    stats: { reposts: 53, quotes: 8, likes: 1240, bookmarks: 42 },
+    replies: [],
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+  },
+]

@@ -1,20 +1,22 @@
-import React from 'react';
-import Avatar from '../common/Avatar';
+// src/components/detail/TweetMain.tsx
+import { format } from 'date-fns'
+import { ko } from 'date-fns/locale'
+import Avatar from '../common/Avatar'
+import type { Tweet } from '../../data/mockTweet'
+
 interface TweetMainProps {
-  tweet: {
-    author: string;
-    handle: string;
-    avatar: string;
-    content: string;
-    image?: string;
-    time?: string;
-    date?: string;
-    views?: string;
-  };
+  tweet: Tweet
 }
 
 const TweetMain = ({ tweet }: TweetMainProps) => {
-  const { author, handle, avatar, content, image, time, date, views } = tweet;
+  const { author, handle, avatar, content, image, created_at } = tweet
+
+  // 날짜 포맷
+  const formattedTime = format(new Date(created_at), 'a h:mm', { locale: ko })
+  const formattedDate = format(new Date(created_at), 'yyyy년 M월 d일', {
+    locale: ko,
+  })
+
   return (
     <section className="p-6 border-b border-gray-200">
       <div className="flex space-x-4">
@@ -36,17 +38,21 @@ const TweetMain = ({ tweet }: TweetMainProps) => {
 
           {/* 이미지 (선택적) */}
           {image && (
-            <img src={image} alt="tweet image" className="rounded-2xl w-full object-cover mb-4" />
+            <img
+              src={image}
+              alt="tweet image"
+              className="rounded-2xl w-full object-cover mb-4"
+            />
           )}
 
-          {/* 시간/날짜/조회수 */}
+          {/* 시간/날짜 */}
           <div className="text-secondary text-base mb-6">
-            {time || '2:34 PM'} · {date || 'Oct 17, 2024'} · {views || '1.2M Views'}
+            {formattedTime} · {formattedDate}
           </div>
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default TweetMain;
+export default TweetMain

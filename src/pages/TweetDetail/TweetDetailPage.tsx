@@ -1,36 +1,74 @@
-import { useParams } from 'react-router-dom';
-import { mockTweet } from '../../data/mockTweet';
-import SidebarLeft from '../../components/layout/SidebarLeft';
-import SidebarRight from '../../components/layout/SidebarRight';
-import TweetHeader from '../../components/detail/TweetHeader';
-import TweetMain from '../../components/detail/TweetMain';
-import TweetStats from '../../components/detail/TweetStats';
-import TweetActions from '../../components/detail/TweetActions';
-import ReplyComposer from '../../components/detail/ReplyComposer';
-import RepliesList from '../../components/detail/RepliesList';
+import { useParams } from 'react-router-dom'
+import { useState } from 'react'
+import SidebarLeft from '../../components/layout/SidebarLeft'
+import SidebarRight from '../../components/layout/SidebarRight'
+import TweetHeader from '../../components/detail/TweetHeader'
+import TweetMain from '../../components/detail/TweetMain'
+import TweetStats from '../../components/detail/TweetStats'
+import TweetActions from '../../components/detail/TweetActions'
+import ReplyComposer from '../../components/detail/ReplyComposer'
+import RepliesList from '../../components/detail/RepliesList'
+import { mockTweets, type Tweet } from '../../data/mockTweet'
+
+interface UiReply {
+  id: string
+  author: string
+  handle: string
+  avatar: string
+  time: string
+  text: string
+  likes: number
+  replies: number
+  retweets: number
+}
 
 const TweetDetailPage = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>()
+  const [tweets, setTweets] = useState<Tweet[]>(mockTweets)
+  const tweet = tweets.find(t => t.id === id) || tweets[0]
 
-  // 현재는 mock 데이터로 표시
-  const tweet = mockTweet; // 나중에 id 기준 fetch 가능
+  const initialReplies: UiReply[] = tweet.replies.map(r => ({
+    id: r.id,
+    author: r.author,
+    handle: r.handle,
+    avatar: r.avatar,
+    time: r.time,
+    text: r.content,
+    likes: r.likes,
+    replies: r.comments,
+    retweets: r.retweets,
+  }))
+
+  const [replies, setReplies] = useState<UiReply[]>(initialReplies)
+
+  const handleAddReply = (parentId: string, content: string) => {
+    const newReply: UiReply = {
+      id: `reply-${Date.now()}`,
+      author: 'You',
+      handle: 'you_dev',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=You',
+      time: 'just now',
+      text: content,
+      likes: 0,
+      replies: 0,
+      retweets: 0,
+    }
+    setReplies(prev => [newReply, ...prev])
+  }
 
   return (
-    <div className="flex max-w-7xl mx-auto">
-      {/* Left Sidebar */}
-      <SidebarLeft />
+    <div className="flex max-w-7xl mx-auto bg-white">
+      {/* Reply 모드로 SidebarLeft 연결 */}
+      <SidebarLeft
+        isReplyMode
+        parentId={tweet.id}
+        onReply={handleAddReply}
+      />
 
-      {/* Center Content */}
-      <div className="flex-1 min-h-screen border-r border-gray-200">
+      <main className="flex-1 min-h-screen border-r border-gray-200">
         <TweetHeader />
-
-        {/* 본문 */}
         <TweetMain tweet={tweet} />
-
-        {/* 통계 */}
-        <TweetStats stats={tweet.stats} />
-
-        {/* 액션 버튼 - 구조 맞춤 */}
+        <TweetStats stats={tweet.stats} createdAt={tweet.created_at} />
         <TweetActions
           tweet={{
             id: tweet.id,
@@ -39,29 +77,15 @@ const TweetDetailPage = () => {
           }}
         />
 
-        {/* 댓글 입력 */}
-        <ReplyComposer />
+        {/* 원래 ReplyComposer (기존 입력창) */}
+        <ReplyComposer parentId={tweet.id} onReply={handleAddReply} />
 
-        {/* 댓글 목록 - 구조 맞춤 */}
-        <RepliesList
-          replies={tweet.replies.map(r => ({
-            id: r.id,
-            author: r.author,
-            handle: r.handle,
-            avatar: r.avatar ?? 'https://api.dicebear.com/7.x/avataaars/svg?seed=reply',
-            time: r.time,
-            text: r.content, // ✅ ReplyCard의 text 필드명에 맞춤
-            likes: r.likes,
-            replies: r.comments, // ✅ ReplyCard는 replies 수로 표시
-            retweets: r.retweets,
-          }))}
-        />
-      </div>
+        <RepliesList replies={replies} />
+      </main>
 
-      {/* Right Sidebar */}
       <SidebarRight />
     </div>
-  );
-};
+  )
+}
 
-export default TweetDetailPage;
+export default TweetDetailPage

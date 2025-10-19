@@ -1,24 +1,24 @@
-import React, { useState } from 'react';
-import { useLike } from '../../hooks/useLike';
-import { useRetweet } from '../../hooks/useRetweet';
-import { Bookmark, Heart, MessageCircle, Repeat2, Share2 } from 'lucide-react';
+// src/components/detail/TweetActions.tsx
+import { useState } from 'react'
+import { useLike } from '../../hooks/useLike'
+import { useRetweet } from '../../hooks/useRetweet'
+import { Bookmark, Heart, MessageCircle, Repeat2, Share2 } from 'lucide-react'
 
 interface TweetActionsProps {
   tweet: {
-    id: string;
-    likes: number;
-    retweets: number;
-  };
+    id: string
+    likes: number
+    retweets: number
+  }
 }
 
 const TweetActions = ({ tweet }: TweetActionsProps) => {
-  const { id, likes, retweets } = tweet;
-  const { liked, count: likeCount, toggleLike } = useLike(id, likes);
-  const { retweeted, count: retweetCount, toggleRetweet } = useRetweet(id, retweets);
+  const { id, likes, retweets } = tweet
+  const { liked, count: likeCount, toggleLike } = useLike(id, likes)
+  const { retweeted, count: retweetCount, toggleRetweet } = useRetweet(id, retweets)
 
-  const [bookmarked, setBookmarked] = useState(false);
-
-  const toggleBookmark = () => setBookmarked(prev => !prev);
+  const [bookmarked, setBookmarked] = useState(false)
+  const toggleBookmark = () => setBookmarked(prev => !prev)
 
   return (
     <section className="px-6 py-4 border-b border-gray-200">
@@ -38,6 +38,7 @@ const TweetActions = ({ tweet }: TweetActionsProps) => {
           }`}
         >
           <Repeat2 className={`w-5 h-5 ${retweeted ? 'rotate-180' : ''}`} />
+          <span className="ml-1 text-sm">{retweetCount}</span>
         </button>
 
         {/* 좋아요 */}
@@ -52,6 +53,7 @@ const TweetActions = ({ tweet }: TweetActionsProps) => {
             fill={liked ? '#ef4444' : 'none'}
             strokeWidth={liked ? 0 : 2}
           />
+          <span className="ml-1 text-sm">{likeCount}</span>
         </button>
 
         {/* 북마크 */}
@@ -76,7 +78,7 @@ const TweetActions = ({ tweet }: TweetActionsProps) => {
         </button>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default TweetActions;
+export default TweetActions

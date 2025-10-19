@@ -1,20 +1,20 @@
-import React from 'react';
-import ReplyCard from './ReplyCard';
+// src/components/detail/RepliesList.tsx
+import ReplyCard from './ReplyCard'
 
 interface Reply {
-  id: string;
-  author: string;
-  handle: string;
-  avatar: string;
-  time: string;
-  text: string;
-  likes: number;
-  replies: number;
-  retweets: number;
+  id: string
+  author: string
+  handle: string
+  avatar: string
+  time: string
+  text: string
+  likes: number
+  replies: number
+  retweets: number
 }
 
 interface RepliesListProps {
-  replies: Reply[];
+  replies: Reply[]
 }
 
 const RepliesList = ({ replies }: RepliesListProps) => {
@@ -23,7 +23,7 @@ const RepliesList = ({ replies }: RepliesListProps) => {
       <div className="p-6 text-center text-secondary">
         <p>No replies yet. Be the first to reply!</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -32,7 +32,7 @@ const RepliesList = ({ replies }: RepliesListProps) => {
         <ReplyCard key={reply.id} {...reply} />
       ))}
     </div>
-  );
-};
+  )
+}
 
-export default RepliesList;
+export default RepliesList

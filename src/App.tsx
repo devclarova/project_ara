@@ -31,6 +31,7 @@ import TempCommunityPage from './pages/temps/TempCommunityPage';
 import ScrollToTop from './components/common/ScrollToTop';
 import HomeFeed from './pages/temps/HomeFeed';
 import TweetDetailPage from './pages/TweetDetail/TweetDetailPage';
+import ExplorePage from './pages/TweetDetail/ExplorePage';
 
 const App = () => {
   return (
@@ -60,6 +61,8 @@ const App = () => {
                 <Route path="/test" element={<TempHomePage />}></Route>
                 <Route path="/testC" element={<TempCommunityPage />}></Route>
                 <Route path="/social" element={<HomeFeed />}></Route>
+                <Route path="/social/explore" element={<ExplorePage />} />
+                <Route path="/social/profile" element={<ProfilePage />} />
                 <Route path="/social/:id" element={<TweetDetailPage />} />
               </Routes>
             </main>

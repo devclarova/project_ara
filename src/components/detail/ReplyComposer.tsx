@@ -1,66 +1,83 @@
-import { FileVideo, Image, Smile } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import Avatar from '../common/Avatar';
+import { useEffect, useRef, useState } from 'react'
+import { Image, FileVideo, Smile } from 'lucide-react'
+import Avatar from '../common/Avatar'
 
-const ReplyComposer = () => {
-  const [reply, setReply] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+interface ReplyComposerProps {
+  parentId: string
+  onReply?: (parentId: string, content: string) => void
+}
 
-  // textarea 자동 높이 조정
+const ReplyComposer = ({ parentId, onReply }: ReplyComposerProps) => {
+  const [reply, setReply] = useState<string>('') // 초기값 문자열 보장
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // textarea 높이 자동 조절
   useEffect(() => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = `${textarea.scrollHeight}px`;
-    }
-  }, [reply]);
+    const textarea = textareaRef.current
+    if (!textarea) return
+    textarea.style.height = 'auto'
+    textarea.style.height = `${textarea.scrollHeight}px`
+  }, [reply])
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!reply.trim()) return;
-    console.log('Reply posted:', reply);
-    setReply(''); // 입력 초기화
-  };
+    e.preventDefault()
+    const content = reply.trim()
+    if (!content) return
+
+    console.group('%c💬 ReplyComposer Debug', 'color:#1d9bf0;font-weight:bold;')
+    console.log('↳ parentId:', parentId)
+    console.log('↳ reply value:', reply)
+    console.groupEnd()
+
+    onReply?.(parentId, content)
+    setReply('')
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 border-b border-gray-200 bg-white flex space-x-3">
-      {/* 프로필 이미지 */}
+    <form
+      onSubmit={handleSubmit}
+      className="p-6 border-b border-gray-200 bg-white flex space-x-3"
+    >
       <Avatar
-        src="https://api.dicebear.com/7.x/avataaars/svg?seed=you"
+        src="https://api.dicebear.com/7.x/avataaars/svg?seed=You"
         alt="Your avatar"
         size={48}
       />
 
-      {/* 입력 영역 */}
       <div className="flex-1">
         <textarea
           ref={textareaRef}
           placeholder="Post your reply"
-          value={reply}
-          onChange={e => setReply(e.target.value)}
+          value={reply || ''} // always string
+          onChange={(e) => {
+            const val = String(e.target.value ?? '')
+            console.log('✏️ typing:', val)
+            setReply(val)
+          }}
           rows={1}
-          className="w-full text-xl placeholder-gray-500 border-none resize-none outline-none bg-transparent"
+          className="w-full text-lg placeholder-gray-500 border-none resize-none outline-none bg-transparent"
         />
 
-        {/* 툴바 + 버튼 */}
         <div className="flex items-center justify-between mt-4">
-          <div className="flex space-x-4 text-primary">
-            <button type="button" className="hover:bg-blue-50 p-2 rounded-full transition-colors">
-              <Image className="w-5 h-5" />
-            </button>
-            <button type="button" className="hover:bg-blue-50 p-2 rounded-full transition-colors">
-              <FileVideo className="w-5 h-5" />
-            </button>
-            <button type="button" className="hover:bg-blue-50 p-2 rounded-full transition-colors">
-              <Smile className="w-5 h-5" />
-            </button>
+          <div className="flex space-x-3 text-primary">
+            {[Image, FileVideo, Smile].map((Icon, i) => (
+              <button
+                type="button"
+                key={i}
+                className="hover:bg-blue-50 p-2 rounded-full transition-colors"
+              >
+                <Icon size={18} />
+              </button>
+            ))}
           </div>
 
           <button
             type="submit"
             disabled={!reply.trim()}
-            className={`font-bold py-2 px-6 rounded-[8px] text-white transition-colors ${
-              reply.trim() ? 'bg-primary hover:bg-blue-600' : 'bg-primary/50 cursor-not-allowed'
+            className={`font-bold py-2 px-6 rounded-full text-white transition-colors ${
+              reply.trim()
+                ? 'bg-primary hover:bg-blue-600'
+                : 'bg-primary/50 cursor-not-allowed'
             }`}
           >
             Reply
@@ -68,7 +85,7 @@ const ReplyComposer = () => {
         </div>
       </div>
     </form>
-  );
-};
+  )
+}
 
-export default ReplyComposer;
+export default ReplyComposer
