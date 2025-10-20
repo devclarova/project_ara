@@ -4,6 +4,7 @@ import SignUpStep1Consent, { type ConsentResult } from '../components/auth/SignU
 import SignUpStep2Form, { type FormData } from '../components/auth/SignUpStep2Form';
 import SignUpStep3Profile from '../components/auth/SignUpStep3Profile';
 
+
 type Step = 1 | 2 | 3;
 
 export default function SignUpPage() {
