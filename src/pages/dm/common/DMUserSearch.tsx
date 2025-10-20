@@ -112,8 +112,9 @@ function DMUserSearch({
             aria-controls="dm-user-search-listbox"
             aria-autocomplete="list"
           />
-          <div className="text-gray-400 ml-1 mr-1 sm:ml-0 sm:mr-0 sm:">
-            | <button className="text-gray-400 hover:text-gray-700 ml-2 mr-3"> 검색</button>
+          <div className="flex items-center text-gray-400 ml-1 mr-1 sm:ml-0 sm:mr-0 sm:">
+            <img src="/line-y.svg" alt="구분선" />
+            <button className="text-gray-400 hover:text-gray-700 ml-2 mr-3"> 검색</button>
           </div>
         </div>
         <button

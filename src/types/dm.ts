@@ -20,8 +20,12 @@ export interface Chat {
   pinned?: boolean; // 상단 고정 여부 (핀)
   alarmOff?: boolean; // 알림 끔 여부 (true면 mute 상태)
   lastUpdated?: string; // 최근 대화 여부 (정렬 시 사용 가능) ISO string 또는 "YYYY-MM-DD HH:mm"
-  participantIds?: number[]; // 참여자 ID 목록 (1:1이면 두 개, 그룹이면 여러 개)
+  participantIds?: string[]; // 참여자 ID 목록 (1:1이면 두 개, 그룹이면 여러 개)
   isTempUpdated?: boolean; // 고정/읽음 등 상태 갱신용 로컬 플래그
+  user1_id: string; // 채팅방 참여자 1 ID
+  user2_id: string; // 채팅방 참여자 2 ID
+  created_at: string; // 생성 시간 (ISO string 또는 "YYYY-MM-DD HH:mm")
+  updated_at: string; // 마지막 업데이트 시간 (ISO string 또는 "YYYY-MM-DD HH:mm")
 }
 
 // export interface Chat {

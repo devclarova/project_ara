@@ -6,10 +6,10 @@ import MessageItem from './MessageItem';
 
 type Props = {
   messages: Message[];
-  /** 'never' | 'onSend' | 'always' */
   autoScrollMode?: 'never' | 'onSend' | 'always';
-  /** 내가 방금 보냈다면 true */
-  justSent?: boolean;
+  justSent?: boolean; // 내가 방금 보냈다면 true
+  highlightMap?: Record<string | number, { start: number; end: number }[]>;
+  activeMessageId?: string | number;
 };
 
 function sameMinute(a: Date, b: Date) {
@@ -24,8 +24,15 @@ function authorKey(m: Message) {
   return m.isMe !== undefined ? String(m.isMe) : String(m.author_id);
 }
 
-function MessageList({ messages, autoScrollMode = 'onSend', justSent = false }: Props) {
+function MessageList({
+  messages,
+  autoScrollMode = 'onSend',
+  justSent = false,
+  highlightMap = {},
+  activeMessageId,
+}: Props) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const itemRefs = useRef<Record<string | number, HTMLDivElement | null>>({});
 
   // 자동 스크롤
   useEffect(() => {
@@ -34,12 +41,23 @@ function MessageList({ messages, autoScrollMode = 'onSend', justSent = false }: 
     }
   }, [messages, autoScrollMode, justSent]);
 
+  // 검색 이동: 렌더 완료 후 스크롤 보장
+  useEffect(() => {
+    if (!activeMessageId) return;
+    const el = itemRefs.current[activeMessageId];
+    if (!el) return;
+    const timer = setTimeout(() => {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [activeMessageId, messages.length]);
+
   // 날짜를 최상단에 고정하려면 메시지 배열의 첫 번째 요소로 날짜를 미리 설정
   const messageDate = new Date(messages[0]?.created_at);
   const showDate = true; // 날짜는 항상 맨 위에 보여줘야 하므로 항상 true로 설정
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 bg-white">
+    <div className="flex-1 min-h-0 overflow-y-auto p-4 bg-white">
       {/* 날짜 표시 */}
       {showDate && (
         <div className="relative text-center text-gray-500 my-2 text-sm px-2 w-full">
@@ -59,8 +77,18 @@ function MessageList({ messages, autoScrollMode = 'onSend', justSent = false }: 
           !sameMinute(current, new Date(nextMsg.created_at));
 
         return (
-          <div key={m.id}>
-            <MessageItem key={m.id} msg={m} showTime={showTime} />
+          <div
+            key={m.id}
+            ref={el => {
+              itemRefs.current[m.id] = el; // 스크롤 타겟 저장
+            }}
+          >
+            <MessageItem
+              key={m.id}
+              msg={m}
+              showTime={showTime}
+              highlightRanges={highlightMap[m.id] || []} // 하이라이트 구건 전달
+            />
           </div>
         );
       })}

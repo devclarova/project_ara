@@ -1,9 +1,10 @@
 // 개별채팅
 
-import React, { useCallback, useState } from 'react';
-import type { Chat } from '../../../types/dm';
+import React, { useCallback, useEffect, useState } from 'react';
 import DMAvatar from './DMAvatar';
 import DMContextMenu, { type ContextMenuItem } from './DMContextMenu';
+import { supabase } from '../../../lib/supabase';
+import type { Chat } from '../../../types/dm';
 
 type Props = {
   chat: Chat;
@@ -29,6 +30,8 @@ const DMChatListItem: React.FC<Props> = ({
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null); // 상대방 아바타 URL
+  const [nickname, setNickname] = useState<string>(''); // 상대방 닉네임
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -63,6 +66,30 @@ const DMChatListItem: React.FC<Props> = ({
       onSelect: () => onDelete?.(chat.id),
     },
   ];
+
+  // 채팅방 사용자 정보 불러오기 (닉네임, 아바타)
+  useEffect(() => {
+    const fetchChatUserInfo = async () => {
+      // 채팅방 참여자 ID로 상대방 프로필을 불러옵니다.
+      const userId = chat.user1_id === 'me' ? chat.user2_id : chat.user1_id;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('avatar_url, nickname')
+        .eq('id', userId)
+        .single(); // 프로필 정보 가져오기
+
+      if (error) {
+        console.log('사용자 프로필 정보 불러오기 실패', error);
+      } else {
+        setAvatarUrl(data?.avatar_url ?? null); // 아바타 URL 설정
+        setNickname(data?.nickname ?? ''); // 닉네임 설정
+      }
+    };
+
+    fetchChatUserInfo(); // 채팅방이 변경될 때마다 호출
+  }, [chat]); // `chat`이 바뀔 때마다 실행
+
   return (
     <>
       <button
