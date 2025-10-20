@@ -1,8 +1,14 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import { supabase } from '../../lib/supabase';
 
 type Consents = { terms: boolean; privacy: boolean; age: boolean; marketing: boolean };
+
+type DraftProfile = {
+  bio: string;
+  file: File | null;
+  preview: string | null; // ObjectURL
+};
 
 type Props = {
   email: string;
@@ -14,6 +20,11 @@ type Props = {
   consents?: Consents;
   onBack: () => void;
   onDone: () => void;
+
+  /** 부모가 기억하는 프로필 드래프트 (되돌아왔을 때 그대로 보여줌) */
+  draft?: DraftProfile;
+  /** 프로필 드래프트가 바뀔 때 부모에게 즉시 알림 */
+  onChangeDraft?: (d: DraftProfile) => void;
 };
 
 export default function SignUpStep3Profile({
@@ -26,12 +37,34 @@ export default function SignUpStep3Profile({
   consents,
   onBack,
   onDone,
+  draft,
+  onChangeDraft,
 }: Props) {
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [bio, setBio] = useState('');
+  const [file, setFile] = useState<File | null>(draft?.file ?? null);
+  const [preview, setPreview] = useState<string | null>(draft?.preview ?? null);
+  const [bio, setBio] = useState(draft?.bio ?? '');
+
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
+
+  // 부모 드래프트로 동기화 (되돌아왔을 때 초기화 방지)
+  useEffect(() => {
+    if (!draft) return;
+    setFile(draft.file ?? null);
+    setPreview(draft.preview ?? null);
+    setBio(draft.bio ?? '');
+  }, [draft]);
+
+  const commitDraft = (next: DraftProfile) => onChangeDraft?.(next);
+
+  // ObjectURL 누수 방지
+  useEffect(() => {
+    return () => {
+      if (preview && preview.startsWith('blob:')) {
+        URL.revokeObjectURL(preview);
+      }
+    };
+  }, [preview]);
 
   const disabled = useMemo(() => loading, [loading]);
 
@@ -41,9 +74,16 @@ export default function SignUpStep3Profile({
     if (f.size > 2 * 1024 * 1024) return setMsg('이미지는 2MB 이하만 가능합니다.');
     if (!['image/jpeg', 'image/png', 'image/gif'].includes(f.type))
       return setMsg('JPG/PNG/GIF만 가능합니다.');
+
+    // 기존 미리보기 URL 정리
+    if (preview && preview.startsWith('blob:')) {
+      URL.revokeObjectURL(preview);
+    }
+    const url = URL.createObjectURL(f);
     setFile(f);
-    setPreview(URL.createObjectURL(f));
+    setPreview(url);
     setMsg('');
+    commitDraft({ bio, file: f, preview: url }); // 부모 저장
   };
 
   async function uploadPendingAvatar(): Promise<string | null> {
@@ -173,7 +213,10 @@ export default function SignUpStep3Profile({
         <textarea
           id="bio"
           value={bio}
-          onChange={e => setBio(e.target.value)}
+          onChange={e => {
+            setBio(e.target.value);
+            commitDraft({ bio: e.target.value, file, preview });
+          }}
           rows={4}
           placeholder="간단한 소개를 작성해주세요."
           className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ara-ring)]"

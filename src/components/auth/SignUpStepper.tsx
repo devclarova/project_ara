@@ -5,16 +5,20 @@ export type Step = 1 | 2 | 3;
 
 type Props = {
   current: Step;
-  onStepChange?: (next: Step) => void; // 숫자/라벨 클릭 이동
+  onStepChange?: (next: Step) => void;
+  /** 이동 허용 여부를 부모가 결정 (앞으로 이동 시 검증 등) */
+  guard?: (from: Step, to: Step) => boolean | Promise<boolean>;
 };
 
-type AnimState = {
-  connector: number | null;
+// 경유 애니메이션을 위한 시퀀스 상태
+type AnimSeq = {
+  path: number[]; // 지나갈 커넥터 인덱스들: [0] = 1-2, [1] = 2-3
   dir: 'forward' | 'backward';
-  tick: number;
-};
+  step: number; // 지금 재생 중인 path 인덱스
+  tick: number; // 키 리셋용
+} | null;
 
-export default function SignUpStepper({ current, onStepChange }: Props) {
+export default function SignUpStepper({ current, onStepChange, guard }: Props) {
   const steps = [
     { n: 1 as Step, label: '동의' },
     { n: 2 as Step, label: '정보 입력' },
@@ -22,34 +26,87 @@ export default function SignUpStepper({ current, onStepChange }: Props) {
   ] as const;
 
   const prevRef = useRef<Step>(current);
-  const [anim, setAnim] = useState<AnimState>({ connector: null, dir: 'forward', tick: 0 });
+  const [anim, setAnim] = useState<AnimSeq>(null);
+  const [pendingTarget, setPendingTarget] = useState<Step | null>(null);
 
+  // prev→current 이동 시, 지나갈 커넥터 경로 계산
   useEffect(() => {
     const prev = prevRef.current;
-    if (prev !== current) {
-      const dir: 'forward' | 'backward' = current > prev ? 'forward' : 'backward';
-      const connector = (dir === 'forward' ? prev - 1 : current - 1) as number;
-      setAnim({ connector, dir, tick: Date.now() });
-      prevRef.current = current;
-    }
+    if (prev === current) return;
+    const dir: 'forward' | 'backward' = current > prev ? 'forward' : 'backward';
+
+    const from = Math.min(prev, current);
+    const to = Math.max(prev, current);
+    const forwardPath = Array.from({ length: to - from }, (_, i) => from - 1 + i);
+    const path = dir === 'forward' ? forwardPath : [...forwardPath].reverse();
+
+    setAnim({ path, dir, step: 0, tick: Date.now() });
+    prevRef.current = current;
   }, [current]);
 
-  const go = (next: Step) => onStepChange?.(next);
+  // 버튼 클릭 처리 (1↔3 점프 시 2를 실제 경유)
+  const go = async (next: Step) => {
+    if (next === current) return;
+
+    const tryMove = async (from: Step, to: Step) => {
+      const ok = (await guard?.(from, to)) ?? true;
+      if (!ok) return false;
+      onStepChange?.(to);
+      return true;
+    };
+
+    // 1↔3 점프 → 2 경유
+    if (Math.abs(next - current) === 2) {
+      setPendingTarget(next);
+      await tryMove(current, 2);
+      return;
+    }
+
+    // 인접 이동
+    await tryMove(current, next);
+  };
+
+  // 커넥터 하나의 애니메이션이 끝났을 때
+  const handleConnectorDone = async () => {
+    setAnim(prev => {
+      if (!prev) return null;
+      const nextStep = prev.step + 1;
+      if (nextStep >= prev.path.length) return null; // 시퀀스 종료
+      return { ...prev, step: nextStep, tick: Date.now() + nextStep };
+    });
+
+    const a = anim;
+    if (!a) return;
+    const finished = a.step + 1 >= a.path.length;
+
+    // 전체 경로가 끝났고 pending이 있으면 최종 목적지로 이동
+    if (finished && pendingTarget != null) {
+      const target = pendingTarget;
+      setPendingTarget(null);
+      const ok = (await guard?.(2, target)) ?? true;
+      if (ok) onStepChange?.(target);
+    }
+  };
 
   return (
-    <ol className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6" aria-label="회원가입 단계">
+    <div
+      aria-label="회원가입 단계"
+      className="grid grid-cols-[auto_1fr_auto_1fr_auto] items-center w-full mb-4 sm:mb-6"
+    >
       {steps.map((s, i) => {
         const isActive = current === s.n;
         const isDone = current > s.n;
         const isLast = i === steps.length - 1;
 
         return (
-          <li key={s.n} className="flex items-center gap-2">
+          <div key={s.n} className="contents">
+            {/* 버튼 */}
             <button
               type="button"
-              onClick={() => go(s.n)}
+              onClick={() => void go(s.n)}
               className={[
                 'group flex items-center gap-2 sm:gap-3 select-none focus:outline-none',
+                isLast ? 'justify-self-end text-right' : '',
                 isActive
                   ? 'text-black dark:text-white'
                   : isDone
@@ -82,36 +139,40 @@ export default function SignUpStepper({ current, onStepChange }: Props) {
               </span>
             </button>
 
+            {/* 커넥터 */}
             {!isLast && (
               <Connector
                 index={i}
-                done={isDone}
-                anim={anim.connector === i ? { dir: anim.dir, tick: anim.tick } : null}
+                done={current > i + 1}
+                anim={
+                  anim && anim.path[anim.step] === i ? { dir: anim.dir, tick: anim.tick } : null
+                }
+                onDone={handleConnectorDone}
               />
             )}
-          </li>
+          </div>
         );
       })}
-    </ol>
+    </div>
   );
 }
 
-/** 커넥터(구분선): 선은 항상 유지. 화살표 '대가리'(chevron)만 선 중앙을 따라 이동/오버슈트 후 사라짐. */
+/** 커넥터(구분선) */
 function Connector({
   index,
   done,
   anim,
+  onDone,
 }: {
   index: number;
   done: boolean;
   anim: { dir: 'forward' | 'backward'; tick: number } | null;
+  onDone: () => void | Promise<void>;
 }) {
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [trackW, setTrackW] = useState(0);
-  const trackWClass = 'w-24 sm:w-32';
 
   const trackColor = useMemo(() => (done ? 'var(--ara-primary)' : 'rgba(107,114,128,0.7)'), [done]);
-
   const headPx = 16;
   const liftPx = Math.round(headPx * 0.5);
 
@@ -135,15 +196,15 @@ function Connector({
     setShow(true);
   }, [anim?.tick]);
 
-  const shortenPx = 2; // ★ 1~2px 정도 짧게 멈춤
+  const shortenPx = 2;
   const startX = anim?.dir === 'forward' ? -headPx / 2 : trackW - headPx / 2;
   const endX = anim?.dir === 'forward' ? trackW - headPx / 2 - shortenPx : -headPx / 2 + shortenPx;
 
   return (
-    <div className="relative mx-2 sm:mx-3 shrink-0">
+    <div className="relative w-[72px] sm:w-[96px] justify-self-center">
       <div
         ref={trackRef}
-        className={['h-[2px] rounded', trackWClass].join(' ')}
+        className="h-[2px] rounded w-full"
         style={{ backgroundColor: trackColor }}
       />
 
@@ -151,7 +212,7 @@ function Connector({
         {anim && show && trackW > 0 && (
           <motion.div
             key={`${index}-${anim.tick}`}
-            className={`absolute left-0 ${trackWClass} pointer-events-none`}
+            className="absolute left-0 w-full pointer-events-none"
             style={{ top: `calc(50% - ${liftPx}px)` }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -164,10 +225,13 @@ function Connector({
               initial={{ x: startX }}
               animate={{ x: endX }}
               transition={{ duration: 0.55, ease: 'easeInOut' }}
-              onAnimationComplete={() => setShow(false)}
+              onAnimationComplete={() => {
+                setShow(false);
+                void onDone();
+              }}
               aria-hidden
             >
-              {anim.dir === 'forward' ? (
+              {anim?.dir === 'forward' ? (
                 <svg width={headPx} height={headPx} viewBox="0 0 12 12" fill="none">
                   <polyline
                     points="3,2 9,6 3,10"
