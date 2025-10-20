@@ -1,6 +1,7 @@
 // 검색
 
 import React, { useEffect, useRef, useState } from 'react';
+import { supabase } from '../../../lib/supabase';
 
 type UserItem = {
   id: string;
@@ -35,6 +36,8 @@ function DMUserSearch({
   const [q, setQ] = useState('');
   const [debouncedQ, setDebouncedQ] = useState('');
   const [activeIndex, setActiveIndex] = useState<number>(-1);
+  const [filteredUsers, setFilteredUsers] = useState<UserItem[]>([]); // 필터링된 사용자 목록
+  const [loading, setLoading] = useState(false); // 로딩 상태
   const [isHovered, setIsHovered] = useState(false); // 서치 닫기 호버
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -44,32 +47,57 @@ function DMUserSearch({
     return () => clearTimeout(t);
   }, [q, debounceMs]);
 
-  const filtered = React.useMemo(() => {
-    const nq = normalize(debouncedQ);
-    if (!nq) return [];
-    return users.filter(u => normalize(u.nickname).includes(nq)).slice(0, 50); // 상한(성능/스크롤 과도 방지)
-  }, [users, debouncedQ]);
+  // Supabase에서 사용자 검색
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (!debouncedQ) {
+        setFilteredUsers([]);
+        return;
+      }
+      setLoading(true);
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles') // profiles 테이블에서 사용자 검색
+          .select('id, nickname, avatar_url')
+          .ilike('nickname', `%${debouncedQ}%`) // 대소문자 구분 없이 부분 일치 검색
+          .limit(50); // 최대 50명만 가져오기
+
+        if (error) {
+          console.error('사용자 검색 에러', error);
+        } else {
+          setFilteredUsers(data || []);
+        }
+      } catch (err) {
+        console.error('검색 중 오류 발생', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [debouncedQ]);
 
   // 키보드 내비게이션
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Escape') {
       e.preventDefault();
-      handleCloseSearch(); // ESC 로 닫기
+      handleCloseSearch();
       return;
     }
-    if (filtered.length === 0) return;
+    if (filteredUsers.length === 0) return;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setActiveIndex(i => (i + 1) % filtered.length);
+      setActiveIndex(i => (i + 1) % filteredUsers.length);
       scrollActiveIntoView(1);
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setActiveIndex(i => (i - 1 + filtered.length) % filtered.length);
+      setActiveIndex(i => (i - 1 + filteredUsers.length) % filteredUsers.length);
       scrollActiveIntoView(-1);
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      const target = filtered[activeIndex] ?? filtered[0];
-      if (target) onSelectUser(target); // 엔터로는 닫지 않음
+      const target = filteredUsers[activeIndex] ?? filteredUsers[0];
+      if (target) onSelectUser(target);
     }
   };
 
@@ -108,7 +136,7 @@ function DMUserSearch({
             placeholder={placeholder}
             className="flex-grow p-0 m-0 border-none ml-3 outline-none bg-transparent focus:outline-none focus:ring-0 focus:border-transparent sm:w-12"
             role="combobox"
-            aria-expanded={!!debouncedQ && filtered.length > 0}
+            aria-expanded={!!debouncedQ && filteredUsers.length > 0}
             aria-controls="dm-user-search-listbox"
             aria-autocomplete="list"
           />
@@ -136,8 +164,8 @@ function DMUserSearch({
         aria-live="polite"
         aria-label="사용자 검색 결과"
       >
-        {debouncedQ && filtered.length > 0 ? (
-          filtered.map((u, idx) => {
+        {debouncedQ && filteredUsers.length > 0 ? (
+          filteredUsers.map((u, idx) => {
             const isActive = idx === activeIndex;
             return (
               <button

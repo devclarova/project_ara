@@ -6,8 +6,8 @@ import DMChatListItem from './DMChatListItem';
 
 type Props = {
   chats: Chat[];
-  selectedChatId: number | null;
-  onSelect: (id: number) => void;
+  selectedChatId: string | null;
+  onSelect: (id: string) => void;
   emptyNode?: ReactNode;
 };
 
@@ -27,7 +27,12 @@ const DMChatList = ({ chats, selectedChatId, onSelect, emptyNode }: Props) => {
   return (
     <div className="flex-1 overflow-y-auto max-h-full">
       {chats.map(c => (
-        <DMChatListItem key={c.id} chat={c} selected={selectedChatId === c.id} onClick={onSelect} />
+        <DMChatListItem
+          key={c.id}
+          chat={c}
+          selected={selectedChatId === c.id} // selectedChatId가 현재 채팅의 id와 일치하면 true
+          onClick={() => onSelect(c.id)} // 클릭 시 onSelect 함수 호출, c.id를 넘겨줌
+        />
       ))}
     </div>
   );

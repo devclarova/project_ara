@@ -9,13 +9,13 @@ import type { Chat } from '../../../types/dm';
 type Props = {
   chat: Chat;
   selected?: boolean;
-  onClick?: (id: number) => void;
+  onClick?: (id: string) => void;
   className?: string;
   // 우클릭 메뉴 액션 콜백들
-  onTogglePin?: (chatId: number, nextPinned: boolean) => void;
-  onToggleAlarm?: (chatId: number, nextAlarmOn: boolean) => void; // mute/unmute
-  onMarkAsRead?: (chatId: number) => void;
-  onDelete?: (chatId: number) => void;
+  onTogglePin?: (chatId: string, nextPinned: boolean) => void;
+  onToggleAlarm?: (chatId: string, nextAlarmOn: boolean) => void; // mute/unmute
+  onMarkAsRead?: (chatId: string) => void;
+  onDelete?: (chatId: string) => void;
 };
 
 const DMChatListItem: React.FC<Props> = ({
