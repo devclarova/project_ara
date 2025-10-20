@@ -1,4 +1,4 @@
-import Select, { components, type SingleValue } from 'react-select';
+import Select, { components, type SingleValue, type StylesConfig } from 'react-select';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { ChevronDown, ChevronUp } from 'lucide-react';
@@ -23,13 +23,6 @@ interface CountrySelectProps {
   onChange: (value: string) => void;
   error?: boolean;
 }
-
-type Options = {
-  value: string;
-  label: string;
-  flag_url?: string | null;
-  phone_code: number;
-};
 
 const CustomDropdownIndicator = (props: any) => {
   const { selectProps } = props;
@@ -66,8 +59,9 @@ export default function CountrySelect({ value, onChange, error = false }: Countr
 
   const selectedOption = options.find(o => o.value === value) || null;
 
-  const customStyles = {
-    control: (provided: any, state: any) => ({
+  // ✅ any 제거한 스타일 타입
+  const customStyles: StylesConfig<Option, false> = {
+    control: (provided, state) => ({
       ...provided,
       minHeight: 48,
       height: 48,
@@ -77,25 +71,38 @@ export default function CountrySelect({ value, onChange, error = false }: Countr
       borderWidth: 1,
       outline: 'none',
       boxShadow: isFocused ? '0 0 0 3px var(--ara-ring)' : 'none',
+      // hover 효과 제거 유지
       '&:hover': {
         borderColor: isFocused ? 'var(--ara-primary)' : error && !value ? 'red' : '#D1D5DB',
       },
+      // 포털 + fixed일 때 가려지지 않도록 배경 지정
+      backgroundColor: '#fff',
     }),
-    valueContainer: (provided: any) => ({
+    valueContainer: provided => ({
       ...provided,
       height: 48,
       padding: 0,
       display: 'flex',
       alignItems: 'center',
     }),
-    input: (provided: any) => ({ ...provided, margin: 0, padding: 0 }),
-    singleValue: (provided: any) => ({ ...provided, color: '#111827' }),
-    indicatorsContainer: (provided: any) => ({ ...provided, height: 48 }),
-    dropdownIndicator: (provided: any) => ({ ...provided, marginLeft: 8 }),
-    indicatorSeparator: (provided: any) => ({ ...provided }),
+    input: provided => ({ ...provided, margin: 0, padding: 0 }),
+    singleValue: provided => ({ ...provided, color: '#111827' }),
+    indicatorsContainer: provided => ({ ...provided, height: 48 }),
+    dropdownIndicator: provided => ({ ...provided, marginLeft: 8 }),
+    indicatorSeparator: provided => ({ ...provided, display: 'none' }),
+    // ✅ 메뉴/포털 z-index 보정: 레이아웃 위로 띄우기
+    menu: provided => ({
+      ...provided,
+      zIndex: 50, // 컨텍스트에 맞춰 조절(필요시 9999)
+    }),
+    menuPortal: provided => ({
+      ...provided,
+      zIndex: 9999, // 최상단 보장
+    }),
   };
 
-  const handleChange = (opt: SingleValue<any>) => {
+  // ✅ SingleValue 타입도 Option으로 명확화
+  const handleChange = (opt: SingleValue<Option>) => {
     onChange(opt?.value || '');
     setIsFocused(false);
     (document.activeElement as HTMLElement)?.blur();
@@ -131,7 +138,16 @@ export default function CountrySelect({ value, onChange, error = false }: Countr
         className="w-full"
         classNamePrefix="react-select"
         placeholder=" "
-        openMenuOnFocus // ⬅︎ (추가) 포커스(=Tab 이동) 시 자동 오픈
+        // ⬇️ 핵심: 아래 비면 위로 자동 배치
+        menuPlacement="auto"
+        // ⬇️ 스크롤 컨테이너/overflow 숨김 환경에서도 안전
+        menuPosition="fixed"
+        menuPortalTarget={typeof window !== 'undefined' ? document.body : null}
+        // 메뉴가 뷰포트로 스크롤되게
+        menuShouldScrollIntoView
+        // 메뉴 높이 제한(상·하 여백 최적화)
+        maxMenuHeight={280}
+        openMenuOnFocus
       />
 
       <label
@@ -145,12 +161,10 @@ export default function CountrySelect({ value, onChange, error = false }: Countr
           }
         `}
       >
-        Nationality
+        국적
       </label>
 
-      {error && !value && (
-        <p className="text-red-500 text-sm mt-1">Please select your nationality.</p>
-      )}
+      {error && !value && <p className="text-red-500 text-sm mt-1">국적을 선택해주세요.</p>}
     </div>
   );
 }

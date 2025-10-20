@@ -96,9 +96,9 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
     }
   `}
       >
-        Gender
+        성별
       </label>
-      {error && <p className="text-red-500 text-sm mt-1">Please select your gender.</p>}
+      {error && <p className="text-red-500 text-sm mt-1">성별을 선택해주세요.</p>}
     </div>
   );
 }

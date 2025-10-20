@@ -17,7 +17,7 @@ export default function BirthInput({
   value,
   onChange,
   error = false,
-  errorMessage = 'Enter your date of birth.',
+  errorMessage = '생년월일을 입력해주세요.',
 }: BirthInputProps): JSX.Element {
   const [inputValue, setInputValue] = useState(value ? formatFromDate(value) : '');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -173,7 +173,7 @@ export default function BirthInput({
       ${inputValue ? '-top-2 text-xs' : 'top-3 text-sm'}
       peer-focus:-top-3 peer-focus:text-xs peer-focus:text-primary`}
         >
-          Birthday
+          생년월일
         </label>
         <button
           type="button"

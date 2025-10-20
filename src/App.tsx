@@ -32,6 +32,9 @@ import ScrollToTop from './components/common/ScrollToTop';
 import HomeFeed from './pages/temps/HomeFeed';
 import TweetDetailPage from './pages/TweetDetail/TweetDetailPage';
 import ExplorePage from './pages/TweetDetail/ExplorePage';
+import DMPage from './pages/dm/common/DMPage';
+import SignUpPage_old from './pages/SignUpPage_old';
+
 
 const App = () => {
   return (
@@ -49,6 +52,7 @@ const App = () => {
                 <Route path="/landing" element={<LandingPage />}></Route>
                 <Route path="/home" element={<HomePage />}></Route>
                 <Route path="/signup" element={<SignUpPage />}></Route>
+                <Route path="/signupo" element={<SignUpPage_old />}></Route>
                 <Route path="/signin" element={<SignInPage />}></Route>
                 <Route path="/profile" element={<ProfilePage />}></Route>
                 <Route path="/studyList" element={<StudyListPage />}></Route>
@@ -64,20 +68,21 @@ const App = () => {
                 <Route path="/social/explore" element={<ExplorePage />} />
                 <Route path="/social/profile" element={<ProfilePage />} />
                 <Route path="/social/:id" element={<TweetDetailPage />} />
+                <Route path="/dm" element={<DMPage />}></Route>
               </Routes>
             </main>
 
             {/* <Footer /> */}
-            <div className={`${styles.footer} mb-16 md:mb-0`}>
+            {/* <div className={`${styles.footer} mb-16 md:mb-0`}>
               <div className={styles.footerContent}>
                 <img className={styles.textLogo} src={textLogo} alt="Foodit" />
                 <span>서비스 이용약관 | 개인정보 처리방침</span>
               </div>
-              {/* 햄버거 */}
-              {/* <div className="h-[calc(4rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden /> */}
-            </div>
+              햄버거
+              <div className="h-[calc(4rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden />
+            </div> */}
           </div>
-          <InflearnNav />
+          {/* <InflearnNav /> */}
         </Router>
       </PostProvider>
     </AuthProvider>
