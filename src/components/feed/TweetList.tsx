@@ -1,9 +1,19 @@
 // src/components/TweetList.tsx
-import type { Tweet } from '../../data/mockTweet';
-import TweetCard from './TweetCard';
+import TweetCard from './TweetCard'
+
+interface Tweet {
+  id: string
+  content: string
+  image_url: string | null
+  created_at: string
+  like_count: number
+  repost_count: number
+  bookmark_count: number
+  profiles: { nickname: string; avatar_url: string } | null
+}
 
 interface TweetListProps {
-  tweets: Tweet[];
+  tweets: Tweet[]
 }
 
 export default function TweetList({ tweets }: TweetListProps) {
@@ -13,7 +23,7 @@ export default function TweetList({ tweets }: TweetListProps) {
         <p className="text-lg font-medium">아직 트윗이 없습니다</p>
         <p className="text-sm text-gray-400 mt-1">첫 트윗을 작성해보세요 🐦</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -22,5 +32,5 @@ export default function TweetList({ tweets }: TweetListProps) {
         <TweetCard key={tweet.id} {...tweet} />
       ))}
     </div>
-  );
+  )
 }

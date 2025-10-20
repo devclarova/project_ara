@@ -2,16 +2,22 @@
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import Avatar from '../common/Avatar'
-import type { Tweet } from '../../data/mockTweet'
 
+// ✅ Supabase 구조에 맞는 타입 정의
 interface TweetMainProps {
-  tweet: Tweet
+  tweet: {
+    id: string
+    author: string
+    avatar: string
+    content: string
+    image?: string | null
+    created_at: string
+  }
 }
 
 const TweetMain = ({ tweet }: TweetMainProps) => {
-  const { author, handle, avatar, content, image, created_at } = tweet
+  const { author, avatar, content, image, created_at } = tweet
 
-  // 날짜 포맷
   const formattedTime = format(new Date(created_at), 'a h:mm', { locale: ko })
   const formattedDate = format(new Date(created_at), 'yyyy년 M월 d일', {
     locale: ko,
@@ -23,12 +29,10 @@ const TweetMain = ({ tweet }: TweetMainProps) => {
         {/* 프로필 이미지 */}
         <Avatar src={avatar} alt={author} size={56} />
 
-        {/* 본문 영역 */}
         <div className="flex-1">
           {/* 작성자 */}
           <div className="flex items-center space-x-2 mb-3">
             <span className="font-bold text-lg">{author}</span>
-            <span className="text-secondary text-base">@{handle}</span>
           </div>
 
           {/* 본문 내용 */}
@@ -36,7 +40,7 @@ const TweetMain = ({ tweet }: TweetMainProps) => {
             {content}
           </p>
 
-          {/* 이미지 (선택적) */}
+          {/* 이미지 */}
           {image && (
             <img
               src={image}
@@ -45,7 +49,7 @@ const TweetMain = ({ tweet }: TweetMainProps) => {
             />
           )}
 
-          {/* 시간/날짜 */}
+          {/* 작성 시간 */}
           <div className="text-secondary text-base mb-6">
             {formattedTime} · {formattedDate}
           </div>

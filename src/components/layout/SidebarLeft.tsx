@@ -1,3 +1,5 @@
+// src/components/layout/SidebarLeft.tsx
+
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Modal from '../common/Modal';
@@ -16,27 +18,29 @@ import {
   Feather,
 } from 'lucide-react';
 
+// ✅ onPost 타입을 HomeFeed와 맞춤
 interface SidebarLeftProps {
-  onPost?: (content: string) => void;
-  onReply?: (parentId: string, content: string) => void; // ✅ 추가
-  parentId?: string; // ✅ TweetDetailPage에서 넘길 트윗 ID
+  onPost?: (content: string, image_url?: string | null) => Promise<void>;
+  onReply?: (parentId: string, content: string) => void;
+  parentId?: string;
   isReplyMode?: boolean;
 }
 
-const SidebarLeft = ({ onPost, onReply, parentId, isReplyMode = false }: SidebarLeftProps) => {
+const SidebarLeft = ({
+  onPost,
+  onReply,
+  parentId,
+  isReplyMode = false,
+}: SidebarLeftProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handlePost = (content: string) => {
-    if (onPost) onPost(content);
+  // ✅ async로 수정 (Promise 반환)
+  const handlePost = async (content: string, image_url?: string | null) => {
+    if (onPost) await onPost(content, image_url);
     setIsModalOpen(false);
   };
-
-  // const handleReply = (content: string) => {
-  //   if (onReply && parentId) onReply(parentId, content)
-  //   setIsModalOpen(false)
-  // }
 
   const handleReply = (parentId: string, content: string) => {
     if (onReply) onReply(parentId, content);
@@ -94,9 +98,9 @@ const SidebarLeft = ({ onPost, onReply, parentId, isReplyMode = false }: Sidebar
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <div className="bg-white rounded-xl p-4 w-full max-w-xl mx-auto">
           {isReplyMode ? (
-            // Reply 모드일 때 ReplyComposer 사용
             <ReplyComposer parentId={parentId || ''} onReply={handleReply} />
           ) : (
+            // ✅ TweetComposer로 전달할 때 타입 일치
             <TweetComposer onPost={handlePost} />
           )}
         </div>
