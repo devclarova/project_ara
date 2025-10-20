@@ -7,7 +7,11 @@ export type ConsentResult = {
   marketing: boolean;
 };
 
-type Props = { onNext: (c: ConsentResult) => void };
+type Props = {
+  onNext: (c: ConsentResult) => void;
+  value?: ConsentResult;
+  onChange?: (c: ConsentResult) => void;
+};
 
 // 간단한 고유 ID 훅
 function useAutoId(prefix = 'chk') {
@@ -18,7 +22,7 @@ function useAutoId(prefix = 'chk') {
   return ref.current;
 }
 
-// ✅ 사각형 커스텀 체크박스 (indeterminate 표현 옵션 지원)
+// 사각형 커스텀 체크박스 (indeterminate 표현 옵션 지원)
 function CheckboxSquare({
   checked,
   onChange,
@@ -101,11 +105,23 @@ function CheckboxSquare({
   );
 }
 
-export default function SignUpStep1Consent({ onNext }: Props) {
-  const [terms, setTerms] = useState(false);
-  const [privacy, setPrivacy] = useState(false);
-  const [age, setAge] = useState(false);
-  const [marketing, setMarketing] = useState(false);
+export default function SignUpStep1Consent({ onNext, value, onChange }: Props) {
+  const [terms, setTerms] = useState(value?.terms ?? false);
+  const [privacy, setPrivacy] = useState(value?.privacy ?? false);
+  const [age, setAge] = useState(value?.age ?? false);
+  const [marketing, setMarketing] = useState(value?.marketing ?? false);
+
+  useEffect(() => {
+    if (!value) return;
+    setTerms(value.terms);
+    setPrivacy(value.privacy);
+    setAge(value.age);
+    setMarketing(value.marketing);
+  }, [value?.terms, value?.privacy, value?.age, value?.marketing]);
+
+  // 부모로 변경 통지 헬퍼
+  const emit = (next: ConsentResult) => onChange?.(next);
+
   const [open, setOpen] = useState<null | 'terms' | 'privacy' | 'marketing'>(null);
 
   // 버튼 활성화는 필수 3개만
@@ -121,6 +137,7 @@ export default function SignUpStep1Consent({ onNext }: Props) {
     setPrivacy(v);
     setAge(v);
     setMarketing(v);
+    emit({ terms: v, privacy: v, age: v, marketing: v });
   };
 
   // ─────────────────────────────────────────

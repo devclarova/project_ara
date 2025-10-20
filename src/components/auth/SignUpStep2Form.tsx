@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import InputField from './InputField';
 import GenderSelect from './GenderSelect';
 import BirthInput from './BirthInput';
@@ -7,6 +7,11 @@ import CountrySelect from './CountrySelect';
 type Props = {
   onNext: (data: FormData) => void;
   onBack: () => void;
+
+  /** 부모가 가지고 있는 값(되돌아와도 값 유지용) */
+  value?: FormData;
+  /** 입력이 바뀔 때 부모에게 즉시 알려줌 */
+  onChange?: (data: FormData) => void;
 };
 
 export type FormData = {
@@ -19,14 +24,35 @@ export type FormData = {
   country: string;
 };
 
-export default function SignUpStep2Form({ onNext, onBack }: Props) {
-  const [email, setEmail] = useState('');
-  const [pw, setPw] = useState('');
-  const [confirmPw, setConfirmPw] = useState('');
-  const [nickname, setNickname] = useState('');
-  const [gender, setGender] = useState('');
-  const [birth, setBirth] = useState<Date | null>(null);
-  const [country, setCountry] = useState('');
+export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Props) {
+  // 내부 상태 초기화 (부모 값 우선)
+  const [email, setEmail] = useState(value?.email ?? '');
+  const [pw, setPw] = useState(value?.pw ?? '');
+  const [confirmPw, setConfirmPw] = useState(value?.confirmPw ?? '');
+  const [nickname, setNickname] = useState(value?.nickname ?? '');
+  const [gender, setGender] = useState(value?.gender ?? '');
+  const [birth, setBirth] = useState<Date | null>(value?.birth ?? null);
+  const [country, setCountry] = useState(value?.country ?? '');
+
+  // 부모 값이 바뀌면 내부 상태도 동기화 (되돌아왔을 때 그대로 보이도록)
+  useEffect(() => {
+    if (!value) return;
+    setEmail(value.email ?? '');
+    setPw(value.pw ?? '');
+    setConfirmPw(value.confirmPw ?? '');
+    setNickname(value.nickname ?? '');
+    setGender(value.gender ?? '');
+    setBirth(value.birth ?? null);
+    setCountry(value.country ?? '');
+  }, [value]);
+
+  // 부모로 변경 통지 헬퍼
+  const emit = (next: FormData) => onChange?.(next);
+
+  const snapshot: FormData = useMemo(
+    () => ({ email, pw, confirmPw, nickname, gender, birth, country }),
+    [email, pw, confirmPw, nickname, gender, birth, country],
+  );
 
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
@@ -45,8 +71,9 @@ export default function SignUpStep2Form({ onNext, onBack }: Props) {
   };
 
   const handleNext = () => {
+    // 최신 스냅샷으로 유효성 검사
     if (!validate()) return;
-    onNext({ email, pw, confirmPw, nickname, gender, birth, country });
+    onNext(snapshot);
   };
 
   return (
@@ -58,7 +85,10 @@ export default function SignUpStep2Form({ onNext, onBack }: Props) {
           id="email"
           label="이메일"
           value={email}
-          onChange={setEmail}
+          onChange={v => {
+            setEmail(v);
+            emit({ ...snapshot, email: v });
+          }}
           error={errors.email}
         />
         <InputField
@@ -66,7 +96,10 @@ export default function SignUpStep2Form({ onNext, onBack }: Props) {
           label="비밀번호"
           type="password"
           value={pw}
-          onChange={setPw}
+          onChange={v => {
+            setPw(v);
+            emit({ ...snapshot, pw: v });
+          }}
           error={errors.pw}
         />
         <InputField
@@ -74,19 +107,46 @@ export default function SignUpStep2Form({ onNext, onBack }: Props) {
           label="비밀번호 확인"
           type="password"
           value={confirmPw}
-          onChange={setConfirmPw}
+          onChange={v => {
+            setConfirmPw(v);
+            emit({ ...snapshot, confirmPw: v });
+          }}
           error={errors.confirmPw}
         />
         <InputField
           id="nickname"
           label="닉네임"
           value={nickname}
-          onChange={setNickname}
+          onChange={v => {
+            setNickname(v);
+            emit({ ...snapshot, nickname: v });
+          }}
           error={errors.nickname}
         />
-        <GenderSelect value={gender} onChange={setGender} error={!!errors.gender} />
-        <BirthInput value={birth} onChange={setBirth} error={!!errors.birth} />
-        <CountrySelect value={country} onChange={setCountry} error={!!errors.country} />
+        <GenderSelect
+          value={gender}
+          onChange={v => {
+            setGender(v);
+            emit({ ...snapshot, gender: v });
+          }}
+          error={!!errors.gender}
+        />
+        <BirthInput
+          value={birth}
+          onChange={v => {
+            setBirth(v);
+            emit({ ...snapshot, birth: v });
+          }}
+          error={!!errors.birth}
+        />
+        <CountrySelect
+          value={country}
+          onChange={v => {
+            setCountry(v);
+            emit({ ...snapshot, country: v });
+          }}
+          error={!!errors.country}
+        />
       </div>
 
       <div className="flex justify-between sm:justify-end gap-2 sm:gap-3 mt-6">
