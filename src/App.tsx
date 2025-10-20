@@ -29,9 +29,12 @@ import SignInPage from './pages/SignInPage';
 import TempHomePage from './pages/TempHomePage';
 import TempCommunityPage from './pages/temps/TempCommunityPage';
 import ScrollToTop from './components/common/ScrollToTop';
-import DMPage from './pages/dm/common/DMPage';
 import HomeFeed from './pages/temps/HomeFeed';
+import TweetDetailPage from './pages/TweetDetail/TweetDetailPage';
+import ExplorePage from './pages/TweetDetail/ExplorePage';
+import DMPage from './pages/dm/common/DMPage';
 import SignUpPage_old from './pages/SignUpPage_old';
+
 
 const App = () => {
   return (
@@ -61,8 +64,11 @@ const App = () => {
                 <Route path="/notfound" element={<NotFound />}></Route>
                 <Route path="/test" element={<TempHomePage />}></Route>
                 <Route path="/testC" element={<TempCommunityPage />}></Route>
-                <Route path="/dm" element={<DMPage />}></Route>
                 <Route path="/social" element={<HomeFeed />}></Route>
+                <Route path="/social/explore" element={<ExplorePage />} />
+                <Route path="/social/profile" element={<ProfilePage />} />
+                <Route path="/social/:id" element={<TweetDetailPage />} />
+                <Route path="/dm" element={<DMPage />}></Route>
               </Routes>
             </main>
 

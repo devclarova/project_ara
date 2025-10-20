@@ -1,49 +1,100 @@
-import type { PropsWithChildren } from 'react';
-import React from 'react';
+// src/components/common/Modal.tsx
+import { Heart, MessageCircle, Repeat2, Share2, X } from 'lucide-react';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
+import Avatar from './Avatar';
 
-// 하단 버튼 타입 (이미 있으면 그대로 사용)
-export type ModalButton = {
-  label: string;
-  onClick: () => void;
-  variant?: 'primary' | 'secondary' | 'danger';
-};
-
-// ✅ Base props를 먼저 정의 (children 제외)
-interface BaseModalProps {
-  isOpen: boolean; // 모달 열림 여부
-  title?: string; // 제목
-  message?: string; // 본문 메시지 (children과 병행 가능)
-  buttons?: ModalButton[]; // 하단 버튼들
-  onClose: () => void; // 닫기 함수 - 선택 아님(모달 밖 클릭/ESC 등 필요)
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
 }
 
-// ✅ children을 합친 최종 Props
-export type ModalProps = PropsWithChildren<BaseModalProps>;
+export default function Modal({ isOpen, onClose, children }: ModalProps) {
+  const [preview, setPreview] = useState<string>('');
 
-// ✅ React.FC<ModalProps> 혹은 함수형 컴포넌트로 children 포함
-const Modal: React.FC<ModalProps> = ({ isOpen, title, message, buttons, onClose, children }) => {
   if (!isOpen) return null;
 
-  return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-panel" onClick={e => e.stopPropagation()}>
-        {title && <h3 className="modal-title">{title}</h3>}
-        {message && <p className="modal-message">{message}</p>}
-        {/* ⚡ children이 있으면 그걸 우선 랜더링 */}
-        {children}
+  // 임시 작성 내용 감지 (children이 TweetComposer일 경우, 작성 후 반영 가능)
+  const handlePreview = (text: string) => {
+    setPreview(text);
+  };
 
-        {buttons && buttons.length > 0 && (
-          <div className="modal-actions">
-            {buttons.map((b, i) => (
-              <button key={i} className={`btn ${b.variant ?? 'primary'}`} onClick={b.onClick}>
-                {b.label}
-              </button>
-            ))}
-          </div>
-        )}
+  const modalRoot = document.getElementById('modal-root')!;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 bg-black/40 flex items-start justify-center pt-16 z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl w-full max-w-2xl mx-4 shadow-xl overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* 상단 헤더 */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 transition-colors">
+            <X className="w-6 h-6" />
+          </button>
+          <h2 className="text-lg font-bold">Compose Post</h2>
+          <div className="w-6" />
+        </div>
+
+        {/* 본문 */}
+        <div className="p-6 space-y-6">
+          {/* Tweet 작성 (자식 컴포넌트) */}
+          {children}
+
+          {/* ✅ 작성 후 미리보기 카드 (createTweetElement 디자인 적용) */}
+          {preview && (
+            <div className="tweet-card p-4 cursor-pointer transition-colors border border-gray-100 rounded-2xl shadow-sm hover:bg-gray-50">
+              <div className="flex space-x-3">
+                <Avatar
+                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=you"
+                  alt="You"
+                  size={48}
+                />
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold">You</span>
+                    <span className="text-secondary">@you</span>
+                    <span className="text-secondary">·</span>
+                    <span className="text-secondary">now</span>
+                  </div>
+                  <p className="mt-2 text-gray-900">{preview}</p>
+
+                  <div className="flex items-center justify-between mt-4 max-w-md">
+                    <button className="flex items-center space-x-2 text-secondary hover:text-blue-600 group">
+                      <div className="w-8 h-8 flex items-center justify-center rounded-full group-hover:bg-blue-50">
+                        <MessageCircle className="w-4 h-4" />
+                      </div>
+                      <span className="text-sm">0</span>
+                    </button>
+                    <button className="flex items-center space-x-2 text-secondary hover:text-green-600 group">
+                      <div className="w-8 h-8 flex items-center justify-center rounded-full group-hover:bg-green-50">
+                        <Repeat2 className="w-4 h-4" />
+                      </div>
+                      <span className="text-sm">0</span>
+                    </button>
+                    <button className="flex items-center space-x-2 text-secondary hover:text-red-600 group">
+                      <div className="w-8 h-8 flex items-center justify-center rounded-full group-hover:bg-red-50">
+                        <Heart className="w-4 h-4" />
+                      </div>
+                      <span className="text-sm">0</span>
+                    </button>
+                    <button className="flex items-center space-x-2 text-secondary hover:text-blue-600 group">
+                      <div className="w-8 h-8 flex items-center justify-center rounded-full group-hover:bg-blue-50">
+                        <Share2 className="w-4 h-4" />
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </div>,
+    modalRoot,
   );
-};
-
-export default Modal;
+}
