@@ -5,10 +5,11 @@
 */
 import { useMemo, useState } from 'react';
 import type { Chat } from '../../../types/dm';
-import { mockChats } from '../chat';
+
 import DMChatList from './DMChatList';
 import DMHeader from './DMHeader';
 import DMUserSearch from './DMUserSearch';
+import { mockChatData } from '../chat';
 
 type DMListProps = {
   chats: Chat[];
@@ -20,7 +21,7 @@ type DMListProps = {
 
 const DMList: React.FC<DMListProps> = ({ chats, selectedChatId, onSelect }) => {
   // 초기 상태 설정 (목업데이터 사용)
-  const [chatList, setChatList] = useState<Chat[]>(chats.length ? chats : mockChats);
+  const [chatList, setChatList] = useState<Chat[]>(chats.length ? chats : mockChatData);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // 새 채팅 버튼 클릭 시 검색 창 열기
@@ -61,7 +62,7 @@ const DMList: React.FC<DMListProps> = ({ chats, selectedChatId, onSelect }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 border-r border-gray-200 overflow-hidden">
+    <div className="relative flex flex-col h-dvh sm:h-[calc(100vh-120px)] overscroll-contain">
       <div className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
         <DMHeader onNewChatClick={handleNewChatClick} />
         {isSearchOpen && (

@@ -36,85 +36,19 @@ export async function sendMessage(chat_id: string, text: string): Promise<Messag
   };
 }
 
-export const mockChats: Chat[] = [
-  {
-    id: 1,
-    name: '재현님',
-    lastMessage: '죄송합니다........',
-    time: '오후 2:30',
-    unread: 2,
-    avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=재현님`,
-  },
-  {
-    id: 2,
-    name: '수하님',
-    lastMessage: '집가요~~',
-    time: '오전 11:15',
-    unread: 0,
-    avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=수하님`,
-  },
-  {
-    id: 3,
-    name: '아악',
-    lastMessage: '자고싶어요',
-    time: '오후 12:25',
-    unread: 1,
-    avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=아악`,
-  },
-  {
-    id: 4,
-    name: 'aaa',
-    lastMessage: 'Hello',
-    time: '오전 09:05',
-    unread: 0,
-    avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=aaa`,
-  },
-  {
-    id: 5,
-    name: 'aa',
-    lastMessage: '........',
-    time: '오후 2:30',
-    unread: 2,
-    avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=재현님`,
-  },
-  {
-    id: 6,
-    name: 'b',
-    lastMessage: 'ddd',
-    time: '오후 2:30',
-    unread: 2,
-    avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=재현님`,
-  },
-  {
-    id: 7,
-    name: '집',
-    lastMessage: '보내줘!!!!!!!!',
-    time: '오후 2:30',
-    unread: 0,
-    avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=재현님`,
-  },
-  {
-    id: 8,
-    name: '핳',
-    lastMessage: '집!!!!!!!!!!',
-    time: '오후 2:30',
-    unread: 0,
-    avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=재현님`,
-  },
-  {
-    id: 9,
-    name: '핳',
-    lastMessage: '집!!!!!!!!!!',
-    time: '오후 2:30',
-    unread: 0,
-    avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=재현님`,
-  },
-  {
-    id: 10,
-    name: '핳',
-    lastMessage: '집!!!!!!!!!!',
-    time: '오후 2:30',
-    unread: 0,
-    avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=재현님`,
-  },
-];
+export const mockChatData: Chat = {
+  id: 1, // 고유 ID (string)
+  name: '재현님', // 상대 이름
+  lastMessage: '죄송합니다........', // 마지막 메시지 내용
+  time: '오후 2:30', // 마지막 메시지 시각
+  unread: 2, // 읽지 않은 메시지 수
+  avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=재현님`, // 아바타 URL
+  pinned: false, // 상단 고정 여부
+  alarmOff: false, // 알림 끄기 여부
+  lastUpdated: '2025-10-20 14:30', // 최근 대화 여부 (ISO string)
+  participantIds: ['user1', 'user2'], // 참여자 ID 목록 (1:1 채팅이면 두 개, 그룹이면 여러 개)
+  user1_id: 'user1', // 채팅방 참여자 1 ID
+  user2_id: 'user2', // 채팅방 참여자 2 ID
+  created_at: '2025-10-19 10:00', // 채팅방 생성 시간 (ISO string)
+  updated_at: '2025-10-20 14:30', // 마지막 업데이트 시간 (ISO string)
+};

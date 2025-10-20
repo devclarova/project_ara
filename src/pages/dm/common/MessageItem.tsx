@@ -9,7 +9,33 @@ type MessageItemProps = {
   myAvatarUrl?: string;
   otherAvatarUrl?: string;
   unread?: number; // 읽지 않은 메시지 수
+  highlightRanges?: { start: number; end: number }[]; // 메시지 검색 하이라이트
 };
+
+// 텍스트를 하이라이트 구간에 맞게 쪼개서 렌더
+function renderHighlighted(text: string, ranges: { start: number; end: number }[]) {
+  if (!ranges?.length) return text;
+  const parts: JSX.Element[] = [];
+  let cursor = 0;
+
+  ranges.forEach((r, idx) => {
+    const { start, end } = r;
+    if (cursor < start) {
+      parts.push(<span key={`n-${idx}-${cursor}`}>{text.slice(cursor, start)}</span>);
+    }
+    parts.push(
+      <mark key={`h-${idx}`} className="bg-yellow-200 rounded-sm px-0.5">
+        {text.slice(start, end)}
+      </mark>,
+    );
+    cursor = end;
+  });
+
+  if (cursor < text.length) {
+    parts.push(<span key={`tail-${cursor}`}>{text.slice(cursor)}</span>);
+  }
+  return parts;
+}
 
 function formatTime(iso?: string) {
   if (!iso) return '';
@@ -24,6 +50,7 @@ function MessageItem({
   myAvatarUrl,
   otherAvatarUrl,
   unread = 0,
+  highlightRanges = [],
 }: MessageItemProps) {
   const mine = msg.isMe ?? msg.author_id === 'me';
   const timeLabel = formatTime(msg.created_at);
@@ -43,7 +70,7 @@ function MessageItem({
         <DMAvatar name={authorName} src={authorAvatar} size={32} unread={unread} />
       )}
 
-      <div className="max-w-[70%] flex flex-col">
+      <div className="max-w-[70%] flex flex-col min-h-[32px]">
         <div
           className={[
             'relative px-3 py-2 text-sm leading-5 whitespace-pre-wrap break-words',
@@ -52,7 +79,7 @@ function MessageItem({
               : 'bg-[#f1f3f4] text-[#333] self-start rounded-xl rounded-bl-[3px]',
           ].join(' ')}
         >
-          {msg.content}
+          {renderHighlighted(msg.content ?? '', highlightRanges)}
         </div>
 
         {showTime && (

@@ -1,16 +1,44 @@
-import { useMemo, useState, useEffect } from 'react';
-import { mockChats } from '../chat';
+import { useEffect, useMemo, useState } from 'react';
+import type { MessagesRow } from '../../../types/database';
+
 import DMList from './DMList';
 import DMRoom from './DMRoom';
+import { supabase } from '../../../lib/supabase';
+import { mockChatData } from '../chat';
 
 function DMPage() {
-  const [chatList, setChatList] = useState(mockChats);
-  const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
+  const [messages, setMessages] = useState<MessagesRow[]>([]); // 실제 메시지 상태 관리
+  const [chatList, setChatList] = useState(mockChatData); // 목업
+  const [selectedChatId, setSelectedChatId] = useState<number | null>(null); // 선택된 채팅방 ID
 
   const selectedChat = useMemo(
     () => chatList.find(c => c.id === selectedChatId) ?? null,
     [chatList, selectedChatId],
   );
+
+  // 메시지 불러오기
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!selectedChatId) return; // 선택된 채팅방 ID가 없으면 반환
+
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('chat_id', selectedChatId.toString()); // 선택된 채팅방의 메시지만 불러오기
+
+      if (error) {
+        console.log('메시지 패칭 에러', error);
+      } else {
+        const messagesWithName = data.map((msg: MessagesRow) => {
+          // const chat = chatList.find(c => c.id === msg.chat_id);
+          // return { ...msg, name: chat?.name }; // name을 추가
+        });
+        // setMessages(messagesWithName); // 데이터가 있을 경우 상태에 저장
+      }
+    };
+
+    fetchMessages(); // 채팅방 ID 변경시 메시지 불러오기
+  }, [selectedChatId, chatList]); // 채팅방이 변경될 때마다 메시지 불러오기
 
   const handleAfterSend = (chatId: number, lastText: string, localTime: string) => {
     setChatList(prev =>
@@ -26,8 +54,7 @@ function DMPage() {
   }, [selectedChatId]);
 
   return (
-    // 바디 스크롤 잠금: 외부로 넘치지 않도록
-    <div className="flex flex-col h-[600px] mt-2 mb-2 bg-white text-gray-900 mx-auto w-full max-w-[1200px] px-2 sm:px-4 lg:px-8 overflow-y-auto">
+    <div className="flex flex-col flex-1 min-h-0 h-full mt-2 mb-2 bg-white text-gray-900 mx-auto w-full max-w-[1200px] px-2 sm:px-4 lg:px-8 overflow-y-auto">
       <div className="flex flex-1 border border-gray-200 rounded-lg overflow-hidden shadow-sm">
         {/* 왼쪽 사이드바 (내부만 스크롤) */}
         <aside className="hidden sm:flex sm:w-[260px] md:w-[300px] lg:w-[340px] border-r border-gray-200 bg-gray-50 flex-col overflow-y-auto transition-all duration-300">
