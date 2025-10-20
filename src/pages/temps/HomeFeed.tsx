@@ -1,28 +1,88 @@
 // src/pages/HomeFeed.tsx
-import { useState } from 'react'
-import TweetComposer from '../../components/feed/TweetComposer'
-import TweetList from '../../components/feed/TweetList'
-import Header from '../../components/layout/Header'
-import SidebarLeft from '../../components/layout/SidebarLeft'
-import SidebarRight from '../../components/layout/SidebarRight'
-import { mockTweets, type Tweet } from '../../data/mockTweet'
+import { useEffect, useState } from 'react';
+import TweetComposer from '../../components/feed/TweetComposer';
+import TweetList from '../../components/feed/TweetList';
+import Header from '../../components/layout/Header';
+import SidebarLeft from '../../components/layout/SidebarLeft';
+import SidebarRight from '../../components/layout/SidebarRight';
+import { supabase } from '../../lib/supabase';
 
 const HomeFeed = () => {
-  const [tweets, setTweets] = useState<Tweet[]>(mockTweets)
+  const [tweets, setTweets] = useState<any[]>([]);
 
-  const handleAddTweet = (content: string) => {
-    const newTweet: Tweet = {
-      id: Date.now().toString(),
-      author: 'You',
-      handle: 'your_handle',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=You',
-      content,
-      stats: { reposts: 0, quotes: 0, likes: 0, bookmarks: 0 },
-      replies: [],
-      created_at: new Date().toISOString(),
+  // 초기 데이터 불러오기
+  useEffect(() => {
+    const fetchTweets = async () => {
+      const { data, error } = await supabase
+        .from('tweets')
+        .select(`
+          id,
+          content,
+          image_url,
+          created_at,
+          like_count,
+          repost_count,
+          bookmark_count,
+          profiles:author_id (
+            nickname,
+            avatar_url
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) console.error(error);
+      else setTweets(data || []);
+    };
+
+    fetchTweets();
+  }, []);
+
+  // ✅ 게시글 작성 시 즉시 UI 반영 + Supabase INSERT
+  const handleAddTweet = async (content: string, image_url?: string | null) => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      return;
     }
-    setTweets(prev => [newTweet, ...prev])
-  }
+
+    // 1️⃣ Supabase INSERT
+    const { data, error } = await supabase
+      .from('tweets')
+      .insert([
+        {
+          content,
+          image_url,
+          author_id: user.id,
+          like_count: 0,
+          repost_count: 0,
+          bookmark_count: 0,
+        },
+      ])
+      .select(`
+        id,
+        content,
+        image_url,
+        created_at,
+        like_count,
+        repost_count,
+        bookmark_count,
+        profiles:author_id (
+          nickname,
+          avatar_url
+        )
+      `)
+      .single();
+
+    if (error) {
+      console.error('❌ Error inserting tweet:', error);
+      return;
+    }
+
+    console.log('✅ New tweet added:', data);
+
+    // 2️⃣ UI 즉시 업데이트
+    setTweets(prev => [data, ...prev]);
+  };
 
   return (
     <div className="flex max-w-7xl mx-auto">
@@ -30,11 +90,11 @@ const HomeFeed = () => {
       <main className="flex-1 min-h-screen border-r border-gray-200">
         <Header title="Home" />
         <TweetComposer onPost={handleAddTweet} />
-        <TweetList tweets={tweets || []} />
+        <TweetList tweets={tweets} />
       </main>
       <SidebarRight />
     </div>
-  )
-}
+  );
+};
 
-export default HomeFeed
+export default HomeFeed;

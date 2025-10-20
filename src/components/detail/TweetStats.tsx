@@ -5,7 +5,7 @@ import { ko } from 'date-fns/locale'
 interface TweetStatsProps {
   stats: {
     reposts: number
-    quotes: number
+    quotes?: number
     likes: number
     bookmarks: number
   }
