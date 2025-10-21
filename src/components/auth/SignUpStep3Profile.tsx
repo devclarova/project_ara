@@ -57,15 +57,6 @@ export default function SignUpStep3Profile({
 
   const commitDraft = (next: DraftProfile) => onChangeDraft?.(next);
 
-  // ObjectURL 누수 방지
-  useEffect(() => {
-    return () => {
-      if (preview && preview.startsWith('blob:')) {
-        URL.revokeObjectURL(preview);
-      }
-    };
-  }, [preview]);
-
   const disabled = useMemo(() => loading, [loading]);
 
   const pick = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,14 +67,12 @@ export default function SignUpStep3Profile({
       return setMsg('JPG/PNG/GIF만 가능합니다.');
 
     // 기존 미리보기 URL 정리
-    if (preview && preview.startsWith('blob:')) {
-      URL.revokeObjectURL(preview);
-    }
+    if (preview && preview.startsWith('blob:')) URL.revokeObjectURL(preview);
     const url = URL.createObjectURL(f);
     setFile(f);
     setPreview(url);
     setMsg('');
-    commitDraft({ bio, file: f, preview: url }); // 부모 저장
+    onChangeDraft?.({ bio, file: f, preview: url }); // 부모 저장
   };
 
   async function uploadPendingAvatar(): Promise<string | null> {
@@ -120,10 +109,14 @@ export default function SignUpStep3Profile({
       setLoading(true);
       setMsg('');
 
-      // (선택) 세션 없이도 썸네일 노출하려고 pending 업로드
-      const pendingAvatarUrl = await uploadPendingAvatar();
+      let pendingAvatarUrl: string | null = null;
+      try {
+        pendingAvatarUrl = await uploadPendingAvatar(); // ★ 실패해도 가입 진행
+      } catch (err) {
+        console.warn('pending upload failed', err);
+        // 실패해도 계속 진행 (이미지 없이 가입)
+      }
 
-      // 가입
       const { error: signErr } = await supabase.auth.signUp({
         email,
         password: pw,
@@ -131,10 +124,10 @@ export default function SignUpStep3Profile({
           emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             gender,
-            nickname, // Edge에서 확정되지만 메타로도 보관(최초 표시용)
+            nickname,
             birthday: birth ? birth.toISOString().slice(0, 10) : null,
             country,
-            avatar_url: pendingAvatarUrl,
+            avatar_url: pendingAvatarUrl, // ★ 최소한 메타에 pending URL 기록
             bio,
             consents: consents ?? null,
           },
@@ -142,14 +135,24 @@ export default function SignUpStep3Profile({
       });
       if (signErr) throw new Error(signErr.message);
 
-      // 세션이 있으면 즉시 후처리 (인증 OFF 환경)
-      const session = (await supabase.auth.getSession()).data.session;
+      const { data } = await supabase.auth.getSession();
+      const session = data.session;
+
       if (session?.access_token) {
+        // 인증 OFF or 이메일 즉시 인증 환경
         const uid = session.user.id;
+
         await finalizeNickname(session.access_token, nickname);
 
         let avatarUrl = pendingAvatarUrl;
-        if (file) avatarUrl = await uploadAvatarToUser(file, uid);
+        if (file) {
+          try {
+            avatarUrl = await uploadAvatarToUser(file, uid); // ★ 유저 폴더 업로드 우선
+          } catch (err) {
+            console.warn('user upload failed, keep pending url', err);
+            // 실패 시 pending URL 그대로 사용
+          }
+        }
 
         await supabase
           .from('profiles')
@@ -161,13 +164,23 @@ export default function SignUpStep3Profile({
             country,
           })
           .eq('user_id', uid);
+      } else {
+        // 이메일 인증 대기 환경
+        // 안내 메시지 강화
+        setMsg(
+          pendingAvatarUrl
+            ? '회원가입 신청 완료! 이메일 인증 후 프로필이 적용됩니다.'
+            : '회원가입 신청 완료! (프로필 이미지는 이메일 인증 후 설정할 수 있어요)',
+        );
       }
 
-      setMsg('회원가입 신청 완료! 이메일로 발송된 인증 메일을 확인해주세요.');
       onDone();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : '예상치 못한 오류');
     } finally {
+      if (preview && preview.startsWith('blob:')) {
+        URL.revokeObjectURL(preview);
+      }
       setLoading(false);
     }
   };

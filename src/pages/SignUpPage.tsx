@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-import SignUpStepper from '../components/auth/SignUpStepper';
 import SignUpStep1Consent, { type ConsentResult } from '../components/auth/SignUpStep1Consent';
 import SignUpStep2Form, { type FormData } from '../components/auth/SignUpStep2Form';
 import SignUpStep3Profile from '../components/auth/SignUpStep3Profile';
+import SignUpStepper from '../components/auth/SignUpStepper';
 
 type Step = 1 | 2 | 3;
 
@@ -36,12 +36,52 @@ export default function SignUpPage() {
     preview: string | null; // blob: URL
   }>({ bio: '', file: null, preview: null });
 
-  // ✅ 네 컴포넌트의 필드명에 맞춤(terms/privacy/age, email/pw/…)
-  const consentOK = !!(consents?.terms && consents?.privacy && consents?.age);
-  const formOK = useMemo(() => !!form, [form]);
+  // 새로고침 감지 플래그(복원/저장 이펙트 1회 스킵용)
+  const skipPersistenceRef = useRef(false);
 
-  // (옵션) 드래프트 복원
+  function isFormValid(f: FormData | null): boolean {
+    if (!f) return false;
+    const emailOk = /\S+@\S+\.\S+/.test(f.email || '');
+    const pwOk = typeof f.pw === 'string' && f.pw.length >= 6 && f.pw === (f.confirmPw || '');
+    const nickOk = typeof f.nickname === 'string' && f.nickname.trim().length >= 2;
+    const genderOk = !!f.gender;
+    const birthOk = !!f.birth; // 필요 시 상세 체크(미래/형식) 추가
+    const countryOk = !!f.country;
+    return emailOk && pwOk && nickOk && genderOk && birthOk && countryOk;
+  }
+
+  // ✅ 필드 유효성
+  const consentOK = !!(consents?.terms && consents?.privacy && consents?.age);
+  const formOK = useMemo(() => isFormValid(form), [form]);
+
+  // ─────────────────────────────────────
+  // (1) 새로고침이면 저장된 초안 전부 삭제 + 1단계로 초기화
+  // (2) 새로고침이 아니면 localStorage 복원
+  // ─────────────────────────────────────
   useEffect(() => {
+    // Navigation Timing으로 리로드 감지
+    const nav = performance.getEntriesByType('navigation')[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    const isReload = nav?.type === 'reload';
+
+    if (isReload) {
+      // 리로드 시에는 모든 초안/스텝 초기화
+      try {
+        localStorage.removeItem(DRAFT_KEY);
+      } catch {}
+      setStep(1);
+      prevStepRef.current = 1;
+      setConsents(null);
+      setForm(null);
+      setProfileDraft({ bio: '', file: null, preview: null });
+
+      // 첫 저장 이펙트 1회 스킵 (초기 상태로 덮어쓰지 않게)
+      skipPersistenceRef.current = true;
+      return;
+    }
+
+    // 리로드가 아니면 저장된 초안 복원
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
       if (!raw) return;
@@ -51,25 +91,31 @@ export default function SignUpPage() {
         step?: Step;
       };
       if (parsed.consents) setConsents(parsed.consents);
-
       if (parsed.form) {
         const revivedBirth = parsed.form.birth
           ? typeof parsed.form.birth === 'string'
             ? new Date(parsed.form.birth)
             : parsed.form.birth
           : null;
-        setForm({ ...(parsed.form as any), birth: revivedBirth }); // ← birth를 Date | null 로 복원
+        setForm({ ...(parsed.form as any), birth: revivedBirth });
       }
-
-      if (parsed.step) setStep(parsed.step);
+      if (parsed.step) {
+        setStep(parsed.step);
+        prevStepRef.current = parsed.step;
+      }
     } catch {}
   }, []);
 
   // (옵션) 드래프트 저장 (File/preview는 직렬화 이슈로 저장하지 않음)
   useEffect(() => {
+    // 리로드 직후 1회 스킵
+    if (skipPersistenceRef.current) {
+      skipPersistenceRef.current = false;
+      return;
+    }
     try {
       const safeForm = form
-        ? { ...form, birth: form.birth ? form.birth.toISOString() : null } // ← 문자열로 저장
+        ? { ...form, birth: form.birth ? form.birth.toISOString() : null }
         : null;
       localStorage.setItem(DRAFT_KEY, JSON.stringify({ consents, form: safeForm, step }));
     } catch {}
@@ -106,7 +152,7 @@ export default function SignUpPage() {
           회원가입
         </h1>
 
-        {/* 스텝퍼 (카드 밖) — ★ guard 연결 + 1↔3 경유 애니는 스텝퍼가 처리 */}
+        {/* 스텝퍼 (카드 밖) — guard 연결 + 1↔3 경유 애니는 스텝퍼가 처리 */}
         <div className="mb-3 sm:mb-4">
           <SignUpStepper current={step} onStepChange={goTo} guard={guard} />
         </div>
@@ -134,7 +180,6 @@ export default function SignUpPage() {
                   exit="exit"
                 >
                   <SignUpStep1Consent
-                    // ▼ 추가: 되돌아와도 체크 유지
                     value={consents ?? undefined}
                     onChange={c => setConsents(c)}
                     onNext={c => {
@@ -155,7 +200,6 @@ export default function SignUpPage() {
                   exit="exit"
                 >
                   <SignUpStep2Form
-                    // ▼ 추가: 되돌아와도 입력 유지
                     value={form ?? undefined}
                     onChange={d => setForm(d)}
                     onNext={d => {
@@ -189,7 +233,6 @@ export default function SignUpPage() {
                       onDone={() => {
                         console.log('Sign up flow finished', { consents, form, profileDraft });
                       }}
-                      // ▼ 추가: 프로필 드래프트(이미지/미리보기/자기소개) 유지
                       draft={profileDraft}
                       onChangeDraft={setProfileDraft}
                     />
