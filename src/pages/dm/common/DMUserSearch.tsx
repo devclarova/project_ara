@@ -194,7 +194,7 @@ function DMUserSearch({
               >
                 <div className="mr-3 w-8 h-8 rounded-full overflow-hidden bg-gray-300 shrink-0">
                   <img
-                    src={u.avatarUrl || 'https://api.dicebear.com/7.x/adventurer/svg?seed=tmp'}
+                    src={u.avatarUrl || '/default-avatar.svg'}
                     alt={u.nickname}
                     width={32}
                     height={32}
