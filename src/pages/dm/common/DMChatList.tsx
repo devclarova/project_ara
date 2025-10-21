@@ -17,8 +17,8 @@ const DMChatList = ({ chats, selectedChatId, onSelect, emptyNode }: Props) => {
       <div className="px-4 py-8 text-center text-[#666]">
         {emptyNode ?? (
           <>
-            <p>아직 채팅방이 없습니다.</p>
-            <p>새 채팅 버튼을 눌러 대화를 시작하세요!</p>
+            <p className="text-center font-bold text-gray-600">아직 채팅방이 없습니다.</p>
+            <p className="text-center text-gray-500 mb-5">새 채팅 버튼을 눌러 대화를 시작하세요!</p>
           </>
         )}
       </div>

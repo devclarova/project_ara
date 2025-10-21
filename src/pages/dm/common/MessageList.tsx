@@ -20,8 +20,7 @@ function sameDate(a: Date, b: Date) {
 }
 
 function authorKey(m: Message) {
-  // isMe가 있으면 그걸 우선, 없으면 author_id로 구분
-  return m.isMe !== undefined ? String(m.isMe) : String(m.author_id);
+  return m.sender_id;
 }
 
 function MessageList({
