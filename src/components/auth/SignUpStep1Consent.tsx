@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 export type ConsentResult = {
   terms: boolean;
@@ -459,21 +459,38 @@ export default function SignUpStep1Consent({ onNext, value, onChange }: Props) {
           required
           label="이용약관 동의"
           checked={terms}
-          onChange={setTerms}
+          onChange={v => {
+            setTerms(v);
+            emit({ terms: v, privacy, age, marketing });
+          }}
           onDetail={() => setOpen('terms')}
         />
         <AgreeRow
           required
           label="개인정보처리방침 동의"
           checked={privacy}
-          onChange={setPrivacy}
+          onChange={v => {
+            setPrivacy(v);
+            emit({ privacy: v, terms, age, marketing });
+          }}
           onDetail={() => setOpen('privacy')}
         />
-        <AgreeRow required label="만 14세 이상입니다" checked={age} onChange={setAge} />
+        <AgreeRow
+          required
+          label="만 14세 이상입니다"
+          checked={age}
+          onChange={v => {
+            setAge(v);
+            emit({ age: v, terms, privacy, marketing });
+          }}
+        />
         <AgreeRow
           label="마케팅 정보 수신 동의(선택)"
           checked={marketing}
-          onChange={setMarketing}
+          onChange={v => {
+            setMarketing(v);
+            emit({ marketing: v, terms, privacy, age });
+          }}
           onDetail={() => setOpen('marketing')}
         />
       </div>

@@ -24,9 +24,12 @@ export type Step = 1 | 2 | 3;
 export type ConsentResult = { service: boolean; privacy: boolean; marketing?: boolean };
 export type SignUpForm = {
   email: string;
-  password: string;
-  passwordConfirm: string;
+  pw: string;
+  confirmPw: string;
   nickname: string;
+  gender: string;
+  birth: string;
+  country: string;
 };
 type StepValid = { step1: boolean; step2: boolean; step3: boolean };
 const SIGNUP_STORAGE_KEY = 'ara-signup-draft-v1';
@@ -79,7 +82,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const validateStep2 = (f: SignUpForm | null) => {
     if (!f) return false;
     const emailOk = /\S+@\S+\.\S+/.test(f.email);
-    const pwOk = f.password.length >= 8 && f.password === f.passwordConfirm;
+    const pwOk = f.pw.length >= 8 && f.pw === f.confirmPw;
     const nickOk = f.nickname.trim().length >= 2;
     return emailOk && pwOk && nickOk;
   };
