@@ -90,19 +90,22 @@ const DMList: React.FC<DMListProps> = ({ chats, selectedChatId, onSelect }) => {
       return;
     }
 
+    // 상대방의 프로필 찾기 (여기서는 상대방을 임시로 설정하고 실제 로직에서는 상대방의 ID로 변경해야 함)
+    const user2Profile = users.find(profile => profile.id === u.id) || {
+      id: 'user2', // 임시 설정
+      nickname: 'User2',
+      avatar_url: '', // 기본 빈 이미지
+    };
+
     const now = new Date();
     const newChat: Chat = {
       id: u.id,
-      user1_id: u.id,
-      user2_id: 'user1', // 상대방의 user2_id (여기서는 'user1'이지만 실제로는 상대방의 ID로 바꿔야 함)
+      user1_id: u.id, // user1과 user2를 동일한 user_id로 설정
+      user2_id: u.id, // user2 역시 동일한 user_id로 설정
 
       // user1과 user2 프로필을 각각 찾는다
       user1: user1Profile, // 실제 유저 프로필
-      user2: users.find(profile => profile.id === 'user1') || {
-        id: 'user1',
-        nickname: 'User1',
-        avatar_url: '',
-      }, // 상대방 프로필 (여기선 'user1'으로 가정)
+      user2: user2Profile, // 상대방 프로필
 
       lastMessage: '새 대화를 시작해보세요!',
       time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -111,7 +114,7 @@ const DMList: React.FC<DMListProps> = ({ chats, selectedChatId, onSelect }) => {
       pinned: false,
       alarm: true,
       lastUpdated: now.toISOString(),
-      participantIds: [u.id, 'user1'],
+      participantIds: [u.id, 'user2'],
       created_at: now.toISOString(),
       updated_at: now.toISOString(),
     };
