@@ -3,62 +3,99 @@
    - DMUserSearch에 "사용자" 목록을 따로 전달
    - 새 유저 선택 시: 기존 대화 찾기 → 없으면 새 대화 생성 → 부모 onSelect 호출
 */
-import { useMemo, useState } from 'react';
-import type { Chat } from '../../../types/dm';
 
+import { useEffect, useMemo, useState } from 'react';
+import type { Chat } from '../../../types/dm';
 import DMChatList from './DMChatList';
 import DMHeader from './DMHeader';
 import DMUserSearch from './DMUserSearch';
-import { mockChatData } from '../chat';
+// import { mockChatData } from '../chat';
+import { supabase } from '../../../lib/supabase';
 
 type DMListProps = {
   chats: Chat[];
-  selectedChatId: number | null;
-  onSelect: (id: number) => void;
-  onUpdateChat: (id: number, patch: Partial<Chat>) => void;
+  selectedChatId: string | null;
+  onSelect: (id: string) => void;
+  onUpdateChat: (id: string, patch: Partial<Chat>) => void;
   onSearchToggle?: () => void;
 };
 
 const DMList: React.FC<DMListProps> = ({ chats, selectedChatId, onSelect }) => {
-  // 초기 상태 설정 (목업데이터 사용)
-  const [chatList, setChatList] = useState<Chat[]>(chats.length ? chats : mockChatData);
+  const [chatList, setChatList] = useState<Chat[]>([]); // Supabase에서 가져온 채팅 목록 상태
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Supabase에서 채팅 목록을 가져오는 함수
+  useEffect(() => {
+    const fetchChats = async () => {
+      const { data, error } = await supabase
+        .from('chats') // 'chats' 테이블에서 데이터 가져오기
+        .select('*');
+
+      if (error) {
+        console.log('채팅 에러 패칭 :', error.message);
+      } else {
+        setChatList(data || []); // data가 null일 경우 빈 배열로 처리
+      }
+    };
+
+    fetchChats();
+  }, []);
 
   // 새 채팅 버튼 클릭 시 검색 창 열기
   const handleNewChatClick = () => {
     setIsSearchOpen(true);
   };
 
+  // 사용자 목록 준비
   const users = useMemo(
     () =>
       chatList.map(c => ({
-        id: String(c.id), // DMUserSearch가 string id를 기대
+        id: String(c.id),
         nickname: c.name,
         avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(c.name)}`,
       })),
     [chatList],
   );
 
-  // 유저 선택 시 처리: 선택 상태는 부모가 소유(onSelect)
-  const handleSelectUser = (u: { id: string; nickname: string }) => {
+  // 유저 선택 시 처리: 기존 채팅이 있으면 선택, 없으면 새 채팅 생성
+  const handleSelectUser = async (u: { id: string; nickname: string }) => {
     const existing = chatList.find(c => String(c.id) === u.id);
     if (existing) {
       onSelect(existing.id);
       return;
     }
 
-    const newId = chatList.length ? Math.max(...chatList.map(c => c.id)) + 1 : 1;
     const now = new Date();
     const newChat: Chat = {
-      id: newId,
+      id: u.id,
       name: u.nickname,
       lastMessage: '새 대화를 시작해보세요!',
       time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       unread: 0,
+      avatarUrl: `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(u.nickname)}`,
+      pinned: false,
+      alarmOff: false,
+      lastUpdated: now.toISOString(),
+      participantIds: [u.id, 'user1'],
+      user1_id: 'user1',
+      user2_id: u.id,
+      created_at: now.toISOString(),
+      updated_at: now.toISOString(),
     };
 
-    setChatList(prev => [newChat, ...prev]);
-    onSelect(newId);
+    // 새 채팅을 Supabase에 추가
+    const { data, error } = await supabase
+      .from('chats') // 'chats' 테이블에 새 채팅 추가
+      .insert([newChat])
+      .single(); // 단일 결과만 반환받기 위해 .single() 사용
+
+    if (error) {
+      console.error('Error inserting new chat:', error.message);
+    } else {
+      const newChatData = data as Chat; // `data`를 Chat 타입으로 명시
+      setChatList(prev => [newChatData, ...prev]); // 새 채팅 추가
+      onSelect(newChatData.id); // 새 채팅 선택
+    }
   };
 
   return (

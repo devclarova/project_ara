@@ -11,7 +11,7 @@ export interface ChatUser {
 // 채팅 정보
 
 export interface Chat {
-  id: number; // 고유 ID
+  id: string; // 고유 ID
   name: string; // 상대 이름 또는 그룹명
   lastMessage?: string; // 마지막 메시지 내용 (없을 수도 있음)
   time?: string; // 마지막 메시지 시각
@@ -27,15 +27,6 @@ export interface Chat {
   created_at: string; // 생성 시간 (ISO string 또는 "YYYY-MM-DD HH:mm")
   updated_at: string; // 마지막 업데이트 시간 (ISO string 또는 "YYYY-MM-DD HH:mm")
 }
-
-// export interface Chat {
-//   id: string; // 채팅방 고유 식별자
-//   name: string; // 채팅방 이름
-//   type: 'direct'; // 채팅방 타입 (direct | group) : 현재는 1:1 만 지원
-//   created_by: string; // 채팅방 생성한 유저의 ID
-//   created_at: string; // 생성시간
-//   updated_at: string; // 마지막 업데이트 시간
-// }
 
 // 메시지 타입
 export interface Message {
