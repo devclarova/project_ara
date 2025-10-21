@@ -48,9 +48,9 @@ const DMChatListItem: React.FC<Props> = ({
     },
     {
       key: 'alarm',
-      label: chat.alarmOff ? '알림 켜기' : '알림 끄기',
+      label: chat.alarm ? '알림 켜기' : '알림 끄기',
       onSelect: () =>
-        onToggleAlarm?.(chat.id, !!chat.alarmOff ? true /* turn on */ : false /* turn off */),
+        onToggleAlarm?.(chat.id, !!chat.alarm ? true /* turn on */ : false /* turn off */),
       shortcut: 'M',
     },
     {
@@ -107,11 +107,11 @@ const DMChatListItem: React.FC<Props> = ({
           className,
         ].join(' ')}
       >
-        <DMAvatar name={chat.name} src={chat.avatarUrl} unread={chat.unread ?? 0} />
+        <DMAvatar name={chat.id} src={chat.avatarUrl} unread={chat.unread ?? 0} />
 
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-center mb-1">
-            <div className="font-semibold text-[#333] text-sm">{chat.name}</div>
+            <div className="font-semibold text-[#333] text-sm">{chat.id}</div>
             <div className="text-xs text-[#666]">{chat.time}</div>
           </div>
 

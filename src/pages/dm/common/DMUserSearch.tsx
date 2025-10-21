@@ -1,7 +1,9 @@
-// 검색
+// 유저 검색
 
 import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../contexts/AuthContext';
 
 type UserItem = {
   id: string;
@@ -26,7 +28,6 @@ function normalize(s: string) {
 }
 
 function DMUserSearch({
-  users,
   onSelectUser,
   placeholder = '사용자 검색...',
   emptyText = '검색 결과가 없습니다.',
@@ -40,6 +41,8 @@ function DMUserSearch({
   const [loading, setLoading] = useState(false); // 로딩 상태
   const [isHovered, setIsHovered] = useState(false); // 서치 닫기 호버
   const listRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate(); // 페이지 이동
+  const { user } = useAuth(); // user 정보 가져오기
 
   // 디바운스
   useEffect(() => {
@@ -60,8 +63,7 @@ function DMUserSearch({
         const { data, error } = await supabase
           .from('profiles') // profiles 테이블에서 사용자 검색
           .select('id, nickname, avatar_url')
-          .ilike('nickname', `%${debouncedQ}%`) // 대소문자 구분 없이 부분 일치 검색
-          .limit(50); // 최대 50명만 가져오기
+          .ilike('nickname', `%${debouncedQ}%`); // 대소문자 구분 없이 부분 일치 검색
 
         if (error) {
           console.error('사용자 검색 에러', error);
@@ -97,7 +99,14 @@ function DMUserSearch({
     } else if (e.key === 'Enter') {
       e.preventDefault();
       const target = filteredUsers[activeIndex] ?? filteredUsers[0];
-      if (target) onSelectUser(target);
+      if (target) {
+        // 본인 선택시 프로필 페이지로 이동
+        if (target.id === user?.id) {
+          navigate(`/profile/${user.id}`); // 프로필 페이지로 이동
+        } else {
+          onSelectUser(target);
+        }
+      }
     }
   };
 

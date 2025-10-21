@@ -52,7 +52,7 @@ function MessageItem({
   unread = 0,
   highlightRanges = [],
 }: MessageItemProps) {
-  const mine = msg.isMe ?? msg.author_id === 'me';
+  const mine = msg.sender_id === 'me';
   const timeLabel = formatTime(msg.created_at);
 
   // 메시지 작성자 이름/아바타 정보

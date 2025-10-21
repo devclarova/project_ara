@@ -4,7 +4,6 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import type { Chat, Message } from '../../../types/dm';
-import { fetchMessages, sendMessage } from '../chat';
 import DMList from './DMList';
 import { supabase } from '../../../lib/supabase';
 
@@ -34,6 +33,43 @@ function DMRoom({ chatId, title, avatarUrl, onAfterSend, setSelectedChatId }: DM
   const handleBackButton = () => {
     setSelectedChatIdInternal(null);
     setSelectedChatId(null);
+  };
+
+  const fetchMessages = async (chatId: string): Promise<Message[]> => {
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('chat_id', chatId)
+      .order('created_at', { ascending: true }); // 시간 순으로 정렬
+
+    if (error) {
+      console.error('Error fetching messages:', error.message);
+      return [];
+    }
+
+    return data as Message[];
+  };
+
+  const sendMessage = async (chatId: string, content: string): Promise<Message> => {
+    const { data, error } = await supabase
+      .from('messages')
+      .insert([
+        {
+          chat_id: chatId,
+          sender_id: 'me', // 현재 사용자 ID (여기서는 예시로 "me" 사용, 실제로는 auth를 통해 동적으로 얻어야 함)
+          content,
+          created_at: new Date().toISOString(),
+          type: 'text', // 기본 메시지 유형 'text'
+        },
+      ])
+      .single(); // 하나의 메시지만 반환
+
+    if (error) {
+      console.error('Error sending message:', error.message);
+      return null as any; // 오류 처리
+    }
+
+    return data as Message; // 성공적으로 삽입된 메시지 반환
   };
 
   // 채팅 목록 가져오기
@@ -251,11 +287,11 @@ function DMRoom({ chatId, title, avatarUrl, onAfterSend, setSelectedChatId }: DM
           messages={sorted.map(m => ({
             id: m.id,
             chat_id: String(m.chat_id),
-            author_id: m.author_id,
-            author_name: m.author_name,
+            sender_id: m.sender_id,
+            auth_id: m.sender_id,
             content: m.content,
             created_at: m.created_at,
-            isMe: m.isMe,
+            type: 'text',
           }))}
           autoScrollMode="onSend"
           justSent={justSent}
