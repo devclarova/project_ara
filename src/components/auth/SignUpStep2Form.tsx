@@ -70,6 +70,159 @@ function validateConfirmPwField(confirm: string, pw: string): string {
   return '';
 }
 
+/** ───────── 닉네임 검증 유틸 (정책 v1.2 반영) ───────── */
+type Lang =
+  | 'ko'
+  | 'en'
+  | 'ja'
+  | 'zh'
+  | 'ru'
+  | 'vi'
+  | 'bn'
+  | 'ar'
+  | 'hi'
+  | 'th'
+  | 'es'
+  | 'fr'
+  | 'pt'
+  | 'pt-br';
+
+const RE = {
+  ko: /^[가-힣0-9_]+$/,
+  en: /^[A-Za-z0-9_]+$/,
+  ja: /^[ぁ-ゟ゠-ヿｦ-ﾟ一-龯0-9_]+$/, // 히라/가타/반각가타/한자
+  zh: /^[\u4E00-\u9FFF0-9_]+$/, // CJK 통합 한자
+  ru: /^[\u0400-\u04FF0-9_]+$/,
+  vi: /^[A-Za-zÀ-ỹ0-9_]+$/, // 베트남어 라틴 확장
+  bn: /^[\u0980-\u09FF0-9_]+$/,
+  ar: /^[\u0600-\u06FF0-9_]+$/,
+  hi: /^[\u0900-\u097F0-9_]+$/,
+  th: /^[\u0E00-\u0E7F0-9_]+$/,
+  es: /^[A-Za-záéíóúñüÁÉÍÓÚÑÜ0-9_]+$/,
+  fr: /^[A-Za-zàâçéèêëîïôùûüÀÂÇÉÈÊËÎÏÔÙÛÜ0-9_]+$/,
+  pt: /^[A-Za-zãõçáéíóúÃÕÇÁÉÍÓÚ0-9_]+$/,
+  'pt-br': /^[A-Za-záãâçéêíóôõúÁÃÂÇÉÊÍÓÔÕÚ0-9_]+$/,
+} as const;
+
+const LEN: Record<Lang, [number, number]> = {
+  ko: [2, 6],
+  en: [3, 12],
+  ja: [2, 8],
+  zh: [2, 8],
+  ru: [3, 12],
+  vi: [3, 10],
+  bn: [2, 10],
+  ar: [2, 10],
+  hi: [2, 10],
+  th: [2, 10],
+  es: [3, 12],
+  fr: [3, 12],
+  pt: [3, 12],
+  'pt-br': [3, 12],
+};
+
+const DIACRITIC_HINT = {
+  es: /[áéíóúñüÁÉÍÓÚÑÜ]/,
+  fr: /[àâçéèêëîïôùûüÀÂÇÉÈÊËÎÏÔÙÛÜ]/,
+  pt: /[ãõçáéíóúÃÕÇÁÉÍÓÚ]/,
+  'pt-br': /[áãâçéêíóôõúÁÃÂÇÉÊÍÓÔÕÚ]/,
+  vi: /[ÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚÝàáâãèéêìíòóôõùúýĂăĐđĨĩŨũƠơƯưẠ-ỹ]/,
+};
+
+function hasOnlyOneScript(nick: string): boolean {
+  // 허용된 문자(각 스크립트 + 숫자/언더바) 외 문자가 섞이면 false
+  const allowedUnion =
+    /[A-Za-z0-9_가-힣ぁ-ゟ゠-ヿｦ-ﾟ一-龯\u4E00-\u9FFF\u0400-\u04FF\u0980-\u09FF\u0600-\u06FF\u0900-\u097F\u0E00-\u0E7FÀ-ỹáéíóúñüÁÉÍÓÚÑÜàâçéèêëîïôùûüÃÕÇãõç]/;
+  for (const ch of nick) {
+    if (!allowedUnion.test(ch)) return false;
+  }
+  // 스크립트 혼합 감지(간단 휴리스틱)
+  const isKorean = /[가-힣]/.test(nick);
+  const isKana = /[ぁ-ゟ゠-ヿｦ-ﾟ]/.test(nick);
+  const isHan = /[\u4E00-\u9FFF]/.test(nick);
+  const isCyr = /[\u0400-\u04FF]/.test(nick);
+  const isAr = /[\u0600-\u06FF]/.test(nick);
+  const isHi = /[\u0900-\u097F]/.test(nick);
+  const isTh = /[\u0E00-\u0E7F]/.test(nick);
+  const isBn = /[\u0980-\u09FF]/.test(nick);
+  const isLatin = /[A-Za-zÀ-ỹ]/.test(nick);
+
+  const count = [isKorean, isKana || isHan, isCyr, isAr, isHi, isTh, isBn, isLatin].filter(
+    Boolean,
+  ).length;
+  // 일본어는 (히라/가타/한자) 혼용 허용 → 위에서 kana||han을 하나로 묶었다.
+  return count <= 1;
+}
+
+function detectLang(nick: string): Lang | null {
+  if (!nick) return null;
+  if (/[가-힣]/.test(nick)) return 'ko';
+  if (/[ぁ-ゟ゠-ヿｦ-ﾟ]/.test(nick)) return 'ja';
+  if (/[\u4E00-\u9FFF]/.test(nick)) return 'zh';
+  if (/[\u0400-\u04FF]/.test(nick)) return 'ru';
+  if (/[\u0600-\u06FF]/.test(nick)) return 'ar';
+  if (/[\u0900-\u097F]/.test(nick)) return 'hi';
+  if (/[\u0E00-\u0E7F]/.test(nick)) return 'th';
+  if (/[\u0980-\u09FF]/.test(nick)) return 'bn';
+  // 라틴 확장 세부 판별
+  if (DIACRITIC_HINT.vi.test(nick)) return 'vi';
+  if (DIACRITIC_HINT['pt-br'].test(nick)) return 'pt-br';
+  if (DIACRITIC_HINT.pt.test(nick)) return 'pt';
+  if (DIACRITIC_HINT.fr.test(nick)) return 'fr';
+  if (DIACRITIC_HINT.es.test(nick)) return 'es';
+  if (/[A-Za-z]/.test(nick)) return 'en';
+  return null;
+}
+
+function validateNicknameField(nickRaw: string): { error: string; lang: Lang | null } {
+  const u = (nickRaw ?? '').trim();
+  if (!u) return { error: '닉네임을 입력해주세요.', lang: null };
+  if (/\s/.test(u)) return { error: '닉네임에 공백은 사용할 수 없습니다.', lang: null };
+  if (/^\d+$/.test(u)) return { error: '숫자만으로는 닉네임을 만들 수 없습니다.', lang: null };
+  if (/(.)\1\1/.test(u))
+    return { error: '동일 문자를 3회 이상 연속 사용할 수 없습니다.', lang: null };
+  const underscoreCount = u.length - u.replace(/_/g, '').length;
+  if (underscoreCount > 2) return { error: '언더바는 최대 2개까지만 허용됩니다.', lang: null };
+
+  if (!hasOnlyOneScript(u)) {
+    return { error: '닉네임은 하나의 문자계열만 사용할 수 있습니다.', lang: null };
+  }
+
+  const lang = detectLang(u);
+  if (!lang) return { error: '언어를 인식할 수 없습니다. 허용 문자만 사용해주세요.', lang: null };
+
+  // 한글: 완성형만 허용(자모-only 금지는 정규식으로 자연 차단)
+  const range = LEN[lang];
+  if (!range) return { error: '지원하지 않는 언어입니다.', lang: null };
+  const [min, max] = range;
+  if (!RE[lang].test(u)) return { error: '허용되지 않은 문자가 포함되어 있습니다.', lang };
+  if (u.length < min || u.length > max)
+    return { error: `길이는 ${min}~${max}자만 가능합니다.`, lang };
+
+  return { error: '', lang };
+}
+
+function langLabel(l?: Lang | null): string {
+  if (!l) return '';
+  const map: Record<Lang, string> = {
+    ko: '한국어',
+    en: '영어',
+    ja: '일본어',
+    zh: '중국어',
+    ru: '러시아어',
+    vi: '베트남어',
+    bn: '벵골어',
+    ar: '아랍어',
+    hi: '힌디어',
+    th: '태국어',
+    es: '스페인어',
+    fr: '프랑스어',
+    pt: '포르투갈어',
+    'pt-br': '브라질 포르투갈어',
+  };
+  return map[l] ?? l;
+}
+
 type Props = {
   onNext: (data: FormData) => void;
   onBack: () => void;
@@ -96,6 +249,9 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
   const [gender, setGender] = useState(value?.gender ?? '');
   const [birth, setBirth] = useState<Date | null>(value?.birth ?? null);
   const [country, setCountry] = useState(value?.country ?? '');
+
+  // 감지된 닉네임 언어(검증 시 업데이트)
+  const [nickLang, setNickLang] = useState<Lang | null>(null);
 
   // 부모 값이 바뀌면 내부 상태도 동기화
   useEffect(() => {
@@ -125,33 +281,156 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
   const [nickChecking, setNickChecking] = useState(false);
   const [nickCheckResult, setNickCheckResult] = useState<'available' | 'taken' | ''>('');
 
-  const validate = (): boolean => {
+  const validate = (withDupHints = false): boolean => {
     const newErr: Partial<Record<keyof FormData, string>> = {};
 
-    // ✅ 이메일: 단일 소스 검증
+    // (기존 형식/필수 검증 그대로)
     const emailMsg = validateEmailField(email);
     if (emailMsg) newErr.email = emailMsg;
 
-    // ✅ 비밀번호/확인: 강화 검증
     const pwMsg = validatePasswordField(pw);
     if (pwMsg) newErr.pw = pwMsg;
 
     const confirmMsg = validateConfirmPwField(confirmPw, pw);
     if (confirmMsg) newErr.confirmPw = confirmMsg;
 
-    if (!nickname) newErr.nickname = '닉네임을 입력해주세요.';
+    const { error: nickMsg, lang } = validateNicknameField(nickname);
+    setNickLang(lang);
+    if (nickMsg) newErr.nickname = nickMsg;
+
     if (!gender) newErr.gender = '성별을 선택해주세요.';
     if (!birth) newErr.birth = '생년월일을 입력해주세요.';
     if (!country) newErr.country = '국적을 선택해주세요.';
+
+    // ⬇️ 추가: 입력 누락 에러들과 "같은 타이밍"에 중복확인 안내를 보여줌
+    if (withDupHints) {
+      if (!emailMsg && emailCheckResult !== 'available') {
+        // 형식이 맞을 때만 중복확인 힌트 노출
+        newErr.email =
+          emailCheckResult === 'taken'
+            ? '해당 이메일은 이미 사용 중입니다.'
+            : '이메일 중복확인을 진행해주세요.';
+      }
+      if (!nickMsg && nickCheckResult !== 'available') {
+        newErr.nickname =
+          nickCheckResult === 'taken'
+            ? '해당 닉네임은 이미 사용 중입니다.'
+            : '닉네임 중복확인을 진행해주세요.';
+      }
+    }
 
     setErrors(newErr);
     return Object.keys(newErr).length === 0;
   };
 
-  const handleNext = () => {
-    if (!validate()) return;
-    onNext(snapshot);
+  // 이메일 중복 상태만 반환('available' | 'taken' | 'error')
+  const emailDupStatus = async (): Promise<'available' | 'taken' | 'error'> => {
+    const msg = validateEmailField(email);
+    if (msg) {
+      setErrors(prev => ({ ...prev, email: msg }));
+      return 'error';
+    }
+    try {
+      const v = email.trim();
+      const { data, error } = await supabase.rpc('email_exists', { _email: v });
+      if (error) {
+        console.error('email_exists error:', error.message);
+        return 'error';
+      }
+      return data === true ? 'taken' : 'available';
+    } catch (e) {
+      console.error('email_exists exception:', e);
+      return 'error';
+    }
   };
+
+  // 닉네임 중복 상태만 반환('available' | 'taken' | 'error')
+  // 서버 정책 검증까지 포함
+  const nickDupStatus = async (): Promise<'available' | 'taken' | 'error'> => {
+    const { error: nickMsg, lang } = validateNicknameField(nickname);
+    setNickLang(lang);
+    if (nickMsg || !lang) {
+      setErrors(prev => ({ ...prev, nickname: nickMsg || '닉네임을 다시 확인해주세요.' }));
+      return 'error';
+    }
+
+    try {
+      // 1) 서버 정책(보호어/금칙어) — 있으면 사용
+      const policyErr = await serverNicknamePolicyError(nickname, lang);
+      if (policyErr) {
+        setErrors(prev => ({ ...prev, nickname: policyErr }));
+        return 'error';
+      }
+
+      // 2) 중복 여부
+      const { data, error } = await supabase.rpc('nickname_exists', {
+        _nickname: nickname,
+        _lang: lang,
+      } as any);
+      if (error) {
+        console.error('nickname_exists error:', error.message);
+        return 'error';
+      }
+      return data === true ? 'taken' : 'available';
+    } catch (e) {
+      console.error('nickname_exists exception:', e);
+      return 'error';
+    }
+  };
+
+  const handleNext = async () => {
+    // ⬇️ 힌트 포함 검증으로 변경
+    if (!validate(true)) return;
+
+    setEmailChecking(true);
+    setNickChecking(true);
+
+    try {
+      const [eRes, nRes] = await Promise.all([emailDupStatus(), nickDupStatus()]);
+
+      setEmailCheckResult(eRes === 'available' ? 'available' : eRes === 'taken' ? 'taken' : '');
+      setNickCheckResult(nRes === 'available' ? 'available' : nRes === 'taken' ? 'taken' : '');
+
+      if (eRes === 'taken') {
+        setErrors(prev => ({ ...prev, email: '해당 이메일은 이미 사용 중입니다.' }));
+        return;
+      }
+      if (eRes === 'error') {
+        setErrors(prev => ({ ...prev, email: '이메일 중복체크를 다시 시도해주세요.' }));
+        return;
+      }
+
+      if (nRes === 'taken') {
+        setErrors(prev => ({ ...prev, nickname: '해당 닉네임은 이미 사용 중입니다.' }));
+        return;
+      }
+      if (nRes === 'error') {
+        setErrors(prev => ({ ...prev, nickname: '닉네임 중복체크를 다시 시도해주세요.' }));
+        return;
+      }
+
+      onNext(snapshot);
+    } finally {
+      setEmailChecking(false);
+      setNickChecking(false);
+    }
+  };
+
+  //   // 3) 닉네임 중복체크 검사 (반드시 'available'이어야 함)
+  //   if (nickCheckResult !== 'available') {
+  //     setErrors(prev => ({
+  //       ...prev,
+  //       nickname:
+  //         nickCheckResult === 'taken'
+  //           ? '해당 닉네임은 이미 사용 중입니다.'
+  //           : '닉네임 중복체크를 먼저 진행해주세요.',
+  //     }));
+  //     return;
+  //   }
+
+  //   // 4) 모두 통과 → 다음 단계로
+  //   onNext(snapshot);
+  // };
 
   // 이메일 중복체크
   const handleEmailCheck = async () => {
@@ -185,11 +464,64 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
     }
   };
 
-  // 닉네임 중복체크 버튼(지금은 버튼만 동작, 로직은 나중에)
+  // 🔸 서버 정책 검증 호출 (있으면 사용, 없으면 건너뜀)
+  async function serverNicknamePolicyError(nick: string, lang: Lang): Promise<string | null> {
+    try {
+      const { data, error } = await supabase.rpc('validate_nickname_policy', {
+        in_nick: nick,
+        in_lang: lang,
+      } as any);
+      if (error) {
+        // 함수 미존재/에러 시 정책 검증을 스킵(중복체크만 진행)
+        console.warn('validate_nickname_policy skipped:', error.message);
+        return null;
+      }
+      // data === null 이면 통과, 문자열이면 그게 에러 메시지
+      return data ?? null;
+    } catch (e) {
+      console.warn('validate_nickname_policy exception skip');
+      return null;
+    }
+  }
+
+  // 닉네임 중복체크 (정책 → 중복 순서)
   const handleNickCheck = async () => {
+    // 1) 클라이언트 1차 검증
+    const { error: nickMsg, lang } = validateNicknameField(nickname);
+    setNickLang(lang);
+    if (nickMsg || !lang) {
+      setNickCheckResult('');
+      setErrors(prev => ({ ...prev, nickname: nickMsg || '닉네임을 다시 확인해주세요.' }));
+      return;
+    }
+
     setNickChecking(true);
     try {
-      setNickCheckResult('');
+      // 2) 서버 정책 검증(보호어/금칙어) — 있으면 사용
+      const policyErr = await serverNicknamePolicyError(nickname, lang);
+      if (policyErr) {
+        setNickCheckResult(''); // 사용불가
+        setErrors(prev => ({ ...prev, nickname: policyErr }));
+        return;
+      }
+
+      // 3) 중복 확인
+      const { data, error } = await supabase.rpc('nickname_exists', {
+        _nickname: nickname,
+        _lang: lang,
+      } as any);
+      if (error) {
+        console.error('nickname_exists error:', error.message);
+        setNickCheckResult('');
+        return;
+      }
+      if (data === true) {
+        setNickCheckResult('taken');
+        setErrors(prev => ({ ...prev, nickname: '해당 닉네임은 이미 사용 중입니다.' }));
+      } else {
+        setNickCheckResult('available');
+        setErrors(prev => ({ ...prev, nickname: undefined }));
+      }
     } finally {
       setNickChecking(false);
     }
@@ -257,26 +589,54 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
           error={errors.confirmPw}
         />
 
-        <InputField
-          id="nickname"
-          label="닉네임"
-          value={nickname}
-          onChange={v => {
-            setNickname(v);
-            setErrors(prev => ({ ...prev, nickname: undefined }));
-            setNickCheckResult('');
-            emit({ ...snapshot, nickname: v });
-          }}
-          error={errors.nickname}
-          onCheck={handleNickCheck}
-          isChecking={nickChecking}
-          checkResult={nickCheckResult}
-        />
+        <div>
+          <InputField
+            id="nickname"
+            label="닉네임"
+            value={nickname}
+            onChange={v => {
+              setNickname(v);
+              setErrors(prev => ({ ...prev, nickname: undefined }));
+              setNickCheckResult('');
+              // 타이핑 중에도 감지만 업데이트(UX용)
+              setNickLang(detectLang(v));
+              emit({ ...snapshot, nickname: v });
+            }}
+            onBlur={async () => {
+              const { error, lang } = validateNicknameField(nickname);
+              setNickLang(lang);
+              if (error) {
+                setErrors(prev => ({ ...prev, nickname: error }));
+                return;
+              }
+              // 블러 시에도 서버 정책 검증을 가볍게 시도(있으면)
+              if (lang) {
+                const policyErr = await serverNicknamePolicyError(nickname, lang);
+                if (policyErr) {
+                  setErrors(prev => ({ ...prev, nickname: policyErr }));
+                }
+              }
+            }}
+            error={errors.nickname}
+            onCheck={handleNickCheck}
+            isChecking={nickChecking}
+            checkResult={nickCheckResult}
+          />
+          {/* 감지된 언어 힌트 */}
+          {nickname && (
+            <p className="text-[11px] text-gray-500 mt-1 ml-3">
+              감지된 언어:{' '}
+              <span className="font-medium">{langLabel(nickLang) || '알 수 없음'}</span>
+              {nickLang ? ` · 길이 ${LEN[nickLang][0]}~${LEN[nickLang][1]}자, 언더바 최대 2개` : ''}
+            </p>
+          )}
+        </div>
 
         <GenderSelect
           value={gender}
           onChange={v => {
             setGender(v);
+            setErrors(prev => ({ ...prev, gender: undefined }));
             emit({ ...snapshot, gender: v });
           }}
           error={!!errors.gender}
@@ -286,6 +646,7 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
           value={birth}
           onChange={v => {
             setBirth(v);
+            setErrors(prev => ({ ...prev, birth: undefined }));
             emit({ ...snapshot, birth: v });
           }}
           error={!!errors.birth}
@@ -295,6 +656,7 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
           value={country}
           onChange={v => {
             setCountry(v);
+            setErrors(prev => ({ ...prev, country: undefined }));
             emit({ ...snapshot, country: v });
           }}
           error={!!errors.country}
@@ -312,7 +674,8 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
         <button
           type="button"
           onClick={handleNext}
-          className="bg-[var(--ara-primary)] text-white font-semibold py-2 px-4 rounded-lg hover:opacity-85 transition-colors"
+          disabled={emailChecking || nickChecking}
+          className="bg-[var(--ara-primary)] text-white font-semibold py-2 px-4 rounded-lg hover:opacity-85 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           다음 단계
         </button>
