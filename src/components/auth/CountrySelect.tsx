@@ -90,10 +90,10 @@ export default function CountrySelect({ value, onChange, error = false }: Countr
     indicatorsContainer: provided => ({ ...provided, height: 48 }),
     dropdownIndicator: provided => ({ ...provided, marginLeft: 8 }),
     indicatorSeparator: provided => ({ ...provided, display: 'none' }),
-    // ✅ 메뉴/포털 z-index 보정: 레이아웃 위로 띄우기
     menu: provided => ({
       ...provided,
-      zIndex: 50, // 컨텍스트에 맞춰 조절(필요시 9999)
+      zIndex: 50,
+      marginBottom: 13, // 위로 뜨므로, 컨트롤과의 간격(라벨 가림 방지)
     }),
     menuPortal: provided => ({
       ...provided,
@@ -139,7 +139,7 @@ export default function CountrySelect({ value, onChange, error = false }: Countr
         classNamePrefix="react-select"
         placeholder=" "
         // ⬇️ 핵심: 아래 비면 위로 자동 배치
-        menuPlacement="auto"
+        menuPlacement="top"
         // ⬇️ 스크롤 컨테이너/overflow 숨김 환경에서도 안전
         menuPosition="fixed"
         menuPortalTarget={typeof window !== 'undefined' ? document.body : null}

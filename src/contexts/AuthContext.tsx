@@ -1,225 +1,139 @@
-/**
- * 주요기능
- * - 사용자 세션관리
- * - 로그인/회원가입/로그아웃
- * - 사용자 인증 정보 상태 변경 감시
- * - 전역 인증 상태를 컴포넌트에 반영
- *
- * ▼ 추가: 회원가입 플로우 드래프트/검증/가드 (기존 로직은 그대로 유지, 필드만 추가)
- */
-
 import type { Session, User } from '@supabase/supabase-js';
-import {
+import React, {
   createContext,
   useContext,
   useEffect,
-  useMemo,
   useState,
   type PropsWithChildren,
 } from 'react';
 import { supabase } from '../lib/supabase';
 
-// ===== [ADD] 가입 플로우 타입 =====
-export type Step = 1 | 2 | 3;
-export type ConsentResult = { service: boolean; privacy: boolean; marketing?: boolean };
-export type SignUpForm = {
-  email: string;
-  pw: string;
-  confirmPw: string;
-  nickname: string;
-  gender: string;
-  birth: string;
-  country: string;
-};
-type StepValid = { step1: boolean; step2: boolean; step3: boolean };
-const SIGNUP_STORAGE_KEY = 'ara-signup-draft-v1';
-
-// 1. 인증 컨텍스트 타입
 type AuthContextType = {
-  // 현재 사용자의 세션정보 (로그인 상태, 토큰)
   session: Session | null;
-  // 현재 로그인 된 사용자 정보
   user: User | null;
-  // 회원 가입 함수(이메일, 비밀번호)
+  signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signUp: (email: string, password: string) => Promise<{ error?: string }>;
-  // 회원 로그인 함수(이메일, 비밀번호)
-  signIn: (email: string, password: string) => Promise<{ error?: string; unverified?: boolean }>;
-  // 회원 로그아웃
   signOut: () => Promise<void>;
-
-  // ===== [ADD] 가입 플로우 필드 (추가만 / 기존 사용처 영향 없음) =====
-  currentStep: Step;
-  setCurrentStep: (s: Step) => void;
-
-  consents: ConsentResult | null;
-  setConsents: (c: ConsentResult) => void;
-
-  form: SignUpForm | null;
-  setForm: (f: SignUpForm) => void;
-
-  valid: StepValid;
-  /** 스텝 이동 가드: from→to 허용 여부 */
-  guard: (from: Step, to: Step) => boolean;
 };
 
-// 2. 인증 컨텍스트 생성
 const AuthContext = createContext<AuthContextType | null>(null);
+const DRAFT_KEY = 'signup-profile-draft';
 
-// 3. 인증 컨텍스트 프로바이더
-export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
-  // 현재 사용자 세션
+async function upsertUsersOnLogin(u: User) {
+  try {
+    await supabase.from('users').upsert(
+      {
+        auth_user_id: u.id,
+        email: u.email ?? null,
+        created_at: new Date().toISOString(),
+        last_login: new Date().toISOString(),
+      },
+      { onConflict: 'auth_user_id' },
+    );
+  } catch (e) {
+    console.warn('users upsert on login failed:', e);
+  }
+}
+
+async function createProfileFromDraftIfMissing(u: User) {
+  const { data: exists, error: exErr } = await supabase
+    .from('profiles')
+    .select('user_id')
+    .eq('user_id', u.id)
+    .maybeSingle();
+
+  if (exErr) {
+    console.error('profiles exists check error:', exErr);
+    return;
+  }
+  if (exists) return;
+
+  const raw = localStorage.getItem('signup-profile-draft');
+  const draft = raw ? JSON.parse(raw) : null;
+
+  const nickname = (draft?.nickname ?? u.email?.split('@')[0] ?? 'user').toString().trim();
+  const gender = (draft?.gender ?? 'Male').toString().trim();
+  const birthday = (draft?.birthday ?? '2000-01-01').toString().trim();
+  const country = (draft?.country ?? 'Unknown').toString().trim();
+  const bio = (draft?.bio ?? '').toString().trim() || null; // ✅ bio 포함(옵션)
+  const avatar = draft?.pendingAvatarUrl ?? null;
+
+  const payload = {
+    user_id: u.id,
+    nickname,
+    gender,
+    birthday,
+    country,
+    bio, // ✅ 이제 DB에 저장됨
+    avatar_url: avatar,
+    created_at: new Date().toISOString(),
+  };
+
+  const { error: pErr } = await supabase.from('profiles').insert(payload);
+  if (pErr) {
+    console.error('profiles insert error:', pErr);
+    return;
+  }
+
+  try {
+    localStorage.removeItem('signup-profile-draft');
+  } catch {}
+}
+
+export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
-  // 현재 로그인한 사용자 정보
   const [user, setUser] = useState<User | null>(null);
 
-  // ===== [ADD] 가입 플로우 상태 =====
-  const [currentStep, setCurrentStep] = useState<Step>(1);
-  const [consents, setConsentsState] = useState<ConsentResult | null>(null);
-  const [form, setFormState] = useState<SignUpForm | null>(null);
-
-  // ===== [ADD] 유효성 =====
-  const validateStep1 = (c: ConsentResult | null) => !!(c?.service && c?.privacy);
-  const validateStep2 = (f: SignUpForm | null) => {
-    if (!f) return false;
-    const emailOk = /\S+@\S+\.\S+/.test(f.email);
-    const pwOk = f.pw.length >= 8 && f.pw === f.confirmPw;
-    const nickOk = f.nickname.trim().length >= 2;
-    return emailOk && pwOk && nickOk;
-  };
-  const validateStep3 = () => true; // 프로필은 선택사항으로 가정
-
-  const valid = useMemo<StepValid>(
-    () => ({
-      step1: validateStep1(consents),
-      step2: validateStep2(form),
-      step3: validateStep3(),
-    }),
-    [consents, form],
-  );
-
-  // ===== [ADD] 드래프트 저장/복원 (새로고침/이동에도 유지) =====
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(SIGNUP_STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as { consents?: ConsentResult; form?: SignUpForm };
-      if (parsed.consents) setConsentsState(parsed.consents);
-      if (parsed.form) setFormState(parsed.form);
-    } catch {}
-  }, []);
-  const persistDraft = (next: { consents: ConsentResult | null; form: SignUpForm | null }) => {
-    try {
-      localStorage.setItem(SIGNUP_STORAGE_KEY, JSON.stringify(next));
-    } catch {}
-  };
-  const setConsents = (c: ConsentResult) =>
-    setConsentsState(prev => {
-      const next = { ...(prev ?? ({} as ConsentResult)), ...c };
-      persistDraft({ consents: next, form });
-      return next;
-    });
-  const setForm = (f: SignUpForm) =>
-    setFormState(prev => {
-      const next = { ...(prev ?? ({} as SignUpForm)), ...f };
-      persistDraft({ consents, form: next });
-      return next;
-    });
-
-  // ===== [ADD] 이동 가드 (앞으로 갈 때만 선행 검증 필요) =====
-  const guard = (from: Step, to: Step) => {
-    if (to > from) {
-      if (from === 1 && to >= 2 && !valid.step1) return false;
-      if (from === 1 && to >= 3 && (!valid.step1 || !valid.step2)) return false;
-      if (from === 2 && to >= 3 && !valid.step2) return false;
-    }
-    return true; // 뒤로 가기는 허용
-  };
-
-  // 초기 세션 로드 및 인증 상태 변경 감시 (기존 그대로)
-  useEffect(() => {
+    // 초기 세션 로드
     supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session ? data.session : null);
+      setSession(data.session ?? null);
       setUser(data.session?.user ?? null);
     });
-    const { data } = supabase.auth.onAuthStateChange((_event, newSession) => {
+
+    // 상태 변화 구독
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
+
+      const u = newSession?.user ?? null;
+      if (!u) return;
+
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+        // 1) users 보정
+        await upsertUsersOnLogin(u);
+        // 2) profiles 생성(없을 때만)
+        await createProfileFromDraftIfMissing(u);
+      }
     });
-    return () => {
-      data.subscription.unsubscribe();
-    };
+
+    return () => sub.subscription.unsubscribe();
   }, []);
 
-  // 회원 가입 함수(이메일, 비밀번호)
-  const signUp: AuthContextType['signUp'] = async (email, password) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    if (error) {
-      return { error: error.message };
-    }
-    return {};
-  };
-
-  // 회원 로그인 함수(이메일, 비밀번호)
   const signIn: AuthContextType['signIn'] = async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password, options: {} });
-    if (error) {
-      const msg = (error.message || '').toLowerCase();
-      const unverified =
-        msg.includes('confirm') || msg.includes('not confirmed') || msg.includes('verify');
-
-      if (unverified) {
-        try {
-          await supabase.auth.resend({ type: 'signup', email });
-        } catch (error) {}
-      }
-      return { error: error.message, unverified };
-    }
-    try {
-      await supabase.rpc('ensure_profile');
-    } catch (error) {}
-    return {};
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error: error?.message };
   };
 
-  // 회원 로그아웃
-  const signOut: AuthContextType['signOut'] = async () => {
+  const signUp: AuthContextType['signUp'] = async (email, password) => {
+    // (팁) 실제 가입은 각 스텝 화면에서 처리하므로 여기선 래퍼만 유지
+    const { error } = await supabase.auth.signUp({ email, password });
+    return { error: error?.message };
+  };
+
+  const signOut = async () => {
     await supabase.auth.signOut();
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        signUp,
-        signIn,
-        signOut,
-        user,
-        session,
-        // [ADD] 가입 플로우
-        currentStep,
-        setCurrentStep,
-        consents,
-        setConsents,
-        form,
-        setForm,
-        valid,
-        guard,
-      }}
-    >
+    <AuthContext.Provider value={{ session, user, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
-// const {signUp, signIn, signOut, user, session, ...가입플로우} = useAuth()
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error('AuthContext 가 없습니다.');
-  }
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 };

@@ -181,13 +181,13 @@ export default function BirthInput({
           className="absolute right-8 top-1/2 -translate-y-1/2 px-1 text-gray-500 hover:text-gray-700"
           aria-label="Toggle calendar"
         >
-          📅
+          <img src="/images/calendar.png" alt="달력" className="w-5" />
         </button>
         {inputValue && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-2 top-1/2 -translate-y-1/2 px-1 text-gray-500 hover:text-gray-700"
+            className="absolute right-2 top-1/2 -translate-y-1/2 px-1 text-secondary hover:text-secondary hover:opacity-75"
             aria-label="Clear date"
           >
             ✖
@@ -201,7 +201,7 @@ export default function BirthInput({
         <div
           id="birth-popover" // ⬅︎ (추가)
           role="dialog" // ⬅︎ (추가)
-          className="absolute left-0 mt-2 w-72 bg-white border rounded shadow-lg z-20"
+          className="absolute left-0 bottom-full mb-4 w-72 bg-white border rounded shadow-lg z-50 max-h-80 overflow-auto"
           onMouseDown={e => e.stopPropagation()}
         >
           <div className="flex items-center justify-between px-3 py-2 border-b">
