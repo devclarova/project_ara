@@ -10,6 +10,15 @@ import type { Chat } from '../../../types/dm';
 import DMChatList from './DMChatList';
 import DMHeader from './DMHeader';
 import DMUserSearch from './DMUserSearch';
+import { useAuth } from '../../../contexts/AuthContext';
+import { ensureMyProfileId } from '../../../lib/ensureMyProfileId';
+
+type UserItem = {
+  id: string;
+  user_id: string;
+  nickname: string;
+  avatar_url?: string;
+};
 
 type DMListProps = {
   chats: Chat[];
@@ -19,118 +28,126 @@ type DMListProps = {
   onSearchToggle?: () => void;
 };
 
-const DMList: React.FC<DMListProps> = ({ chats, selectedChatId, onSelect }) => {
-  const [chatList, setChatList] = useState<Chat[]>([]); // Supabase에서 가져온 채팅 목록 상태
+const DMList: React.FC<DMListProps> = ({ selectedChatId, onSelect }) => {
+  const { user } = useAuth();
+  const [chatList, setChatList] = useState<Chat[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [users, setUsers] = useState<any[]>([]); // 사용자 목록 상태
+  const [users, setUsers] = useState<UserItem[]>([]);
+  const [busy, setBusy] = useState(false);
 
-  // Supabase에서 채팅 목록과 사용자 목록을 가져오는 함수
+  // 사용자/채팅 목록 가져오기
   useEffect(() => {
-    const fetchChatsAndUsers = async () => {
-      // 채팅 목록 가져오기
-      const { data: chatsData, error: chatError } = await supabase
-        .from('chats') // 'chats' 테이블에서 데이터 가져오기
-        .select('*');
+    (async () => {
+      const [{ data: usersData, error: usersError }, { data: chatsData, error: chatError }] =
+        await Promise.all([
+          supabase.from('profiles').select('user_id, nickname, avatar_url'),
+          supabase.from('chats').select('*'),
+        ]);
 
-      if (chatError) {
-        console.log('채팅 에러 패칭 :', chatError.message);
-      } else {
-        setChatList(chatsData || []); // data가 null일 경우 빈 배열로 처리
-      }
+      if (usersError) console.log('사용자 에러 패칭:', usersError.message);
+      else setUsers((usersData ?? []) as UserItem[]);
 
-      // 사용자 목록 가져오기 (user1_id, user2_id를 기반으로 profiles에서 가져오기)
-      const userIds = Array.from(
-        new Set(
-          // user1_id와 user2_id를 중복 없이 합침
-          chatsData?.flatMap((chat: Chat) => [chat.user1_id, chat.user2_id]) || [],
-        ),
-      );
-
-      const { data: usersData, error: usersError } = await supabase
-        .from('profiles')
-        .select('id, nickname, avatar_url')
-        .in('id', userIds); // userIds에 포함된 사용자만 가져오기
-
-      if (usersError) {
-        console.log('사용자 에러 패칭 :', usersError.message);
-      } else {
-        setUsers(usersData || []);
-      }
-    };
-
-    fetchChatsAndUsers();
+      if (chatError) console.log('채팅 에러 패칭:', chatError.message);
+      else setChatList((chatsData ?? []) as Chat[]);
+    })();
   }, []);
 
-  // 새 채팅 버튼 클릭 시 검색 창 열기
-  const handleNewChatClick = () => {
-    setIsSearchOpen(true);
-  };
+  // (선택) chats 테이블 실시간 구독
+  useEffect(() => {
+    const channel = supabase
+      .channel('chats-feed')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, payload => {
+        if (payload.eventType === 'INSERT') {
+          setChatList(prev => [payload.new as Chat, ...prev]);
+        } else if (payload.eventType === 'UPDATE') {
+          setChatList(prev =>
+            prev.map(c => (c.id === (payload.new as Chat).id ? (payload.new as Chat) : c)),
+          );
+        } else if (payload.eventType === 'DELETE') {
+          setChatList(prev => prev.filter(c => c.id !== (payload.old as Chat).id));
+        }
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
-  // 유저 선택 시 처리: 기존 채팅이 있으면 선택, 없으면 새 채팅 생성
-  const handleSelectUser = async (u: { id: string; nickname: string }) => {
-    // 기존 채팅방 찾기
-    const existingChat = chatList.find(
-      c =>
-        (c.user1_id === u.id || c.user2_id === u.id) &&
-        (c.user1_id !== u.id || c.user2_id !== u.id),
-    );
+  const handleNewChatClick = () => setIsSearchOpen(true);
 
-    if (existingChat) {
-      // 기존 채팅방이 있으면 해당 채팅방으로 이동
-      onSelect(existingChat.id);
+  // 선택 유저와의 1:1 채팅 열기(있으면 열고 없으면 생성)
+  const handleSelectUser = async (u: UserItem) => {
+    console.log('[DMList] 선택한 유저:', u);
+
+    const myProfileId = await ensureMyProfileId(); // ✅ 내 profiles.id 확보
+
+    if (u.user_id === myProfileId) {
+      alert('본인과의 채팅은 생성할 수 없습니다.');
       return;
     }
 
-    // 프로필 정보가 없으면 추가 (유저 정보 확인)
-    const user1Profile = users.find(user => user.id === u.id);
+    if (busy) return;
+    setBusy(true);
 
-    if (!user1Profile) {
-      console.log('유저 프로필이 없습니다.');
-      alert('해당 유저의 프로필이 존재하지 않습니다.'); // 사용자에게 알림
-      return;
-    }
+    try {
+      // profiles.id 기준으로 정렬
+      const u1 = myProfileId < u.user_id ? myProfileId : u.user_id;
+      const u2 = myProfileId < u.user_id ? u.user_id : myProfileId;
 
-    // 상대방의 프로필 찾기 (여기서는 상대방을 임시로 설정하고 실제 로직에서는 상대방의 ID로 변경해야 함)
-    const user2Profile = users.find(profile => profile.id === u.id) || {
-      id: 'user2', // 임시 설정
-      nickname: 'User2',
-      avatar_url: '', // 기본 빈 이미지
-    };
+      // 기존 방 조회
+      const { data: exists } = await supabase
+        .from('chats')
+        .select('id')
+        .eq('user1_id', u1)
+        .eq('user2_id', u2)
+        .maybeSingle();
 
-    const now = new Date();
-    const newChat: Chat = {
-      id: u.id,
-      user1_id: u.id, // user1과 user2를 동일한 user_id로 설정
-      user2_id: u.id, // user2 역시 동일한 user_id로 설정
+      if (exists?.id) {
+        onSelect(exists.id);
+        setIsSearchOpen(false);
+        return;
+      }
 
-      // user1과 user2 프로필을 각각 찾는다
-      user1: user1Profile, // 실제 유저 프로필
-      user2: user2Profile, // 상대방 프로필
+      // 없으면 생성
+      const {
+        data: created,
+        error: insErr,
+        status,
+      } = await supabase
+        .from('chats')
+        .insert([{ user1_id: u1, user2_id: u2 }]) // ✅ FK: profiles.id
+        .select('id')
+        .single();
 
-      lastMessage: '새 대화를 시작해보세요!',
-      time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      unread: 0,
-      avatarUrl: user1Profile.avatar_url || '', // 사용자1의 아바타 URL
-      pinned: false,
-      alarm: true,
-      lastUpdated: now.toISOString(),
-      participantIds: [u.id, 'user2'],
-      created_at: now.toISOString(),
-      updated_at: now.toISOString(),
-    };
+      if (!insErr && created?.id) {
+        setChatList(prev => [created as Chat, ...prev]);
+        onSelect(created.id);
+        setIsSearchOpen(false);
+        return;
+      }
 
-    // 새 채팅을 Supabase에 추가
-    const { data, error } = await supabase
-      .from('chats') // 'chats' 테이블에 새 채팅 추가
-      .insert([newChat])
-      .single(); // 단일 결과만 반환받기 위해 .single() 사용
+      // 경쟁(409) 처리
+      if (status === 409 || (insErr && `${insErr.message}`.includes('duplicate'))) {
+        const { data: again } = await supabase
+          .from('chats')
+          .select('id')
+          .eq('user1_id', u1)
+          .eq('user2_id', u2)
+          .maybeSingle();
+        if (again?.id) {
+          onSelect(again.id);
+          setIsSearchOpen(false);
+          return;
+        }
+      }
 
-    if (error) {
-      console.error('Error inserting new chat:', error.message);
-    } else {
-      const newChatData = data as Chat; // `data`를 Chat 타입으로 명시
-      setChatList(prev => [newChatData, ...prev]); // 새 채팅 추가
-      onSelect(newChatData.id); // 새 채팅 선택
+      if (insErr) throw insErr;
+      alert('채팅방 생성/열기에 실패했습니다.');
+    } catch (e) {
+      console.error('open/select chat error', e);
+      alert('채팅방 처리 중 오류가 발생했습니다.');
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -143,6 +160,8 @@ const DMList: React.FC<DMListProps> = ({ chats, selectedChatId, onSelect }) => {
             users={users}
             onSelectUser={handleSelectUser}
             onClose={() => setIsSearchOpen(false)}
+            // (선택) busy 내려서 클릭 잠그기
+            // disabled={busy}
           />
         )}
       </div>

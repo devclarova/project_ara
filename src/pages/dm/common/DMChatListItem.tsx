@@ -5,6 +5,7 @@ import DMAvatar from './DMAvatar';
 import DMContextMenu, { type ContextMenuItem } from './DMContextMenu';
 import { supabase } from '../../../lib/supabase';
 import type { Chat } from '../../../types/dm';
+import { useAuth } from '../../../contexts/AuthContext';
 
 type Props = {
   chat: Chat;
@@ -28,10 +29,14 @@ const DMChatListItem: React.FC<Props> = ({
   onMarkAsRead,
   onDelete,
 }) => {
+  const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null); // 상대방 아바타 URL
-  const [nickname, setNickname] = useState<string>(''); // 상대방 닉네임
+
+  // 상대방 프로필 상태
+  const [otherAvatar, setOtherAvatar] = useState<string | null>(null);
+  const [otherNickname, setOtherNickname] = useState<string>('');
+  const otherUserId = chat.user1_id === user?.id ? chat.user2_id : chat.user1_id;
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -39,6 +44,7 @@ const DMChatListItem: React.FC<Props> = ({
     setMenuOpen(true);
   }, []);
 
+  // 컨텍스트 메뉴
   const items: ContextMenuItem[] = [
     {
       key: 'pin',
@@ -48,9 +54,8 @@ const DMChatListItem: React.FC<Props> = ({
     },
     {
       key: 'alarm',
-      label: chat.alarm ? '알림 켜기' : '알림 끄기',
-      onSelect: () =>
-        onToggleAlarm?.(chat.id, !!chat.alarm ? true /* turn on */ : false /* turn off */),
+      label: chat.alarm ? '알림 끄기' : '알림 켜기',
+      onSelect: () => onToggleAlarm?.(chat.id, !chat.alarm),
       shortcut: 'M',
     },
     {
@@ -69,26 +74,20 @@ const DMChatListItem: React.FC<Props> = ({
 
   // 채팅방 사용자 정보 불러오기 (닉네임, 아바타)
   useEffect(() => {
-    const fetchChatUserInfo = async () => {
-      // 채팅방 참여자 ID로 상대방 프로필을 불러옵니다.
-      const userId = chat.user1_id === 'me' ? chat.user2_id : chat.user1_id;
-
-      const { data, error } = await supabase
+    if (!otherUserId) return;
+    (async () => {
+      const { data } = await supabase
         .from('profiles')
-        .select('avatar_url, nickname')
-        .eq('id', userId)
-        .single(); // 프로필 정보 가져오기
+        .select('id, nickname, avatar_url')
+        .eq('id', otherUserId)
+        .maybeSingle();
+      setOtherAvatar(data?.avatar_url ?? null);
+      setOtherNickname(data?.nickname ?? '');
+    })();
+  }, [otherUserId]);
 
-      if (error) {
-        console.log('사용자 프로필 정보 불러오기 실패', error);
-      } else {
-        setAvatarUrl(data?.avatar_url ?? null); // 아바타 URL 설정
-        setNickname(data?.nickname ?? ''); // 닉네임 설정
-      }
-    };
-
-    fetchChatUserInfo(); // 채팅방이 변경될 때마다 호출
-  }, [chat]); // `chat`이 바뀔 때마다 실행
+  // lastMessage 필드 이름 통일 (로그가 lastmessage면 여기서 변환해 사용)
+  const lastMessage = (chat as any).lastMessage ?? (chat as any).lastmessage ?? null;
 
   return (
     <>
@@ -107,20 +106,21 @@ const DMChatListItem: React.FC<Props> = ({
           className,
         ].join(' ')}
       >
-        <DMAvatar name={chat.id} src={chat.avatarUrl} unread={chat.unread ?? 0} />
+        {/* DMAvatar에는 바로 otherAvatar를 넘기고, 불가하면 내부 fallback */}
+        <DMAvatar userId={otherUserId} unread={chat.unread ?? 0} />
 
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-center mb-1">
-            <div className="font-semibold text-[#333] text-sm">{chat.id}</div>
+            <div className="font-semibold text-[#333] text-sm">{otherNickname || '알 수 없음'}</div>
             <div className="text-xs text-[#666]">{chat.time}</div>
           </div>
 
           <div className="text-[13px] text-[#666] whitespace-nowrap overflow-hidden text-ellipsis">
-            {chat.lastMessage ? (
+            {lastMessage ? (
               <span
                 className={(chat.unread ?? 0) > 0 ? 'font-semibold text-[#333]' : 'text-[#666]'}
               >
-                {chat.lastMessage}
+                {lastMessage}
               </span>
             ) : (
               <span className="italic text-[#999]">메시지가 없습니다.</span>

@@ -1,44 +1,32 @@
+// 아바타+배지(읽지않음)
+
 import { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 
-// 아바타+배지(읽지않음)
-type Props = {
-  name: string;
-  src?: string;
-  size?: number; // px
-  unread?: number;
-};
-
-const DMAvatar: React.FC<Props> = ({ name, src, size = 50, unread = 0 }) => {
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+type Props = { userId: string; size?: number; unread?: number };
+const DMAvatar: React.FC<Props> = ({ userId, size = 50, unread = 0 }) => {
+  const [src, setSrc] = useState<string | null>(null);
+  const [name, setName] = useState<string>('');
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      const { data, error } = await supabase
+    if (!userId) return;
+    (async () => {
+      const { data } = await supabase
         .from('profiles')
-        .select('avatar_url')
-        .eq('nickname', name)
-        .single();
+        .select('avatar_url, nickname')
+        .eq('id', userId)
+        .maybeSingle();
+      setSrc(data?.avatar_url ?? null);
+      setName(data?.nickname ?? '');
+    })();
+  }, [userId]);
 
-      if (error) {
-        console.log('프로필 정보 가져오기 실패', error);
-      } else {
-        setAvatarUrl(data?.avatar_url ?? null);
-      }
-    };
-    fetchProfile();
-  }, [name]);
-
+  const fallback = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(name || userId)}`;
   return (
     <div className="relative mr-4">
       <img
-        src={
-          src ??
-          avatarUrl ??
-          `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(name)}`
-        }
-        alt={name}
-        // 확인용 임시 테두리 / 테스트 후 지우기
+        src={src || fallback}
+        alt={name || userId}
         className="rounded-full object-cover border-2 border-[#f0f0f0]"
         style={{ width: size, height: size }}
       />
@@ -50,5 +38,4 @@ const DMAvatar: React.FC<Props> = ({ name, src, size = 50, unread = 0 }) => {
     </div>
   );
 };
-
 export default DMAvatar;

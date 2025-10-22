@@ -7,8 +7,9 @@ import { useAuth } from '../../../contexts/AuthContext';
 
 type UserItem = {
   id: string;
+  user_id: string;
   nickname: string;
-  avatarUrl?: string;
+  avatar_url?: string;
 };
 
 type Props = {
@@ -61,7 +62,7 @@ function DMUserSearch({
 
       try {
         const { data, error } = await supabase
-          .from('profiles') // profiles 테이블에서 사용자 검색
+          .from('profiles')
           .select('id, nickname, avatar_url')
           .ilike('nickname', `%${debouncedQ}%`); // 대소문자 구분 없이 부분 일치 검색
 
@@ -101,7 +102,7 @@ function DMUserSearch({
       const target = filteredUsers[activeIndex] ?? filteredUsers[0];
       if (target) {
         // 본인 선택시 프로필 페이지로 이동
-        if (target.id === user?.id) {
+        if (target.user_id === user?.id) {
           navigate(`/profile/${user.id}`); // 프로필 페이지로 이동
         } else {
           onSelectUser(target);
@@ -178,7 +179,7 @@ function DMUserSearch({
             const isActive = idx === activeIndex;
             return (
               <button
-                key={u.id}
+                key={`${u.user_id}-${u.nickname}`} // `id`와 `nickname`을 결합해 고유한 key 생성
                 type="button"
                 role="option"
                 aria-selected={isActive}
@@ -187,14 +188,14 @@ function DMUserSearch({
                 onMouseLeave={() => setActiveIndex(-1)}
                 onDoubleClick={() => onSelectUser(u)} // 더블 클릭시 채팅방 이동
                 className="
-                  w-full flex items-center p-2 rounded text-left transition
-                  hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
-                  data-[active=true]:bg-primary/10
-                "
+          w-full flex items-center p-2 rounded text-left transition
+          hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
+          data-[active=true]:bg-primary/10
+        "
               >
                 <div className="mr-3 w-8 h-8 rounded-full overflow-hidden bg-gray-300 shrink-0">
                   <img
-                    src={u.avatarUrl || '/default-avatar.svg'}
+                    src={u.avatar_url || '/default-avatar.svg'} // avatar_url 사용
                     alt={u.nickname}
                     width={32}
                     height={32}
