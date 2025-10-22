@@ -25,7 +25,6 @@ function DMRoom({ chatId, title, avatarUrl, onAfterSend, setSelectedChatId }: DM
   const [isAlarmOn, setIsAlarmOn] = useState(true); // 알림 상태
   const [isPinned, setIsPinned] = useState(false); // 핀 표시 여부
   const [selectedChatId, setSelectedChatIdInternal] = useState<string | null>(null);
-
   const chatListRef = useRef<HTMLDivElement>(null); // 채팅목록을 위한 ref
   const dropdownRef = useRef<HTMLDivElement>(null); // 채팅목록을 위한 ref
 
@@ -87,6 +86,27 @@ function DMRoom({ chatId, title, avatarUrl, onAfterSend, setSelectedChatId }: DM
 
     fetchChats();
   }, []);
+
+  // 채팅 데이터 불러오기
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!chatId) return; // chatId가 없으면 실행하지 않음
+
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('chat_id', chatId)
+        .order('created_at', { ascending: true }); // 시간순으로 정렬
+
+      if (error) {
+        console.log('메시지 패칭 에러:', error.message);
+      } else {
+        setMsgs(data); // 메시지 상태에 데이터 저장
+      }
+    };
+
+    fetchMessages(); // chatId가 바뀔 때마다 실행
+  }, [chatId]); // chatId가 변경될 때마다 실행
 
   useEffect(() => {
     let mounted = true;

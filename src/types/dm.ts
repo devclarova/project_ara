@@ -12,7 +12,7 @@ export interface Chat {
   lastMessage: string; // 마지막 메시지 내용
   time?: string; // 마지막 메시지 시간 (옵션)
   unread?: number; // 읽지 않은 메시지 수 (옵션)
-  avatarUrl?: string; // 프로필 이미지 URL (옵션)
+  avatar_url?: string; // 프로필 이미지 URL (옵션)
   pinned?: boolean; // 고정 여부 (옵션)
   alarm?: boolean; // 알림 여부 (옵션)
   lastUpdated: string; // 최근 업데이트 시간 (ISO 형식)
