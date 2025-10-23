@@ -37,7 +37,7 @@ import SignUpPage_old from './pages/SignUpPage_old';
 import ShancnPage from './pages/ShancnPage';
 import { NotificationPlacements } from 'antd/es/notification/interface';
 import NotificationsPage from './pages/TweetDetail/NotificationsPage';
-
+import SevenShad from './pages/temps/SevenShad';
 
 const App = () => {
   return (
@@ -47,9 +47,10 @@ const App = () => {
           <ScrollToTop />
           <div className="layout min-h-screen flex flex-col">
             {/* 공통 헤더 */}
-            <Header />
+            {/* <Header /> */}
 
             <main className="flex-1">
+            {/* <main className="flex-1 mt-[calc(97px)]"> */}
               <Routes>
                 <Route path="/" element={<LandingPage />}></Route>
                 <Route path="/landing" element={<LandingPage />}></Route>
@@ -74,6 +75,7 @@ const App = () => {
                 <Route path="/dm" element={<DMPage />}></Route>
                 <Route path="/socialcn" element={<ShancnPage />}></Route>
                 <Route path="/notifications" element={<NotificationsPage />}></Route>
+                <Route path="/socialss" element={<SevenShad />}></Route>
               </Routes>
             </main>
 
