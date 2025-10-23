@@ -10,7 +10,8 @@ function Header() {
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const homePath = user ? '/home' : '/';
+  // const homePath = user ? '/social' : '/';
+  const homePath = '/';
 
   const menuItems = [
     { name: 'Home', path: '/', matchPaths: ['/home'] },

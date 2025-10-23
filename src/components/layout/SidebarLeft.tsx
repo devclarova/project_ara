@@ -50,8 +50,8 @@ const SidebarLeft = ({
   const menuItems = [
     { icon: Home, label: 'Home', path: '/social' },
     { icon: Search, label: 'Explore', path: '/social/explore' },
-    { icon: Bell, label: 'Notifications', path: '/social/notifications' },
-    { icon: Mail, label: 'Messages', path: '/social/messages' },
+    { icon: Bell, label: 'Notifications', path: '/notifications' },
+    { icon: Mail, label: 'Messages', path: '/dm' },
     // { icon: List, label: 'Lists', path: '/social/lists' },
     // { icon: Users, label: 'Communities', path: '/social/communities' },
     // { icon: Star, label: 'Premium', path: '/social/premium' },

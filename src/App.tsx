@@ -35,6 +35,8 @@ import ExplorePage from './pages/TweetDetail/ExplorePage';
 import DMPage from './pages/dm/common/DMPage';
 import SignUpPage_old from './pages/SignUpPage_old';
 import ShancnPage from './pages/ShancnPage';
+import { NotificationPlacements } from 'antd/es/notification/interface';
+import NotificationsPage from './pages/TweetDetail/NotificationsPage';
 
 
 const App = () => {
@@ -71,6 +73,7 @@ const App = () => {
                 <Route path="/social/:id" element={<TweetDetailPage />} />
                 <Route path="/dm" element={<DMPage />}></Route>
                 <Route path="/socialcn" element={<ShancnPage />}></Route>
+                <Route path="/notifications" element={<NotificationsPage />}></Route>
               </Routes>
             </main>
 
