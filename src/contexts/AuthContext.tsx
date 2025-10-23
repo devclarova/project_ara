@@ -78,11 +78,19 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const validateStep1 = (c: ConsentResult | null) => !!(c?.service && c?.privacy);
   const validateStep2 = (f: SignUpForm | null) => {
     if (!f) return false;
-    const emailOk = /\S+@\S+\.\S+/.test(f.email);
-    const pwOk = f.password.length >= 8 && f.password === f.passwordConfirm;
-    const nickOk = f.nickname.trim().length >= 2;
+
+    // email, password, passwordConfirm, nickname 중 하나라도 빠졌다면 false 처리
+    const emailOk = f.email ? /\S+@\S+\.\S+/.test(f.email) : false;
+    const pwOk =
+      typeof f.password === 'string' &&
+      typeof f.passwordConfirm === 'string' &&
+      f.password.length >= 8 &&
+      f.password === f.passwordConfirm;
+    const nickOk = typeof f.nickname === 'string' && f.nickname.trim().length >= 2;
+
     return emailOk && pwOk && nickOk;
   };
+
   const validateStep3 = () => true; // 프로필은 선택사항으로 가정
 
   const valid = useMemo<StepValid>(

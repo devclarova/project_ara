@@ -15,7 +15,8 @@ const HomeFeed = () => {
     const fetchTweets = async () => {
       const { data, error } = await supabase
         .from('tweets')
-        .select(`
+        .select(
+          `
           id,
           content,
           image_url,
@@ -27,11 +28,16 @@ const HomeFeed = () => {
             nickname,
             avatar_url
           )
-        `)
+        `,
+        )
         .order('created_at', { ascending: false });
 
       if (error) console.error(error);
-      else setTweets(data || []);
+      //else setTweets(data || []);
+      else {
+        console.log('🧩 Supabase fetched data:', data);
+        setTweets(data || []);
+      }
     };
 
     fetchTweets();
@@ -58,7 +64,8 @@ const HomeFeed = () => {
           bookmark_count: 0,
         },
       ])
-      .select(`
+      .select(
+        `
         id,
         content,
         image_url,
@@ -70,7 +77,8 @@ const HomeFeed = () => {
           nickname,
           avatar_url
         )
-      `)
+      `,
+      )
       .single();
 
     if (error) {

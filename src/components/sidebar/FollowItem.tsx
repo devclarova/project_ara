@@ -13,7 +13,7 @@ const FollowItem = ({ name, handle, avatar }: FollowItemProps) => {
         <img src={avatar} alt={name} className="w-10 h-10 rounded-full object-cover" />
         <div>
           <p className="font-bold text-sm">{name}</p>
-          <p className="text-secondary text-sm">@{handle}</p>
+          {/* <p className="text-secondary text-sm">@{handle}</p> */}
         </div>
       </div>
 

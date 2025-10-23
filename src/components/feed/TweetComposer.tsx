@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Image, BarChart3, Smile, Calendar, FileVideo } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import 'react-quill/dist/quill.snow.css';
 
 interface TweetComposerProps {
   onPost: (content: string, image_url?: string | null) => Promise<void>;

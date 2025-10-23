@@ -52,11 +52,11 @@ const SidebarLeft = ({
     { icon: Search, label: 'Explore', path: '/social/explore' },
     { icon: Bell, label: 'Notifications', path: '/social/notifications' },
     { icon: Mail, label: 'Messages', path: '/social/messages' },
-    { icon: List, label: 'Lists', path: '/social/lists' },
-    { icon: Users, label: 'Communities', path: '/social/communities' },
-    { icon: Star, label: 'Premium', path: '/social/premium' },
+    // { icon: List, label: 'Lists', path: '/social/lists' },
+    // { icon: Users, label: 'Communities', path: '/social/communities' },
+    // { icon: Star, label: 'Premium', path: '/social/premium' },
     { icon: User, label: 'Profile', path: '/social/profile' },
-    { icon: MoreHorizontal, label: 'More', path: '/social/more' },
+    // { icon: MoreHorizontal, label: 'More', path: '/social/more' },
   ];
 
   return (
