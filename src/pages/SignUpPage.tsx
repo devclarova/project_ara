@@ -1,12 +1,17 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect, useRef, useState, useMemo } from 'react';
 
-import SignUpStepper from '../components/auth/SignUpStepper';
 import SignUpStep1Consent, { type ConsentResult } from '../components/auth/SignUpStep1Consent';
 import SignUpStep2Form, { type FormData } from '../components/auth/SignUpStep2Form';
 import SignUpStep3Profile from '../components/auth/SignUpStep3Profile';
+import SignUpStepper from '../components/auth/SignUpStepper';
 
 type Step = 1 | 2 | 3;
+
+type Verified = {
+  email: { value: string; ok: boolean };
+  nickname: { value: string; ok: boolean };
+};
 
 // 좌↔우 슬라이드(절대배치 없이 x/opacity만)
 const slideVariants = {
@@ -19,7 +24,7 @@ const slideVariants = {
   }),
 } as const;
 
-// (옵션) 드래프트 저장 키
+// 남겨두되, 실제로는 쓰지 않음(기존 브라우저 잔여 데이터 정리용)
 const DRAFT_KEY = 'ara-signup-draft-v1';
 
 export default function SignUpPage() {
@@ -29,61 +34,78 @@ export default function SignUpPage() {
   const [consents, setConsents] = useState<ConsentResult | null>(null);
   const [form, setForm] = useState<FormData | null>(null);
 
-  // ✅ 3단계 프로필 드래프트(이전/다음 왕복 시 유지) — 직렬화 어려운 File은 로컬스토리지는 생략
+  // 3단계 프로필 드래프트(왕복 시 유지) — 컴포넌트 생존 동안만 유지(스토리지 미사용)
   const [profileDraft, setProfileDraft] = useState<{
     bio: string;
     file: File | null;
     preview: string | null; // blob: URL
   }>({ bio: '', file: null, preview: null });
 
-  // ✅ 네 컴포넌트의 필드명에 맞춤(terms/privacy/age, email/pw/…)
-  const consentOK = !!(consents?.terms && consents?.privacy && consents?.age);
-  const formOK = useMemo(() => !!form, [form]);
+  const [verified, setVerified] = useState<Verified>({
+    email: { value: '', ok: false },
+    nickname: { value: '', ok: false },
+  });
 
-  // (옵션) 드래프트 복원
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  function invalidateIfChanged(nextEmail: string, nextNickname: string) {
+    setVerified(v => ({
+      email: { value: nextEmail, ok: v.email.ok && v.email.value === nextEmail },
+      nickname: { value: nextNickname, ok: v.nickname.ok && v.nickname.value === nextNickname },
+    }));
+  }
+
+  // ✅ 언마운트 시 혹시 남아 있을 수 있는 이전 버전 초안 제거(안전)
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(DRAFT_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as {
-        consents?: ConsentResult | null;
-        form?: FormData | (Omit<FormData, 'birth'> & { birth: string | null }) | null;
-        step?: Step;
-      };
-      if (parsed.consents) setConsents(parsed.consents);
-
-      if (parsed.form) {
-        const revivedBirth = parsed.form.birth
-          ? typeof parsed.form.birth === 'string'
-            ? new Date(parsed.form.birth)
-            : parsed.form.birth
-          : null;
-        setForm({ ...(parsed.form as any), birth: revivedBirth }); // ← birth를 Date | null 로 복원
-      }
-
-      if (parsed.step) setStep(parsed.step);
-    } catch {}
+    return () => {
+      try {
+        localStorage.removeItem(DRAFT_KEY);
+      } catch {}
+    };
   }, []);
 
-  // (옵션) 드래프트 저장 (File/preview는 직렬화 이슈로 저장하지 않음)
-  useEffect(() => {
-    try {
-      const safeForm = form
-        ? { ...form, birth: form.birth ? form.birth.toISOString() : null } // ← 문자열로 저장
-        : null;
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ consents, form: safeForm, step }));
-    } catch {}
-  }, [consents, form, step]);
+  // 유효성
+  function isFormValid(f: FormData | null): boolean {
+    if (!f) return false;
+    const emailOk = /\S+@\S+\.\S+/.test(f.email || '');
+    const pwOk = typeof f.pw === 'string' && f.pw.length >= 6 && f.pw === (f.confirmPw || '');
+    const nickOk = typeof f.nickname === 'string' && f.nickname.trim().length >= 2;
+    const genderOk = !!f.gender;
+    const birthOk = !!f.birth;
+    const countryOk = !!f.country;
+    return emailOk && pwOk && nickOk && genderOk && birthOk && countryOk;
+  }
+
+  const consentOK = !!(consents?.terms && consents?.privacy && consents?.age);
+  const formOK = useMemo(() => isFormValid(form), [form]);
 
   const direction: 'forward' | 'backward' = step > prevStepRef.current ? 'forward' : 'backward';
 
-  // 🔒 이동 가드 (스텝퍼에도 넘겨서 버튼 클릭 시 동일 규칙 적용)
+  // 이동 가드
   const guard = (from: Step, to: Step) => {
     if (to > from) {
-      if (to >= 2 && !consentOK) return false; // 1→2, 1→3
-      if (to >= 3 && !formOK) return false; // 2→3, 1→3
+      if (to >= 2 && !consentOK) return false;
+
+      if (to >= 3) {
+        // Stepper로 3번을 눌러도 항상 안내문구가 뜨도록 일괄 트리거
+        setSubmitAttempted(true);
+
+        // 기존 형식/필수 체크
+        if (!formOK) return false;
+
+        // ✅ 중복확인까지 완료 여부 검사
+        const emailOK = verified.email.ok && verified.email.value === (form?.email ?? '');
+        const nickOK = verified.nickname.ok && verified.nickname.value === (form?.nickname ?? '');
+
+        if (!emailOK || !nickOK) {
+          // 안내문구 노출 트리거
+          setSubmitAttempted(true);
+          return false;
+        }
+        if (!emailOK || !nickOK) return false;
+      }
     }
-    return true; // 뒤로 가기는 허용
+    return true;
   };
 
   const guardedSetStep = (next: Step) => {
@@ -93,35 +115,47 @@ export default function SignUpPage() {
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 타입 안전 이동(분기)
   const goTo = (next: Step) => guardedSetStep(next);
   const next = () => guardedSetStep(step === 1 ? 2 : 3);
   const back = () => guardedSetStep(step === 3 ? 2 : 1);
 
+  // ⬇️ 레이아웃: 항상 상단 정렬. 2단계만 살짝 넉넉한 패딩.
+  const isStep2 = step === 2;
+  const wrapperPad = isStep2
+    ? 'pt-8 sm:pt-12 pb-10' // Step 2: 폼 길어서 살짝 여유
+    : 'pt-5 sm:pt-7 pb-4'; // Step 1/3: 여백 최소화(바닥 내려가 보임 방지)
+  const titleMargin = 'mb-3 sm:mb-4';
+  const stepperMargin = 'mb-3 sm:mb-4';
+
   return (
-    <div className="min-h-screen w-full bg-gray-50 dark:bg-neutral-950 flex items-start justify-center py-8 sm:py-12">
+    <div
+      className={`
+        min-h-auto md:min-h-auto
+        w-full bg-white dark:bg-black
+        flex justify-center items-start ${wrapperPad}
+        overflow-y-auto
+      `}
+    >
       <div className="w-full max-w-md sm:max-w-lg md:max-w-2xl px-4 sm:px-6 md:px-8">
-        {/* 페이지 타이틀 (카드 밖) */}
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-800 dark:text-white mb-4 sm:mb-6">
+        <h1
+          className={`
+            text-2xl sm:text-3xl md:text-4xl font-bold text-center
+            text-gray-800 dark:text-white ${titleMargin}
+          `}
+        >
           회원가입
         </h1>
 
-        {/* 스텝퍼 (카드 밖) — ★ guard 연결 + 1↔3 경유 애니는 스텝퍼가 처리 */}
-        <div className="mb-3 sm:mb-4">
+        <div className={`${stepperMargin}`}>
           <SignUpStepper current={step} onStepChange={goTo} guard={guard} />
         </div>
 
-        {/* 카드 컨테이너 */}
         <div
           className="
-            rounded-2xl
-            bg-white dark:bg-neutral-900
-            shadow-md
-            ring-1 ring-gray-200/80 dark:ring-neutral-800
-            p-4 sm:p-6 md:p-8
-          "
+          rounded-2xl bg-white dark:bg-neutral-900 shadow-md
+          ring-1 ring-gray-200/80 dark:ring-neutral-800 p-4 sm:p-6 md:p-8
+        "
         >
-          {/* height 자동 보간 */}
           <motion.div layout className="overflow-x-hidden">
             <AnimatePresence mode="wait" custom={direction}>
               {step === 1 && (
@@ -134,7 +168,6 @@ export default function SignUpPage() {
                   exit="exit"
                 >
                   <SignUpStep1Consent
-                    // ▼ 추가: 되돌아와도 체크 유지
                     value={consents ?? undefined}
                     onChange={c => setConsents(c)}
                     onNext={c => {
@@ -155,11 +188,17 @@ export default function SignUpPage() {
                   exit="exit"
                 >
                   <SignUpStep2Form
-                    // ▼ 추가: 되돌아와도 입력 유지
                     value={form ?? undefined}
+                    verified={verified}
+                    submitAttempted={submitAttempted}
+                    onInvalidateByChange={(e, n) => invalidateIfChanged(e, n)}
+                    onDupChecked={(which, value, ok) =>
+                      setVerified(v => ({ ...v, [which]: { value, ok } }))
+                    }
                     onChange={d => setForm(d)}
                     onNext={d => {
                       setForm(d);
+                      setSubmitAttempted(true); // 버튼 경로에서도 안내문구 조건 통일
                       guardedSetStep(3);
                     }}
                     onBack={back}
@@ -187,9 +226,8 @@ export default function SignUpPage() {
                       consents={consents ?? undefined}
                       onBack={back}
                       onDone={() => {
-                        console.log('Sign up flow finished', { consents, form, profileDraft });
+                        // console.log('Sign up flow finished', { consents, form, profileDraft });
                       }}
-                      // ▼ 추가: 프로필 드래프트(이미지/미리보기/자기소개) 유지
                       draft={profileDraft}
                       onChangeDraft={setProfileDraft}
                     />

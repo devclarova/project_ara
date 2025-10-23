@@ -1,129 +1,192 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { MessagesRow, Profile } from '../../../types/database';
+// DMPage.tsx — 정리/최적화 버전
+// - 역할별 함수 분리(getMyProfile, getChats, getRoomMeta)
+// - 의존성 명확화 및 가드 추가
+// - 주석 보강(데이터 흐름/의도/오류 처리 위치)
+// - UI 구조는 동일, 스타일은 최소 수정
 
+import { useEffect, useState, useCallback } from 'react';
+import type { MessagesRow, Profile } from '../../../types/database';
+import type { Chat } from '../../../types/dm';
 import { supabase } from '../../../lib/supabase';
+import { useAuth } from '../../../contexts/AuthContext';
 import DMList from './DMList';
 import DMRoom from './DMRoom';
-import type { Chat } from '../../../types/dm';
-import { useAuth } from '../../../contexts/AuthContext';
+
+type RoomMeta = { title: string; avatarUrl: string };
+
+const DEFAULT_AVATAR = '/default-avatar.svg';
 
 function DMPage() {
   const { user } = useAuth();
-  const [messages, setMessages] = useState<MessagesRow[]>([]); // 실제 메시지 상태 관리
-  const [chatList, setChatList] = useState<Chat[]>([]); // 실제 채팅 목록을 위한 상태
-  const [selectedChatId, setSelectedChatId] = useState<string | null>(null); // 선택된 채팅방 ID
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const selectedChat = useMemo(
-    () => messages.find(c => c.id === selectedChatId) ?? null,
-    [messages, selectedChatId],
-  );
 
-  // 프로필 불러오기
-  useEffect(() => {
-    if (!user) return; // user가 없으면 프로필을 불러오지 않음
+  // UI 상태
+  const [messages, setMessages] = useState<MessagesRow[]>([]); // 현재 파일에서는 직접 사용 X (DMRoom에서 소비될 수 있으니 유지)
+  const [chatList, setChatList] = useState<Chat[]>([]);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
 
-    const fetchProfile = async () => {
+  // 데이터 상태
+  const [profile, setProfile] = useState<Profile | null>(null); // 내 프로필
+  const [roomMeta, setRoomMeta] = useState<RoomMeta | null>(null); // 선택된 방의 상대 정보(닉네임/아바타)
+
+  // 로딩/에러 상태
+  const [loadingChats, setLoadingChats] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [loadingRoomMeta, setLoadingRoomMeta] = useState(false);
+
+  // 내 프로필 조회
+  const getMyProfile = useCallback(async (userId: string) => {
+    setLoadingProfile(true);
+    try {
       const { data, error } = await supabase
-        .from('profiles') // profiles 테이블에서 프로필 데이터 가져오기
-        .select('avatar_url') // 필요 데이터만 선택
-        .eq('user_id', user.id) // user.id와 매칭되는 프로필 찾기
-        .single(); // 한 개의 데이터만 가져오기
+        .from('profiles')
+        .select('id, user_id, nickname, avatar_url')
+        .eq('user_id', userId)
+        .single();
 
-      if (error) {
-        console.error('프로필 데이터 로드 실패', error);
-      } else {
-        setProfile(data); // profile 상태 업데이트
-      }
-    };
-
-    if (user) {
-      fetchProfile(); // 사용자가 있을 경우 프로필 불러오기
+      if (error) throw error;
+      setProfile(data as Profile);
+    } catch (err) {
+      console.error('[DMPage] 프로필 데이터 로드 실패:', err);
+      setProfile(null);
+    } finally {
+      setLoadingProfile(false);
     }
-  }, [user]); // user가 변경될 때마다 실행
+  }, []);
 
-  // 실제 채팅 목록을 Supabase에서 가져오는 함수
-  useEffect(() => {
-    const fetchChats = async () => {
-      const { data, error } = await supabase.from('chats').select('*'); // 'chats' 테이블에서 실제 채팅 목록 가져오기
+  // 내가 속한 채팅 목록 조회
+  const getChats = useCallback(async () => {
+    setLoadingChats(true);
+    try {
+      const { data, error } = await supabase.from('chats').select('*');
+      if (error) throw error;
+      setChatList((data ?? []) as Chat[]);
+    } catch (err) {
+      console.log('[DMPage] 채팅 목록 패칭 에러:', err);
+      setChatList([]);
+    } finally {
+      setLoadingChats(false);
+    }
+  }, []);
 
-      if (error) {
-        console.log('채팅 목록 패칭 에러', error);
-      } else {
-        setChatList(data); // 채팅 목록 데이터 업데이트
+  // 특정 채팅방의 상대 프로필 메타(닉네임/아바타) 조회
+  const getRoomMeta = useCallback(async (chatId: string, me?: { id?: string | null }) => {
+    if (!chatId || !me?.id) {
+      setRoomMeta(null);
+      return;
+    }
+
+    setLoadingRoomMeta(true);
+    try {
+      // 채팅 행에서 상대 user id 추출
+      const { data: chatRow, error: chatErr } = await supabase
+        .from('chats')
+        .select('id, user1_id, user2_id')
+        .eq('id', chatId)
+        .maybeSingle();
+
+      if (chatErr) throw chatErr;
+      if (!chatRow) {
+        setRoomMeta(null);
+        return;
       }
-    };
 
-    fetchChats();
-  }, []); // 컴포넌트가 마운트될 때 채팅 목록 불러오기
+      const otherUserId = chatRow.user1_id === me.id ? chatRow.user2_id : chatRow.user1_id;
 
-  // 메시지 불러오기
+      // 상대의 프로필 조회
+      const { data: prof, error: profErr } = await supabase
+        .from('profiles')
+        .select('nickname, avatar_url')
+        .eq('id', otherUserId)
+        .maybeSingle();
+
+      if (profErr) throw profErr;
+
+      setRoomMeta({
+        title: prof?.nickname ?? '알 수 없음',
+        avatarUrl: prof?.avatar_url ?? DEFAULT_AVATAR,
+      });
+    } catch (err) {
+      console.error('[DMPage] 룸 메타 로드 실패:', err);
+      setRoomMeta({
+        title: chatId, // 최소 fallback
+        avatarUrl: DEFAULT_AVATAR,
+      });
+    } finally {
+      setLoadingRoomMeta(false);
+    }
+  }, []);
+
+  // 내 프로필
   useEffect(() => {
-    const fetchMessages = async () => {
-      if (!selectedChatId) return; // 선택된 채팅방 ID가 없으면 반환
+    if (!user?.id) return;
+    getMyProfile(user.id);
+  }, [user?.id, getMyProfile]);
 
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('chat_id', selectedChatId); // 선택된 채팅방의 메시지만 불러오기
+  // 채팅 목록
+  useEffect(() => {
+    getChats();
+  }, [getChats]);
 
-      if (error) {
-        console.log('메시지 패칭 에러', error); // 오류 발생 시 에러 메시지 출력
-      } else {
-        setMessages(data); // 정상적으로 데이터 불러오면 상태 업데이트
-      }
-    };
+  // 선택 방 메타 (선택 변경 시마다)
+  useEffect(() => {
+    if (!selectedChatId || !user?.id) {
+      setRoomMeta(null);
+      return;
+    }
+    getRoomMeta(selectedChatId, { id: user.id });
+  }, [selectedChatId, user?.id, getRoomMeta]);
 
-    fetchMessages(); // 채팅방 ID 변경시 메시지 불러오기
-  }, [selectedChatId, messages]); // 채팅방이 변경될 때마다 메시지 불러오기
+  // 페이지 전환 시 스크롤 상단 고정
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [selectedChatId]);
 
+  // 콜백: 메시지 전송 후 목록 갱신(미리보기, 시간, 뱃지)
   const handleAfterSend = (chatId: string, lastText: string, localTime: string) => {
-    setMessages(prev =>
+    setChatList(prev =>
       prev.map(c =>
         c.id === chatId ? { ...c, lastMessage: lastText, time: localTime, unread: 0 } : c,
       ),
     );
   };
 
-  // 채팅 전환 시 전체 페이지 스크롤을 맨 위로
-  useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-  }, [selectedChatId]);
-
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full mt-2 mb-2 bg-white text-gray-900 mx-auto w-full max-w-[1200px] px-2 sm:px-4 lg:px-8 overflow-y-auto">
       <div className="flex flex-1 border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-        {/* 왼쪽 사이드바 (내부만 스크롤) */}
+        {/* 좌측: 채팅 목록(데스크톱 이상) */}
         <aside className="hidden sm:flex sm:w-[260px] md:w-[300px] lg:w-[340px] border-r border-gray-200 bg-gray-50 flex-col overflow-y-auto transition-all duration-300">
           <DMList
-            chats={chatList}
+            // chats={chatList}
             selectedChatId={selectedChatId}
             onSelect={setSelectedChatId}
-            onUpdateChat={() => {}}
+            // onUpdateChat={() => {}}
+            // 필요시 로딩 표시 전달: loading={loadingChats}
           />
         </aside>
 
-        {/* 오른쪽 메인 영역 (내부만 스크롤) */}
+        {/* 우측: 채팅룸 or 안내 */}
         <main className="flex-1 flex flex-col bg-white overflow-hidden">
-          {selectedChat ? (
+          {selectedChatId ? (
             <DMRoom
-              chatId={selectedChat.chat_id} // 채팅 ID를 DMRoom에 전달
-              title={selectedChat.chat_id} // 채팅 이름을 DMRoom에 전달
-              avatarUrl={profile?.avatar_url || '/default_avatar.svg'} // 기본이미지 넣기
+              chatId={selectedChatId}
+              title={roomMeta?.title || selectedChatId} // 상대 닉네임(Fallback: ID)
+              avatarUrl={roomMeta?.avatarUrl || DEFAULT_AVATAR} // 상대 아바타(Fallback)
               onAfterSend={handleAfterSend}
               setSelectedChatId={setSelectedChatId}
             />
           ) : (
             <>
+              {/* 모바일: 목록 먼저 노출 */}
               <div className="sm:hidden flex-1 overflow-y-auto bg-gray-50">
                 <DMList
-                  chats={chatList} // 실제 채팅 목록을 DMList에 전달
+                  // chats={chatList}
                   selectedChatId={selectedChatId}
                   onSelect={setSelectedChatId}
-                  onUpdateChat={() => {}}
+                  // onUpdateChat={() => {}}
                 />
               </div>
-              {/* 안내 화면 */}
+
+              {/* 데스크톱: 빈 상태 안내 */}
               <div className="hidden sm:flex flex-1 items-center justify-center text-center p-8 text-gray-600 overflow-auto">
                 <div>
                   <h2 className="text-2xl font-semibold mb-2">1 : 1 채팅</h2>

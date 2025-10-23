@@ -124,7 +124,7 @@ function SignInPage() {
   };
 
   return (
-    <div className="flex items-center justify-center bg-gray-50 pt-12 px-4">
+    <div className="flex items-center justify-center bg-white pt-12 px-4">
       <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 md:p-10 lg:p-12 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl">
         {/* 로고 및 제목 */}
         <div className="text-center mb-6">

@@ -1,13 +1,13 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 export type Step = 1 | 2 | 3;
 
 type Props = {
   current: Step;
   onStepChange?: (next: Step) => void;
-  /** 이동 허용 여부를 부모가 결정 (앞으로 이동 시 검증 등) */
   guard?: (from: Step, to: Step) => boolean | Promise<boolean>;
+  onBeforeChange?: (from: Step, to: Step) => void | Promise<void>;
 };
 
 // 경유 애니메이션을 위한 시퀀스 상태
@@ -18,7 +18,7 @@ type AnimSeq = {
   tick: number; // 키 리셋용
 } | null;
 
-export default function SignUpStepper({ current, onStepChange, guard }: Props) {
+export default function SignUpStepper({ current, onStepChange, guard, onBeforeChange }: Props) {
   const steps = [
     { n: 1 as Step, label: '동의' },
     { n: 2 as Step, label: '정보 입력' },

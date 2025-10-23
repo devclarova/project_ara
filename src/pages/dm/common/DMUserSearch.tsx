@@ -1,16 +1,19 @@
-// 검색
+// 유저 검색
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { supabase } from '../../../lib/supabase';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../contexts/AuthContext';
 
 type UserItem = {
-  id: string;
+  id: string; // profiles.id (chats FK와 동일 축)
+  user_id: string; // auth.users.id
   nickname: string;
-  avatarUrl?: string;
+  avatar_url?: string;
 };
 
 type Props = {
-  users: UserItem[]; // 로컬/모의 데이터
+  users?: UserItem[];
   onSelectUser: (u: UserItem) => void;
   placeholder?: string;
   emptyText?: string;
@@ -22,100 +25,126 @@ function normalize(s: string) {
   return (s || '')
     .toLowerCase()
     .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, ''); // 악센트 제거(간단 유니코드 정규화)
+    .replace(/[\u0300-\u036f]/g, '');
 }
 
-function DMUserSearch({
+const DMUserSearch: React.FC<Props> = ({
   users,
   onSelectUser,
   placeholder = '사용자 검색...',
   emptyText = '검색 결과가 없습니다.',
   debounceMs = 180,
   onClose,
-}: Props) {
+}) => {
   const [q, setQ] = useState('');
   const [debouncedQ, setDebouncedQ] = useState('');
   const [activeIndex, setActiveIndex] = useState<number>(-1);
-  const [filteredUsers, setFilteredUsers] = useState<UserItem[]>([]); // 필터링된 사용자 목록
-  const [loading, setLoading] = useState(false); // 로딩 상태
-  const [isHovered, setIsHovered] = useState(false); // 서치 닫기 호버
-  const listRef = useRef<HTMLDivElement>(null);
+  const [remoteUsers, setRemoteUsers] = useState<UserItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
-  // 디바운스
+  const listRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // 입력 디바운스
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q), debounceMs);
     return () => clearTimeout(t);
   }, [q, debounceMs]);
 
-  // Supabase에서 사용자 검색
-  useEffect(() => {
-    const fetchUsers = async () => {
-      if (!debouncedQ) {
-        setFilteredUsers([]);
-        return;
-      }
-      setLoading(true);
+  const useLocal = Array.isArray(users) && users.length > 0;
 
+  // 로컬 필터 결과
+  const localFiltered = useMemo(() => {
+    if (!useLocal || !debouncedQ) return [];
+    const nq = normalize(debouncedQ);
+    return users!.filter(u => normalize(u.nickname).includes(nq)).slice(0, 50); // 안전 상한
+  }, [useLocal, users, debouncedQ]);
+
+  // 원격(Supabase) 검색
+  useEffect(() => {
+    if (useLocal) return; // 로컬 사용 시 서버 호출 안 함
+    if (!debouncedQ) {
+      setRemoteUsers([]);
+      return;
+    }
+
+    let alive = true;
+    (async () => {
+      setLoading(true);
       try {
         const { data, error } = await supabase
-          .from('profiles') // profiles 테이블에서 사용자 검색
-          .select('id, nickname, avatar_url')
-          .ilike('nickname', `%${debouncedQ}%`) // 대소문자 구분 없이 부분 일치 검색
-          .limit(50); // 최대 50명만 가져오기
+          .from('profiles')
+          .select('id, user_id, nickname, avatar_url')
+          .ilike('nickname', `%${debouncedQ}%`) // 부분 일치
+          .limit(50);
 
-        if (error) {
-          console.error('사용자 검색 에러', error);
-        } else {
-          setFilteredUsers(data || []);
-        }
+        if (error) throw error;
+        if (alive) setRemoteUsers((data ?? []) as UserItem[]);
       } catch (err) {
-        console.error('검색 중 오류 발생', err);
+        console.error('[DMUserSearch] 사용자 검색 에러:', err);
+        if (alive) setRemoteUsers([]);
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
+    })();
+
+    return () => {
+      alive = false;
     };
+  }, [debouncedQ, useLocal]);
 
-    fetchUsers();
-  }, [debouncedQ]);
+  const filteredUsers: UserItem[] = useLocal ? localFiltered : remoteUsers;
 
-  // 키보드 내비게이션
+  // 🔽 키보드 내비게이션
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Escape') {
       e.preventDefault();
       handleCloseSearch();
       return;
     }
-    if (filteredUsers.length === 0) return;
+    if (!filteredUsers.length) return;
+
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       setActiveIndex(i => (i + 1) % filteredUsers.length);
-      scrollActiveIntoView(1);
+      scrollActiveIntoView();
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setActiveIndex(i => (i - 1 + filteredUsers.length) % filteredUsers.length);
-      scrollActiveIntoView(-1);
+      scrollActiveIntoView();
     } else if (e.key === 'Enter') {
       e.preventDefault();
       const target = filteredUsers[activeIndex] ?? filteredUsers[0];
-      if (target) onSelectUser(target);
+      if (!target) return;
+
+      // 본인 선택 시: 프로필 페이지로 이동
+      if (target.user_id === user?.id) {
+        navigate(`/profile/${user.id}`);
+      } else {
+        onSelectUser(target);
+      }
     }
   };
 
-  const scrollActiveIntoView = (dir: 1 | -1) => {
+  const scrollActiveIntoView = () => {
     const container = listRef.current;
     if (!container) return;
     const item = container.querySelector<HTMLButtonElement>('[data-active="true"]');
     if (!item) return;
+
     const cTop = container.scrollTop;
     const cBottom = cTop + container.clientHeight;
     const iTop = item.offsetTop;
     const iBottom = iTop + item.offsetHeight;
+
     if (iTop < cTop) container.scrollTop = iTop - 4;
     else if (iBottom > cBottom) container.scrollTop = iBottom - container.clientHeight + 4;
   };
 
   const handleCloseSearch = () => {
-    setQ(''); // 검색창 비우고 닫기
+    setQ('');
     setDebouncedQ('');
     setActiveIndex(-1);
     onClose?.();
@@ -123,6 +152,7 @@ function DMUserSearch({
 
   return (
     <div className="p-2 border-b border-gray-200 bg-white">
+      {/* 입력 헤더 */}
       <div className="flex items-center justify-center p-2 bg-white">
         <div className="flex items-center justify-between h-10 bg-white border-b w-full border rounded-md border-gray-300 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-1 focus-within:ring-offset-white focus-within:border-transparent">
           <input
@@ -145,17 +175,21 @@ function DMUserSearch({
             <button className="text-gray-400 hover:text-gray-700 ml-2 mr-3"> 검색</button>
           </div>
         </div>
+
         <button
           type="button"
           className="ml-3 mr-3"
           onClick={handleCloseSearch}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
+          aria-label="닫기"
+          title="닫기"
         >
           <img src={isHovered ? '/closeh.svg' : '/close.svg'} alt="닫기" className="w-8 h-8" />
         </button>
       </div>
 
+      {/* 결과 리스트 */}
       <div
         id="dm-user-search-listbox"
         ref={listRef}
@@ -164,6 +198,12 @@ function DMUserSearch({
         aria-live="polite"
         aria-label="사용자 검색 결과"
       >
+        {/* 로딩 표시 */}
+        {!useLocal && loading && (
+          <div className="p-4 text-center text-gray-500 text-sm">검색 중…</div>
+        )}
+
+        {/* 결과 */}
         {debouncedQ && filteredUsers.length > 0 ? (
           filteredUsers.map((u, idx) => {
             const isActive = idx === activeIndex;
@@ -176,16 +216,16 @@ function DMUserSearch({
                 data-active={isActive ? 'true' : 'false'}
                 onMouseEnter={() => setActiveIndex(idx)}
                 onMouseLeave={() => setActiveIndex(-1)}
-                onDoubleClick={() => onSelectUser(u)} // 더블 클릭시 채팅방 이동
+                onDoubleClick={() => onSelectUser(u)} // 더블 클릭 시 바로 선택
                 className="
-                  w-full flex items-center p-2 rounded text-left transition
-                  hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
-                  data-[active=true]:bg-primary/10
-                "
+          w-full flex items-center p-2 rounded text-left transition
+          hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
+          data-[active=true]:bg-primary/10
+        "
               >
                 <div className="mr-3 w-8 h-8 rounded-full overflow-hidden bg-gray-300 shrink-0">
                   <img
-                    src={u.avatarUrl || 'https://api.dicebear.com/7.x/adventurer/svg?seed=tmp'}
+                    src={u.avatar_url || '/default-avatar.svg'}
                     alt={u.nickname}
                     width={32}
                     height={32}
@@ -196,12 +236,12 @@ function DMUserSearch({
               </button>
             );
           })
-        ) : debouncedQ ? (
+        ) : debouncedQ && !loading ? (
           <div className="p-4 text-center text-gray-500 text-sm">{emptyText}</div>
         ) : null}
       </div>
     </div>
   );
-}
+};
 
 export default DMUserSearch;

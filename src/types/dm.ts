@@ -1,79 +1,83 @@
 // 1 : 1 채팅을 위한 타입
 
-// 채팅 사용자 정보
-export interface ChatUser {
-  id: string; // 사용자 고유 식별자 (UUID)
-  email: string; // 사용자 이메일 주소
-  nickname: string; // 표시용 닉네임
-  avatar_url?: string | null; // 프로필 이미지 URL (선택)
-}
+import type { Profile } from './database';
 
-// 채팅 정보
-
+// chats (1:1 대화방)
 export interface Chat {
-  id: string; // 고유 ID
-  name: string; // 상대 이름 또는 그룹명
-  lastMessage?: string; // 마지막 메시지 내용 (없을 수도 있음)
-  time?: string; // 마지막 메시지 시각
-  unread?: number; // 읽지 않은 메시지 수
-  avatarUrl?: string; // 프로필 이미지 URL
-  pinned?: boolean; // 상단 고정 여부 (핀)
-  alarmOff?: boolean; // 알림 끔 여부 (true면 mute 상태)
-  lastUpdated?: string; // 최근 대화 여부 (정렬 시 사용 가능) ISO string 또는 "YYYY-MM-DD HH:mm"
-  participantIds?: string[]; // 참여자 ID 목록 (1:1이면 두 개, 그룹이면 여러 개)
-  isTempUpdated?: boolean; // 고정/읽음 등 상태 갱신용 로컬 플래그
-  user1_id: string; // 채팅방 참여자 1 ID
-  user2_id: string; // 채팅방 참여자 2 ID
-  created_at: string; // 생성 시간 (ISO string 또는 "YYYY-MM-DD HH:mm")
-  updated_at: string; // 마지막 업데이트 시간 (ISO string 또는 "YYYY-MM-DD HH:mm")
-}
-
-// 메시지 타입
-export interface Message {
-  id: string; // 메시지 고유 식별자
-  chat_id: string; // 채팅방 ID
-  author_id: string; // 'me' 또는 상대 id
-  author_name: string;
-  content: string; // 메시지 내용
-  created_at: string; // 전송 시간
-  isMe?: boolean;
-}
-
-// 메시지의 상세 추가 확장 정보
-export interface MessageDetail extends Message {
-  sender: ChatUser;
-}
-
-// 채팅방 목록 타입
-export interface ChatListItem {
-  id: string; // 채팅방 ID
-  name: string; // 채팅방 이름
-  last_message?: {
-    // 마지막 메시지 정보(선택사항)
-    content: string; // 내용
-    created_at: string; // 작성시간
-    sender_nickname: string; // 보낸사람 닉네임
-  };
-  other_user: ChatUser; // 상대방 사용자 정보
-  unread_count: number; // 읽지 않은 메시지 수
+  id: string; // 고유 ID (UUID)
+  user1_id: string; // 사용자 1 ID
+  user2_id: string; // 사용자 2 ID
+  user1: Profile; // 사용자 1 정보
+  user2: Profile; // 사용자 2 정보
+  lastMessage: string; // 마지막 메시지 내용
+  time?: string; // 마지막 메시지 시간 (옵션)
+  unread?: number; // 읽지 않은 메시지 수 (옵션)
+  avatar_url?: string; // 프로필 이미지 URL (옵션)
+  pinned?: boolean; // 고정 여부 (옵션)
+  alarm?: boolean; // 알림 여부 (옵션)
+  lastUpdated: string; // 최근 업데이트 시간 (ISO 형식)
+  participantIds: string[]; // 참여자 ID 목록
+  created_at: string; // 생성 시간
   updated_at: string; // 마지막 업데이트 시간
 }
 
-// 채팅방 생성용
-export interface CreateChatData {
-  name: string; // 채팅방 이름
-  participant_id: string; // 참여자 ID
-}
-
-// 메시지 전송용
-export interface CreateMessageData {
+// messages (메시지)
+export interface Message {
+  id: string; // 메시지 고유 ID (UUID)
   chat_id: string; // 채팅방 ID
-  content: string; // 메시지 내용
+  auth_id: string; // 사용자 인증 ID
+  sender_id: string; // 보낸 사람 ID
+  type: 'text' | 'image' | 'file' | 'system'; // 메시지 유형
+  content?: string; // 메시지 내용 (텍스트 메시지일 경우)
+  translated_text?: string; // 번역된 메시지 (옵션)
+  translated_lang?: string; // 번역된 언어 코드 (옵션)
+  created_at: string; // 메시지 생성 시간
 }
 
-// API 응답 래퍼
-export interface ChatApiResponse<T> {
-  success: boolean; // 성공 여부
-  data?: T; // 응답 데이터 (제네릭타입-선택적)
-  error?: string; // 에러메시지 (실패시-선택적)
+// message_files (첨부파일)
+export interface MessageFile {
+  id: string; // 파일 ID (UUID)
+  message_id: string; // 메시지 ID
+  file_url: string; // 파일 URL
+  file_type?: string; // 파일 MIME 타입 (옵션)
+  file_name?: string; // 파일 이름 (옵션)
+  file_size?: number; // 파일 크기 (옵션)
+  width?: number; // 이미지 너비 (옵션)
+  height?: number; // 이미지 높이 (옵션)
+  created_at: string; // 생성 시간
+}
+
+// message_receipts (읽음 표시)
+export interface MessageReceipt {
+  message_id: string; // 메시지 ID
+  user_id: string; // 사용자 ID
+  read_at: string; // 읽음 시간
+}
+
+// user_blocks (차단)
+export interface UserBlock {
+  id: string; // 차단 ID (UUID)
+  blocker_id: string; // 차단한 사용자 ID
+  blocked_id: string; // 차단된 사용자 ID
+  created_at: string; // 생성 시간
+}
+
+// user_reports (신고)
+export interface UserReport {
+  id: string; // 신고 ID (UUID)
+  reporter_id: string; // 신고자 ID
+  reported_id: string; // 신고된 사용자 ID
+  reason?: string; // 신고 이유 (옵션)
+  created_at: string; // 신고 시간
+}
+
+// chat_user_state (개인별 방 상태)
+export interface ChatUserState {
+  chat_id: string; // 채팅방 ID
+  user_id: string; // 사용자 ID
+  left_at?: string; // 나간 시간 (옵션)
+  is_archived: boolean; // 보관 여부
+  is_pinned: boolean; // 고정 여부
+  muted_until?: string; // 뮤트 종료 시간 (옵션)
+  updated_at: string; // 마지막 업데이트 시간
 }
