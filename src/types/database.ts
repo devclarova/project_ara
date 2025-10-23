@@ -130,18 +130,21 @@ export type Database = {
         Row: {
           created_at: string;
           id: string;
+          lastmessage: string | null;
           user1_id: string;
           user2_id: string;
         };
         Insert: {
           created_at?: string;
           id?: string;
+          lastmessage?: string | null;
           user1_id: string;
           user2_id: string;
         };
         Update: {
           created_at?: string;
           id?: string;
+          lastmessage?: string | null;
           user1_id?: string;
           user2_id?: string;
         };
@@ -406,9 +409,10 @@ export type Database = {
       };
       messages: {
         Row: {
+          auth_id: string;
           chat_id: string;
           content: string | null;
-          content_tsv: unknown | null;
+          content_tsv: unknown;
           created_at: string;
           id: string;
           sender_id: string;
@@ -417,9 +421,10 @@ export type Database = {
           type: string;
         };
         Insert: {
+          auth_id: string;
           chat_id: string;
           content?: string | null;
-          content_tsv?: unknown | null;
+          content_tsv?: unknown;
           created_at?: string;
           id?: string;
           sender_id: string;
@@ -428,9 +433,10 @@ export type Database = {
           type?: string;
         };
         Update: {
+          auth_id?: string;
           chat_id?: string;
           content?: string | null;
-          content_tsv?: unknown | null;
+          content_tsv?: unknown;
           created_at?: string;
           id?: string;
           sender_id?: string;
@@ -552,6 +558,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null;
+          bio: string | null;
           birthday: string;
           country: string;
           created_at: string;
@@ -560,13 +567,16 @@ export type Database = {
           is_online: boolean;
           last_active_at: string | null;
           nickname: string;
+          nickname_lang: Database['public']['Enums']['nickname_lang_enum'] | null;
           nickname_normalized: string | null;
           nickname_script: string | null;
+          nickname_set_at: string | null;
           updated_at: string;
           user_id: string;
         };
         Insert: {
           avatar_url?: string | null;
+          bio?: string | null;
           birthday?: string;
           country?: string;
           created_at?: string;
@@ -575,13 +585,16 @@ export type Database = {
           is_online?: boolean;
           last_active_at?: string | null;
           nickname: string;
+          nickname_lang?: Database['public']['Enums']['nickname_lang_enum'] | null;
           nickname_normalized?: string | null;
           nickname_script?: string | null;
+          nickname_set_at?: string | null;
           updated_at?: string;
           user_id: string;
         };
         Update: {
           avatar_url?: string | null;
+          bio?: string | null;
           birthday?: string;
           country?: string;
           created_at?: string;
@@ -590,8 +603,10 @@ export type Database = {
           is_online?: boolean;
           last_active_at?: string | null;
           nickname?: string;
+          nickname_lang?: Database['public']['Enums']['nickname_lang_enum'] | null;
           nickname_normalized?: string | null;
           nickname_script?: string | null;
+          nickname_set_at?: string | null;
           updated_at?: string;
           user_id?: string;
         };
@@ -638,18 +653,51 @@ export type Database = {
       reserved_words: {
         Row: {
           id: number;
+          lang: Database['public']['Enums']['nickname_lang_enum'] | null;
           lang_code: string;
+          reason: string | null;
           word: string;
+          word_normalized: string | null;
         };
         Insert: {
           id?: number;
+          lang?: Database['public']['Enums']['nickname_lang_enum'] | null;
           lang_code: string;
+          reason?: string | null;
           word: string;
+          word_normalized?: string | null;
         };
         Update: {
           id?: number;
+          lang?: Database['public']['Enums']['nickname_lang_enum'] | null;
           lang_code?: string;
+          reason?: string | null;
           word?: string;
+          word_normalized?: string | null;
+        };
+        Relationships: [];
+      };
+      restricted_words: {
+        Row: {
+          id: number;
+          is_strict: boolean;
+          lang: Database['public']['Enums']['nickname_lang_enum'] | null;
+          note: string | null;
+          pattern: string;
+        };
+        Insert: {
+          id?: number;
+          is_strict?: boolean;
+          lang?: Database['public']['Enums']['nickname_lang_enum'] | null;
+          note?: string | null;
+          pattern: string;
+        };
+        Update: {
+          id?: number;
+          is_strict?: boolean;
+          lang?: Database['public']['Enums']['nickname_lang_enum'] | null;
+          note?: string | null;
+          pattern?: string;
         };
         Relationships: [];
       };
@@ -735,6 +783,92 @@ export type Database = {
             columns: ['study_id'];
             isOneToOne: false;
             referencedRelation: 'study';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      tweet_replies: {
+        Row: {
+          author_id: string;
+          content: string;
+          created_at: string | null;
+          id: string;
+          like_count: number | null;
+          repost_count: number | null;
+          tweet_id: string;
+        };
+        Insert: {
+          author_id: string;
+          content: string;
+          created_at?: string | null;
+          id?: string;
+          like_count?: number | null;
+          repost_count?: number | null;
+          tweet_id: string;
+        };
+        Update: {
+          author_id?: string;
+          content?: string;
+          created_at?: string | null;
+          id?: string;
+          like_count?: number | null;
+          repost_count?: number | null;
+          tweet_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tweet_replies_author_id_fkey';
+            columns: ['author_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tweet_replies_tweet_id_fkey';
+            columns: ['tweet_id'];
+            isOneToOne: false;
+            referencedRelation: 'tweets';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      tweets: {
+        Row: {
+          author_id: string;
+          bookmark_count: number | null;
+          content: string;
+          created_at: string | null;
+          id: string;
+          image_url: string | null;
+          like_count: number | null;
+          repost_count: number | null;
+        };
+        Insert: {
+          author_id: string;
+          bookmark_count?: number | null;
+          content: string;
+          created_at?: string | null;
+          id?: string;
+          image_url?: string | null;
+          like_count?: number | null;
+          repost_count?: number | null;
+        };
+        Update: {
+          author_id?: string;
+          bookmark_count?: number | null;
+          content?: string;
+          created_at?: string | null;
+          id?: string;
+          image_url?: string | null;
+          like_count?: number | null;
+          repost_count?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tweets_author_id_fkey';
+            columns: ['author_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
             referencedColumns: ['id'];
           },
         ];
@@ -1046,65 +1180,41 @@ export type Database = {
       };
     };
     Functions: {
-      email_exists: {
-        Args: { _email: string };
-        Returns: boolean;
-      };
-      ensure_profile: {
-        Args: Record<PropertyKey, never>;
+      email_exists: { Args: { _email: string }; Returns: boolean };
+      ensure_profile: { Args: never; Returns: undefined };
+      fn_normalize_nickname: { Args: { nick: string }; Returns: string };
+      hhmmss_to_seconds: { Args: { t: string }; Returns: number };
+      is_admin: { Args: never; Returns: boolean };
+      load_wordlists: {
+        Args: { _reserved?: Json; _restricted?: Json };
         Returns: undefined;
       };
-      gtrgm_compress: {
-        Args: { '': unknown };
-        Returns: unknown;
-      };
-      gtrgm_decompress: {
-        Args: { '': unknown };
-        Returns: unknown;
-      };
-      gtrgm_in: {
-        Args: { '': unknown };
-        Returns: unknown;
-      };
-      gtrgm_options: {
-        Args: { '': unknown };
+      nickname_exists:
+        | {
+            Args: {
+              _lang: Database['public']['Enums']['nickname_lang_enum'];
+              _nickname: string;
+            };
+            Returns: boolean;
+          }
+        | { Args: { _nickname: string }; Returns: boolean };
+      set_nickname: {
+        Args: {
+          p_lang: Database['public']['Enums']['nickname_lang_enum'];
+          p_nick: string;
+        };
         Returns: undefined;
       };
-      gtrgm_out: {
-        Args: { '': unknown };
-        Returns: unknown;
-      };
-      hhmmss_to_seconds: {
-        Args: { t: string };
-        Returns: number;
-      };
-      is_admin: {
-        Args: Record<PropertyKey, never>;
-        Returns: boolean;
-      };
-      nickname_exists: {
-        Args: { _nickname: string };
-        Returns: boolean;
-      };
-      set_limit: {
-        Args: { '': number };
-        Returns: number;
-      };
-      show_limit: {
-        Args: Record<PropertyKey, never>;
-        Returns: number;
-      };
-      show_trgm: {
-        Args: { '': string };
-        Returns: string[];
-      };
-      unaccent: {
-        Args: { '': string };
+      show_limit: { Args: never; Returns: number };
+      show_trgm: { Args: { '': string }; Returns: string[] };
+      unaccent: { Args: { '': string }; Returns: string };
+      unaccent_immutable: { Args: { txt: string }; Returns: string };
+      validate_nickname_policy: {
+        Args: {
+          in_lang: Database['public']['Enums']['nickname_lang_enum'];
+          in_nick: string;
+        };
         Returns: string;
-      };
-      unaccent_init: {
-        Args: { '': unknown };
-        Returns: unknown;
       };
     };
     Enums: {
@@ -1113,6 +1223,21 @@ export type Database = {
       difficulty_level: '초급' | '중급' | '고급';
       gender_enum: 'Male' | 'Female';
       level_enum: '초급' | '중급' | '고급';
+      nickname_lang_enum:
+        | 'ko'
+        | 'en'
+        | 'ja'
+        | 'zh'
+        | 'ru'
+        | 'vi'
+        | 'bn'
+        | 'ar'
+        | 'hi'
+        | 'th'
+        | 'es'
+        | 'fr'
+        | 'pt'
+        | 'pt-br';
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -1243,6 +1368,22 @@ export const Constants = {
       difficulty_level: ['초급', '중급', '고급'],
       gender_enum: ['Male', 'Female'],
       level_enum: ['초급', '중급', '고급'],
+      nickname_lang_enum: [
+        'ko',
+        'en',
+        'ja',
+        'zh',
+        'ru',
+        'vi',
+        'bn',
+        'ar',
+        'hi',
+        'th',
+        'es',
+        'fr',
+        'pt',
+        'pt-br',
+      ],
     },
   },
 } as const;
