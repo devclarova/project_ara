@@ -86,8 +86,9 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
-    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #f8fafc;
@@ -194,11 +195,13 @@ textarea:focus {
   --color-info: #3b82f6; /* blue-500 */
 
   /* Typography */
-  --font-sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans KR',
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans KR',
     'Apple SD Gothic Neo', 'Malgun Gothic', 'Pretendard', 'Helvetica Neue', Arial, 'Segoe UI Emoji',
     'Segoe UI Symbol', sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-    'Courier New', monospace;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
 
   /* Type scale (≈ 1.2 modular) */
   --fs-12: 0.75rem; /* 12 */
@@ -763,5 +766,279 @@ hr {
 @media (prefers-reduced-motion: reduce) {
   .plane-launch .plane {
     animation: none !important;
+  }
+}
+
+/* ===== React Quill Styles ===== */
+/* 텍스트 정렬 */
+.ql-align-center {
+  text-align: center !important;
+}
+.ql-align-right {
+  text-align: right !important;
+}
+.ql-align-justify {
+  text-align: justify !important;
+}
+.ql-align-left {
+  text-align: left !important;
+}
+
+/* 헤더 스타일 */
+.ql-size-small {
+  font-size: 0.75em !important;
+}
+.ql-size-large {
+  font-size: 1.5em !important;
+}
+.ql-size-huge {
+  font-size: 2.5em !important;
+}
+
+/* 헤더 태그 */
+.ql-editor h1 {
+  font-size: 2em !important;
+  font-weight: bold !important;
+  margin: 0.67em 0 !important;
+}
+.ql-editor h2 {
+  font-size: 1.5em !important;
+  font-weight: bold !important;
+  margin: 0.75em 0 !important;
+}
+.ql-editor h3 {
+  font-size: 1.17em !important;
+  font-weight: bold !important;
+  margin: 0.83em 0 !important;
+}
+
+/* 텍스트 서식 */
+.ql-editor strong {
+  font-weight: bold !important;
+}
+.ql-editor em {
+  font-style: italic !important;
+}
+.ql-editor u {
+  text-decoration: underline !important;
+}
+.ql-editor s {
+  text-decoration: line-through !important;
+}
+
+/* 목록 스타일 */
+.ql-editor ul {
+  list-style-type: disc !important;
+  margin: 1em 0 !important;
+  padding-left: 1.5em !important;
+}
+.ql-editor ol {
+  list-style-type: decimal !important;
+  margin: 1em 0 !important;
+  padding-left: 1.5em !important;
+}
+.ql-editor li {
+  display: list-item !important;
+  margin: 0.5em 0 !important;
+}
+
+/* 들여쓰기 */
+.ql-indent-1 {
+  padding-left: 3em !important;
+}
+.ql-indent-2 {
+  padding-left: 6em !important;
+}
+.ql-indent-3 {
+  padding-left: 9em !important;
+}
+.ql-indent-4 {
+  padding-left: 12em !important;
+}
+.ql-indent-5 {
+  padding-left: 15em !important;
+}
+.ql-indent-6 {
+  padding-left: 18em !important;
+}
+.ql-indent-7 {
+  padding-left: 21em !important;
+}
+.ql-indent-8 {
+  padding-left: 24em !important;
+}
+
+/* 링크 스타일 */
+.ql-editor a {
+  color: #06c !important;
+  text-decoration: underline !important;
+}
+.ql-editor a:hover {
+  color: #0056b3 !important;
+}
+
+/* 이미지 스타일 */
+.ql-editor img {
+  max-width: 100% !important;
+  height: auto !important;
+  display: block !important;
+  margin: 0.5em auto !important;
+}
+
+/* 인용문 스타일 */
+.ql-editor blockquote {
+  border-left: 4px solid #ccc !important;
+  margin: 1em 0 !important;
+  padding-left: 1em !important;
+  color: #666 !important;
+  font-style: italic !important;
+}
+
+/* 코드 스타일 */
+.ql-editor code {
+  background-color: #f4f4f4 !important;
+  border: 1px solid #ddd !important;
+  border-radius: 3px !important;
+  padding: 2px 4px !important;
+  font-family: 'Courier New', Courier, monospace !important;
+  font-size: 0.9em !important;
+}
+
+.ql-editor pre {
+  background-color: #f4f4f4 !important;
+  border: 1px solid #ddd !important;
+  border-radius: 3px !important;
+  padding: 1em !important;
+  margin: 1em 0 !important;
+  overflow-x: auto !important;
+  font-family: 'Courier New', Courier, monospace !important;
+  font-size: 0.9em !important;
+}
+
+.ql-editor pre code {
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* 구분선 */
+.ql-editor hr {
+  border: none !important;
+  border-top: 1px solid #ccc !important;
+  margin: 1em 0 !important;
+}
+
+/* 문단 스타일 */
+.ql-editor p {
+  margin: 0.5em 0 !important;
+  line-height: 1.6 !important;
+}
+
+/* 에디터 컨테이너 */
+.ql-editor {
+  font-family: inherit !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  color: inherit !important;
+}
+
+/* 선택된 텍스트 스타일 */
+.ql-editor::selection {
+  background-color: #b3d4fc !important;
+}
+
+/* 포커스 스타일 */
+.ql-editor:focus {
+  outline: none !important;
+}
+
+/* Shadcn 용 CSS */
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+
+    /* --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%; */
+    --primary: 174 100% 37%; /* #00BFA5 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+
+    
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }

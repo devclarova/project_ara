@@ -34,6 +34,7 @@ import TweetDetailPage from './pages/TweetDetail/TweetDetailPage';
 import ExplorePage from './pages/TweetDetail/ExplorePage';
 import DMPage from './pages/dm/common/DMPage';
 import SignUpPage_old from './pages/SignUpPage_old';
+import ShancnPage from './pages/ShancnPage';
 
 
 const App = () => {
@@ -69,6 +70,7 @@ const App = () => {
                 <Route path="/social/profile" element={<ProfilePage />} />
                 <Route path="/social/:id" element={<TweetDetailPage />} />
                 <Route path="/dm" element={<DMPage />}></Route>
+                <Route path="/socialcn" element={<ShancnPage />}></Route>
               </Routes>
             </main>
 

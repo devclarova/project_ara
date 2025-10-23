@@ -17,6 +17,7 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
+
 const DRAFT_KEY = 'signup-profile-draft';
 
 // 로그인 시 users 보정
