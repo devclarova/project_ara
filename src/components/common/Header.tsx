@@ -10,7 +10,6 @@ function Header() {
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // 로그인 여부에 따라 홈 목적지
   const homePath = user ? '/home' : '/';
 
   const menuItems = [
@@ -27,7 +26,6 @@ function Header() {
     return item.matchPaths.some(p => path.startsWith(p));
   };
 
-  // 외부 클릭 시 드롭다운 닫기
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -47,9 +45,9 @@ function Header() {
     item.name === 'Home' ? homePath : item.path;
 
   const handleSignout = async () => {
-    await signOut();
+    await signOut(); // ← 여기서 이미 상태가 null
     setIsOpen(false);
-    navigate('/');
+    navigate('/', { replace: true }); // replace로 뒤로가기 시 재로그인 페이지로 안돌아오게
   };
 
   const nickname =
@@ -75,33 +73,12 @@ function Header() {
           alt="Logo"
           className="w-14 sm:w-16 lg:w-20 cursor-pointer"
         />
-
-        {/* 데스크탑 메뉴 */}
-        {/* <div className="hidden md:flex gap-4 lg:gap-6">
-          {menuItems.map(item => {
-            const active = isRouteActive(item);
-            const target = targetOf(item);
-            return (
-              <button
-                key={item.name}
-                type="button"
-                onClick={() => navigate(target)}
-                aria-current={active ? 'page' : undefined}
-                className={`text-base lg:text-lg font-bold p-0 ${
-                  active
-                    ? 'text-primary underline hover:opacity-60'
-                    : 'text-secondary hover:opacity-60'
-                }`}
-              >
-                {item.name}
-              </button>
-            );
-          })}
-        </div> */}
+        {/*
+          데스크탑 메뉴는 주석 상태(필요 시 복구)
+        */}
       </div>
 
       <div className="flex items-center">
-        {/* 데스크탑 */}
         <div className="hidden md:flex items-center gap-2 sm:gap-4">
           {user ? (
             <>
@@ -183,7 +160,6 @@ function Header() {
 
           <div className="h-px bg-gray-100 my-2" />
 
-          {/* 메뉴 리스트 */}
           <div className="flex flex-col">
             {menuItems.map(item => {
               const active = isRouteActive(item);
@@ -211,7 +187,6 @@ function Header() {
 
           <div className="flex gap-2">
             {user ? (
-              // 로그인: 로그아웃만 노출
               <button
                 type="button"
                 onClick={handleSignout}
@@ -220,7 +195,6 @@ function Header() {
                 SignOut
               </button>
             ) : (
-              // 비로그인: 로그인/회원가입
               <>
                 <button
                   type="button"
