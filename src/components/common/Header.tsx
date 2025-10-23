@@ -10,8 +10,8 @@ function Header() {
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // const homePath = user ? '/social' : '/';
-  const homePath = '/';
+  const homePath = user ? '/social' : '/';
+  // const homePath = '/';
 
   const menuItems = [
     { name: 'Home', path: '/', matchPaths: ['/home'] },
@@ -66,7 +66,10 @@ function Header() {
       : '/images/default_avatar.png';
 
   return (
-    <div className="flex justify-between items-center px-4 sm:px-8 lg:px-36 py-2 border-b border-gray-200 sticky top-0 bg-white z-50">
+    <div
+      className="flex justify-between items-center px-4 sm:px-8 lg:px-36 py-2 border-b border-gray-200 fixed top-0 left-0 w-full bg-white z-50
+"
+    >
       <div className="flex items-center gap-4 sm:gap-6">
         <img
           onClick={() => navigate(homePath)}

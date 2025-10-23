@@ -252,7 +252,7 @@ const CTA = ({ onSignup }: CTAProps) => {
           무료로 시작하기
         </button> */}
 
-        <div className="flex gap-4 justify-center">
+        {/* <div className="flex gap-4 justify-center">
           <button
             onClick={() => navigate('/test')}
             className="px-8 py-4 bg-primary text-white rounded-[8px] text-lg font-medium"
@@ -265,7 +265,7 @@ const CTA = ({ onSignup }: CTAProps) => {
           >
             둘러보기
           </button>
-        </div>
+        </div> */}
       </div>
     </section>
   );
@@ -281,21 +281,20 @@ const LandingPage = ({ onSignup }: HomeProps) => {
       <Hero onSignup={onSignup} />
 
       {/* 주요 기능 */}
-      <Features />
+      {/* <Features /> */}
 
       {/* 인기 콘텐츠 */}
-      <ContentGrid />
+      {/* <ContentGrid /> */}
 
       {/* 학습 후기 */}
-      <Testimonials />
+      {/* <Testimonials /> */}
 
       {/* CTA */}
       <CTA onSignup={onSignup} />
 
       {/* 탭/사이드바 포함 메인 콘텐츠 영역 */}
-      <div className="max-w-screen-xl mx-auto px-6 grid grid-cols-1 xl:grid-cols-12 gap-8 pb-24">
-        {/* 메인 영역 */}
-      </div>
+      {/* <div className="max-w-screen-xl mx-auto px-6 grid grid-cols-1 xl:grid-cols-12 gap-8 pb-24">
+      </div> */}
     </main>
   );
 };
