@@ -191,13 +191,13 @@ export default function SignUpStep3Profile({
         <textarea
           id="bio"
           value={draft.bio}
-          onChange={e => onChangeDraft(d => ({ ...d, bio: e.target.value.slice(0, 500) }))}
+          onChange={e => onChangeDraft(d => ({ ...d, bio: e.target.value.slice(0, 300) }))}
           rows={4}
           placeholder="간단한 소개를 작성해주세요."
-          className="w-full rounded-lg border border-gray-300 dark:border-white/15 bg-transparent px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--ara-ring)]"
+          className="w-full h-32 resize-none rounded-lg border border-gray-300 dark:border-white/15 bg-transparent px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--ara-ring)]"
         />
         <div className="mt-1 text-right text-[11px] text-gray-400 dark:text-gray-500">
-          {draft.bio.length}/500
+          {draft.bio.length}/300
         </div>
       </div>
 

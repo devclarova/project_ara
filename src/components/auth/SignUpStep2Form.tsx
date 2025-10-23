@@ -14,16 +14,16 @@ function validateEmailField(raw: string): string {
 
   if (!s.trim()) return '이메일을 입력해주세요.';
 
-  // ✅ 공백 포함 즉시 차단 (맨 앞, 뒤, 중간 모두)
+  // 공백 포함 즉시 차단 (맨 앞, 뒤, 중간 모두)
   if (/\s/.test(s)) return '이메일에 공백은 사용할 수 없습니다.';
 
-  // ✅ 비ASCII(한글 등) 포함 즉시 차단
+  // 비ASCII(한글 등) 포함 즉시 차단
   if (NON_ASCII_RE.test(s)) return '이메일은 영문/숫자로만 입력해주세요.';
 
-  // ✅ 1차 기본 형식(local@domain)
+  // 1차 기본 형식(local@domain)
   if (!EMAIL_ASCII_RE.test(s)) return '올바르지 않은 이메일 형식입니다.';
 
-  // ── 추가 안전검사 ──
+  // 추가 안전검사
   if (s.length > 254) return '올바르지 않은 이메일 형식입니다.';
   const [local, domain] = s.split('@');
   if (!local || !domain) return '올바르지 않은 이메일 형식입니다.';
@@ -31,7 +31,7 @@ function validateEmailField(raw: string): string {
   if (local.startsWith('.') || local.endsWith('.') || local.includes('..'))
     return '올바르지 않은 이메일 형식입니다.';
 
-  // ✅ 도메인 라벨 검증
+  // 도메인 라벨 검증
   const labels = domain.split('.');
   if (labels.length < 2) return '올바르지 않은 이메일 형식입니다.';
   for (const lab of labels) {
@@ -45,9 +45,7 @@ function validateEmailField(raw: string): string {
   return '';
 }
 
-// ============================
 // 비밀번호 검증 규칙
-// ============================
 const PW_LETTER_RE = /[A-Za-z]/;
 const PW_NUMBER_RE = /[0-9]/;
 const PW_SPECIAL_RE = /[!@#$%^&*]/;
@@ -70,7 +68,7 @@ function validateConfirmPwField(confirm: string, pw: string): string {
   return '';
 }
 
-/** ───────── 닉네임 검증 유틸 (정책 v1.2 반영) ───────── */
+/** 닉네임 검증 유틸 */
 type Lang =
   | 'ko'
   | 'en'
@@ -228,6 +226,13 @@ type Props = {
   onBack: () => void;
   value?: FormData;
   onChange?: (data: FormData) => void;
+  verified: {
+    email: { value: string; ok: boolean };
+    nickname: { value: string; ok: boolean };
+  };
+  submitAttempted: boolean;
+  onInvalidateByChange: (email: string, nickname: string) => void;
+  onDupChecked: (which: 'email' | 'nickname', value: string, ok: boolean) => void;
 };
 
 export type FormData = {
@@ -240,7 +245,16 @@ export type FormData = {
   country: string;
 };
 
-export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Props) {
+export default function SignUpStep2Form({
+  onNext,
+  onBack,
+  value,
+  onChange,
+  verified,
+  submitAttempted,
+  onInvalidateByChange,
+  onDupChecked,
+}: Props) {
   // 내부 상태 초기화 (부모 값 우선)
   const [email, setEmail] = useState(value?.email ?? '');
   const [pw, setPw] = useState(value?.pw ?? '');
@@ -268,6 +282,33 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
   // 부모로 변경 통지 헬퍼
   const emit = (next: FormData) => onChange?.(next);
 
+  // 값이 바뀔 때마다 부모에 "캐시 무효화 판단" 요청
+  useEffect(() => {
+    onInvalidateByChange(email, nickname);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email, nickname]);
+
+  // 부모 캐시와 현재 값이 같고 ok면, 로컬 표시는 'available'로 유지
+  useEffect(() => {
+    if (verified.email.ok && verified.email.value === email) {
+      setEmailCheckResult('available');
+      setErrors(prev => ({ ...prev, email: undefined }));
+    }
+    if (verified.nickname.ok && verified.nickname.value === nickname) {
+      setNickCheckResult('available');
+      setErrors(prev => ({ ...prev, nickname: undefined }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [verified.email.value, verified.email.ok, verified.nickname.value, verified.nickname.ok]);
+
+  // 외부(부모)에서 제출 시도가 생기면, 즉시 전체 검증 + 중복확인 힌트 노출
+  useEffect(() => {
+    if (submitAttempted) {
+      validate(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitAttempted]);
+
   const snapshot: FormData = useMemo(
     () => ({ email, pw, confirmPw, nickname, gender, birth, country }),
     [email, pw, confirmPw, nickname, gender, birth, country],
@@ -284,7 +325,7 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
   const validate = (withDupHints = false): boolean => {
     const newErr: Partial<Record<keyof FormData, string>> = {};
 
-    // (기존 형식/필수 검증 그대로)
+    // (기존 형식/필수 검증 로직 그대로)
     const emailMsg = validateEmailField(email);
     if (emailMsg) newErr.email = emailMsg;
 
@@ -302,16 +343,18 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
     if (!birth) newErr.birth = '생년월일을 입력해주세요.';
     if (!country) newErr.country = '국적을 선택해주세요.';
 
-    // ⬇️ 추가: 입력 누락 에러들과 "같은 타이밍"에 중복확인 안내를 보여줌
+    // ✅ 힌트 표시 시, '중복확인 캐시 OK'도 통과로 인정
     if (withDupHints) {
-      if (!emailMsg && emailCheckResult !== 'available') {
-        // 형식이 맞을 때만 중복확인 힌트 노출
+      const emailVerifiedOk = verified.email.ok && verified.email.value === email;
+      const nickVerifiedOk = verified.nickname.ok && verified.nickname.value === nickname;
+
+      if (!emailMsg && !emailVerifiedOk && emailCheckResult !== 'available') {
         newErr.email =
           emailCheckResult === 'taken'
             ? '해당 이메일은 이미 사용 중입니다.'
             : '이메일 중복확인을 진행해주세요.';
       }
-      if (!nickMsg && nickCheckResult !== 'available') {
+      if (!nickMsg && !nickVerifiedOk && nickCheckResult !== 'available') {
         newErr.nickname =
           nickCheckResult === 'taken'
             ? '해당 닉네임은 이미 사용 중입니다.'
@@ -379,8 +422,17 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
   };
 
   const handleNext = async () => {
-    // ⬇️ 힌트 포함 검증으로 변경
+    // 1) 힌트 포함 검증으로 변경
     if (!validate(true)) return;
+
+    // 2) 중복확인 캐시로 단축 (같은 값이면 재호출 없이 바로 통과)
+    const cachedEmailOK = verified.email.ok && verified.email.value === email;
+    const cachedNickOK = verified.nickname.ok && verified.nickname.value === nickname;
+
+    if (cachedEmailOK && cachedNickOK) {
+      onNext(snapshot);
+      return;
+    }
 
     setEmailChecking(true);
     setNickChecking(true);
@@ -409,6 +461,9 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
         return;
       }
 
+      // 성공 시 부모 캐시 확정 + 다음 단계
+      onDupChecked('email', email, true);
+      onDupChecked('nickname', nickname, true);
       onNext(snapshot);
     } finally {
       setEmailChecking(false);
@@ -435,7 +490,6 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
   // 이메일 중복체크
   const handleEmailCheck = async () => {
     const msg = validateEmailField(email);
-    // 형식/ASCII 미통과면 서버 호출 안 함
     if (msg) {
       setEmailCheckResult('');
       setErrors(prev => ({ ...prev, email: msg }));
@@ -451,20 +505,21 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
         setEmailCheckResult('');
         return;
       }
-      // data === true → 이미 존재(사용 불가)
       if (data === true) {
         setEmailCheckResult('taken');
         setErrors(prev => ({ ...prev, email: '해당 이메일은 이미 사용 중입니다.' }));
       } else {
         setEmailCheckResult('available');
         setErrors(prev => ({ ...prev, email: undefined }));
+        // 성공 시 부모 캐시 확정
+        onDupChecked('email', email, true);
       }
     } finally {
       setEmailChecking(false);
     }
   };
 
-  // 🔸 서버 정책 검증 호출 (있으면 사용, 없으면 건너뜀)
+  // 서버 정책 검증 호출 (있으면 사용, 없으면 건너뜀)
   async function serverNicknamePolicyError(nick: string, lang: Lang): Promise<string | null> {
     try {
       const { data, error } = await supabase.rpc('validate_nickname_policy', {
@@ -521,6 +576,8 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
       } else {
         setNickCheckResult('available');
         setErrors(prev => ({ ...prev, nickname: undefined }));
+        // ✅ 성공 시 부모 캐시 확정
+        onDupChecked('nickname', nickname, true);
       }
     } finally {
       setNickChecking(false);
@@ -544,9 +601,9 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
             emit({ ...snapshot, email: v });
           }}
           onBlur={() => {
-            // 포커스 해제 시 1차 형식/ASCII 검증
-            const msg = validateEmailField(email);
-            setErrors(prev => ({ ...prev, email: msg || undefined }));
+            // // 포커스 해제 시 1차 형식/ASCII 검증
+            // const msg = validateEmailField(email);
+            // setErrors(prev => ({ ...prev, email: msg || undefined }));
           }}
           error={errors.email}
           onCheck={handleEmailCheck}
@@ -566,8 +623,8 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
             emit({ ...snapshot, pw: v });
           }}
           onBlur={() => {
-            const msg = validatePasswordField(pw);
-            setErrors(prev => ({ ...prev, pw: msg || undefined }));
+            // const msg = validatePasswordField(pw);
+            // setErrors(prev => ({ ...prev, pw: msg || undefined }));
           }}
           error={errors.pw}
         />
@@ -583,8 +640,8 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
             emit({ ...snapshot, confirmPw: v });
           }}
           onBlur={() => {
-            const msg = validateConfirmPwField(confirmPw, pw);
-            setErrors(prev => ({ ...prev, confirmPw: msg || undefined }));
+            // const msg = validateConfirmPwField(confirmPw, pw);
+            // setErrors(prev => ({ ...prev, confirmPw: msg || undefined }));
           }}
           error={errors.confirmPw}
         />
@@ -603,19 +660,19 @@ export default function SignUpStep2Form({ onNext, onBack, value, onChange }: Pro
               emit({ ...snapshot, nickname: v });
             }}
             onBlur={async () => {
-              const { error, lang } = validateNicknameField(nickname);
-              setNickLang(lang);
-              if (error) {
-                setErrors(prev => ({ ...prev, nickname: error }));
-                return;
-              }
-              // 블러 시에도 서버 정책 검증을 가볍게 시도(있으면)
-              if (lang) {
-                const policyErr = await serverNicknamePolicyError(nickname, lang);
-                if (policyErr) {
-                  setErrors(prev => ({ ...prev, nickname: policyErr }));
-                }
-              }
+              // const { error, lang } = validateNicknameField(nickname);
+              // setNickLang(lang);
+              // if (error) {
+              //   setErrors(prev => ({ ...prev, nickname: error }));
+              //   return;
+              // }
+              // // 블러 시에도 서버 정책 검증을 가볍게 시도(있으면)
+              // if (lang) {
+              //   const policyErr = await serverNicknamePolicyError(nickname, lang);
+              //   if (policyErr) {
+              //     setErrors(prev => ({ ...prev, nickname: policyErr }));
+              //   }
+              // }
             }}
             error={errors.nickname}
             onCheck={handleNickCheck}
