@@ -154,7 +154,7 @@ const DMUserSearch: React.FC<Props> = ({
     <div className="p-2 border-b border-gray-200 bg-white">
       {/* 입력 헤더 */}
       <div className="flex items-center justify-center p-2 bg-white">
-        <div className="flex items-center h-10 w-full rounded-md border border-gray-300 focus-within:ring-2 focus-within:ring-emerald-400 focus-within:ring-offset-1">
+        <div className="flex items-center justify-between h-10 bg-white border-b w-full border rounded-md border-gray-300 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-1 focus-within:ring-offset-white focus-within:border-transparent">
           <input
             type="text"
             value={q}
@@ -164,26 +164,21 @@ const DMUserSearch: React.FC<Props> = ({
             }}
             onKeyDown={onKeyDown}
             placeholder={placeholder}
-            className="flex-grow px-3 border-none outline-none bg-transparent"
+            className="flex-grow p-0 m-0 border-none ml-3 outline-none bg-transparent focus:outline-none focus:ring-0 focus:border-transparent sm:w-12"
             role="combobox"
             aria-expanded={!!debouncedQ && filteredUsers.length > 0}
             aria-controls="dm-user-search-listbox"
             aria-autocomplete="list"
           />
-          <button
-            type="button"
-            className="text-gray-500 px-3 hover:text-gray-700"
-            onClick={() => setDebouncedQ(q)}
-            aria-label="검색"
-            title="검색"
-          >
-            검색
-          </button>
+          <div className="flex items-center text-gray-400 ml-1 mr-1 sm:ml-0 sm:mr-0 sm:">
+            <img src="/line-y.svg" alt="구분선" />
+            <button className="text-gray-400 hover:text-gray-700 ml-2 mr-3"> 검색</button>
+          </div>
         </div>
 
         <button
           type="button"
-          className="ml-2"
+          className="ml-3 mr-3"
           onClick={handleCloseSearch}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -199,7 +194,7 @@ const DMUserSearch: React.FC<Props> = ({
         id="dm-user-search-listbox"
         ref={listRef}
         role="listbox"
-        className="max-h-[220px] overflow-y-auto rounded-md border border-gray-200"
+        className="max-h-[200px] overflow-y-auto rounded-md border-t-gray-3200"
         aria-live="polite"
         aria-label="사용자 검색 결과"
       >
@@ -223,12 +218,12 @@ const DMUserSearch: React.FC<Props> = ({
                 onMouseLeave={() => setActiveIndex(-1)}
                 onDoubleClick={() => onSelectUser(u)} // 더블 클릭 시 바로 선택
                 className="
-                  w-full flex items-center p-2 gap-3 text-left transition
-                  hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400
-                  data-[active=true]:bg-emerald-50
-                "
+          w-full flex items-center p-2 rounded text-left transition
+          hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
+          data-[active=true]:bg-primary/10
+        "
               >
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 shrink-0">
+                <div className="mr-3 w-8 h-8 rounded-full overflow-hidden bg-gray-300 shrink-0">
                   <img
                     src={u.avatar_url || '/default-avatar.svg'}
                     alt={u.nickname}

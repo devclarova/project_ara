@@ -60,7 +60,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
       try {
         setSending(true);
-        setLaunching(true); // 간단한 “슈웅” 애니메이션 트리거
+        setLaunching(true); // 간단한 애니메이션 트리거
         await onSend?.(trimmed);
         setText(''); // 입력 초기화
 
@@ -100,20 +100,12 @@ const MessageInput: React.FC<MessageInputProps> = ({
   );
 
   return (
-    <div className="border-t border-gray-200 bg-white p-4">
+    <div className="border-t border-[#e0e0e0] bg-white p-4">
       <form className="w-full" onSubmit={onSubmit}>
         <div className="flex gap-2">
           <textarea
             ref={textareaRef}
-            className="
-              flex-1
-              min-h-[40px] max-h-[120px]
-              border border-gray-300 rounded-full
-              resize-none
-              text-sm leading-[1.4]
-              px-3 py-2
-              focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200
-            "
+            className="message-textarea flex-1 min-h-[40px] max-h-[120px] border border-[#ddd] rounded-full resize-none text-sm leading-[1.4] focus:outline-none focus:border-primary px-3 py-2"
             rows={1}
             value={text}
             onChange={e => setText(e.target.value)}
@@ -134,25 +126,17 @@ const MessageInput: React.FC<MessageInputProps> = ({
             aria-disabled={!canSend}
             disabled={!canSend}
             className={[
-              'w-10 h-10 rounded-full',
-              'flex items-center justify-center',
-              'border-0 text-white',
+              'send-button w-10 h-10 border-0 rounded-full bg-primary text-white cursor-pointer flex items-center justify-center transition-all duration-200 ease-in-out',
+              // 활성화 상태에서만 호버 효과
               canSend
-                ? 'bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600'
-                : 'bg-gray-300 cursor-not-allowed',
-              'transition-all duration-150 ease-in-out',
+                ? 'enabled:hover:bg-[#00BFA5] enabled:hover:bg-opacity-50 cursor-pointer'
+                : 'disabled:bg-[#cccccc] disabled:cursor-default',
               launching ? 'plane-launch' : '',
             ].join(' ')}
             title={submitLabel}
           >
             {sending ? (
-              <div
-                className="
-                  w-4 h-4
-                  border-2 border-white border-t-transparent
-                  rounded-full animate-spin
-                "
-              />
+              <div className="loading-spinner w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               // 종이비행기 아이콘
               <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" className="plane">
