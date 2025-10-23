@@ -1,10 +1,9 @@
-/* 채팅리스트 (왼쪽 - 검색 + 목록)
-   - Tailwind 토큰으로 색상 정리(bg-gray-50 / border-gray-200)
-   - DMUserSearch에 "사용자" 목록을 따로 전달
-   - 새 유저 선택 시: 기존 대화 찾기 → 없으면 새 대화 생성 → 부모 onSelect 호출
-*/
+// 채팅리스트 (왼쪽 - 검색 + 목록)
+// - 왼쪽 패널: 헤더 + 사용자 검색 + 채팅 목록
+// - 검색에서 유저를 선택하면 기존 DM 방을 열고, 없으면 새로 생성
+// - chats 실시간 구독으로 변경사항 반영
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../../lib/supabase';
 import type { Chat } from '../../../types/dm';
 import DMChatList from './DMChatList';
@@ -21,38 +20,62 @@ type UserItem = {
 };
 
 type DMListProps = {
-  chats: Chat[];
   selectedChatId: string | null;
   onSelect: (id: string) => void;
-  onUpdateChat: (id: string, patch: Partial<Chat>) => void;
-  onSearchToggle?: () => void;
 };
 
 const DMList: React.FC<DMListProps> = ({ selectedChatId, onSelect }) => {
   const { user } = useAuth();
+
   const [chatList, setChatList] = useState<Chat[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [users, setUsers] = useState<UserItem[]>([]);
   const [busy, setBusy] = useState(false);
 
-  // 사용자/채팅 목록 가져오기
-  useEffect(() => {
-    (async () => {
-      const [{ data: usersData, error: usersError }, { data: chatsData, error: chatError }] =
-        await Promise.all([
-          supabase.from('profiles').select('user_id, nickname, avatar_url'),
-          supabase.from('chats').select('*'),
-        ]);
-
-      if (usersError) console.log('사용자 에러 패칭:', usersError.message);
-      else setUsers((usersData ?? []) as UserItem[]);
-
-      if (chatError) console.log('채팅 에러 패칭:', chatError.message);
-      else setChatList((chatsData ?? []) as Chat[]);
-    })();
+  // 유틸: 내 profiles.id (chats FK와 동일한 축)
+  const getMyId = useCallback(async () => {
+    // ensureMyProfileId는 "profiles.id"를 반환하도록 구현되어 있다고 가정
+    return ensureMyProfileId();
   }, []);
 
-  // (선택) chats 테이블 실시간 구독
+  // 사용자 / 채팅 목록 초기 로드
+  useEffect(() => {
+    (async () => {
+      const myProfileId = await getMyId().catch(() => null);
+
+      // 1) 사용자 목록: DMUserSearch용 (반드시 'id' 포함)
+      const { data: usersData, error: usersError } = await supabase
+        .from('profiles')
+        .select('id, user_id, nickname, avatar_url');
+
+      if (usersError) {
+        console.error('[DMList] 사용자 패칭 에러:', usersError.message);
+      } else {
+        setUsers((usersData ?? []) as UserItem[]);
+      }
+
+      // 2) 채팅 목록: (선택) RLS 켜진 상황 고려 → 내 profiles.id가 멤버인 채팅만 조회
+      //    RLS가 꺼져 있다면 전체가 오지만, UX/보안상 내 것만 필터링하는 편이 안전
+      if (myProfileId) {
+        const { data: chatsData, error: chatError } = await supabase
+          .from('chats')
+          .select('*')
+          .or(`user1_id.eq.${myProfileId},user2_id.eq.${myProfileId}`)
+          .order('updated_at', { ascending: false }); // 정렬 컬럼은 스키마에 맞게 조정
+
+        if (chatError) {
+          console.error('[DMList] 채팅 패칭 에러:', chatError.message);
+        } else {
+          setChatList((chatsData ?? []) as Chat[]);
+        }
+      } else {
+        // myProfileId가 없다면(로그인 이슈/프로필 미생성) 빈 목록
+        setChatList([]);
+      }
+    })();
+  }, [getMyId]);
+
+  // chats 테이블 실시간 구독
   useEffect(() => {
     const channel = supabase
       .channel('chats-feed')
@@ -68,39 +91,44 @@ const DMList: React.FC<DMListProps> = ({ selectedChatId, onSelect }) => {
         }
       })
       .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
     };
   }, []);
 
+  // 새 채팅 버튼 → 검색창 열기
   const handleNewChatClick = () => setIsSearchOpen(true);
 
-  // 선택 유저와의 1:1 채팅 열기(있으면 열고 없으면 생성)
+  // 검색 결과에서 유저 선택 → 1:1 채팅 열기 (기존 방 재사용, 없으면 생성)
   const handleSelectUser = async (u: UserItem) => {
-    console.log('[DMList] 선택한 유저:', u);
-
-    const myProfileId = await ensureMyProfileId(); // ✅ 내 profiles.id 확보
-
-    if (u.user_id === myProfileId) {
-      alert('본인과의 채팅은 생성할 수 없습니다.');
-      return;
-    }
-
     if (busy) return;
-    setBusy(true);
 
     try {
-      // profiles.id 기준으로 정렬
-      const u1 = myProfileId < u.user_id ? myProfileId : u.user_id;
-      const u2 = myProfileId < u.user_id ? u.user_id : myProfileId;
+      setBusy(true);
 
-      // 기존 방 조회
-      const { data: exists } = await supabase
+      const myProfileId = await getMyId();
+      if (!myProfileId) throw new Error('내 프로필을 확인할 수 없습니다.');
+
+      // "본인과의 채팅" 방지: profiles.id 기준으로 비교 (user_id 아님)
+      if (u.id === myProfileId) {
+        alert('본인과의 채팅은 생성할 수 없습니다.');
+        return;
+      }
+
+      // 항상 profiles.id 기준으로 쌍 정렬 (중복 방 생성 방지)
+      const u1 = myProfileId < u.id ? myProfileId : u.id;
+      const u2 = myProfileId < u.id ? u.id : myProfileId;
+
+      // 1) 기존 방 존재 여부 확인
+      const { data: exists, error: selErr } = await supabase
         .from('chats')
         .select('id')
         .eq('user1_id', u1)
         .eq('user2_id', u2)
         .maybeSingle();
+
+      if (selErr) throw selErr;
 
       if (exists?.id) {
         onSelect(exists.id);
@@ -108,14 +136,14 @@ const DMList: React.FC<DMListProps> = ({ selectedChatId, onSelect }) => {
         return;
       }
 
-      // 없으면 생성
+      // 2) 없으면 생성
       const {
         data: created,
         error: insErr,
         status,
       } = await supabase
         .from('chats')
-        .insert([{ user1_id: u1, user2_id: u2 }]) // ✅ FK: profiles.id
+        .insert([{ user1_id: u1, user2_id: u2 }])
         .select('id')
         .single();
 
@@ -126,7 +154,7 @@ const DMList: React.FC<DMListProps> = ({ selectedChatId, onSelect }) => {
         return;
       }
 
-      // 경쟁(409) 처리
+      // 3) 경쟁 상태(이미 다른 클라이언트가 먼저 생성) 처리
       if (status === 409 || (insErr && `${insErr.message}`.includes('duplicate'))) {
         const { data: again } = await supabase
           .from('chats')
@@ -134,6 +162,7 @@ const DMList: React.FC<DMListProps> = ({ selectedChatId, onSelect }) => {
           .eq('user1_id', u1)
           .eq('user2_id', u2)
           .maybeSingle();
+
         if (again?.id) {
           onSelect(again.id);
           setIsSearchOpen(false);
@@ -142,9 +171,9 @@ const DMList: React.FC<DMListProps> = ({ selectedChatId, onSelect }) => {
       }
 
       if (insErr) throw insErr;
-      alert('채팅방 생성/열기에 실패했습니다.');
+      alert('채팅방 생성/열기에 실패했습니다. 잠시 후 다시 시도해 주세요.');
     } catch (e) {
-      console.error('open/select chat error', e);
+      console.log('[DMList] open/select chat error:', e);
       alert('채팅방 처리 중 오류가 발생했습니다.');
     } finally {
       setBusy(false);
@@ -153,6 +182,7 @@ const DMList: React.FC<DMListProps> = ({ selectedChatId, onSelect }) => {
 
   return (
     <div className="relative flex flex-col h-dvh sm:h-[calc(100vh-120px)] overscroll-contain">
+      {/* 상단 헤더 + (옵션) 검색 패널 */}
       <div className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
         <DMHeader onNewChatClick={handleNewChatClick} />
         {isSearchOpen && (
@@ -160,12 +190,13 @@ const DMList: React.FC<DMListProps> = ({ selectedChatId, onSelect }) => {
             users={users}
             onSelectUser={handleSelectUser}
             onClose={() => setIsSearchOpen(false)}
-            // (선택) busy 내려서 클릭 잠그기
-            // disabled={busy}
+            // disabled={busy}  // 필요 시 클릭 잠금
           />
         )}
       </div>
-      <div className="flex-1 overflow-y-auto min-h-0">
+
+      {/* 채팅 목록 */}
+      <div className="flex-1 overflow-y-auto min-h-0 bg-white">
         <DMChatList chats={chatList} selectedChatId={selectedChatId} onSelect={onSelect} />
       </div>
     </div>
