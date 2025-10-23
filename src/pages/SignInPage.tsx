@@ -120,7 +120,7 @@ function SignInPage() {
 
     // 성공
     setLoading(false);
-    navigate('/home');
+    navigate('/social');
   };
 
   return (

@@ -1,6 +1,7 @@
 import { Badge, Film, Languages, Users } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card } from './TempHomePage';
+import { useAuth } from '@/contexts/AuthContext';
 
 type HeroProps = {
   onSignup?: () => void;
@@ -8,6 +9,18 @@ type HeroProps = {
 
 const Hero = ({ onSignup }: HeroProps) => {
   const navigate = useNavigate();
+ const { user, signOut } = useAuth();
+
+   const handleClick = () => {
+    if (user) {
+      // 로그인 상태 → /social 이동
+      navigate('/social');
+    } else {
+      // 로그아웃 상태 → /test 이동
+      navigate('/signin');
+    }
+  };
+
   return (
     <section className="relative h-[600px] bg-gradient-to-b from-primary/5 to-white overflow-hidden">
       <div className="max-w-screen-xl mx-auto px-6 h-full flex items-center">
@@ -23,17 +36,17 @@ const Hero = ({ onSignup }: HeroProps) => {
           </p>
           <div className="flex gap-4">
             <button
-              onClick={() => navigate('/test')}
+              onClick={handleClick}
               className="px-8 py-4 bg-primary text-white rounded-[8px] text-lg font-medium"
             >
               시작하기
             </button>
-            <button
+            {/* <button
               onClick={() => navigate('/studylist')}
               className="px-8 py-4 bg-primary text-white rounded-[8px] text-lg font-medium"
             >
               둘러보기
-            </button>
+            </button> */}
           </div>
         </div>
 

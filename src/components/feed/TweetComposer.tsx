@@ -50,6 +50,7 @@ export default function TweetComposer({ onPost }: TweetComposerProps) {
   // ✅ Supabase 게시글 등록
   const handlePost = async () => {
     if (!content.trim() || !user) return;
+    // if (!content.trim()) return;
     setLoading(true);
     console.log('🚀 handlePost called with content:', content);
     try {
