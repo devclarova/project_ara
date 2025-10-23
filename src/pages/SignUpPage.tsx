@@ -8,6 +8,11 @@ import SignUpStepper from '../components/auth/SignUpStepper';
 
 type Step = 1 | 2 | 3;
 
+type Verified = {
+  email: { value: string; ok: boolean };
+  nickname: { value: string; ok: boolean };
+};
+
 // 좌↔우 슬라이드(절대배치 없이 x/opacity만)
 const slideVariants = {
   initial: (dir: 'forward' | 'backward') => ({ x: dir === 'forward' ? 40 : -40, opacity: 0 }),
@@ -35,6 +40,20 @@ export default function SignUpPage() {
     file: File | null;
     preview: string | null; // blob: URL
   }>({ bio: '', file: null, preview: null });
+
+  const [verified, setVerified] = useState<Verified>({
+    email: { value: '', ok: false },
+    nickname: { value: '', ok: false },
+  });
+
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  function invalidateIfChanged(nextEmail: string, nextNickname: string) {
+    setVerified(v => ({
+      email: { value: nextEmail, ok: v.email.ok && v.email.value === nextEmail },
+      nickname: { value: nextNickname, ok: v.nickname.ok && v.nickname.value === nextNickname },
+    }));
+  }
 
   // ✅ 언마운트 시 혹시 남아 있을 수 있는 이전 버전 초안 제거(안전)
   useEffect(() => {
@@ -66,7 +85,25 @@ export default function SignUpPage() {
   const guard = (from: Step, to: Step) => {
     if (to > from) {
       if (to >= 2 && !consentOK) return false;
-      if (to >= 3 && !formOK) return false;
+
+      if (to >= 3) {
+        // Stepper로 3번을 눌러도 항상 안내문구가 뜨도록 일괄 트리거
+        setSubmitAttempted(true);
+
+        // 기존 형식/필수 체크
+        if (!formOK) return false;
+
+        // ✅ 중복확인까지 완료 여부 검사
+        const emailOK = verified.email.ok && verified.email.value === (form?.email ?? '');
+        const nickOK = verified.nickname.ok && verified.nickname.value === (form?.nickname ?? '');
+
+        if (!emailOK || !nickOK) {
+          // 안내문구 노출 트리거
+          setSubmitAttempted(true);
+          return false;
+        }
+        if (!emailOK || !nickOK) return false;
+      }
     }
     return true;
   };
@@ -82,14 +119,34 @@ export default function SignUpPage() {
   const next = () => guardedSetStep(step === 1 ? 2 : 3);
   const back = () => guardedSetStep(step === 3 ? 2 : 1);
 
+  // ⬇️ 레이아웃: 항상 상단 정렬. 2단계만 살짝 넉넉한 패딩.
+  const isStep2 = step === 2;
+  const wrapperPad = isStep2
+    ? 'pt-8 sm:pt-12 pb-10' // Step 2: 폼 길어서 살짝 여유
+    : 'pt-5 sm:pt-7 pb-4'; // Step 1/3: 여백 최소화(바닥 내려가 보임 방지)
+  const titleMargin = 'mb-3 sm:mb-4';
+  const stepperMargin = 'mb-3 sm:mb-4';
+
   return (
-    <div className="min-h-screen w-full bg-gray-50 dark:bg-neutral-950 flex items-start justify-center py-8 sm:py-12">
+    <div
+      className={`
+        min-h-auto md:min-h-auto
+        w-full bg-white dark:bg-black
+        flex justify-center items-start ${wrapperPad}
+        overflow-y-auto
+      `}
+    >
       <div className="w-full max-w-md sm:max-w-lg md:max-w-2xl px-4 sm:px-6 md:px-8">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-800 dark:text-white mb-4 sm:mb-6">
+        <h1
+          className={`
+            text-2xl sm:text-3xl md:text-4xl font-bold text-center
+            text-gray-800 dark:text-white ${titleMargin}
+          `}
+        >
           회원가입
         </h1>
 
-        <div className="mb-3 sm:mb-4">
+        <div className={`${stepperMargin}`}>
           <SignUpStepper current={step} onStepChange={goTo} guard={guard} />
         </div>
 
@@ -132,9 +189,16 @@ export default function SignUpPage() {
                 >
                   <SignUpStep2Form
                     value={form ?? undefined}
+                    verified={verified}
+                    submitAttempted={submitAttempted}
+                    onInvalidateByChange={(e, n) => invalidateIfChanged(e, n)}
+                    onDupChecked={(which, value, ok) =>
+                      setVerified(v => ({ ...v, [which]: { value, ok } }))
+                    }
                     onChange={d => setForm(d)}
                     onNext={d => {
                       setForm(d);
+                      setSubmitAttempted(true); // 버튼 경로에서도 안내문구 조건 통일
                       guardedSetStep(3);
                     }}
                     onBack={back}
@@ -162,7 +226,7 @@ export default function SignUpPage() {
                       consents={consents ?? undefined}
                       onBack={back}
                       onDone={() => {
-                        console.log('Sign up flow finished', { consents, form, profileDraft });
+                        // console.log('Sign up flow finished', { consents, form, profileDraft });
                       }}
                       draft={profileDraft}
                       onChangeDraft={setProfileDraft}
