@@ -61,7 +61,7 @@ const DMList: React.FC<DMListProps> = ({ selectedChatId, onSelect }) => {
           .from('chats')
           .select('*')
           .or(`user1_id.eq.${myProfileId},user2_id.eq.${myProfileId}`)
-          .order('updated_at', { ascending: false }); // 정렬 컬럼은 스키마에 맞게 조정
+          .order('created_at', { ascending: false }); // 정렬 컬럼은 스키마에 맞게 조정
 
         if (chatError) {
           console.error('[DMList] 채팅 패칭 에러:', chatError.message);

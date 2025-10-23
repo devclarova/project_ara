@@ -10,6 +10,7 @@ import type { Chat, Message } from '../../../types/dm';
 import DMList from './DMList';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
+import { ensureMyProfileId } from '../../../lib/ensureMyProfileId';
 
 type DMRoomProps = {
   chatId: string;
@@ -21,6 +22,7 @@ type DMRoomProps = {
 
 function DMRoom({ chatId, title, avatarUrl, onAfterSend, setSelectedChatId }: DMRoomProps) {
   const { user } = useAuth();
+  const [myProfileId, setMyProfileId] = useState<string>('');
 
   // 메시지 / UI 상
   const [msgs, setMsgs] = useState<Message[]>([]);
@@ -66,6 +68,8 @@ function DMRoom({ chatId, title, avatarUrl, onAfterSend, setSelectedChatId }: DM
         return null;
       }
 
+      const profileId = await ensureMyProfileId();
+
       // sender_id에는 "profiles.id" 또는 "auth.users.id" 중 스키마에 맞는 값을 사용하세요.
       // 여기서는 auth.users.id(= user.id)를 사용했다고 가정합니다.
       const { data, error } = await supabase
@@ -73,10 +77,10 @@ function DMRoom({ chatId, title, avatarUrl, onAfterSend, setSelectedChatId }: DM
         .insert([
           {
             chat_id: cid,
-            sender_id: user.id, // 실제 로그인 유저 id
+            sender_id: profileId, // 실제 로그인 유저 id
+            auth_id: user.id,
             content,
             type: 'text',
-            // created_at은 DB default(now())가 있다면 생략 가능
           },
         ])
         .select('*')
@@ -107,6 +111,14 @@ function DMRoom({ chatId, title, avatarUrl, onAfterSend, setSelectedChatId }: DM
       alive = false;
     };
   }, [chatId, fetchMessages]);
+
+  // 내 프로필 id state로 받아서 넘기기
+  useEffect(() => {
+    (async () => {
+      const pid = await ensureMyProfileId().catch(() => '');
+      setMyProfileId(pid ?? '');
+    })();
+  }, []);
 
   // Realtime : messages 테이블 변경 실시간 반영
   // useEffect(() => {
@@ -297,7 +309,7 @@ function DMRoom({ chatId, title, avatarUrl, onAfterSend, setSelectedChatId }: DM
       ) : (
         <MessageList
           messages={msgs}
-          myId={myId} // 현재 사용자 id 전달 (sender_id와 동일 축)
+          myId={myProfileId} // 현재 사용자 id 전달 (sender_id와 동일 축)
           autoScrollMode="onSend"
           justSent={justSent}
         />
