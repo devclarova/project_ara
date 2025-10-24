@@ -38,6 +38,8 @@ import ShancnPage from './pages/ShancnPage';
 import { NotificationPlacements } from 'antd/es/notification/interface';
 import NotificationsPage from './pages/TweetDetail/NotificationsPage';
 import SevenShad from './pages/temps/SevenShad';
+import Profile from './components/profile/Profile';
+import MyProfile from './pages/MyProfile';
 
 const App = () => {
   return (
@@ -50,7 +52,7 @@ const App = () => {
             {/* <Header /> */}
 
             <main className="flex-1">
-            {/* <main className="flex-1 mt-[calc(97px)]"> */}
+              {/* <main className="flex-1 mt-[calc(97px)]"> */}
               <Routes>
                 <Route path="/" element={<LandingPage />}></Route>
                 <Route path="/landing" element={<LandingPage />}></Route>
@@ -76,6 +78,9 @@ const App = () => {
                 <Route path="/socialcn" element={<ShancnPage />}></Route>
                 <Route path="/notifications" element={<NotificationsPage />}></Route>
                 <Route path="/socialss" element={<SevenShad />}></Route>
+                {/* 프로필 테스트 */}
+                <Route path="/profilet" element={<Profile />}></Route>
+                <Route path="/profilettt" element={<MyProfile />}></Route>
               </Routes>
             </main>
 
