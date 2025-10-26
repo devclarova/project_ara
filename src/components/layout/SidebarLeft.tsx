@@ -16,6 +16,7 @@ import {
   User,
   Users,
   Feather,
+  Settings,
 } from 'lucide-react';
 
 // ✅ onPost 타입을 HomeFeed와 맞춤
@@ -26,12 +27,7 @@ interface SidebarLeftProps {
   isReplyMode?: boolean;
 }
 
-const SidebarLeft = ({
-  onPost,
-  onReply,
-  parentId,
-  isReplyMode = false,
-}: SidebarLeftProps) => {
+const SidebarLeft = ({ onPost, onReply, parentId, isReplyMode = false }: SidebarLeftProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -56,6 +52,7 @@ const SidebarLeft = ({
     // { icon: Users, label: 'Communities', path: '/social/communities' },
     // { icon: Star, label: 'Premium', path: '/social/premium' },
     { icon: User, label: 'Profile', path: '/social/profile' },
+    { icon: Settings, label: 'Settings', path: '/settings' },
     // { icon: MoreHorizontal, label: 'More', path: '/social/more' },
   ];
 

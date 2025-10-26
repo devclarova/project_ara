@@ -1,6 +1,6 @@
 import { BookMarked, BookOpen, Home, Menu, UserCircle, Users, X } from 'lucide-react';
 
-import { useEffect, useState } from 'react';
+import { Profiler, useEffect, useState } from 'react';
 import {
   NavLink,
   Route,
@@ -13,7 +13,7 @@ import textLogo from './assets/text-logo.svg';
 import styles from './components/Layout.module.css';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import CommunityDetailPage from './pages/CommunityDetailPage';
-import ProfilePage from './pages/ProfilePage';
+
 import StudyPage from './pages/StudyPage';
 import VocaPage from './pages/VocaPage';
 import CommunityWritePage from './pages/CommunityWritePage';
@@ -38,8 +38,12 @@ import ShancnPage from './pages/ShancnPage';
 import { NotificationPlacements } from 'antd/es/notification/interface';
 import NotificationsPage from './pages/TweetDetail/NotificationsPage';
 import SevenShad from './pages/temps/SevenShad';
-import Profile from './components/profile/Profile';
+
 import MyProfile from './pages/MyProfile';
+
+import ProfilePage_old from './pages/ProfilePage_old';
+import ProfilePage from './pages/ProfilePage';
+import ProfileSettings from './components/profile/ProfileSettings';
 
 const App = () => {
   return (
@@ -61,6 +65,7 @@ const App = () => {
                 <Route path="/signupo" element={<SignUpPage_old />}></Route>
                 <Route path="/signin" element={<SignInPage />}></Route>
                 <Route path="/profile" element={<ProfilePage />}></Route>
+                <Route path="/profileo" element={<ProfilePage_old />}></Route>
                 <Route path="/studyList" element={<StudyListPage />}></Route>
                 <Route path="/study/:id" element={<StudyPage />}></Route>
                 <Route path="/voca" element={<VocaPage />}></Route>
@@ -73,13 +78,13 @@ const App = () => {
                 <Route path="/social" element={<HomeFeed />}></Route>
                 <Route path="/social/explore" element={<ExplorePage />} />
                 <Route path="/social/profile" element={<ProfilePage />} />
+                <Route path="/settings" element={<ProfileSettings />} />
                 <Route path="/social/:id" element={<TweetDetailPage />} />
                 <Route path="/dm" element={<DMPage />}></Route>
                 <Route path="/socialcn" element={<ShancnPage />}></Route>
                 <Route path="/notifications" element={<NotificationsPage />}></Route>
                 <Route path="/socialss" element={<SevenShad />}></Route>
                 {/* 프로필 테스트 */}
-                <Route path="/profilet" element={<Profile />}></Route>
                 <Route path="/profilettt" element={<MyProfile />}></Route>
               </Routes>
             </main>

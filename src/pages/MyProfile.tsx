@@ -196,10 +196,8 @@ export default function MyProfile() {
     joinedDate: 'March 2024',
     following: 234,
     followers: 1847,
-    coverImage:
-      'https://placehold.co/100',
-    avatar:
-      'default-avatar.svg',
+    coverImage: 'https://placehold.co/100',
+    avatar: 'default-avatar.svg',
   };
 
   const userPosts = mockPosts.filter((_, index) => index < 3);
