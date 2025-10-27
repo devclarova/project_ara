@@ -84,8 +84,6 @@ const App = () => {
                 <Route path="/socialcn" element={<ShancnPage />}></Route>
                 <Route path="/notifications" element={<NotificationsPage />}></Route>
                 <Route path="/socialss" element={<SevenShad />}></Route>
-                {/* 프로필 테스트 */}
-                <Route path="/profilettt" element={<MyProfile />}></Route>
               </Routes>
             </main>
 

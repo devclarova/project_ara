@@ -5,7 +5,7 @@ import React from 'react';
 export default function SettingsLayout({
   left,
   right,
-  gapClass = 'gap-6 md:gap-10',
+  gapClass = 'gap-6 md:gap-8',
 }: {
   left: React.ReactNode; // 공용 사이드바 등
   right: React.ReactNode; // 오른쪽 내용(넓은 패널 or 고정폭 패널)

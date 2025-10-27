@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Button from '../common/Buttons';
 
 type ProfileEditProps = {
   open: boolean;
@@ -168,19 +169,10 @@ const ProfileEdit = ({ open, onClose, onSave }: ProfileEditProps) => {
 
           {/* Footer */}
           <div className="mt-7 flex items-center justify-end gap-2 px-1 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-xl px-4 py-2 text-gray-700 hover:bg-gray-100"
-            >
+            <Button type="button" variant="ghost" onClick={onClose}>
               취소
-            </button>
-            <button
-              type="submit"
-              className="rounded-xl bg-primary/80 px-4 py-2 font-medium text-white hover:bg-primary active:translate-y-[1px]"
-            >
-              저장
-            </button>
+            </Button>
+            <Button type="submit">저장</Button>
           </div>
         </form>
       </div>
