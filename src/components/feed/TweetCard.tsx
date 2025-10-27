@@ -102,7 +102,15 @@ export default function TweetCard({
         </header>
 
         {/* 내용 */}
-        <p className="mt-1 text-gray-800 text-[15px] leading-snug whitespace-pre-line">{content}</p>
+        {/* <p className="mt-1 text-gray-800 text-[15px] leading-snug whitespace-pre-line">{content}</p> */}
+        {/* <p className="mt-1 text-gray-800 text-[15px] leading-snug whitespace-pre-line">
+          {content.replace(/<[^>]+>/g, '')}
+        </p> */}
+        {/* 수정 코드 */}
+        <div
+          className="mt-1 text-gray-800 text-[15px] leading-snug prose max-w-none"
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
 
         {/* 이미지 */}
         {image_url && (
