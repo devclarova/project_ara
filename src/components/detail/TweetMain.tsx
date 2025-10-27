@@ -2,8 +2,8 @@
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import Avatar from '../common/Avatar'
+import DOMPurify from 'dompurify' // ✅ 추가
 
-// ✅ Supabase 구조에 맞는 타입 정의
 interface TweetMainProps {
   tweet: {
     id: string
@@ -35,12 +35,13 @@ const TweetMain = ({ tweet }: TweetMainProps) => {
             <span className="font-bold text-lg">{author}</span>
           </div>
 
-          {/* 본문 내용 */}
-          <p className="text-xl leading-relaxed mb-4 text-gray-900 whitespace-pre-line">
-            {content}
-          </p>
+          {/* ✅ Quill content HTML 렌더링 */}
+          <div
+            className="text-xl leading-relaxed mb-4 text-gray-900 prose max-w-none"
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
+          />
 
-          {/* 이미지 */}
+          {/* 대표 이미지 (옵션) */}
           {image && (
             <img
               src={image}
