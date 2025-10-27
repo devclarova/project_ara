@@ -7,7 +7,7 @@ type Props = {
   items: SidebarItem[];
   activeId: MenuId;
   onChange: (id: MenuId) => void;
-  className?: string; // w-96, w-[28rem] 같은 폭 제어용
+  className?: string;
 };
 
 export default function SettingsSidebar({
@@ -29,7 +29,7 @@ export default function SettingsSidebar({
             <li key={it.id}>
               <button
                 onClick={() => onChange(it.id)}
-                className={`w-full flex items-center justify-between rounded-xl px-4 py-3 text-sm transition
+                className={`w-full flex items-center justify-between rounded-xl px-4 py-3 transition text-base
                   ${active ? 'bg-gray-100 text-gray-900 font-medium' : 'hover:bg-gray-50 text-gray-700'}`}
               >
                 <span className="truncate">{it.label}</span>

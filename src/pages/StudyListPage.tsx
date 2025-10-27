@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Input from '../components/Input';
 import { supabase } from '../lib/supabase';
 import type { Study } from '../types/study';
+import SearchBar from '../components/Input';
 
 const FilterDropdown = () => {
   const [open, setOpen] = useState(false);
@@ -16,7 +17,6 @@ const FilterDropdown = () => {
         <i className="ri-filter-line text-sm" />
         필터
       </button>
-
       {open && (
         <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
           <div className="p-4 space-y-4">
@@ -303,9 +303,9 @@ const StudyListPage = () => {
         {/* 탭 */}
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <CategoryTabs />
-          <Input
-            variant="search"
-            onChange={handleKeywordChange}
+          <SearchBar
+            // variant="search"
+            // onChange={handleKeywordChange}
             placeholder="검색어를 입력해주세요"
           />
         </div>

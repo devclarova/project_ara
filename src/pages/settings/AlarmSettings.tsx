@@ -5,7 +5,7 @@ import Switch from './Switch';
 
 export default function AlarmSettings() {
   const [commentPush, setCommentPush] = useState(true);
-  const [likePush, setLikePush] = useState(false);
+  const [likePush, setLikePush] = useState(true);
   const [followPush, setFollowPush] = useState(true);
 
   return (

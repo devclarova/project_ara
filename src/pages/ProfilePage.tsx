@@ -2,7 +2,7 @@ import SidebarLeft from '@/components/layout/SidebarLeft';
 import { useState } from 'react';
 import PostCard, { EmptyCard } from '@/components/profile/PostCard';
 import SidebarRight from '@/components/layout/SidebarRight';
-import ProfileEdit from '@/components/modal/ProfileEdit';
+import ProfileEdit from '@/components/profile/ProfileEdit';
 
 const mockPosts = [
   {

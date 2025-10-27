@@ -8,6 +8,34 @@
       href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css"
       rel="stylesheet"
     />
+
+    <!-- 테마 -->
+    <script>
+      (function () {
+        var KEY = 'theme-mode'; // 'light' | 'dark' | 'system'
+        var saved = localStorage.getItem(KEY) || 'system';
+        var mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+        function apply(mode) {
+          var dark = mode === 'dark' || (mode === 'system' && mq.matches);
+          document.documentElement.classList.toggle('dark', dark);
+          document.documentElement.dataset.themeMode = mode;
+        }
+
+        window.__setTheme = function (mode) {
+          localStorage.setItem(KEY, mode);
+          apply(mode);
+        };
+
+        mq.addEventListener &&
+          mq.addEventListener('change', function () {
+            if ((localStorage.getItem(KEY) || 'system') === 'system') apply('system');
+          });
+
+        apply(saved);
+      })();
+    </script>
+
     <title>Korean Leaning Service Ara</title>
   </head>
   <body>
