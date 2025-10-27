@@ -11,6 +11,7 @@ import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import DMList from './DMList';
 import DMRoom from './DMRoom';
+import SidebarLeft from '@/components/layout/SidebarLeft';
 
 type RoomMeta = { title: string; avatarUrl: string };
 
@@ -151,57 +152,60 @@ function DMPage() {
   };
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 h-full mt-2 mb-2 bg-white text-gray-900 mx-auto w-full max-w-[1200px] px-2 sm:px-4 lg:px-8 overflow-y-auto">
-      <div className="flex flex-1 border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-        {/* 좌측: 채팅 목록(데스크톱 이상) */}
-        <aside className="hidden sm:flex sm:w-[260px] md:w-[300px] lg:w-[340px] border-r border-gray-200 bg-gray-50 flex-col overflow-y-auto transition-all duration-300">
-          <DMList
-            // chats={chatList}
-            selectedChatId={selectedChatId}
-            onSelect={setSelectedChatId}
-            // onUpdateChat={() => {}}
-            // 필요시 로딩 표시 전달: loading={loadingChats}
-          />
-        </aside>
-
-        {/* 우측: 채팅룸 or 안내 */}
-        <main className="flex-1 flex flex-col bg-white overflow-hidden">
-          {selectedChatId ? (
-            <DMRoom
-              chatId={selectedChatId}
-              title={roomMeta?.title || selectedChatId} // 상대 닉네임(Fallback: ID)
-              avatarUrl={roomMeta?.avatarUrl || DEFAULT_AVATAR} // 상대 아바타(Fallback)
-              onAfterSend={handleAfterSend}
-              setSelectedChatId={setSelectedChatId}
+    <div className="min-h-screen flex max-w-7xl  mx-auto">
+      <SidebarLeft />
+      <div className="flex flex-col flex-1 min-h-0 h-full mt-2 mb-2 bg-white text-gray-900 mx-auto w-full max-w-[1200px] px-2 sm:px-4 lg:px-8 overflow-y-auto">
+        <div className="flex flex-1 border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+          {/* 좌측: 채팅 목록(데스크톱 이상) */}
+          <aside className="hidden sm:flex sm:w-[260px] md:w-[300px] lg:w-[340px] border-r border-gray-200 bg-gray-50 flex-col overflow-y-auto transition-all duration-300">
+            <DMList
+              // chats={chatList}
+              selectedChatId={selectedChatId}
+              onSelect={setSelectedChatId}
+              // onUpdateChat={() => {}}
+              // 필요시 로딩 표시 전달: loading={loadingChats}
             />
-          ) : (
-            <>
-              {/* 모바일: 목록 먼저 노출 */}
-              <div className="sm:hidden flex-1 overflow-y-auto bg-gray-50">
-                <DMList
-                  // chats={chatList}
-                  selectedChatId={selectedChatId}
-                  onSelect={setSelectedChatId}
-                  // onUpdateChat={() => {}}
-                />
-              </div>
+          </aside>
 
-              {/* 데스크톱: 빈 상태 안내 */}
-              <div className="hidden sm:flex flex-1 items-center justify-center text-center p-8 text-gray-600 overflow-auto">
-                <div>
-                  <h2 className="text-2xl font-semibold mb-2">1 : 1 채팅</h2>
-                  <p className="text-sm sm:text-base">좌측에서 채팅방을 선택하거나</p>
-                  <p className="text-sm sm:text-base">새 채팅 버튼을 눌러 대화를 시작하세요.</p>
-                  <div className="mt-6 text-gray-700 space-y-1 text-sm sm:text-base">
-                    <p>💬 실시간 1:1 메시지</p>
-                    <p>👥 사용자 검색 및 초대</p>
-                    <p>📱 반응형 디자인</p>
+          {/* 우측: 채팅룸 or 안내 */}
+          <main className="flex-1 flex flex-col bg-white overflow-hidden">
+            {selectedChatId ? (
+              <DMRoom
+                chatId={selectedChatId}
+                title={roomMeta?.title || selectedChatId} // 상대 닉네임(Fallback: ID)
+                avatarUrl={roomMeta?.avatarUrl || DEFAULT_AVATAR} // 상대 아바타(Fallback)
+                onAfterSend={handleAfterSend}
+                setSelectedChatId={setSelectedChatId}
+              />
+            ) : (
+              <>
+                {/* 모바일: 목록 먼저 노출 */}
+                <div className="sm:hidden flex-1 overflow-y-auto bg-gray-50">
+                  <DMList
+                    // chats={chatList}
+                    selectedChatId={selectedChatId}
+                    onSelect={setSelectedChatId}
+                    // onUpdateChat={() => {}}
+                  />
+                </div>
+
+                {/* 데스크톱: 빈 상태 안내 */}
+                <div className="hidden sm:flex flex-1 items-center justify-center text-center p-8 text-gray-600 overflow-auto">
+                  <div>
+                    <h2 className="text-2xl font-semibold mb-2">1 : 1 채팅</h2>
+                    <p className="text-sm sm:text-base">좌측에서 채팅방을 선택하거나</p>
+                    <p className="text-sm sm:text-base">새 채팅 버튼을 눌러 대화를 시작하세요.</p>
+                    <div className="mt-6 text-gray-700 space-y-1 text-sm sm:text-base">
+                      <p>💬 실시간 1:1 메시지</p>
+                      <p>👥 사용자 검색 및 초대</p>
+                      <p>📱 반응형 디자인</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </>
-          )}
-        </main>
+              </>
+            )}
+          </main>
+        </div>
       </div>
     </div>
   );
