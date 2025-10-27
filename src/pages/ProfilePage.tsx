@@ -1,8 +1,12 @@
 import SidebarLeft from '@/components/layout/SidebarLeft';
-import { useState } from 'react';
-import PostCard, { EmptyCard } from '@/components/profile/PostCard';
 import SidebarRight from '@/components/layout/SidebarRight';
-import ProfileEdit from '@/components/profile/ProfileEdit';
+import ProfileActivity from '@/components/profile/ProfileActivity';
+import ProfileInfo, { type ProfileData } from '@/components/profile/ProfileInfo';
+import type { TabItem } from '@/components/profile/ProfileTabBar';
+import ProfileTabBar from '@/components/profile/ProfileTabBar';
+import { useState } from 'react';
+
+type ActivityTab = 'posts' | 'replies' | 'media' | 'likes';
 
 const mockPosts = [
   {
@@ -64,10 +68,23 @@ const mockPosts = [
   },
 ];
 
+const profile = {
+  nickname: '닉네임',
+  handle: '아이디',
+  bio: '소개',
+  location: '위치',
+  website: 'https://example.com',
+  joined: '2025.10',
+  followingCount: 444,
+  followerCount: 1180,
+  coverUrl: null,
+  avatarUrl: '/default-avatar.svg',
+} satisfies ProfileData;
+
 const ProfilePage = () => {
-  const [activeTab, setActiveTab] = useState('posts'); // 게시글, 답장, 미디어, 좋아요 토글
-  const [likedPosts, setLikedPosts] = useState<string[]>([]); // ❤️ 좋아요한 글 ID 저장
-  const coverUrl: string | null = null;
+  const [activeTab, setActiveTab] = useState<ActivityTab>('posts'); // 게시글, 답장, 미디어, 좋아요 토글
+  const [likedPosts, setLikedPosts] = useState<string[]>([]); // 좋아요한 글 ID 저장
+  // const coverUrl: string | null = null;
   const [isEditOpen, setIsEditOpen] = useState(false);
 
   const toggleLike = (postId: string) => {
@@ -76,11 +93,11 @@ const ProfilePage = () => {
     );
   };
 
-  const tabs = [
+  const tabs: TabItem<ActivityTab>[] = [
     { id: 'posts', label: 'Posts', count: mockPosts.length },
     { id: 'replies', label: 'Replies', count: 12 },
-    { id: 'media', label: 'Media', count: 8 },
-    { id: 'likes', label: 'Likes', count: 45 },
+    { id: 'media', label: 'Media', count: mockPosts.filter(p => p.image).length },
+    { id: 'likes', label: 'Likes', count: likedPosts.length },
   ];
 
   return (
@@ -89,207 +106,25 @@ const ProfilePage = () => {
 
       <main className="pb-20 lg:pb-6 px-6 py-8">
         <div className="w-full max-w-2xl mx-auto bg-white mr-2">
-          {/* ===== 커버 + 아바타 영역 ===== */}
-          <div className="relative">
-            <div className="h-48 overflow-hidden relative">
-              {coverUrl ? (
-                <img
-                  src={coverUrl}
-                  alt="커버이미지"
-                  className="w-full h-full object-cover object-top"
-                />
-              ) : (
-                <div className="w-full h-full bg-slate-200" />
-              )}
-            </div>
-
-            <div className="absolute -bottom-12 ml-5 mb-3">
-              <div className="w-24 h-24 rounded-full border-4 border-white bg-white overflow-hidden">
-                <img
-                  src="/default-avatar.svg"
-                  alt="아바타이미지"
-                  className="w-full h-full object-cover object-top"
-                />
-              </div>
-            </div>
-          </div>
-
           {/* ===== 프로필 정보 ===== */}
-          <div className="ml-5">
-            <div className="text-right mt-4">
-              <button
-                className="bg-primary/80 text-white px-4 py-2 mr-5 rounded-full text-sm hover:bg-primary"
-                onClick={() => setIsEditOpen(true)}
-              >
-                프로필 편집
-              </button>
-            </div>
-
-            <div>
-              <div className="mb-3">
-                <h1 className="text-2xl font-bold text-[#111827] mb-0.5">닉네임</h1>
-                <p className="text-[#6b7280] text-sm">@아이디</p>
-              </div>
-
-              <p className="text-[#111827] mb-4 leading-relaxed">소개</p>
-
-              <div className="flex flex-wrap items-center gap-4 text-[13px] text-[#6b7280] mb-4">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-4 flex items-center justify-center">
-                    <i className="ri-map-pin-line" />
-                  </div>
-                  <span>위치</span>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-4 flex items-center justify-center">
-                    <i className="ri-link" />
-                  </div>
-                  <a
-                    href="https://example.com"
-                    className="text-[#00bdaa] hover:underline cursor-pointer"
-                  >
-                    website
-                  </a>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-4 flex items-center justify-center">
-                    <i className="ri-calendar-line" />
-                  </div>
-                  <span>Joined 2025.10</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-6 text-sm">
-                <button className="hover:underline cursor-pointer transition-all duration-200">
-                  <span className="font-bold text-[#111827]">444</span>
-                  <span className="text-[#6b7280] ml-1">Following</span>
-                </button>
-                <button className="hover:underline cursor-pointer transition-all duration-200">
-                  <span className="font-bold text-[#111827]">1,180</span>
-                  <span className="text-[#6b7280] ml-1">Followers</span>
-                </button>
-              </div>
-            </div>
-          </div>
+          <ProfileInfo profile={profile} onClickEdit={() => setIsEditOpen(true)} />
 
           {/* ===== 활동 탭 ===== */}
-          <div className="mt-6">
-            <div className="border-t">
-              {/* 탭 바 */}
-              <div className="sticky top-0 z-10 bg-white border-b">
-                <div className="flex">
-                  {tabs.map(tab => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex-1 h-12 px-5 font-medium text-sm transition-all duration-200 cursor-pointer relative ${
-                        activeTab === tab.id
-                          ? 'text-[#00bdaa] font-semibold'
-                          : 'text-[#6b7280] hover:text-[#00bdaa]'
-                      }`}
-                    >
-                      <span>{tab.label}</span>
-                      {activeTab === tab.id && (
-                        <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#00bdaa] rounded-t-full" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-4 px-10 pb-6 bg-white">
-                <div className="space-y-6 min-h-[240px]">
-                  {/* Posts */}
-                  {activeTab === 'posts' && (
-                    <>
-                      {mockPosts.length > 0 ? (
-                        mockPosts.map(post => (
-                          <div
-                            key={post.id}
-                            className="transition-all duration-150 hover:bg-[#f9fafb] rounded-2xl"
-                          >
-                            <PostCard
-                              {...post}
-                              isLiked={likedPosts.includes(post.id)}
-                              onLike={() => toggleLike(post.id)}
-                            />
-                          </div>
-                        ))
-                      ) : (
-                        <EmptyCard iconClass="ri-file-list-line" text="게시글이 없습니다." />
-                      )}
-                    </>
-                  )}
-
-                  {/* Replies */}
-                  {activeTab === 'replies' && (
-                    <EmptyCard iconClass="ri-chat-3-line" text="답글이 없습니다." />
-                  )}
-
-                  {/* Media */}
-                  {activeTab === 'media' && (
-                    <>
-                      {mockPosts.length > 0 ? (
-                        mockPosts
-                          .filter(post => post.image)
-                          .map(post => (
-                            <div
-                              key={post.id}
-                              className="transition-all duration-150 hover:bg-[#f9fafb] rounded-2xl"
-                            >
-                              <PostCard {...post} />
-                            </div>
-                          ))
-                      ) : (
-                        <EmptyCard iconClass="ri-image-line" text="미디어가 없습니다." />
-                      )}
-                    </>
-                  )}
-
-                  {/* Likes */}
-                  {activeTab === 'likes' && (
-                    <>
-                      {mockPosts.length > 0 ? (
-                        mockPosts
-                          .filter(post => post.likes)
-                          .map(post => (
-                            <div
-                              key={post.id}
-                              className="transition-all duration-150 hover:bg-[#f9fafb] rounded-2xl"
-                            >
-                              <PostCard
-                                {...post}
-                                isLiked={!likedPosts.includes(post.id)}
-                                onLike={() => toggleLike(post.id)}
-                              />
-                            </div>
-                          ))
-                      ) : (
-                        <EmptyCard text="좋아요한 게시글이 없습니다." />
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+          <ProfileTabBar<ActivityTab>
+            activeId={activeTab}
+            tabs={tabs}
+            onChange={id => setActiveTab(id)}
+          />
+          <ProfileActivity
+            activeTab={activeTab}
+            tabs={tabs}
+            posts={mockPosts}
+            likedPosts={likedPosts}
+            onToggleLike={toggleLike}
+          />
         </div>
       </main>
-
       <SidebarRight />
-
-      {/* === 모달 마운트 === */}
-      <ProfileEdit
-        open={isEditOpen}
-        onClose={() => setIsEditOpen(false)}
-        onSave={data => {
-          // TODO: 여기에 Supabase/API 연동
-          console.log('저장 데이터:', data);
-          setIsEditOpen(false);
-        }}
-      />
     </div>
   );
 };
