@@ -146,6 +146,42 @@ export type Database = {
           },
         ];
       };
+      consent_documents: {
+        Row: {
+          code: string;
+          content_hash: string | null;
+          content_url: string | null;
+          id: number;
+          lang: string;
+          published_at: string;
+          required: boolean;
+          title: string;
+          version: string;
+        };
+        Insert: {
+          code: string;
+          content_hash?: string | null;
+          content_url?: string | null;
+          id?: number;
+          lang?: string;
+          published_at?: string;
+          required?: boolean;
+          title: string;
+          version: string;
+        };
+        Update: {
+          code?: string;
+          content_hash?: string | null;
+          content_url?: string | null;
+          id?: number;
+          lang?: string;
+          published_at?: string;
+          required?: boolean;
+          title?: string;
+          version?: string;
+        };
+        Relationships: [];
+      };
       countries: {
         Row: {
           flag: string | null;
@@ -284,6 +320,110 @@ export type Database = {
           timeline?: string | null;
         };
         Relationships: [];
+      };
+      direct_chats: {
+        Row: {
+          created_at: string | null;
+          id: string;
+          is_active: boolean | null;
+          last_message_at: string | null;
+          user_pair_high: string | null;
+          user_pair_low: string | null;
+          user1_active: boolean | null;
+          user1_id: string;
+          user1_left_at: string | null;
+          user1_notified: boolean | null;
+          user2_active: boolean | null;
+          user2_id: string;
+          user2_left_at: string | null;
+          user2_notified: boolean | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          last_message_at?: string | null;
+          user_pair_high?: string | null;
+          user_pair_low?: string | null;
+          user1_active?: boolean | null;
+          user1_id: string;
+          user1_left_at?: string | null;
+          user1_notified?: boolean | null;
+          user2_active?: boolean | null;
+          user2_id: string;
+          user2_left_at?: string | null;
+          user2_notified?: boolean | null;
+        };
+        Update: {
+          created_at?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          last_message_at?: string | null;
+          user_pair_high?: string | null;
+          user_pair_low?: string | null;
+          user1_active?: boolean | null;
+          user1_id?: string;
+          user1_left_at?: string | null;
+          user1_notified?: boolean | null;
+          user2_active?: boolean | null;
+          user2_id?: string;
+          user2_left_at?: string | null;
+          user2_notified?: boolean | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'direct_chats_user1_id_fkey';
+            columns: ['user1_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'direct_chats_user2_id_fkey';
+            columns: ['user2_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      direct_messages: {
+        Row: {
+          chat_id: string;
+          content: string;
+          created_at: string | null;
+          id: string;
+          is_read: boolean | null;
+          read_at: string | null;
+          sender_id: string;
+        };
+        Insert: {
+          chat_id: string;
+          content: string;
+          created_at?: string | null;
+          id?: string;
+          is_read?: boolean | null;
+          read_at?: string | null;
+          sender_id: string;
+        };
+        Update: {
+          chat_id?: string;
+          content?: string;
+          created_at?: string | null;
+          id?: string;
+          is_read?: boolean | null;
+          read_at?: string | null;
+          sender_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'direct_messages_chat_id_fkey';
+            columns: ['chat_id'];
+            isOneToOne: false;
+            referencedRelation: 'direct_chats';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       memo: {
         Row: {
@@ -768,6 +908,38 @@ export type Database = {
           },
         ];
       };
+      tweet_media: {
+        Row: {
+          created_at: string | null;
+          id: string;
+          tweet_id: string | null;
+          type: string | null;
+          url: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          id?: string;
+          tweet_id?: string | null;
+          type?: string | null;
+          url: string;
+        };
+        Update: {
+          created_at?: string | null;
+          id?: string;
+          tweet_id?: string | null;
+          type?: string | null;
+          url?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tweet_media_tweet_id_fkey';
+            columns: ['tweet_id'];
+            isOneToOne: false;
+            referencedRelation: 'tweets';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       tweet_replies: {
         Row: {
           author_id: string;
@@ -889,6 +1061,41 @@ export type Database = {
             columns: ['blocker_id'];
             isOneToOne: false;
             referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      user_consents: {
+        Row: {
+          agreed: boolean;
+          agreed_at: string;
+          consent_id: number;
+          ip: unknown;
+          user_agent: string | null;
+          user_id: string;
+        };
+        Insert: {
+          agreed: boolean;
+          agreed_at?: string;
+          consent_id: number;
+          ip?: unknown;
+          user_agent?: string | null;
+          user_id: string;
+        };
+        Update: {
+          agreed?: boolean;
+          agreed_at?: string;
+          consent_id?: number;
+          ip?: unknown;
+          user_agent?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'user_consents_consent_id_fkey';
+            columns: ['consent_id'];
+            isOneToOne: false;
+            referencedRelation: 'consent_documents';
             referencedColumns: ['id'];
           },
         ];
@@ -1162,6 +1369,10 @@ export type Database = {
     };
     Functions: {
       email_exists: { Args: { _email: string }; Returns: boolean };
+      email_taken_by_email_provider: {
+        Args: { _email: string };
+        Returns: boolean;
+      };
       ensure_profile: { Args: never; Returns: undefined };
       fn_normalize_nickname: { Args: { nick: string }; Returns: string };
       hhmmss_to_seconds: { Args: { t: string }; Returns: number };

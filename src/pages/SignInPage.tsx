@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 function SignInPage() {
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle, signInWithKakao } = useAuth();
   const [email, setEmail] = useState<string>('');
   const [pw, setPw] = useState<string>('');
   const [msg, setMsg] = useState<string>('');
@@ -234,13 +234,24 @@ function SignInPage() {
           <hr className="flex-grow border-gray-300" />
         </div>
 
-        <div className="mt-4 space-y-2">
+        <div className="mt-4 space-y-2 flex flex-col gap-3">
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-2 border border-primary rounded-lg py-2 sm:py-3 text-sm sm:text-base font-medium text-primary bg-gray-50 hover:opacity-80 transition-opacity"
+            className="w-full flex items-center justify-center gap-2 border border-solid border-gray-300 rounded-lg py-2 sm:py-3 text-sm sm:text-base font-medium text-black bg-[#fff] hover:bg-gray-50 transition-opacity"
+            onError={error => setMsg(`구글 로그인 오류: ${error}`)}
+            onClick={signInWithGoogle}
           >
             <img src="/images/google_logo.png" alt="Sign in with Google" className="w-5 h-5" />
-            <span>Google로 로그인하기</span>
+            <span>Google 로그인</span>
+          </button>
+          <button
+            type="button"
+            className="w-full flex items-center justify-center gap-2 border border-gray-300 rounded-lg py-2 sm:py-3 text-sm sm:text-base font-medium text-black bg-[#FEE500] hover:opacity-80 transition-opacity"
+            onError={error => setMsg(`구글 로그인 오류: ${error}`)}
+            onClick={signInWithKakao}
+          >
+            <img src="/images/kakao_logo.png" alt="Sign in with Google" className="w-5 h-5" />
+            <span>카카오 로그인</span>
           </button>
         </div>
       </div>

@@ -50,7 +50,7 @@ const App = () => {
             {/* <Header /> */}
 
             <main className="flex-1">
-            {/* <main className="flex-1 mt-[calc(97px)]"> */}
+              {/* <main className="flex-1 mt-[calc(97px)]"> */}
               <Routes>
                 <Route path="/" element={<LandingPage />}></Route>
                 <Route path="/landing" element={<LandingPage />}></Route>

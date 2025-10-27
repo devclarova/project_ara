@@ -34,6 +34,15 @@ type Props = {
 
 const DRAFT_KEY = 'signup-profile-draft';
 
+// ★ 로컬 기준 'YYYY-MM-DD' 포맷터 (UTC 변환 금지)
+function toYMDLocal(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const y = d.getFullYear();
+  const m = pad(d.getMonth() + 1);
+  const day = pad(d.getDate());
+  return `${y}-${m}-${day}`;
+}
+
 export default function SignUpStep3Profile({
   email,
   pw,
@@ -58,7 +67,10 @@ export default function SignUpStep3Profile({
       setLoading(true);
 
       // 1) 필수값 프론트 검증
-      const birthdayStr = birth ? birth.toISOString().slice(0, 10) : '';
+      // ❌ 기존: birth.toISOString().slice(0, 10)  → 날짜가 하루 당김
+      // ✅ 수정: 로컬 기준 'YYYY-MM-DD'로 안전 포맷
+      const birthdayStr = birth ? toYMDLocal(birth) : ''; // ★ 변경 포인트
+
       if (!email.trim()) return setMsg('이메일을 입력해 주세요.');
       if (!pw.trim()) return setMsg('비밀번호를 입력해 주세요.');
       if (!nickname.trim()) return setMsg('닉네임을 입력해 주세요.');
@@ -88,12 +100,13 @@ export default function SignUpStep3Profile({
       }
 
       // 3) 프로필 드래프트를 localStorage에 저장(로그인 성공 시 profiles 생성에 사용)
+      //    ★ 여기에도 'YYYY-MM-DD' 문자열 그대로 저장 → 이후 생성 로직에서 그대로 DB date 컬럼에 넣으면 하루 당김 없음
       localStorage.setItem(
         DRAFT_KEY,
         JSON.stringify({
           nickname: nickname.trim(),
           gender: gender.trim(),
-          birthday: birthdayStr,
+          birthday: birthdayStr, // ★ 안전한 문자열
           country: country.trim(),
           bio: (draft.bio ?? '').toString(),
           pendingAvatarUrl,
@@ -109,25 +122,6 @@ export default function SignUpStep3Profile({
         },
       });
       if (error) throw new Error(error.message);
-
-      // 5) 요구사항: "회원가입 누르면 user는 넘기라고." (세션 없어도 가능)
-      try {
-        const authId = data.user?.id;
-        const authEmail = data.user?.email ?? email;
-        if (authId) {
-          await supabase.from('users').upsert(
-            {
-              auth_user_id: authId,
-              email: authEmail,
-              created_at: new Date().toISOString(),
-              last_login: new Date().toISOString(),
-            },
-            { onConflict: 'auth_user_id' },
-          );
-        }
-      } catch (uErr) {
-        console.warn('users upsert at signUp skipped:', uErr);
-      }
 
       // 6) 성공 모달
       setShowSuccess(true);
@@ -194,7 +188,7 @@ export default function SignUpStep3Profile({
           onChange={e => onChangeDraft(d => ({ ...d, bio: e.target.value.slice(0, 300) }))}
           rows={4}
           placeholder="간단한 소개를 작성해주세요."
-          className="w-full h-32 resize-none rounded-lg border border-gray-300 dark:border-white/15 bg-transparent px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--ara-ring)]"
+          className="w-full h-32 resize-none rounded-lg border border-gray-300 dark:border白/15 bg-transparent px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--ara-ring)]"
         />
         <div className="mt-1 text-right text-[11px] text-gray-400 dark:text-gray-500">
           {draft.bio.length}/300

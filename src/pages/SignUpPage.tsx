@@ -25,7 +25,7 @@ const slideVariants = {
 } as const;
 
 // 남겨두되, 실제로는 쓰지 않음(기존 브라우저 잔여 데이터 정리용)
-const DRAFT_KEY = 'ara-signup-draft-v1';
+const DRAFT_KEY = 'signup-profile-draft';
 
 export default function SignUpPage() {
   const [step, setStep] = useState<Step>(1);
@@ -55,7 +55,7 @@ export default function SignUpPage() {
     }));
   }
 
-  // ✅ 언마운트 시 혹시 남아 있을 수 있는 이전 버전 초안 제거(안전)
+  // 언마운트 시 혹시 남아 있을 수 있는 이전 버전 초안 제거(안전)
   useEffect(() => {
     return () => {
       try {
@@ -93,7 +93,7 @@ export default function SignUpPage() {
         // 기존 형식/필수 체크
         if (!formOK) return false;
 
-        // ✅ 중복확인까지 완료 여부 검사
+        // 중복확인까지 완료 여부 검사
         const emailOK = verified.email.ok && verified.email.value === (form?.email ?? '');
         const nickOK = verified.nickname.ok && verified.nickname.value === (form?.nickname ?? '');
 
@@ -119,7 +119,7 @@ export default function SignUpPage() {
   const next = () => guardedSetStep(step === 1 ? 2 : 3);
   const back = () => guardedSetStep(step === 3 ? 2 : 1);
 
-  // ⬇️ 레이아웃: 항상 상단 정렬. 2단계만 살짝 넉넉한 패딩.
+  // 레이아웃: 항상 상단 정렬. 2단계만 살짝 넉넉한 패딩.
   const isStep2 = step === 2;
   const wrapperPad = isStep2
     ? 'pt-8 sm:pt-12 pb-10' // Step 2: 폼 길어서 살짝 여유
@@ -130,7 +130,7 @@ export default function SignUpPage() {
   return (
     <div
       className={`
-        min-h-auto md:min-h-auto
+        min-h-auto mt-4 md:min-h-auto
         w-full bg-white dark:bg-black
         flex justify-center items-start ${wrapperPad}
         overflow-y-auto

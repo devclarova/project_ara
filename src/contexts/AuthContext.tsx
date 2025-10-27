@@ -14,28 +14,15 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signUp: (email: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
+  // 구글 로그인 함수
+  signInWithGoogle: () => Promise<{ error?: string }>;
+  // 카카오 로그인 함수
+  signInWithKakao: () => Promise<{ error?: string }>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 const DRAFT_KEY = 'signup-profile-draft';
-
-// 로그인 시 users 보정
-async function upsertUsersOnLogin(u: User) {
-  try {
-    await supabase.from('users').upsert(
-      {
-        auth_user_id: u.id,
-        email: u.email ?? null,
-        created_at: new Date().toISOString(),
-        last_login: new Date().toISOString(),
-      },
-      { onConflict: 'auth_user_id' },
-    );
-  } catch (e) {
-    console.warn('users upsert on login failed:', e);
-  }
-}
 
 // 프로필 없으면 draft로 생성
 async function createProfileFromDraftIfMissing(u: User) {
@@ -108,7 +95,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
         const u = newSession?.user;
         if (u) {
-          void Promise.allSettled([upsertUsersOnLogin(u), createProfileFromDraftIfMissing(u)]);
+          void Promise.allSettled([createProfileFromDraftIfMissing(u)]);
         }
       }
     });
@@ -119,6 +106,40 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const signIn: AuthContextType['signIn'] = async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error?.message };
+  };
+
+  // 구글 로그인 함수
+  const signInWithGoogle: AuthContextType['signInWithGoogle'] = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        // 로그인 실행후 이동옵션
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    // 오류발생시 체크 해보자.
+    if (error) {
+      return { error: error.message };
+    }
+    console.log('구글 로그인 성공 : ', data);
+    return {};
+  };
+
+  // 카카오 로그인 함수
+  const signInWithKakao: AuthContextType['signInWithKakao'] = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: {
+        // 로그인 실행후 이동옵션
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    // 오류발생시 체크 해보자.
+    if (error) {
+      return { error: error.message };
+    }
+    console.log('카카오 로그인 성공 : ', data);
+    return {};
   };
 
   const signUp: AuthContextType['signUp'] = async (email, password) => {
@@ -142,6 +163,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
       // 단일 출처 상태 정리
       setSession(null);
       setUser(null);
+      try {
+        localStorage.removeItem(DRAFT_KEY);
+      } catch {}
 
       // 앱 내 캐시/로컬 상태 초기화가 필요하면 여기서
       // localStorage.removeItem('...'); queryClient.clear(); 등
@@ -149,7 +173,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, signIn, signUp, signOut }}>
+    <AuthContext.Provider
+      value={{ session, user, signIn, signUp, signOut, signInWithGoogle, signInWithKakao }}
+    >
       {children}
     </AuthContext.Provider>
   );
