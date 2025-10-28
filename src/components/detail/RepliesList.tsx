@@ -4,7 +4,6 @@ import ReplyCard from './ReplyCard'
 interface Reply {
   id: string
   author: string
-  handle: string
   avatar: string
   time: string
   text: string
@@ -17,22 +16,20 @@ interface RepliesListProps {
   replies: Reply[]
 }
 
-const RepliesList = ({ replies }: RepliesListProps) => {
+export default function RepliesList({ replies }: RepliesListProps) {
   if (!replies || replies.length === 0) {
     return (
-      <div className="p-6 text-center text-secondary">
-        <p>No replies yet. Be the first to reply!</p>
+      <div className="p-8 text-center text-gray-500 bg-white border-t border-gray-100">
+        <p className="text-sm">아직 댓글이 없습니다 😌 첫 댓글을 남겨보세요!</p>
       </div>
     )
   }
 
   return (
-    <div className="divide-y divide-gray-200">
+    <div className="divide-y divide-gray-200 bg-white">
       {replies.map(reply => (
         <ReplyCard key={reply.id} {...reply} />
       ))}
     </div>
   )
 }
-
-export default RepliesList

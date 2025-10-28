@@ -1,116 +1,76 @@
 // src/components/detail/ReplyComposer.tsx
-import { useEffect, useRef, useState } from 'react'
-import { Image, FileVideo, Smile } from 'lucide-react'
-import Avatar from '../common/Avatar'
-import { supabase } from '../../lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
+import FFFBox from '@/pages/temps/FFFBox'
+import { useEffect, useState } from 'react'
 
 interface ReplyComposerProps {
   parentId: string
   onReply?: (parentId: string, content: string) => void
 }
 
-const ReplyComposer = ({ parentId, onReply }: ReplyComposerProps) => {
-  const [reply, setReply] = useState<string>('') // 초기값 문자열 보장
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+/**
+ * ✅ ReplyComposer — FFFBox를 활용한 댓글 작성 버전
+ * 댓글은 tweet_replies 테이블에 저장됨
+ */
+export default function ReplyComposer({ parentId, onReply }: ReplyComposerProps) {
+  const { user } = useAuth()
+  const [profile, setProfile] = useState<any>(null)
 
-  // ✅ 로그인된 유저의 프로필 이미지 가져오기
+  // ✅ 프로필 데이터 불러오기
   useEffect(() => {
-    const fetchAvatar = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) return
+    if (!user) return
+    supabase
+      .from('profiles')
+      .select('id, nickname, avatar_url')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data, error }) => {
+        if (!error && data) setProfile(data)
+      })
+  }, [user])
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('avatar_url')
-        .eq('user_id', user.id)
-        .maybeSingle()
+  // ✅ 댓글 등록 함수
+  const handleAddReply = async (newReply: any) => {
+    if (!user) return alert('로그인이 필요합니다.')
 
-      if (error) {
-        console.error('❌ Error fetching avatar:', error)
-      }
+    const { data, error } = await supabase
+      .from('tweet_replies')
+      .insert([
+        {
+          tweet_id: parentId,
+          author_id: profile?.id,
+          content: newReply.content, // FFFTweetComposer의 내용
+        },
+      ])
+      .select(
+        `
+        id,
+        content,
+        created_at,
+        profiles:author_id (
+          nickname,
+          avatar_url
+        )
+      `,
+      )
+      .single()
 
-      if (data?.avatar_url) setAvatarUrl(data.avatar_url)
-      else setAvatarUrl('https://api.dicebear.com/7.x/avataaars/svg?seed=You')
+    if (error) {
+      console.error('❌ 댓글 등록 실패:', error)
+      return
     }
 
-    fetchAvatar()
-  }, [])
-
-  // textarea 높이 자동 조절
-  useEffect(() => {
-    const textarea = textareaRef.current
-    if (!textarea) return
-    textarea.style.height = 'auto'
-    textarea.style.height = `${textarea.scrollHeight}px`
-  }, [reply])
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const content = reply.trim()
-    if (!content) return
-
-    console.group('%c💬 ReplyComposer Debug', 'color:#1d9bf0;font-weight:bold;')
-    console.log('↳ parentId:', parentId)
-    console.log('↳ reply value:', reply)
-    console.groupEnd()
-
-    onReply?.(parentId, content)
-    setReply('')
+    // ✅ 부모 컴포넌트에 알림
+    onReply?.(parentId, newReply.content)
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="p-6 border-b border-gray-200 bg-white flex space-x-3"
-    >
-      {/* ✅ Supabase 아바타 반영 */}
-      <Avatar
-        src={avatarUrl || 'https://api.dicebear.com/7.x/avataaars/svg?seed=You'}
-        alt="Your avatar"
-        size={48}
+    <div className="border-t border-gray-200 bg-white">
+      <FFFBox
+        profile={profile}
+        onPost={handleAddReply}
       />
-
-      <div className="flex-1">
-        <textarea
-          ref={textareaRef}
-          placeholder="Post your reply"
-          value={reply || ''}
-          onChange={(e) => setReply(String(e.target.value ?? ''))}
-          rows={1}
-          className="w-full text-lg placeholder-gray-500 border-none resize-none outline-none bg-transparent"
-        />
-
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex space-x-3 text-primary">
-            {[Image, FileVideo, Smile].map((Icon, i) => (
-              <button
-                type="button"
-                key={i}
-                className="hover:bg-blue-50 p-2 rounded-full transition-colors"
-              >
-                <Icon size={18} />
-              </button>
-            ))}
-          </div>
-
-          <button
-            type="submit"
-            disabled={!reply.trim()}
-            className={`font-bold py-2 px-6 rounded-full text-white transition-colors ${
-              reply.trim()
-                ? 'bg-primary hover:bg-blue-600'
-                : 'bg-primary/50 cursor-not-allowed'
-            }`}
-          >
-            Reply
-          </button>
-        </div>
-      </div>
-    </form>
+    </div>
   )
 }
-
-export default ReplyComposer

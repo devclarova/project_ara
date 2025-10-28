@@ -1,111 +1,116 @@
-import React from 'react';
-import { useLike } from '../../hooks/useLike';
-import { useRetweet } from '../../hooks/useRetweet';
-import { Heart, MessageCircle, Repeat2, Share2 } from 'lucide-react';
-import Avatar from '../common/Avatar';
+// src/components/detail/ReplyCard.tsx
+import { useState } from 'react'
+import { Heart, MessageCircle, Repeat2, Share2 } from 'lucide-react'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 
 interface ReplyCardProps {
-  id: string;
-  author: string;
-  handle: string;
-  avatar: string;
-  time: string;
-  text: string;
-  likes: number;
-  replies: number;
-  retweets: number;
+  id: string
+  author: string
+  avatar: string
+  time: string
+  text: string // Quill HTML 포함
+  likes: number
+  replies: number
+  retweets: number
 }
-const ReplyCard = ({
+
+export default function ReplyCard({
   id,
   author,
-  handle,
   avatar,
   time,
   text,
   likes,
   replies,
   retweets,
-}: ReplyCardProps) => {
-  const { liked, count: likeCount, toggleLike } = useLike(id, likes);
-  const { retweeted, count: retweetCount, toggleRetweet } = useRetweet(id, retweets);
+}: ReplyCardProps) {
+  const [liked, setLiked] = useState(false)
+  const [retweeted, setRetweeted] = useState(false)
+  const [likeCount, setLikeCount] = useState(likes)
+  const [retweetCount, setRetweetCount] = useState(retweets)
+
+  const toggleLike = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setLiked(prev => !prev)
+    setLikeCount(prev => (liked ? prev - 1 : prev + 1))
+  }
+
+  const toggleRetweet = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setRetweeted(prev => !prev)
+    setRetweetCount(prev => (retweeted ? prev - 1 : prev + 1))
+  }
+
   return (
-    <div className="reply-card p-6 cursor-pointer transition-colors hover:bg-gray-50 border-b border-gray-200">
-      <div className="flex space-x-3">
-        {/* 프로필 이미지 */}
-        <Avatar src={avatar} alt={author} size={48} />
+    <div className="flex space-x-3 p-5 hover:bg-gray-50 transition-colors border-b border-gray-100">
+      {/* ✅ 아바타 */}
+      <Avatar className="w-10 h-10">
+        <AvatarImage src={avatar} alt={author} />
+        <AvatarFallback>{author?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+      </Avatar>
 
-        {/* 본문 */}
-        <div className="flex-1">
-          {/* 작성자 */}
-          <div className="flex items-center space-x-2">
-            <span className="font-bold">{author}</span>
-            <span className="text-secondary">@{handle}</span>
-            <span className="text-secondary">·</span>
-            <span className="text-secondary">{time}</span>
-          </div>
+      <div className="flex-1 min-w-0">
+        {/* 작성자 */}
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <span className="font-semibold text-gray-900">{author}</span>
+          <span className="text-gray-400">· {time}</span>
+        </div>
 
-          {/* 내용 */}
-          <p className="mt-2 text-gray-900 leading-relaxed">{text}</p>
+        {/* ✅ 본문 (이미지 포함) */}
+        <div
+          className="mt-2 text-gray-900 text-[15px] leading-relaxed whitespace-pre-wrap break-words"
+          dangerouslySetInnerHTML={{ __html: text }}
+        />
 
-          {/* 액션 버튼 */}
-          <div className="flex items-center justify-between mt-4 max-w-md">
-            {/* 댓글 수 */}
-            <button className="flex items-center space-x-1 text-secondary hover:text-blue-600 group">
-              <div className="w-8 h-8 flex items-center justify-center rounded-full group-hover:bg-blue-50">
-                <MessageCircle className="w-4 h-4" />
-              </div>
-              <span className="text-sm">{replies}</span>
-            </button>
+        {/* 액션 버튼 */}
+        <div className="flex items-center justify-between mt-3 text-gray-500 text-sm max-w-md">
+          {/* 댓글 수 */}
+          <button
+            onClick={e => e.stopPropagation()}
+            className="flex items-center gap-1 hover:text-blue-500"
+          >
+            <MessageCircle size={16} />
+            <span>{replies}</span>
+          </button>
 
-            {/* 리트윗 */}
-            <button
-              onClick={toggleRetweet}
-              className={`flex items-center space-x-1 group ${
-                retweeted ? 'text-green-600' : 'text-secondary hover:text-green-600'
-              }`}
-            >
-              <div
-                className={`w-8 h-8 flex items-center justify-center rounded-full group-hover:bg-green-50 ${
-                  retweeted ? 'bg-green-50' : ''
-                }`}
-              >
-                <Repeat2 className="w-4 h-4" />
-              </div>
-              <span className="text-sm">{retweetCount}</span>
-            </button>
+          {/* 리트윗 */}
+          <button
+            onClick={toggleRetweet}
+            className={`flex items-center gap-1 transition-colors ${
+              retweeted ? 'text-green-600' : 'hover:text-green-600'
+            }`}
+          >
+            <Repeat2
+              size={16}
+              className={`${retweeted ? 'rotate-180' : ''} transition-transform`}
+            />
+            <span>{retweetCount}</span>
+          </button>
 
-            {/* 좋아요 */}
-            <button
-              onClick={toggleLike}
-              className={`flex items-center space-x-1 group ${
-                liked ? 'text-red-600' : 'text-secondary hover:text-red-600'
-              }`}
-            >
-              <div
-                className={`w-8 h-8 flex items-center justify-center rounded-full group-hover:bg-red-50 ${
-                  liked ? 'bg-red-50' : ''
-                }`}
-              >
-                <Heart
-                  className="w-4 h-4"
-                  fill={liked ? '#ef4444' : 'none'}
-                  strokeWidth={liked ? 0 : 2}
-                />
-              </div>
-              <span className="text-sm">{likeCount}</span>
-            </button>
+          {/* 좋아요 */}
+          <button
+            onClick={toggleLike}
+            className={`flex items-center gap-1 transition-colors ${
+              liked ? 'text-pink-500' : 'hover:text-pink-500'
+            }`}
+          >
+            <Heart
+              size={16}
+              fill={liked ? '#ec4899' : 'none'}
+              strokeWidth={liked ? 0 : 2}
+            />
+            <span>{likeCount}</span>
+          </button>
 
-            {/* 공유 */}
-            <button className="flex items-center space-x-1 text-secondary hover:text-blue-600 group">
-              <div className="w-8 h-8 flex items-center justify-center rounded-full group-hover:bg-blue-50">
-                <Share2 className="w-4 h-4" />
-              </div>
-            </button>
-          </div>
+          {/* 공유 */}
+          <button
+            onClick={e => e.stopPropagation()}
+            className="flex items-center gap-1 hover:text-blue-500"
+          >
+            <Share2 size={16} />
+          </button>
         </div>
       </div>
     </div>
-  );
-};
-
-export default ReplyCard;
+  )
+}
