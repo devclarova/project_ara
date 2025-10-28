@@ -57,13 +57,13 @@ export default function TweetCard({
   };
 
   const handleNavigate = () => {
-    navigate(`/social/${id}`);
+    navigate(`/feed/${id}`);
   };
 
   return (
     <article
       onClick={handleNavigate}
-      className="flex space-x-3 p-4 hover:bg-gray-50 transition cursor-pointer"
+      className="flex gap-3 p-5 hover:bg-muted/40 transition-colors cursor-pointer"
     >
       {/* 프로필 이미지 */}
       {profiles?.avatar_url ? (
@@ -71,59 +71,49 @@ export default function TweetCard({
           src={profiles.avatar_url}
           alt={profiles.nickname || 'user'}
           onError={e => (e.currentTarget.src = '/default-avatar.svg')}
-          className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+          className="w-11 h-11 rounded-full object-cover border border-border/50"
         />
       ) : (
-        <svg
-          width="48"
-          height="48"
-          viewBox="0 0 80 80"
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-12 h-12 rounded-full flex-shrink-0"
-        >
-          <circle cx="40" cy="40" r="40" fill="#ccc" />
-          <path
-            d="M40 40C46.6274 40 52 34.6274 52 28C52 21.3726 46.6274 16 40 16C33.3726 16 28 21.3726 28 28C28 34.6274 33.3726 40 40 40Z"
-            fill="#e6e6e6"
-          />
-          <path
-            d="M16 64C16 50.7452 26.7452 40 40 40C53.2548 40 64 50.7452 64 64H16Z"
-            fill="#e6e6e6"
-          />
-        </svg>
+        <img
+          src={profiles?.avatar_url || '/default-avatar.svg'}
+          alt={profiles?.nickname || 'user'}
+          onError={e => (e.currentTarget.src = '/default-avatar.svg')}
+          className="w-11 h-11 rounded-full object-cover border border-border/50 flex-shrink-0"
+        />
       )}
 
       {/* 본문 */}
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         {/* 헤더 */}
-        <header className="flex items-center space-x-2 text-sm text-gray-600">
-          <span className="font-semibold text-black">{profiles?.nickname || 'Unknown User'}</span>
-          <span className="text-gray-400">· {timeAgo}</span>
+        <header className="flex items-center space-x-2 text-sm text-muted-foreground">
+          <span className="font-semibold text-foreground">
+            {profiles?.nickname || 'Unknown User'}
+          </span>
+          <span className="text-muted-foreground/70">· {timeAgo}</span>
         </header>
 
         {/* 내용 */}
-        {/* <p className="mt-1 text-gray-800 text-[15px] leading-snug whitespace-pre-line">{content}</p> */}
-        {/* <p className="mt-1 text-gray-800 text-[15px] leading-snug whitespace-pre-line">
-          {content.replace(/<[^>]+>/g, '')}
-        </p> */}
-        {/* 수정 코드 */}
         <div
-          className="mt-1 text-gray-800 text-[15px] leading-snug prose max-w-none"
+          className="mt-1 text-foreground text-[15px] leading-snug whitespace-pre-line break-words"
           dangerouslySetInnerHTML={{ __html: content }}
         />
 
         {/* 이미지 */}
         {image_url && (
-          <div className="mt-2 rounded-xl overflow-hidden border border-gray-200">
-            <img src={image_url} alt="tweet media" className="w-full object-cover" />
+          <div className="mt-3 rounded-xl overflow-hidden border border-border/60">
+            <img
+              src={image_url}
+              alt="tweet media"
+              className="w-full h-auto object-cover transition-transform duration-200 hover:scale-[1.01]"
+            />
           </div>
         )}
 
         {/* 액션 버튼 */}
-        <footer className="flex justify-between mt-3 text-gray-500 text-sm">
+        <footer className="flex justify-between mt-4 text-muted-foreground text-sm">
           <button
             onClick={e => e.stopPropagation()}
-            className="flex items-center gap-1 hover:text-blue-500"
+            className="flex items-center gap-1 hover:text-primary transition-colors"
           >
             <MessageCircle size={18} />
           </button>
@@ -151,7 +141,7 @@ export default function TweetCard({
           <button
             onClick={toggleBookmark}
             className={`flex items-center gap-1 transition-colors ${
-              bookmarked ? 'text-blue-600' : 'hover:text-blue-600'
+              bookmarked ? 'text-primary' : 'hover:text-primary/90'
             }`}
           >
             <Bookmark
@@ -164,7 +154,7 @@ export default function TweetCard({
 
           <button
             onClick={e => e.stopPropagation()}
-            className="flex items-center gap-1 hover:text-gray-400"
+            className="flex items-center gap-1 hover:text-muted-foreground/70"
           >
             <BarChart3 size={18} />
           </button>

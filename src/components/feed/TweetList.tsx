@@ -19,17 +19,22 @@ interface TweetListProps {
 export default function TweetList({ tweets }: TweetListProps) {
   if (!tweets || tweets.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
         <p className="text-lg font-medium">아직 트윗이 없습니다</p>
-        <p className="text-sm text-gray-400 mt-1">첫 트윗을 작성해보세요 🐦</p>
+        <p className="text-sm text-muted-foreground/70 mt-1">첫 트윗을 작성해보세요 🐦</p>
       </div>
     )
   }
 
   return (
-    <div className="divide-y divide-gray-200">
+    <div className="flex flex-col gap-4">
       {tweets.map(tweet => (
-        <TweetCard key={tweet.id} {...tweet} />
+        <div
+          key={tweet.id}
+          className="rounded-2xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow"
+        >
+          <TweetCard {...tweet} />
+        </div>
       ))}
     </div>
   )

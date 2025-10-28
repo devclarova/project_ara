@@ -44,6 +44,9 @@ import MyProfile from './pages/MyProfile';
 import ProfilePage_old from './pages/ProfilePage_old';
 import ProfilePage from './pages/ProfilePage';
 import ProfileSettings from './components/profile/ProfileSettings';
+import TestSevenShad from './pages/temps/TestSevenShad';
+import FeedMain from './pages/temps/FeedMain';
+import TestTweetDetailInner from './pages/temps/TestTweetDetailInner';
 
 const App = () => {
   return (
@@ -84,6 +87,10 @@ const App = () => {
                 <Route path="/socialcn" element={<ShancnPage />}></Route>
                 <Route path="/notifications" element={<NotificationsPage />}></Route>
                 <Route path="/socialss" element={<SevenShad />}></Route>
+                <Route path="/feed" element={<TestSevenShad />}>
+                  <Route index element={<FeedMain />} /> {/* 기본 피드 */}
+                  <Route path=":id" element={<TestTweetDetailInner />} /> {/* 중앙 컨텐츠만 교체 */}
+                </Route>
               </Routes>
             </main>
 
