@@ -111,7 +111,7 @@ function ProfileInfo({ profile, onClickEdit }: ProfileInfoProps) {
                 <div className="w-4 h-4 flex items-center justify-center">
                   <i className="ri-calendar-line" />
                 </div>
-                <span>r가입일 {joined}</span>
+                <span>가입일 {joined}</span>
               </div>
             )}
 
