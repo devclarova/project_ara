@@ -44,7 +44,7 @@ const SidebarLeft = ({ onPost, onReply, parentId, isReplyMode = false }: Sidebar
   };
 
   const menuItems = [
-    { icon: Home, label: 'Home', path: '/social' },
+    { icon: Home, label: 'Home', path: '/socialss' },
     { icon: Search, label: 'Explore', path: '/social/explore' },
     { icon: Bell, label: 'Notifications', path: '/notifications' },
     { icon: Mail, label: 'Messages', path: '/dm' },

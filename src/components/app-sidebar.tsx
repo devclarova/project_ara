@@ -60,83 +60,53 @@ const data = {
       items: [
         {
           title: '홈',
-          url: '#',
+          url: '/socialss',
+        },
+        {
+          title: '탐색',
+          url: '/social/explore',
         },
         {
           title: '알림',
-          url: '#',
+          url: '/notifications',
         },
         {
-          title: '메시지',
-          url: '#',
+          title: '채팅',
+          url: '/dm',
+        },
+        {
+          title: '프로필',
+          url: '/profile',
+        },
+        {
+          title: '설정',
+          url: '/settings',
         },
       ],
     },
     // {
-    //   title: "Models",
-    //   url: "#",
-    //   icon: Bot,
+    //   title: '설정',
+    //   url: '#',
+    //   icon: Settings2,
     //   items: [
     //     {
-    //       title: "Genesis",
-    //       url: "#",
+    //       title: '정책1',
+    //       url: '#',
     //     },
     //     {
-    //       title: "Explorer",
-    //       url: "#",
+    //       title: '정책2',
+    //       url: '#',
     //     },
     //     {
-    //       title: "Quantum",
-    //       url: "#",
+    //       title: '정책3',
+    //       url: '#',
+    //     },
+    //     {
+    //       title: '정책4',
+    //       url: '#',
     //     },
     //   ],
     // },
-    // {
-    //   title: "Documentation",
-    //   url: "#",
-    //   icon: BookOpen,
-    //   items: [
-    //     {
-    //       title: "Introduction",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Get Started",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Tutorials",
-    //       url: "#",
-    //     },
-    //     {
-    //       title: "Changelog",
-    //       url: "#",
-    //     },
-    //   ],
-    // },
-    {
-      title: '설정',
-      url: '#',
-      icon: Settings2,
-      items: [
-        {
-          title: '정책1',
-          url: '#',
-        },
-        {
-          title: '정책2',
-          url: '#',
-        },
-        {
-          title: '정책3',
-          url: '#',
-        },
-        {
-          title: '정책4',
-          url: '#',
-        },
-      ],
-    },
   ],
   projects: [
     {
