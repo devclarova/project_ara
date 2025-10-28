@@ -7,6 +7,7 @@ export type ProfileData = {
   location?: string;
   website?: string;
   joined?: string; // 예: "2025.10"
+  birth?: string;
   followingCount: number;
   followerCount: number;
   coverUrl?: string | null;
@@ -26,6 +27,7 @@ function ProfileInfo({ profile, onClickEdit }: ProfileInfoProps) {
     location,
     website,
     joined,
+    birth,
     followingCount,
     followerCount,
     coverUrl,
@@ -95,11 +97,11 @@ function ProfileInfo({ profile, onClickEdit }: ProfileInfoProps) {
                 </div>
                 <a
                   href={website}
-                  className="text-[#00bdaa] hover:underline cursor-pointer"
+                  className="text-primary/80 hover:text-primary hover:underline cursor-pointer"
                   target="_blank"
                   rel="noreferrer"
                 >
-                  website
+                  웹사이트
                 </a>
               </div>
             )}
@@ -109,20 +111,33 @@ function ProfileInfo({ profile, onClickEdit }: ProfileInfoProps) {
                 <div className="w-4 h-4 flex items-center justify-center">
                   <i className="ri-calendar-line" />
                 </div>
-                <span>Joined {joined}</span>
+                <span>r가입일 {joined}</span>
+              </div>
+            )}
+
+            {birth && (
+              <div className="flex items-center gap-1.5">
+                <div className="w-4 h-4 flex items-center justify-center">
+                  <i className="ri-calendar-event-line" />
+                </div>
+                <span>생년월일 {birth}</span>
               </div>
             )}
           </div>
 
           <div className="flex items-center gap-6 text-sm">
-            <button className="hover:underline cursor-pointer transition-all duration-200">
-              <span className="font-bold text-[#111827]">{followingCount}</span>
-              <span className="text-[#6b7280] ml-1">Following</span>
-            </button>
-            <button className="hover:underline cursor-pointer transition-all duration-200">
-              <span className="font-bold text-[#111827]">{followerCount}</span>
-              <span className="text-[#6b7280] ml-1">Followers</span>
-            </button>
+            <div className="flex items-center gap-1">
+              <button className="hover:underline cursor-pointer transition-all duration-200">
+                <span className="font-bold text-[#111827]">{followingCount}</span>
+              </button>
+              <span className="text-[#6b7280] ml-1">팔로잉</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button className="hover:underline cursor-pointer transition-all duration-200">
+                <span className="font-bold text-[#111827]">{followerCount}</span>
+              </button>
+              <span className="text-[#6b7280] ml-1">팔로워</span>
+            </div>
           </div>
         </div>
       </div>
