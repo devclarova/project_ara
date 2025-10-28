@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import Button from '../common/Buttons';
 
+export type ProfileEditInitial = {
+  name?: string;
+  bio?: string;
+  birth?: string; // "YYYY-MM-DD"
+  gender?: '남' | '여';
+  country?: string;
+  avatarUrl?: string;
+};
+
 type ProfileEditProps = {
   open: boolean;
   onClose: () => void;
@@ -10,9 +19,12 @@ type ProfileEditProps = {
     birth: string;
     gender: '남' | '여';
     country: string;
+    website?: string;
     avatarUrl?: string;
     avatarFile?: File | null;
   }) => void;
+  // 기존 프로필로 모달 열 때 필드 채우기
+  initial?: ProfileEditInitial;
 };
 
 const ProfileEdit = ({ open, onClose, onSave }: ProfileEditProps) => {
@@ -36,7 +48,9 @@ const ProfileEdit = ({ open, onClose, onSave }: ProfileEditProps) => {
       <div className="relative z-10 w-[min(720px,92vw)] rounded-2xl bg-white shadow-xl border border-gray-200">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">프로필 수정</h2>
+          <h2 id="profile-edit-title" className="text-lg font-semibold text-gray-900">
+            프로필 수정
+          </h2>
         </div>
 
         {/* Body */}
@@ -51,6 +65,7 @@ const ProfileEdit = ({ open, onClose, onSave }: ProfileEditProps) => {
               birth: (fd.get('birth') as string) || '',
               gender,
               country: (fd.get('country') as string) || '',
+              website: (fd.get('website') as string) || '',
               avatarUrl,
               avatarFile,
             });
@@ -94,7 +109,7 @@ const ProfileEdit = ({ open, onClose, onSave }: ProfileEditProps) => {
                 type="text"
                 required
                 placeholder="닉네임"
-                className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-gray-400"
+                className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 focus:ring-offset-0"
               />
             </div>
 
@@ -106,7 +121,7 @@ const ProfileEdit = ({ open, onClose, onSave }: ProfileEditProps) => {
                 id="bio"
                 name="bio"
                 placeholder="프로필에 자기소개를 입력해주세요"
-                className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-gray-400"
+                className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 focus:ring-offset-0"
               />
             </div>
 
@@ -120,9 +135,8 @@ const ProfileEdit = ({ open, onClose, onSave }: ProfileEditProps) => {
                   name="birth"
                   type="date"
                   required
-                  className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-gray-400"
+                  className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 focus:ring-offset-0"
                 />
-                <p className="mt-1 text-[11px] text-gray-500">YYYY-MM-DD</p>
               </div>
 
               <div>
@@ -155,7 +169,7 @@ const ProfileEdit = ({ open, onClose, onSave }: ProfileEditProps) => {
               <select
                 id="country"
                 name="country"
-                className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-gray-400"
+                className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 focus:ring-offset-0"
                 defaultValue="대한민국"
               >
                 <option>대한민국</option>
@@ -164,6 +178,24 @@ const ProfileEdit = ({ open, onClose, onSave }: ProfileEditProps) => {
                 <option>영국</option>
                 <option>기타</option>
               </select>
+            </div>
+            <div>
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  웹사이트
+                </label>
+                <input
+                  id="website"
+                  name="website"
+                  type="url"
+                  placeholder="https://example.com"
+                  className="mt-1 w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 focus:ring-offset-0"
+                  pattern="https?://.*" // (선택) http:// 또는 https:// 로 시작하도록 검사
+                />
+                <p className="ml-2 mt-2 text-[11px] text-gray-400">
+                  웹사이트 주소는 <code>https://</code> 또는 <code>http://</code>로 시작해야 합니다.
+                </p>
+              </div>
             </div>
           </div>
 

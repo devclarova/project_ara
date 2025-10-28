@@ -5,12 +5,28 @@ function SNSConnect({ onClose }: { onClose?: () => void }) {
     <div className="flex flex-col min-h-[420px]">
       <div className="space-y-3">
         <p className="text-sm text-gray-600">연결할 SNS를 선택하세요</p>
-        <div className="gap-2">
+        {/* <div className="gap-2">
           <button className="w-full flex items-center justify-between rounded-xl border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50">
             Google 연결
           </button>
           <button className="w-full flex items-center justify-between rounded-xl border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50">
             Kakao 연결
+          </button>
+        </div> */}
+        <div className="mt-4 space-y-2 flex flex-col gap-4">
+          <button
+            type="button"
+            className="w-full flex items-center justify-center gap-2 border border-solid border-gray-300 rounded-lg py-2 sm:py-3 text-sm sm:text-base font-medium text-black bg-[#fff] hover:bg-gray-50 transition-opacity"
+          >
+            <img src="/images/google_logo.png" alt="Sign in with Google" className="w-5 h-5" />
+            <span>Google 연결</span>
+          </button>
+          <button
+            type="button"
+            className="w-full flex items-center justify-center gap-2 border border-gray-300 rounded-lg py-2 sm:py-3 text-sm sm:text-base font-medium text-black bg-[#FEE500] hover:opacity-80 transition-opacity"
+          >
+            <img src="/images/kakao_logo.png" alt="Sign in with Google" className="w-5 h-5" />
+            <span>카카오 연결</span>
           </button>
         </div>
       </div>

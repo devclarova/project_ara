@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export interface PostCardProps {
   author: {
@@ -27,6 +27,9 @@ function PostCard({
   isLiked,
   onLike,
 }: PostCardProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
   const [isBookmarked, setIsBookmarked] = useState(false);
 
   const [liked, setLiked] = useState<boolean>(!!isLiked);
@@ -58,9 +61,40 @@ function PostCard({
                 <span className="text-[#6b7280] text-sm">{timestamp}</span>
               </div>
             </div>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#e2f8f5] transition-all duration-200 cursor-pointer">
-              <i className="ri-more-2-fill text-[#6b7280]"></i>
-            </button>
+            {/* 수정 삭제 버튼 */}
+            {/* <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#e2f8f5] transition-all duration-200 cursor-pointer">
+              <i className="ri-more-fill text-[#6b7280]"></i>
+            </button> */}
+            <div className="relative">
+              <button
+                onClick={() => setIsMenuOpen(prev => !prev)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#e2f8f5] transition-all duration-200 cursor-pointer"
+              >
+                <i className="ri-more-fill text-[#6b7280]"></i>
+              </button>
+
+              {/* === 드롭다운 메뉴 === */}
+              {isMenuOpen && (
+                <div className="absolute right-0 mt-2 w-28 bg-white border border-gray-200 rounded-lg shadow-md z-50 animate-fadeIn">
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  >
+                    수정
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    삭제
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -121,12 +155,12 @@ export const EmptyCard: React.FC<{ iconClass?: string; text: string }> = ({
   text,
 }) => {
   return (
-    <div className="w-full rounded-2xl border border-[#e5e7eb] p-6 min-h-[180px] text-center flex flex-col items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
+    <article className="bg-white p-6 w-full min-h-[220px] flex flex-col items-center justify-center">
       <div className="w-16 h-16 flex items-center justify-center mb-4 text-[#9ca3af]">
         <i className={`${iconClass} text-5xl`} />
       </div>
-      <p className="text-[#9ca3af] text-lg">{text}</p>
-    </div>
+      <p className="text-[#9ca3af] text-lg text-center">{text}</p>
+    </article>
   );
 };
 
