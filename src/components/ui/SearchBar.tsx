@@ -9,7 +9,6 @@ interface SearchBarProps {
 
 export default function SearchBar({ placeholder, onSubmit, onClose }: SearchBarProps) {
   const [q, setQ] = useState('');
-  const [isHovered, setIsHovered] = useState(false);
 
   const handleSubmit = () => {
     if (q.trim() === '') return;
@@ -18,11 +17,6 @@ export default function SearchBar({ placeholder, onSubmit, onClose }: SearchBarP
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') handleSubmit();
-  };
-
-  const handleClose = () => {
-    setQ('');
-    onClose?.();
   };
 
   return (
@@ -41,11 +35,7 @@ export default function SearchBar({ placeholder, onSubmit, onClose }: SearchBarP
           onChange={e => setQ(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder ?? '검색어를 입력하세요'}
-          className="
-        flex-1 h-full px-3 bg-transparent outline-none
-        text-sm placeholder-muted-foreground
-        border-none focus:outline-none focus:ring-0 focus:border-transparent
-      "
+          className="flex-1 h-full px-3 bg-transparent outline-none text-sm placeholder-muted-foreground border-none focus:outline-none focus:ring-0 focus:border-transparent"
         />
 
         {/* 구분선 + 검색 버튼 */}
@@ -54,11 +44,7 @@ export default function SearchBar({ placeholder, onSubmit, onClose }: SearchBarP
           <button
             type="button"
             onClick={handleSubmit}
-            className="
-          px-3 py-1.5 text-sm font-medium
-          text-muted-foreground hover:text-foreground
-          rounded-full hover:bg-accent transition-colors
-        "
+            className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground rounded-full hover:bg-accent transition-colors"
             aria-label="검색"
           >
             검색
