@@ -26,7 +26,7 @@ export default function SearchBar({ placeholder, onSubmit, onClose }: SearchBarP
   };
 
   return (
-    <div className="flex items-center justify-center p-5 bg-background text-foreground transition-colors">
+    <div className="flex items-center justify-center mb-5 bg-background text-foreground transition-colors">
       {/* 검색 입력창 */}
       <div className="flex items-center justify-between h-12 w-full rounded-full border border-input bg-card shadow-sm focus-within:ring-2 focus-within:ring-primary/60 focus-within:border-transparent transition-colors overflow-hidden">
         {/* 돋보기 아이콘 */}
