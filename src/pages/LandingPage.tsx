@@ -9,12 +9,12 @@ type HeroProps = {
 
 const Hero = ({ onSignup }: HeroProps) => {
   const navigate = useNavigate();
- const { user, signOut } = useAuth();
+  const { user, signOut } = useAuth();
 
-   const handleClick = () => {
+  const handleClick = () => {
     if (user) {
       // 로그인 상태 → /social 이동
-      navigate('/social');
+      navigate('/socialss');
     } else {
       // 로그아웃 상태 → /test 이동
       navigate('/signin');

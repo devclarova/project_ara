@@ -138,7 +138,7 @@ export function NavUser() {
 
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => navigate('/profilettt')}>
+              <DropdownMenuItem onClick={() => navigate('/profile')}>
                 <BadgeCheck />
                 프로필
               </DropdownMenuItem>
