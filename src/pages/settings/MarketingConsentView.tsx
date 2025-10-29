@@ -50,7 +50,7 @@ export function MarketingConsentView({
           <Item label="푸시 알림" checked={push} onChange={setPush} />
         </div>
       </div>
-      <div className="-mx-6 mt-auto border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-6 py-4 flex justify-end gap-2 transition-colors">
+      <div className="-mx-6 mt-auto dark:border-gray-800 bg-white dark:bg-gray-900 px-6 py-4 flex justify-end gap-2 transition-colors">
         <Button type="button" variant="ghost" size="md" onClick={onClose}>
           취소
         </Button>

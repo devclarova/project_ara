@@ -84,6 +84,18 @@ const data = {
         },
       ],
     },
+    {
+      title: 'Ara Study',
+      url: '#',
+      icon: SquareTerminal,
+      isActive: true,
+      items: [
+        {
+          title: '스터디',
+          url: '/studyList',
+        },
+      ],
+    },
     // {
     //   title: '설정',
     //   url: '#',

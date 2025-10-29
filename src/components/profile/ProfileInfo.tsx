@@ -1,18 +1,7 @@
 // 프로필 정보
 
-export type ProfileData = {
-  nickname: string;
-  handle: string;
-  bio?: string;
-  location?: string;
-  website?: string;
-  joined?: string; // 예: "2025.10"
-  birth?: string;
-  followingCount: number;
-  followerCount: number;
-  coverUrl?: string | null;
-  avatarUrl?: string;
-};
+import type { ProfileData } from '@/types/profile';
+import Button from '../common/Buttons';
 
 type ProfileInfoProps = {
   profile: ProfileData;
@@ -25,17 +14,16 @@ function ProfileInfo({ profile, onClickEdit }: ProfileInfoProps) {
     handle,
     bio,
     location,
-    website,
     joined,
     birth,
     followingCount,
     followerCount,
     coverUrl,
-    avatarUrl = '/default-avatar.svg',
+    avatarUrl,
   } = profile;
 
   return (
-    <>
+    <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* ===== 커버 + 아바타 영역 ===== */}
       <div className="relative">
         <div className="h-48 overflow-hidden relative">
@@ -52,11 +40,15 @@ function ProfileInfo({ profile, onClickEdit }: ProfileInfoProps) {
 
         <div className="absolute -bottom-12 ml-5 mb-3">
           <div className="w-24 h-24 rounded-full border-4 border-white bg-white overflow-hidden">
-            <img
-              src={avatarUrl}
-              alt="아바타이미지"
-              className="w-full h-full object-cover object-top"
-            />
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="아바타이미지"
+                className="w-full h-full object-cover object-top"
+              />
+            ) : (
+              <img src="/default-avatar.svg" alt="기본아바타이미지" />
+            )}
           </div>
         </div>
       </div>
@@ -64,12 +56,9 @@ function ProfileInfo({ profile, onClickEdit }: ProfileInfoProps) {
       {/* ===== 프로필 정보 ===== */}
       <div className="ml-5">
         <div className="text-right mt-4">
-          <button
-            className="bg-primary/80 text-white px-4 py-2 mr-5 rounded-full text-sm hover:bg-primary"
-            onClick={onClickEdit}
-          >
+          <Button type="submit" className="mr-10" onClick={onClickEdit}>
             프로필 편집
-          </button>
+          </Button>
         </div>
 
         <div>
@@ -87,22 +76,6 @@ function ProfileInfo({ profile, onClickEdit }: ProfileInfoProps) {
                   <i className="ri-map-pin-line" />
                 </div>
                 <span>{location}</span>
-              </div>
-            )}
-
-            {website && (
-              <div className="flex items-center gap-1.5">
-                <div className="w-4 h-4 flex items-center justify-center">
-                  <i className="ri-link" />
-                </div>
-                <a
-                  href={website}
-                  className="text-primary/80 hover:text-primary hover:underline cursor-pointer"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  웹사이트
-                </a>
               </div>
             )}
 
@@ -141,7 +114,7 @@ function ProfileInfo({ profile, onClickEdit }: ProfileInfoProps) {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

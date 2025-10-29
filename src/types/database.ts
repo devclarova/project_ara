@@ -10,7 +10,6 @@ export type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
 export type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
 
 // 채팅
-
 export type MessagesRow = Database['public']['Tables']['messages']['Row'];
 export type MessagesInsert = Database['public']['Tables']['messages']['Insert'];
 export type MessagesUpdate = Database['public']['Tables']['messages']['Update'];

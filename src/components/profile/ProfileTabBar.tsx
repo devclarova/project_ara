@@ -20,7 +20,7 @@ function ProfileTabBar<T extends string = string>({
   className = '',
 }: ProfileTabBarProps<T>) {
   return (
-    <div className={`sticky top-0 z-10 bg-white border-b ${className}`}>
+    <div className={`sticky top-0 bg-white border-b ${className}`}>
       <div className="flex">
         {tabs.map(tab => (
           <button
