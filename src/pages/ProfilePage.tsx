@@ -2,12 +2,12 @@ import SidebarLeft from '@/components/layout/SidebarLeft';
 import SidebarRight from '@/components/layout/SidebarRight';
 import ProfileActivity from '@/components/profile/ProfileActivity';
 import ProfileEdit from '@/components/profile/ProfileEdit';
-import ProfileInfo, { type ProfileData } from '@/components/profile/ProfileInfo';
+import ProfileInfo from '@/components/profile/ProfileInfo';
 import type { TabItem } from '@/components/profile/ProfileTabBar';
 import ProfileTabBar from '@/components/profile/ProfileTabBar';
+import { useProfile } from '@/hooks/useProfile';
+import type { ActivityTab, ProfileData } from '@/types/profile';
 import { useState } from 'react';
-
-type ActivityTab = 'posts' | 'replies' | 'media' | 'likes';
 
 const mockPosts = [
   {
@@ -70,24 +70,10 @@ const mockPosts = [
 ];
 
 const ProfilePage = () => {
-  const [profile, setProfile] = useState<ProfileData>({
-    nickname: '닉네임',
-    handle: '아이디',
-    bio: '소개',
-    location: '위치',
-    website: 'https://example.com',
-    joined: '2025.10',
-    birth: '2001-01-01',
-    followingCount: 444,
-    followerCount: 1180,
-    coverUrl: null,
-    avatarUrl: '/default-avatar.svg',
-  });
-
+  const { profile, loading, isEditOpen, openEdit, closeEdit, save } = useProfile();
   const [activeTab, setActiveTab] = useState<ActivityTab>('posts'); // 게시글, 답장, 미디어, 좋아요 토글
   const [likedPosts, setLikedPosts] = useState<string[]>([]); // 좋아요한 글 ID 저장
-  // const coverUrl: string | null = null;
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  // const [isEditOpen, setIsEditOpen] = useState(false);
 
   const toggleLike = (postId: string) => {
     setLikedPosts(prev =>
@@ -103,39 +89,35 @@ const ProfilePage = () => {
   ];
 
   return (
-    <div className="min-h-screen flex items-start max-w-7xl mx-auto">
+    <div className="min-h-screen flex items-start max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 gap-6">
       {/* 왼쪽 사이드바 */}
       <SidebarLeft />
-
       {/* 가운데 메인 영역 */}
-      <main className="flex-1 min-w-0 px-6 py-8 pb-20 lg:pb-6">
+      <main className="flex-1 min-w-0 px-0 sm:px-2 md:px-4 py-8 pb-20 lg:pb-6">
         <div className="w-full mx-auto bg-white sm:max-w-none md:max-w-2xl lg:w-[680px] xl:w-[720px] shrink-0">
           {/* ===== 프로필 정보 ===== */}
-          <ProfileInfo profile={profile} onClickEdit={() => setIsEditOpen(true)} />
+          <ProfileInfo profile={profile} onClickEdit={openEdit} />
 
           {/* 프로필 편집 모달 */}
           <ProfileEdit
             open={isEditOpen}
-            onClose={() => setIsEditOpen(false)}
+            onClose={closeEdit}
             initial={{
               name: profile.nickname,
               bio: profile.bio ?? '',
-              birth: '',
+              birth: profile.birth ?? '',
               gender: '남',
               country: profile.location ?? '대한민국',
               avatarUrl: profile.avatarUrl ?? '',
+              coverUrl: profile.coverUrl ?? '',
             }}
-            onSave={data => {
-              setProfile(prev => ({
-                ...prev,
-                nickname: data.name || prev.nickname,
-                bio: data.bio ?? prev.bio,
-                birth: data.birth || prev.birth,
-                location: data.country || prev.location,
-                avatarUrl: data.avatarUrl || prev.avatarUrl,
-                website: data.website ?? prev.website,
-              }));
-              setIsEditOpen(false);
+            onSave={async data => {
+              const ok = await save(data);
+              closeEdit();
+              if (!ok) {
+                // 실패 시 로컬로라도 반영하고 싶다면 아래 주석 해제
+                // setProfile(prev => ({ ...prev, ...data }));
+              }
             }}
           />
 
@@ -155,9 +137,10 @@ const ProfilePage = () => {
           />
         </div>
       </main>
-
       {/* 오른쪽 사이드바 */}
-      <SidebarRight />
+      <aside className="hidden lg:block w-[300px] shrink-0">
+        <SidebarRight />
+      </aside>
     </div>
   );
 };

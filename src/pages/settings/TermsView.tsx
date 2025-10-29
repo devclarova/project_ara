@@ -17,7 +17,7 @@ export function TermsView({ onClose }: { onClose?: () => void }) {
           <li>분쟁 해결 및 관할 법원</li>
         </ul>
       </div>
-      <div className="-mx-6 mt-auto border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-6 py-4 flex justify-end gap-2 transition-colors">
+      <div className="-mx-6 mt-auto dark:border-gray-800 bg-white dark:bg-gray-900 px-6 py-4 flex justify-end gap-2 transition-colors">
         <Button type="button" variant="primary" size="md" onClick={onClose}>
           닫기
         </Button>

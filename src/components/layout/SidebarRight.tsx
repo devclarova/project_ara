@@ -31,7 +31,7 @@ const follows = [
 
 const SidebarRight = () => {
   return (
-    <aside className="w-80 h-screen sticky top-0 flex flex-col">
+    <aside className="w-80 h-screen sticky top-0 flex flex-col bg-white">
       {/* ✅ 고정 검색창 */}
       <div className="p-4 bg-white sticky top-0 z-10 border-b border-gray-100">
         <SearchBar />

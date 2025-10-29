@@ -2,6 +2,7 @@
 
 import PostCard, { EmptyCard } from '@/components/profile/PostCard';
 import type { TabItem } from '@/components/profile/ProfileTabBar';
+import type { ActivityTab } from '@/types/profile';
 
 type Post = {
   id: string;
@@ -14,9 +15,7 @@ type Post = {
   shares: number;
 };
 
-export type ActivityTab = 'posts' | 'replies' | 'media' | 'likes';
-
-type Props = {
+type ProfileActivityProps = {
   activeTab: ActivityTab;
   tabs: TabItem<ActivityTab>[];
   posts: Post[];
@@ -24,7 +23,7 @@ type Props = {
   onToggleLike: (postId: string) => void;
 };
 
-function ProfileActivity({ activeTab, posts, likedPosts, onToggleLike }: Props) {
+function ProfileActivity({ activeTab, posts, likedPosts, onToggleLike }: ProfileActivityProps) {
   return (
     <div className="pt-4 px-10 pb-6 bg-white">
       <div className="space-y-6 min-h-[240px]">
