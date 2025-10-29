@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Input from '../components/Input';
+import SearchBar from '../components/Input';
 import { supabase } from '../lib/supabase';
 import type { Study } from '../types/study';
-import SearchBar from '../components/Input';
 
 const FilterDropdown = () => {
   const [open, setOpen] = useState(false);

@@ -1,52 +1,42 @@
-import { BookMarked, BookOpen, Home, Menu, UserCircle, Users, X } from 'lucide-react';
-
-import { Profiler, useEffect, useState } from 'react';
 import {
-  NavLink,
   Route,
   BrowserRouter as Router,
-  Routes,
-  useLocation,
-  useNavigate,
+  Routes
 } from 'react-router-dom';
-import textLogo from './assets/text-logo.svg';
-import styles from './components/Layout.module.css';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
 import CommunityDetailPage from './pages/CommunityDetailPage';
 
-import StudyPage from './pages/StudyPage';
-import VocaPage from './pages/VocaPage';
-import CommunityWritePage from './pages/CommunityWritePage';
-import NotFound from './pages/NotFound';
-import StudyListPage, { InflearnNav } from './pages/StudyListPage';
+import ScrollToTop from './components/common/ScrollToTop';
 import { PostProvider } from './contexts/PostContext';
 import CommunityListPage from './pages/CommunityListPage';
+import CommunityWritePage from './pages/CommunityWritePage';
+import DMPage from './pages/dm/common/DMPage';
 import HomePage from './pages/HomePage';
 import LandingPage from './pages/LandingPage';
-import SignUpPage from './pages/SignUpPage';
-import Header from './components/common/Header';
-import SignInPage from './pages/SignInPage';
-import TempHomePage from './pages/TempHomePage';
-import TempCommunityPage from './pages/temps/TempCommunityPage';
-import ScrollToTop from './components/common/ScrollToTop';
-import HomeFeed from './pages/temps/HomeFeed';
-import TweetDetailPage from './pages/TweetDetail/TweetDetailPage';
-import ExplorePage from './pages/TweetDetail/ExplorePage';
-import DMPage from './pages/dm/common/DMPage';
-import SignUpPage_old from './pages/SignUpPage_old';
+import NotFound from './pages/NotFound';
 import ShancnPage from './pages/ShancnPage';
-import { NotificationPlacements } from 'antd/es/notification/interface';
-import NotificationsPage from './pages/TweetDetail/NotificationsPage';
+import SignInPage from './pages/SignInPage';
+import SignUpPage from './pages/SignUpPage';
+import SignUpPage_old from './pages/SignUpPage_old';
+import StudyListPage from './pages/StudyListPage';
+import StudyPage from './pages/StudyPage';
+import TempHomePage from './pages/TempHomePage';
+import HomeFeed from './pages/temps/HomeFeed';
 import SevenShad from './pages/temps/SevenShad';
+import TempCommunityPage from './pages/temps/TempCommunityPage';
+import ExplorePage from './pages/TweetDetail/ExplorePage';
+import NotificationsPage from './pages/TweetDetail/NotificationsPage';
+import TweetDetailPage from './pages/TweetDetail/TweetDetailPage';
+import VocaPage from './pages/VocaPage';
 
-import MyProfile from './pages/MyProfile';
 
-import ProfilePage_old from './pages/ProfilePage_old';
-import ProfilePage from './pages/ProfilePage';
 import ProfileSettings from './components/profile/ProfileSettings';
-import TestSevenShad from './pages/temps/TestSevenShad';
+import ProfilePage from './pages/ProfilePage';
+import ProfilePage_old from './pages/ProfilePage_old';
 import FeedMain from './pages/temps/FeedMain';
+import TestSevenShad from './pages/temps/TestSevenShad';
 import TestTweetDetailInner from './pages/temps/TestTweetDetailInner';
+import Home from './pages/homes/Home';
 
 const App = () => {
   return (
@@ -91,6 +81,7 @@ const App = () => {
                   <Route index element={<FeedMain />} /> {/* 기본 피드 */}
                   <Route path=":id" element={<TestTweetDetailInner />} /> {/* 중앙 컨텐츠만 교체 */}
                 </Route>
+                <Route path="/finalhome" element={<Home />}></Route>
               </Routes>
             </main>
 
