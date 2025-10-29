@@ -46,6 +46,7 @@
     "@types/node": "^24.9.1",
     "@types/react": "^18.3.24",
     "@types/react-dom": "^18.3.7",
+    "@types/react-infinite-scroll-component": "^4.2.5",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "@vitejs/plugin-react": "^5.0.0",
