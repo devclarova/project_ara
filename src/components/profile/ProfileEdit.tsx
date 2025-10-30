@@ -138,7 +138,7 @@ const ProfileEdit = ({ open, onClose, onSave, initial }: ProfileEditProps) => {
           {/* 아바타 & 커버 */}
           <div className="relative">
             {/* 커버 이미지 업로드 */}
-            <label className="group block w-full overflow-hidden cursor-pointer bg-gray-100 h-28 xs:h-32 sm:h-40 md:h-48 lg:h-56 relative rounded-lg pb-12 sm:pb-14">
+            <label className="group block w-full overflow-hidden cursor-pointer bg-gray-100 h-28 xs:h-32 sm:h-40 md:h-48 lg:h-56 relative rounded-lg">
               <input
                 name="cover"
                 type="file"
@@ -192,7 +192,7 @@ const ProfileEdit = ({ open, onClose, onSave, initial }: ProfileEditProps) => {
                   {avatarUrl ? (
                     <img
                       alt="프로필 미리보기"
-                      className="size-full object-cover"
+                      className="size-full object-cover bg-white"
                       src={avatarUrl}
                       loading="lazy"
                       decoding="async"
@@ -293,7 +293,7 @@ const ProfileEdit = ({ open, onClose, onSave, initial }: ProfileEditProps) => {
               </select>
             </div>
             <div>
-              <div>
+              {/* <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                   웹사이트
                 </label>
@@ -308,7 +308,7 @@ const ProfileEdit = ({ open, onClose, onSave, initial }: ProfileEditProps) => {
                 <p className="ml-2 mt-2 text-[11px] text-gray-400">
                   웹사이트 주소는 <code>https://</code> 또는 <code>http://</code>로 시작해야 합니다.
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
 

@@ -3,6 +3,19 @@ import type { Database } from './database';
 // 난이도 enum
 export type DifficultyLevel = '초급' | '중급' | '고급';
 
+export type StudyListProps = {
+  id: number;
+  image?: string | null;
+  title: string;
+  // subtitle: string;
+  // desc: string;
+  short_description: string;
+  level: string;
+  levelColor: string;
+  duration: string;
+  comments: string;
+};
+
 // 1. Study (학습 단위)
 export interface Study {
   id: number;

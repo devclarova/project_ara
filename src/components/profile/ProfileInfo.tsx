@@ -1,7 +1,19 @@
 // 프로필 정보
 
-import type { ProfileData } from '@/types/profile';
 import Button from '../common/Buttons';
+
+export type ProfileData = {
+  nickname: string;
+  handle: string;
+  bio?: string;
+  location?: string;
+  joined?: string; // 예: "2025.10"
+  birth?: string;
+  followingCount: number;
+  followerCount: number;
+  cover_url?: string | null;
+  avatar_url?: string;
+};
 
 type ProfileInfoProps = {
   profile: ProfileData;
@@ -18,18 +30,18 @@ function ProfileInfo({ profile, onClickEdit }: ProfileInfoProps) {
     birth,
     followingCount,
     followerCount,
-    coverUrl,
-    avatarUrl,
+    cover_url,
+    avatar_url,
   } = profile;
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="w-full max-w-3xl mx-auto">
       {/* ===== 커버 + 아바타 영역 ===== */}
       <div className="relative">
         <div className="h-48 overflow-hidden relative">
-          {coverUrl ? (
+          {cover_url ? (
             <img
-              src={coverUrl}
+              src={cover_url}
               alt="커버이미지"
               className="w-full h-full object-cover object-top"
             />
@@ -40,9 +52,9 @@ function ProfileInfo({ profile, onClickEdit }: ProfileInfoProps) {
 
         <div className="absolute -bottom-12 ml-5 mb-3">
           <div className="w-24 h-24 rounded-full border-4 border-white bg-white overflow-hidden">
-            {avatarUrl ? (
+            {avatar_url ? (
               <img
-                src={avatarUrl}
+                src={avatar_url}
                 alt="아바타이미지"
                 className="w-full h-full object-cover object-top"
               />

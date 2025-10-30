@@ -18,6 +18,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
     { icon: 'ri-mail-line', label: 'Messages', path: '/messages' },
     { icon: 'ri-bookmark-line', label: 'Bookmarks', path: '/bookmarks' },
     { icon: 'ri-user-line', label: 'Profile', path: '/profile' },
+    { icon: 'ri-youtube-line', label: 'Study', path: '/studylist' },
     { icon: 'ri-more-line', label: 'More', path: '/more' },
   ];
 
@@ -104,7 +105,13 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
               <i className="ri-user-line mr-3 flex-shrink-0"></i>
               <span className="lg:inline">Profile</span>
             </button>
-            <button className="w-full text-left px-4 py-3 hover:bg-gray-100 transition-colors cursor-pointer whitespace-nowrap">
+            <button
+              onClick={() => {
+                handleNavigation('/settings');
+                setShowUserMenu(false);
+              }}
+              className="w-full text-left px-4 py-3 hover:bg-gray-100 transition-colors cursor-pointer whitespace-nowrap"
+            >
               <i className="ri-settings-3-line mr-3 flex-shrink-0"></i>
               <span className="lg:inline">Settings</span>
             </button>

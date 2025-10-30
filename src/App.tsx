@@ -1,8 +1,4 @@
-import {
-  Route,
-  BrowserRouter as Router,
-  Routes
-} from 'react-router-dom';
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import CommunityDetailPage from './pages/CommunityDetailPage';
 
@@ -28,7 +24,6 @@ import ExplorePage from './pages/TweetDetail/ExplorePage';
 import NotificationsPage from './pages/TweetDetail/NotificationsPage';
 import TweetDetailPage from './pages/TweetDetail/TweetDetailPage';
 import VocaPage from './pages/VocaPage';
-
 
 import ProfileSettings from './components/profile/ProfileSettings';
 import ProfilePage from './pages/ProfilePage';

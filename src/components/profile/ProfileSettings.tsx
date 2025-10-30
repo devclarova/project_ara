@@ -11,6 +11,7 @@ import SettingsContent from './SettingsContent';
 import SettingsLayout from './SettingsLayout';
 import SettingsSidebar from './SettingsSidebar';
 import SearchBar from '../ui/SearchBar';
+import Sidebar from '@/pages/homes/feature/Sidebar';
 
 const items: SidebarItem[] = [
   { id: 'alarm', label: '알림 설정' },
@@ -20,6 +21,7 @@ const items: SidebarItem[] = [
 ];
 
 export default function ProfileSettings() {
+  const [showTweetModal, setShowTweetModal] = useState(false);
   const [activeId, setActiveId] = useState<MenuId>('alarm');
   const handleChange = (id: MenuId) => setActiveId(id);
   const sidebarWidth = 'sm:w-72 md:w-auto flex-1'; // 공통 폭
@@ -44,23 +46,36 @@ export default function ProfileSettings() {
     );
 
   return (
-    <div className="min-h-screen flex max-w-7xl mx-auto">
-      <SidebarLeft />
-      <main className="p-6 md:p-10 text-[17px] md:text-[18px] w-full">
-        <SearchBar placeholder="검색어를 입력해주세요" />
-        <SettingsLayout
-          left={
-            <SettingsSidebar
-              title="계정 설정"
-              items={items}
-              activeId={activeId}
-              onChange={handleChange}
-              className={sidebarWidth}
+    <div className="min-h-screen bg-white overflow-x-hidden">
+      {/* Centered Container for all three sections */}
+      <div className="flex justify-center min-h-screen">
+        <div className="flex w-full max-w-7xl">
+          {/* Left Sidebar - Now part of centered layout */}
+          <div className="w-20 lg:w-64 flex-shrink-0">
+            <div className="fixed w-20 lg:w-64 h-full z-10">
+              <Sidebar onTweetClick={() => setShowTweetModal(true)} />
+            </div>
+          </div>
+
+          {/* Central Content with spacing */}
+
+          <main className="p-6 md:p-10 text-[17px] md:text-[18px] w-full">
+            <SearchBar placeholder="검색어를 입력해주세요" />
+            <SettingsLayout
+              left={
+                <SettingsSidebar
+                  title="계정 설정"
+                  items={items}
+                  activeId={activeId}
+                  onChange={handleChange}
+                  className={sidebarWidth}
+                />
+              }
+              right={rightPanel}
             />
-          }
-          right={rightPanel}
-        />
-      </main>
+          </main>
+        </div>
+      </div>
     </div>
   );
 }
