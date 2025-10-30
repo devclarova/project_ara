@@ -1,3 +1,5 @@
+// TrendsPanel.tsx
+
 import { useState } from "react";
 
 export default function TrendsPanel() {
@@ -36,7 +38,7 @@ export default function TrendsPanel() {
   ];
 
   return (
-    <div className="w-80 h-full flex flex-col">
+    <div className="w-80 h-full flex flex-col border-l border-gray-200 lg:px-4 py-6">
       {/* Fixed Search Bar */}
       <div className="sticky top-0 bg-white z-10 pb-4">
         <div className="relative">

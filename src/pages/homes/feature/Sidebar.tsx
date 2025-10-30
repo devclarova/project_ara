@@ -1,3 +1,5 @@
+// Sidebar.tsx
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -12,14 +14,14 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
   const location = useLocation();
 
   const navigationItems = [
-    { icon: 'ri-home-5-fill', label: 'Home', path: '/' },
-    { icon: 'ri-search-line', label: 'Explore', path: '/explore' },
-    { icon: 'ri-notification-3-line', label: 'Notifications', path: '/notifications' },
-    { icon: 'ri-mail-line', label: 'Messages', path: '/messages' },
-    { icon: 'ri-bookmark-line', label: 'Bookmarks', path: '/bookmarks' },
-    { icon: 'ri-user-line', label: 'Profile', path: '/profile' },
-    { icon: 'ri-youtube-line', label: 'Study', path: '/studylist' },
-    { icon: 'ri-more-line', label: 'More', path: '/more' },
+    { icon: 'ri-home-5-fill', label: '홈', path: '/finalhome' },
+    { icon: 'ri-search-line', label: '탐색', path: '/explore1' },
+    { icon: 'ri-notification-3-line', label: '알림', path: '/notifications1' },
+    { icon: 'ri-chat-3-line', label: '채팅', path: '/messages1' },
+    // { icon: 'ri-bookmark-line', label: 'Bookmarks', path: '/bookmarks' },
+    { icon: 'ri-user-line', label: '프로필', path: '/profiles1' },
+    { icon: 'ri-youtube-line', label: 'Study', path: '/finalhome/studyList' },
+    { icon: 'ri-more-line', label: '더보기', path: '/finalhome/hometest' },
   ];
 
   const handleNavigation = (path: string) => {
@@ -37,7 +39,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
           >
             logo
           </h1>
-          <div className="lg:hidden w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+          <div className="lg:hidden w-8 h-8 bg-primary rounded-full flex items-center justify-center">
             <i className="ri-twitter-fill text-white text-lg"></i>
           </div>
         </button>
@@ -52,7 +54,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
                 onClick={() => handleNavigation(item.path)}
                 className={`w-full flex items-center justify-center lg:justify-start space-x-0 lg:space-x-4 px-2 lg:px-4 py-3 rounded-full transition-colors cursor-pointer whitespace-nowrap ${
                   location.pathname === item.path
-                    ? 'bg-blue-50 text-blue-600'
+                    ? 'bg-blue-50 text-primary'
                     : 'hover:bg-gray-100 text-gray-700'
                 }`}
               >
@@ -68,9 +70,9 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
         {/* Tweet Button */}
         <button
           onClick={onTweetClick}
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-2 lg:px-8 rounded-full mt-6 transition-colors cursor-pointer whitespace-nowrap"
+          className="w-full bg-primary hover:bg-primary/80 text-white font-bold py-3 px-2 lg:px-8 rounded-full mt-6 transition-colors cursor-pointer whitespace-nowrap"
         >
-          <span className="hidden lg:block">Tweet</span>
+          <span className="hidden lg:block">게시하기</span>
           <i className="ri-add-line text-xl lg:hidden"></i>
         </button>
       </nav>
