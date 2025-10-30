@@ -1,150 +1,272 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
 import { supabase } from '../../lib/supabase';
-import type { ConsentResult } from './SignUpStep1Consent';
+import type { ConsentResult } from '@/types/consent';
 
-// SignUpPage에서 사용하는 draft 타입을 그대로 명시
 type ProfileDraft = {
   bio: string;
-  file: File | null; // 아바타 원본 파일
-  preview: string | null; // blob: URL (미리보기)
+  file: File | null;
+  preview: string | null;
 };
 
 type Props = {
-  // 2단계에서 넘어온 필드들
   email: string;
   pw: string;
   nickname: string;
   gender: string;
   birth: Date | null;
   country: string;
-
-  // 1단계 동의정보(3단계에서 꼭 안 써도, 부모가 넘기므로 타입에 포함)
   consents?: ConsentResult;
-
-  // 상단 스텝 내비
   onBack: () => void;
   onDone: () => void;
-
-  // 3단계 프로필 드래프트(왕복 시 유지)
   draft: ProfileDraft;
   onChangeDraft: React.Dispatch<React.SetStateAction<ProfileDraft>>;
+  signupKind: 'email' | 'social';
 };
 
 const DRAFT_KEY = 'signup-profile-draft';
 
-// ★ 로컬 기준 'YYYY-MM-DD' 포맷터 (UTC 변환 금지)
+// 로컬 기준 YYYY-MM-DD
 function toYMDLocal(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');
-  const y = d.getFullYear();
-  const m = pad(d.getMonth() + 1);
-  const day = pad(d.getDate());
-  return `${y}-${m}-${day}`;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-export default function SignUpStep3Profile({
-  email,
-  pw,
-  nickname,
-  gender,
-  birth,
-  country,
-  consents,
-  onBack,
-  onDone,
-  draft,
-  onChangeDraft,
-}: Props) {
+export default function SignUpStep3Profile(props: Props) {
+  const {
+    email,
+    pw,
+    nickname,
+    gender,
+    birth,
+    country,
+    consents,
+    onBack,
+    onDone,
+    draft,
+    onChangeDraft,
+    signupKind,
+  } = props;
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+  // 성공 케이스 상태: 모달에서 동기적으로 사용
+  const [successKind, setSuccessKind] = useState<'social' | 'email' | null>(null);
+
+  // 현재 호출이 소셜 플로우인지(=이미 세션이 있는지) 판단해서 캐싱
+  // - 소셜: AuthCallback에서 exchange 후 세션 O
+  // - 이메일: signUp만 하고 자동 로그인 X → 세션 없음
+  const [isSocialFlow, setIsSocialFlow] = useState<boolean>(false);
+
+  useEffect(() => {
+    // 최초 마운트 시 한 번만 판단해도 충분 (submit 때 매번 getSession 해도 OK)
+    supabase.auth.getSession().then(({ data }) => {
+      setIsSocialFlow(!!data.session);
+    });
+  }, []);
 
   const handleSubmit = async () => {
     setMsg('');
+    setLoading(true);
+
     try {
-      setLoading(true);
+      // ─────────────────────────────────────────
+      // 0) 공통: 프론트 유효성
+      // ─────────────────────────────────────────
+      const birthdayStr = birth ? toYMDLocal(birth) : '';
 
-      // 1) 필수값 프론트 검증
-      // ❌ 기존: birth.toISOString().slice(0, 10)  → 날짜가 하루 당김
-      // ✅ 수정: 로컬 기준 'YYYY-MM-DD'로 안전 포맷
-      const birthdayStr = birth ? toYMDLocal(birth) : ''; // ★ 변경 포인트
+      if (!email?.trim()) {
+        setMsg('이메일을 입력해 주세요.');
+        return;
+      }
+      if (!nickname?.trim()) {
+        setMsg('닉네임을 입력해 주세요.');
+        return;
+      }
+      if (!gender?.trim()) {
+        setMsg('성별을 선택해 주세요.');
+        return;
+      }
+      if (!birthdayStr) {
+        setMsg('생년월일을 입력해 주세요.');
+        return;
+      }
+      if (!country?.trim()) {
+        setMsg('국적을 선택해 주세요.');
+        return;
+      }
 
-      if (!email.trim()) return setMsg('이메일을 입력해 주세요.');
-      if (!pw.trim()) return setMsg('비밀번호를 입력해 주세요.');
-      if (!nickname.trim()) return setMsg('닉네임을 입력해 주세요.');
-      if (!gender.trim()) return setMsg('성별을 선택해 주세요.');
-      if (!birthdayStr) return setMsg('생년월일을 입력해 주세요.');
-      if (!country.trim()) return setMsg('국적을 선택해 주세요.');
+      // 소셜이 아닌 경우에만 비밀번호 확인(소셜은 임의값/비활성화)
+      if (signupKind !== 'social') {
+        if (!pw?.trim()) {
+          setMsg('비밀번호를 입력해 주세요.');
+          return;
+        }
+      }
 
-      // 2) (선택) 아바타 임시 업로드 → public URL을 draft에 저장해 로그인 후 profiles insert 시 사용
+      // ─────────────────────────────────────────
+      // 1) 이미지 업로드 (임시 또는 최종)
+      //    - 이메일: pending 경로에 업로드해서 draft에 URL 저장
+      //    - 소셜: 최종 경로로 업로드해서 avatar_url 확정
+      // ─────────────────────────────────────────
       let pendingAvatarUrl: string | null = null;
+      let finalAvatarUrl: string | null = null;
+
       if (draft.file) {
-        try {
-          const ext =
-            (draft.file.name.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '') || 'jpg';
+        const ext =
+          (draft.file.name.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '') || 'jpg';
+
+        if (signupKind === 'social') {
+          // 소셜은 세션이 반드시 있어야 함
+          const { data: s1 } = await supabase.auth.getSession();
+          const uid = s1.session?.user?.id;
+          if (!uid) {
+            setMsg('세션이 만료되었습니다. 소셜 로그인부터 다시 진행해 주세요.');
+            return;
+          }
+          const path = `avatars/${uid}/${uuid()}.${ext}`;
+          const { error: upErr } = await supabase.storage
+            .from('avatars')
+            .upload(path, draft.file, { upsert: true });
+          if (upErr) {
+            setMsg(`아바타 업로드 실패: ${upErr.message}`);
+            return;
+          }
+          const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
+          finalAvatarUrl = pub?.publicUrl ?? null;
+        } else {
+          // 이메일 가입은 아직 세션이 없으므로 pending에 저장 후 인증/로그인 뒤 프로필 생성 시 사용
           const path = `pending/${uuid()}.${ext}`;
           const { error: upErr } = await supabase.storage
             .from('avatars')
             .upload(path, draft.file, { upsert: true });
-          if (upErr) throw upErr;
-          const { data } = supabase.storage.from('avatars').getPublicUrl(path);
-          pendingAvatarUrl = data?.publicUrl ?? null;
-
-          // draft에도 반영(선택)
-          onChangeDraft(d => ({ ...d /* file/preview 유지 */ }));
-        } catch (e) {
-          console.warn('avatar upload skipped:', e);
+          if (upErr) {
+            // 업로드 실패는 치명적이지 않으므로 경고만
+            console.warn('avatar upload skipped:', upErr);
+          } else {
+            const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
+            pendingAvatarUrl = pub?.publicUrl ?? null;
+          }
         }
       }
 
-      // 3) 프로필 드래프트를 localStorage에 저장(로그인 성공 시 profiles 생성에 사용)
-      //    ★ 여기에도 'YYYY-MM-DD' 문자열 그대로 저장 → 이후 생성 로직에서 그대로 DB date 컬럼에 넣으면 하루 당김 없음
-      localStorage.setItem(
-        DRAFT_KEY,
-        JSON.stringify({
+      // ─────────────────────────────────────────
+      // 2) 분기 처리
+      //    A) 이메일 가입: draft 저장 → signUp(이메일 인증 필요)
+      //    B) 소셜 가입: 즉시 profiles upsert (users는 소셜 로그인 시 이미 생성)
+      // ─────────────────────────────────────────
+
+      if (signupKind === 'email') {
+        // (안전) 혹시 남아있는 세션이 있으면 로컬 스코프만 정리 후 진행
+        const { data: s0 } = await supabase.auth.getSession();
+        if (s0.session) {
+          try {
+            await supabase.auth.signOut({ scope: 'local' });
+          } catch {
+            /* no-op */
+          }
+        }
+
+        // 2-A) 이메일: 프로필 드래프트를 저장 (인증 후 로그인 시 프로필 생성 로직이 이 값을 사용)
+        localStorage.setItem(
+          DRAFT_KEY,
+          JSON.stringify({
+            nickname: nickname.trim(),
+            gender: gender.trim(),
+            birthday: birthdayStr, // 로컬 기준 'YYYY-MM-DD'
+            country: country.trim(),
+            bio: (draft.bio ?? '').toString(),
+            pendingAvatarUrl,
+            // 동의 항목도 함께 저장해 인증 후 최초 로그인 시 profiles 생성에 반영
+            tos_agreed: !!consents?.terms,
+            privacy_agreed: !!consents?.privacy,
+            age_confirmed: !!consents?.age,
+            marketing_opt_in: !!consents?.marketing,
+          }),
+        );
+
+        // 2-A) 이메일 가입(signUp) 호출
+        const { error } = await supabase.auth.signUp({
+          email,
+          password: pw,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            // metadata가 필요하면 data: { signup_kind: 'email' } 등 추가 가능
+          },
+        });
+
+        if (error) {
+          console.error('[signUp:error]', { message: error.message, name: error.name });
+          const low = (error.message || '').toLowerCase();
+          if (low.includes('already registered')) {
+            setMsg('이미 가입된 이메일입니다. 로그인을 시도해 주세요.');
+          } else {
+            setMsg('회원가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+          }
+          return;
+        }
+
+        // 성공 모달 (이메일 인증 안내)
+        setShowSuccess(true);
+        return;
+      }
+
+      // 2-B) 소셜: 세션 필수 → profiles 즉시 upsert
+      const { data: s1 } = await supabase.auth.getSession();
+      const uid = s1.session?.user?.id;
+      if (!uid) {
+        setMsg('세션이 만료되었습니다. 소셜 로그인부터 다시 진행해 주세요.');
+        return;
+      }
+
+      const { error: upErr } = await supabase.from('profiles').upsert(
+        {
+          user_id: uid,
           nickname: nickname.trim(),
-          gender: gender.trim(),
-          birthday: birthdayStr, // ★ 안전한 문자열
+          avatar_url: finalAvatarUrl, // 소셜은 최종 URL
+          birthday: birthdayStr, // 'YYYY-MM-DD'
+          gender: gender.trim() as any,
           country: country.trim(),
           bio: (draft.bio ?? '').toString(),
-          pendingAvatarUrl,
-        }),
+          tos_agreed: !!consents?.terms,
+          privacy_agreed: !!consents?.privacy,
+          age_confirmed: !!consents?.age,
+          marketing_opt_in: !!consents?.marketing,
+          is_onboarded: true,
+          is_public: true,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id' },
       );
 
-      // 4) 실제 "가입" (이메일 인증 필요). 자동 로그인 없음
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password: pw,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      if (error) throw new Error(error.message);
+      if (upErr) {
+        setMsg(`프로필 저장 실패: ${upErr.message}`);
+        return;
+      }
 
-      // 6) 성공 모달
+      // 성공 모달 (소셜은 바로 시작)
       setShowSuccess(true);
     } catch (e: any) {
-      setMsg(e?.message || '회원가입 중 오류가 발생했습니다.');
+      console.error('[handleSubmit:exception]', e);
+      setMsg('네트워크 또는 서버 통신 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    // ▼▼▼ UI만 두 번째 코드 스타일로 변경 (카드, 원형 업로더, 버튼 톤 등) ▼▼▼
     <section className="bg-white rounded-2xl p-4 sm:p-6 md:p-8 shadow dark:bg-neutral-900">
       <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
         프로필
       </h2>
 
-      {/* 아바타 업로드 (원형, 점선 보더, 호버 링) */}
+      {/* 아바타 업로더 */}
       <div className="flex flex-col items-center mt-1 sm:mt-2">
         <label className="mb-2 font-semibold text-gray-700 dark:text-gray-200 text-sm sm:text-base">
           프로필 이미지
         </label>
-
         <label
           htmlFor="avatar-upload"
           className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-dashed border-gray-300 dark:border-white/20 flex items-center justify-center overflow-hidden bg-gray-50 dark:bg-neutral-800 cursor-pointer hover:ring-2 hover:ring-[var(--ara-ring)] transition"
@@ -173,7 +295,6 @@ export default function SignUpStep3Profile({
             }}
           />
         </label>
-
         <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">최대 2MB · JPG/PNG/GIF</p>
       </div>
 
@@ -188,21 +309,19 @@ export default function SignUpStep3Profile({
           onChange={e => onChangeDraft(d => ({ ...d, bio: e.target.value.slice(0, 300) }))}
           rows={4}
           placeholder="간단한 소개를 작성해주세요."
-          className="w-full h-32 resize-none rounded-lg border border-gray-300 dark:border白/15 bg-transparent px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--ara-ring)]"
+          className="w-full h-32 resize-none rounded-lg border border-gray-300 dark:border-white/15 bg-transparent px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--ara-ring)]"
         />
         <div className="mt-1 text-right text-[11px] text-gray-400 dark:text-gray-500">
           {draft.bio.length}/300
         </div>
       </div>
 
-      {/* 에러 메시지 */}
       {!!msg && (
         <p className="mt-3 text-center text-sm sm:text-base text-gray-700 dark:text-gray-300">
           {msg}
         </p>
       )}
 
-      {/* 액션 버튼: 좌 아웃라인 / 우 프라이머리 */}
       <div className="flex justify-between sm:justify-end gap-2 sm:gap-3 mt-6">
         <button
           type="button"
@@ -222,26 +341,29 @@ export default function SignUpStep3Profile({
         </button>
       </div>
 
-      {/* 성공 모달 (톤 통일) */}
       {showSuccess && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/50">
           <div className="w-[360px] rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-neutral-900 p-6 text-center shadow-xl">
             <h3 className="mb-1 text-base font-semibold text-gray-900 dark:text-gray-100">
               회원가입 완료!
             </h3>
+
             <p className="mb-5 text-sm text-gray-600 dark:text-gray-300">
-              인증 메일을 확인해주세요.
+              {successKind === 'social'
+                ? '이제 서비스를 이용할 수 있어요.'
+                : '인증 메일을 확인해주세요.'}
             </p>
+
             <button
               onClick={() => {
                 setShowSuccess(false);
-                onDone?.(); // 필요하면 플로우 종료 콜백
-                navigate('/signin'); // 로그인 페이지로 이동
+                onDone?.();
+                navigate(successKind === 'social' ? '/social' : '/signin');
               }}
               className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white"
               style={{ background: 'var(--ara-primary)' }}
             >
-              로그인 페이지로 이동
+              {successKind === 'social' ? '시작하기' : '로그인 페이지로 이동'}
             </button>
           </div>
         </div>

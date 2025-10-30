@@ -49,32 +49,32 @@ const App = () => {
             <main className="flex-1">
               {/* <main className="flex-1 mt-[calc(97px)]"> */}
               <Routes>
-                <Route path="/" element={<LandingPage />}></Route>
-                <Route path="/landing" element={<LandingPage />}></Route>
-                <Route path="/home" element={<HomePage />}></Route>
-                <Route path="/signup" element={<SignUpPage />}></Route>
-                <Route path="/signupo" element={<SignUpPage_old />}></Route>
-                <Route path="/signin" element={<SignInPage />}></Route>
-                <Route path="/profile" element={<ProfilePage />}></Route>
-                <Route path="/profileo" element={<ProfilePage_old />}></Route>
-                <Route path="/studyList" element={<StudyListPage />}></Route>
-                <Route path="/study/:id" element={<StudyPage />}></Route>
-                <Route path="/voca" element={<VocaPage />}></Route>
-                <Route path="/communitywrite" element={<CommunityWritePage />}></Route>
-                <Route path="/communitylist" element={<CommunityListPage />}></Route>
-                <Route path="/communitydetail/:id" element={<CommunityDetailPage />}></Route>
-                <Route path="/notfound" element={<NotFound />}></Route>
-                <Route path="/test" element={<TempHomePage />}></Route>
-                <Route path="/testC" element={<TempCommunityPage />}></Route>
-                <Route path="/social" element={<HomeFeed />}></Route>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/landing" element={<LandingPage />} />
+                <Route path="/home" element={<HomePage />} />
+                <Route path="/signup" element={<SignUpPage />} />
+                <Route path="/signupo" element={<SignUpPage_old />} />
+                <Route path="/signin" element={<SignInPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/profileo" element={<ProfilePage_old />} />
+                <Route path="/studyList" element={<StudyListPage />} />
+                <Route path="/study/:id" element={<StudyPage />} />
+                <Route path="/voca" element={<VocaPage />} />
+                <Route path="/communitywrite" element={<CommunityWritePage />} />
+                <Route path="/communitylist" element={<CommunityListPage />} />
+                <Route path="/communitydetail/:id" element={<CommunityDetailPage />} />
+                <Route path="/notfound" element={<NotFound />} />
+                <Route path="/test" element={<TempHomePage />} />
+                <Route path="/testC" element={<TempCommunityPage />} />
+                <Route path="/social" element={<HomeFeed />} />
                 <Route path="/social/explore" element={<ExplorePage />} />
                 <Route path="/social/profile" element={<ProfilePage />} />
                 <Route path="/settings" element={<ProfileSettings />} />
                 <Route path="/social/:id" element={<TweetDetailPage />} />
-                <Route path="/dm" element={<DMPage />}></Route>
-                <Route path="/socialcn" element={<ShancnPage />}></Route>
-                <Route path="/notifications" element={<NotificationsPage />}></Route>
-                <Route path="/socialss" element={<SevenShad />}></Route>
+                <Route path="/dm" element={<DMPage />} />
+                <Route path="/socialcn" element={<ShancnPage />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
+                <Route path="/socialss" element={<SevenShad />} />
                 <Route path="/feed" element={<TestSevenShad />}>
                   <Route index element={<FeedMain />} /> {/* 기본 피드 */}
                   <Route path=":id" element={<TestTweetDetailInner />} /> {/* 중앙 컨텐츠만 교체 */}
