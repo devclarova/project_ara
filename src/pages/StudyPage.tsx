@@ -81,6 +81,33 @@ const StudyPage = () => {
         <div className="flex items-center mb-2 gap-1">
           <div className="flex items-center gap-1">
             <NavLink
+              to="/studylist"
+              className={({ isActive }) =>
+                isActive
+                  ? 'text-primary font-medium text-m'
+                  : 'text-gray-600 hover:text-gray-900 text-m'
+              }
+            >
+              Studylist
+            </NavLink>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M9 5L16 12L9 19"
+                stroke="gray"
+                strokeWidth="1"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+          <div className="flex items-center gap-1">
+            <NavLink
               to="/category"
               className={({ isActive }) =>
                 isActive

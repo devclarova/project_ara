@@ -9,8 +9,8 @@ export type ProfileData = {
   birth?: string;
   followingCount: number;
   followerCount: number;
-  coverUrl?: string | null;
-  avatarUrl?: string;
+  cover_url?: string | null;
+  avatar_url?: string;
 };
 
 export type DbProfile = {

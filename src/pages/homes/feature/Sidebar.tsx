@@ -107,7 +107,13 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
               <i className="ri-user-line mr-3 flex-shrink-0"></i>
               <span className="lg:inline">Profile</span>
             </button>
-            <button className="w-full text-left px-4 py-3 hover:bg-gray-100 transition-colors cursor-pointer whitespace-nowrap">
+            <button
+              onClick={() => {
+                handleNavigation('/settings');
+                setShowUserMenu(false);
+              }}
+              className="w-full text-left px-4 py-3 hover:bg-gray-100 transition-colors cursor-pointer whitespace-nowrap"
+            >
               <i className="ri-settings-3-line mr-3 flex-shrink-0"></i>
               <span className="lg:inline">Settings</span>
             </button>
