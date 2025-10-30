@@ -70,3 +70,11 @@ export function saveConsentDraft(partial: Partial<ConsentDraft>): void {
 export function clearConsentDraft(): void {
   localStorage.removeItem(KEY);
 }
+
+export async function persistConsentToServer(
+  userId: string,
+  consents: ConsentDraft
+): Promise<void> {
+  // TODO: 여기서 실제 서버 반영 로직(supabase rpc/insert 등) 연결
+  return;
+}

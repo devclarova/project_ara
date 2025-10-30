@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { CONTENT, type ConsentKey } from './ConsentContent';
+import { CONTENT, type ConsentKey } from './consentContent';
 
 type Props = {
   open: ConsentKey | null;
