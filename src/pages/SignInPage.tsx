@@ -3,6 +3,103 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
+const DRAFT_KEY = 'signup-profile-draft';
+
+// 안전한 로컬 드래프트 읽기
+function readDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 이메일 로그인 직후에도 한 번 더 보장:
+ * - 존재하지 않으면 draft 기반으로 profiles 생성 (is_onboarded=true)
+ * - 생성 성공 시 draft 제거
+ * - 이미 존재하면 no-op
+ */
+async function ensureProfileFromDraftAfterSignIn(userId: string, email?: string | null) {
+  const { data: exists, error: exErr } = await supabase
+    .from('profiles')
+    .select('user_id')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (exErr || exists) return;
+
+  const draft = readDraft();
+
+  const nickname =
+    (draft?.nickname ?? (email && email.includes('@') ? email.split('@')[0] : '') ?? 'user')
+      ?.toString()
+      .trim() || 'user';
+
+  const payload = {
+    user_id: userId,
+    nickname,
+    gender: (draft?.gender ?? 'Male').toString().trim(),
+    birthday: (draft?.birthday ?? '2000-01-01').toString().trim(),
+    country: (draft?.country ?? 'Unknown').toString().trim(),
+    bio: (draft?.bio ?? '').toString().trim() || null,
+    avatar_url: draft?.pendingAvatarUrl ?? null,
+    tos_agreed: !!draft?.tos_agreed,
+    privacy_agreed: !!draft?.privacy_agreed,
+    age_confirmed: !!draft?.age_confirmed,
+    marketing_opt_in: !!draft?.marketing_opt_in,
+    is_onboarded: true, // 이메일은 인증 마치고 로그인했으므로 온보딩 true
+    is_public: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = await supabase.from('profiles').insert(payload);
+  if (!error) {
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+    } catch {}
+  }
+}
+
+/** 로그인 성공 후 라우팅 분기
+ * - 프로필 존재 & is_onboarded=true → /social
+ * - 그 외 → /signup (소셜은 콜백에서 이동, 이메일은 여기서 이미 보장됨)
+ */
+async function postSignInRoute(navigate: ReturnType<typeof useNavigate>) {
+  // 세션/유저 확보
+  const { data } = await supabase.auth.getSession();
+  const u = data.session?.user;
+  if (!u) {
+    navigate('/signin', { replace: true });
+    return;
+  }
+
+  // ✅ 먼저 프로필 보장 (초안이 있으면 생성, 없으면 no-op)
+  await ensureProfileFromDraftAfterSignIn(u.id, u.email);
+
+  // 존재/온보딩 여부 재확인
+  const { data: prof, error } = await supabase
+    .from('profiles')
+    .select('user_id,is_onboarded')
+    .eq('user_id', u.id)
+    .maybeSingle();
+
+  if (error) {
+    // 조회 에러가 나도 UX를 막지 않음 → 홈으로 폴백
+    console.warn('[signin route] profiles select error:', error.message);
+    navigate('/social', { replace: true });
+    return;
+  }
+
+  if (prof && (prof as any).is_onboarded === true) {
+    navigate('/social', { replace: true });
+  } else {
+    // (이상 케이스) 온보딩 미완 → 가입 이어서
+    navigate('/signup', { replace: true, state: { from: 'email' } });
+  }
+}
+
 function SignInPage() {
   const { signIn, signInWithGoogle, signInWithKakao } = useAuth();
   const [email, setEmail] = useState<string>('');
@@ -36,17 +133,18 @@ function SignInPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (loading) return;
     setMsg('');
     setNotConfirmed(false);
     setLoading(true);
     setErrors({});
     setSuppressEffects(false);
 
-    // 입력 정규화(공백 제거 + 이메일 소문자)
+    // 입력 정규화
     const normalizedEmail = email.trim().toLowerCase();
     const pwValue = pw;
 
-    // 필수 입력 체크
+    // 필수 체크
     if (!normalizedEmail || !pwValue) {
       setErrors({
         email: !normalizedEmail ? '이메일을 입력해주세요.' : '',
@@ -56,16 +154,13 @@ function SignInPage() {
       return;
     }
 
-    // 로그인 시도
+    // 로그인 시도(직접 호출; useAuth.signIn 사용해도 무방)
     const { error } = await supabase.auth.signInWithPassword({
       email: normalizedEmail,
       password: pwValue,
     });
 
     if (error) {
-      // 상태코드/원문 기반으로 “정확히” 분기
-      // supabase-js v2에선 AuthApiError 형태로 status가 들어옵니다.
-      // (타입 임포트 안 해도 사용 가능: 런타임 속성만 읽음)
       const status = (error as { status?: number }).status ?? 0;
       const raw = error.message ?? '';
       const low = raw.toLowerCase();
@@ -78,12 +173,9 @@ function SignInPage() {
 
       if (isUnverified) {
         setNotConfirmed(true);
-        // 인증 메일 자동 재발송
         try {
           await supabase.auth.resend({ type: 'signup', email: normalizedEmail });
-        } catch {
-          /* no-op */
-        }
+        } catch {}
         setErrors(prev => ({
           ...prev,
           email: '이메일 인증 실패, 이메일을 확인해주세요.',
@@ -94,7 +186,7 @@ function SignInPage() {
         return;
       }
 
-      // 잘못된 자격증명(이메일/비밀번호 불일치)
+      // 자격 증명 오류
       const isInvalidCred =
         status === 400 ||
         low.includes('invalid login') ||
@@ -112,15 +204,21 @@ function SignInPage() {
         return;
       }
 
-      // 기타 오류 노출
+      // 기타 오류
       setMsg(raw || '알 수 없는 오류로 인해 로그인에 실패했습니다.');
       setLoading(false);
       return;
     }
 
-    // 성공
-    setLoading(false);
-    navigate('/socialss');
+    // 성공 → 프로필/온보딩 상태에 따라 분기 (프로필 먼저 보장)
+    try {
+      await postSignInRoute(navigate);
+    } catch (e) {
+      console.warn('[signin route] fallback social:', (e as any)?.message);
+      navigate('/social', { replace: true });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -238,7 +336,6 @@ function SignInPage() {
           <button
             type="button"
             className="w-full flex items-center justify-center gap-2 border border-solid border-gray-300 rounded-lg py-2 sm:py-3 text-sm sm:text-base font-medium text-black bg-[#fff] hover:bg-gray-50 transition-opacity"
-            onError={error => setMsg(`구글 로그인 오류: ${error}`)}
             onClick={signInWithGoogle}
           >
             <img src="/images/google_logo.png" alt="Sign in with Google" className="w-5 h-5" />
@@ -247,10 +344,9 @@ function SignInPage() {
           <button
             type="button"
             className="w-full flex items-center justify-center gap-2 border border-gray-300 rounded-lg py-2 sm:py-3 text-sm sm:text-base font-medium text-black bg-[#FEE500] hover:opacity-80 transition-opacity"
-            onError={error => setMsg(`구글 로그인 오류: ${error}`)}
             onClick={signInWithKakao}
           >
-            <img src="/images/kakao_logo.png" alt="Sign in with Google" className="w-5 h-5" />
+            <img src="/images/kakao_logo.png" alt="Sign in with Kakao" className="w-5 h-5" />
             <span>카카오 로그인</span>
           </button>
         </div>
