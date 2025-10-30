@@ -1,8 +1,4 @@
-import {
-  Route,
-  BrowserRouter as Router,
-  Routes
-} from 'react-router-dom';
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import CommunityDetailPage from './pages/CommunityDetailPage';
 
@@ -29,7 +25,6 @@ import NotificationsPage from './pages/TweetDetail/NotificationsPage';
 import TweetDetailPage from './pages/TweetDetail/TweetDetailPage';
 import VocaPage from './pages/VocaPage';
 
-
 import ProfileSettings from './components/profile/ProfileSettings';
 import ProfilePage from './pages/ProfilePage';
 import ProfilePage_old from './pages/ProfilePage_old';
@@ -37,6 +32,9 @@ import FeedMain from './pages/temps/FeedMain';
 import TestSevenShad from './pages/temps/TestSevenShad';
 import TestTweetDetailInner from './pages/temps/TestTweetDetailInner';
 import Home from './pages/homes/Home';
+import Layout from './pages/homes/Layout';
+import NotFoundPage from './pages/homes/NotFoundPage';
+import HomesTest from './pages/homes/HomesTest';
 
 const App = () => {
   return (
@@ -81,7 +79,19 @@ const App = () => {
                   <Route index element={<FeedMain />} /> {/* 기본 피드 */}
                   <Route path=":id" element={<TestTweetDetailInner />} /> {/* 중앙 컨텐츠만 교체 */}
                 </Route>
-                <Route path="/finalhome" element={<Home />}></Route>
+                {/* <Route path="/finalhome" element={<Home />}></Route> */}
+
+                {/* 공통 레이아웃 (좌측 Sidebar / 중앙 Outlet / 우측 Trends) */}
+                <Route path="/finalhome" element={<Layout />}>
+                  {/* 기본 진입은 홈으로 */}
+                  <Route index element={<Home />} />
+                  {/* <Route path="finalhome" element={<Home />} /> */}
+                  <Route path="hometest" element={<HomesTest />} />
+                  <Route path="studyList" element={<StudyListPage />} />
+                </Route>
+
+                {/* 존재하지 않는 경로 */}
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </main>
 
