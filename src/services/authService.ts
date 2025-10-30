@@ -1,6 +1,11 @@
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
-import { clearConsentDraft, persistConsentToServer, readConsentDraft, type ConsentDraft } from './consentService';
+import {
+  clearConsentDraft,
+  readConsentDraft,
+  type ConsentDraft,
+  persistConsentToServer,
+} from './consentService';
 
 export const PROFILE_DRAFT_KEY = 'signup-profile-draft';
 const isDupeErr = (msg?: string) =>
