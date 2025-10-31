@@ -1,6 +1,13 @@
 import type { StudyListProps } from '@/types/study';
 import { useNavigate } from 'react-router-dom';
 
+const InfoItem = ({ icon, text }: { icon: string; text?: string }) => (
+  <p className="text-xs sm:text-[12px] md:text-sm text-gray-600 line-clamp-2 flex items-center">
+    <i className={`${icon} mr-1`} />
+    {text}
+  </p>
+);
+
 const ContentCard = ({
   id,
   image,
@@ -9,6 +16,8 @@ const ContentCard = ({
   // desc,
   short_description,
   level,
+  episode,
+  scene,
   levelColor,
   duration,
   comments,
@@ -24,7 +33,7 @@ const ContentCard = ({
       <div className="flex justify-center items-center overflow-hidden">
         <div className="card__media relative w-full overflow-hidden rounded-t-xl">
           {/* 비율 유지 (모바일 4:5 → 태블릿 1:2 → 데스크톱 16:9 → 와이드 5:3) */}
-          <div className="w-full pt-[80%] xs:pt-[50%] sm:pt-[50%] md:pt-[56.25%] lg:pt-[60%] xl:pt-[48%] min-h-[140px]"></div>
+          <div className="w-full pt-[110%] xs:pt-[85%] sm:pt-[75%] md:pt-[65%] lg:pt-[60%] xl:pt-[56%] min-h-[180px]"></div>
 
           {image ? (
             <img
@@ -40,14 +49,23 @@ const ContentCard = ({
       </div>
 
       {/* 본문 */}
-      <div className="card__body px-3 py-3 sm:px-3 sm:py-3 md:px-4 md:py-4">
-        <div className="card__content">
-          <h3 className="card__title text-sm sm:text-[13px] md:text-base font-semibold text-gray-900 line-clamp-1">
+      <div className="px-2 py-2 sm:px-3 sm:py-2 md:px-4 md:py-2">
+        <div className="gird min-h-20">
+          <h3 className="text-sm sm:text-[13px] md:text-base font-semibold text-gray-900 line-clamp-1">
             {title}
           </h3>
-          <p className="card__subtitle text-xs sm:text-[12px] md:text-sm text-gray-600 line-clamp-2">
-            {level} · {duration}
-          </p>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-5">
+              <InfoItem icon="ri-youtube-line" text={episode} />
+              <InfoItem icon="ri-time-line" text={scene} />
+            </div>
+            {(level || duration) && (
+              <div className="flex items-center gap-5">
+                {level && <InfoItem icon="ri-time-line" text={level} />}
+                {duration && <InfoItem icon="ri-time-line" text={duration} />}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

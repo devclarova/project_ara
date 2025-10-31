@@ -146,9 +146,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ autoPlay = false }) => {
                   d="M9 18H7V6H9V18ZM15 6H17V18H15V6Z"
                   fill="black"
                   stroke="black"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               </svg>
             ) : (
