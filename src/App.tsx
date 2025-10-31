@@ -26,15 +26,17 @@ import TweetDetailPage from './pages/TweetDetail/TweetDetailPage';
 import VocaPage from './pages/VocaPage';
 
 import ProfileSettings from './components/profile/ProfileSettings';
+import Home from './pages/homes/Home';
+import HomesTest from './pages/homes/HomesTest';
+import Layout from './pages/homes/Layout';
+import NotFoundPage from './pages/homes/NotFoundPage';
 import ProfilePage from './pages/ProfilePage';
 import ProfilePage_old from './pages/ProfilePage_old';
 import FeedMain from './pages/temps/FeedMain';
 import TestSevenShad from './pages/temps/TestSevenShad';
 import TestTweetDetailInner from './pages/temps/TestTweetDetailInner';
-import Home from './pages/homes/Home';
-import Layout from './pages/homes/Layout';
-import NotFoundPage from './pages/homes/NotFoundPage';
-import HomesTest from './pages/homes/HomesTest';
+import ProfileAsap from './pages/homes/profile/ProfileAsap';
+import TweetDetail from './pages/homes/tweet/TweetDetail';
 
 const App = () => {
   return (
@@ -85,8 +87,11 @@ const App = () => {
                 <Route path="/finalhome" element={<Layout />}>
                   {/* 기본 진입은 홈으로 */}
                   <Route index element={<Home />} />
+                  <Route path=":id" element={<TweetDetail />} />
+                  <Route path="user/:username" element={<ProfileAsap />} />
                   {/* <Route path="finalhome" element={<Home />} /> */}
                   <Route path="hometest" element={<HomesTest />} />
+                  <Route path="profileasap" element={<ProfileAsap />} />
                   <Route path="studyList" element={<StudyListPage />} />
                 </Route>
 

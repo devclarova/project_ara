@@ -1,6 +1,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useState, useRef } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ComposeBoxProps {
   onTweetPost?: (tweet: {
@@ -25,81 +27,134 @@ interface ComposeBoxProps {
 export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
   const [tweetText, setTweetText] = useState('');
   const [showOptions, setShowOptions] = useState(false);
-  const [selectedImages, setSelectedImages] = useState<string[]>([]);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
   const maxLength = 280;
 
   const emojis = ['😀', '😂', '🥰', '😍', '🤔', '👍', '❤️', '🔥', '💯', '🎉', '🚀', '✨'];
 
-  const handleTweet = () => {
-    if (tweetText.trim()) {
+  // ✅ 이미지 업로드 핸들러
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onload = e => setPreviewImage(e.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // ✅ Supabase에 트윗 업로드
+  const handleTweet = async () => {
+    if (!tweetText.trim() || !user) return;
+
+    try {
+      setUploading(true);
+
+      let uploadedImageUrl: string | null = null;
+
+      // ✅ 이미지가 선택된 경우 Supabase Storage에 업로드
+      if (selectedImage) {
+        const fileExt = selectedImage.name.split('.').pop();
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+        const filePath = `tweet_images/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('tweet_media')
+          .upload(filePath, selectedImage);
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrl } = supabase.storage.from('tweet_media').getPublicUrl(filePath);
+
+        uploadedImageUrl = publicUrl.publicUrl;
+      }
+
+      // ✅ DB에 트윗 추가
+      const { data, error } = await supabase
+        .from('tweets')
+        .insert([
+          {
+            author_id: user.id, // RLS 정책에 따라 auth.uid()와 매칭
+            content: tweetText,
+            image_url: uploadedImageUrl,
+          },
+        ])
+        .select(
+          `
+          id,
+          content,
+          image_url,
+          created_at,
+          profiles:author_id (
+            nickname,
+            username,
+            avatar_url
+          )
+        `,
+        )
+        .single();
+
+      if (error) throw error;
+
       const newTweet = {
-        id: `tweet-${Date.now()}`,
+        id: data.id,
         user: {
-          name: 'You',
-          username: 'yourhandle',
-          // avatar: 'https://readdy.ai/api/search-image?query=professional%20headshot%20of%20a%20young%20person%20with%20friendly%20smile%2C%20clean%20background%2C%20high%20quality%20portrait%20photography%2C%20modern%20lighting&width=48&height=48&seq=user-avatar&orientation=squarish',
-          avatar: '/default-avatar.svg',
+          name: data.profiles?.nickname ?? 'Unknown',
+          username: data.profiles?.username ?? data.profiles?.nickname ?? 'user',
+          avatar: data.profiles?.avatar_url ?? '/default-avatar.svg',
         },
-        content: tweetText,
-        image: selectedImages.length > 0 ? selectedImages[0] : undefined,
-        timestamp: 'now',
+        content: data.content,
+        image: data.image_url ?? undefined, // ✅ image_url → image
+        timestamp: new Date(data.created_at).toLocaleString('ko-KR', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }), // ✅ created_at 대신 timestamp 사용
         stats: {
           replies: 0,
           retweets: 0,
           likes: 0,
+          bookmarks: 0,
           views: Math.floor(Math.random() * 100) + 1,
         },
       };
 
       onTweetPost?.(newTweet);
 
-      // Reset composer
+      // ✅ 초기화
       setTweetText('');
-      setSelectedImages([]);
+      setSelectedImage(null);
+      setPreviewImage(null);
       setShowOptions(false);
-      setShowEmojiPicker(false);
+    } catch (err: any) {
+      console.error('❌ 트윗 업로드 실패:', err.message);
+      alert('트윗을 업로드하는 중 오류가 발생했습니다.');
+    } finally {
+      setUploading(false);
     }
-  };
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      const newImages: string[] = [];
-      Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = e => {
-          if (e.target?.result) {
-            newImages.push(e.target.result as string);
-            if (newImages.length === files.length) {
-              setSelectedImages(prev => [...prev, ...newImages].slice(0, 4)); // Max 4 images
-            }
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setSelectedImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const addEmoji = (emoji: string) => {
     setTweetText(prev => prev + emoji);
-    setShowEmojiPicker(false);
   };
 
   return (
     <div className="border-b border-gray-200 p-4 min-w-[320px]">
       <div className="flex space-x-3 w-full">
+        {/* ✅ 프로필 아바타 */}
         <div className="flex-shrink-0">
           <Avatar className="w-10 h-10">
             <AvatarImage src="/default-avatar.svg" alt="User avatar" />
             <AvatarFallback>U</AvatarFallback>
           </Avatar>
         </div>
+
+        {/* ✅ 입력 필드 */}
         <div className="flex-1 min-w-0">
           <textarea
             value={tweetText}
@@ -111,141 +166,62 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
             onFocus={() => setShowOptions(true)}
           />
 
-          {/* Image Previews */}
-          {selectedImages.length > 0 && (
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              {selectedImages.map((image, index) => (
-                <div
-                  key={index}
-                  className="relative rounded-xl overflow-hidden border border-gray-200"
-                >
-                  <img
-                    src={image}
-                    alt={`Upload ${index + 1}`}
-                    className="w-full h-32 object-cover"
-                  />
-                  <button
-                    onClick={() => removeImage(index)}
-                    className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-black/80 transition-colors cursor-pointer"
-                  >
-                    <i className="ri-close-line text-sm"></i>
-                  </button>
-                </div>
-              ))}
+          {/* ✅ 이미지 미리보기 */}
+          {previewImage && (
+            <div className="mt-3 relative rounded-xl overflow-hidden border border-gray-200">
+              <img src={previewImage} alt="Preview" className="w-full h-48 object-cover" />
+              <button
+                onClick={() => {
+                  setSelectedImage(null);
+                  setPreviewImage(null);
+                }}
+                className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-black/80 transition-colors cursor-pointer"
+              >
+                <i className="ri-close-line text-sm"></i>
+              </button>
             </div>
           )}
 
+          {/* ✅ 옵션들 */}
           {showOptions && (
             <div className="mt-4 w-full">
-              {/* Media Options */}
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center space-x-2 sm:space-x-4 flex-wrap">
-                  {/* Image Upload */}
+                  {/* 이미지 업로드 */}
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition-colors cursor-pointer flex-shrink-0"
+                    className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition-colors cursor-pointer"
                   >
-                    <i className="ri-image-line text-lg w-5 h-5 flex items-center justify-center"></i>
+                    <i className="ri-image-line text-lg"></i>
                   </button>
                   <input
                     ref={fileInputRef}
                     type="file"
                     accept="image/*"
-                    multiple
                     onChange={handleImageUpload}
                     className="hidden"
                   />
 
-                  {/* GIF */}
-                  <button className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition-colors cursor-pointer flex-shrink-0">
-                    <i className="ri-file-gif-line text-lg w-5 h-5 flex items-center justify-center"></i>
-                  </button>
-
-                  {/* Poll */}
-                  <button className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition-colors cursor-pointer flex-shrink-0">
-                    <i className="ri-bar-chart-horizontal-line text-lg w-5 h-5 flex items-center justify-center"></i>
-                  </button>
-
-                  {/* Emoji */}
+                  {/* 이모지 */}
                   <div className="relative">
                     <button
-                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                      className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition-colors cursor-pointer flex-shrink-0"
+                      onClick={() => addEmoji('🔥')}
+                      className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition-colors cursor-pointer"
                     >
-                      <i className="ri-emotion-line text-lg w-5 h-5 flex items-center justify-center"></i>
+                      <i className="ri-emotion-line text-lg"></i>
                     </button>
-
-                    {/* Emoji Picker */}
-                    {showEmojiPicker && (
-                      <div className="absolute top-12 left-0 bg-white border border-gray-200 rounded-xl shadow-lg p-3 z-10">
-                        <div className="grid grid-cols-6 gap-2">
-                          {emojis.map((emoji, index) => (
-                            <button
-                              key={index}
-                              onClick={() => addEmoji(emoji)}
-                              className="text-xl hover:bg-gray-100 p-2 rounded-lg transition-colors cursor-pointer"
-                            >
-                              {emoji}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
-
-                  {/* Calendar */}
-                  <button className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition-colors cursor-pointer flex-shrink-0">
-                    <i className="ri-calendar-event-line text-lg w-5 h-5 flex items-center justify-center"></i>
-                  </button>
                 </div>
 
+                {/* ✅ 게시 버튼 */}
                 <div className="flex items-center space-x-3 flex-shrink-0">
-                  {/* Character Counter */}
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className={`text-sm ${
-                        tweetText.length > maxLength * 0.8 ? 'text-red-500' : 'text-gray-500'
-                      }`}
-                    >
-                      {maxLength - tweetText.length}
-                    </div>
-                    <div className="w-6 h-6 relative flex-shrink-0">
-                      <svg className="w-6 h-6 transform -rotate-90" viewBox="0 0 24 24">
-                        <circle
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          fill="none"
-                          className="text-gray-200"
-                        />
-                        <circle
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          fill="none"
-                          strokeDasharray={`${2 * Math.PI * 10}`}
-                          strokeDashoffset={`${
-                            2 * Math.PI * 10 * (1 - tweetText.length / maxLength)
-                          }`}
-                          className={
-                            tweetText.length > maxLength * 0.8 ? 'text-red-500' : 'text-blue-500'
-                          }
-                        />
-                      </svg>
-                    </div>
-                  </div>
-
-                  {/* Tweet Button */}
+                  <div className="text-sm text-gray-500">{maxLength - tweetText.length}</div>
                   <Button
                     onClick={handleTweet}
-                    disabled={!tweetText.trim() || tweetText.length > maxLength}
-                    className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white px-4 py-1.5 rounded-full font-bold text-sm transition-colors cursor-pointer whitespace-nowrap flex-shrink-0"
+                    disabled={!tweetText.trim() || uploading}
+                    className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white px-4 py-1.5 rounded-full font-bold text-sm transition-colors"
                   >
-                    Tweet
+                    {uploading ? 'Posting...' : 'Tweet'}
                   </Button>
                 </div>
               </div>
