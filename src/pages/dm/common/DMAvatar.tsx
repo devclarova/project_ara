@@ -33,7 +33,7 @@ const DMAvatar: React.FC<Props> = ({ userId, size = 50, unread = 0 }) => {
         const { data, error } = await supabase
           .from('profiles')
           .select('avatar_url, nickname')
-          .eq('id', userId)
+          .eq('user_id', userId)
           .maybeSingle();
 
         if (error) throw error;

@@ -6,18 +6,19 @@ function ScrollToTop() {
   const navType = useNavigationType();
 
   useEffect(() => {
-    if (hash) {
-      const el = document.querySelector(hash);
+    const isValidIdHash = /^#[A-Za-z][\w-]*$/.test(hash || '');
+
+    if (isValidIdHash) {
+      const el = document.querySelector(hash!);
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         return;
       }
     }
 
-    if (navType !== 'POP') {
-      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-    }
-  }, [pathname, hash, navType]);
+    // 2) 유효하지 않으면(= OAuth 토큰 해시 등) 그냥 최상단으로
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+  }, [pathname, hash]);
 
   return null;
 }
