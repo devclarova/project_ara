@@ -1,38 +1,33 @@
-import { useEffect, useState } from 'react';
 import CategoryTabs from '@/components/study/CategoryTabs';
 import ContentCard from '@/components/study/ContentCard';
-import FilterDropdown from '@/components/study/FilterDropdown';
 import SearchBar from '@/components/ui/SearchBar';
+import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Study } from '../types/study';
-import Sidebar from './homes/feature/Sidebar';
 
 const StudyListPage = () => {
   const [clips, setClips] = useState<Study[]>([]);
   const [keyword, setKeyword] = useState('');
-  const [showTweetModal, setShowTweetModal] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const limit = 6; // 한 페이지당 9개 (3x3 그리드) 테스트 후 수정
+  const limit = 9; // 한 페이지당 9개 (3x3 그리드)
 
   useEffect(() => {
     const fetchData = async () => {
       const from = (page - 1) * limit;
       const to = from + limit - 1;
 
-      // 전체 개수 확인 (count 옵션 사용)
       const { data, count, error } = await supabase
         .from('study')
-        .select('*', { count: 'exact' })
-        .range(from, to)
-        .order('id', { ascending: true });
+        .select('*, video(*)', { count: 'exact' })
+        .order('id', { ascending: true })
+        .range(from, to);
 
       if (error) {
         console.error('❌ 데이터 불러오기 오류:', error.message);
         return;
       }
-
-      setClips(data ?? []);
+      setClips((data ?? []) as Study[]);
       setTotal(count ?? 0);
     };
 
@@ -51,33 +46,37 @@ const StudyListPage = () => {
         {/* 헤더 */}
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 sm:gap-0 mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">학습하기</h1>
-          <FilterDropdown />
         </div>
 
         {/* 탭 + 검색 */}
-        <div className="flex flex-col md:flex-row md:justify-between gap-4 md:gap-10">
+        <div className="flex flex-col items-center md:flex-row md:justify-between md:gap-20">
           <CategoryTabs />
           <SearchBar placeholder="검색어를 입력해주세요" />
         </div>
 
         {/* 카드 그리드 */}
         <div className="grid gap-6 sm:gap-8 p-4 sm:p-6 mt-6 grid-cols-1 sm:grid-cols-2 lg:[grid-template-columns:repeat(3,minmax(260px,1fr))]">
-          {clips.map(study => (
-            <ContentCard
-              key={study.id}
-              id={study.id}
-              image={study.poster_image_url}
-              title={study.title || '제목 없음'}
-              short_description={study.short_description ?? '설명 없음'}
-              level="초급"
-              levelColor="bg-primary"
-              duration="10분"
-              comments="0개 댓글"
-            />
-          ))}
+          {clips.map(study => {
+            const [v] = study.video ?? [];
+            return (
+              <ContentCard
+                key={study.id}
+                id={study.id}
+                image={study.poster_image_url}
+                title={study.title || '제목 없음'}
+                short_description={study.short_description || '설명 없음'}
+                episode={v?.episode || ''}
+                scene={v?.scene || ''}
+                level={v?.level || ''}
+                // levelColor="bg-primary"
+                duration={v?.runtime || ''}
+                comments="0개 댓글"
+              />
+            );
+          })}
         </div>
 
-        {/* 페이지네이션 그대로 */}
+        {/* 페이지네이션 */}
         <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 my-6 sm:my-8">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
             <button

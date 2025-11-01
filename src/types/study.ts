@@ -1,5 +1,3 @@
-import type { Database } from './database';
-
 // 난이도 enum
 export type DifficultyLevel = '초급' | '중급' | '고급';
 
@@ -11,6 +9,8 @@ export type StudyListProps = {
   // desc: string;
   short_description: string;
   level: string;
+  episode?: string;
+  scene?: string;
   levelColor: string;
   duration: string;
   comments: string;
@@ -23,6 +23,7 @@ export interface Study {
   created_at: string; // ISO timestamp
   poster_image_url: string;
   short_description: string;
+  video?: Video[];
 }
 
 // 2. Subtitle (자막)
@@ -30,7 +31,6 @@ export interface Subtitle {
   english_subtitle: string | null;
   id: number;
   korean_subtitle: string | null;
-  level: Database['public']['Enums']['difficulty_level'] | null;
   pronunciation: string | null;
   study_id: number | null;
   subtitle_end_time: number | null;
@@ -42,6 +42,7 @@ export interface Video {
   categories: string | null;
   contents: string | null;
   episode: string | null;
+  level: string | null;
   id: number;
   image_url: string | null;
   runtime: number | null;

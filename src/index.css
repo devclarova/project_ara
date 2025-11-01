@@ -424,7 +424,7 @@ hr {
   -webkit-line-clamp: var(--card-title-lines);
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: calc(var(--card-title-lines) * var(--card-title-lh) * var(--card-title-fs));
+  min-height: calc(var(--card-title-lines) * var(--card-title-fs) * 1.1);
 }
 /* 설명(부제목): 카드 전용 스타일 (기존 .subtitle 대신 사용 권장) */
 .card__subtitle {
@@ -435,7 +435,7 @@ hr {
   -webkit-line-clamp: var(--card-subtitle-lines);
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: calc(var(--card-subtitle-lines) * var(--card-subtitle-lh) * var(--card-subtitle-fs));
+  min-height: calc(var(--card-subtitle-lines) * var(--card-subtitle-fs) * 1.1);
 }
 .card__meta {
   margin-top: var(--sp-2);
@@ -1043,4 +1043,15 @@ hr {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* 스크롤바 숨기기 */
+.hide-scrollbar::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
