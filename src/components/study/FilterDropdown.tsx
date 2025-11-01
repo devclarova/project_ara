@@ -1,19 +1,30 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const FilterDropdown = () => {
   const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
 
   return (
-    <div className="relative">
+    <div ref={dropdownRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-4 py-2 text-primary border border-primary rounded-button hover:bg-primary hover:text-white transition-all whitespace-nowrap"
+        className="flex items-center gap-2 pb-4 text-primary border border-primary rounded-button hover:text-primary/80 transition-all whitespace-nowrap"
       >
-        <i className="ri-filter-line text-sm" />
-        필터
+        <i className="ri-filter-line text-xl" />
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
+        <div className="absolute right-0 mb-2 w-64 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
           <div className="p-4 space-y-4">
             {/* 난이도 */}
             <div>
@@ -64,7 +75,7 @@ const FilterDropdown = () => {
               </select>
             </div>
 
-            <div className="flex justify-end pt-2 border-t border-gray-100">
+            <div className="flex justify-end pt-2">
               <button
                 onClick={() => setOpen(false)}
                 className="px-4 py-2 text-sm text-white bg-primary rounded-button whitespace-nowrap"

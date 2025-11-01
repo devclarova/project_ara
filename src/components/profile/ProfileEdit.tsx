@@ -118,7 +118,7 @@ const ProfileEdit = ({ open, onClose, onSave, initial }: ProfileEditProps) => {
         </div>
         {/* Body */}
         <form
-          className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-5"
+          className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-5 scrollbar-hidden hide-scrollbar"
           onSubmit={e => {
             e.preventDefault();
             const fd = new FormData(e.currentTarget as HTMLFormElement);
@@ -162,7 +162,7 @@ const ProfileEdit = ({ open, onClose, onSave, initial }: ProfileEditProps) => {
               )}
               {/* Hover 힌트 */}
               <div className="absolute inset-0 hidden place-items-center bg-black/20 group-hover:grid group-focus-within:grid">
-                <img src="/camera.svg" alt="커버 변경하기" className="opacity-90" />
+                <img src="images/camera.svg" alt="커버 변경하기" className="opacity-90" />
               </div>
 
               {/* 커버 삭제 버튼 (여기 '한 번만') */}
@@ -203,7 +203,7 @@ const ProfileEdit = ({ open, onClose, onSave, initial }: ProfileEditProps) => {
                     </div>
                   )}
                   <div className="absolute inset-0 hidden place-items-center bg-black/25 text-white text-xs group-hover:grid group-focus-within:grid">
-                    <img src="/camera.svg" alt="프로필 변경하기" />
+                    <img src="images/camera.svg" alt="프로필 변경하기" />
                   </div>
                 </div>
               </label>

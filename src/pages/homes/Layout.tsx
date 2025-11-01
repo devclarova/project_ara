@@ -1,7 +1,7 @@
 // Layout.tsx
 
 // src/pages/ShellLayout.tsx
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import Sidebar from './feature/Sidebar';
 import TrendsPanel from './feature/TrendsPanel';
@@ -9,7 +9,9 @@ import TweetModal from './feature/TweetModal';
 
 export default function Layout() {
   const [showTweetModal, setShowTweetModal] = useState(false);
-
+  const location = useLocation(); // 현재 경로 정보
+  const isFinalHome =
+    location.pathname.startsWith('/finalhome') && !location.pathname.includes('/studyList');
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
       <div className="flex justify-center min-h-screen">
@@ -29,13 +31,15 @@ export default function Layout() {
           </div>
 
           {/* Right Trends */}
-          {/* <div className="hidden xl:block w-80 flex-shrink-0">
-            <div className="sticky top-0 h-screen">
-              <div className=" h-full">
-                <TrendsPanel />
+          {isFinalHome && (
+            <div className="hidden xl:block w-80 flex-shrink-0">
+              <div className="sticky top-0 h-screen">
+                <div className=" h-full">
+                  <TrendsPanel />
+                </div>
               </div>
             </div>
-          </div> */}
+          )}
         </div>
       </div>
 

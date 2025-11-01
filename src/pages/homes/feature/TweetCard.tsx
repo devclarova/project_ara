@@ -34,13 +34,13 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
 
   const handleCardClick = () => {
     // Navigate to tweet detail page using the actual tweet ID
-    navigate(`/tweet/${id}`);
+    navigate(`/finalhome/${id}`);
   };
 
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent tweet card click
     // Navigate to user's profile page
-    navigate(`/profile/${user.username}`);
+    navigate(`/finalhome/user/${user.username}`);
   };
 
   const handleActionClick = (e: React.MouseEvent, action: () => void) => {

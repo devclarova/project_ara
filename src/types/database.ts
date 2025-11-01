@@ -696,58 +696,94 @@ export type Database = {
       };
       profiles: {
         Row: {
+          age_confirmed: boolean;
           avatar_url: string | null;
+          banner_url: string | null;
           bio: string | null;
           birthday: string;
           country: string;
           created_at: string;
+          followers_count: number | null;
+          following_count: number | null;
           gender: Database['public']['Enums']['gender_enum'];
           id: string;
+          is_onboarded: boolean;
           is_online: boolean;
+          is_public: boolean;
+          join_date: string | null;
           last_active_at: string | null;
+          location: string | null;
+          marketing_opt_in: boolean;
           nickname: string;
           nickname_lang: Database['public']['Enums']['nickname_lang_enum'] | null;
           nickname_normalized: string | null;
           nickname_script: string | null;
           nickname_set_at: string | null;
+          privacy_agreed: boolean;
+          tos_agreed: boolean;
           updated_at: string;
           user_id: string;
+          username: string | null;
         };
         Insert: {
+          age_confirmed?: boolean;
           avatar_url?: string | null;
+          banner_url?: string | null;
           bio?: string | null;
           birthday?: string;
           country?: string;
           created_at?: string;
+          followers_count?: number | null;
+          following_count?: number | null;
           gender: Database['public']['Enums']['gender_enum'];
           id?: string;
+          is_onboarded?: boolean;
           is_online?: boolean;
+          is_public?: boolean;
+          join_date?: string | null;
           last_active_at?: string | null;
+          location?: string | null;
+          marketing_opt_in?: boolean;
           nickname: string;
           nickname_lang?: Database['public']['Enums']['nickname_lang_enum'] | null;
           nickname_normalized?: string | null;
           nickname_script?: string | null;
           nickname_set_at?: string | null;
+          privacy_agreed?: boolean;
+          tos_agreed?: boolean;
           updated_at?: string;
           user_id: string;
+          username?: string | null;
         };
         Update: {
+          age_confirmed?: boolean;
           avatar_url?: string | null;
+          banner_url?: string | null;
           bio?: string | null;
           birthday?: string;
           country?: string;
           created_at?: string;
+          followers_count?: number | null;
+          following_count?: number | null;
           gender?: Database['public']['Enums']['gender_enum'];
           id?: string;
+          is_onboarded?: boolean;
           is_online?: boolean;
+          is_public?: boolean;
+          join_date?: string | null;
           last_active_at?: string | null;
+          location?: string | null;
+          marketing_opt_in?: boolean;
           nickname?: string;
           nickname_lang?: Database['public']['Enums']['nickname_lang_enum'] | null;
           nickname_normalized?: string | null;
           nickname_script?: string | null;
           nickname_set_at?: string | null;
+          privacy_agreed?: boolean;
+          tos_agreed?: boolean;
           updated_at?: string;
           user_id?: string;
+          username?: string | null;
         };
         Relationships: [];
       };
@@ -858,6 +894,30 @@ export type Database = {
           id?: number;
           study_id?: number;
           user_id?: string | null;
+        };
+        Relationships: [];
+      };
+      signup_error_log: {
+        Row: {
+          at: string;
+          auth_user_id: string | null;
+          detail: string | null;
+          err: string | null;
+          id: number;
+        };
+        Insert: {
+          at?: string;
+          auth_user_id?: string | null;
+          detail?: string | null;
+          err?: string | null;
+          id?: number;
+        };
+        Update: {
+          at?: string;
+          auth_user_id?: string | null;
+          detail?: string | null;
+          err?: string | null;
+          id?: number;
         };
         Relationships: [];
       };
@@ -1012,7 +1072,10 @@ export type Database = {
           id: string;
           image_url: string | null;
           like_count: number | null;
+          reply_count: number | null;
           repost_count: number | null;
+          updated_at: string | null;
+          view_count: number | null;
         };
         Insert: {
           author_id: string;
@@ -1022,7 +1085,10 @@ export type Database = {
           id?: string;
           image_url?: string | null;
           like_count?: number | null;
+          reply_count?: number | null;
           repost_count?: number | null;
+          updated_at?: string | null;
+          view_count?: number | null;
         };
         Update: {
           author_id?: string;
@@ -1032,7 +1098,10 @@ export type Database = {
           id?: string;
           image_url?: string | null;
           like_count?: number | null;
+          reply_count?: number | null;
           repost_count?: number | null;
+          updated_at?: string | null;
+          view_count?: number | null;
         };
         Relationships: [
           {
@@ -1118,6 +1187,21 @@ export type Database = {
           },
         ];
       };
+      user_id_map: {
+        Row: {
+          new_id: string;
+          old_id: number;
+        };
+        Insert: {
+          new_id: string;
+          old_id: number;
+        };
+        Update: {
+          new_id?: string;
+          old_id?: number;
+        };
+        Relationships: [];
+      };
       user_reports: {
         Row: {
           created_at: string;
@@ -1162,24 +1246,30 @@ export type Database = {
           auth_user_id: string;
           created_at: string;
           email: string;
-          id: number;
+          id: string;
+          is_online: boolean;
           last_login: string;
+          last_seen: string | null;
           password: string | null;
         };
         Insert: {
           auth_user_id: string;
           created_at?: string;
           email: string;
-          id?: number;
+          id: string;
+          is_online?: boolean;
           last_login?: string;
+          last_seen?: string | null;
           password?: string | null;
         };
         Update: {
           auth_user_id?: string;
           created_at?: string;
           email?: string;
-          id?: number;
+          id?: string;
+          is_online?: boolean;
           last_login?: string;
+          last_seen?: string | null;
           password?: string | null;
         };
         Relationships: [];
@@ -1386,12 +1476,51 @@ export type Database = {
       };
     };
     Functions: {
+      caller_is_onboarded: { Args: never; Returns: boolean };
+      create_or_update_profile_from_draft: {
+        Args: {
+          in_avatar_url: string;
+          in_bio: string;
+          in_birthday_ymd: string;
+          in_country: string;
+          in_gender: string;
+          in_nickname: string;
+          in_nickname_lang: string;
+        };
+        Returns: undefined;
+      };
+      create_or_update_profile_onboarding: {
+        Args: {
+          p_age_confirmed?: boolean;
+          p_avatar?: string;
+          p_bio?: string;
+          p_birthday: string;
+          p_country: string;
+          p_gender: Database['public']['Enums']['gender_enum'];
+          p_marketing_opt_in?: boolean;
+          p_nickname: string;
+          p_privacy_agreed?: boolean;
+          p_tos_agreed?: boolean;
+        };
+        Returns: undefined;
+      };
       email_exists: { Args: { _email: string }; Returns: boolean };
       email_taken_by_email_provider: {
         Args: { _email: string };
         Returns: boolean;
       };
       ensure_profile: { Args: never; Returns: undefined };
+      finalize_signup: {
+        Args: {
+          in_avatar_url?: string;
+          in_bio?: string;
+          in_birthday_ymd: string;
+          in_country: string;
+          in_gender: string;
+          in_nickname: string;
+        };
+        Returns: undefined;
+      };
       fn_normalize_nickname: { Args: { nick: string }; Returns: string };
       hhmmss_to_seconds: { Args: { t: string }; Returns: number };
       is_admin: { Args: never; Returns: boolean };
@@ -1399,15 +1528,12 @@ export type Database = {
         Args: { _reserved?: Json; _restricted?: Json };
         Returns: undefined;
       };
+      mark_offline: { Args: never; Returns: undefined };
+      mark_online: { Args: never; Returns: undefined };
       nickname_exists:
-        | {
-            Args: {
-              _lang: Database['public']['Enums']['nickname_lang_enum'];
-              _nickname: string;
-            };
-            Returns: boolean;
-          }
+        | { Args: { _lang: string; _nickname: string }; Returns: boolean }
         | { Args: { _nickname: string }; Returns: boolean };
+      record_login: { Args: never; Returns: undefined };
       set_nickname: {
         Args: {
           p_lang: Database['public']['Enums']['nickname_lang_enum'];
