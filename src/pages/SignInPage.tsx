@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -75,10 +75,16 @@ async function postSignInRoute(navigate: ReturnType<typeof useNavigate>) {
     return;
   }
 
-  // ✅ 먼저 프로필 보장 (초안이 있으면 생성, 없으면 no-op)
-  await ensureProfileFromDraftAfterSignIn(u.id, u.email);
+  // 로그인 제공자 확인
+  const provider = (u.app_metadata?.provider as string | undefined) ?? 'email';
 
-  // 존재/온보딩 여부 재확인
+  if (provider === 'email') {
+    // 이메일은 인증이 끝나야 로그인 성공하므로, 바로 홈
+    navigate('/finalhome', { replace: true });
+    return;
+  }
+
+  // 소셜: 온보딩 여부로 분기
   const { data: prof, error } = await supabase
     .from('profiles')
     .select('user_id,is_onboarded')
@@ -86,22 +92,20 @@ async function postSignInRoute(navigate: ReturnType<typeof useNavigate>) {
     .maybeSingle();
 
   if (error) {
-    // 조회 에러가 나도 UX를 막지 않음 → 홈으로 폴백
     console.warn('[signin route] profiles select error:', error.message);
-    navigate('/social', { replace: true });
+    navigate('/finalhome', { replace: true });
     return;
   }
 
-  if (prof && (prof as any).is_onboarded === true) {
-    navigate('/social', { replace: true });
+  if (prof?.is_onboarded) {
+    navigate('/finalhome', { replace: true });
   } else {
-    // (이상 케이스) 온보딩 미완 → 가입 이어서
-    navigate('/signup', { replace: true, state: { from: 'email' } });
+    navigate('/signup', { replace: true, state: { from: 'oauth' } });
   }
 }
 
 function SignInPage() {
-  const { signIn, signInWithGoogle, signInWithKakao } = useAuth();
+  const { signIn, session, signInWithGoogle, signInWithKakao } = useAuth();
   const [email, setEmail] = useState<string>('');
   const [pw, setPw] = useState<string>('');
   const [msg, setMsg] = useState<string>('');
@@ -111,6 +115,25 @@ function SignInPage() {
   const [notConfirmed, setNotConfirmed] = useState(false);
   const [resendMsg, setResendMsg] = useState('');
   const [suppressEffects, setSuppressEffects] = useState(false);
+
+  useEffect(() => {
+    if (loading) return;
+    if (session) {
+      (async () => {
+        const provider = (session.user.app_metadata?.provider as string | undefined) ?? 'email';
+        if (provider !== 'email') {
+          navigate('/signup/social', { replace: true });
+          return;
+        }
+        const uid = session.user.id;
+        const { count } = await supabase
+          .from('profiles')
+          .select('user_id', { head: true, count: 'exact' })
+          .eq('user_id', uid);
+        navigate(count ? '/finalhome' : '/signup', { replace: true });
+      })();
+    }
+  }, [loading, session, navigate]);
 
   const handleChange = (field: 'email' | 'pw', value: string) => {
     setSuppressEffects(false);

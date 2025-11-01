@@ -24,11 +24,11 @@ export function useSignupStepper(initialStep: Step = 1) {
   const [step, setStep] = useState<Step>(initialStep);
   const prevStepRef = useRef<Step>(initialStep);
 
-  const direction: 'forward' | 'backward' =
-    step > prevStepRef.current ? 'forward' : 'backward';
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
 
   const guardedSetStep = (from: Step) => (to: Step, canGo: boolean) => {
     if (!canGo) return;
+     setDirection(to > from ? 'forward' : 'backward');
     prevStepRef.current = from;
     setStep(to);
     if (typeof window !== 'undefined') {

@@ -188,6 +188,18 @@ function langLabel(l?: Lang | null): string {
   return map[l] ?? l;
 }
 
+// === 만 14세 이상 여부 판단 ===
+function isAge14Plus(dateLike?: Date | string | null) {
+  if (!dateLike) return false;
+  const birth = dateLike instanceof Date ? dateLike : new Date(dateLike);
+  if (Number.isNaN(birth.getTime())) return false;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const notHadBirthday = today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate());
+  if (notHadBirthday) age -= 1;
+  return age >= 14;
+}
+
 type Props = {
   onNext: (data: FormData) => void;
   onBack: () => void;
@@ -340,6 +352,10 @@ export default function SignUpStep2Form({
     if (nickMsg) newErr.nickname = nickMsg;
     if (!gender) newErr.gender = '성별을 선택해주세요.';
     if (!birth) newErr.birth = '생년월일을 입력해주세요.';
+    // [추가] 생일이 들어왔다면, 오늘 기준 만 14세 이상인지 체크
+    if (birth && !isAge14Plus(birth)) {
+      newErr.birth = '만 14세 미만은 가입할 수 없습니다.';
+    }
     if (!country) newErr.country = '국적을 선택해주세요.';
 
     if (withDupHints) {
@@ -519,11 +535,29 @@ export default function SignUpStep2Form({
             emit({ ...snapshot, email: v });
           }}
           error={errors.email}
-          onCheck={signupKind === 'social' ? undefined : handleEmailCheck}
           isChecking={emailChecking}
-          checkResult={emailCheckResult}
+          checkResult={signupKind === 'social' ? '' : emailCheckResult}
+          onCheck={signupKind === 'social' ? undefined : handleEmailCheck}
           className={signupKind === 'social' ? 'opacity-70 cursor-not-allowed' : ''}
-          inputProps={signupKind === 'social' ? { readOnly: true } : undefined}
+          inputProps={
+            signupKind === 'social'
+              ? {
+                  readOnly: true,
+                  tabIndex: -1, // 탭 포커스 차단
+                  onFocus: e => e.currentTarget.blur(), // 포커스 들어와도 즉시 해제
+                  onMouseDown: e => e.preventDefault(), // 마우스 포커스 차단
+                  onKeyDown: e => e.preventDefault(), // 키입력 방지
+                  // ✅ 크기 유지: 클래스는 안 건드리고 색상만 인라인 스타일로
+                  style: {
+                    backgroundColor: 'rgb(243 244 246)', // bg-gray-100
+                    color: 'rgb(107 114 128)', // text-gray-500
+                    // 필요하면 포커스 테두리만 제거(크기 영향 없음)
+                    outline: 'none',
+                    cursor: 'default',
+                  },
+                }
+              : undefined
+          }
         />
 
         <InputField
@@ -538,10 +572,25 @@ export default function SignUpStep2Form({
             emit({ ...snapshot, pw: v });
           }}
           error={errors.pw}
-          inputProps={{
-            disabled: signupKind === 'social',
-            readOnly: signupKind === 'social',
-          }}
+          inputProps={
+            signupKind === 'social'
+              ? {
+                  readOnly: true,
+                  tabIndex: -1, // 탭 포커스 차단
+                  onFocus: e => e.currentTarget.blur(), // 포커스 들어와도 즉시 해제
+                  onMouseDown: e => e.preventDefault(), // 마우스 포커스 차단
+                  onKeyDown: e => e.preventDefault(), // 키입력 방지
+                  // ✅ 크기 유지: 클래스는 안 건드리고 색상만 인라인 스타일로
+                  style: {
+                    backgroundColor: 'rgb(243 244 246)', // bg-gray-100
+                    color: 'rgb(107 114 128)', // text-gray-500
+                    // 필요하면 포커스 테두리만 제거(크기 영향 없음)
+                    outline: 'none',
+                    cursor: 'default',
+                  },
+                }
+              : undefined
+          }
         />
 
         <InputField
@@ -556,10 +605,25 @@ export default function SignUpStep2Form({
             emit({ ...snapshot, confirmPw: v });
           }}
           error={errors.confirmPw}
-          inputProps={{
-            disabled: signupKind === 'social',
-            readOnly: signupKind === 'social',
-          }}
+          inputProps={
+            signupKind === 'social'
+              ? {
+                  readOnly: true,
+                  tabIndex: -1, // 탭 포커스 차단
+                  onFocus: e => e.currentTarget.blur(), // 포커스 들어와도 즉시 해제
+                  onMouseDown: e => e.preventDefault(), // 마우스 포커스 차단
+                  onKeyDown: e => e.preventDefault(), // 키입력 방지
+                  // ✅ 크기 유지: 클래스는 안 건드리고 색상만 인라인 스타일로
+                  style: {
+                    backgroundColor: 'rgb(243 244 246)', // bg-gray-100
+                    color: 'rgb(107 114 128)', // text-gray-500
+                    // 필요하면 포커스 테두리만 제거(크기 영향 없음)
+                    outline: 'none',
+                    cursor: 'default',
+                  },
+                }
+              : undefined
+          }
         />
 
         <div>
@@ -608,6 +672,7 @@ export default function SignUpStep2Form({
             emit({ ...snapshot, birth: v, birthYmd: ymd });
           }}
           error={!!errors.birth}
+          errorMessage={errors.birth}
         />
 
         <CountrySelect

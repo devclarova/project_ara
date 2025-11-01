@@ -11,12 +11,10 @@ type Props = {
 };
 
 export default function SignUpStep1Consent({ onNext, value, onChange }: Props) {
-  const { load, persist } = useConsentDraft();
-  const draft = !value ? load() : null;
-  const [terms, setTerms] = useState(value?.terms ?? draft?.tos_agreed ?? false);
-  const [privacy, setPrivacy] = useState(value?.privacy ?? draft?.privacy_agreed ?? false);
-  const [age, setAge] = useState(value?.age ?? draft?.age_ok ?? false);
-  const [marketing, setMarketing] = useState(value?.marketing ?? draft?.marketing_agreed ?? false);
+  const [terms, setTerms] = useState(value?.terms ?? false);
+  const [privacy, setPrivacy] = useState(value?.privacy ?? false);
+  const [age, setAge] = useState(value?.age ?? false);
+  const [marketing, setMarketing] = useState(value?.marketing ?? false);
 
   // 외부 value 변화 동기화
   useEffect(() => {
@@ -119,8 +117,6 @@ export default function SignUpStep1Consent({ onNext, value, onChange }: Props) {
           disabled={!allRequired}
           onClick={() => {
             const payload: ConsentResult = { terms, privacy, age, marketing };
-            // ✅ Step 전환 시에만 저장
-            persist(payload);
             onNext(payload);
           }}
           className={[

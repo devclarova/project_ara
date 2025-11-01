@@ -27,7 +27,7 @@ export default function TweetComposer({ onPost }: TweetComposerProps) {
       const { data } = await supabase
         .from('profiles')
         .select('avatar_url')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .single();
       setAvatarUrl(data?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=You');
     }

@@ -21,12 +21,12 @@ function readDraft() {
  * - 생성 성공 시 draft 제거
  * - 이메일 플로우는 is_onboarded=true로 마무리(첫 로그인에서 바로 /social)
  */
-async function ensureProfileFromDraft(userId: string, email?: string | null) {
+async function ensureProfileFromDraft(uid: string, email?: string | null) {
   // 이미 존재하면 no-op
   const { data: exists, error: exErr } = await supabase
     .from('profiles')
     .select('user_id')
-    .eq('user_id', userId)
+    .eq('user_id', uid)
     .maybeSingle();
   if (exErr || exists) return;
 
@@ -37,19 +37,38 @@ async function ensureProfileFromDraft(userId: string, email?: string | null) {
       ?.toString()
       .trim() || 'user';
 
+  // ✅ 동의값 매핑: 옛 키/새 키 모두 흡수
+  const tos_agreed = !!(draft?.tos_agreed ?? draft?.terms);
+  const privacy_agreed = !!(draft?.privacy_agreed ?? draft?.privacy);
+  const age_confirmed = !!(draft?.age_confirmed ?? draft?.age_ok);
+  const marketing_opt_in = !!(draft?.marketing_opt_in ?? draft?.marketing_agreed);
+
+  // ✅ [2] 생년 검증(14세 이상 여부)
+  const birth = new Date((draft?.birthday ?? '2000-01-01').toString().trim());
+  const today = new Date();
+  const age =
+    today.getFullYear() -
+    birth.getFullYear() -
+    (today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate()) ? 1 : 0);
+  const isAge14Plus = age >= 14;
+
+  // ✅ 온보딩 완료는 '필수 동의'가 모두 true일 때만
+  const canOnboard = tos_agreed && privacy_agreed && age_confirmed;
+
   const payload = {
-    user_id: userId,
+    user_id: uid,
     nickname,
     gender: (draft?.gender ?? 'Male').toString().trim(),
     birthday: (draft?.birthday ?? '2000-01-01').toString().trim(), // YYYY-MM-DD
     country: (draft?.country ?? 'Unknown').toString().trim(),
     bio: (draft?.bio ?? '').toString().trim() || null,
     avatar_url: draft?.pendingAvatarUrl ?? null,
-    tos_agreed: !!draft?.tos_agreed,
-    privacy_agreed: !!draft?.privacy_agreed,
-    age_confirmed: !!draft?.age_confirmed,
-    marketing_opt_in: !!draft?.marketing_opt_in,
-    is_onboarded: true, // 이메일은 인증 완료 시 온보딩 종료
+    tos_agreed,
+    privacy_agreed,
+    age_confirmed,
+    marketing_opt_in,
+    // ⚠️ 체크 제약 충족 시에만 true
+    is_onboarded: canOnboard,
     is_public: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -61,6 +80,37 @@ async function ensureProfileFromDraft(userId: string, email?: string | null) {
       localStorage.removeItem(DRAFT_KEY);
     } catch {}
   }
+}
+
+async function createProfileShellIfMissing(uid: string) {
+  // 이미 있으면 종료
+  const { data: exists, error: exErr } = await supabase
+    .from('profiles')
+    .select('user_id')
+    .eq('user_id', uid)
+    .maybeSingle();
+  if (exErr || exists) return;
+
+  // ✅ 스키마 제약( NOT NULL / CHECK ) 을 통과할 최소 기본값
+  const payload = {
+    user_id: uid,
+    nickname: `user_${uid.slice(0, 8)}`,
+    gender: 'Male', // enum이면 허용값과 대소문자 정확히 일치해야 합니다
+    birthday: '2000-01-01', // YYYY-MM-DD
+    country: 'Unknown',
+    bio: null,
+    avatar_url: null,
+    tos_agreed: false,
+    privacy_agreed: false,
+    age_confirmed: false,
+    marketing_opt_in: false,
+    is_onboarded: false, // 소셜은 온보딩 페이지에서 true로 업데이트
+    is_public: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  await supabase.from('profiles').insert(payload);
 }
 
 export default function AuthCallback() {
@@ -79,89 +129,58 @@ export default function AuthCallback() {
   };
 
   useEffect(() => {
-    if (ranRef.current) return;
-    ranRef.current = true;
-
-    const current = new URL(window.location.href);
-    const code = current.searchParams.get('code');
-    const error =
-      current.searchParams.get('error_description') || current.searchParams.get('error');
-
-    // URL 정리
-    if (current.search) {
-      const clean = `${current.pathname}${current.hash || ''}`;
-      window.history.replaceState({}, document.title, clean);
-    }
-
-    if (!code && !error) {
-      setMsg('콜백 페이지에 직접 접근하셨습니다. 로그인 페이지로 이동합니다...');
-      scheduleRedirect('/signin', 600);
-      return () => {
-        if (redirectTimerRef.current) window.clearTimeout(redirectTimerRef.current);
-      };
-    }
-
-    let innerTimer: number | null = null;
-
     (async () => {
-      try {
-        if (error) {
-          setMsg(`인증/로그인 실패: ${decodeURIComponent(error)}`);
-          return;
-        }
+      const href = window.location.href;
+      const hasCode = href.includes('code=');
+      const hasHashToken = href.includes('#access_token=');
 
-        if (code) {
-          const { error: exErr } = await supabase.auth.exchangeCodeForSession(window.location.href);
-          if (exErr) {
-            setMsg(`소셜 로그인 처리 실패: ${exErr.message}`);
-            return;
-          }
-
-          const { data } = await supabase.auth.getSession();
-          const u = data.session?.user ?? null;
-          const provider = (u?.app_metadata?.provider as string | undefined) ?? 'email';
-
-          // ✅ 이메일 인증 콜백: 여기서 프로필을 먼저 보장하고 signOut → /signin
-          if (provider === 'email') {
-            if (u?.id) {
-              try {
-                await ensureProfileFromDraft(u.id, u.email);
-              } catch {}
-            }
-            setMsg('이메일 인증이 완료되었습니다. 로그인 페이지로 이동해 로그인해주세요.');
-            await supabase.auth.signOut();
-            innerTimer = window.setTimeout(() => navigate('/signin', { replace: true }), 1000);
-            return;
-          }
-
-          // 소셜(OAuth) 콜백: 최소 user_id upsert만 하고 /signup으로 연결 (프로필 세부는 가입 단계에서)
-          if (u?.id) {
-            try {
-              await supabase.rpc('ensure_app_user');
-            } catch {}
-            await supabase.from('profiles').upsert({ user_id: u.id }, { onConflict: 'user_id' });
-          }
-
-          setMsg('소셜 로그인 처리 완료! 회원가입을 이어서 진행합니다...');
-          innerTimer = window.setTimeout(() => {
-            navigate('/signup', { replace: true, state: { from: 'oauth' } });
-          }, 600);
-          return;
-        }
-
-        // code가 없고 error도 없을 때의 보수 처리
-        setMsg('이메일 인증이 완료되었습니다. 로그인 페이지로 이동해 로그인해주세요.');
-        await supabase.auth.signOut();
-        innerTimer = window.setTimeout(() => navigate('/signin', { replace: true }), 1200);
-      } catch (e: any) {
-        setMsg(`처리 중 오류가 발생했습니다: ${e?.message ?? 'unknown error'}`);
+      if (!hasCode && !hasHashToken) {
+        navigate('/signin', { replace: true });
+        return;
       }
-    })();
 
-    return () => {
-      if (innerTimer) window.clearTimeout(innerTimer);
-      if (redirectTimerRef.current) window.clearTimeout(redirectTimerRef.current);
-    };
+      // ✅ SDK가 자동으로 URL을 파싱(detectSessionInUrl: true). 잠깐 대기하면서 세션 생성 기다림.
+      for (let i = 0; i < 20; i++) {
+        const { data } = await supabase.auth.getSession();
+        if (data.session) break;
+        await new Promise(r => setTimeout(r, 100));
+      }
+
+      const { data } = await supabase.auth.getSession();
+      const u = data.session?.user;
+      if (!u) {
+        navigate('/signin', { replace: true });
+        return;
+      }
+
+      const provider = (u.app_metadata?.provider as string | undefined) ?? 'email';
+
+      if (provider === 'email') {
+        try {
+          await ensureProfileFromDraft(u.id, u.email);
+        } catch {}
+        navigate('/finalhome', { replace: true });
+        return;
+      }
+
+      // try {
+      //   await supabase.rpc('ensure_app_user');
+      // } catch {}
+      // await supabase
+      //   .from('profiles')
+      //   .upsert({ user_id: u.id }, { onConflict: 'user_id', ignoreDuplicates: true });
+
+      try {
+        await createProfileShellIfMissing(u.id);
+      } catch {
+        // no-op: 실패해도 온보딩에서 다시 update 시도됨
+      }
+
+      navigate('/signup/social', { replace: true, state: { from: 'oauth' } });
+    })().finally(() => {
+      // ✅ 세션 처리 후에 URL 정리
+      window.history.replaceState({}, document.title, '/auth/callback');
+    });
   }, [navigate]);
 
   return (
