@@ -122,14 +122,14 @@ const App = () => {
 
                     {/* 공통 레이아웃 (좌측 Sidebar / 중앙 Outlet / 우측 Trends) */}
                     <Route path="/finalhome" element={<Layout />}>
-                    {/* 기본 진입은 홈으로 */}
-                    <Route index element={<Home />} />
-                    <Route path=":id" element={<TweetDetail />} />
-                    <Route path="user/:username" element={<ProfileAsap />} />
-                    {/* <Route path="finalhome" element={<Home />} /> */}
-                    <Route path="hometest" element={<HomesTest />} />
-                    <Route path="profileasap" element={<ProfileAsap />} />
-                    <Route path="studyList" element={<StudyListPage />} />
+                      {/* 기본 진입은 홈으로 */}
+                      <Route index element={<Home />} />
+                      <Route path=":id" element={<TweetDetail />} />
+                      <Route path="user/:username" element={<ProfileAsap />} />
+                      {/* <Route path="finalhome" element={<Home />} /> */}
+                      <Route path="hometest" element={<HomesTest />} />
+                      <Route path="profileasap" element={<ProfileAsap />} />
+                      <Route path="studyList" element={<StudyListPage />} />
                     </Route>
                   </Route>
                 </Route>
