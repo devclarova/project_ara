@@ -1,38 +1,49 @@
-// src/pages/homes/Home.tsx
+// src/pages/Home.tsx
 import { useEffect, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import ComposeBox from './feature/ComposeBox';
-import TweetCard from './feature/TweetCard';
 import InfiniteScroll from 'react-infinite-scroll-component';
+import TweetCard from './feature/TweetCard';
 
-interface Tweet {
+type TweetUser = {
+  name: string;
+  username: string;
+  avatar: string;
+};
+
+type TweetStats = {
+  replies: number;
+  retweets: number;
+  likes: number;
+  bookmarks?: number;
+  views: number;
+};
+
+export type UITweet = {
   id: string;
-  user: {
-    name: string;
-    username: string;
-    avatar: string;
-  };
+  user: TweetUser;
   content: string;
   image?: string;
   timestamp: string;
-  stats: {
-    replies: number;
-    retweets: number;
-    likes: number;
-    bookmarks?: number;
-    views: number;
-  };
-}
+  stats: TweetStats;
+};
+
+type OutletCtx = {
+  newTweet: UITweet | null;
+  setNewTweet: (t: UITweet | null) => void;
+};
 
 export default function Home() {
-  const [tweets, setTweets] = useState<Tweet[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [hasMore, setHasMore] = useState(true);
+  const { newTweet, setNewTweet } = useOutletContext<OutletCtx>();
+  const [tweets, setTweets] = useState<UITweet[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // ✅ Supabase에서 트윗 불러오기
+  // 무한스크롤 (필요 시 실제 페이지네이션으로 교체)
+  const [hasMore, setHasMore] = useState<boolean>(false);
+
+  // 초기 트윗 로드
   const fetchTweets = async () => {
     setLoading(true);
-
     const { data, error } = await supabase
       .from('tweets')
       .select(
@@ -46,7 +57,7 @@ export default function Home() {
         like_count,
         bookmark_count,
         view_count,
-        profiles (
+        profiles:author_id (
           nickname,
           user_id,
           avatar_url
@@ -56,13 +67,14 @@ export default function Home() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Error fetching tweets:', error);
+      console.error('❌ Error fetching tweets:', error.message);
+      setTweets([]); // 실패 시 빈 배열
       setLoading(false);
       return;
     }
 
-    // ✅ Supabase 데이터를 mockTweet 형태로 변환
-    const mapped = data.map((t: any) => ({
+    // ✅ data null-safe 처리
+    const mapped: UITweet[] = (data ?? []).map((t: any) => ({
       id: t.id,
       user: {
         name: t.profiles?.nickname || 'Unknown',
@@ -70,7 +82,7 @@ export default function Home() {
         avatar: t.profiles?.avatar_url || '/default-avatar.svg',
       },
       content: t.content,
-      image: t.image_url || '',
+      image: t.image_url || undefined,
       timestamp: new Date(t.created_at).toLocaleString('ko-KR', {
         hour: '2-digit',
         minute: '2-digit',
@@ -88,55 +100,108 @@ export default function Home() {
 
     setTweets(mapped);
     setLoading(false);
+    setHasMore(false); // 필요 시 실제 페이지네이션으로 true 처리
   };
 
   useEffect(() => {
     fetchTweets();
   }, []);
 
-  // ✅ 새 트윗 작성 시 UI 반영
-  const handleTweetPost = (newTweet: Tweet) => {
-    setTweets(prev => [newTweet, ...prev]);
-  };
+  // ✅ 모달에서 생성된 새 트윗 즉시 반영
+  useEffect(() => {
+    if (newTweet) {
+      setTweets(prev => [newTweet, ...prev]);
+      setNewTweet(null); // 한 번만 반영하도록 초기화
+    }
+  }, [newTweet, setNewTweet]);
 
-  // (선택) 무한 스크롤 구조 유지
+  // ✅ Supabase Realtime (다른 유저 트윗도 실시간 반영)
+  useEffect(() => {
+    const channel = supabase
+      .channel('tweets-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'tweets' },
+        async payload => {
+          try {
+            // author 프로필 조인
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('nickname, user_id, avatar_url')
+              .eq('id', payload.new.author_id)
+              .single();
+
+            const incoming: UITweet = {
+              id: payload.new.id,
+              user: {
+                name: profileData?.nickname || 'Unknown',
+                username: profileData?.user_id || 'anonymous',
+                avatar: profileData?.avatar_url || '/default-avatar.svg',
+              },
+              content: payload.new.content,
+              image: payload.new.image_url || undefined,
+              timestamp: new Date(payload.new.created_at).toLocaleString('ko-KR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                month: 'short',
+                day: 'numeric',
+              }),
+              stats: {
+                replies: payload.new.reply_count ?? 0,
+                retweets: payload.new.repost_count ?? 0,
+                likes: payload.new.like_count ?? 0,
+                bookmarks: payload.new.bookmark_count ?? 0,
+                views: payload.new.view_count ?? 0,
+              },
+            };
+
+            // 중복 방지 후 prepend
+            setTweets(prev => (prev.some(t => t.id === incoming.id) ? prev : [incoming, ...prev]));
+          } catch (e) {
+            console.error('⚠️ realtime mapping error:', e);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      // ✅ cleanup에서 Promise 반환하지 않음 (TS 경고 해결)
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const loadMoreTweets = async () => {
-    setHasMore(false); // 현재는 일단 페이지네이션 생략
+    // 실제 페이지네이션 구현 시 교체
+    setHasMore(false);
   };
 
   return (
     <>
-      {/* 상단 헤더 */}
+      {/* Header */}
       <div className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-gray-200 p-4 z-20">
         <h1 className="text-xl font-bold text-gray-900">Home</h1>
       </div>
 
-      {/* 트윗 작성 박스 */}
-      <ComposeBox onTweetPost={handleTweetPost} />
-
-      {/* 트윗 피드 */}
+      {/* Loading */}
       {loading ? (
         <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
         </div>
       ) : (
         <InfiniteScroll
           dataLength={tweets.length}
           next={loadMoreTweets}
           hasMore={hasMore}
+          // ✅ 필수 loader prop 제공
           loader={
             <div className="p-8 text-center text-gray-500">
               <div className="inline-flex items-center space-x-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500" />
                 <span>Loading more tweets...</span>
               </div>
             </div>
           }
-          endMessage={
-            <p className="text-center py-6 text-gray-400">
-              🎉 모든 트윗을 다 봤어요!
-            </p>
-          }
+          endMessage={<p className="text-center py-6 text-gray-400">🎉 모든 트윗을 다 봤어요!</p>}
           scrollThreshold={0.9}
         >
           {tweets.map(t => (
