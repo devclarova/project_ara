@@ -172,9 +172,29 @@ function Connector({
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [trackW, setTrackW] = useState(0);
 
+  // ✅ 선 색상 동일
   const trackColor = useMemo(() => (done ? 'var(--ara-primary)' : 'rgba(107,114,128,0.7)'), [done]);
-  const headPx = 16;
-  const liftPx = Math.round(headPx * 0.5);
+
+  // ✅ 화면 너비에 따라 화살표/이동량만 살짝 조절
+  const [sizes, setSizes] = useState({ head: 16, lift: 8, shorten: 2 });
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      if (w >= 768) {
+        setSizes({ head: 16, lift: 8, shorten: 2 }); // md 이상: 기존 값
+      } else if (w >= 640) {
+        setSizes({ head: 14, lift: 7, shorten: 2 }); // sm~md: 약간 축소
+      } else {
+        setSizes({ head: 12, lift: 6, shorten: 1 }); // <sm: 조금 더 축소
+      }
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  const headPx = sizes.head;
+  const liftPx = sizes.lift;
 
   useEffect(() => {
     const el = trackRef.current;
@@ -196,18 +216,17 @@ function Connector({
     setShow(true);
   }, [anim?.tick]);
 
-  const shortenPx = 2;
   const startX = anim?.dir === 'forward' ? -headPx / 2 : trackW - headPx / 2;
-  const endX = anim?.dir === 'forward' ? trackW - headPx / 2 - shortenPx : -headPx / 2 + shortenPx;
+  const endX =
+    anim?.dir === 'forward' ? trackW - headPx / 2 - sizes.shorten : -headPx / 2 + sizes.shorten;
 
   return (
-    <div className="relative w-[72px] sm:w-[96px] justify-self-center">
+    <div className="relative w-[60px] sm:w-[70px] md:w-[105px] justify-self-center">
       <div
         ref={trackRef}
         className="h-[2px] rounded w-full"
         style={{ backgroundColor: trackColor }}
       />
-
       <AnimatePresence>
         {anim && show && trackW > 0 && (
           <motion.div

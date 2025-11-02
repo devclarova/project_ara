@@ -33,6 +33,18 @@ function toYMDLocal(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+// [추가] 오늘 기준 만 14세 이상 여부
+function isAge14Plus(dateLike?: Date | null) {
+  if (!dateLike) return false;
+  const birth = dateLike instanceof Date ? dateLike : new Date(dateLike);
+  if (Number.isNaN(birth.getTime())) return false;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const notHadBirthday = today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate());
+  if (notHadBirthday) age -= 1;
+  return age >= 14;
+}
+
 export default function SignUpStep3Profile(props: Props) {
   const {
     email,
@@ -95,6 +107,12 @@ export default function SignUpStep3Profile(props: Props) {
       }
       if (!country?.trim()) {
         setMsg('국적을 선택해 주세요.');
+        return;
+      }
+
+      // [추가] 만 14세 미만 최종 차단 (프론트 우회 대비)
+      if (!isAge14Plus(birth)) {
+        setMsg('만 14세 미만은 가입할 수 없습니다.');
         return;
       }
 
@@ -209,6 +227,7 @@ export default function SignUpStep3Profile(props: Props) {
         }
 
         // 성공 모달 (이메일 인증 안내)
+        setSuccessKind('email');
         setShowSuccess(true);
         return;
       }
@@ -247,6 +266,7 @@ export default function SignUpStep3Profile(props: Props) {
       }
 
       // 성공 모달 (소셜은 바로 시작)
+      setSuccessKind('social');
       setShowSuccess(true);
     } catch (e: any) {
       console.error('[handleSubmit:exception]', e);
@@ -358,7 +378,7 @@ export default function SignUpStep3Profile(props: Props) {
               onClick={() => {
                 setShowSuccess(false);
                 onDone?.();
-                navigate(successKind === 'social' ? '/social' : '/signin');
+                navigate(successKind === 'social' ? '/finalhome' : '/signin');
               }}
               className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white"
               style={{ background: 'var(--ara-primary)' }}

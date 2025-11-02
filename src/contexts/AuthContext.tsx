@@ -11,6 +11,7 @@ import { supabase } from '../lib/supabase';
 type AuthContextType = {
   session: Session | null;
   user: User | null;
+  loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signUp: (email: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
@@ -31,6 +32,8 @@ function readProfileDraftSafe() {
 }
 
 async function createProfileFromDraftIfMissing(u: User) {
+  const provider = (u.app_metadata?.provider as string | undefined) ?? 'email';
+
   const { data: exists, error: exErr } = await supabase
     .from('profiles')
     .select('user_id')
@@ -74,11 +77,13 @@ async function createProfileFromDraftIfMissing(u: User) {
     privacy_agreed,
     age_confirmed,
     marketing_opt_in,
-    is_onboarded: true, // 이메일 가입자는 인증까지 끝났다면 온보딩 true로 바로 사용 시작
+    is_onboarded: provider === 'email',
     is_public: true,
   };
 
-  const { error: pErr } = await supabase.from('profiles').insert(payload);
+  const { error: pErr } = await supabase
+    .from('profiles')
+    .upsert(payload, { onConflict: 'user_id', ignoreDuplicates: true });
   if (pErr) {
     console.error('profiles insert error:', pErr);
   } else {
@@ -91,24 +96,41 @@ async function createProfileFromDraftIfMissing(u: User) {
 export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
+    // 1) 초기 세션
     supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
       setSession(data.session ?? null);
       setUser(data.session?.user ?? null);
+      setLoading(false); // ✅ 반드시 내려준다
     });
 
+    // 2) 세션 변동 구독
     const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
+      if (!mounted) return;
       setSession(newSession);
       setUser(newSession?.user ?? null);
+      setLoading(false); // ✅ 이벤트 도착 시에도 false 보장
 
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
         const u = newSession?.user;
-        if (u) void Promise.allSettled([createProfileFromDraftIfMissing(u)]);
+        if (u) {
+          const provider = (u.app_metadata?.provider as string | undefined) ?? 'email';
+          if (provider === 'email') {
+            void Promise.allSettled([createProfileFromDraftIfMissing(u)]);
+          }
+        }
       }
     });
 
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const signIn: AuthContextType['signIn'] = async (email, password) => {
@@ -161,7 +183,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   return (
     <AuthContext.Provider
-      value={{ session, user, signIn, signUp, signOut, signInWithGoogle, signInWithKakao }}
+      value={{ session, user, loading, signIn, signUp, signOut, signInWithGoogle, signInWithKakao }}
     >
       {children}
     </AuthContext.Provider>
