@@ -12,7 +12,7 @@ type VideoRow = {
   id: number;
   categories: string | null;
   contents: string | null; // 작품/콘텐츠 이름
-  episode: string | null; // ← 오타 주의: epsode 아님
+  episode: string | null;
   scene: string | number | null;
   runtime: string | null; // 예: "1:50" 등
   image_url: string | null;

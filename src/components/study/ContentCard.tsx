@@ -18,7 +18,7 @@ const ContentCard = ({
   level,
   episode,
   scene,
-  levelColor,
+  // levelColor,
   duration,
   comments,
 }: StudyListProps) => {
@@ -62,7 +62,7 @@ const ContentCard = ({
             {(level || duration) && (
               <div className="flex items-center gap-5">
                 {level && <InfoItem icon="ri-time-line" text={level} />}
-                {duration && <InfoItem icon="ri-time-line" text={duration} />}
+                {duration && <InfoItem icon="ri-time-line" text={`${duration}`} />}
               </div>
             )}
           </div>
