@@ -1,4 +1,4 @@
-// 난이도 enum
+// 난이도
 export type DifficultyLevel = '초급' | '중급' | '고급';
 
 export type StudyListProps = {
@@ -11,8 +11,8 @@ export type StudyListProps = {
   level: string;
   episode?: string;
   scene?: string;
-  levelColor: string;
-  duration: string;
+  // levelColor: string;
+  duration: number | null;
   comments: string;
 };
 

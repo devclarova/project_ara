@@ -12,6 +12,7 @@ import SettingsLayout from './SettingsLayout';
 import SettingsSidebar from './SettingsSidebar';
 import SearchBar from '../ui/SearchBar';
 import Sidebar from '@/pages/homes/feature/Sidebar';
+import Input from '../Input';
 
 const items: SidebarItem[] = [
   { id: 'alarm', label: '알림 설정' },
@@ -60,7 +61,7 @@ export default function ProfileSettings() {
           {/* Central Content with spacing */}
 
           <main className="p-6 md:p-10 text-[17px] md:text-[18px] w-full">
-            <SearchBar placeholder="검색어를 입력해주세요" />
+            <input placeholder="검색어를 입력해주세요" />
             <SettingsLayout
               left={
                 <SettingsSidebar
