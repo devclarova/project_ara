@@ -23,7 +23,7 @@ export default function AgreeRow({
           <button
             type="button"
             onClick={onDetail}
-            className="text-[var(--ara-primary)] hover:underline font-semibold whitespace-nowrap dark:text-gray-300"
+            className="text-[var(--ara-primary)] hover:underline font-semibold whitespace-nowrap"
           >
             상세보기
           </button>
