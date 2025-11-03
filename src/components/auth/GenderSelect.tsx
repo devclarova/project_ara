@@ -31,22 +31,47 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
 
   const selectedOption = options.find(o => o.value === value) || null;
 
+  const isDark =
+    typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+
   const customStyles = {
-    control: (provided: any, state: any) => ({
-      ...provided,
-      minHeight: 48,
-      height: 48,
-      borderRadius: 14,
-      borderColor: state.isFocused ? 'var(--ara-primary)' : error ? 'red' : '#D1D5DB',
-      borderWidth: 1,
-      outline: 'none',
-      boxShadow: state.isFocused ? '0 0 0 3px var(--ara-ring)' : 'none',
-      paddingLeft: 12,
-      paddingRight: 12,
-      '&:hover': {
-        borderColor: state.isFocused ? 'var(--ara-primary)' : error ? 'red' : '#D1D5DB',
-      },
-    }),
+    control: (provided: any, state: any) => {
+      const isDark =
+        typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+
+      // ✅ 라이트 모드는 기존 유지 / 다크 모드만 border-gray-300 적용
+      const baseBorderColor = state.isFocused
+        ? 'var(--ara-primary)'
+        : error
+          ? 'red'
+          : isDark
+            ? '#D1D5DB' // 🌙 다크 모드 보더-gray-300
+            : '#D1D5DB'; // ☀️ 기존 라이트 동일(혹은 '#E5E7EB' 써도 됨)
+
+      return {
+        ...provided,
+        minHeight: 48,
+        height: 48,
+        borderRadius: 14,
+        border: `1px solid ${baseBorderColor}`,
+        outline: 'none',
+        boxShadow: state.isFocused ? '0 0 0 3px var(--ara-ring)' : 'none',
+        paddingLeft: 12,
+        paddingRight: 12,
+        backgroundColor: isDark ? 'hsl(var(--secondary))' : '#FFFFFF',
+        color: isDark ? 'hsl(var(--secondary-foreground))' : '#111827',
+        '&:hover': {
+          borderColor: state.isFocused
+            ? 'var(--ara-primary)'
+            : error
+              ? 'red'
+              : isDark
+                ? '#D1D5DB' // 🌙 다크 hover 도 동일
+                : '#D1D5DB',
+        },
+      };
+    },
+
     valueContainer: (provided: any) => ({
       ...provided,
       height: 48,
@@ -54,11 +79,51 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
       display: 'flex',
       alignItems: 'center',
     }),
-    input: (provided: any) => ({ ...provided, margin: 0, padding: 0 }),
-    singleValue: (provided: any) => ({ ...provided, color: '#111827' }),
-    indicatorsContainer: (provided: any) => ({ ...provided, height: 48 }),
-    dropdownIndicator: (provided: any) => ({ ...provided, marginLeft: 8 }),
-    indicatorSeparator: (provided: any) => ({ ...provided }),
+    input: (provided: any) => ({
+      ...provided,
+      margin: 0,
+      padding: 0,
+      color: isDark ? '#9CA3AF' : '#111827',
+    }),
+    singleValue: (provided: any) => ({
+      ...provided,
+      color: isDark ? '#F3F4F6' : '#111827',
+    }),
+    indicatorsContainer: (provided: any) => ({
+      ...provided,
+      height: 48,
+    }),
+    dropdownIndicator: (provided: any) => ({
+      ...provided,
+      marginLeft: 8,
+    }),
+    indicatorSeparator: (provided: any) => ({
+      ...provided,
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      backgroundColor: isDark ? 'hsl(var(--secondary))' : '#FFFFFF',
+      color: isDark ? 'hsl(var(--secondary-foreground))' : '#111827',
+      border: `1px solid ${isDark ? '#D1D5DB' : '#E5E7EB'}`, // ✅ 다크만 회색 보더
+      borderRadius: 12,
+      overflow: 'hidden',
+    }),
+    option: (provided: any, state: any) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? isDark
+          ? 'hsl(var(--primary) / 0.22)'
+          : 'rgba(59,130,246,0.12)'
+        : state.isFocused
+          ? isDark
+            ? 'hsl(var(--primary) / 0.12)'
+            : 'rgba(59,130,246,0.08)'
+          : 'transparent',
+      color: isDark ? 'hsl(var(--secondary-foreground))' : '#111827',
+      borderBottom: `1px solid ${isDark ? '#D1D5DB' : 'rgba(229,231,235,0.8)'}`,
+      cursor: 'pointer',
+      '&:last-of-type': { borderBottom: 'none' },
+    }),
   };
 
   return (
@@ -83,10 +148,10 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
         className="w-full"
         classNamePrefix="react-select"
         placeholder=" "
-        openMenuOnFocus // ⬅︎ (추가) 포커스(=Tab 이동) 시 자동 오픈
+        openMenuOnFocus
       />
       <label
-        className={`absolute left-3 px-1 bg-white/95 rounded transition-all
+        className={`absolute left-3 px-1 bg-white/95 rounded transition-all dark:bg-secondary
     ${
       isFocused
         ? '-top-2 text-xs text-primary'
