@@ -145,14 +145,14 @@ export default function TweetDetail() {
             >
               <i className="ri-arrow-left-line text-xl"></i>
             </button>
-            <h1 className="text-xl font-bold text-gray-900">Tweet</h1>
+            <h1 className="text-xl font-bold text-gray-900">상세보기</h1>
           </div>
         </div>
 
         {/* Main */}
         <div>
           <TweetDetailCard tweet={tweet} />
-          <ReplyComposer onReply={handleAddReply} />
+          {/* <ReplyComposer onReply={handleAddReply} /> */}
           <ReplyList replies={replies} />
         </div>
       </div>

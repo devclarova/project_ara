@@ -18,7 +18,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
 
-  // ✅ DB에서 로그인한 유저의 프로필 불러오기
+  //  DB에서 로그인한 유저의 프로필 불러오기
   useEffect(() => {
     if (!user) {
       setProfile(null);
@@ -42,13 +42,13 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
     fetchProfile();
   }, [user]);
 
-  // ✅ 로그아웃
+  //  로그아웃
   const handleLogout = async () => {
     await signOut();
     navigate('/');
   };
 
-  // ✅ (✨ 수정된 부분) 프로필 클릭 시 → 내 닉네임 기반 프로필 페이지로 이동
+  //  (✨ 수정된 부분) 프로필 클릭 시 → 내 닉네임 기반 프로필 페이지로 이동
   const handleProfileClick = () => {
     if (profile?.nickname) {
       navigate(`/finalhome/user/${profile.nickname}`);
@@ -59,13 +59,13 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
 
   const navigationItems = [
     { icon: 'ri-home-5-fill', label: '홈', path: '/finalhome' },
-    { icon: 'ri-search-line', label: '탐색', path: '/explore1' },
+    // { icon: 'ri-search-line', label: '탐색', path: '/explore1' },
     { icon: 'ri-notification-3-line', label: '알림', path: '/notifications1' },
     { icon: 'ri-chat-3-line', label: '채팅', path: '/messages1' },
-    // ✅ (✨ 수정된 부분) 프로필 메뉴 클릭 시 내 닉네임으로 이동
+    //  (✨ 수정된 부분) 프로필 메뉴 클릭 시 내 닉네임으로 이동
     { icon: 'ri-user-line', label: '프로필', onClick: handleProfileClick },
     { icon: 'ri-youtube-line', label: 'Study', path: '/studyList' },
-    { icon: 'ri-more-line', label: '더보기', path: '/finalhome/hometest' },
+    // { icon: 'ri-more-line', label: '더보기', path: '/finalhome/hometest' },
   ];
 
   const handleNavigation = (path?: string, onClick?: () => void) => {
@@ -146,7 +146,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
             <div className="absolute bottom-full left-0 w-full bg-white rounded-2xl shadow-lg border border-gray-200 py-2 mb-2 min-w-48 z-50">
               <button
                 onClick={() => {
-                  handleProfileClick(); // ✅ (✨ 추가된 부분) 내 프로필 바로 이동
+                  handleProfileClick(); //  (✨ 추가된 부분) 내 프로필 바로 이동
                   setShowUserMenu(false);
                 }}
                 className="w-full text-left px-4 py-3 hover:bg-gray-100 transition-colors cursor-pointer whitespace-nowrap"

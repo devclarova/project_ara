@@ -73,7 +73,7 @@ export default function Home() {
       return;
     }
 
-    // ✅ data null-safe 처리
+    //  data null-safe 처리
     const mapped: UITweet[] = (data ?? []).map((t: any) => ({
       id: t.id,
       user: {
@@ -107,7 +107,7 @@ export default function Home() {
     fetchTweets();
   }, []);
 
-  // ✅ 모달에서 생성된 새 트윗 즉시 반영
+  //  모달에서 생성된 새 트윗 즉시 반영
   useEffect(() => {
     if (newTweet) {
       setTweets(prev => [newTweet, ...prev]);
@@ -115,7 +115,7 @@ export default function Home() {
     }
   }, [newTweet, setNewTweet]);
 
-  // ✅ Supabase Realtime (다른 유저 트윗도 실시간 반영)
+  //  Supabase Realtime (다른 유저 트윗도 실시간 반영)
   useEffect(() => {
     const channel = supabase
       .channel('tweets-realtime')
@@ -165,7 +165,7 @@ export default function Home() {
       .subscribe();
 
     return () => {
-      // ✅ cleanup에서 Promise 반환하지 않음 (TS 경고 해결)
+      //  cleanup에서 Promise 반환하지 않음 (TS 경고 해결)
       supabase.removeChannel(channel);
     };
   }, []);
@@ -179,7 +179,7 @@ export default function Home() {
     <>
       {/* Header */}
       <div className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-gray-200 p-4 z-20">
-        <h1 className="text-xl font-bold text-gray-900">Home</h1>
+        <h1 className="text-xl font-bold text-gray-900">홈</h1>
       </div>
 
       {/* Loading */}
