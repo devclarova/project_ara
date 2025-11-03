@@ -115,6 +115,7 @@ function SignInPage() {
   const [notConfirmed, setNotConfirmed] = useState(false);
   const [resendMsg, setResendMsg] = useState('');
   const [suppressEffects, setSuppressEffects] = useState(false);
+  const [remember, setRemember] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -245,18 +246,18 @@ function SignInPage() {
   };
 
   return (
-    <div className="flex items-center justify-center bg-white pt-12 px-4">
-      <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 md:p-10 lg:p-12 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl">
+    <div className="flex items-center justify-center bg-white pt-12 px-4 dark:bg-gray-800">
+      <div className="bg-white dark:bg-secondary rounded-2xl shadow-lg p-6 sm:p-8 md:p-10 lg:p-12 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl">
         {/* 로고 및 제목 */}
         <div className="text-center mb-6">
           <span className="flex items-center justify-center text-3xl sm:text-4xl md:text-5xl font-bold text-red-400">
             <img
-              src="/images/sample_logo.png"
+              src="/images/sample_font_logo.png"
               alt="Ara"
-              className="mx-auto w-24 sm:w-28 md:w-32 lg:w-40 xl:w-48"
+              className="mx-auto w-24 sm:w-28 md:w-32 lg:w-30 xl:w-36"
             />
           </span>
-          <h2 className="mt-2 text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">
+          <h2 className="mt-2 text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
             아라에 오신 것을 환영합니다!
           </h2>
         </div>
@@ -271,13 +272,13 @@ function SignInPage() {
               value={email}
               onChange={e => handleChange('email', e.target.value)}
               placeholder=" "
-              className={`peer w-full px-4 py-2 border bg-white text-gray-800 text-sm ara-rounded
+              className={`peer w-full px-4 py-2 border bg-white dark:bg-secondary text-gray-800 dark:text-gray-100 text-sm ara-rounded
                 ${errors.email ? 'ara-focus--error' : 'ara-focus'}
                 ${errors.email ? '' : 'border-gray-300'}`}
             />
             <label
               htmlFor="email"
-              className={`absolute left-4 text-sm transition-all
+              className={`absolute left-4 text-sm transition-all dark:text-gray-400 dark:bg-secondary
                 ${email || errors.email ? '-top-3 text-sm' : 'top-2.5 text-gray-400 text-sm'}
                 ${errors.email ? 'text-red-500' : 'peer-focus:text-[#00BFA5]'}
                 peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-gray-400
@@ -286,7 +287,9 @@ function SignInPage() {
             >
               Email
             </label>
-            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1 ml-2 dark:text-red-400">{errors.email}</p>
+            )}
           </div>
 
           {/* Password */}
@@ -297,13 +300,13 @@ function SignInPage() {
               value={pw}
               onChange={e => handleChange('pw', e.target.value)}
               placeholder=" "
-              className={`peer w-full px-4 py-2 border bg-white text-gray-800 text-sm ara-rounded
+              className={`peer w-full px-4 py-2 border bg-white dark:bg-secondary text-gray-800 dark:text-gray-100 text-sm ara-rounded
                 ${errors.pw ? 'ara-focus--error' : 'ara-focus'}
                 ${errors.pw ? '' : 'border-gray-300'}`}
             />
             <label
               htmlFor="password"
-              className={`absolute left-4 text-sm transition-all
+              className={`absolute left-4 text-sm transition-all dark:text-gray-400 dark:bg-secondary
                 ${pw || errors.pw ? '-top-3 text-sm' : 'top-2.5 text-gray-400 text-sm'}
                 ${errors.pw ? 'text-red-500' : 'peer-focus:text-[#00BFA5]'}
                 peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-gray-400
@@ -312,19 +315,92 @@ function SignInPage() {
             >
               Password
             </label>
-            {errors.pw && <p className="text-red-500 text-xs mt-1">{errors.pw}</p>}
+            {errors.pw && (
+              <p className="text-red-500 text-xs mt-1 ml-2 dark:text-red-400">{errors.pw}</p>
+            )}
           </div>
 
-          {msg && <p className="my-4 text-center text-red-400 text-sm sm:text-base">{msg}</p>}
+          {msg && (
+            <p className="my-4 text-center text-red-400 dark:text-red-300 text-sm sm:text-base">
+              {msg}
+            </p>
+          )}
 
           <button
             type="submit"
-            className="w-full bg-primary text-white py-2 sm:py-3 rounded-lg font-semibold hover:opacity-80 text-sm sm:text-base disabled:opacity-50"
+            className="w-full bg-primary text-white py-2 sm:py-3 rounded-xl font-semibold hover:opacity-80 text-sm sm:text-base disabled:opacity-50"
             disabled={loading}
           >
             {loading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
+
+        <div className="mt-5 flex flex-row items-center justify-between gap-2 px-3 flex-wrap">
+          {/* 자동 로그인 체크박스 (CheckboxSquare 스타일 적용, UI 전용) */}
+          <label
+            htmlFor="remember"
+            className="flex items-center gap-3 cursor-pointer select-none"
+            style={
+              {
+                '--ara-checkbox-bg': 'var(--ara-surface, #ffffff)',
+                '--ara-checkbox-border': 'var(--ara-border, #d1d5db)',
+                '--ara-checkbox-ring': 'var(--ara-ring, rgba(0,191,165,.3))',
+                '--ara-checkbox-check': 'var(--ara-ink, #111111)',
+              } as React.CSSProperties
+            }
+          >
+            {/* 시각용 상태만 토글 — 비즈니스 로직 영향 없음 */}
+            <input
+              id="remember"
+              type="checkbox"
+              className="sr-only"
+              checked={remember}
+              onChange={e => setRemember(e.target.checked)}
+            />
+            <span
+              className="w-5 h-5 rounded-[6px] border grid place-items-center
+               bg-[var(--ara-checkbox-bg)] border-[var(--ara-checkbox-border)]
+               outline-none ring-0 focus-visible:ring-2"
+              tabIndex={-1}
+              aria-hidden="true"
+            >
+              {/* 체크 상태에 따라 아이콘 투명도만 변경 */}
+              <svg
+                className={`w-4 h-4 transition-opacity duration-150 ${remember ? 'opacity-100' : 'opacity-0'}`}
+                viewBox="0 0 20 20"
+                fill="none"
+              >
+                <path
+                  d="M5 10.5l3 3 7-7"
+                  stroke="var(--ara-checkbox-check)"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <span className="text-sm text-gray-600 dark:text-gray-100">자동 로그인</span>
+          </label>
+
+          {/* 이메일/비밀번호 찾기 (그대로 유지) */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary underline-offset-2 hover:underline"
+              aria-label="이메일 찾기"
+            >
+              이메일 찾기
+            </button>
+            <span className="text-gray-300">|</span>
+            <button
+              type="button"
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary underline-offset-2 hover:underline"
+              aria-label="비밀번호 찾기"
+            >
+              비밀번호 찾기
+            </button>
+          </div>
+        </div>
 
         {notConfirmed && (
           <div className="mt-3 text-center">
@@ -339,7 +415,7 @@ function SignInPage() {
           </div>
         )}
 
-        <p className="mt-4 text-center text-sm sm:text-base text-gray-500">
+        <p className="mt-4 text-center text-sm sm:text-base text-gray-500 dark:text-gray-400">
           처음 오시나요? 계정을 생성해보세요.{' '}
           <span
             onClick={() => navigate('/signup')}
@@ -351,14 +427,14 @@ function SignInPage() {
 
         <div className="mt-4 flex items-center">
           <hr className="flex-grow border-gray-300" />
-          <span className="mx-2 text-gray-400 text-sm sm:text-base">OR</span>
+          <span className="mx-2 text-gray-400 dark:text-gray-100 text-sm sm:text-base">OR</span>
           <hr className="flex-grow border-gray-300" />
         </div>
 
         <div className="mt-4 space-y-2 flex flex-col gap-3">
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-2 border border-solid border-gray-300 rounded-lg py-2 sm:py-3 text-sm sm:text-base font-medium text-black bg-[#fff] hover:bg-gray-50 transition-opacity"
+            className="w-full flex items-center justify-center gap-2 border border-solid border-gray-300 rounded-xl py-2 sm:py-3 text-sm sm:text-base font-medium text-black bg-[#fff] hover:bg-gray-50 transition-opacity dark:hover:opacity-70"
             onClick={signInWithGoogle}
           >
             <img src="/images/google_logo.png" alt="Sign in with Google" className="w-5 h-5" />
@@ -366,7 +442,7 @@ function SignInPage() {
           </button>
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-2 border border-gray-300 rounded-lg py-2 sm:py-3 text-sm sm:text-base font-medium text-black bg-[#FEE500] hover:opacity-80 transition-opacity"
+            className="w-full flex items-center justify-center gap-2 border border-gray-300 rounded-xl py-2 sm:py-3 text-sm sm:text-base font-medium text-black bg-[#FEE500] hover:opacity-80 transition-opacity"
             onClick={signInWithKakao}
           >
             <img src="/images/kakao_logo.png" alt="Sign in with Kakao" className="w-5 h-5" />

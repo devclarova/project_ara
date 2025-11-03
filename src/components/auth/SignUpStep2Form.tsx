@@ -519,7 +519,7 @@ export default function SignUpStep2Form({
   };
 
   return (
-    <section className="bg-white rounded-2xl p-4 sm:p-6 md:p-8 shadow">
+    <section className="bg-white p-4 sm:p-6 md:p-8 shadow dark:bg-secondary">
       <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-5">회원 정보 입력</h2>
 
       <div className="flex flex-col gap-3 sm:gap-4 md:gap-5">

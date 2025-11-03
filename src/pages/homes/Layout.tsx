@@ -1,6 +1,4 @@
-// Layout.tsx
-
-// src/pages/ShellLayout.tsx
+// ✅ Layout.tsx
 import { Outlet, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import Sidebar from './feature/Sidebar';
@@ -9,9 +7,16 @@ import TweetModal from './feature/TweetModal';
 
 export default function Layout() {
   const [showTweetModal, setShowTweetModal] = useState(false);
-  const location = useLocation(); // 현재 경로 정보
+  const [newTweet, setNewTweet] = useState(null); // ✅ 새 트윗 상태 추가
+  const location = useLocation();
   const isFinalHome =
     location.pathname.startsWith('/finalhome') && !location.pathname.includes('/studyList');
+
+  // 채팅/DM 경로 플래그
+  const isChatRoute =
+    location.pathname.startsWith('/finalhome/chat') ||
+    location.pathname.startsWith('/finalhome/dm');
+
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
       <div className="flex justify-center min-h-screen">
@@ -23,27 +28,35 @@ export default function Layout() {
             </div>
           </div>
 
-          {/* Central Outlet */}
-          <div className="w-full max-w-2xl min-w-[320px] sm:min-w-[400px] mx-6 relative">
-            <div className=" border-gray-200 relative">
-              <Outlet />
-            </div>
+          {/* Central Outlet → Home으로 새 트윗 전달 */}
+          <div
+            className={
+              isChatRoute
+                ? 'w-full max-w-[1120px] mx-6 relative' // 🔹 채팅 화면만 넓게
+                : 'w-full max-w-2xl min-w-[320px] sm:min-w-[400px] mx-6 relative'
+            }
+          >
+            <Outlet context={{ newTweet, setNewTweet }} />
           </div>
 
           {/* Right Trends */}
-          {isFinalHome && (
+          {isFinalHome && !isChatRoute && (
             <div className="hidden xl:block w-80 flex-shrink-0">
               <div className="sticky top-0 h-screen">
-                <div className=" h-full">
-                  <TrendsPanel />
-                </div>
+                <TrendsPanel />
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {showTweetModal && <TweetModal onClose={() => setShowTweetModal(false)} />}
+      {/* ✅ 트윗 작성 모달 */}
+      {showTweetModal && (
+        <TweetModal
+          onClose={() => setShowTweetModal(false)}
+          onTweetCreated={tweet => setNewTweet(tweet)} // 새 트윗 데이터 저장
+        />
+      )}
     </div>
   );
 }

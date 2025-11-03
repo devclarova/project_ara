@@ -23,12 +23,11 @@ function readDraft() {
  */
 async function ensureProfileFromDraft(uid: string, email?: string | null) {
   // 이미 존재하면 no-op
-  const { data: exists, error: exErr } = await supabase
+  const { count, error: exErr } = await supabase
     .from('profiles')
-    .select('user_id')
-    .eq('user_id', uid)
-    .maybeSingle();
-  if (exErr || exists) return;
+    .select('user_id', { count: 'exact', head: true })
+    .eq('user_id', uid);
+  if (!exErr && (count ?? 0) > 0) return;
 
   const draft = readDraft();
 
@@ -74,7 +73,7 @@ async function ensureProfileFromDraft(uid: string, email?: string | null) {
     updated_at: new Date().toISOString(),
   };
 
-  const { error } = await supabase.from('profiles').insert(payload);
+  const { error } = await supabase.from('profiles').upsert(payload, { onConflict: 'user_id' });
   if (!error) {
     try {
       localStorage.removeItem(DRAFT_KEY);
@@ -83,13 +82,11 @@ async function ensureProfileFromDraft(uid: string, email?: string | null) {
 }
 
 async function createProfileShellIfMissing(uid: string) {
-  // 이미 있으면 종료
-  const { data: exists, error: exErr } = await supabase
+  const { count, error: exErr } = await supabase
     .from('profiles')
-    .select('user_id')
-    .eq('user_id', uid)
-    .maybeSingle();
-  if (exErr || exists) return;
+    .select('user_id', { count: 'exact', head: true })
+    .eq('user_id', uid);
+  if (!exErr && (count ?? 0) > 0) return;
 
   // ✅ 스키마 제약( NOT NULL / CHECK ) 을 통과할 최소 기본값
   const payload = {
@@ -110,7 +107,7 @@ async function createProfileShellIfMissing(uid: string) {
     updated_at: new Date().toISOString(),
   };
 
-  await supabase.from('profiles').insert(payload);
+  await supabase.from('profiles').upsert(payload, { onConflict: 'user_id' });
 }
 
 export default function AuthCallback() {
@@ -159,7 +156,13 @@ export default function AuthCallback() {
         try {
           await ensureProfileFromDraft(u.id, u.email);
         } catch {}
-        navigate('/finalhome', { replace: true });
+
+        // ✅ 이메일 인증 링크로 들어온 세션을 즉시 끊고
+        await supabase.auth.signOut({ scope: 'local' });
+
+        // ✅ 로그인 페이지로 이동하면서 "인증 완료 모달"을 띄울 수 있도록 신호를 전달
+        navigate('/signin', { replace: true, state: { emailVerified: true } });
+
         return;
       }
 
