@@ -63,9 +63,13 @@ export default function SignUpStep1Consent({ onNext, value, onChange }: Props) {
   };
 
   return (
-    <section className="bg-white rounded-2xl p-4 sm:p-6 md:p-8 shadow overflow-x-hidden">
-      <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1">회원가입 동의</h2>
-      <p className="text-gray-500 mb-4 sm:mb-5">서비스 이용을 위해 약관에 동의해주세요.</p>
+    <section className="bg-white p-4 sm:p-6 md:p-8 shadow overflow-x-hidden dark:bg-secondary">
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1 dark:text-gray-100">
+        회원가입 동의
+      </h2>
+      <p className="text-gray-500 mb-4 sm:mb-5 dark:text-gray-400">
+        서비스 이용을 위해 약관에 동의해주세요.
+      </p>
 
       <div className="grid grid-cols-[1fr,auto] gap-x-4">
         <AgreeRow label="전체 동의" checked={allSelected} onChange={handleAll} />
