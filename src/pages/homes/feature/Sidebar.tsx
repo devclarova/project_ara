@@ -64,7 +64,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
     { icon: 'ri-chat-3-line', label: '채팅', path: '/finalhome/chat' },
     // ✅ (✨ 수정된 부분) 프로필 메뉴 클릭 시 내 닉네임으로 이동
     { icon: 'ri-user-line', label: '프로필', onClick: handleProfileClick },
-    { icon: 'ri-youtube-line', label: 'Study', path: '/studyList' },
+    { icon: 'ri-youtube-line', label: '학습', path: '/studyList' },
     { icon: 'ri-more-line', label: '더보기', path: '/finalhome/hometest' },
   ];
 

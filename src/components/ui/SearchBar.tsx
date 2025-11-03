@@ -1,6 +1,4 @@
-import { useState } from 'react';
-import { Search, X } from 'lucide-react'; // lucide 아이콘
-import FilterDropdown from '../study/FilterDropdown';
+import { Search } from 'lucide-react'; // lucide 아이콘
 
 interface SearchBarProps {
   placeholder?: string;
@@ -8,6 +6,7 @@ interface SearchBarProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit?: (query: string) => void;
   onClose?: () => void;
+  autoFocus?: boolean;
 }
 
 export default function SearchBar({
@@ -15,7 +14,7 @@ export default function SearchBar({
   value,
   onChange,
   onSubmit,
-  onClose,
+  autoFocus,
 }: SearchBarProps) {
   const handleSubmit = () => {
     if (value.trim() === '') return;
@@ -43,6 +42,7 @@ export default function SearchBar({
             onChange={onChange}
             onKeyDown={handleKeyDown}
             placeholder={placeholder ?? '검색어를 입력하세요'}
+            autoFocus={autoFocus}
             className="flex-1 h-full px-2 sm:px-3 bg-transparent outline-none text-xs sm:text-sm md:text-base placeholder-muted-foreground border-none focus:outline-none focus:ring-0 focus:border-transparent"
           />
 

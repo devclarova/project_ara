@@ -93,7 +93,6 @@ const App = () => {
                       <Route path="/signupo" element={<SignUpPage_old />} />
                       <Route path="/signin" element={<SignInPage />} />
                     </Route>
-
                     <Route element={<RequireAuth />}>
                       <Route path="/signup/social" element={<SignUpWizard mode="social" />} />
                       <Route element={<OnboardingWall />}>

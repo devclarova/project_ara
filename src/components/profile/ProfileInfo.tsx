@@ -59,7 +59,7 @@ function ProfileInfo({ profile, onClickEdit }: ProfileInfoProps) {
                 className="w-full h-full object-cover object-top"
               />
             ) : (
-              <img src="/default-avatar.svg" alt="기본아바타이미지" />
+              <img src="images/default-avatar.svg" alt="기본아바타이미지" />
             )}
           </div>
         </div>

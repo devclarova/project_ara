@@ -177,17 +177,51 @@ const StudyPage = () => {
           </NavLink>
         </div>
 
-        {/* 상단 타이틀 */}
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">
-          {loading
-            ? '로딩 중...'
-            : `${study?.contents ?? '제목 없음'} ${study?.episode ? `- ${study.episode}` : ''}${
-                study?.scene ? ` - Scene ${study.scene}` : ''
-              }`}
-        </h1>
-
-        {/* 진행바: 임시 고정 */}
-        <Progress percent={30} size="default" strokeColor="bg-primary" />
+        {/* 총 회차 진행률 */}
+        <div className="flex justify-between items-center">
+          <button
+            onClick={handlePrevPage}
+            className="text-sm text-gray-600 hover:text-gray-900 px-4 py-2 flex items-center gap-2 hover:scale-110 transition-transform duration-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="16"
+              viewBox="0 0 18 16"
+              fill="none"
+            >
+              <path
+                d="M6.215 7.33319H14.3299V8.66652H6.215L9.79942 12.2399L8.85335 13.1865L3.66992 7.99986L8.85335 2.81319L9.79942 3.75986L6.215 7.33319Z"
+                fill="#4B5563"
+              />
+            </svg>
+          </button>
+          {/* 상단 타이틀 */}
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            {loading
+              ? '로딩 중...'
+              : `${study?.contents ?? '제목 없음'} ${study?.episode ? `- ${study.episode}` : ''}${
+                  study?.scene ? ` - Scene ${study.scene}` : ''
+                }`}
+          </h1>
+          <button
+            onClick={handleNextPage}
+            className="text-sm text-gray-600 hover:text-gray-900 px-4 py-2 flex items-center gap-2 hover:scale-110 transition-transform duration-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="16"
+              viewBox="0 0 18 16"
+              fill="none"
+            >
+              <path
+                d="M11.7848 7.33319L8.20042 3.75986L9.1465 2.81319L14.3299 7.99986L9.1465 13.1865L8.20042 12.2399L11.7848 8.66652H3.66992V7.33319H11.7848Z"
+                fill="#4B5563"
+              />
+            </svg>
+          </button>
+        </div>
 
         {/* 메타 정보 라인: 시간/난이도(임시)/카테고리 */}
         <div className="flex items-center gap-5 text-sm text-gray-600">
@@ -250,49 +284,6 @@ const StudyPage = () => {
 
       {/* 학습 카드 */}
       {studyId !== undefined && <StudyCard subtitle={selectedSubtitle} studyId={studyId} />}
-
-      {/* 총 회차 진행률 */}
-      <div className="flex justify-between items-center">
-        <button
-          onClick={handlePrevPage}
-          className="text-sm text-gray-600 hover:text-gray-900 px-4 py-2 flex items-center gap-2 hover:scale-110 transition-transform duration-200"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="16"
-            viewBox="0 0 18 16"
-            fill="none"
-          >
-            <path
-              d="M6.215 7.33319H14.3299V8.66652H6.215L9.79942 12.2399L8.85335 13.1865L3.66992 7.99986L8.85335 2.81319L9.79942 3.75986L6.215 7.33319Z"
-              fill="#4B5563"
-            />
-          </svg>
-        </button>
-        <div className="text-center flex flex-col justify-center items-center flex-grow">
-          <span className="text-lg font-semibold text-gray-600">
-            총 회차 진행률 <span className="text-m font-semibold text-primary">35%</span>
-          </span>
-        </div>
-        <button
-          onClick={handleNextPage}
-          className="text-sm text-gray-600 hover:text-gray-900 px-4 py-2 flex items-center gap-2 hover:scale-110 transition-transform duration-200"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="16"
-            viewBox="0 0 18 16"
-            fill="none"
-          >
-            <path
-              d="M11.7848 7.33319L8.20042 3.75986L9.1465 2.81319L14.3299 7.99986L9.1465 13.1865L8.20042 12.2399L11.7848 8.66652H3.66992V7.33319H11.7848Z"
-              fill="#4B5563"
-            />
-          </svg>
-        </button>
-      </div>
     </div>
   );
 };
