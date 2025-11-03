@@ -1046,16 +1046,33 @@ hr {
 }
 
 @layer base {
-  /* Chrome/Edge/Safari 자동완성 레이어를 테마 변수로 오버라이드 */
+  /* 라이트 모드: 카드 톤 유지 (회색 변색 방지) */
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
   input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0px 1000px hsl(var(--input)) inset !important;
-    box-shadow: 0 0 0px 1000px hsl(var(--input)) inset !important;
+    -webkit-box-shadow: 0 0 0px 1000px hsl(var(--card)) inset !important;
+    box-shadow: 0 0 0px 1000px hsl(var(--card)) inset !important;
     -webkit-text-fill-color: hsl(var(--foreground)) !important;
     caret-color: hsl(var(--foreground)) !important;
     transition: background-color 9999s ease-out 0s;
+    border-radius: inherit;
+    background-clip: padding-box;
+  }
+
+  /* 다크 모드: secondary 톤으로 맞춤 */
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover,
+  .dark input:-webkit-autofill:focus,
+  .dark input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0px 1000px hsl(var(--secondary)) inset !important;
+    box-shadow: 0 0 0px 1000px hsl(var(--secondary)) inset !important;
+    /* secondary 배경 위 가독성 높은 전경색 사용 */
+    -webkit-text-fill-color: hsl(var(--secondary-foreground)) !important;
+    caret-color: hsl(var(--secondary-foreground)) !important;
+    transition: background-color 9999s ease-out 0s;
+    border-radius: inherit;
+    background-clip: padding-box;
   }
 }
 

@@ -89,42 +89,57 @@ export default function SignUpPage() {
   const back = () => goTo(step === 3 ? 2 : 1);
 
   // 레이아웃 마진/패딩
-  const isStep2 = step === 2;
-  const wrapperPad = isStep2 ? 'pt-8 sm:pt-12 pb-10' : 'pt-5 sm:pt-7 pb-4';
+  const wrapperPad = 'pt-6 sm:pt-8 pb-6';
+
+  const title = signupKind === 'social' ? '소셜 회원가입' : '회원가입';
 
   return (
     <div
-      className={`min-h-auto mt-4 md:min-h-auto w-full bg-white dark:bg-gray-800
+      className={`min-h-auto mt- md:min-h-auto w-full bg-white dark:bg-gray-800
                      flex justify-center items-start ${wrapperPad} overflow-y-auto`}
     >
       <div className="w-full max-w-md sm:max-w-lg md:max-w-2xl px-4 sm:px-6 md:px-8">
-        <h1
-          className="text-2xl sm:text-3xl md:text-4xl font-bold text-center
-                       text-gray-800 dark:text-white mb-3 sm:mb-4"
-        >
-          회원가입
-        </h1>
+        <div className="mb-3 sm:mb-4 grid grid-cols-3 items-center">
+          <div className="col-start-2 justify-self-center">
+            <h1 className="text-2xl pb-4 sm:text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-gray-100">
+              {title}
+            </h1>
+          </div>
 
-        <div className="mb-2 flex justify-end">
-          {signupKind === 'social' ? (
-            <button
-              type="button"
-              onClick={handleSkipSocial}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium border border-black/10 dark:border-white/10
-                 text-gray-800 dark:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5 transition"
-            >
-              다음에 하기
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleGoHome}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium border border-black/10 dark:border:white/10
-                 text-gray-800 dark:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5 transition"
-            >
-              홈으로
-            </button>
-          )}
+          {/* 오른쪽: 액션 버튼 */}
+          <div className="col-start-3 justify-self-end">
+            {signupKind === 'social' ? (
+              <button
+                type="button"
+                onClick={handleSkipSocial}
+                className="inline-flex items-center gap-1.5 rounded-2xl px-3.5 py-1.5 text-sm font-medium
+                   border border-black/10 dark:border-white/10
+                   text-gray-800 dark:text-gray-200
+                   bg-primary/30 dark:bg-primary/70 backdrop-blur
+                   shadow-sm hover:shadow transition-all duration-200
+                   hover:bg-primary/50 hover:dark:bg-primary/80 hover:from-sky-400/10 hover:to-indigo-500/10
+                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-0"
+                aria-label="다음에 하기"
+              >
+                다음에 하기
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleGoHome}
+                className="inline-flex items-center gap-1.5 rounded-2xl px-3.5 py-1.5 text-sm font-medium
+                   border border-black/10 dark:border-white/10
+                   text-gray-800 dark:text-gray-200
+                   bg-gray-300/30 dark:bg-gray-300/10 backdrop-blur
+                   shadow-sm hover:shadow transition-all duration-200
+                   hover:bg-gray-300/50 hover:dark:bg-gray-300/30 hover:from-sky-400/10 hover:to-indigo-500/10
+                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-0"
+                aria-label="홈으로"
+              >
+                홈으로
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="mb-3 sm:mb-4">

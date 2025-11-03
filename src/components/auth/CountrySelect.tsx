@@ -59,25 +59,44 @@ export default function CountrySelect({ value, onChange, error = false }: Countr
 
   const selectedOption = options.find(o => o.value === value) || null;
 
-  // ✅ any 제거한 스타일 타입
+  // 🌙 전역 다크 여부
+  const isDark =
+    typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+
+  // ✅ InputField/GenderSelect와 동일한 톤 적용 (다크만)
   const customStyles: StylesConfig<Option, false> = {
-    control: (provided, state) => ({
-      ...provided,
-      minHeight: 48,
-      height: 48,
-      padding: '0 12px',
-      borderRadius: 14,
-      borderColor: isFocused ? 'var(--ara-primary)' : error && !value ? 'red' : '#D1D5DB',
-      borderWidth: 1,
-      outline: 'none',
-      boxShadow: isFocused ? '0 0 0 3px var(--ara-ring)' : 'none',
-      // hover 효과 제거 유지
-      '&:hover': {
-        borderColor: isFocused ? 'var(--ara-primary)' : error && !value ? 'red' : '#D1D5DB',
-      },
-      // 포털 + fixed일 때 가려지지 않도록 배경 지정
-      backgroundColor: '#fff',
-    }),
+    control: (provided, state) => {
+      const baseBorder = state.isFocused
+        ? 'var(--ara-primary)'
+        : error && !value
+          ? 'red'
+          : isDark
+            ? '#D1D5DB' // 다크: gray-300
+            : '#D1D5DB'; // 라이트: 기존 톤 유지
+      return {
+        ...provided,
+        minHeight: 48,
+        height: 48,
+        padding: '0 12px',
+        borderRadius: 14,
+        border: `1px solid ${baseBorder}`,
+        borderColor: baseBorder,
+        borderWidth: 1,
+        outline: 'none',
+        boxShadow: state.isFocused ? '0 0 0 3px var(--ara-ring)' : 'none',
+        backgroundColor: isDark ? 'hsl(var(--secondary))' : '#fff',
+        color: isDark ? '#9CA3AF' : '#111827',
+        '&:hover': {
+          borderColor: state.isFocused
+            ? 'var(--ara-primary)'
+            : error && !value
+              ? 'red'
+              : isDark
+                ? '#D1D5DB'
+                : '#D1D5DB',
+        },
+      };
+    },
     valueContainer: provided => ({
       ...provided,
       height: 48,
@@ -85,23 +104,60 @@ export default function CountrySelect({ value, onChange, error = false }: Countr
       display: 'flex',
       alignItems: 'center',
     }),
-    input: provided => ({ ...provided, margin: 0, padding: 0 }),
-    singleValue: provided => ({ ...provided, color: '#111827' }),
-    indicatorsContainer: provided => ({ ...provided, height: 48 }),
-    dropdownIndicator: provided => ({ ...provided, marginLeft: 8 }),
-    indicatorSeparator: provided => ({ ...provided, display: 'none' }),
+    input: provided => ({
+      ...provided,
+      margin: 0,
+      padding: 0,
+      color: isDark ? '#9CA3AF' : '#111827', // 다크: gray-400
+    }),
+    singleValue: provided => ({
+      ...provided,
+      color: isDark ? '#9CA3AF' : '#111827', // 다크: gray-400
+    }),
+    indicatorsContainer: provided => ({
+      ...provided,
+      height: 48,
+      color: isDark ? '#9CA3AF' : provided.color,
+    }),
+    dropdownIndicator: provided => ({
+      ...provided,
+      marginLeft: 8,
+      color: isDark ? '#9CA3AF' : provided.color,
+    }),
+    indicatorSeparator: provided => ({
+      ...provided,
+      display: 'none',
+    }),
     menu: provided => ({
       ...provided,
       zIndex: 50,
-      marginBottom: 13, // 위로 뜨므로, 컨트롤과의 간격(라벨 가림 방지)
+      marginBottom: 13,
+      backgroundColor: isDark ? 'hsl(var(--secondary))' : provided.backgroundColor,
+      color: isDark ? '#9CA3AF' : '#111827',
+      border: `1px solid ${isDark ? '#D1D5DB' : '#E5E7EB'}`, // 다크 보더 통일
+      borderRadius: 12,
+      overflow: 'hidden',
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? isDark
+          ? 'hsl(var(--primary) / 0.22)'
+          : 'rgba(59,130,246,0.12)'
+        : state.isFocused
+          ? isDark
+            ? 'hsl(var(--primary) / 0.12)'
+            : 'rgba(59,130,246,0.08)'
+          : 'transparent',
+      color: isDark ? '#9CA3AF' : '#111827',
+      cursor: 'pointer',
     }),
     menuPortal: provided => ({
       ...provided,
-      zIndex: 9999, // 최상단 보장
+      zIndex: 9999,
     }),
   };
 
-  // ✅ SingleValue 타입도 Option으로 명확화
   const handleChange = (opt: SingleValue<Option>) => {
     onChange(opt?.value || '');
     setIsFocused(false);
@@ -138,20 +194,16 @@ export default function CountrySelect({ value, onChange, error = false }: Countr
         className="w-full"
         classNamePrefix="react-select"
         placeholder=" "
-        // ⬇️ 핵심: 아래 비면 위로 자동 배치
         menuPlacement="top"
-        // ⬇️ 스크롤 컨테이너/overflow 숨김 환경에서도 안전
         menuPosition="fixed"
         menuPortalTarget={typeof window !== 'undefined' ? document.body : null}
-        // 메뉴가 뷰포트로 스크롤되게
         menuShouldScrollIntoView
-        // 메뉴 높이 제한(상·하 여백 최적화)
         maxMenuHeight={280}
         openMenuOnFocus
       />
 
       <label
-        className={`absolute left-3 px-1 bg-white/95 rounded transition-all
+        className={`absolute left-3 px-1 bg-white/95 rounded transition-all dark:bg-secondary
           ${
             isFocused
               ? '-top-2 text-xs text-primary'

@@ -21,21 +21,18 @@ export default function BirthInput({
   error = false,
   errorMessage = '생년월일을 입력해주세요.',
 }: BirthInputProps): JSX.Element {
-  // 오늘 기준 만 14세 상한일 (이날 이후는 선택 불가)
   const maxDate14 = (() => {
     const t = new Date();
     return new Date(t.getFullYear() - 14, t.getMonth(), t.getDate());
   })();
 
-  const [mode, setMode] = useState<Mode>('day'); // ✅ 컴포넌트 내부에 둔다
+  const [mode, setMode] = useState<Mode>('day');
 
-  // 표시 문자열
   const [inputValue, setInputValue] = useState(value ? formatFromDate(value) : '');
   const inputRef = useRef<HTMLInputElement>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(value);
   const [open, setOpen] = useState<boolean>(false);
 
-  // 선택값 없으면 기본 뷰는 maxDate14 (뒤로 멀리 갈 필요 X)
   const [viewYear, setViewYear] = useState<number>((value ?? maxDate14).getFullYear());
   const [viewMonth, setViewMonth] = useState<number>((value ?? maxDate14).getMonth());
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -65,7 +62,6 @@ export default function BirthInput({
     setInputValue(raw);
     const parsed = parseInputToDate(raw);
 
-    // 14세 미만 날짜는 무효화
     if (parsed && parsed > maxDate14) {
       setSelectedDate(null);
       onChange(null);
@@ -74,7 +70,6 @@ export default function BirthInput({
       onChange(parsed);
     }
 
-    // 입력 중에도 팝오버 열어서 확인 가능
     setOpen(true);
     if (parsed) {
       setViewYear(parsed.getFullYear());
@@ -112,13 +107,11 @@ export default function BirthInput({
     inputRef.current?.focus();
   };
 
-  // 컴포넌트 밖 클릭 시에만 닫기 (빠르게 눌러도 안 닫히게)
   useEffect(() => {
     const onDocClick = (ev: MouseEvent) => {
       if (!rootRef.current) return;
       if (!rootRef.current.contains(ev.target as Node)) {
         setOpen(false);
-        // inputRef.current?.blur();
       }
     };
     document.addEventListener('mousedown', onDocClick);
@@ -140,7 +133,6 @@ export default function BirthInput({
         inMonth: false,
       });
     }
-    // [추가] 항상 6주(7x6=42) 되도록 채우기 → 달마다 높이 동일
     while (cells.length < 42) {
       const last = cells[cells.length - 1].date;
       cells.push({
@@ -162,8 +154,7 @@ export default function BirthInput({
           value={inputValue}
           onChange={handleInputChange}
           onFocus={() => {
-            setMode('day'); // [수정] 무조건 날짜 그리드 먼저
-            // 선택값이 없으면, 뷰 기준만 maxDate14로 유지
+            setMode('day');
             if (!selectedDate) {
               setViewYear(maxDate14.getFullYear());
               setViewMonth(maxDate14.getMonth());
@@ -177,19 +168,13 @@ export default function BirthInput({
               e.preventDefault();
               const parsed = parseInputToDate(inputValue);
               if (parsed) {
-                if (parsed > maxDate14) {
-                  // 14세 미만이면 무시
-                  return;
-                }
+                if (parsed > maxDate14) return;
                 setSelectedDate(parsed);
                 setInputValue(formatFromDate(parsed));
                 onChange(parsed);
                 setViewYear(parsed.getFullYear());
                 setViewMonth(parsed.getMonth());
                 setOpen(false);
-                // inputRef.current?.blur();
-              } else {
-                console.warn('Please enter the date in a valid format.');
               }
             }
           }}
@@ -197,23 +182,26 @@ export default function BirthInput({
           aria-haspopup="dialog"
           aria-expanded={open}
           aria-controls="birth-popover"
-          className={`peer w-full px-3 py-3 border rounded-[14px] bg-white text-black text-sm ${error ? 'border-red-500' : 'border-gray-300'} ara-focus`}
+          className={`peer w-full px-3 py-3 border rounded-[14px] bg-white text-black text-sm dark:bg-secondary dark:text-gray-300 ${
+            error
+              ? 'ara-focus--error border-red-500'
+              : 'ara-focus border-gray-300 dark:border-[#D1D5DB]'
+          }`}
         />
         <label
-          className={`absolute left-3 transition-all text-gray-400 bg-white/95 px-1 rounded
+          className={`absolute left-3 transition-all text-gray-400 bg-white/95 rounded dark:bg-secondary
       ${inputValue ? '-top-2 text-xs' : 'top-3 text-sm'}
-      peer-focus:-top-3 peer-focus:text-xs peer-focus:text-primary`}
+      peer-focus:-top-2 peer-focus:text-xs peer-focus:text-primary`}
         >
           생년월일
         </label>
         <button
           type="button"
           onClick={() => {
-            // 토글할 때 값 없으면 월 그리드부터 보여주기
             setMode(prev => (open ? prev : selectedDate ? 'day' : 'month'));
             setOpen(o => !o);
           }}
-          className="absolute right-8 top-1/2 -translate-y-1/2 px-1 text-gray-500 hover:text-gray-700"
+          className="absolute right-8 top-1/2 -translate-y-1/2 px-1 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white/90"
           aria-label="Toggle calendar"
         >
           <img src="/images/calendar.png" alt="달력" className="w-5" />
@@ -236,22 +224,21 @@ export default function BirthInput({
         <div
           id="birth-popover"
           role="dialog"
-          className="absolute left-0 bottom-full mb-4 w-72 bg-white border rounded shadow-lg z-50 max-h-80 overflow-auto"
+          className="absolute left-0 bottom-full mb-4 w-72 bg-white dark:bg-secondary dark:text-gray-300 border border-gray-300 dark:border-[#D1D5DB] rounded-[14px] shadow-lg z-50 max-h-80 overflow-auto"
           onMouseDown={e => {
-            // [수정]
-            e.preventDefault(); // ❶ 기본 포커스 이동 방지
-            e.stopPropagation(); // ❷ 외부 핸들러로 이벤트 전파 차단
+            e.preventDefault();
+            e.stopPropagation();
           }}
         >
-          {/* 헤더: 좌/제목/우 */}
-          <div className="flex items-center justify-between px-3 py-2 border-b">
+          {/* 헤더 */}
+          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-[#D1D5DB]">
             <button
               onClick={() => {
                 if (mode === 'day') prevMonth();
                 else if (mode === 'month') setViewYear(v => v - 1);
-                else /* year */ setViewYear(v => v - 20); // 연도 20개 단위 스크롤
+                else setViewYear(v => v - 20);
               }}
-              className="px-2 py-1 rounded hover:bg-gray-100"
+              className="px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-white/10"
               type="button"
             >
               ‹
@@ -261,7 +248,7 @@ export default function BirthInput({
               onClick={() =>
                 setMode(m => (m === 'day' ? 'month' : m === 'month' ? 'year' : 'year'))
               }
-              className="text-sm font-medium px-2 py-1 rounded hover:bg-gray-100"
+              className="text-sm font-medium px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg.white/10"
               aria-label="Change view mode"
             >
               {mode === 'day' &&
@@ -277,9 +264,9 @@ export default function BirthInput({
               onClick={() => {
                 if (mode === 'day') nextMonth();
                 else if (mode === 'month') setViewYear(v => v + 1);
-                else /* year */ setViewYear(v => v + 20);
+                else setViewYear(v => v + 20);
               }}
-              className="px-2 py-1 rounded hover:bg-gray-100"
+              className="px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-white/10"
               type="button"
             >
               ›
@@ -306,7 +293,7 @@ export default function BirthInput({
                       'py-2 rounded text-sm',
                       disabled
                         ? 'cursor-not-allowed opacity-40'
-                        : 'hover:bg-gray-100 cursor-pointer',
+                        : 'hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer',
                     ].join(' ')}
                   >
                     {y}
@@ -337,7 +324,7 @@ export default function BirthInput({
                       'py-2 rounded text-sm',
                       disabled
                         ? 'cursor-not-allowed opacity-40'
-                        : 'hover:bg-gray-100 cursor-pointer',
+                        : 'hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer',
                     ].join(' ')}
                   >
                     {label}
@@ -352,7 +339,7 @@ export default function BirthInput({
             <>
               <div className="grid grid-cols-7 text-xs text-center px-2 pt-2">
                 {WEEK_DAYS.map(wd => (
-                  <div key={wd} className="py-1 font-medium text-gray-600">
+                  <div key={wd} className="py-1 font-medium text-gray-600 dark:text-gray-300">
                     {wd}
                   </div>
                 ))}
@@ -377,7 +364,9 @@ export default function BirthInput({
                             ? 'cursor-not-allowed opacity-40'
                             : 'cursor-pointer'
                           : 'cursor-default opacity-40',
-                        isSelected ? 'bg-teal-500 text-white' : 'hover:bg-gray-100',
+                        isSelected
+                          ? 'bg-teal-500 text-white'
+                          : 'hover:bg-gray-100 dark:hover:bg-white/10',
                       ].join(' ')}
                       disabled={!cell.inMonth || overMax}
                       aria-pressed={isSelected ?? undefined}

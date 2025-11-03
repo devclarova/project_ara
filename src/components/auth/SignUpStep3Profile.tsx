@@ -277,7 +277,7 @@ export default function SignUpStep3Profile(props: Props) {
   };
 
   return (
-    <section className="bg-white rounded-2xl p-4 sm:p-6 md:p-8 shadow dark:bg-neutral-900">
+    <section className="bg-white rounded-2xl p-4 sm:p-6 md:p-8 shadow dark:bg-secondary">
       <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
         프로필
       </h2>
