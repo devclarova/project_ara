@@ -3,14 +3,14 @@
 @tailwind utilities;
 
 /* Chrome/Edge/Safari 자동완성 배경 제거 + 글자색 통일 */
-input:-webkit-autofill,
+/* input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0px 1000px #fff inset !important; /* 흰 배경으로 채우기 */
+  -webkit-box-shadow: 0 0 0px 1000px #fff inset !important;
   box-shadow: 0 0 0px 1000px #fff inset !important;
-  -webkit-text-fill-color: #111827 !important; /* Tailwind gray-900 정도 */
-  transition: background-color 9999s ease-out 0s; /* 깜빡임 방지 */
-}
+  -webkit-text-fill-color: #111827 !important;
+  transition: background-color 9999s ease-out 0s;
+} */
 
 /* Firefox (효과는 제한적) */
 input:-moz-ui-valid {
@@ -1007,8 +1007,8 @@ hr {
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
+    --primary: 174 100% 37%; /* #00BFA5 (라이트와 동일) */
+    --primary-foreground: 0 0% 100%; /* 흰색 텍스트 */
     --secondary: 0 0% 14.9%;
     --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 14.9%;
@@ -1042,6 +1042,26 @@ hr {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer base {
+  /* Chrome/Edge/Safari 자동완성 레이어를 테마 변수로 오버라이드 */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0px 1000px hsl(var(--input)) inset !important;
+    box-shadow: 0 0 0px 1000px hsl(var(--input)) inset !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    caret-color: hsl(var(--foreground)) !important;
+    transition: background-color 9999s ease-out 0s;
+  }
+}
+
+@layer base {
+  .dark body {
+    background-color: #1f2937 !important; /* Tailwind gray-800 */
   }
 }
 
