@@ -35,17 +35,14 @@ export default function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-16 
-                 bg-black/40 dark:bg-black/60 min-h-screen transition-colors"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-16 bg-black/40 dark:bg-black/60 min-h-screen transition-colors"
       onClick={closeOnBackdrop ? onClose : undefined}
       role="dialog"
       aria-modal="true"
       aria-label={title}
     >
       <div
-        className="w-full max-w-xl mx-4 rounded-2xl shadow-xl overflow-hidden min-h-[500px]
-                   bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 
-                   text-gray-900 dark:text-gray-100 transition-colors duration-200"
+        className="w-full max-w-xl mx-4 rounded-2xl shadow-xl overflow-hidden min-h-[500px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200"
         onClick={e => e.stopPropagation()} // 내부 클릭 시 닫힘 방지
       >
         {/* Header */}

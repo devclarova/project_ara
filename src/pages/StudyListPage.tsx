@@ -13,6 +13,7 @@ const StudyListPage = () => {
   const [keyword, setKeyword] = useState('');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [showSearch, setShowSearch] = useState(false);
   const [activeCategory, setActiveCategory] = useState<
     '전체' | '드라마' | '영화' | '예능' | '음악'
   >('전체');
@@ -26,7 +27,7 @@ const StudyListPage = () => {
 
       let query = supabase
         .from('study')
-        .select('*, video(*)', { count: 'exact' })
+        .select('*, video(*,runtime_bucket)', { count: 'exact' })
         .order('id', { ascending: true });
 
       // 카테고리 필터
@@ -74,40 +75,97 @@ const StudyListPage = () => {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-white">
-      <div className="flex justify-center min-h-screen">
+    <div className="h-screen overflow-hidden bg-white">
+      <div className="flex justify-center h-screen">
         <div className="flex w-full max-w-7xl">
           {/* Left Sidebar */}
-          <aside className="w-20 lg:w-64 shrink-0 border-r border-gray-200 sticky top-0 h-screen">
+          <aside className="w-20 lg:w-64 shrink-0 border-r border-gray-200 h-screen">
             <Sidebar onTweetClick={() => setShowTweetModal(true)} />
           </aside>
 
           {/* 데스크톱에서만 폭 제한해 자연스런 3열 유지 */}
-          <main className="flex-1 min-w-0 bg-white">
+          <main className="flex-1 min-w-0 bg-white h-screen overflow-y-auto hide-scrollbar">
             <div className="w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1400px]">
               {/* 헤더 */}
-              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 sm:gap-0 mb-6 sm:mb-8">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
-                  학습하기
-                </h1>
+              <div className="flex flex-col sm:flex-row justify-center">
+                <img src="images/sample_font_logo.png" alt="로고이미지" className="h-15 w-20" />
               </div>
 
               {/* 탭 + 검색 */}
-              <div className="flex flex-col items-center md:flex-row md:justify-between md:gap-5">
-                <CategoryTabs active={activeCategory} onChange={handleCategoryChange} />
-                <div className="flex flex-col items-center md:flex-row md:justify-between md:gap-1">
-                  <SearchBar
-                    placeholder="검색어를 입력해주세요"
-                    value={keyword}
-                    onChange={handleKeywordChange}
-                    onSubmit={q => console.log('검색어:', q)}
-                  />
-                  <FilterDropdown />
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 border-b border-gray-200">
+                {/* 왼쪽: 카테고리 + 모바일용 검색 아이콘 */}
+                <div className="flex items-center justify-between">
+                  <CategoryTabs active={activeCategory} onChange={handleCategoryChange} />
+
+                  {/* 모바일 전용 검색 버튼 (카테고리 옆에 위치) */}
+                  <button
+                    onClick={() => setShowSearch(true)}
+                    className="md:hidden ml-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
+                    aria-label="검색 열기"
+                  >
+                    <i className="ri-search-line text-[20px] text-gray-600" />
+                  </button>
                 </div>
+
+                {/* 오른쪽: 필터 + 검색 그룹 (데스크톱 전용) */}
+                <div className="hidden md:flex items-center gap-2 mt-3 md:mt-0 flex-nowrap">
+                  <div className="h-10 sm:h-11 flex items-center">
+                    <FilterDropdown />
+                  </div>
+                  <div className="h-10 sm:h-11 flex items-center">
+                    <SearchBar
+                      placeholder="검색어를 입력해주세요"
+                      value={keyword}
+                      onChange={handleKeywordChange}
+                      onSubmit={q => console.log('검색어:', q)}
+                    />
+                  </div>
+                </div>
+
+                {/* 모바일: 검색 + 필터 통합 모달 */}
+                {showSearch && (
+                  <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-20 md:hidden">
+                    <div className="bg-white w-[90%] max-w-sm rounded-xl shadow-lg p-4 flex flex-col gap-4">
+                      {/* 헤더 */}
+                      <div className="flex justify-between items-center">
+                        <h2 className="text-base font-semibold text-gray-800">검색 및 필터</h2>
+                        <button
+                          onClick={() => setShowSearch(false)}
+                          className="text-gray-500 hover:text-gray-800"
+                          aria-label="닫기"
+                        >
+                          <i className="ri-close-line text-xl" />
+                        </button>
+                      </div>
+
+                      {/* 필터 + 검색 */}
+                      <div className="flex flex-col sm:flex-row items-center gap-3 mt-3">
+                        {/* 필터 */}
+                        <div className="flex items-center w-full sm:w-auto">
+                          <FilterDropdown />
+                        </div>
+
+                        {/* 검색 */}
+                        <div className="h-10 flex items-center w-full sm:w-auto">
+                          <SearchBar
+                            autoFocus
+                            placeholder="검색어를 입력해주세요"
+                            value={keyword}
+                            onChange={handleKeywordChange}
+                            onSubmit={q => {
+                              console.log('검색어:', q); // 실제 검색 로직
+                              setShowSearch(false); // 검색 후 모달 닫기
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* 카드 그리드 */}
-              <div className="grid gap-6 sm:gap-8 p-4 sm:p-6 mt-6 grid-cols-1 sm:grid-cols-2 lg:[grid-template-columns:repeat(3,minmax(260px,1fr))]">
+              <div className="grid gap-6 sm:gap-8 py-4 sm:py-6 px-0 grid-cols-1 sm:grid-cols-2 lg:[grid-template-columns:repeat(3,minmax(260px,1fr))]">
                 {filteredClips.length > 0 ? (
                   filteredClips.map(study => {
                     const [v] = study.video ?? [];
@@ -121,13 +179,13 @@ const StudyListPage = () => {
                         episode={v?.episode || ''}
                         scene={v?.scene || ''}
                         level={v?.level || ''}
-                        duration={typeof v?.runtime === 'number' ? v.runtime : null}
+                        duration={typeof v?.runtime_bucket === 'string' ? v.runtime_bucket : null}
                         comments="0개 댓글"
                       />
                     );
                   })
                 ) : (
-                  // ✅ 빈 결과 문구
+                  // 빈 결과 문구
                   <div className="col-span-full text-center py-16 text-gray-500 text-sm sm:text-base">
                     해당 조건에 맞는 학습 콘텐츠가 없습니다.
                   </div>

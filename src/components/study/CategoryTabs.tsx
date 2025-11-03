@@ -8,16 +8,17 @@ type CategoryTabsProps = {
 const CategoryTabs = ({ active, onChange }: CategoryTabsProps) => {
   return (
     <div className="w-full">
-      <div className="flex gap-3 xs:gap-3 sm:gap-4 mb-6 sm:mb-8 px-1 sm:px-0 min-w-max">
+      <div className="flex gap-3 xs:gap-3 sm:gap-4 px-1 sm:px-0 min-w-max">
         {categories.map(c => (
           <button
             key={c}
             onClick={() => onChange(c)}
-            className={`px-5 xs:px-4 sm:px-5 py-2.5 sm:py-3 text-sm sm:text-base font-medium whitespace-nowrap rounded-button transition-colors ${
-              active === c ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
+            className={`relative px-5 xs:px-4 sm:px-5 py-2.5 sm:py-3 text-sm sm:text-base font-extrabold whitespace-nowrap transition-colors duration-300 ${active === c ? 'text-primary' : 'text-gray-600 hover:text-black'}`}
           >
             {c}
+            <span
+              className={`absolute left-0 bottom-0 h-[3px] rounded-full transition-all duration-300 ease-out ${active === c ? 'w-full bg-primary' : 'w-0 bg-transparent'}`}
+            />
           </button>
         ))}
       </div>

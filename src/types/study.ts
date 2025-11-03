@@ -5,15 +5,13 @@ export type StudyListProps = {
   id: number;
   image?: string | null;
   title: string;
-  // subtitle: string;
-  // desc: string;
   short_description: string;
   level: string;
   episode?: string;
   scene?: string;
   // levelColor: string;
-  duration: number | null;
-  comments: string;
+  duration: string | null;
+  comments?: string;
 };
 
 // 1. Study (학습 단위)
@@ -51,6 +49,7 @@ export interface Video {
   video_end_time: number | null;
   video_start_time: number | null;
   video_url: string | null;
+  runtime_bucket: string | null;
 }
 
 // 4. Culture Note (문화포인트)

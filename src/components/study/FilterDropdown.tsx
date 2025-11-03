@@ -19,12 +19,12 @@ const FilterDropdown = () => {
     <div ref={dropdownRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 pb-4 text-primary border border-primary rounded-button hover:text-primary/80 transition-all whitespace-nowrap"
+        className="flex items-center gap-2 pb-6 text-primary border border-primary rounded-button hover:text-primary/80 transition-all whitespace-nowrap"
       >
-        <i className="ri-filter-line text-xl" />
+        <i className="ri-filter-line text-2xl" />
       </button>
       {open && (
-        <div className="absolute right-0 mb-2 w-64 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
+        <div className="absolute left-0 mb-2 w-64 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
           <div className="p-4 space-y-4">
             {/* 난이도 */}
             <div>

@@ -1,18 +1,16 @@
 // settings 왼쪽 메뉴 + 오른쪽 내용 전체를 감싸는 레이아웃
 
-import { useState } from 'react';
+import Sidebar from '@/pages/homes/feature/Sidebar';
 import AlarmSettings from '@/pages/settings/AlarmSettings';
 import PrivacySettings from '@/pages/settings/PrivacySettings';
 import SupportPolicy from '@/pages/settings/SupportPolicy';
 import SystemSettings from '@/pages/settings/SystemSettings';
 import type { MenuId, SidebarItem } from '@/types/settings';
-import SidebarLeft from '../layout/SidebarLeft';
+import { useState } from 'react';
+import Input from '../Input';
 import SettingsContent from './SettingsContent';
 import SettingsLayout from './SettingsLayout';
 import SettingsSidebar from './SettingsSidebar';
-import SearchBar from '../ui/SearchBar';
-import Sidebar from '@/pages/homes/feature/Sidebar';
-import Input from '../Input';
 
 const items: SidebarItem[] = [
   { id: 'alarm', label: '알림 설정' },
@@ -61,7 +59,7 @@ export default function ProfileSettings() {
           {/* Central Content with spacing */}
 
           <main className="p-6 md:p-10 text-[17px] md:text-[18px] w-full">
-            <input placeholder="검색어를 입력해주세요" />
+            <Input placeholder="검색어를 입력해주세요" />
             <SettingsLayout
               left={
                 <SettingsSidebar
