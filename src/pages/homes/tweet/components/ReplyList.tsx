@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import DOMPurify from 'dompurify'; // ✅ 추가
+
 interface User {
   name: string;
   username: string;
@@ -35,7 +37,7 @@ function ReplyCard({ reply }: { reply: Reply }) {
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     // Navigate to user's profile page
-    navigate(`/finalhome/user/${reply.user.username}`);
+    navigate(`/finalhome/user/${reply.user.name}`);
   };
 
   return (
@@ -64,9 +66,23 @@ function ReplyCard({ reply }: { reply: Reply }) {
 
           {/* Reply Content */}
           <div className="mt-1">
-            <p className="text-gray-900 whitespace-pre-wrap break-words">{reply.content}</p>
+            <div
+              className="text-gray-900 whitespace-pre-wrap break-words leading-relaxed"
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(reply.content, {
+                  ADD_TAGS: ['iframe', 'video', 'source', 'img'],
+                  ADD_ATTR: [
+                    'allow',
+                    'allowfullscreen',
+                    'frameborder',
+                    'scrolling',
+                    'src',
+                    'controls',
+                  ],
+                }),
+              }}
+            />
           </div>
-
           {/* Action Buttons */}
           <div className="flex items-center justify-between max-w-md mt-3 text-gray-500">
             {/* Reply */}

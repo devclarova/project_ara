@@ -40,7 +40,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
 
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/finalhome/user/${tweet.user.username}`);
+    navigate(`/finalhome/user/${tweet.user.name}`);
   };
 
   const normalizedStats = {

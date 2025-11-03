@@ -1,86 +1,78 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext'; // ✅ 추가
 import TweetDetailCard from './components/TweetDetailCard';
-import ReplyComposer from './components/ReplyComposer';
 import ReplyList from './components/ReplyList';
-
-interface Tweet {
-  id: string;
-  user: {
-    name: string;
-    username: string;
-    avatar: string;
-  };
-  content: string;
-  image?: string;
-  timestamp: string;
-  stats: {
-    replies: number;
-    retweets: number;
-    likes: number;
-    bookmarks?: number;
-    views: number;
-  };
-}
 
 export default function TweetDetail() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth(); // ✅ 로그인 유저
   const navigate = useNavigate();
-  const [tweet, setTweet] = useState<Tweet | null>(null);
+  const [tweet, setTweet] = useState<any | null>(null);
   const [replies, setReplies] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!id) return;
     fetchTweetById(id);
+    fetchReplies(id);
   }, [id]);
 
-  // ✅ Supabase에서 해당 트윗 1개 가져오기
+  // ✅ 중복 조회 방지 + view_count 증가
+  useEffect(() => {
+    if (!id || !user) return;
+    handleViewCount(id);
+  }, [id, user]);
+
+  const handleViewCount = async (tweetId: string) => {
+    try {
+      const viewedTweets = JSON.parse(localStorage.getItem('viewedTweets') || '{}');
+      const lastViewed = viewedTweets[tweetId];
+      const now = Date.now();
+
+      // 24시간 내 중복 조회 방지
+      if (lastViewed && now - lastViewed < 24 * 60 * 60 * 1000) return;
+
+      const { error } = await supabase
+        .from('tweets')
+        .update({ view_count: (tweet?.stats?.views ?? 0) + 1 })
+        .eq('id', tweetId);
+
+      if (error) console.error('조회수 업데이트 실패:', error.message);
+      viewedTweets[tweetId] = now;
+      localStorage.setItem('viewedTweets', JSON.stringify(viewedTweets));
+    } catch (err) {
+      console.error('조회수 처리 실패:', err);
+    }
+  };
+
   const fetchTweetById = async (tweetId: string) => {
     setIsLoading(true);
-
     const { data, error } = await supabase
       .from('tweets')
       .select(
         `
-        id,
-        content,
-        image_url,
-        created_at,
-        reply_count,
-        repost_count,
-        like_count,
-        bookmark_count,
-        view_count,
-        profiles (
-          nickname,
-          user_id,
-          avatar_url
-        )
-      `
+        id, content, image_url, created_at,
+        reply_count, repost_count, like_count, bookmark_count, view_count,
+        profiles (nickname, user_id, avatar_url)
+      `,
       )
       .eq('id', tweetId)
-      .single(); // 단일 행만 반환
+      .single();
 
     if (error) {
-      console.error('❌ Error fetching tweet:', error);
-      setIsLoading(false);
-      return;
-    }
-
-    if (!data) {
-      // ✅ 데이터가 없을 때는 /finalhome 으로 되돌리기
+      console.error('트윗 불러오기 실패:', error.message);
       navigate('/finalhome');
       return;
     }
 
-    const mappedTweet: Tweet = {
+    setTweet({
       id: data.id,
       user: {
-        name: data.profiles?.nickname || 'Unknown',
-        username: data.profiles?.user_id || 'anonymous',
-        avatar: data.profiles?.avatar_url || '/default-avatar.svg',
+        name: data.profiles?.nickname ?? 'Unknown',
+        username: data.profiles?.user_id ?? 'anonymous',
+        avatar: data.profiles?.avatar_url ?? '/default-avatar.svg',
       },
       content: data.content,
       image: data.image_url,
@@ -97,26 +89,46 @@ export default function TweetDetail() {
         bookmarks: data.bookmark_count ?? 0,
         views: data.view_count ?? 0,
       },
-    };
+    });
 
-    setTweet(mappedTweet);
     setIsLoading(false);
   };
 
-  // ✅ 댓글은 추후 Supabase 연동 가능
-  const handleAddReply = (replyText: string) => {
-    const newReply = {
-      id: Date.now().toString(),
+  const fetchReplies = async (tweetId: string) => {
+    const { data, error } = await supabase
+      .from('tweet_replies')
+      .select(
+        `
+        id, content, created_at,
+        profiles:author_id (nickname, user_id, avatar_url)
+      `,
+      )
+      .eq('tweet_id', tweetId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('댓글 불러오기 실패:', error.message);
+      return;
+    }
+
+    const mapped = (data ?? []).map(r => ({
+      id: r.id,
       user: {
-        name: 'You',
-        username: 'your_username',
-        avatar: '/default-avatar.svg',
+        name: r.profiles?.nickname ?? 'Unknown',
+        username: r.profiles?.user_id ?? 'anonymous',
+        avatar: r.profiles?.avatar_url ?? '/default-avatar.svg',
       },
-      content: replyText,
-      timestamp: 'now',
-      stats: { replies: 0, retweets: 0, likes: 0, views: 1 },
-    };
-    setReplies(prev => [newReply, ...prev]);
+      content: r.content,
+      timestamp: new Date(r.created_at).toLocaleString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        month: 'short',
+        day: 'numeric',
+      }),
+      stats: { replies: 0, retweets: 0, likes: 0, views: 0 },
+    }));
+
+    setReplies(mapped);
   };
 
   if (isLoading) {
@@ -128,7 +140,6 @@ export default function TweetDetail() {
   }
 
   if (!tweet) {
-    // ✅ 트윗이 존재하지 않으면 홈으로
     navigate('/finalhome');
     return null;
   }
@@ -136,7 +147,6 @@ export default function TweetDetail() {
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
       <div className="w-full max-w-2xl mx-auto border-x border-gray-200">
-        {/* Header */}
         <div className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-gray-200 p-4 z-20">
           <div className="flex items-center">
             <button
@@ -149,12 +159,8 @@ export default function TweetDetail() {
           </div>
         </div>
 
-        {/* Main */}
-        <div>
-          <TweetDetailCard tweet={tweet} />
-          {/* <ReplyComposer onReply={handleAddReply} /> */}
-          <ReplyList replies={replies} />
-        </div>
+        <TweetDetailCard tweet={tweet} />
+        <ReplyList replies={replies} />
       </div>
     </div>
   );

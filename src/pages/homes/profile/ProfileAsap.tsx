@@ -1,6 +1,6 @@
 // src/pages/ProfileAsap.tsx
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import ProfileHeader from './components/ProfileHeader';
@@ -9,6 +9,7 @@ import ProfileTweets from './components/ProfileTweets';
 import type { Profile } from '@/types/database';
 
 interface UserProfile {
+  user_id: string;
   name: string;
   username: string;
   avatar: string;
@@ -25,15 +26,18 @@ export default function ProfileAsap() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { username } = useParams<{ username: string }>();
 
-  // ✅ DB에서 현재 로그인한 사용자의 프로필 불러오기
+  // DB에서 현재 로그인한 사용자의 프로필 불러오기
   useEffect(() => {
-    if (!user) return;
+    if (!username) return;
 
     const fetchProfile = async () => {
+      // ✅ username(nickname)으로 프로필 검색
       const { data, error } = await supabase
         .from('profiles')
-        .select(`
+        .select(
+          `
           id,
           user_id,
           nickname,
@@ -45,18 +49,19 @@ export default function ProfileAsap() {
           followers_count,
           following_count,
           created_at
-        `)
-        .eq('user_id', user.id)
+        `,
+        )
+        .eq('nickname', username) // 🔥 여기! username 대신 nickname으로 조회
         .single();
 
-      if (error) {
-        console.error('❌ 프로필 불러오기 실패:', error.message);
+      if (error || !data) {
+        console.error('❌ 프로필 불러오기 실패:', error?.message);
         setUserProfile(null);
         return;
       }
 
-      // ✅ DB 데이터를 UI용 구조로 변환
       setUserProfile({
+        user_id: data.user_id,
         name: data.nickname,
         username: data.username ?? data.nickname,
         avatar: data.avatar_url ?? '/default-avatar.svg',
@@ -73,7 +78,7 @@ export default function ProfileAsap() {
     };
 
     fetchProfile();
-  }, [user]);
+  }, [username]);
 
   if (!userProfile) {
     return (

@@ -46,6 +46,7 @@ import SignUpWizard from './pages/SignUpWizard';
 import OnboardingWall from './routes/guards/OnboardingWall';
 import ProfileAsap from './pages/homes/profile/ProfileAsap';
 import TweetDetail from './pages/homes/tweet/TweetDetail';
+import Notifications from './pages/homes/Notifications';
 
 function RequireAuth() {
   const { session, loading } = useAuth();
@@ -127,7 +128,9 @@ const App = () => {
                     <Route path="user/:username" element={<ProfileAsap />} />
                     {/* <Route path="finalhome" element={<Home />} /> */}
                     <Route path="hometest" element={<HomesTest />} />
+                    <Route path="notifications1" element={<Notifications />} />
                     <Route path="profileasap" element={<ProfileAsap />} />
+                    {/* <Route path="studyList" element={<StudyListPage />} /> */}
                     {/* <Route path="studyList" element={<StudyListPage />} /> */}
                     </Route>
                   </Route>

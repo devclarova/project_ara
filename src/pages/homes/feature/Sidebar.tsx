@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import type { Profile } from '@/types/database';
 import { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, matchPath } from 'react-router-dom'; // ✅ matchPath 추가
 
 interface SidebarProps {
   onTweetClick?: () => void;
@@ -18,7 +18,16 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
 
-  //  DB에서 로그인한 유저의 프로필 불러오기
+  // ✅ 현재 경로가 트윗 상세 페이지인지 확인
+  const detailMatch = matchPath({ path: '/finalhome/:id', end: true }, location.pathname);
+  const isTweetDetail =
+    !!detailMatch &&
+    !!detailMatch.params.id &&
+    !['user', 'studyList', 'hometest', 'profileasap'].includes(detailMatch.params.id);
+
+  const actionLabel = isTweetDetail ? '댓글달기' : '게시하기';
+
+  // ✅ DB에서 로그인한 유저의 프로필 불러오기
   useEffect(() => {
     if (!user) {
       setProfile(null);
@@ -42,13 +51,13 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
     fetchProfile();
   }, [user]);
 
-  //  로그아웃
+  // ✅ 로그아웃
   const handleLogout = async () => {
     await signOut();
     navigate('/');
   };
 
-  //  (✨ 수정된 부분) 프로필 클릭 시 → 내 닉네임 기반 프로필 페이지로 이동
+  // ✅ 프로필 클릭 시 → 내 닉네임 기반 프로필 페이지로 이동
   const handleProfileClick = () => {
     if (profile?.nickname) {
       navigate(`/finalhome/user/${profile.nickname}`);
@@ -59,13 +68,10 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
 
   const navigationItems = [
     { icon: 'ri-home-5-fill', label: '홈', path: '/finalhome' },
-    // { icon: 'ri-search-line', label: '탐색', path: '/explore1' },
-    { icon: 'ri-notification-3-line', label: '알림', path: '/notifications1' },
+    { icon: 'ri-notification-3-line', label: '알림', path: '/finalhome/notifications1' },
     { icon: 'ri-chat-3-line', label: '채팅', path: '/messages1' },
-    //  (✨ 수정된 부분) 프로필 메뉴 클릭 시 내 닉네임으로 이동
     { icon: 'ri-user-line', label: '프로필', onClick: handleProfileClick },
     { icon: 'ri-youtube-line', label: 'Study', path: '/studyList' },
-    // { icon: 'ri-more-line', label: '더보기', path: '/finalhome/hometest' },
   ];
 
   const handleNavigation = (path?: string, onClick?: () => void) => {
@@ -76,17 +82,18 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
   return (
     <div className="h-full w-full bg-white border-r border-gray-200 flex flex-col px-3 lg:px-4 py-6 transition-all duration-300">
       {/* Logo */}
-      <div className="mb-8 flex justify-center lg:justify-start flex-shrink-0">
+      <div className=" flex justify-center lg:justify-center flex-shrink-0">
         <button onClick={() => navigate('/')} className="cursor-pointer">
-          <h1
+          {/* <h1
             className="text-2xl font-bold hidden lg:block"
             style={{ fontFamily: '"Pacifico", serif' }}
           >
             logo
-          </h1>
-          <div className="lg:hidden w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+          </h1> */}
+          <img src="/images/sample_font_logo.png" alt="" className="w-20 h-auto object-contain" />
+          {/* <div className="lg:hidden w-8 h-8 bg-primary rounded-full flex items-center justify-center">
             <i className="ri-twitter-fill text-white text-lg"></i>
-          </div>
+          </div> */}
         </button>
       </div>
 
@@ -112,12 +119,12 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
           ))}
         </ul>
 
-        {/* Tweet Button */}
+        {/* ✅ 게시하기 / 댓글달기 버튼 */}
         <button
           onClick={onTweetClick}
           className="w-full bg-primary hover:bg-primary/80 text-white font-bold py-3 px-2 lg:px-8 rounded-full mt-6 transition-colors cursor-pointer whitespace-nowrap"
         >
-          <span className="hidden lg:block">게시하기</span>
+          <span className="hidden lg:block">{actionLabel}</span>
           <i className="ri-add-line text-xl lg:hidden"></i>
         </button>
       </nav>
@@ -146,7 +153,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
             <div className="absolute bottom-full left-0 w-full bg-white rounded-2xl shadow-lg border border-gray-200 py-2 mb-2 min-w-48 z-50">
               <button
                 onClick={() => {
-                  handleProfileClick(); //  (✨ 추가된 부분) 내 프로필 바로 이동
+                  handleProfileClick();
                   setShowUserMenu(false);
                 }}
                 className="w-full text-left px-4 py-3 hover:bg-gray-100 transition-colors cursor-pointer whitespace-nowrap"

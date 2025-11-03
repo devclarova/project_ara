@@ -1,16 +1,30 @@
 // ✅ Layout.tsx
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, matchPath } from 'react-router-dom';
 import { useState } from 'react';
 import Sidebar from './feature/Sidebar';
 import TrendsPanel from './feature/TrendsPanel';
 import TweetModal from './feature/TweetModal';
+import ReplyModal from './feature/ReplyModal'; // ✅ 새로 추가 (ReplyModal 존재한다고 가정)
 
 export default function Layout() {
   const [showTweetModal, setShowTweetModal] = useState(false);
-  const [newTweet, setNewTweet] = useState(null); // ✅ 새 트윗 상태 추가
+  const [showReplyModal, setShowReplyModal] = useState(false); // ✅ 댓글용 모달 상태
+  const [newTweet, setNewTweet] = useState(null);
   const location = useLocation();
+
+  // ✅ 경로 판별
   const isFinalHome =
     location.pathname.startsWith('/finalhome') && !location.pathname.includes('/studyList');
+
+  const isTweetDetail =
+    !!matchPath({ path: '/finalhome/:id', end: true }, location.pathname) &&
+    !matchPath({ path: '/finalhome/user/:username' }, location.pathname);
+
+  // ✅ 게시/댓글 버튼 클릭 시 동작
+  const handleTweetClick = () => {
+    if (isTweetDetail) setShowReplyModal(true);
+    else setShowTweetModal(true);
+  };
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
@@ -19,7 +33,7 @@ export default function Layout() {
           {/* Left Sidebar */}
           <div className="w-20 lg:w-64 flex-shrink-0">
             <div className="fixed w-20 lg:w-64 h-full z-10">
-              <Sidebar onTweetClick={() => setShowTweetModal(true)} />
+              <Sidebar onTweetClick={handleTweetClick} /> {/* ✅ 경로별로 모달 분기 */}
             </div>
           </div>
 
@@ -43,7 +57,15 @@ export default function Layout() {
       {showTweetModal && (
         <TweetModal
           onClose={() => setShowTweetModal(false)}
-          onTweetCreated={tweet => setNewTweet(tweet)} // 새 트윗 데이터 저장
+          onTweetCreated={tweet => setNewTweet(tweet)}
+        />
+      )}
+
+      {/* ✅ 댓글 작성 모달 */}
+      {showReplyModal && (
+        <ReplyModal
+          tweetId={location.pathname.split('/').pop()!} // URL 마지막 부분을 tweetId로 전달
+          onClose={() => setShowReplyModal(false)}
         />
       )}
     </div>
