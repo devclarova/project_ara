@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import DOMPurify from 'dompurify'; // ✅ 추가
 
 interface User {
   name: string;
@@ -20,7 +21,7 @@ interface Stats {
 interface TweetCardProps {
   id: string;
   user: User;
-  content: string;
+  content: string; // HTML 문자열 가능
   image?: string;
   timestamp: string;
   stats: Stats;
@@ -32,23 +33,15 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
   const [retweeted, setRetweeted] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
 
-  const handleCardClick = () => {
-    // Navigate to tweet detail page using the actual tweet ID
-    navigate(`/finalhome/${id}`);
-  };
-
+  const handleCardClick = () => navigate(`/finalhome/${id}`);
   const handleAvatarClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent tweet card click
-    // Navigate to user's profile page
+    e.stopPropagation();
     navigate(`/finalhome/user/${user.username}`);
   };
 
-  const handleActionClick = (e: React.MouseEvent, action: () => void) => {
-    e.stopPropagation();
-    action();
-  };
+  // ✅ HTML 문자열을 안전하게 렌더링할 준비
+  const safeContent = DOMPurify.sanitize(content);
 
-  // Normalize stats to handle different property names
   const normalizedStats = {
     replies: stats.replies || stats.comments || 0,
     retweets: stats.retweets || 0,
@@ -63,12 +56,12 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
     >
       <div className="flex space-x-3">
         <div onClick={handleAvatarClick} className="cursor-pointer">
-          {/* <Avatar src={user.avatar} alt={user.name} size="md" /> */}
           <Avatar className="w-10 h-10">
             <AvatarImage src={user.avatar || '/default-avatar.svg'} alt={user.name} />
             <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
           </Avatar>
         </div>
+
         <div className="flex-1 min-w-0">
           {/* User Info */}
           <div className="flex items-center space-x-1 flex-wrap">
@@ -83,24 +76,28 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
             <span className="text-gray-500 flex-shrink-0">{timestamp}</span>
           </div>
 
-          {/* Tweet Content */}
-          <div className="mt-1">
-            <p className="text-gray-900 whitespace-pre-wrap break-words">{content}</p>
+          {/* ✅ Tweet Content (HTML 렌더링) */}
+          <div
+            className="mt-1 text-gray-900 text-[15px] leading-snug whitespace-pre-line break-words"
+            dangerouslySetInnerHTML={{ __html: safeContent }}
+          />
 
-            {/* Tweet Image */}
-            {image && (
-              <div className="mt-3 rounded-2xl overflow-hidden border border-gray-200">
-                <img src={image} alt="Tweet image" className="w-full h-auto object-cover" />
-              </div>
-            )}
-          </div>
+          {/* Tweet Image */}
+          {image && (
+            <div className="mt-3 rounded-2xl overflow-hidden border border-gray-200">
+              <img src={image} alt="Tweet image" className="w-full h-auto object-cover" />
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex items-center justify-between max-w-md mt-3 text-gray-500">
             {/* Reply */}
             <button
               className="flex items-center space-x-2 hover:text-blue-500 transition-colors group"
-              onClick={e => handleActionClick(e, () => navigate(`/tweet/${id}`))}
+              onClick={e => {
+                e.stopPropagation();
+                navigate(`/tweet/${id}`);
+              }}
             >
               <div className="p-2 rounded-full group-hover:bg-blue-50 transition-colors">
                 <i className="ri-chat-3-line text-lg"></i>
@@ -113,7 +110,10 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
               className={`flex items-center space-x-2 transition-colors group ${
                 retweeted ? 'text-green-500' : 'hover:text-green-500'
               }`}
-              onClick={e => handleActionClick(e, () => setRetweeted(!retweeted))}
+              onClick={e => {
+                e.stopPropagation();
+                setRetweeted(!retweeted);
+              }}
             >
               <div className="p-2 rounded-full group-hover:bg-green-50 transition-colors">
                 <i className="ri-repeat-line text-lg"></i>
@@ -126,7 +126,10 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
               className={`flex items-center space-x-2 transition-colors group ${
                 liked ? 'text-red-500' : 'hover:text-red-500'
               }`}
-              onClick={e => handleActionClick(e, () => setLiked(!liked))}
+              onClick={e => {
+                e.stopPropagation();
+                setLiked(!liked);
+              }}
             >
               <div className="p-2 rounded-full group-hover:bg-red-50 transition-colors">
                 <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg`}></i>
@@ -147,7 +150,10 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
               className={`flex items-center space-x-2 transition-colors group ${
                 bookmarked ? 'text-blue-500' : 'hover:text-blue-500'
               }`}
-              onClick={e => handleActionClick(e, () => setBookmarked(!bookmarked))}
+              onClick={e => {
+                e.stopPropagation();
+                setBookmarked(!bookmarked);
+              }}
             >
               <div className="p-2 rounded-full group-hover:bg-blue-50 transition-colors">
                 <i
