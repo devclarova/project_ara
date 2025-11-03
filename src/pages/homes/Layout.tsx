@@ -12,6 +12,11 @@ export default function Layout() {
   const isFinalHome =
     location.pathname.startsWith('/finalhome') && !location.pathname.includes('/studyList');
 
+  // 채팅/DM 경로 플래그
+  const isChatRoute =
+    location.pathname.startsWith('/finalhome/chat') ||
+    location.pathname.startsWith('/finalhome/dm');
+
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
       <div className="flex justify-center min-h-screen">
@@ -24,12 +29,18 @@ export default function Layout() {
           </div>
 
           {/* Central Outlet → Home으로 새 트윗 전달 */}
-          <div className="w-full max-w-2xl min-w-[320px] sm:min-w-[400px] mx-6 relative">
+          <div
+            className={
+              isChatRoute
+                ? 'w-full max-w-[1120px] mx-6 relative' // 🔹 채팅 화면만 넓게
+                : 'w-full max-w-2xl min-w-[320px] sm:min-w-[400px] mx-6 relative'
+            }
+          >
             <Outlet context={{ newTweet, setNewTweet }} />
           </div>
 
           {/* Right Trends */}
-          {isFinalHome && (
+          {isFinalHome && !isChatRoute && (
             <div className="hidden xl:block w-80 flex-shrink-0">
               <div className="sticky top-0 h-screen">
                 <TrendsPanel />
