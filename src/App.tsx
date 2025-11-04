@@ -51,6 +51,7 @@ import { NewChatNotificationProvider } from './contexts/NewChatNotificationConte
 import { DirectChatProider } from './contexts/DirectChatContext';
 import DirectChatPage from './pages/chat/DirectChatPage';
 import { Toaster } from './components/ui/sonner';
+import HNotificationsPage from './pages/homes/notifications/HNotificationsPage';
 
 function RequireAuth() {
   const { session, loading } = useAuth();
@@ -134,7 +135,7 @@ const App = () => {
                           {/* <Route path="finalhome" element={<Home />} /> */}
                           <Route path="hometest" element={<HomesTest />} />
                           <Route path="profileasap" element={<ProfileAsap />} />
-                          <Route path="notifications1" element={<Notifications />} />
+                          <Route path="notifications1" element={<HNotificationsPage />} />
                           <Route path="studyList" element={<StudyListPage />} />
                           <Route path="chat" element={<DirectChatPage />} />
                         </Route>

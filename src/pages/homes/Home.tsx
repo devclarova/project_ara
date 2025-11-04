@@ -178,7 +178,8 @@ export default function Home() {
       .channel('tweets-views-realtime')
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'tweets', filter: 'view_count=not.is.null' },
+        // { event: 'UPDATE', schema: 'public', table: 'tweets', filter: 'view_count=not.is.null' },
+        { event: 'UPDATE', schema: 'public', table: 'tweets' },
         payload => {
           const tweetId = (payload.new as any)?.id;
           const newViewCount = (payload.new as any)?.view_count;
@@ -206,7 +207,7 @@ export default function Home() {
   }
 
   return (
-    <div className='lg:border-x border-gray-200'>
+    <div className="lg:border-x border-gray-200">
       {/* Header */}
       <div className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-gray-200 p-4 z-20">
         <h1 className="text-xl font-bold text-gray-900">홈</h1>

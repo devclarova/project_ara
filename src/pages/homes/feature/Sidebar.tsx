@@ -74,7 +74,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
 
   const navigationItems = [
     { icon: 'ri-home-5-fill', label: '홈', path: '/finalhome' },
-    { icon: 'ri-notification-3-line', label: '알림', path: '/notifications1' },
+    { icon: 'ri-notification-3-line', label: '알림', path: '/finalhome/notifications1' },
     { icon: 'ri-chat-3-line', label: '채팅', path: '/finalhome/chat' },
     { icon: 'ri-user-line', label: '프로필', onClick: handleProfileClick },
     { icon: 'ri-youtube-line', label: '학습', path: '/studyList' },
@@ -112,7 +112,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
                 onClick={() => handleNavigation(item.path, item.onClick)}
                 className={`w-full flex items-center justify-center lg:justify-start space-x-0 lg:space-x-4 px-2 lg:px-4 py-3 rounded-full transition-colors cursor-pointer whitespace-nowrap ${
                   location.pathname === item.path
-                    ? 'bg-blue-50 text-primary'
+                    ? 'bg-primary/10 text-primary'
                     : 'hover:bg-primary/5 text-gray-700'
                 }`}
               >

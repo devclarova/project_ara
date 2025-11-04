@@ -92,14 +92,15 @@ export default function TweetDetail() {
       const now = Date.now();
 
       // 24시간 내 중복 조회 방지
-      if (lastViewed && now - lastViewed < 24 * 60 * 60 * 1000) return;
+      // if (lastViewed && now - lastViewed < 24 * 60 * 60 * 1000) return;
 
-      const { error } = await supabase
-        .from('tweets')
-        .update({ view_count: (tweet?.stats?.views ?? 0) + 1 })
-        .eq('id', tweetId);
+      // ✅ Supabase RPC 함수로 view_count + 1
+      const { error } = await supabase.rpc('increment_tweet_view', {
+        tweet_id_input: tweetId,
+      });
 
-      if (error) console.error('조회수 업데이트 실패:', error.message);
+      if (error) console.error('조회수 RPC 실패:', error.message);
+
       viewedTweets[tweetId] = now;
       localStorage.setItem('viewedTweets', JSON.stringify(viewedTweets));
     } catch (err) {

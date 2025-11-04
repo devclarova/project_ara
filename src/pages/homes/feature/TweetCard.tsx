@@ -111,7 +111,7 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
       navigate(`/finalhome/${id}`);
 
       //  Supabase에서 view_count + 1 업데이트
-      await supabase.rpc('increment_tweet_view', { tweet_id_input: id });
+      // await supabase.rpc('increment_tweet_view', { tweet_id_input: id });
     } catch (err) {
       console.error('❌ 조회수 업데이트 실패:', err);
     }
@@ -124,36 +124,36 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
 
   const safeContent = DOMPurify.sanitize(content);
 
-  useEffect(() => {
-    //  개별 트윗의 view_count 변경 실시간 감시
-    const channel = supabase
-      .channel(`tweet-${id}-views`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'tweets',
-          filter: `id=eq.${id}`,
-        },
-        payload => {
-          const newViewCount = (payload.new as any)?.view_count;
-          if (newViewCount !== undefined) {
-            setLikeCount(prev => prev); // 유지
-            //  local 상태(stats.views) 갱신
-            setLocalStats(prev => ({
-              ...prev,
-              views: newViewCount,
-            }));
-          }
-        },
-      )
-      .subscribe();
+  // useEffect(() => {
+  //   //  개별 트윗의 view_count 변경 실시간 감시
+  //   const channel = supabase
+  //     .channel(`tweet-${id}-views`)
+  //     .on(
+  //       'postgres_changes',
+  //       {
+  //         event: 'UPDATE',
+  //         schema: 'public',
+  //         table: 'tweets',
+  //         filter: `id=eq.${id}`,
+  //       },
+  //       payload => {
+  //         const newViewCount = (payload.new as any)?.view_count;
+  //         if (newViewCount !== undefined) {
+  //           setLikeCount(prev => prev); // 유지
+  //           //  local 상태(stats.views) 갱신
+  //           setLocalStats(prev => ({
+  //             ...prev,
+  //             views: newViewCount,
+  //           }));
+  //         }
+  //       },
+  //     )
+  //     .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [id]);
+  //   return () => {
+  //     supabase.removeChannel(channel);
+  //   };
+  // }, [id]);
 
   return (
     <div
