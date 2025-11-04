@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import RichTextEditor from '../editor/RichTextEditor';
+import { toast } from 'sonner';
 
 interface TweetModalProps {
   onClose: () => void;
@@ -137,7 +138,8 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
       };
 
       onTweetCreated?.(newTweet);
-      alert('✅ 트윗이 성공적으로 업로드되었습니다!');
+      // alert('트윗이 성공적으로 업로드되었습니다!');
+      toast.success('트윗이 성공적으로 업로드되었습니다!');
       onClose();
     } catch (err) {
       console.error('⚠️ 트윗 업로드 오류:', err);

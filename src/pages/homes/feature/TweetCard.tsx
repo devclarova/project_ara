@@ -5,6 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import ReactCountryFlag from 'react-country-flag';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 
 interface User {
   name: string;
@@ -40,7 +43,7 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
   const [profileId, setProfileId] = useState<string | null>(null);
   const [localStats, setLocalStats] = useState(stats);
 
-  // ✅ 로그인된 유저의 profiles.id 조회
+  //  로그인된 유저의 profiles.id 조회
   useEffect(() => {
     const loadProfileId = async () => {
       if (!authUser) return;
@@ -55,7 +58,7 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
     loadProfileId();
   }, [authUser]);
 
-  // ✅ 초기 좋아요 여부 확인
+  //  초기 좋아요 여부 확인
   useEffect(() => {
     const checkLike = async () => {
       if (!profileId) return;
@@ -71,7 +74,7 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
     checkLike();
   }, [id, profileId]);
 
-  // ✅ 좋아요 토글 함수
+  //  좋아요 토글 함수
   const handleLikeToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!authUser || !profileId) return alert('로그인이 필요합니다.');
@@ -101,7 +104,19 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
     }
   };
 
-  const handleCardClick = () => navigate(`/finalhome/${id}`);
+  // const handleCardClick = () => navigate(`/finalhome/${id}`);
+  const handleCardClick = async () => {
+    try {
+      // 먼저 상세페이지로 이동
+      navigate(`/finalhome/${id}`);
+
+      //  Supabase에서 view_count + 1 업데이트
+      await supabase.rpc('increment_tweet_view', { tweet_id_input: id });
+    } catch (err) {
+      console.error('❌ 조회수 업데이트 실패:', err);
+    }
+  };
+
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/finalhome/user/${user.name}`);
@@ -110,7 +125,7 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
   const safeContent = DOMPurify.sanitize(content);
 
   useEffect(() => {
-    // ✅ 개별 트윗의 view_count 변경 실시간 감시
+    //  개별 트윗의 view_count 변경 실시간 감시
     const channel = supabase
       .channel(`tweet-${id}-views`)
       .on(
@@ -125,7 +140,7 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
           const newViewCount = (payload.new as any)?.view_count;
           if (newViewCount !== undefined) {
             setLikeCount(prev => prev); // 유지
-            // ✅ local 상태(stats.views) 갱신
+            //  local 상태(stats.views) 갱신
             setLocalStats(prev => ({
               ...prev,
               views: newViewCount,
@@ -161,12 +176,60 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
               className="font-bold text-gray-900 hover:underline cursor-pointer truncate"
               onClick={e => {
                 e.stopPropagation();
-                navigate(`/finalhome/user/${user.username}`);
+                navigate(`/finalhome/user/${user.name}`);
               }}
             >
               {user.name}
             </span>
-            <span className="text-gray-500 truncate">@{user.username}</span>
+            {/* <span className="text-gray-500 truncate">@{user.username}</span> */}
+
+            {/* <ReactCountryFlag
+              countryCode="KR" // 🇺🇸 표시
+              svg
+              style={{
+                fontSize: '1em', // 텍스트 높이에 맞춤
+                lineHeight: '1em',
+                verticalAlign: 'middle', // 세로 정렬
+              }}
+              title="United States"
+            /> */}
+
+            {/* 툴팁 */}
+            {/* <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <ReactCountryFlag
+                      countryCode="US"
+                      svg
+                      style={{
+                        fontSize: '1em', // 텍스트 높이에 맞춤
+                        lineHeight: '1em',
+                        verticalAlign: 'middle',
+                      }}
+                    />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-sm">
+                  검은 머리 외국인
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider> */}
+
+            {/* 배지 */}
+            <Badge variant="secondary" className="flex items-center gap-1 px-2 py-1">
+              <ReactCountryFlag
+                countryCode="KR"
+                svg
+                style={{
+                  fontSize: '1em',
+                  lineHeight: '1em',
+                  verticalAlign: 'middle',
+                }}
+              />
+              {/* <span className="text-xs font-medium">United States</span> */}
+            </Badge>
+
             <span className="text-gray-500">·</span>
             <span className="text-gray-500 flex-shrink-0">{timestamp}</span>
           </div>
@@ -199,7 +262,7 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
             </button>
 
             {/* Retweet */}
-            <button
+            {/* <button
               className={`flex items-center space-x-2 transition-colors group ${
                 retweeted ? 'text-green-500' : 'hover:text-green-500'
               }`}
@@ -212,7 +275,7 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
                 <i className="ri-repeat-line text-lg"></i>
               </div>
               <span className="text-sm">{stats.retweets ?? 0}</span>
-            </button>
+            </button> */}
 
             {/* Like */}
             <button
@@ -228,7 +291,7 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
             </button>
 
             {/* Views */}
-            <button className="flex items-center space-x-2 hover:text-blue-500 transition-colors group">
+            <button className="flex items-center space-x-2 hover:text-green-500 transition-colors group">
               <div className="p-2 rounded-full group-hover:bg-blue-50 transition-colors">
                 <i className="ri-eye-line text-lg"></i>
               </div>
@@ -236,7 +299,7 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
             </button>
 
             {/* Bookmark */}
-            <button
+            {/* <button
               className={`flex items-center space-x-2 transition-colors group ${
                 bookmarked ? 'text-blue-500' : 'hover:text-blue-500'
               }`}
@@ -250,7 +313,7 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
                   className={`${bookmarked ? 'ri-bookmark-fill' : 'ri-bookmark-line'} text-lg`}
                 ></i>
               </div>
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
