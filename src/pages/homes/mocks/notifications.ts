@@ -19,8 +19,8 @@ export const mockNotifications: {
     id: '1',
     type: 'like',
     user: {
-      name: '수하',
-      username: 'suha20',
+      name: '뭄뭄',
+      username: 'moo',
       avatar: '/default-avatar.svg',
     },
     action: '님이 회원님의 글을 좋아합니다',
