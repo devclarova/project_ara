@@ -2,10 +2,15 @@ import CategoryTabs from '@/components/study/CategoryTabs';
 import ContentCard from '@/components/study/ContentCard';
 import FilterDropdown from '@/components/study/FilterDropdown';
 import SearchBar from '@/components/ui/SearchBar';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Study } from '../types/study';
 import Sidebar from './homes/feature/Sidebar';
+import { useSearchParams } from 'react-router-dom';
+
+type TCategory = '전체' | '드라마' | '영화' | '예능' | '음악';
+
+const ALL_CATEGORIES: TCategory[] = ['전체', '드라마', '영화', '예능', '음악'];
 
 const StudyListPage = () => {
   const [clips, setClips] = useState<Study[]>([]);
@@ -14,34 +19,66 @@ const StudyListPage = () => {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<
-    '전체' | '드라마' | '영화' | '예능' | '음악'
-  >('전체');
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // ✅ 쿼리에서 초기 category 읽기 (유효하지 않으면 '전체')
+  const initialCategory: TCategory = useMemo(() => {
+    const q = searchParams.get('category') ?? '전체';
+    return (ALL_CATEGORIES.includes(q as TCategory) ? q : '전체') as TCategory;
+  }, [searchParams]);
+
+  const displayCategory: TCategory = useMemo(() => {
+    const q = searchParams.get('category') ?? '전체';
+    return (ALL_CATEGORIES.includes(q as TCategory) ? q : '전체') as TCategory;
+  }, [searchParams]);
+
+  const [activeCategory, setActiveCategory] = useState<TCategory>(initialCategory);
 
   const limit = 9; // 한 페이지당 9개 (3x3 그리드)
+
+  // 쿼리에서 content 읽기
+  const contentFilter = useMemo(() => {
+    const raw = searchParams.get('content')?.trim() ?? '';
+    return raw.length ? raw : '';
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchData = async () => {
       const from = (page - 1) * limit;
       const to = from + limit - 1;
 
+      // 기본 셀렉트
       let query = supabase
         .from('study')
         .select('*, video(*,runtime_bucket)', { count: 'exact' })
         .order('id', { ascending: true });
 
-      // 카테고리 필터
-      if (activeCategory !== '전체') {
-        query = query.select('*, video!inner(*)').eq('video.categories', activeCategory);
+      // 카테고리/콘텐츠 중 하나라도 필터가 있으면 INNER JOIN 로 전환해 정확히 필터
+      const needsCategory = activeCategory !== '전체';
+      const needsContent = !!contentFilter;
+
+      if (needsCategory || needsContent) {
+        query = supabase
+          .from('study')
+          .select('*, video!inner(*,runtime_bucket)', { count: 'exact' })
+          .order('id', { ascending: true });
+
+        if (needsCategory) {
+          query = query.eq('video.categories', activeCategory);
+        }
+        if (needsContent) {
+          // 완전 일치: eq / 부분매칭 원하면 ilike로 교체
+          query = query.eq('video.contents', contentFilter);
+          // query = query.ilike('video.contents', `%${contentFilter}%`);
+        }
       }
 
-      // 키워드 검색
       if (keyword.trim()) {
         query = query.or(`title.ilike.%${keyword}%,short_description.ilike.%${keyword}%`);
       }
 
       const { data, count, error } = await query.range(from, to);
-
       if (error) {
         console.error('❌ 데이터 불러오기 오류:', error.message);
         return;
@@ -51,7 +88,7 @@ const StudyListPage = () => {
     };
 
     fetchData();
-  }, [page, activeCategory, keyword]);
+  }, [page, activeCategory, keyword, contentFilter]);
 
   const filteredClips =
     activeCategory === '전체'
@@ -62,6 +99,12 @@ const StudyListPage = () => {
           }),
         );
 
+  // URL이 바뀌면 탭/페이지도 맞춰주기
+  useEffect(() => {
+    setActiveCategory(initialCategory);
+    setPage(1);
+  }, [initialCategory, contentFilter]);
+
   const totalPages = Math.ceil(total / limit);
 
   const handleKeywordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,8 +113,16 @@ const StudyListPage = () => {
   };
 
   const handleCategoryChange = (c: string) => {
-    setActiveCategory(c as typeof activeCategory);
-    setPage(1); // 카테고리 변경 시 1페이지로
+    const next = (ALL_CATEGORIES.includes(c as TCategory) ? c : '전체') as TCategory;
+    setActiveCategory(next);
+    setPage(1);
+    if (next === '전체') {
+      // 전체면 쿼리 제거
+      searchParams.delete('category');
+      setSearchParams(searchParams, { replace: true });
+    } else {
+      setSearchParams({ category: next }, { replace: true });
+    }
   };
 
   return (
@@ -95,7 +146,7 @@ const StudyListPage = () => {
               <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 border-b border-gray-200">
                 {/* 왼쪽: 카테고리 + 모바일용 검색 아이콘 */}
                 <div className="flex items-center justify-between">
-                  <CategoryTabs active={activeCategory} onChange={handleCategoryChange} />
+                  <CategoryTabs active={displayCategory} onChange={handleCategoryChange} />
 
                   {/* 모바일 전용 검색 버튼 (카테고리 옆에 위치) */}
                   <button
@@ -122,13 +173,13 @@ const StudyListPage = () => {
                   </div>
                 </div>
 
-                {/* 모바일: 검색 + 필터 통합 모달 */}
+                {/* 모바일: 검색 전용 모달  */}
                 {showSearch && (
                   <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-20 md:hidden">
                     <div className="bg-white w-[90%] max-w-sm rounded-xl shadow-lg p-4 flex flex-col gap-4">
                       {/* 헤더 */}
                       <div className="flex justify-between items-center">
-                        <h2 className="text-base font-semibold text-gray-800">검색 및 필터</h2>
+                        <h2 className="text-base font-semibold text-gray-800">검색</h2>
                         <button
                           onClick={() => setShowSearch(false)}
                           className="text-gray-500 hover:text-gray-800"
@@ -138,26 +189,18 @@ const StudyListPage = () => {
                         </button>
                       </div>
 
-                      {/* 필터 + 검색 */}
-                      <div className="flex flex-col sm:flex-row items-center gap-3 mt-3">
-                        {/* 필터 */}
-                        <div className="flex items-center w-full sm:w-auto">
-                          <FilterDropdown />
-                        </div>
-
-                        {/* 검색 */}
-                        <div className="h-10 flex items-center w-full sm:w-auto">
-                          <SearchBar
-                            autoFocus
-                            placeholder="검색어를 입력해주세요"
-                            value={keyword}
-                            onChange={handleKeywordChange}
-                            onSubmit={q => {
-                              console.log('검색어:', q); // 실제 검색 로직
-                              setShowSearch(false); // 검색 후 모달 닫기
-                            }}
-                          />
-                        </div>
+                      {/* 검색만 표시 */}
+                      <div className="mt-2">
+                        <SearchBar
+                          autoFocus
+                          placeholder="검색어를 입력해주세요"
+                          value={keyword}
+                          onChange={handleKeywordChange}
+                          onSubmit={q => {
+                            console.log('검색어:', q); // 실제 검색 로직 연결
+                            setShowSearch(false); // 검색 후 모달 닫기
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
