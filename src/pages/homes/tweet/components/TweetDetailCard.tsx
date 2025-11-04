@@ -1,6 +1,9 @@
+// src/pages/homes/tweet/components/TweetDetailCard.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import DOMPurify from 'dompurify';
+
 interface User {
   name: string;
   username: string;
@@ -37,11 +40,9 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
 
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Navigate to user's profile page
-    navigate(`/finalhome/user/${tweet.user.username}`);
+    navigate(`/finalhome/user/${tweet.user.name}`);
   };
 
-  // Normalize stats to handle different property names
   const normalizedStats = {
     replies: tweet.stats.replies || tweet.stats.comments || 0,
     retweets: tweet.stats.retweets || 0,
@@ -53,7 +54,6 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
     <div className="border-b border-gray-200 px-4 py-6">
       <div className="flex space-x-3">
         <div onClick={handleAvatarClick} className="cursor-pointer">
-          {/* <Avatar src={tweet.user.avatar} alt={tweet.user.name} size="md" /> */}
           <Avatar>
             <AvatarImage src={tweet.user.avatar || '/default-avatar.svg'} alt={tweet.user.name} />
             <AvatarFallback>{tweet.user.name.charAt(0)}</AvatarFallback>
@@ -75,11 +75,17 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
 
       {/* Tweet Content */}
       <div className="mt-4">
-        <p className="text-gray-900 text-xl leading-relaxed whitespace-pre-wrap break-words">
-          {tweet.content}
-        </p>
+        <div
+          className="text-gray-900 text-xl leading-relaxed break-words"
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(tweet.content, {
+              ADD_TAGS: ['iframe', 'video', 'source', 'img'],
+              ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
+            }),
+          }}
+        />
 
-        {/* Tweet Image */}
+        {/* Tweet Image (fallback for old content) */}
         {tweet.image && (
           <div className="mt-4 rounded-2xl overflow-hidden border border-gray-200">
             <img src={tweet.image} alt="Tweet image" className="w-full h-auto object-cover" />

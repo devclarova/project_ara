@@ -46,6 +46,7 @@ import SignUpWizard from './pages/SignUpWizard';
 import OnboardingWall from './routes/guards/OnboardingWall';
 import ProfileAsap from './pages/homes/profile/ProfileAsap';
 import TweetDetail from './pages/homes/tweet/TweetDetail';
+import Notifications from './pages/homes/Notifications';
 import { NewChatNotificationProvider } from './contexts/NewChatNotificationContext';
 import { DirectChatProider } from './contexts/DirectChatContext';
 import DirectChatPage from './pages/chat/DirectChatPage';
@@ -123,7 +124,6 @@ const App = () => {
                         </Route>
                         {/* <Route path="/home" element={<HomePage />} /> */}
                         {/* <Route path="/finalhome" element={<Home />}></Route> */}
-
                         {/* 공통 레이아웃 (좌측 Sidebar / 중앙 Outlet / 우측 Trends) */}
                         <Route path="/finalhome" element={<Layout />}>
                           {/* 기본 진입은 홈으로 */}
@@ -133,7 +133,8 @@ const App = () => {
                           {/* <Route path="finalhome" element={<Home />} /> */}
                           <Route path="hometest" element={<HomesTest />} />
                           <Route path="profileasap" element={<ProfileAsap />} />
-                          {/* <Route path="studyList" element={<StudyListPage />} /> */}
+                          <Route path="notifications1" element={<Notifications />} />
+                          <Route path="studyList" element={<StudyListPage />} />
                           <Route path="chat" element={<DirectChatPage />} />
                         </Route>
                       </Route>

@@ -7,8 +7,8 @@ export default function ProfileTabs({ activeTab, onTabChange }: ProfileTabsProps
   const tabs = [
     { id: 'posts', label: 'Posts' },
     { id: 'replies', label: 'Replies' },
-    { id: 'highlights', label: 'Highlights' },
-    { id: 'media', label: 'Media' },
+    // { id: 'highlights', label: 'Highlights' },
+    // { id: 'media', label: 'Media' },
     { id: 'likes', label: 'Likes' }
   ];
 

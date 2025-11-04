@@ -980,6 +980,42 @@ export type Database = {
           },
         ]
       }
+      tweet_likes: {
+        Row: {
+          created_at: string | null
+          id: string
+          tweet_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          tweet_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          tweet_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tweet_likes_tweet_id_fkey"
+            columns: ["tweet_id"]
+            isOneToOne: false
+            referencedRelation: "tweets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tweet_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tweet_media: {
         Row: {
           created_at: string | null
@@ -1528,6 +1564,10 @@ export type Database = {
         | { Args: { _lang: string; _nickname: string }; Returns: boolean }
         | { Args: { _nickname: string }; Returns: boolean }
       record_login: { Args: never; Returns: undefined }
+      runtime_bucket: {
+        Args: { v: Database["public"]["Tables"]["video"]["Row"] }
+        Returns: string
+      }
       set_nickname: {
         Args: {
           p_lang: Database["public"]["Enums"]["nickname_lang_enum"]

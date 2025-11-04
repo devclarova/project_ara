@@ -48,7 +48,7 @@ const InputField: React.FC<InputFieldProps> = ({
           onChange={e => onChange(e.target.value)}
           onBlur={onBlur}
           placeholder=" "
-          className={`peer w-full h-12 px-4 pr-20 border bg-white text-gray-900 text-sm
+          className={`peer w-full h-12 px-4 pr-20 border bg-white text-gray-900 text-sm dark:bg-secondary dark:text-gray-100
             ${error ? 'ara-focus--error' : 'ara-focus'} ara-rounded ${error ? '' : 'border-gray-300'}`}
           {...inputProps}
         />
@@ -57,7 +57,7 @@ const InputField: React.FC<InputFieldProps> = ({
         <label
           htmlFor={id}
           className={`
-            pointer-events-none absolute left-3 sm:left-4 bg-white/95 px-1 rounded
+            pointer-events-none absolute left-3 sm:left-4 bg-white/95 px-1 rounded dark:bg-secondary
             text-gray-400 transition-all duration-150
             ${value ? '-top-2 text-xs' : 'top-3 text-sm'}
             peer-focus:-top-2 peer-focus:text-xs peer-focus:text-primary
