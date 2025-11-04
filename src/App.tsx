@@ -50,6 +50,7 @@ import Notifications from './pages/homes/Notifications';
 import { NewChatNotificationProvider } from './contexts/NewChatNotificationContext';
 import { DirectChatProider } from './contexts/DirectChatContext';
 import DirectChatPage from './pages/chat/DirectChatPage';
+import { Toaster } from './components/ui/sonner';
 
 function RequireAuth() {
   const { session, loading } = useAuth();
@@ -155,6 +156,7 @@ const App = () => {
               <div className="h-[calc(4rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden />
             </div> */}
               </div>
+              <Toaster />
               {/* <InflearnNav /> */}
             </Router>
           </PostProvider>

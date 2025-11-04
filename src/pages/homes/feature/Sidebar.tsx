@@ -18,14 +18,20 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
 
+  // ✅ 홈 페이지 여부
+  const isHome = location.pathname === '/finalhome';
+
   // ✅ 현재 경로가 트윗 상세 페이지인지 확인
   const detailMatch = matchPath({ path: '/finalhome/:id', end: true }, location.pathname);
   const isTweetDetail =
     !!detailMatch &&
     !!detailMatch.params.id &&
-    !['user', 'studyList', 'hometest', 'profileasap'].includes(detailMatch.params.id);
+    !['user', 'studyList', 'hometest', 'profileasap', 'chat'].includes(detailMatch.params.id);
 
   const actionLabel = isTweetDetail ? '댓글달기' : '게시하기';
+
+  // ✅ 홈 또는 상세 페이지에서만 버튼 보이기
+  const showPostButton = isHome || isTweetDetail;
 
   // ✅ DB에서 로그인한 유저의 프로필 불러오기
   useEffect(() => {
@@ -107,7 +113,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
                 className={`w-full flex items-center justify-center lg:justify-start space-x-0 lg:space-x-4 px-2 lg:px-4 py-3 rounded-full transition-colors cursor-pointer whitespace-nowrap ${
                   location.pathname === item.path
                     ? 'bg-blue-50 text-primary'
-                    : 'hover:bg-gray-100 text-gray-700'
+                    : 'hover:bg-primary/5 text-gray-700'
                 }`}
               >
                 <i
@@ -120,13 +126,15 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
         </ul>
 
         {/* ✅ 게시하기 / 댓글달기 버튼 */}
-        <button
-          onClick={onTweetClick}
-          className="w-full bg-primary hover:bg-primary/80 text-white font-bold py-3 px-2 lg:px-8 rounded-full mt-6 transition-colors cursor-pointer whitespace-nowrap"
-        >
-          <span className="hidden lg:block">{actionLabel}</span>
-          <i className="ri-add-line text-xl lg:hidden"></i>
-        </button>
+        {showPostButton && (
+          <button
+            onClick={onTweetClick}
+            className="w-full bg-primary hover:bg-primary/80 text-white font-bold py-3 px-2 lg:px-8 rounded-full mt-6 transition-colors cursor-pointer whitespace-nowrap"
+          >
+            <span className="hidden lg:block">{actionLabel}</span>
+            <i className="ri-add-line text-xl lg:hidden"></i>
+          </button>
+        )}
       </nav>
 
       {/* User Profile */}
