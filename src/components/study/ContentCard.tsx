@@ -1,7 +1,7 @@
 import type { StudyListProps } from '@/types/study';
 import { useNavigate } from 'react-router-dom';
 
-const InfoItem = ({ icon, text }: { icon: string; text?: string }) => {
+export const InfoItem = ({ icon, text }: { icon: string; text?: string }) => {
   return (
     <span className="flex items-center gap-1 text-xs sm:text-[12px] md:text-sm text-gray-600 leading-none">
       <i className={`${icon} text-[13px] relative top-[0.5px]`} />
@@ -66,7 +66,7 @@ const ContentCard = ({
 
                 {/* 오른쪽 아이템 */}
                 <div className="flex items-center justify-start w-1/2 pl-3">
-                  {scene && <InfoItem icon="ri-clapperboard-line" text={scene} />}
+                  {scene && <InfoItem icon="ri-clapperboard-line" text={`${scene}`} />}
                 </div>
               </div>
             )}
