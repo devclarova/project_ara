@@ -17,7 +17,7 @@ export default function CheckboxSquare({
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
-  label: string;
+  label?: string;
   required?: boolean;
   id?: string;
   className?: string;

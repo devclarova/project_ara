@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import CheckboxSquare from '../common/CheckboxSquare';
 
 export type TDifficulty = '' | '초급' | '중급' | '고급';
 
@@ -35,10 +36,14 @@ const FilterDropdown = ({ value, onApply }: FilterDropdownProps) => {
     <div ref={dropdownRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 h-10 text-primary border border-primary rounded-button hover:text-primary/80 transition-all whitespace-nowrap"
+        className={[
+          'flex items-center gap-2 px-3 h-10 rounded-button transition-all whitespace-nowrap',
+          value
+            ? 'text-primary dark:text-primary'
+            : 'text-gray-600 dark:text-gray-300 hover:text-black',
+        ].join(' ')}
       >
-        {/* 난이도 적용 시 왼쪽에 텍스트 표시 */}
-        {value && <span className="text-sm">{`${value}`}</span>}
+        {value && <span className="text-sm">{value}</span>}
         <i className="ri-filter-line text-2xl" />
       </button>
 
@@ -49,33 +54,16 @@ const FilterDropdown = ({ value, onApply }: FilterDropdownProps) => {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium text-gray-700">난이도</h3>
-                <button
-                  className="text-xs text-gray-500 hover:text-gray-800"
-                  onClick={() => setDraft('')}
-                  type="button"
-                >
-                  초기화
-                </button>
               </div>
               <div className="space-y-2">
                 <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="difficulty"
-                    value=""
-                    className="form-radio text-primary"
-                    checked={draft === ''}
-                    onChange={() => setDraft('')}
-                  />
+                  <CheckboxSquare checked={draft === ''} onChange={() => setDraft('')} />
                   <span className="ml-2 text-sm text-gray-600">전체</span>
                 </label>
                 {DIFFS.map(label => (
                   <label key={label} className="flex items-center">
-                    <input
-                      type="radio"
-                      name="difficulty"
-                      value={label}
-                      className="form-radio text-primary"
+                    <CheckboxSquare
+                      key={label}
                       checked={draft === label}
                       onChange={() => setDraft(label)}
                     />
@@ -120,7 +108,7 @@ const FilterDropdown = ({ value, onApply }: FilterDropdownProps) => {
               </select>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end pt-2 gap-2">
               <button
                 onClick={() => setOpen(false)} // ← 취소용이라면 OK, 하지만 적용은 아래 버튼에서!
                 className="px-3 py-2 text-sm text-gray-700 bg-gray-100 rounded-button"

@@ -48,7 +48,9 @@ const CategoryTabs = ({ active, onChange, className = '' }: CategoryTabsProps) =
                 'relative px-5 xs:px-4 sm:px-5 py-2.5 sm:py-3',
                 'text-sm sm:text-base font-extrabold whitespace-nowrap',
                 'transition-colors duration-300',
-                isActive ? 'text-primary' : 'text-gray-600 hover:text-black',
+                isActive
+                  ? 'text-primary'
+                  : 'text-gray-600 hover:text-black dark:text-gray-300 dark:hover:text-gray-400',
               ].join(' ')}
             >
               <span className="inline-block">{c}</span>
