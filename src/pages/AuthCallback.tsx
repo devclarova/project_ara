@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Timer as TimerIcon } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const DRAFT_KEY = 'signup-profile-draft';
 
@@ -36,13 +36,13 @@ async function ensureProfileFromDraft(uid: string, email?: string | null) {
       ?.toString()
       .trim() || 'user';
 
-  // ✅ 동의값 매핑: 옛 키/새 키 모두 흡수
+  // 동의값 매핑: 옛 키/새 키 모두 흡수
   const tos_agreed = !!(draft?.tos_agreed ?? draft?.terms);
   const privacy_agreed = !!(draft?.privacy_agreed ?? draft?.privacy);
   const age_confirmed = !!(draft?.age_confirmed ?? draft?.age_ok);
   const marketing_opt_in = !!(draft?.marketing_opt_in ?? draft?.marketing_agreed);
 
-  // ✅ [2] 생년 검증(14세 이상 여부)
+  // [2] 생년 검증(14세 이상 여부)
   const birth = new Date((draft?.birthday ?? '2000-01-01').toString().trim());
   const today = new Date();
   const age =
@@ -51,7 +51,7 @@ async function ensureProfileFromDraft(uid: string, email?: string | null) {
     (today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate()) ? 1 : 0);
   const isAge14Plus = age >= 14;
 
-  // ✅ 온보딩 완료는 '필수 동의'가 모두 true일 때만
+  // 온보딩 완료는 '필수 동의'가 모두 true일 때만
   const canOnboard = tos_agreed && privacy_agreed && age_confirmed;
 
   const payload = {
@@ -66,7 +66,7 @@ async function ensureProfileFromDraft(uid: string, email?: string | null) {
     privacy_agreed,
     age_confirmed,
     marketing_opt_in,
-    // ⚠️ 체크 제약 충족 시에만 true
+    // 체크 제약 충족 시에만 true
     is_onboarded: canOnboard,
     is_public: true,
     created_at: new Date().toISOString(),
@@ -88,7 +88,7 @@ async function createProfileShellIfMissing(uid: string) {
     .eq('user_id', uid);
   if (!exErr && (count ?? 0) > 0) return;
 
-  // ✅ 스키마 제약( NOT NULL / CHECK ) 을 통과할 최소 기본값
+  // 스키마 제약( NOT NULL / CHECK ) 을 통과할 최소 기본값
   const payload = {
     user_id: uid,
     nickname: `user_${uid.slice(0, 8)}`,
@@ -114,9 +114,11 @@ export default function AuthCallback() {
   const navigate = useNavigate();
   const [msg, setMsg] = useState('인증 처리 중 ...');
 
+  // 중복 실행 방지
+  const ranRef = useRef(false);
+
   // setTimeout 반환형 number로 고정
   const redirectTimerRef = useRef<number | null>(null);
-  const ranRef = useRef(false);
 
   const scheduleRedirect = (path: string, delay = 600, state?: any) => {
     if (redirectTimerRef.current) window.clearTimeout(redirectTimerRef.current);
@@ -126,17 +128,24 @@ export default function AuthCallback() {
   };
 
   useEffect(() => {
+    // 이미 실행됐으면 스킵
+    if (ranRef.current) return;
+    ranRef.current = true;
+
     (async () => {
       const href = window.location.href;
+
       const hasCode = href.includes('code=');
       const hasHashToken = href.includes('#access_token=');
+      const hasTokenHash = href.includes('token_hash=');
 
-      if (!hasCode && !hasHashToken) {
+      // auth 파라미터 없으면 즉시 signin으로
+      if (!hasCode && !hasHashToken && !hasTokenHash) {
         navigate('/signin', { replace: true });
         return;
       }
 
-      // ✅ SDK가 자동으로 URL을 파싱(detectSessionInUrl: true). 잠깐 대기하면서 세션 생성 기다림.
+      // 세션 대기 (최대 2초)
       for (let i = 0; i < 20; i++) {
         const { data } = await supabase.auth.getSession();
         if (data.session) break;
@@ -145,45 +154,41 @@ export default function AuthCallback() {
 
       const { data } = await supabase.auth.getSession();
       const u = data.session?.user;
+
+      // 세션 없으면 무조건 /signin (이메일 인증 완료 케이스)
       if (!u) {
-        navigate('/signin', { replace: true });
+        navigate('/signin', { replace: true, state: { emailVerified: true } });
         return;
       }
 
       const provider = (u.app_metadata?.provider as string | undefined) ?? 'email';
 
       if (provider === 'email') {
+        // 이메일: 프로필 생성 → 로그아웃 → /signin
         try {
           await ensureProfileFromDraft(u.id, u.email);
+        } catch (e) {
+          console.warn('[AuthCallback] ensureProfileFromDraft error', e);
+        }
+
+        try {
+          await supabase.auth.signOut();
         } catch {}
 
-        // ✅ 이메일 인증 링크로 들어온 세션을 즉시 끊고
-        await supabase.auth.signOut({ scope: 'local' });
-
-        // ✅ 로그인 페이지로 이동하면서 "인증 완료 모달"을 띄울 수 있도록 신호를 전달
+        // 즉시 signin으로 이동 (finalhome 거치지 않음)
         navigate('/signin', { replace: true, state: { emailVerified: true } });
-
         return;
       }
 
-      // try {
-      //   await supabase.rpc('ensure_app_user');
-      // } catch {}
-      // await supabase
-      //   .from('profiles')
-      //   .upsert({ user_id: u.id }, { onConflict: 'user_id', ignoreDuplicates: true });
-
+      // 소셜: 프로필 셸 생성 → /signup/social
       try {
         await createProfileShellIfMissing(u.id);
-      } catch {
-        // no-op: 실패해도 온보딩에서 다시 update 시도됨
+      } catch (e) {
+        console.warn('[AuthCallback] createProfileShellIfMissing error', e);
       }
 
       navigate('/signup/social', { replace: true, state: { from: 'oauth' } });
-    })().finally(() => {
-      // ✅ 세션 처리 후에 URL 정리
-      window.history.replaceState({}, document.title, '/auth/callback');
-    });
+    })();
   }, [navigate]);
 
   return (

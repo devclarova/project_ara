@@ -51,7 +51,7 @@ async function createProfileFromDraftIfMissing(u: User) {
   const bio = (draft?.bio ?? '').toString().trim() || null;
   const avatar = draft?.pendingAvatarUrl ?? null;
 
-  // ✅ 여기! consents가 아니라 평탄화된 키를 읽도록 변경
+  // consents가 아니라 평탄화된 키를 읽도록 변경
   const tos_agreed = !!draft?.tos_agreed;
   const privacy_agreed = !!draft?.privacy_agreed;
   const age_confirmed = !!draft?.age_confirmed;
@@ -69,10 +69,10 @@ async function createProfileFromDraftIfMissing(u: User) {
     updated_at: new Date().toISOString(),
     is_online: false,
     last_active_at: null,
-    nickname_normalized: null,
-    nickname_script: null,
-    nickname_lang: null,
-    nickname_set_at: null,
+    // nickname_normalized: null,
+    // nickname_script: null,
+    // nickname_lang: null,
+    // nickname_set_at: null,
     tos_agreed,
     privacy_agreed,
     age_confirmed,
@@ -106,7 +106,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       if (!mounted) return;
       setSession(data.session ?? null);
       setUser(data.session?.user ?? null);
-      setLoading(false); // ✅ 반드시 내려준다
+      setLoading(false);
     });
 
     // 2) 세션 변동 구독
@@ -114,7 +114,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       if (!mounted) return;
       setSession(newSession);
       setUser(newSession?.user ?? null);
-      setLoading(false); // ✅ 이벤트 도착 시에도 false 보장
+      setLoading(false);
 
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
         const u = newSession?.user;

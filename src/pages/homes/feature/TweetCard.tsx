@@ -62,7 +62,8 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
         .from('profiles')
         .select('id')
         .eq('user_id', authUser.id)
-        .single();
+        .limit(1)
+        .maybeSingle();
       if (error) console.error('❌ 프로필 ID 조회 실패:', error.message);
       else setProfileId(data.id);
     };

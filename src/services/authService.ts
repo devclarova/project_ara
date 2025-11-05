@@ -102,7 +102,7 @@ export async function createSocialProfileDefaultsIfMissing(u: User) {
     user_id: u.id,
     nickname,
     gender: 'Male',
-    birth: '2000-01-01',
+    birthday: '2000-01-01',
     country: 'Unknown',
     bio: null,
     avatar_url: null,

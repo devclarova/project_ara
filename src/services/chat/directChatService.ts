@@ -154,38 +154,38 @@ export async function findOrCreateDirectChat(
 
     // 2단계: 새 채팅방 생성 (상대방에게 알림 설정)
 
-    // users 테이블에 profiles.id와 일치하는 레코드 생성 (외래키 제약 조건 해결)
-    try {
-      // 현재 사용자의 profiles.id를 users 테이블에 추가
-      const { data: currentUserResult, error: currentUserError } = await supabase
-        .from('users')
-        .upsert(
-          {
-            id: currentUser.profileId, // profiles.id를 users.id로 사용
-            auth_user_id: currentUser.id,
-            email: currentUser.email,
-            created_at: new Date().toISOString(),
-            last_login: new Date().toISOString(),
-          },
-          { onConflict: 'id' },
-        );
+    // // users 테이블에 profiles.id와 일치하는 레코드 생성 (외래키 제약 조건 해결)
+    // try {
+    //   // 현재 사용자의 profiles.id를 users 테이블에 추가
+    //   const { data: currentUserResult, error: currentUserError } = await supabase
+    //     .from('users')
+    //     .upsert(
+    //       {
+    //         id: currentUser.profileId, // profiles.id를 users.id로 사용
+    //         auth_user_id: currentUser.id,
+    //         email: currentUser.email,
+    //         created_at: new Date().toISOString(),
+    //         last_login: new Date().toISOString(),
+    //       },
+    //       { onConflict: 'id' },
+    //     );
 
-      // 상대방 사용자의 profiles.id를 users 테이블에 추가
-      const { data: participantResult, error: participantError } = await supabase
-        .from('users')
-        .upsert(
-          {
-            id: participantId, // profiles.id를 users.id로 사용
-            auth_user_id: participantId, // 임시로 같은 값 사용
-            email: `user-${participantId}@example.com`,
-            created_at: new Date().toISOString(),
-            last_login: new Date().toISOString(),
-          },
-          { onConflict: 'id' },
-        );
-    } catch (userError) {
-      console.warn('users 테이블 업서트 실패:', userError);
-    }
+    //   // 상대방 사용자의 profiles.id를 users 테이블에 추가
+    //   const { data: participantResult, error: participantError } = await supabase
+    //     .from('users')
+    //     .upsert(
+    //       {
+    //         id: participantId, // profiles.id를 users.id로 사용
+    //         auth_user_id: participantId, // 임시로 같은 값 사용
+    //         email: `user-${participantId}@example.com`,
+    //         created_at: new Date().toISOString(),
+    //         last_login: new Date().toISOString(),
+    //       },
+    //       { onConflict: 'id' },
+    //     );
+    // } catch (userError) {
+    //   console.warn('users 테이블 업서트 실패:', userError);
+    // }
 
     const { data: newChat, error: createError } = await supabase
       .from('direct_chats')
