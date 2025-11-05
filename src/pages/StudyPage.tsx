@@ -58,9 +58,6 @@ const StudyPage = () => {
 
       if (error) {
         console.error('[video fetch error]', error);
-      } else {
-        // 혹시 잘못된 id로 들어왔는지 확인용 로그
-        // console.log('[video fetched]', { studyId, videoId: data?.id, study_id: data?.study_id });
       }
 
       setStudy((data as VideoRow) ?? null);
@@ -205,22 +202,21 @@ const StudyPage = () => {
                   <NavLink
                     to={
                       study?.episode
-                        ? `/content/${encodeURIComponent(String(study?.contents ?? ''))}/${encodeURIComponent(String(study.episode))}`
+                        ? {
+                            pathname: '/studylist',
+                            search: `?category=${encodeURIComponent(study?.categories ?? '전체')}&content=${encodeURIComponent(String(study.contents))}&episode=${encodeURIComponent(study.episode)}`,
+                          }
                         : '/studylist'
                     }
                     className={({ isActive }) =>
-                      `group hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full leading-none transition-all text-sm max-w-[22vw] truncate
-         ${
-           isActive
-             ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10'
-             : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white'
-         }`
+                      `group hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full leading-none transition-all text-sm max-w-[32vw] md:max-w-[28vw] truncate
+     ${isActive ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10' : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white'}`
                     }
-                    title={loading ? '로딩 중' : (study?.episode ?? '없음')}
+                    title={loading ? '로딩 중' : (study?.episode ?? '에피소드 없음')}
                   >
                     <i className="ri-hashtag text-base opacity-70 group-hover:opacity-100" />
                     <span className="font-medium truncate">
-                      {loading ? '로딩 중' : (study?.episode ?? '없음')}
+                      {loading ? '로딩 중' : (study?.episode ?? '에피소드 없음')}
                     </span>
                   </NavLink>
 
@@ -254,10 +250,7 @@ const StudyPage = () => {
                 </button>
 
                 {/* 중앙 타이틀 */}
-                <h1
-                  className="absolute left-1/2 -translate-x-1/2 text-center text-2xl sm:text-3xl font-bold 
-               text-gray-900 select-none tracking-tight transition-all duration-300"
-                >
+                <h1 className="absolute left-1/2 -translate-x-1/2 text-center text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-900 select-none tracking-tight transition-all duration-300 flex justify-center whitespace-nowrap">
                   {loading ? (
                     <span className="animate-pulse text-gray-400">로딩 중...</span>
                   ) : (

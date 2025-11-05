@@ -77,7 +77,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
     { icon: 'ri-notification-3-line', label: '알림', path: '/notifications1' },
     { icon: 'ri-chat-3-line', label: '채팅', path: '/finalhome/chat' },
     { icon: 'ri-user-line', label: '프로필', onClick: handleProfileClick },
-    { icon: 'ri-youtube-line', label: '학습', path: '/studyList' },
+    { imgSrc: '/apple-touch-icon.png', label: '학습', path: '/studyList' },
   ];
 
   const handleNavigation = (path?: string, onClick?: () => void) => {
@@ -116,9 +116,17 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
                     : 'hover:bg-primary/5 text-gray-700'
                 }`}
               >
-                <i
-                  className={`${item.icon} text-xl w-6 h-6 flex items-center justify-center flex-shrink-0`}
-                ></i>
+                {item.imgSrc ? (
+                  <img
+                    src={item.imgSrc}
+                    alt={item.label}
+                    className="w-6 h-6 object-contain flex-shrink-0"
+                  /> // 이미지 추가
+                ) : (
+                  <i
+                    className={`${item.icon} text-xl w-6 h-6 flex items-center justify-center flex-shrink-0`}
+                  ></i>
+                )}
                 <span className="text-lg font-medium hidden lg:block truncate">{item.label}</span>
               </button>
             </li>

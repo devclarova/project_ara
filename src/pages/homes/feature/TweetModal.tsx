@@ -27,6 +27,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
     const ext = clean.split('.').pop() ?? 'jpg';
     const base = clean.replace(/\.[^/.]+$/, ''); // 기존 확장자 제거
     return `${base.slice(0, 50)}.${ext}`;
+    
   };
 
   const handleSubmit = async () => {

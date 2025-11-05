@@ -1,6 +1,6 @@
-import CategoryTabs from '@/components/study/CategoryTabs';
+import CategoryTabs, { type TCategory } from '@/components/study/CategoryTabs';
 import ContentCard from '@/components/study/ContentCard';
-import FilterDropdown from '@/components/study/FilterDropdown';
+import FilterDropdown, { type TDifficulty } from '@/components/study/FilterDropdown';
 import SearchBar from '@/components/ui/SearchBar';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
@@ -8,41 +8,41 @@ import type { Study } from '../types/study';
 import Sidebar from './homes/feature/Sidebar';
 import { useSearchParams } from 'react-router-dom';
 
-type TCategory = '전체' | '드라마' | '영화' | '예능' | '음악';
-
 const ALL_CATEGORIES: TCategory[] = ['전체', '드라마', '영화', '예능', '음악'];
 
 const StudyListPage = () => {
-  const [clips, setClips] = useState<Study[]>([]);
+  const [clips, setClips] = useState<Study[]>([]); // 콘텐츠 목록
   const [showTweetModal, setShowTweetModal] = useState(false);
-  const [keyword, setKeyword] = useState('');
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [keyword, setKeyword] = useState(''); // 검색
+  const [page, setPage] = useState(1); // 현재 페이지
+  const [total, setTotal] = useState(0); // 전체 콘텐츠 개수
   const [showSearch, setShowSearch] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams(); // URL 쿼리
 
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  // ✅ 쿼리에서 초기 category 읽기 (유효하지 않으면 '전체')
-  const initialCategory: TCategory = useMemo(() => {
-    const q = searchParams.get('category') ?? '전체';
-    return (ALL_CATEGORIES.includes(q as TCategory) ? q : '전체') as TCategory;
-  }, [searchParams]);
-
+  // 쿼리에서 초기 category 읽기 (유효하지 않으면 '전체')
   const displayCategory: TCategory = useMemo(() => {
     const q = searchParams.get('category') ?? '전체';
     return (ALL_CATEGORIES.includes(q as TCategory) ? q : '전체') as TCategory;
   }, [searchParams]);
 
-  const [activeCategory, setActiveCategory] = useState<TCategory>(initialCategory);
+  const [activeCategory, setActiveCategory] = useState<TCategory>(displayCategory);
+  const [levelFilter, setLevelFilter] = useState<TDifficulty>('');
 
   const limit = 9; // 한 페이지당 9개 (3x3 그리드)
 
-  // 쿼리에서 content 읽기
+  // 콘텐츠 필터링
   const contentFilter = useMemo(() => {
     const raw = searchParams.get('content')?.trim() ?? '';
     return raw.length ? raw : '';
   }, [searchParams]);
 
+  // 에피소드 필터링
+  const episodeFilter = useMemo(() => {
+    const raw = searchParams.get('episode')?.trim() ?? '';
+    return raw.length ? raw : '';
+  }, [searchParams]);
+
+  // 데이터 불러오기
   useEffect(() => {
     const fetchData = async () => {
       const from = (page - 1) * limit;
@@ -57,6 +57,8 @@ const StudyListPage = () => {
       // 카테고리/콘텐츠 중 하나라도 필터가 있으면 INNER JOIN 로 전환해 정확히 필터
       const needsCategory = activeCategory !== '전체';
       const needsContent = !!contentFilter;
+      const needsEpisode = !!episodeFilter;
+      const needsLevel = !!levelFilter;
 
       if (needsCategory || needsContent) {
         query = supabase
@@ -68,12 +70,15 @@ const StudyListPage = () => {
           query = query.eq('video.categories', activeCategory);
         }
         if (needsContent) {
-          // 완전 일치: eq / 부분매칭 원하면 ilike로 교체
           query = query.eq('video.contents', contentFilter);
-          // query = query.ilike('video.contents', `%${contentFilter}%`);
         }
+        if (needsEpisode) {
+          query = query.eq('video.episode', episodeFilter);
+        }
+        if (needsLevel) query = query.eq('video.level', levelFilter);
       }
 
+      // 검색어가 있으면 필터링 추가
       if (keyword.trim()) {
         query = query.or(`title.ilike.%${keyword}%,short_description.ilike.%${keyword}%`);
       }
@@ -88,7 +93,7 @@ const StudyListPage = () => {
     };
 
     fetchData();
-  }, [page, activeCategory, keyword, contentFilter]);
+  }, [page, activeCategory, keyword, contentFilter, episodeFilter]);
 
   const filteredClips =
     activeCategory === '전체'
@@ -99,11 +104,26 @@ const StudyListPage = () => {
           }),
         );
 
+  // 콘텐츠 필터링 추가
+  const filteredContent = contentFilter
+    ? filteredClips.filter(study => (study.video ?? []).some(v => v?.contents === contentFilter))
+    : filteredClips;
+
+  // 에피소드 필터링 추가
+  const filteredEpisode = episodeFilter
+    ? filteredContent.filter(study => (study.video ?? []).some(v => v?.episode === episodeFilter))
+    : filteredContent;
+
+  // ✅ 난이도 보정
+  const finalList = levelFilter
+    ? filteredEpisode.filter(study => (study.video ?? []).some(v => v?.level === levelFilter))
+    : filteredEpisode;
+
   // URL이 바뀌면 탭/페이지도 맞춰주기
   useEffect(() => {
-    setActiveCategory(initialCategory);
+    setActiveCategory(displayCategory);
     setPage(1);
-  }, [initialCategory, contentFilter]);
+  }, [displayCategory, contentFilter, episodeFilter]);
 
   const totalPages = Math.ceil(total / limit);
 
@@ -143,7 +163,7 @@ const StudyListPage = () => {
               </div>
 
               {/* 탭 + 검색 */}
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 border-b border-gray-200">
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5">
                 {/* 왼쪽: 카테고리 + 모바일용 검색 아이콘 */}
                 <div className="flex items-center justify-between">
                   <CategoryTabs active={displayCategory} onChange={handleCategoryChange} />
@@ -160,10 +180,10 @@ const StudyListPage = () => {
 
                 {/* 오른쪽: 필터 + 검색 그룹 (데스크톱 전용) */}
                 <div className="hidden md:flex items-center gap-2 mt-3 md:mt-0 flex-nowrap">
-                  <div className="h-10 sm:h-11 flex items-center">
-                    <FilterDropdown />
+                  <div className="flex items-center h-11">
+                    <FilterDropdown value={levelFilter} onApply={setLevelFilter} />
                   </div>
-                  <div className="h-10 sm:h-11 flex items-center">
+                  <div className="flex items-center h-11">
                     <SearchBar
                       placeholder="검색어를 입력해주세요"
                       value={keyword}
@@ -209,8 +229,8 @@ const StudyListPage = () => {
 
               {/* 카드 그리드 */}
               <div className="grid gap-6 sm:gap-8 py-4 sm:py-6 px-0 grid-cols-1 sm:grid-cols-2 lg:[grid-template-columns:repeat(3,minmax(260px,1fr))]">
-                {filteredClips.length > 0 ? (
-                  filteredClips.map(study => {
+                {finalList.length > 0 ? (
+                  finalList.map(study => {
                     const [v] = study.video ?? [];
                     return (
                       <ContentCard
