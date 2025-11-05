@@ -15,7 +15,7 @@ const Hero = ({ onSignup }: HeroProps) => {
   const handleClick = () => {
     if (user) {
       // 로그인 상태 → /social 이동
-      navigate('/socialss');
+      navigate('/finalhome');
     } else {
       // 로그아웃 상태 → /test 이동
       navigate('/signin');

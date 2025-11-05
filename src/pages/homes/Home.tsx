@@ -40,7 +40,7 @@ export default function Home() {
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 10;
 
-  // ✅ 트윗 불러오기
+  //  트윗 불러오기
   const fetchTweets = async (reset = false) => {
     try {
       const from = reset ? 0 : page * PAGE_SIZE;
@@ -109,7 +109,7 @@ export default function Home() {
     fetchTweets(true);
   }, []);
 
-  // ✅ 새 트윗 작성 시 즉시 반영
+  // 새 트윗 작성 시 즉시 반영
   useEffect(() => {
     if (newTweet) {
       setTweets(prev => [newTweet, ...prev]);
@@ -117,7 +117,7 @@ export default function Home() {
     }
   }, [newTweet, setNewTweet]);
 
-  // ✅ 실시간 댓글 반영
+  // 실시간 댓글 반영
   useEffect(() => {
     const replyChannel = supabase
       .channel('tweet-replies-realtime')
@@ -143,36 +143,43 @@ export default function Home() {
     };
   }, []);
 
-  // ✅ 실시간 좋아요 반영
+  //  실시간 좋아요 반영
   useEffect(() => {
-    const likeChannel = supabase
-      .channel('tweet-likes-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tweet_likes' }, payload => {
-        const tweetId = (payload.new as any)?.tweet_id || (payload.old as any)?.tweet_id;
-        if (!tweetId) return;
-        const delta = payload.eventType === 'INSERT' ? 1 : -1;
-        setTweets(prev =>
-          prev.map(t =>
-            t.id === tweetId
-              ? { ...t, stats: { ...t.stats, likes: Math.max((t.stats.likes ?? 0) + delta, 0) } }
-              : t,
-          ),
-        );
-      })
+    const tweetLikeCountChannel = supabase
+      .channel('tweets-likecount-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'tweets', filter: 'like_count=not.is.null' },
+        payload => {
+          const tweetId = (payload.new as any)?.id;
+          const likeCount = (payload.new as any)?.like_count;
+          if (!tweetId) return;
+          setTweets(prev =>
+            prev.map(t =>
+              t.id === tweetId
+                ? { ...t, stats: { ...t.stats, likes: likeCount ?? t.stats.likes } }
+                : t,
+            ),
+          );
+
+          console.log('🔥 like event:', payload);
+        },
+      )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(likeChannel);
+      supabase.removeChannel(tweetLikeCountChannel);
     };
   }, []);
 
-  // ✅ 실시간 조회수 반영
+  // 실시간 조회수 반영
   useEffect(() => {
     const viewChannel = supabase
       .channel('tweets-views-realtime')
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'tweets', filter: 'view_count=not.is.null' },
+        // { event: 'UPDATE', schema: 'public', table: 'tweets', filter: 'view_count=not.is.null' },
+        { event: 'UPDATE', schema: 'public', table: 'tweets' },
         payload => {
           const tweetId = (payload.new as any)?.id;
           const newViewCount = (payload.new as any)?.view_count;
@@ -200,7 +207,7 @@ export default function Home() {
   }
 
   return (
-    <>
+    <div className="lg:border-x border-gray-200">
       {/* Header */}
       <div className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-gray-200 p-4 z-20">
         <h1 className="text-xl font-bold text-gray-900">홈</h1>
@@ -226,6 +233,6 @@ export default function Home() {
           <TweetCard key={t.id} {...t} />
         ))}
       </InfiniteScroll>
-    </>
+    </div>
   );
 }

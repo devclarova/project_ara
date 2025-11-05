@@ -19,6 +19,66 @@ export default function TweetDetail() {
     fetchReplies(id);
   }, [id]);
 
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = supabase
+      .channel(`tweet-${id}-replies`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'tweet_replies',
+          filter: `tweet_id=eq.${id}`,
+        },
+        async payload => {
+          const newReply = payload.new as any;
+
+          // ✅ author_id 기반으로 프로필 정보 가져오기
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('nickname, user_id, avatar_url')
+            .eq('id', newReply.author_id)
+            .single();
+
+          if (error) {
+            console.error('❌ 프로필 불러오기 실패:', error.message);
+            return;
+          }
+
+          // ✅ 새 댓글 객체 구성
+          const formattedReply = {
+            id: newReply.id,
+            user: {
+              name: profile?.nickname ?? 'Unknown',
+              username: profile?.user_id ?? 'anonymous',
+              avatar: profile?.avatar_url ?? '/default-avatar.svg',
+            },
+            content: newReply.content,
+            timestamp: new Date(newReply.created_at).toLocaleString('ko-KR', {
+              hour: '2-digit',
+              minute: '2-digit',
+              month: 'short',
+              day: 'numeric',
+            }),
+            stats: { replies: 0, retweets: 0, likes: 0, views: 0 },
+          };
+
+          // ✅ 기존 목록 위에 추가
+          setReplies(prev => [formattedReply, ...prev]);
+        },
+      )
+      .subscribe();
+
+    console.log('✅ 실시간 댓글 구독 시작:', id);
+
+    return () => {
+      supabase.removeChannel(channel);
+      console.log('🧹 실시간 댓글 구독 해제:', id);
+    };
+  }, [id]);
+
   // ✅ 중복 조회 방지 + view_count 증가
   useEffect(() => {
     if (!id || !user) return;
@@ -32,14 +92,15 @@ export default function TweetDetail() {
       const now = Date.now();
 
       // 24시간 내 중복 조회 방지
-      if (lastViewed && now - lastViewed < 24 * 60 * 60 * 1000) return;
+      // if (lastViewed && now - lastViewed < 24 * 60 * 60 * 1000) return;
 
-      const { error } = await supabase
-        .from('tweets')
-        .update({ view_count: (tweet?.stats?.views ?? 0) + 1 })
-        .eq('id', tweetId);
+      // ✅ Supabase RPC 함수로 view_count + 1
+      const { error } = await supabase.rpc('increment_tweet_view', {
+        tweet_id_input: tweetId,
+      });
 
-      if (error) console.error('조회수 업데이트 실패:', error.message);
+      if (error) console.error('조회수 RPC 실패:', error.message);
+
       viewedTweets[tweetId] = now;
       localStorage.setItem('viewedTweets', JSON.stringify(viewedTweets));
     } catch (err) {

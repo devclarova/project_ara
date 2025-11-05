@@ -1,45 +1,70 @@
-// TrendsPanel.tsx
+// src/pages/homes/feature/TrendsPanel.tsx
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useNavigate } from "react-router-dom";
 
-import { useState } from "react";
+interface TrendingTweet {
+  id: string;
+  content: string;
+  like_count: number;
+  reply_count: number;
+  view_count: number;
+  created_at: string;
+  profiles: {
+    nickname: string;
+    avatar_url: string | null;
+  } | null;
+}
 
 export default function TrendsPanel() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [trendingTweets, setTrendingTweets] = useState<TrendingTweet[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const trendingTopics = [
-    { category: "Trending in Technology", topic: "OpenAI", tweets: "125K" },
-    {
-      category: "Trending in Sports",
-      topic: "World Cup 2024",
-      tweets: "89.2K",
-    },
-    {
-      category: "Trending in Entertainment",
-      topic: "Marvel Studios",
-      tweets: "67.8K",
-    },
-    { category: "Trending", topic: "Climate Change", tweets: "45.3K" },
-  ];
+  const fetchTrendingTweets = async () => {
+    try {
+      const { data, error } = await supabase.rpc("get_trending_tweets");
+      if (error) throw error;
+      if (!Array.isArray(data)) return;
+      setTrendingTweets(data);
+    } catch (err) {
+      console.error("🔥 인기 트윗 불러오기 실패:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const whoToFollow = [
-    {
-      name: "Elon Musk",
-      username: "elonmusk",
-      // avatar: 'https://readdy.ai/api/search-image?query=professional%20business%20portrait%20of%20tech%20entrepreneur%2C%20clean%20background%2C%20confident%20expression%2C%20modern%20lighting%2C%20high%20quality%20headshot&width=40&height=40&seq=follow-1&orientation=squarish',
-      avatar: "/default-avatar.svg",
-      verified: true,
-    },
-    {
-      name: "Bill Gates",
-      username: "BillGates",
-      // avatar: 'https://readdy.ai/api/search-image?query=professional%20portrait%20of%20philanthropist%20businessman%2C%20clean%20background%2C%20friendly%20smile%2C%20modern%20lighting%2C%20high%20quality%20headshot&width=40&height=40&seq=follow-2&orientation=squarish',
-      avatar: "/default-avatar.svg",
-      verified: true,
-    },
-  ];
+  useEffect(() => {
+    fetchTrendingTweets();
+
+    const subscription = supabase
+      .channel("trending-tweets-realtime")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "tweets" },
+        (payload) => {
+          const oldData = payload.old as any;
+          const newData = payload.new as any;
+          if (
+            oldData.like_count !== newData.like_count ||
+            oldData.reply_count !== newData.reply_count ||
+            oldData.view_count !== newData.view_count
+          ) {
+            fetchTrendingTweets();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, []);
 
   return (
-    <div className="w-80 h-full flex flex-col border-l border-gray-200 lg:px-4 py-6">
-      {/* Fixed Search Bar */}
+    <div className="w-80 h-full flex flex-col  lg:px-4 py-6">
+      {/* 🔍 Search Bar */}
       <div className="sticky top-0 bg-white z-10 pb-4">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -47,79 +72,82 @@ export default function TrendsPanel() {
           </div>
           <input
             type="text"
-            placeholder="Search Twitter"
+            placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-gray-100 rounded-full border-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all text-sm"
+            className="w-full pl-10 pr-4 py-3 bg-gray-100 rounded-full border-none focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white transition-all text-sm"
           />
         </div>
       </div>
 
-      {/* Scrollable Content Area */}
+      {/* 🧾 What's happening */}
       <div className="flex-1 overflow-y-auto space-y-4">
-        {/* Trending Topics */}
-        <div className="bg-gray-50 rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            What's happening
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <h2 className="text-xl font-bold text-gray-900 mb-4 flex justify-center items-center gap-2">
+            실시간 인기 피드 
           </h2>
-          <div className="space-y-3">
-            {trendingTopics.map((trend, index) => (
-              <div
-                key={index}
-                className="hover:bg-gray-100 p-2 rounded-lg transition-colors cursor-pointer"
-              >
-                <div className="text-sm text-gray-500">{trend.category}</div>
-                <div className="font-bold text-gray-900">{trend.topic}</div>
-                <div className="text-sm text-gray-500">
-                  {trend.tweets} Tweets
-                </div>
-              </div>
-            ))}
-          </div>
-          <button className="text-blue-500 hover:underline mt-3 cursor-pointer whitespace-nowrap">
-            Show more
-          </button>
-        </div>
 
-        {/* Who to Follow */}
-        <div className="bg-gray-50 rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            Who to follow
-          </h2>
-          <div className="space-y-3">
-            {whoToFollow.map((user, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-                    <img
-                      src={user.avatar}
-                      alt={user.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <div className="flex items-center space-x-1">
-                      <span className="font-bold text-gray-900">
-                        {user.name}
+          {loading ? (
+            <div className="space-y-3 animate-pulse">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-16 bg-gray-100 rounded-xl"></div>
+              ))}
+            </div>
+          ) : trendingTweets.length === 0 ? (
+            <p className="text-gray-500 text-sm">No trending tweets yet</p>
+          ) : (
+            <div className="space-y-2">
+              {trendingTweets.map((tweet) => (
+                <div
+                  key={tweet.id}
+                  onClick={() => navigate(`/finalhome/${tweet.id}`)}
+                  className="group flex items-start gap-3 p-2 rounded-xl hover:bg-primary/5 transition-all cursor-pointer"
+                >
+                  <img
+                    src={tweet.profiles?.avatar_url || "/default-avatar.svg"}
+                    onError={(e) =>
+                      (e.currentTarget.src = "/default-avatar.svg")
+                    }
+                    alt={tweet.profiles?.nickname || "User"}
+                    className="w-9 h-9 rounded-full flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-900 line-clamp-3 leading-snug">
+                      {tweet.content.replace(/<[^>]*>?/gm, "")}
+                    </p>
+                    <div className="flex gap-3 mt-2 text-xs text-gray-500">
+                      <span
+                        className="flex items-center gap-1"
+                        title="Likes"
+                      >
+                        <i className="ri-heart-line text-red-500"></i>
+                        {tweet.like_count}
                       </span>
-                      {user.verified && (
-                        <i className="ri-verified-badge-fill text-blue-500 text-sm"></i>
-                      )}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      @{user.username}
+                      <span
+                        className="flex items-center gap-1"
+                        title="Replies"
+                      >
+                        <i className="ri-chat-3-line text-blue-500"></i>
+                        {tweet.reply_count}
+                      </span>
+                      <span
+                        className="flex items-center gap-1"
+                        title="Views"
+                      >
+                        <i className="ri-eye-line text-emerald-500"></i>
+                        {tweet.view_count}
+                      </span>
                     </div>
                   </div>
                 </div>
-                <button className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer whitespace-nowrap">
-                  Follow
-                </button>
-              </div>
-            ))}
-          </div>
-          <button className="text-blue-500 hover:underline mt-3 cursor-pointer whitespace-nowrap">
+              ))}
+            </div>
+          )}
+
+          {/* Show more */}
+          {/* <button className="w-full text-center text-primary hover:bg-primary/10 rounded-full py-2 font-medium transition-colors mt-3">
             Show more
-          </button>
+          </button> */}
         </div>
       </div>
     </div>

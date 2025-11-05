@@ -37,6 +37,8 @@ import { NewChatNotificationProvider } from './contexts/NewChatNotificationConte
 import { DirectChatProider } from './contexts/DirectChatContext';
 import DirectChatPage from './pages/chat/DirectChatPage';
 import Home from './pages/homes/Home';
+import { Toaster } from './components/ui/sonner';
+import HNotificationsPage from './pages/homes/notifications/HNotificationsPage';
 
 interface SignInLocationState {
   emailVerified?: boolean;
@@ -57,7 +59,7 @@ function RequireGuest() {
 
   if (loading) return null;
 
-  // ✅ 이메일 인증 링크 타고 /signin 으로 들어온 경우
+  // 이메일 인증 링크 타고 /signin 으로 들어온 경우
   const fromEmailVerify = location.pathname === '/signin' && state?.emailVerified === true;
 
   if (fromEmailVerify) {
@@ -69,13 +71,13 @@ function RequireGuest() {
   if (session) {
     const provider = (session.user.app_metadata?.provider as string | undefined) ?? 'email';
 
-    // 🔑 핵심: 이메일 세션은 게스트 페이지에서 자동 리다이렉트 하지 않는다
+    // 핵심: 이메일 세션은 게스트 페이지에서 자동 리다이렉트 하지 않는다
     //  → 이메일 인증 때문에 잠깐 세션이 생겨도 /finalhome으로 안 튄다
     if (provider === 'email') {
       return <Outlet />;
     }
 
-    // 🔒 소셜 로그인 사용자는 /signin, /signup 접근 막기 (이전 동작 유지)
+    // 소셜 로그인 사용자는 /signin, /signup 접근 막기 (이전 동작 유지)
     return <Navigate to="/signup/social" replace state={{ from: location }} />;
   }
 
@@ -128,9 +130,10 @@ const App = () => {
                         <Route path=":id" element={<TweetDetail />} />
                         <Route path="user/:username" element={<ProfileAsap />} />
                         <Route path="profileasap" element={<ProfileAsap />} />
-                        <Route path="notifications1" element={<Notifications />} />
+                        <Route path="notifications1" element={<HNotificationsPage />} />
                         <Route path="studyList" element={<StudyListPage />} />
                         <Route path="chat" element={<DirectChatPage />} />
+                        </Route>
                       </Route>
                     </Route>
                   </Route>
@@ -140,6 +143,7 @@ const App = () => {
                 </Routes>
               </main>
             </div>
+        <Toaster />
             {/* <InflearnNav /> */}
           </Router>
         </DirectChatProider>

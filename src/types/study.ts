@@ -8,7 +8,7 @@ export type StudyListProps = {
   short_description: string;
   level: string;
   episode?: string;
-  scene?: string;
+  scene?: string | number | null;
   // levelColor: string;
   duration: string | null;
   comments?: string;

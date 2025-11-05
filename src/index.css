@@ -97,6 +97,16 @@ body {
   line-height: 1.6;
 }
 
+/* Radix dropdown 열릴 때 body 폭이 바뀌지 않도록 고정 */
+/* html,
+body {
+  overflow-y: scroll !important; 
+}
+
+[data-radix-popper-content-wrapper] {
+  margin: 0 !important;
+} */
+
 /* ===== Link Styles ===== */
 a {
   text-decoration: none;

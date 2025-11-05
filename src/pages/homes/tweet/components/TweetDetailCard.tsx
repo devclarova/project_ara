@@ -100,7 +100,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
       <div className="mt-4 pt-4 border-t border-gray-200">
         <div className="flex space-x-6 text-sm">
           <span className="text-gray-900">
-            <span className="font-bold">{normalizedStats.retweets}</span>
+            <span className="font-bold">{normalizedStats.replies}</span>
             <span className="text-gray-500 ml-1">Retweets</span>
           </span>
           <span className="text-gray-900">
@@ -115,16 +115,16 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-around mt-4 pt-4 border-t border-gray-200 text-gray-500">
+      {/* <div className="flex items-center justify-around mt-4 pt-4 border-t border-gray-200 text-gray-500"> */}
         {/* Reply */}
-        <button className="flex items-center space-x-2 hover:text-blue-500 transition-colors group">
+        {/* <button className="flex items-center space-x-2 hover:text-blue-500 transition-colors group">
           <div className="p-3 rounded-full group-hover:bg-blue-50 transition-colors">
             <i className="ri-chat-3-line text-xl"></i>
           </div>
-        </button>
+        </button> */}
 
         {/* Retweet */}
-        <button
+        {/* <button
           className={`flex items-center space-x-2 transition-colors group ${
             retweeted ? 'text-green-500' : 'hover:text-green-500'
           }`}
@@ -133,10 +133,10 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
           <div className="p-3 rounded-full group-hover:bg-green-50 transition-colors">
             <i className="ri-repeat-line text-xl"></i>
           </div>
-        </button>
+        </button> */}
 
         {/* Like */}
-        <button
+        {/* <button
           className={`flex items-center space-x-2 transition-colors group ${
             liked ? 'text-red-500' : 'hover:text-red-500'
           }`}
@@ -145,17 +145,25 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
           <div className="p-3 rounded-full group-hover:bg-red-50 transition-colors">
             <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-xl`}></i>
           </div>
-        </button>
+        </button> */}
 
         {/* Share */}
-        <button className="flex items-center space-x-2 hover:text-blue-500 transition-colors group">
+        {/* <button className="flex items-center space-x-2 hover:text-blue-500 transition-colors group">
           <div className="p-3 rounded-full group-hover:bg-blue-50 transition-colors">
             <i className="ri-share-line text-xl"></i>
           </div>
-        </button>
+        </button> */}
+
+        {/* Views */}
+        {/* <button className="flex items-center space-x-2 hover:text-green-500 transition-colors group">
+          <div className="p-2 rounded-full group-hover:bg-blue-50 transition-colors">
+            <i className="ri-eye-line text-lg"></i>
+          </div>
+          <span className="text-sm">0</span>
+        </button> */}
 
         {/* Bookmark */}
-        <button
+        {/* <button
           className={`flex items-center space-x-2 transition-colors group ${
             bookmarked ? 'text-blue-500' : 'hover:text-blue-500'
           }`}
@@ -164,8 +172,8 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
           <div className="p-3 rounded-full group-hover:bg-blue-50 transition-colors">
             <i className={`${bookmarked ? 'ri-bookmark-fill' : 'ri-bookmark-line'} text-xl`}></i>
           </div>
-        </button>
-      </div>
+        </button> */}
+      {/* </div> */}
     </div>
   );
 }

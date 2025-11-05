@@ -1,10 +1,14 @@
 // src/pages/homes/feature/TweetCard.tsx
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import ReactCountryFlag from 'react-country-flag';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface User {
   name: string;
@@ -35,10 +39,20 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
   const { user: authUser } = useAuth();
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(stats.likes ?? 0);
-  const [bookmarked, setBookmarked] = useState(false);
-  const [retweeted, setRetweeted] = useState(false);
   const [profileId, setProfileId] = useState<string | null>(null);
-  const [localStats, setLocalStats] = useState(stats);
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // ✅ 외부 클릭 시 메뉴 닫기
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // ✅ 로그인된 유저의 profiles.id 조회
   useEffect(() => {
@@ -72,7 +86,7 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
     checkLike();
   }, [id, profileId]);
 
-  // ✅ 좋아요 토글 함수
+  // ✅ 좋아요 토글
   const handleLikeToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!authUser || !profileId) return alert('로그인이 필요합니다.');
@@ -102,7 +116,10 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
     }
   };
 
-  const handleCardClick = () => navigate(`/finalhome/${id}`);
+  const handleCardClick = () => {
+    navigate(`/finalhome/${id}`);
+  };
+
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/finalhome/user/${user.name}`);
@@ -110,40 +127,9 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
 
   const safeContent = DOMPurify.sanitize(content);
 
-  useEffect(() => {
-    // ✅ 개별 트윗의 view_count 변경 실시간 감시
-    const channel = supabase
-      .channel(`tweet-${id}-views`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'tweets',
-          filter: `id=eq.${id}`,
-        },
-        payload => {
-          const newViewCount = (payload.new as any)?.view_count;
-          if (newViewCount !== undefined) {
-            setLikeCount(prev => prev); // 유지
-            // ✅ local 상태(stats.views) 갱신
-            setLocalStats(prev => ({
-              ...prev,
-              views: newViewCount,
-            }));
-          }
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [id]);
-
   return (
     <div
-      className="border-b border-gray-200 px-4 py-3 hover:bg-gray-50/50 transition-colors cursor-pointer"
+      className="border-b border-gray-200 px-4 py-3 hover:bg-gray-50/50 transition-colors cursor-pointer relative"
       onClick={handleCardClick}
     >
       <div className="flex space-x-3">
@@ -157,33 +143,101 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
 
         {/* 본문 */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center space-x-1 flex-wrap">
-            <span
-              className="font-bold text-gray-900 hover:underline cursor-pointer truncate"
+          {/* 상단: 이름 + 더보기 버튼 */}
+          <div className="flex items-start justify-between relative" ref={menuRef}>
+            <div className="flex items-center space-x-1 flex-wrap">
+              <span
+                className="font-bold text-gray-900 hover:underline cursor-pointer truncate"
+                onClick={e => {
+                  e.stopPropagation();
+                  navigate(`/finalhome/user/${user.name}`);
+                }}
+              >
+                {user.name}
+              </span>
+
+              <Badge variant="secondary" className="flex items-center gap-1 px-2 py-1">
+                <ReactCountryFlag
+                  countryCode="KR"
+                  svg
+                  style={{
+                    fontSize: '1em',
+                    lineHeight: '1em',
+                    verticalAlign: 'middle',
+                  }}
+                />
+              </Badge>
+
+              <span className="text-gray-500">·</span>
+              <span className="text-gray-500 flex-shrink-0">{timestamp}</span>
+            </div>
+
+            {/* ✅ 더보기 버튼 */}
+            <button
               onClick={e => {
                 e.stopPropagation();
-                navigate(`/finalhome/user/${user.username}`);
+                setShowMenu(prev => !prev);
               }}
+              className="p-2 rounded-full hover:bg-gray-100 transition"
             >
-              {user.name}
-            </span>
-            <span className="text-gray-500 truncate">@{user.username}</span>
-            <span className="text-gray-500">·</span>
-            <span className="text-gray-500 flex-shrink-0">{timestamp}</span>
+              <i className="ri-more-2-fill text-gray-500 text-lg"></i>
+            </button>
+
+            {/* ✅ 더보기 메뉴 */}
+            {showMenu && (
+              <div className="absolute right-0 top-8 w-36 bg-white border border-gray-200 rounded-2xl shadow-lg py-2 z-50">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      onClick={e => e.stopPropagation()}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-100 text-red-600 flex items-center gap-2 transition-colors"
+                    >
+                      <i className="ri-delete-bin-line"></i>
+                      <span>삭제</span>
+                    </button>
+                  </AlertDialogTrigger>
+
+                  <AlertDialogContent onClick={e => e.stopPropagation()}>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>이 피드를 삭제하시겠어요?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        삭제한 피드는 되돌릴 수 없습니다. 정말 삭제하시겠습니까?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>취소</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => {
+                          setShowMenu(false);
+                          toast.success('피드가 삭제되었습니다.');
+                          // TODO: 실제 Supabase 삭제 로직 추가 가능
+                        }}
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        삭제하기
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                
+              </div>
+            )}
           </div>
 
+          {/* 본문 내용 */}
           <div
             className="mt-1 text-gray-900 text-[15px] leading-snug whitespace-pre-line break-words"
             dangerouslySetInnerHTML={{ __html: safeContent }}
           />
 
+          {/* 이미지 */}
           {image && (
             <div className="mt-3 rounded-2xl overflow-hidden border border-gray-200">
               <img src={image} alt="Tweet image" className="w-full h-auto object-cover" />
             </div>
           )}
 
-          {/* 액션 버튼들 */}
+          {/* 액션 버튼 */}
           <div className="flex items-center justify-between max-w-md mt-3 text-gray-500">
             {/* Reply */}
             <button
@@ -197,22 +251,6 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
                 <i className="ri-chat-3-line text-lg"></i>
               </div>
               <span className="text-sm">{stats.replies ?? 0}</span>
-            </button>
-
-            {/* Retweet */}
-            <button
-              className={`flex items-center space-x-2 transition-colors group ${
-                retweeted ? 'text-green-500' : 'hover:text-green-500'
-              }`}
-              onClick={e => {
-                e.stopPropagation();
-                setRetweeted(!retweeted);
-              }}
-            >
-              <div className="p-2 rounded-full group-hover:bg-green-50 transition-colors">
-                <i className="ri-repeat-line text-lg"></i>
-              </div>
-              <span className="text-sm">{stats.retweets ?? 0}</span>
             </button>
 
             {/* Like */}
@@ -229,28 +267,11 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
             </button>
 
             {/* Views */}
-            <button className="flex items-center space-x-2 hover:text-blue-500 transition-colors group">
+            <button className="flex items-center space-x-2 hover:text-green-500 transition-colors group">
               <div className="p-2 rounded-full group-hover:bg-blue-50 transition-colors">
                 <i className="ri-eye-line text-lg"></i>
               </div>
               <span className="text-sm">{stats.views ?? 0}</span>
-            </button>
-
-            {/* Bookmark */}
-            <button
-              className={`flex items-center space-x-2 transition-colors group ${
-                bookmarked ? 'text-blue-500' : 'hover:text-blue-500'
-              }`}
-              onClick={e => {
-                e.stopPropagation();
-                setBookmarked(!bookmarked);
-              }}
-            >
-              <div className="p-2 rounded-full group-hover:bg-blue-50 transition-colors">
-                <i
-                  className={`${bookmarked ? 'ri-bookmark-fill' : 'ri-bookmark-line'} text-lg`}
-                ></i>
-              </div>
             </button>
           </div>
         </div>

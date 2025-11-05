@@ -1,29 +1,50 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ReactPlayer from 'react-player';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 
-interface VideoPlayerProps {
-  autoPlay?: boolean;
-}
-
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ autoPlay = false }) => {
-  const playerRef = useRef<any>(null);
+const VideoPlayer = () => {
+  const playerRef = useRef<ReactPlayer>(null);
   const { id } = useParams<{ id: string }>();
 
-  const [playing, setPlaying] = useState(autoPlay);
+  const [playing, setPlaying] = useState(false);
   const [video, setVideo] = useState<string | undefined>(undefined);
 
   const [startSec, setStartSec] = useState<number>(); // 기본값
   const [endSec, setEndSec] = useState<number>(); // 기본값
   const [videoDuration, setVideoDuration] = useState<number>();
 
+  const [hasStarted, setHasStarted] = useState(false); // 최초 재생 여부
+  const [isBuffering, setIsBuffering] = useState(false); // 버퍼링 중 여부
+
+  const [viewRecorded, setViewRecorded] = useState(false); // 조회수 이미 반영했는지
+  const [watchTime, setWatchTime] = useState(0); // 누적 시청 시간 (초 단위)
+
+  const [videoRowId, setVideoRowId] = useState<number | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  // 조회수 증가
+  const registerView = async (rowId: number) => {
+    if (!rowId || Number.isNaN(rowId)) {
+      console.warn('[VIEW] invalid rowId:', rowId);
+      return false;
+    }
+    const { data, error } = await supabase.rpc('increment_video_view', { _video_id: rowId });
+    if (error) {
+      console.error('[RPC] increment_video_view ERROR:', error);
+      return false;
+    }
+    // data에 최신 view_count(또는 업데이트된 row 수)가 오도록 DB 함수를 설계
+    console.log('[RPC] increment_video_view OK. new_count =', data);
+    return typeof data === 'number' ? data > 0 : true;
+  };
+
   // 영상 불러오기
   useEffect(() => {
     const fetchVideo = async () => {
       const { data, error } = await supabase
         .from('video')
-        .select('id, video_url,video_start_time, video_end_time')
+        .select('id, video_url,video_start_time, video_end_time,image_url')
         .eq('study_id', Number(id))
         .single(); // id에 해당하는 영상 URL 가져오기
 
@@ -33,9 +54,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ autoPlay = false }) => {
       }
       if (!data) return;
 
+      setVideoRowId(data.id);
       if (data.video_url) setVideo(data.video_url);
       if (typeof data.video_start_time === 'number') setStartSec(data.video_start_time);
       if (typeof data.video_end_time === 'number') setEndSec(data.video_end_time);
+
+      // 이미지 상태 세팅
+      setImageUrl(data.image_url ?? undefined);
     };
 
     if (id) fetchVideo();
@@ -43,14 +68,33 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ autoPlay = false }) => {
 
   // 영상이 준비되면 시작 지점으로 이동
   const handleReady = () => {
-    playerRef.current?.seekTo(startSec, 'seconds');
+    const start = startSec ?? 0; // undefined면 0초로
+    playerRef.current?.seekTo(start, 'seconds');
   };
 
+  // 누적 시청 시간 및 조회수 반영
   const handleProgress = (state: { playedSeconds: number }) => {
-    // endSec 값이 있을 때만 동작
     if (endSec !== undefined && state.playedSeconds >= endSec) {
       setPlaying(false);
-      playerRef.current?.seekTo(endSec, 'seconds');
+      setHasStarted(false);
+      playerRef.current?.seekTo(startSec ?? 0, 'seconds');
+      return;
+    }
+
+    if (playing && !viewRecorded) {
+      setWatchTime(prev => {
+        const next = prev + 0.1; // progressInterval 100ms
+        if (next >= 5 && !viewRecorded) {
+          if (videoRowId) {
+            registerView(videoRowId).then(ok => {
+              if (ok) setViewRecorded(true);
+            });
+          } else {
+            console.warn('[VIEW] videoRowId 없음. 조회수 반영 못함');
+          }
+        }
+        return next;
+      });
     }
   };
 
@@ -103,9 +147,35 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ autoPlay = false }) => {
           onProgress={handleProgress}
           onDuration={d => setVideoDuration(d)}
           progressInterval={100}
+          playsinline // 모바일 인라인 재생
+          onPlay={() => setHasStarted(true)} // 재생 시작 표시
+          onBuffer={() => setIsBuffering(true)} // 버퍼링 시작
+          onBufferEnd={() => setIsBuffering(false)} // 버퍼링 종료
+          onEnded={() => {
+            setPlaying(false);
+            setHasStarted(false); // 안내 화면 다시 보이기
+            playerRef.current?.seekTo(startSec ?? 0, 'seconds'); // 처음 위치로 돌려놓기
+            // setWatchTime(0);    // (선택) 다시 5초 카운트하려면 초기화
+            // setViewRecorded(false); // (선택) 같은 세션에서 재시청도 조회수 올릴 거면 초기화
+          }}
         />
         {/* 오버레이 (클릭 차단) */}
         <div className="absolute inset-0 bg-transparent pointer-events-auto" />
+        {!hasStarted && (
+          <div className="absolute inset-0 bg-black text-white flex items-center justify-center">
+            {video ? (
+              <img
+                src={imageUrl || undefined}
+                alt="video thumbnail"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            ) : (
+              <div className="flex items-center justify-center w-full h-full text-gray-400">
+                이미지 로딩 중...
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 커스텀 컨트롤 */}
@@ -133,6 +203,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ autoPlay = false }) => {
               />
             </svg>
           </button>
+          {/* 재생/정지 버튼 */}
           <button onClick={handlePlayPause} aria-label="Pause:Play" className="p-5 text-2xl">
             {playing ? (
               <svg
