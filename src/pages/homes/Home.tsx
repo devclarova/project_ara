@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import InfiniteScroll from 'react-infinite-scroll-component';
@@ -32,6 +32,8 @@ type OutletCtx = {
   setNewTweet: (t: UITweet | null) => void;
 };
 
+let HOME_SCROLL_Y = 0;
+
 export default function Home() {
   const { newTweet, setNewTweet } = useOutletContext<OutletCtx>();
   const [tweets, setTweets] = useState<UITweet[]>([]);
@@ -39,6 +41,33 @@ export default function Home() {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 10;
+
+  const restoredRef = useRef(false);
+
+  // 1. 스크롤 할 때마다 현재 위치를 계속 저장
+  useEffect(() => {
+    const handleScroll = () => {
+      HOME_SCROLL_Y = window.scrollY || window.pageYOffset || 0;
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  // 2. 처음 돌아왔을 때, 저장된 위치로 딱 한 번만 복원
+  useLayoutEffect(() => {
+    if (loading) return;
+    if (restoredRef.current) return;
+
+    restoredRef.current = true;
+    window.scrollTo({
+      top: HOME_SCROLL_Y,
+      left: 0,
+      behavior: 'instant' as ScrollBehavior,
+    });
+  }, [loading]);
 
   //  트윗 불러오기
   const fetchTweets = async (reset = false) => {

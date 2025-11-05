@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import CheckboxSquare from '@/components/common/CheckboxSquare';
 
 const DRAFT_KEY = 'signup-profile-draft';
 
@@ -339,29 +340,7 @@ function SignInPage() {
               checked={remember}
               onChange={e => setRemember(e.target.checked)}
             />
-            <span
-              className="w-5 h-5 rounded-[6px] border grid place-items-center
-               bg-[var(--ara-checkbox-bg)] border-[var(--ara-checkbox-border)]
-               outline-none ring-0 focus-visible:ring-2"
-              tabIndex={-1}
-              aria-hidden="true"
-            >
-              {/* 체크 상태에 따라 아이콘 투명도만 변경 */}
-              <svg
-                className={`w-4 h-4 transition-opacity duration-150 ${remember ? 'opacity-100' : 'opacity-0'}`}
-                viewBox="0 0 20 20"
-                fill="none"
-              >
-                <path
-                  d="M5 10.5l3 3 7-7"
-                  stroke="var(--ara-checkbox-check)"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
-            <span className="text-sm text-gray-600 dark:text-gray-100">자동 로그인</span>
+            <CheckboxSquare checked={remember} onChange={setRemember} label="자동 로그인" />
           </label>
 
           {/* 이메일/비밀번호 찾기 (그대로 유지) */}
