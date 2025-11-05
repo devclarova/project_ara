@@ -133,7 +133,6 @@ const App = () => {
                         <Route path="notifications1" element={<HNotificationsPage />} />
                         <Route path="studyList" element={<StudyListPage />} />
                         <Route path="chat" element={<DirectChatPage />} />
-                        </Route>
                       </Route>
                     </Route>
                   </Route>
@@ -143,7 +142,7 @@ const App = () => {
                 </Routes>
               </main>
             </div>
-        <Toaster />
+            <Toaster />
             {/* <InflearnNav /> */}
           </Router>
         </DirectChatProider>
