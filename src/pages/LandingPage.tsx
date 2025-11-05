@@ -2,6 +2,7 @@ import { Badge, Film, Languages, Users } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card } from './TempHomePage';
 import { useAuth } from '@/contexts/AuthContext';
+import Header from '@/components/common/Header';
 
 type HeroProps = {
   onSignup?: () => void;
@@ -23,7 +24,8 @@ const Hero = ({ onSignup }: HeroProps) => {
 
   return (
     <section className="relative h-[600px] bg-gradient-to-b from-primary/5 to-white overflow-hidden">
-      <div className="max-w-screen-xl mx-auto px-6 h-full flex items-center">
+      <Header />
+      <div className="max-w-screen-xl mx-auto px-6 h-full pt-36 flex items-center">
         <div className="w-full lg:w-1/2">
           <h1 className="text-5xl font-bold leading-tight mb-6">
             한국어로 새로운 <br />

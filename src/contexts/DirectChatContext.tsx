@@ -341,22 +341,22 @@ export const DirectChatProider: React.FC<DirectChatProiderProps> = ({ children }
     if (!currentUserId) return;
 
     // 간단한 Realtime 테스트
-    const testChannel = supabase
-      .channel('test_channel')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'direct_chats',
-        },
-        payload => {
-          // 테스트 Realtime 수신
-        },
-      )
-      .subscribe(status => {
-        // 테스트 Realtime 상태
-      });
+    // const testChannel = supabase
+    //   .channel('test_channel')
+    //   .on(
+    //     'postgres_changes',
+    //     {
+    //       event: '*',
+    //       schema: 'public',
+    //       table: 'direct_chats',
+    //     },
+    //     payload => {
+    //       // 테스트 Realtime 수신
+    //     },
+    //   )
+    //   .subscribe(status => {
+    //     // 테스트 Realtime 상태
+    //   });
 
     // 통합 채널로 모든 변경사항 감지
     const channel = supabase
@@ -554,13 +554,14 @@ export const DirectChatProider: React.FC<DirectChatProiderProps> = ({ children }
         } else if (status === 'TIMED_OUT') {
           console.error('Realtime 구독 시간 초과!');
         } else if (status === 'CLOSED') {
-          console.error('Realtime 구독 연결 종료!');
+          // console.error('Realtime 구독 연결 종료!');
+          console.log('Realtime 구독 정상 종료');
         }
       });
 
     return () => {
       channel.unsubscribe();
-      testChannel.unsubscribe();
+      // testChannel.unsubscribe();
     };
   }, [currentUserId, loadChats]);
 

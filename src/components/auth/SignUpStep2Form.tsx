@@ -66,7 +66,9 @@ type Lang =
   | 'es'
   | 'fr'
   | 'pt'
-  | 'pt-br';
+  | 'pt-br'
+  | 'de'
+  | 'fi';
 
 const RE = {
   ko: /^[가-힣0-9_]+$/,
@@ -83,6 +85,8 @@ const RE = {
   fr: /^[A-Za-zàâçéèêëîïôùûüÀÂÇÉÈÊËÎÏÔÙÛÜ0-9_]+$/,
   pt: /^[A-Za-zãõçáéíóúÃÕÇÁÉÍÓÚ0-9_]+$/,
   'pt-br': /^[A-Za-záãâçéêíóôõúÁÃÂÇÉÊÍÓÔÕÚ0-9_]+$/,
+  de: /^[A-Za-zÄÖÜäöüß0-9_]+$/,
+  fi: /^[A-Za-zÅÄÖåäö0-9_]+$/,
 } as const;
 
 const LEN: Record<Lang, [number, number]> = {
@@ -100,6 +104,8 @@ const LEN: Record<Lang, [number, number]> = {
   fr: [3, 12],
   pt: [3, 12],
   'pt-br': [3, 12],
+  de: [3, 12],
+  fi: [3, 12],
 };
 
 const DIACRITIC_HINT = {
@@ -108,41 +114,147 @@ const DIACRITIC_HINT = {
   pt: /[ãõçáéíóúÃÕÇÁÉÍÓÚ]/,
   'pt-br': /[áãâçéêíóôõúÁÃÂÇÉÊÍÓÔÕÚ]/,
   vi: /[ÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚÝàáâãèéêìíòóôõùúýĂăĐđĨĩŨũƠơƯưẠ-ỹ]/,
+  de: /[ÄÖÜäöüß]/,
+  fi: /[ÅÄÖåäö]/,
 };
 
 function hasOnlyOneScript(nick: string): boolean {
-  const isKorean = /[가-힣]/.test(nick);
-  const isKana = /[ぁ-ゟ゠-ヿｦ-ﾟ]/.test(nick);
-  const isHan = /[\u4E00-\u9FFF]/.test(nick);
-  const isCyr = /[\u0400-\u04FF]/.test(nick);
-  const isAr = /[\u0600-\u06FF]/.test(nick);
-  const isHi = /[\u0900-\u097F]/.test(nick);
-  const isTh = /[\u0E00-\u0E7F]/.test(nick);
-  const isBn = /[\u0980-\u09FF]/.test(nick);
-  const isLatin = /[A-Za-zÀ-ỹ]/.test(nick);
-  const count = [isKorean, isKana || isHan, isCyr, isAr, isHi, isTh, isBn, isLatin].filter(
-    Boolean,
-  ).length;
-  return count <= 1;
+  // 숫자 / 언더바는 스크립트 판정에서 제외 (어느 언어에도 공통으로 허용)
+  const scripts = new Set<string>();
+
+  const isLatinChar = (ch: string) =>
+    /[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]/.test(
+      ch,
+    );
+
+  for (const ch of nick) {
+    if (/[0-9_]/.test(ch)) continue;
+
+    if (/[가-힣]/.test(ch)) {
+      scripts.add('hangul');
+    } else if (/[ぁ-ゟ゠-ヿｦ-ﾟ]/.test(ch)) {
+      scripts.add('kana');
+    } else if (/[\u4E00-\u9FFF]/.test(ch)) {
+      scripts.add('han');
+    } else if (/[\u0400-\u04FF]/.test(ch)) {
+      scripts.add('cyrillic');
+    } else if (/[\u0600-\u06FF]/.test(ch)) {
+      scripts.add('arabic');
+    } else if (/[\u0900-\u097F]/.test(ch)) {
+      scripts.add('devanagari'); // hi
+    } else if (/[\u0E00-\u0E7F]/.test(ch)) {
+      scripts.add('thai');
+    } else if (/[\u0980-\u09FF]/.test(ch)) {
+      scripts.add('bengali');
+    } else if (isLatinChar(ch)) {
+      scripts.add('latin');
+    } else {
+      scripts.add('other');
+    }
+
+    if (scripts.size > 1) return false;
+  }
+
+  return true;
 }
 
 function detectLang(nick: string): Lang | null {
   if (!nick) return null;
-  if (/[가-힣]/.test(nick)) return 'ko';
-  if (/[ぁ-ゟ゠-ヿｦ-ﾟ]/.test(nick)) return 'ja';
-  if (/[\u4E00-\u9FFF]/.test(nick)) return 'zh';
-  if (/[\u0400-\u04FF]/.test(nick)) return 'ru';
-  if (/[\u0600-\u06FF]/.test(nick)) return 'ar';
-  if (/[\u0900-\u097F]/.test(nick)) return 'hi';
-  if (/[\u0E00-\u0E7F]/.test(nick)) return 'th';
-  if (/[\u0980-\u09FF]/.test(nick)) return 'bn';
-  if (DIACRITIC_HINT.vi.test(nick)) return 'vi';
-  if (DIACRITIC_HINT['pt-br'].test(nick)) return 'pt-br';
-  if (DIACRITIC_HINT.pt.test(nick)) return 'pt';
-  if (DIACRITIC_HINT.fr.test(nick)) return 'fr';
-  if (DIACRITIC_HINT.es.test(nick)) return 'es';
-  if (/[A-Za-z]/.test(nick)) return 'en';
-  return null;
+  const s = nick;
+
+  // 1) 비 라틴 스크립트는 기존 로직 그대로
+  if (/[가-힣]/.test(s)) return 'ko';
+  if (/[ぁ-ゟ゠-ヿｦ-ﾟ]/.test(s)) return 'ja';
+  if (/[\u4E00-\u9FFF]/.test(s)) return 'zh';
+  if (/[\u0400-\u04FF]/.test(s)) return 'ru';
+  if (/[\u0600-\u06FF]/.test(s)) return 'ar';
+  if (/[\u0900-\u097F]/.test(s)) return 'hi';
+  if (/[\u0E00-\u0E7F]/.test(s)) return 'th';
+  if (/[\u0980-\u09FF]/.test(s)) return 'bn';
+
+  // 라틴 계열 문자가 하나도 없으면 감지 불가
+  const hasLatin = /[A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/.test(s);
+  if (!hasLatin) return null;
+
+  // 🔹 악센트(다이아크리틱)가 하나도 없으면 → 영어로 취급
+  const hasAnyDiacritic =
+    DIACRITIC_HINT.es.test(s) ||
+    DIACRITIC_HINT.fr.test(s) ||
+    DIACRITIC_HINT.pt.test(s) ||
+    DIACRITIC_HINT['pt-br'].test(s) ||
+    DIACRITIC_HINT.vi.test(s) ||
+    DIACRITIC_HINT.de.test(s) || // de / fi 힌트도 같이 사용
+    DIACRITIC_HINT.fi.test(s);
+
+  if (!hasAnyDiacritic) {
+    return 'en';
+  }
+
+  // 🔹 라틴 계열 후보들 점수 계산
+  //   - 기본 우선순위: es → pt-br → pt → fr → de → fi → vi
+  const latinCandidates: Lang[] = ['es', 'pt-br', 'pt', 'fr', 'de', 'fi', 'vi'];
+
+  let bestLang: Lang | null = null;
+  let bestScore = -1;
+
+  for (const lang of latinCandidates) {
+    let score = 0;
+
+    // 1) 해당 언어용 정규식에 맞으면 +1
+    const re = RE[lang];
+    if (re && re.test(s)) {
+      score += 1;
+    }
+
+    // 2) 악센트 글자 개수 × 3점
+    const hintRe = (DIACRITIC_HINT as any)[lang] as RegExp | undefined;
+    if (hintRe) {
+      const m = s.match(hintRe);
+      if (m) {
+        score += m.length * 3;
+      }
+    }
+
+    // 3) 언어별 보정(heuristics)
+    //    🎯 베트남어: 짧은 이름 + nh/ng 패턴은 가산점
+    if (lang === 'vi') {
+      const hasVNCore = /[ĂăÂâÊêÔôƠơƯưĐđ]/.test(s); // 전형적인 베트남어 글자
+      const hasNhNg = /(nh|ng)/i.test(s);
+
+      if (hasVNCore) {
+        score += 4;
+      }
+      // 예: "Ánh" 같은 3~4자, nh/ng 포함 → 베트남어 쪽으로 강하게 밀어줌
+      if (hasNhNg && s.length <= 4) {
+        score += 2;
+      }
+    }
+
+    //    🇪🇸 스페인어: 거의 쓰지 않는 'nh'가 있으면 약간 감점
+    if (lang === 'es') {
+      if (/nh/i.test(s)) {
+        score -= 1;
+      }
+    }
+
+    //    🇵🇹 포르투갈어: ã/õ/ç가 없고 nh도 없으면 살짝 감점
+    if (lang === 'pt' || lang === 'pt-br') {
+      const hasPtCore = /[ãÃõÕçÇ]/.test(s);
+      if (!hasPtCore && !/nh/i.test(s)) {
+        score -= 1;
+      }
+    }
+
+    // 🔚 최고 점수 갱신
+    if (score > bestScore) {
+      bestScore = score;
+      bestLang = lang;
+    }
+  }
+
+  // 후보 중 점수 제일 높은 라틴 언어가 있으면 그걸 사용,
+  // 그래도 없으면 영어로 fallback
+  return bestLang ?? 'en';
 }
 
 function validateNicknameField(nickRaw: string): { error: string; lang: Lang | null } {
@@ -184,6 +296,8 @@ function langLabel(l?: Lang | null): string {
     fr: '프랑스어',
     pt: '포르투갈어',
     'pt-br': '브라질 포르투갈어',
+    de: '독일어',
+    fi: '핀란드어',
   };
   return map[l] ?? l;
 }
@@ -418,23 +532,38 @@ export default function SignUpStep2Form({
   const nickDupStatus = async (): Promise<'available' | 'taken' | 'error'> => {
     const { error: nickMsg, lang } = validateNicknameField(nickname);
     setNickLang(lang);
+
+    // 형식/언어 감지 에러
     if (nickMsg || !lang) {
       setErrors(prev => ({ ...prev, nickname: nickMsg || '닉네임을 다시 확인해주세요.' }));
       return 'error';
     }
+
     try {
+      // 1) 서버 정책 검사 (욕설/예약어 등)
       const policyErr = await serverNicknamePolicyError(nickname, lang);
       if (policyErr) {
         setErrors(prev => ({ ...prev, nickname: policyErr }));
         return 'error';
       }
+
+      // 2) DB RPC로 중복 여부 확인 (정규화 기준)
       const { data, error } = await supabase.rpc('nickname_exists', {
         _nickname: nickname,
         _lang: lang,
       } as any);
-      if (error) return 'error';
-      return data === true ? 'taken' : 'available';
-    } catch {
+
+      console.log('nickname_exists result:', { data, error });
+
+      if (error) {
+        console.error('nickname_exists rpc error', error);
+        return 'error';
+      }
+
+      const exists = data === true;
+      return exists ? 'taken' : 'available';
+    } catch (e) {
+      console.error('nickname dup check exception', e);
       return 'error';
     }
   };
@@ -692,7 +821,7 @@ export default function SignUpStep2Form({
         <button
           type="button"
           onClick={onBack}
-          className="bg-gray-100 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:opacity-80 transition-colors"
+          className="bg-gray-100 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:opacity-80 transition-colors dark:bg-neutral-500 dark:text-gray-100"
         >
           이전
         </button>

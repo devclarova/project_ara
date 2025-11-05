@@ -34,12 +34,15 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
       return;
     }
 
+    if (location.pathname.startsWith('/auth/callback')) return;
+
     const fetchProfile = async () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('id, user_id, nickname, avatar_url')
         .eq('user_id', user.id)
-        .single();
+        .limit(1)
+        .maybeSingle();
 
       if (error) {
         console.error('Failed to load profile:', error.message);

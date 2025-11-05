@@ -347,7 +347,7 @@ export default function SignUpStep3Profile(props: Props) {
           type="button"
           onClick={onBack}
           disabled={loading}
-          className="bg-gray-100 dark:bg-neutral-800 text-gray-800 dark:text-gray-100 font-semibold py-2 px-4 rounded-lg hover:opacity-80 transition disabled:opacity-50"
+          className="bg-gray-100 dark:bg-neutral-500 text-gray-800 dark:text-gray-100 font-semibold py-2 px-4 rounded-lg hover:opacity-80 transition disabled:opacity-50"
         >
           이전
         </button>
@@ -378,12 +378,12 @@ export default function SignUpStep3Profile(props: Props) {
               onClick={() => {
                 setShowSuccess(false);
                 onDone?.();
-                navigate(successKind === 'social' ? '/finalhome' : '/signin');
+                navigate(successKind === 'social' ? '/finalhome' : '/');
               }}
               className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white"
               style={{ background: 'var(--ara-primary)' }}
             >
-              {successKind === 'social' ? '시작하기' : '로그인 페이지로 이동'}
+              {successKind === 'social' ? '시작하기' : '홈으로 이동'}
             </button>
           </div>
         </div>

@@ -148,8 +148,7 @@ export default function Home() {
     const likeChannel = supabase
       .channel('tweet-likes-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tweet_likes' }, payload => {
-        const tweetId =
-          (payload.new as any)?.tweet_id || (payload.old as any)?.tweet_id;
+        const tweetId = (payload.new as any)?.tweet_id || (payload.old as any)?.tweet_id;
         if (!tweetId) return;
         const delta = payload.eventType === 'INSERT' ? 1 : -1;
         setTweets(prev =>

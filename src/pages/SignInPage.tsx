@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 const DRAFT_KEY = 'signup-profile-draft';
@@ -116,25 +116,7 @@ function SignInPage() {
   const [resendMsg, setResendMsg] = useState('');
   const [suppressEffects, setSuppressEffects] = useState(false);
   const [remember, setRemember] = useState(false);
-
-  useEffect(() => {
-    if (loading) return;
-    if (session) {
-      (async () => {
-        const provider = (session.user.app_metadata?.provider as string | undefined) ?? 'email';
-        if (provider !== 'email') {
-          navigate('/signup/social', { replace: true });
-          return;
-        }
-        const uid = session.user.id;
-        const { count } = await supabase
-          .from('profiles')
-          .select('user_id', { head: true, count: 'exact' })
-          .eq('user_id', uid);
-        navigate(count ? '/finalhome' : '/signup', { replace: true });
-      })();
-    }
-  }, [loading, session, navigate]);
+  const location = useLocation();
 
   const handleChange = (field: 'email' | 'pw', value: string) => {
     setSuppressEffects(false);
