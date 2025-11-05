@@ -94,7 +94,7 @@ function ReplyCard({ reply }: { reply: Reply }) {
             </button>
 
             {/* Retweet */}
-            <button
+            {/* <button
               className={`flex items-center space-x-2 transition-colors group ${
                 retweeted ? 'text-green-500' : 'hover:text-green-500'
               }`}
@@ -107,7 +107,7 @@ function ReplyCard({ reply }: { reply: Reply }) {
                 <i className="ri-repeat-line text-lg"></i>
               </div>
               <span className="text-sm">{reply.stats.retweets + (retweeted ? 1 : 0)}</span>
-            </button>
+            </button> */}
 
             {/* Like */}
             <button
@@ -126,9 +126,9 @@ function ReplyCard({ reply }: { reply: Reply }) {
             </button>
 
             {/* Views */}
-            <button className="flex items-center space-x-2 hover:text-blue-500 transition-colors group">
+            <button className="flex items-center space-x-2 hover:text-green-500 transition-colors group">
               <div className="p-2 rounded-full group-hover:bg-blue-50 transition-colors">
-                <i className="ri-bar-chart-line text-lg"></i>
+                <i className="ri-eye-line text-lg"></i>
               </div>
               <span className="text-sm">{reply.stats.views}</span>
             </button>
