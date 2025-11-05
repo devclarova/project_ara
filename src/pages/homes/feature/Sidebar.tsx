@@ -92,7 +92,22 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
     <div className="h-full w-full bg-white border-r border-gray-200 flex flex-col px-3 lg:px-4 py-6 transition-all duration-300">
       {/* Logo */}
       <div className=" flex justify-center lg:justify-center flex-shrink-0">
-        <button onClick={() => navigate('/')} className="cursor-pointer">
+        <button
+          onClick={() => {
+            if (location.pathname === '/finalhome') {
+              // 홈일 때 → 스크롤 맨 위 or 새로고침
+              if (window.scrollY <= 5) {
+                window.location.reload();
+              } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            } else {
+              // 홈이 아닐 때 → 홈으로 이동
+              navigate('/finalhome');
+            }
+          }}
+          className="cursor-pointer"
+        >
           {/* <h1
             className="text-2xl font-bold hidden lg:block"
             style={{ fontFamily: '"Pacifico", serif' }}
