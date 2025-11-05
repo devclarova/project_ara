@@ -257,19 +257,94 @@ const StudyListPage = () => {
               {/* 페이지네이션 */}
               {filteredClips.length > 0 && totalPages > 1 && (
                 <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 my-6 sm:my-8">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
+                  {/* 이전 버튼 */}
+                  {page > 1 && (
                     <button
-                      key={num}
-                      onClick={() => setPage(num)}
-                      className={`px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2 rounded-md border text-sm sm:text-base lg:text-lg ${
-                        page === num
-                          ? 'bg-primary/80 text-white border-primary'
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-                      } transition`}
+                      onClick={() => setPage(page - 3)}
+                      className="text-sm sm:text-base lg:text-lg text-gray-500 hover:text-gray-900 transition"
                     >
-                      {num}
+                      <i className="ri-arrow-drop-left-line text-3xl transition-transform duration-200 group-hover:-translate-x-1" />
                     </button>
-                  ))}
+                  )}
+
+                  {/* 페이지 번호 표시 (최대 3개까지 표시) */}
+                  {totalPages <= 3 ? (
+                    // 페이지가 3개 이하일 경우 모두 표시
+                    Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
+                      <button
+                        key={num}
+                        onClick={() => setPage(num)}
+                        className={`px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2 text-sm sm:text-base lg:text-lg
+            ${page === num ? 'text-primary underline' : 'text-gray-700 dark:text-gray-600'} transition`}
+                      >
+                        {num}
+                      </button>
+                    ))
+                  ) : (
+                    <>
+                      {/* 첫 페이지 버튼은 페이지가 4개 이상일 때만 표시 */}
+                      {page > 3 && (
+                        <button
+                          onClick={() => setPage(1)}
+                          className={`px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2 text-sm sm:text-base lg:text-lg
+              ${page === 1 ? 'text-primary underline' : 'text-gray-700 dark:text-gray-600'} transition`}
+                        >
+                          1
+                        </button>
+                      )}
+
+                      {/* '...' 표시 */}
+                      {/* {page > 3 && (
+                        <span className="text-gray-700 dark:text-gray-600 px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2">
+                          ...
+                        </span>
+                      )} */}
+
+                      {/* 현재 페이지를 기준으로 앞뒤로 2개의 페이지 번호만 표시 */}
+                      {Array.from({ length: 3 }, (_, i) => page - 1 + i).map(
+                        num =>
+                          num > 0 &&
+                          num <= totalPages && (
+                            <button
+                              key={num}
+                              onClick={() => setPage(num)}
+                              className={`px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2 text-sm sm:text-base lg:text-lg
+                  ${page === num ? 'text-primary underline' : 'text-gray-700 dark:text-gray-600'} transition`}
+                            >
+                              {num}
+                            </button>
+                          ),
+                      )}
+
+                      {/* '...' 표시 */}
+                      {/* {page < totalPages - 2 && (
+                        <span className="text-gray-700 dark:text-gray-600 px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2">
+                          ...
+                        </span>
+                      )} */}
+
+                      {/* 마지막 페이지 버튼은 페이지가 5개 이상일 때만 표시 */}
+                      {page < totalPages - 2 && (
+                        <button
+                          onClick={() => setPage(totalPages)}
+                          className={`px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2 text-sm sm:text-base lg:text-lg
+              ${page === totalPages ? 'text-primary underline' : 'text-gray-700 dark:text-gray-600'} transition`}
+                        >
+                          {totalPages}
+                        </button>
+                      )}
+                    </>
+                  )}
+
+                  {/* 다음 버튼 */}
+                  {page < totalPages && (
+                    <button
+                      onClick={() => setPage(page + 3)}
+                      className="text-sm sm:text-base lg:text-lg text-gray-500 hover:text-gray-900 transition"
+                    >
+                      <i className="ri-arrow-drop-right-line text-3xl transition-transform duration-200 group-hover:-translate-x-1" />
+                    </button>
+                  )}
                 </div>
               )}
             </div>
