@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import RichTextEditor from '../editor/RichTextEditor';
+import { toast } from 'sonner';
 
 interface ReplyModalProps {
   tweetId: string; // ✅ 부모 트윗 ID
@@ -123,7 +124,8 @@ export default function ReplyModal({ tweetId, onClose, onReplyCreated }: ReplyMo
       };
 
       onReplyCreated?.(newReply);
-      alert('✅ 댓글이 성공적으로 등록되었습니다!');
+      // alert('✅ 댓글이 성공적으로 등록되었습니다!');
+      toast.success('댓글이 성공적으로 업로드되었습니다!');
       onClose();
     } catch (err) {
       console.error('⚠️ 댓글 업로드 오류:', err);

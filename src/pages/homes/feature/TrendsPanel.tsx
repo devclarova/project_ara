@@ -63,7 +63,7 @@ export default function TrendsPanel() {
   }, []);
 
   return (
-    <div className="w-80 h-full flex flex-col border-l border-gray-200 lg:px-4 py-6">
+    <div className="w-80 h-full flex flex-col  lg:px-4 py-6">
       {/* 🔍 Search Bar */}
       <div className="sticky top-0 bg-white z-10 pb-4">
         <div className="relative">
@@ -84,7 +84,7 @@ export default function TrendsPanel() {
       <div className="flex-1 overflow-y-auto space-y-4">
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <h2 className="text-xl font-bold text-gray-900 mb-4 flex justify-center items-center gap-2">
-            지금 뜨는 피드 
+            실시간 인기 피드 
           </h2>
 
           {loading ? (
