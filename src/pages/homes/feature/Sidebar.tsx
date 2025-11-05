@@ -89,7 +89,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
   };
 
   return (
-    <div className="h-full w-full bg-white border-r border-gray-200 flex flex-col px-3 lg:px-4 py-6 transition-all duration-300">
+    <div className="h-full w-full bg-white border-r-2 border-gray-700 flex flex-col px-3 lg:px-4 py-6 transition-all duration-300 dark:bg-gray-800">
       {/* Logo */}
       <div className=" flex justify-center lg:justify-center flex-shrink-0">
         <button
@@ -128,10 +128,10 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
             <li key={index}>
               <button
                 onClick={() => handleNavigation(item.path, item.onClick)}
-                className={`w-full flex items-center justify-center lg:justify-start space-x-0 lg:space-x-4 px-2 lg:px-4 py-3 rounded-full transition-colors cursor-pointer whitespace-nowrap ${
+                className={`w-full flex items-center justify-center lg:justify-start space-x-0 lg:space-x-4 px-2 lg:px-4 py-3 rounded-full transition-colors cursor-pointer whitespace-nowrap dark:text-gray-300 dark:hover:text-gray-400 ${
                   location.pathname === item.path
                     ? 'bg-primary/10 text-primary'
-                    : 'hover:bg-primary/5 text-gray-700'
+                    : 'hover:bg-primary/5 text-gray-700 dark:text-gray-100'
                 }`}
               >
                 {item.imgSrc ? (

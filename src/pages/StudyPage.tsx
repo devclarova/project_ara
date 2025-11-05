@@ -113,11 +113,11 @@ const StudyPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-800">
       <div className="flex justify-center">
         <div className="flex w-full max-w-7xl min-h-screen">
           {/* Left Sidebar */}
-          <aside className="w-20 lg:w-64 shrink-0 border-r border-gray-200 h-screen sticky top-0">
+          <aside className="w-20 lg:w-64 shrink-0 border-r-2 border-gray-200 dark:border-gray-800 h-screen sticky top-0">
             <Sidebar onTweetClick={() => setShowTweetModal(true)} />
           </aside>
 
@@ -135,7 +135,7 @@ const StudyPage = () => {
          ${
            isActive
              ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10'
-             : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white'
+             : 'ring-gray-200 text-gray-700 dark:text-gray-300 hover:ring-indigo-200 dark:hover:bg-gray-600'
          }`}
                   >
                     <i className="ri-home-5-line text-base opacity-70 group-hover:opacity-100" />
@@ -158,7 +158,7 @@ const StudyPage = () => {
          ${
            isActive
              ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10'
-             : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white'
+             : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:dark:bg-gray-600 dark:text-gray-300'
          }`}
                     title={study?.categories ?? '카테고리'}
                   >
@@ -184,7 +184,7 @@ const StudyPage = () => {
      ${
        isActive
          ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10'
-         : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white'
+         : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:dark:bg-gray-600 dark:text-gray-300'
      }`
                     }
                     title={loading ? '로딩 중' : (study?.contents ?? '제목 없음')}
@@ -210,7 +210,7 @@ const StudyPage = () => {
                     }
                     className={({ isActive }) =>
                       `group hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full leading-none transition-all text-sm max-w-[32vw] md:max-w-[28vw] truncate
-     ${isActive ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10' : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white'}`
+     ${isActive ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10' : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:dark:bg-gray-600 dark:text-gray-300'}`
                     }
                     title={loading ? '로딩 중' : (study?.episode ?? '에피소드 없음')}
                   >
@@ -234,20 +234,30 @@ const StudyPage = () => {
                   onClick={handlePrevPage}
                   className="group flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 text-gray-700 hover:text-primary"
                 >
-                  <i className="ri-arrow-drop-left-line text-5xl transition-transform duration-200 group-hover:-translate-x-1" />
+                  <i className="ri-arrow-drop-left-line text-5xl transition-transform duration-200 group-hover:-translate-x-1 dark:text-gray-300" />
                 </button>
 
                 {/* 중앙 타이틀 */}
-                <h1 className="absolute left-1/2 -translate-x-1/2 text-center text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 select-none tracking-tight transition-all duration-300 flex justify-center whitespace-nowrap">
+                <h1 className="absolute left-1/2 -translate-x-1/2 text-center text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 select-none tracking-tight transition-all duration-300 flex justify-center whitespace-nowrap dark:text-gray-100">
                   {loading ? (
-                    <span className="animate-pulse text-gray-400">로딩 중...</span>
+                    <span className="animate-pulse text-gray-400 dark:text-gray-300">
+                      로딩 중...
+                    </span>
                   ) : (
                     <>
                       {study?.contents ?? '제목 없음'} ·
                       {study?.episode && (
-                        <span className="text-gray-600 ml-1 mr-1"> {study.episode}</span>
+                        <span className="text-gray-600 ml-1 mr-1 dark:text-gray-300">
+                          {' '}
+                          {study.episode}
+                        </span>
                       )}
-                      {study?.scene && <span className="text-gray-500"> Scene {study.scene}</span>}
+                      {study?.scene && (
+                        <span className="text-gray-500 dark:text-gray-400">
+                          {' '}
+                          Scene {study.scene}
+                        </span>
+                      )}
                     </>
                   )}
                 </h1>
@@ -257,7 +267,7 @@ const StudyPage = () => {
                   onClick={handleNextPage}
                   className="group flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 text-gray-700 hover:text-primary"
                 >
-                  <i className="ri-arrow-drop-right-line text-5xl transition-transform duration-200 group-hover:-translate-x-1" />
+                  <i className="ri-arrow-drop-right-line text-5xl transition-transform duration-200 group-hover:-translate-x-1 dark:text-gray-300" />
                 </button>
               </div>
 

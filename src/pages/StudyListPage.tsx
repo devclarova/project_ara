@@ -146,18 +146,18 @@ const StudyListPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-secondary">
+    <div className="min-h-screen bg-white dark:bg-gray-800">
       <div className="flex justify-center min-h-screen">
         <div className="flex w-full max-w-7xl">
           {/* Left Sidebar */}
-          <aside className="w-20 lg:w-64 shrink-0 border-r border-gray-200 h-screen sticky top-0">
+          <aside className="w-20 lg:w-64 shrink-0 border-gray-200 h-screen sticky top-0 dark:bg-gray-800">
             <Sidebar onTweetClick={() => setShowTweetModal(true)} />
           </aside>
 
           {/* 데스크톱에서만 폭 제한해 자연스런 3열 유지 */}
-          <main className="flex-1 min-w-0 bg-white">
+          <main className="flex-1 min-w-0 bg-white dark:bg-gray-800">
             {/* 탭 + 검색 */}
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 bg-white dark:bg-secondary sticky top-0 z-10 pb-2 pl-6 pt-8">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 bg-white dark:bg-gray-800 sticky top-0 z-10 pb-2 pl-6 pt-8">
               {/* 왼쪽: 카테고리 + 모바일용 검색 아이콘 */}
               <div className="flex items-center justify-between ">
                 <CategoryTabs active={displayCategory} onChange={handleCategoryChange} />
@@ -220,14 +220,14 @@ const StudyListPage = () => {
                 </div>
               )}
             </div>
-            <div className="w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1400px]">
+            <div className="w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1400px] dark:bg-gray-800">
               {/* 헤더 */}
               {/* <div className="flex flex-col sm:flex-row justify-center">
                 <img src="images/sample_font_logo.png" alt="로고이미지" className="h-15 w-20" />
               </div> */}
 
               {/* 카드 그리드 */}
-              <div className="grid gap-6 sm:gap-8  px-0 grid-cols-1 sm:grid-cols-2 lg:[grid-template-columns:repeat(3,minmax(260px,1fr))]">
+              <div className="grid gap-6 sm:gap-8  px-0 grid-cols-1 sm:grid-cols-2 lg:[grid-template-columns:repeat(3,minmax(260px,1fr))] dark:bg-gray-800">
                 {finalList.length > 0 ? (
                   finalList.map(study => {
                     const [v] = study.video ?? [];

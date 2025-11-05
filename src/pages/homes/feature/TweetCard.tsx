@@ -8,7 +8,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import ReactCountryFlag from 'react-country-flag';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface User {
   name: string;
@@ -219,7 +229,6 @@ export default function TweetCard({ id, user, content, image, timestamp, stats }
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-                
               </div>
             )}
           </div>
