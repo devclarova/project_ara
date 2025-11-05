@@ -257,7 +257,7 @@ const StudyPage = () => {
                   onClick={handleNextPage}
                   className="group flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 text-gray-700 hover:text-primary"
                 >
-                  <i className="ri-arrow-drop-right-line text-5xl transition-transform duration-200 group-hover:-translate-x-1" />
+                  <i className="ri-arrow-drop-right-line text-5xl transition-transform duration-200 group-hover:translate-x-1" />
                 </button>
               </div>
 
