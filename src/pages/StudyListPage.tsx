@@ -146,89 +146,88 @@ const StudyListPage = () => {
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-white">
-      <div className="flex justify-center h-screen">
+    <div className="min-h-screen bg-white dark:bg-secondary">
+      <div className="flex justify-center min-h-screen">
         <div className="flex w-full max-w-7xl">
           {/* Left Sidebar */}
-          <aside className="w-20 lg:w-64 shrink-0 border-r border-gray-200 h-screen">
+          <aside className="w-20 lg:w-64 shrink-0 border-r border-gray-200 h-screen sticky top-0">
             <Sidebar onTweetClick={() => setShowTweetModal(true)} />
           </aside>
 
           {/* 데스크톱에서만 폭 제한해 자연스런 3열 유지 */}
-          <main className="flex-1 min-w-0 bg-white h-screen overflow-y-auto hide-scrollbar">
-            <div className="w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1400px]">
-              {/* 헤더 */}
-              <div className="flex flex-col sm:flex-row justify-center">
-                <img src="images/sample_font_logo.png" alt="로고이미지" className="h-15 w-20" />
+          <main className="flex-1 min-w-0 bg-white">
+            {/* 탭 + 검색 */}
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 bg-white dark:bg-secondary sticky top-0 z-10 pb-2 pl-6 pt-8">
+              {/* 왼쪽: 카테고리 + 모바일용 검색 아이콘 */}
+              <div className="flex items-center justify-between ">
+                <CategoryTabs active={displayCategory} onChange={handleCategoryChange} />
+
+                {/* 모바일 전용 검색 버튼 (카테고리 옆에 위치) */}
+                <button
+                  onClick={() => setShowSearch(true)}
+                  className="md:hidden ml-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
+                  aria-label="검색 열기"
+                >
+                  <i className="ri-search-line text-[20px] text-gray-600" />
+                </button>
               </div>
 
-              {/* 탭 + 검색 */}
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5">
-                {/* 왼쪽: 카테고리 + 모바일용 검색 아이콘 */}
-                <div className="flex items-center justify-between">
-                  <CategoryTabs active={displayCategory} onChange={handleCategoryChange} />
-
-                  {/* 모바일 전용 검색 버튼 (카테고리 옆에 위치) */}
-                  <button
-                    onClick={() => setShowSearch(true)}
-                    className="md:hidden ml-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
-                    aria-label="검색 열기"
-                  >
-                    <i className="ri-search-line text-[20px] text-gray-600" />
-                  </button>
+              {/* 오른쪽: 필터 + 검색 그룹 (데스크톱 전용) */}
+              <div className="hidden md:flex items-center gap-2 mt-3 md:mt-0 flex-nowrap">
+                <div className="flex items-center h-11">
+                  <FilterDropdown value={levelFilter} onApply={setLevelFilter} />
                 </div>
-
-                {/* 오른쪽: 필터 + 검색 그룹 (데스크톱 전용) */}
-                <div className="hidden md:flex items-center gap-2 mt-3 md:mt-0 flex-nowrap">
-                  <div className="flex items-center h-11">
-                    <FilterDropdown value={levelFilter} onApply={setLevelFilter} />
-                  </div>
-                  <div className="flex items-center h-11">
-                    <SearchBar
-                      placeholder="검색어를 입력해주세요"
-                      value={keyword}
-                      onChange={handleKeywordChange}
-                      onSubmit={q => console.log('검색어:', q)}
-                    />
-                  </div>
+                <div className="flex items-center h-11">
+                  <SearchBar
+                    placeholder="검색어를 입력해주세요"
+                    value={keyword}
+                    onChange={handleKeywordChange}
+                    onSubmit={q => console.log('검색어:', q)}
+                  />
                 </div>
+              </div>
 
-                {/* 모바일: 검색 전용 모달  */}
-                {showSearch && (
-                  <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-20 md:hidden">
-                    <div className="bg-white w-[90%] max-w-sm rounded-xl shadow-lg p-4 flex flex-col gap-4">
-                      {/* 헤더 */}
-                      <div className="flex justify-between items-center">
-                        <h2 className="text-base font-semibold text-gray-800">검색</h2>
-                        <button
-                          onClick={() => setShowSearch(false)}
-                          className="text-gray-500 hover:text-gray-800"
-                          aria-label="닫기"
-                        >
-                          <i className="ri-close-line text-xl" />
-                        </button>
-                      </div>
+              {/* 모바일: 검색 전용 모달  */}
+              {showSearch && (
+                <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-20 md:hidden">
+                  <div className="bg-white w-[90%] max-w-sm rounded-xl shadow-lg p-4 flex flex-col gap-4">
+                    {/* 헤더 */}
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-base font-semibold text-gray-800">검색</h2>
+                      <button
+                        onClick={() => setShowSearch(false)}
+                        className="text-gray-500 hover:text-gray-800"
+                        aria-label="닫기"
+                      >
+                        <i className="ri-close-line text-xl" />
+                      </button>
+                    </div>
 
-                      {/* 검색만 표시 */}
-                      <div className="mt-2">
-                        <SearchBar
-                          autoFocus
-                          placeholder="검색어를 입력해주세요"
-                          value={keyword}
-                          onChange={handleKeywordChange}
-                          onSubmit={q => {
-                            console.log('검색어:', q); // 실제 검색 로직 연결
-                            setShowSearch(false); // 검색 후 모달 닫기
-                          }}
-                        />
-                      </div>
+                    {/* 검색만 표시 */}
+                    <div className="mt-2">
+                      <SearchBar
+                        autoFocus
+                        placeholder="검색어를 입력해주세요"
+                        value={keyword}
+                        onChange={handleKeywordChange}
+                        onSubmit={q => {
+                          console.log('검색어:', q); // 실제 검색 로직 연결
+                          setShowSearch(false); // 검색 후 모달 닫기
+                        }}
+                      />
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+            </div>
+            <div className="w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1400px]">
+              {/* 헤더 */}
+              {/* <div className="flex flex-col sm:flex-row justify-center">
+                <img src="images/sample_font_logo.png" alt="로고이미지" className="h-15 w-20" />
+              </div> */}
 
               {/* 카드 그리드 */}
-              <div className="grid gap-6 sm:gap-8 py-4 sm:py-6 px-0 grid-cols-1 sm:grid-cols-2 lg:[grid-template-columns:repeat(3,minmax(260px,1fr))]">
+              <div className="grid gap-6 sm:gap-8  px-0 grid-cols-1 sm:grid-cols-2 lg:[grid-template-columns:repeat(3,minmax(260px,1fr))]">
                 {finalList.length > 0 ? (
                   finalList.map(study => {
                     const [v] = study.video ?? [];

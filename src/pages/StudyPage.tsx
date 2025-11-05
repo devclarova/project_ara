@@ -113,19 +113,19 @@ const StudyPage = () => {
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-white">
-      <div className="flex justify-center h-screen">
-        <div className="flex w-full max-w-7xl">
+    <div className="min-h-screen bg-white">
+      <div className="flex justify-center">
+        <div className="flex w-full max-w-7xl min-h-screen">
           {/* Left Sidebar */}
-          <aside className="w-20 lg:w-64 shrink-0 border-r border-gray-200 h-screen">
+          <aside className="w-20 lg:w-64 shrink-0 border-r border-gray-200 h-screen sticky top-0">
             <Sidebar onTweetClick={() => setShowTweetModal(true)} />
           </aside>
 
-          <div className="max-w-4xl mx-auto p-6 space-y-6 overflow-y-auto hide-scrollbar flex-1">
+          <div className="max-w-4xl mx-auto ml-10 mr-10 space-y-6 overflow-y-auto hide-scrollbar flex-1">
             <div className="p-1 max-w-5xl mx-auto">
               {/* 링크 */}
               <nav aria-label="Breadcrumb" className="mb-4">
-                <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 px-3 py-2 backdrop-blur">
+                <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 py-2 backdrop-blur">
                   {/* 1) Studylist */}
                   <NavLink
                     to="/studylist"
@@ -234,29 +234,19 @@ const StudyPage = () => {
                   onClick={handlePrevPage}
                   className="group flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 text-gray-700 hover:text-primary"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="16"
-                    viewBox="0 0 18 16"
-                    fill="none"
-                    className="transform group-hover:-translate-x-1 transition-transform duration-200"
-                  >
-                    <path
-                      d="M6.215 7.33319H14.3299V8.66652H6.215L9.79942 12.2399L8.85335 13.1865L3.66992 7.99986L8.85335 2.81319L9.79942 3.75986L6.215 7.33319Z"
-                      fill="currentColor"
-                    />
-                  </svg>
+                  <i className="ri-arrow-drop-left-line text-5xl transition-transform duration-200 group-hover:-translate-x-1" />
                 </button>
 
                 {/* 중앙 타이틀 */}
-                <h1 className="absolute left-1/2 -translate-x-1/2 text-center text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-900 select-none tracking-tight transition-all duration-300 flex justify-center whitespace-nowrap">
+                <h1 className="absolute left-1/2 -translate-x-1/2 text-center text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 select-none tracking-tight transition-all duration-300 flex justify-center whitespace-nowrap">
                   {loading ? (
                     <span className="animate-pulse text-gray-400">로딩 중...</span>
                   ) : (
                     <>
                       {study?.contents ?? '제목 없음'} ·
-                      {study?.episode && <span className="text-gray-600"> {study.episode}</span>} ·
+                      {study?.episode && (
+                        <span className="text-gray-600 ml-1 mr-1"> {study.episode}</span>
+                      )}
                       {study?.scene && <span className="text-gray-500"> Scene {study.scene}</span>}
                     </>
                   )}
@@ -267,19 +257,7 @@ const StudyPage = () => {
                   onClick={handleNextPage}
                   className="group flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 text-gray-700 hover:text-primary"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="16"
-                    viewBox="0 0 18 16"
-                    fill="none"
-                    className="transform group-hover:translate-x-1 transition-transform duration-200"
-                  >
-                    <path
-                      d="M11.7848 7.33319L8.20042 3.75986L9.1465 2.81319L14.3299 7.99986L9.1465 13.1865L8.20042 12.2399L11.7848 8.66652H3.66992V7.33319H11.7848Z"
-                      fill="currentColor"
-                    />
-                  </svg>
+                  <i className="ri-arrow-drop-right-line text-5xl transition-transform duration-200 group-hover:-translate-x-1" />
                 </button>
               </div>
 
