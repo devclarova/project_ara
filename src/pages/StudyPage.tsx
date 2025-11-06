@@ -242,7 +242,7 @@ const StudyPage = () => {
                 {/* 이전 버튼 */}
                 <button
                   onClick={handlePrevPage}
-                  className="group flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 transition-all duration-200 text-gray-700 dark:text-gray-100 hover:text-primary"
+                  className="group flex justify-start items-center gap-2 pl-4 py-2 rounded-lg transition-all duration-200 text-gray-700 hover:text-primary w-full sm:w-auto dark:text-gray-100"
                 >
                   <i className="ri-arrow-drop-left-line text-5xl transition-transform duration-200 group-hover:-translate-x-1" />
                 </button>
@@ -278,7 +278,7 @@ const StudyPage = () => {
                 {/* 다음 버튼 */}
                 <button
                   onClick={handleNextPage}
-                  className="group flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 transition-all duration-200 text-gray-700 dark:text-gray-100 hover:text-primary"
+                  className="group flex justify-end items-center gap-2 pr-4 py-2 rounded-lg transition-all duration-200 text-gray-700 hover:text-primary dark:text-gray-100"
                 >
                   <i className="ri-arrow-drop-right-line text-5xl transition-transform duration-200 group-hover:-translate-x-1" />
                 </button>

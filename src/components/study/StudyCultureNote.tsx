@@ -127,24 +127,27 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
 
   return (
     <div>
-      <div className="p-4 bg-white dark:bg-secondary dark:text-gray-300 border rounded-lg shadow-sm">
-        <h4 className="font-semibold mb-1">{currentNote.title || '문화 노트'}</h4>
+      <div className="p-3 sm:p-4 bg-white dark:bg-secondary dark:text-gray-300 border rounded-lg shadow-sm">
+        <h4 className="text-base sm:text-lg font-semibold mb-1">
+          {currentNote.title || '문화 노트'}
+        </h4>
+
         {currentNote.subtitle && (
-          <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line p-1">
+          <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line p-1">
             {currentNote.subtitle}
           </p>
         )}
 
-        <ul className="mt-4 space-y-2">
+        <ul className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2">
           {currentContents.length > 0 ? (
             currentContents.map((item, index) => (
-              <li key={index} className="flex items-start">
+              <li key={index} className="flex items-start text-sm sm:text-base">
                 <span className="text-pink-500 mr-2">•</span>
-                <span>{item.content_value}</span> {/* 콘텐츠 항목을 나열 */}
+                <span>{item.content_value}</span>
               </li>
             ))
           ) : (
-            <li className="flex items-start">
+            <li className="flex items-start text-sm sm:text-base">
               <span className="text-pink-500 mr-2">•</span>
               <span>리스트 항목이 없습니다.</span>
             </li>
@@ -154,11 +157,12 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
 
       {/* 버튼들 */}
       {data.length > 1 && (
-        <div className="flex justify-center mt-4">
+        <div className="flex justify-center mt-3 sm:mt-4">
+          {/* 이전 버튼 */}
           <button
             onClick={handlePrevNote}
             disabled={currentNoteIndex === 0}
-            className="px-4 py-2 rounded disabled:opacity-50 ml-4 cursor-pointer"
+            className="px-3 sm:px-4 py-1.5 sm:py-2 rounded disabled:opacity-50 ml-3 sm:ml-4 cursor-pointer"
             style={{
               pointerEvents: isFirstPage ? 'none' : 'auto',
               cursor: isFirstPage ? 'default' : 'pointer',
@@ -166,8 +170,8 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
+              width="22"
+              height="22"
               viewBox="0 0 24 24"
               fill="none"
             >
@@ -189,10 +193,12 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
               </g>
             </svg>
           </button>
+
+          {/* 다음 버튼 */}
           <button
             onClick={handleNextNote}
             disabled={currentNoteIndex === data.length - 1}
-            className="px-4 py-2 rounded disabled:opacity-50 ml-4 cursor-pointer"
+            className="px-3 sm:px-4 py-1.5 sm:py-2 rounded disabled:opacity-50 ml-3 sm:ml-4 cursor-pointer"
             style={{
               pointerEvents: isLastPage ? 'none' : 'auto',
               cursor: isLastPage ? 'default' : 'pointer',
@@ -200,8 +206,8 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
+              width="22"
+              height="22"
               viewBox="0 0 24 24"
               fill="none"
               className="rotate-180"

@@ -135,47 +135,53 @@ const VideoPlayer = () => {
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <div className="rounded-t-xl overflow-hidden relative">
-        <ReactPlayer
-          ref={playerRef}
-          url={video || undefined}
-          playing={playing}
-          controls={false}
-          width="100%"
-          height="400px"
-          onReady={handleReady}
-          onProgress={handleProgress}
-          onDuration={d => setVideoDuration(d)}
-          progressInterval={100}
-          playsinline // 모바일 인라인 재생
-          onPlay={() => setHasStarted(true)} // 재생 시작 표시
-          onBuffer={() => setIsBuffering(true)} // 버퍼링 시작
-          onBufferEnd={() => setIsBuffering(false)} // 버퍼링 종료
-          onEnded={() => {
-            setPlaying(false);
-            setHasStarted(false); // 안내 화면 다시 보이기
-            playerRef.current?.seekTo(startSec ?? 0, 'seconds'); // 처음 위치로 돌려놓기
-            // setWatchTime(0);    // (선택) 다시 5초 카운트하려면 초기화
-            // setViewRecorded(false); // (선택) 같은 세션에서 재시청도 조회수 올릴 거면 초기화
-          }}
-        />
-        {/* 오버레이 (클릭 차단) */}
-        <div className="absolute inset-0 bg-transparent pointer-events-auto" />
-        {!hasStarted && (
-          <div className="absolute inset-0 bg-black text-white flex items-center justify-center">
-            {video ? (
-              <img
-                src={imageUrl || undefined}
-                alt="video thumbnail"
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            ) : (
-              <div className="flex items-center justify-center w-full h-full text-gray-400">
-                이미지 로딩 중...
-              </div>
-            )}
-          </div>
-        )}
+      <div className="relative w-full rounded-t-xl overflow-hidden">
+        {/* ✅ 반응형 높이: 모바일 높이↓, 데스크톱 높이↑ */}
+        <div className="w-full pt-[72%] xs:pt-[68%] sm:pt-[62%] md:pt-[56.25%] lg:pt-[52%]" />
+
+        {/* 실제 플레이어/오버레이는 비율 상자 위에 절대배치 */}
+        <div className="absolute inset-0">
+          <ReactPlayer
+            ref={playerRef}
+            url={video || undefined}
+            playing={playing}
+            controls={false}
+            width="100%"
+            height="100%" // ✅ 부모 크기에 맞춰 꽉 채움
+            onReady={handleReady}
+            onProgress={handleProgress}
+            onDuration={d => setVideoDuration(d)}
+            progressInterval={100}
+            playsinline
+            onPlay={() => setHasStarted(true)}
+            onBuffer={() => setIsBuffering(true)}
+            onBufferEnd={() => setIsBuffering(false)}
+            onEnded={() => {
+              setPlaying(false);
+              setHasStarted(false);
+              playerRef.current?.seekTo(startSec ?? 0, 'seconds');
+            }}
+          />
+
+          {/* 오버레이 (클릭 차단) — 기존 그대로 */}
+          <div className="absolute inset-0 bg-transparent pointer-events-auto" />
+
+          {!hasStarted && (
+            <div className="absolute inset-0 bg-black text-white flex items-center justify-center">
+              {video ? (
+                <img
+                  src={imageUrl || undefined}
+                  alt="video thumbnail"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : (
+                <div className="flex items-center justify-center w-full h-full text-gray-400">
+                  이미지 로딩 중...
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 커스텀 컨트롤 */}
