@@ -229,8 +229,8 @@ function SignInPage() {
   };
 
   return (
-    <div className="flex items-center justify-center bg-white pt-12 px-4 dark:bg-gray-800">
-      <div className="bg-white dark:bg-secondary rounded-2xl shadow-lg p-6 sm:p-8 md:p-10 lg:p-12 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl">
+    <div className="flex items-center justify-center bg-white pt-12 px-4 dark:bg-background">
+      <div className="bg-white dark:bg-secondary rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 sm:p-8 md:p-10 lg:p-12 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl text-gray-900 dark:text-gray-100">
         {/* 로고 및 제목 */}
         <div className="text-center mb-6">
           <span className="flex items-center justify-center text-3xl sm:text-4xl md:text-5xl font-bold text-red-400">
@@ -257,16 +257,16 @@ function SignInPage() {
               placeholder=" "
               className={`peer w-full px-4 py-2 border bg-white dark:bg-secondary text-gray-800 dark:text-gray-100 text-sm ara-rounded
                 ${errors.email ? 'ara-focus--error' : 'ara-focus'}
-                ${errors.email ? '' : 'border-gray-300'}`}
+                ${errors.email ? '' : 'border-gray-300 dark:border-gray-600'}`}
             />
             <label
               htmlFor="email"
-              className={`absolute left-4 text-sm transition-all dark:text-gray-400 dark:bg-secondary
+              className={`absolute left-4 text-sm transition-all bg-white dark:bg-secondary dark:text-gray-400
                 ${email || errors.email ? '-top-3 text-sm' : 'top-2.5 text-gray-400 text-sm'}
                 ${errors.email ? 'text-red-500' : 'peer-focus:text-[#00BFA5]'}
                 peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-gray-400
                 peer-focus:-top-3 peer-focus:text-sm peer-focus:text-[#00BFA5]
-                bg-white px-1`}
+                px-1`}
             >
               Email
             </label>
@@ -285,16 +285,16 @@ function SignInPage() {
               placeholder=" "
               className={`peer w-full px-4 py-2 border bg-white dark:bg-secondary text-gray-800 dark:text-gray-100 text-sm ara-rounded
                 ${errors.pw ? 'ara-focus--error' : 'ara-focus'}
-                ${errors.pw ? '' : 'border-gray-300'}`}
+                ${errors.pw ? '' : 'border-gray-300 dark:border-gray-600'}`}
             />
             <label
               htmlFor="password"
-              className={`absolute left-4 text-sm transition-all dark:text-gray-400 dark:bg-secondary
+              className={`absolute left-4 text-sm transition-all bg-white dark:bg-secondary dark:text-gray-400
                 ${pw || errors.pw ? '-top-3 text-sm' : 'top-2.5 text-gray-400 text-sm'}
                 ${errors.pw ? 'text-red-500' : 'peer-focus:text-[#00BFA5]'}
                 peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-gray-400
                 peer-focus:-top-3 peer-focus:text-sm peer-focus:text-[#00BFA5]
-                bg-white px-1`}
+                px-1`}
             >
               Password
             </label>
@@ -352,7 +352,7 @@ function SignInPage() {
             >
               이메일 찾기
             </button>
-            <span className="text-gray-300">|</span>
+            <span className="text-gray-300 dark:text-gray-600">|</span>
             <button
               type="button"
               className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary underline-offset-2 hover:underline"
@@ -372,7 +372,9 @@ function SignInPage() {
             >
               인증 메일 재발송
             </button>
-            {resendMsg && <p className="mt-2 text-sm text-gray-600">{resendMsg}</p>}
+            {resendMsg && (
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{resendMsg}</p>
+            )}
           </div>
         )}
 
@@ -387,15 +389,15 @@ function SignInPage() {
         </p>
 
         <div className="mt-4 flex items-center">
-          <hr className="flex-grow border-gray-300" />
+          <hr className="flex-grow border-gray-300 dark:border-gray-700" />
           <span className="mx-2 text-gray-400 dark:text-gray-100 text-sm sm:text-base">OR</span>
-          <hr className="flex-grow border-gray-300" />
+          <hr className="flex-grow border-gray-300 dark:border-gray-700" />
         </div>
 
         <div className="mt-4 space-y-2 flex flex-col gap-3">
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-2 border border-solid border-gray-300 rounded-xl py-2 sm:py-3 text-sm sm:text-base font-medium text-black bg-[#fff] hover:bg-gray-50 transition-opacity dark:hover:opacity-70"
+            className="w-full flex items-center justify-center gap-2 border border-solid border-gray-300 dark:border-gray-600 rounded-xl py-2 sm:py-3 text-sm sm:text-base font-medium text-black bg-[#fff] hover:bg-gray-50 dark:hover:bg-gray-100/90 transition-opacity dark:hover:opacity-90"
             onClick={signInWithGoogle}
           >
             <img src="/images/google_logo.png" alt="Sign in with Google" className="w-5 h-5" />
@@ -403,7 +405,7 @@ function SignInPage() {
           </button>
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-2 border border-gray-300 rounded-xl py-2 sm:py-3 text-sm sm:text-base font-medium text-black bg-[#FEE500] hover:opacity-80 transition-opacity"
+            className="w-full flex items-center justify-center gap-2 border border-gray-300 dark:border-gray-600 rounded-xl py-2 sm:py-3 text-sm sm:text-base font-medium text-black bg-[#FEE500] hover:opacity-80 transition-opacity"
             onClick={signInWithKakao}
           >
             <img src="/images/kakao_logo.png" alt="Sign in with Kakao" className="w-5 h-5" />

@@ -221,7 +221,7 @@ export default function TweetDetail() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 dark:border-primary"></div>
       </div>
     );
   }
@@ -232,20 +232,21 @@ export default function TweetDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden">
-      <div className="w-full max-w-2xl mx-auto border-x border-gray-200">
-        <div className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-gray-200 p-4 z-20">
+    <div className="min-h-screen bg-white dark:bg-background overflow-x-hidden">
+      {' '}
+      <div className="w-full max-w-2xl mx-auto border-x border-gray-200 dark:border-gray-700">
+        {' '}
+        <div className="sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 z-20">
           <div className="flex items-center">
             <button
               onClick={() => navigate(-1)}
-              className="mr-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="mr-4 p-2 hover:bg-gray-100 dark:hover:bg-primary/10 rounded-full transition-colors"
             >
-              <i className="ri-arrow-left-line text-xl"></i>
+              <i className="ri-arrow-left-line text-xl text-gray-900 dark:text-gray-100"></i>
             </button>
-            <h1 className="text-xl font-bold text-gray-900">상세보기</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">상세보기</h1>
           </div>
         </div>
-
         <TweetDetailCard tweet={tweet} />
         <ReplyList replies={replies} />
       </div>

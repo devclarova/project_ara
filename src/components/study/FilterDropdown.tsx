@@ -48,17 +48,17 @@ const FilterDropdown = ({ value, onApply }: FilterDropdownProps) => {
       </button>
 
       {open && (
-        <div className="absolute left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-100 z-50">
+        <div className="absolute left-0 mt-2 w-64 bg-white dark:bg-secondary rounded-lg shadow-lg border border-gray-100 dark:border-secondary z-[999]">
           <div className="p-4 space-y-4">
             {/* 난이도 */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-700">난이도</h3>
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-100">난이도</h3>
               </div>
               <div className="space-y-2">
                 <label className="flex items-center">
                   <CheckboxSquare checked={draft === ''} onChange={() => setDraft('')} />
-                  <span className="ml-2 text-sm text-gray-600">전체</span>
+                  <span className="ml-2 text-sm text-gray-600 dark:text-gray-100">전체</span>
                 </label>
                 {DIFFS.map(label => (
                   <label key={label} className="flex items-center">
@@ -67,7 +67,7 @@ const FilterDropdown = ({ value, onApply }: FilterDropdownProps) => {
                       checked={draft === label}
                       onChange={() => setDraft(label)}
                     />
-                    <span className="ml-2 text-sm text-gray-600">{label}</span>
+                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-100">{label}</span>
                   </label>
                 ))}
               </div>
@@ -101,8 +101,8 @@ const FilterDropdown = ({ value, onApply }: FilterDropdownProps) => {
 
             {/* 정렬 */}
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-2">정렬</h3>
-              <select className="w-full text-sm text-gray-600 border border-gray-200 rounded-button px-3 py-2">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">정렬</h3>
+              <select className="w-full text-sm text-gray-600 border dark:text-gray-100 dark:bg-secondary border-gray-200 dark:border-gray-500 rounded-button px-3 py-2">
                 <option>최신순</option>
                 <option>인기순</option>
               </select>
@@ -111,7 +111,7 @@ const FilterDropdown = ({ value, onApply }: FilterDropdownProps) => {
             <div className="flex justify-end pt-2 gap-2">
               <button
                 onClick={() => setOpen(false)} // ← 취소용이라면 OK, 하지만 적용은 아래 버튼에서!
-                className="px-3 py-2 text-sm text-gray-700 bg-gray-100 rounded-button"
+                className="px-3 py-2 text-sm text-gray-700 bg-gray-100 dark:bg-gray-400 dark:hover:bg-gray-500 rounded-button"
                 type="button"
               >
                 취소
@@ -121,7 +121,7 @@ const FilterDropdown = ({ value, onApply }: FilterDropdownProps) => {
                   onApply(draft);
                   setOpen(false);
                 }} // ✅ 적용하기: onApply 호출 + 닫기
-                className="px-4 py-2 text-sm text-white bg-primary rounded-button whitespace-nowrap"
+                className="px-4 py-2 text-sm text-white bg-primary rounded-button whitespace-nowrap dark:hover:opacity-90"
                 type="button"
               >
                 적용하기

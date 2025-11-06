@@ -113,11 +113,11 @@ const StudyPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-800">
+    <div className="min-h-screen bg-white dark:bg-background">
       <div className="flex justify-center">
         <div className="flex w-full max-w-7xl min-h-screen">
           {/* Left Sidebar */}
-          <aside className="w-20 lg:w-64 shrink-0 border-r-2 border-gray-200 dark:border-gray-800 h-screen sticky top-0">
+          <aside className="w-20 lg:w-64 shrink-0 border-r-2 border-gray-200 dark:border-gray-700 h-screen sticky top-0 bg-white dark:bg-background">
             <Sidebar onTweetClick={() => setShowTweetModal(true)} />
           </aside>
 
@@ -218,7 +218,7 @@ const StudyPage = () => {
         ${
           isActive
             ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10'
-            : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white'
+            : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white hover:dark:bg-gray-600 dark:text-gray-300'
         }`
                     }
                     title={loading ? '로딩 중' : (study?.episode ?? '에피소드 없음')}
@@ -232,7 +232,7 @@ const StudyPage = () => {
 
                   {/* 로딩일 때 스켈레톤 */}
                   {loading && (
-                    <span className="ml-auto h-6 w-24 rounded-full bg-gray-200/70 animate-pulse" />
+                    <span className="ml-auto h-6 w-24 rounded-full bg-gray-200/70 dark:bg-gray-700/60 animate-pulse" />
                   )}
                 </div>
               </nav>
@@ -242,9 +242,9 @@ const StudyPage = () => {
                 {/* 이전 버튼 */}
                 <button
                   onClick={handlePrevPage}
-                  className="group flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 text-gray-700 hover:text-primary"
+                  className="group flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 transition-all duration-200 text-gray-700 dark:text-gray-100 hover:text-primary"
                 >
-                  <i className="ri-arrow-drop-left-line text-5xl transition-transform duration-200 group-hover:-translate-x-1 dark:text-gray-300" />
+                  <i className="ri-arrow-drop-left-line text-5xl transition-transform duration-200 group-hover:-translate-x-1" />
                 </button>
 
                 {/* 중앙 타이틀 */}
@@ -278,14 +278,14 @@ const StudyPage = () => {
                 {/* 다음 버튼 */}
                 <button
                   onClick={handleNextPage}
-                  className="group flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 text-gray-700 hover:text-primary"
+                  className="group flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 transition-all duration-200 text-gray-700 dark:text-gray-100 hover:text-primary"
                 >
-                  <i className="ri-arrow-drop-right-line text-5xl transition-transform duration-200 group-hover:-translate-x-1 dark:text-gray-300" />
+                  <i className="ri-arrow-drop-right-line text-5xl transition-transform duration-200 group-hover:-translate-x-1" />
                 </button>
               </div>
 
-              {/* 메타 정보 라인: 시간/난이도(임시)/카테고리 */}
-              <div className="flex items-center gap-5 text-sm text-gray-600">
+              {/* 메타 정보 라인: 시간/난이도/카테고리 */}
+              <div className="flex items-center gap-5 text-sm text-gray-600 dark:text-gray-300">
                 <span className="flex items-center gap-1">
                   {/* 시간(runtime) */}
                   <InfoItem
@@ -294,7 +294,7 @@ const StudyPage = () => {
                   />
                 </span>
                 <span className="flex items-center gap-1">
-                  {/* 난이도: video에 없으면 임시로 표기 */}
+                  {/* 난이도 */}
                   <InfoItem icon="ri-star-line" text={loading ? '—' : (study?.level ?? '—')} />
                 </span>
                 {/* 조회수 */}

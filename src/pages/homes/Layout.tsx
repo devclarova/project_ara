@@ -32,7 +32,7 @@ export default function Layout() {
     location.pathname.startsWith('/finalhome/dm');
 
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-background overflow-x-hidden">
       <div className="flex justify-center min-h-screen">
         <div className="flex w-full max-w-7xl">
           {/* Left Sidebar */}

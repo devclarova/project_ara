@@ -74,7 +74,7 @@ export default function SignUpStep1Consent({ onNext, value, onChange }: Props) {
       <div className="grid grid-cols-[1fr,auto] gap-x-4">
         <AgreeRow label="전체 동의" checked={allSelected} onChange={handleAll} />
         {/* 인디케이터 표현은 CheckboxSquare 내부 visualState로 처리해도 됨 */}
-        <div className="col-span-2 h-px bg-gray-100 my-1" />
+        <div className="col-span-2 h-px bg-gray-100 dark:bg-gray-700 my-1" />
 
         <AgreeRow
           required

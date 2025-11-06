@@ -1088,7 +1088,7 @@ hr {
 
 @layer base {
   .dark body {
-    background-color: #1f2937 !important; /* Tailwind gray-800 */
+    background-color: #0a0a0a !important;
   }
 }
 
