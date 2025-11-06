@@ -32,7 +32,7 @@ const CategoryTabs = ({ active, onChange, className = '' }: CategoryTabsProps) =
         role="tablist"
         aria-label="콘텐츠 카테고리"
         onKeyDown={handleKey}
-        className="flex gap-3 xs:gap-3 sm:gap-4 px-1 sm:px-0 min-w-max overflow-x-auto scrollbar-none"
+        className="flex gap-2 xs:gap-2 sm:gap-3 px-1 sm:px-0 min-w-max overflow-x-auto scrollbar-none"
       >
         {CATEGORIES.map(c => {
           const isActive = active === c;
@@ -45,8 +45,8 @@ const CategoryTabs = ({ active, onChange, className = '' }: CategoryTabsProps) =
               onClick={() => onChange(c)}
               // 밑줄 absolute를 위해 relative 필요, 높이 확보로 레이아웃 점프 방지
               className={[
-                'relative px-5 xs:px-4 sm:px-5 py-2.5 sm:py-3',
-                'text-sm sm:text-base font-extrabold whitespace-nowrap',
+                'relative px-3 xs:px-3 sm:px-4 md:px-5 lg:px-6 py-2 xs:py-2 sm:py-2.5 md:py-3',
+                'text-xs sm:text-sm md:text-base font-extrabold whitespace-nowrap',
                 'transition-colors duration-300',
                 isActive
                   ? 'text-primary'

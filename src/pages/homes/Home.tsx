@@ -172,6 +172,33 @@ export default function Home() {
     };
   }, []);
 
+  // 댓글 삭제 실시간 반영
+  useEffect(() => {
+    const replyDeleteChannel = supabase
+      .channel('tweet-replies-delete-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'tweet_replies' },
+        payload => {
+          const tweetId = (payload.old as any)?.tweet_id;
+          if (!tweetId) return;
+
+          setTweets(prev =>
+            prev.map(t =>
+              t.id === tweetId
+                ? { ...t, stats: { ...t.stats, replies: Math.max((t.stats.replies ?? 1) - 1, 0) } }
+                : t,
+            ),
+          );
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(replyDeleteChannel);
+    };
+  }, []);
+
   //  실시간 좋아요 반영
   useEffect(() => {
     const tweetLikeCountChannel = supabase
@@ -263,7 +290,14 @@ export default function Home() {
         scrollThreshold={0.9}
       >
         {tweets.map(t => (
-          <TweetCard key={t.id} {...t} />
+          <TweetCard
+            key={t.id}
+            {...t}
+            onDeleted={tweetId => {
+              // ✅ 해당 트윗 삭제 시 상태에서 제거
+              setTweets(prev => prev.filter(item => item.id !== tweetId));
+            }}
+          />
         ))}
       </InfiniteScroll>
     </div>
