@@ -2,7 +2,7 @@ import Modal from '@/components/common/Modal';
 import type { ActiveSetting } from '@/types/settings';
 import { getSettingsTitle } from '@/untils/getTitle';
 import { useState } from 'react';
-import { Row } from '../../components/settings/Row';
+import { Row } from './Row';
 import PasswordChange from './PasswordChange';
 import SNSConnect from './SNSConnect';
 

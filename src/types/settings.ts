@@ -19,3 +19,7 @@ export type ActiveSetting = 'password' | 'sns' | null;
 export type ActiveKey = 'terms' | 'privacy' | 'marketing' | 'support' | null;
 
 export type ActiveSystem = 'language' | 'theme' | null;
+
+export type Mode = 'light' | 'dark' | 'system';
+
+export type Lang = 'ko' | 'en' | 'ja';

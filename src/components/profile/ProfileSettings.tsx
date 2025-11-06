@@ -1,14 +1,14 @@
 import Sidebar from '@/pages/homes/feature/Sidebar';
-import AlarmSettings from '@/pages/settings/AlarmSettings';
-import PrivacySettings from '@/pages/settings/PrivacySettings';
-import SupportPolicy from '@/pages/settings/SupportPolicy';
-import SystemSettings from '@/pages/settings/SystemSettings';
+import AlarmSettings from '@/components/settings/AlarmSettings';
+import PrivacySettings from '@/components/settings/PrivacySettings';
+import SystemSettings from '@/components/settings/SystemSettings';
 import type { MenuId, SidebarItem } from '@/types/settings';
 import { useEffect, useState } from 'react';
 import Input from '../Input';
 import SettingsContent from './SettingsContent';
 import SettingsLayout from './SettingsLayout';
 import SettingsSidebar from './SettingsSidebar';
+import SupportPolicy from '../settings/SupportPolicy';
 
 const items: SidebarItem[] = [
   { id: 'alarm', label: '알림 설정' },

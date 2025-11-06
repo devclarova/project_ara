@@ -9,6 +9,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   size?: ButtonSize;
   fullWidth?: boolean;
   onClose?: () => void;
+  onSave?: () => void;
 }
 
 export default function Button({
@@ -18,11 +19,13 @@ export default function Button({
   className,
   children,
   onClose,
+  onSave,
   onClick,
   ...props
 }: ButtonProps) {
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     onClick?.(e);
+    onSave?.();
     onClose?.();
   };
 

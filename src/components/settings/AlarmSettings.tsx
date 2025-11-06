@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Switch from './Switch';
 
+
 interface PrivacySettingsProps {
   onBackToMenu?: () => void; // ← 부모에서 전달받는 콜백 (선택)
 }
