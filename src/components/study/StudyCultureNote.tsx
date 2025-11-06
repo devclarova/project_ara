@@ -127,10 +127,12 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
 
   return (
     <div>
-      <div className="p-4 bg-white border rounded-lg shadow-sm">
+      <div className="p-4 bg-white dark:bg-secondary dark:text-gray-300 border rounded-lg shadow-sm">
         <h4 className="font-semibold mb-1">{currentNote.title || '문화 노트'}</h4>
         {currentNote.subtitle && (
-          <p className="text-sm text-gray-700 whitespace-pre-line p-1">{currentNote.subtitle}</p>
+          <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line p-1">
+            {currentNote.subtitle}
+          </p>
         )}
 
         <ul className="mt-4 space-y-2">

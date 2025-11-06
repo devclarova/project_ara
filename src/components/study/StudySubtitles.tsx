@@ -112,7 +112,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
 
   return (
     <div>
-      <h2 className="text-xl font-bold ml-2 mb-2">자막</h2>
+      <h2 className="text-xl font-bold ml-2 mb-2 dark:text-gray-100">자막</h2>
 
       {loading && <p>자막 로딩 중...</p>}
       {error && <p className="text-red-600">오류: {error}</p>}
@@ -124,16 +124,22 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
               <li
                 key={d.id} // 안정적인 key
                 onClick={() => onSelectDialogue(d)}
-                className="p-3 bg-white rounded-lg shadow cursor-pointer hover:bg-gray-50 hover:border-l-4 hover:border-primary"
+                className="p-3 bg-white dark:bg-secondary rounded-lg shadow cursor-pointer hover:bg-gray-50 hover:border-l-4 hover:border-primary dark:hover:border-gray-600"
               >
                 {d.korean_subtitle && (
-                  <p className="text-lg text-gray-600 hover:text-green-600">{d.korean_subtitle}</p>
+                  <p className="text-lg text-gray-600 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400">
+                    {d.korean_subtitle}
+                  </p>
                 )}
                 {d.pronunciation && (
-                  <p className="text-lg text-gray-500 hover:text-green-600">[{d.pronunciation}]</p>
+                  <p className="text-lg text-gray-500 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400">
+                    [{d.pronunciation}]
+                  </p>
                 )}
                 {d.english_subtitle && (
-                  <p className="text-lg text-gray-700 hover:text-green-600">{d.english_subtitle}</p>
+                  <p className="text-lg text-gray-700 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400">
+                    {d.english_subtitle}
+                  </p>
                 )}
                 {/* <p className="text-xs text-gray-400 mt-1">
                   {secToMMSS(d.subtitle_start_time)} → {secToMMSS(d.subtitle_end_time)}
