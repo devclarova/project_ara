@@ -26,7 +26,7 @@ const ContentCard = ({
   return (
     <div
       onClick={() => navigate(`/study/${id}`)}
-      className="group relative rounded-xl shadow-lg cursor-pointer transition-all hover:shadow-xl sm:scale-[0.95] md:scale-100 sm:hover:scale-[0.98] origin-top duration-300 overflow-hidden transform-gpu ring-1 ring-transparent dark:bg-secondary z-10"
+      className="group relative rounded-xl shadow-lg cursor-pointer transition-all hover:shadow-xl sm:scale-[0.95] md:scale-100 sm:hover:scale-[0.98] origin-top duration-300 overflow-hidden transform-gpu ring-1 ring-transparent dark:bg-secondary"
     >
       {/* 이미지 */}
       <div className="flex justify-center items-center overflow-hidden">
