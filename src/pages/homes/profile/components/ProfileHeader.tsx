@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 interface ProfileHeaderProps {
   userProfile: {
-    user_id: string; // ✅ 추가
+    user_id: string;
     name: string;
     username: string;
     avatar: string;
@@ -19,7 +19,7 @@ interface ProfileHeaderProps {
 
 export default function ProfileHeader({ userProfile }: ProfileHeaderProps) {
   const { user } = useAuth();
-  const isOwnProfile = user && user.id === userProfile.user_id; // ✅ 수정
+  const isOwnProfile = user && user.id === userProfile.user_id;
 
   return (
     <div className="relative">
@@ -39,15 +39,13 @@ export default function ProfileHeader({ userProfile }: ProfileHeaderProps) {
       <div className="px-4 pb-4">
         {/* Avatar */}
         <div className="relative -mt-16 mb-4">
-          <div className="w-32 h-32 rounded-full border-4 border-white bg-white overflow-hidden shadow-md">
+          <div className="w-32 h-32 rounded-full border-4 border-white bg-white overflow-hidden shadow-md dark:border-gray-900 dark:bg-gray-900">
             <Avatar className="w-full h-full">
               <AvatarImage
                 src={userProfile.avatar || '/default-avatar.svg'}
                 alt={userProfile.name}
               />
-              <AvatarFallback>
-                {userProfile.name.charAt(0).toUpperCase()}
-              </AvatarFallback>
+              <AvatarFallback>{userProfile.name.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
           </div>
         </div>
@@ -57,7 +55,7 @@ export default function ProfileHeader({ userProfile }: ProfileHeaderProps) {
           <div className="flex justify-end mb-4">
             <Button
               variant="outline"
-              className="rounded-full px-6 font-medium text-[#009e89] border-[#009e89] hover:bg-[#00bfa5]/10 transition-colors"
+              className="rounded-full px-6 font-medium text-[#009e89] border-[#009e89] hover:bg-[#00bfa5]/10 dark:hover:bg-primary/10 transition-colors"
             >
               Edit profile
             </Button>
@@ -71,7 +69,9 @@ export default function ProfileHeader({ userProfile }: ProfileHeaderProps) {
             {/* <p className="text-gray-500">@{userProfile.username}</p> */}
           </div>
           {userProfile.bio && (
-            <p className="text-gray-900 whitespace-pre-line">{userProfile.bio}</p>
+            <p className="text-gray-900 dark:text-gray-100 whitespace-pre-line">
+              {userProfile.bio}
+            </p>
           )}
         </div>
       </div>

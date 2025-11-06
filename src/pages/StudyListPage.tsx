@@ -57,6 +57,7 @@ const StudyListPage = () => {
       const needsContent = !!contentFilter;
       const needsEpisode = !!episodeFilter;
       const needsLevel = !!levelFilter;
+      const needsJoin = needsCategory || needsContent || needsEpisode || needsLevel;
 
       if (needsCategory || needsContent || needsEpisode || needsLevel) {
         query = supabase
@@ -134,18 +135,18 @@ const StudyListPage = () => {
   const PaginationComponent = React.memo(Pagination);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-800">
+    <div className="relative min-h-screen bg-white dark:bg-background">
       <div className="flex justify-center min-h-screen">
         <div className="flex w-full max-w-7xl">
           {/* Left Sidebar */}
-          <aside className="w-20 lg:w-64 shrink-0 border-gray-200 h-screen sticky top-0 dark:bg-gray-800">
+          <aside className="w-20 lg:w-64 shrink-0 h-screen sticky top-0 bg-white dark:bg-background z-30">
             <Sidebar onTweetClick={() => setShowTweetModal(true)} />
           </aside>
 
-          {/* 데스크톱에서만 폭 제한해 자연스런 3열 유지 */}
-          <main className="flex-1 min-w-0 bg-white dark:bg-gray-800">
+          {/* 메인 영역 */}
+          <main className="flex-1 min-w-0 bg-white dark:bg-background">
             {/* 탭 + 검색 */}
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 bg-white dark:bg-secondary sticky top-0 z-10 pb-2 pl-6 pt-8 pr-6">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 bg-white dark:bg-background sticky top-0 z-20 pb-2 pl-6 pt-8 pr-6">
               {/* 왼쪽: 카테고리 + 모바일용 검색 아이콘 */}
               <div className="flex items-center justify-between w-full md:w-auto">
                 <CategoryTabs active={displayCategory} onChange={handleCategoryChange} />
@@ -153,10 +154,10 @@ const StudyListPage = () => {
                 {/* 모바일 전용 검색 버튼 (카테고리 옆에 위치) */}
                 <button
                   onClick={() => setShowSearch(true)}
-                  className="md:hidden ml-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
+                  className="md:hidden ml-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-secondary transition"
                   aria-label="검색 열기"
                 >
-                  <i className="ri-search-line text-[20px] sm:text-[24px] md:text-[28px] text-gray-600" />
+                  <i className="ri-search-line text-[20px] sm:text-[24px] md:text-[28px] text-gray-600 dark:text-gray-200" />
                 </button>
               </div>
 
@@ -178,13 +179,15 @@ const StudyListPage = () => {
               {/* 모바일: 검색 전용 모달 */}
               {showSearch && (
                 <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-20 md:hidden">
-                  <div className="bg-white w-[90%] max-w-sm rounded-xl shadow-lg p-4 flex flex-col gap-4">
+                  <div className="bg-white dark:bg-secondary w-[90%] max-w-sm rounded-xl shadow-lg p-4 flex flex-col gap-4">
                     {/* 헤더 */}
                     <div className="flex justify-between items-center">
-                      <h2 className="text-base font-semibold text-gray-800">검색</h2>
+                      <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100">
+                        검색
+                      </h2>
                       <button
                         onClick={() => setShowSearch(false)}
-                        className="text-gray-500 hover:text-gray-800"
+                        className="text-gray-500 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100"
                         aria-label="닫기"
                       >
                         <i className="ri-close-line text-xl" />
@@ -208,14 +211,11 @@ const StudyListPage = () => {
                 </div>
               )}
             </div>
-            <div className="w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1400px] dark:bg-gray-800">
-              {/* 헤더 */}
-              {/* <div className="flex flex-col sm:flex-row justify-center">
-                <img src="images/sample_font_logo.png" alt="로고이미지" className="h-15 w-20" />
-              </div> */}
 
+            {/* 콘텐츠 영역 */}
+            <div className="w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1400px] bg-white dark:bg-background">
               {/* 카드 그리드 */}
-              <div className="grid gap-6 sm:gap-8  px-0 grid-cols-1 sm:grid-cols-2 lg:[grid-template-columns:repeat(3,minmax(260px,1fr))] dark:bg-gray-800">
+              <div className="grid gap-6 sm:gap-8 px-0 grid-cols-1 sm:grid-cols-2 lg:[grid-template-columns:repeat(3,minmax(260px,1fr))] bg-white dark:bg-background">
                 {finalList.length > 0 ? (
                   finalList.map(study => {
                     const [v] = study.video ?? [];
@@ -236,7 +236,7 @@ const StudyListPage = () => {
                   })
                 ) : (
                   // 빈 결과 문구
-                  <div className="col-span-full text-center py-16 text-gray-500 text-sm sm:text-base">
+                  <div className="col-span-full text-center py-16 text-gray-500 dark:text-gray-400 text-sm sm:text-base">
                     해당 조건에 맞는 학습 콘텐츠가 없습니다.
                   </div>
                 )}

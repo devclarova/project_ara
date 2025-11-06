@@ -89,7 +89,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
   };
 
   return (
-    <div className="h-full w-full bg-white border-r border-gray-200 flex flex-col px-3 lg:px-4 py-6 transition-all duration-300 dark:bg-gray-800">
+    <div className="relative h-full w-full bg-white dark:bg-background border-r-2 border-gray-100 dark:border-gray-700 flex flex-col px-3 lg:px-4 py-6 transition-all duration-300 z-30">
       {/* Logo */}
       <div className=" flex justify-center lg:justify-center flex-shrink-0">
         <button
@@ -130,8 +130,8 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
                 onClick={() => handleNavigation(item.path, item.onClick)}
                 className={`w-full flex items-center justify-center lg:justify-start space-x-0 lg:space-x-4 px-2 lg:px-4 py-3 rounded-full transition-colors cursor-pointer whitespace-nowrap dark:text-gray-300 dark:hover:text-gray-400 ${
                   location.pathname === item.path
-                    ? 'bg-primary/10 text-primary'
-                    : 'hover:bg-primary/5 text-gray-700 dark:text-gray-100'
+                    ? 'bg-primary/10 text-primary dark:bg-primary/20'
+                    : 'hover:bg-primary/5 dark:hover:bg-primary/10 text-gray-700 dark:text-gray-100'
                 }`}
               >
                 {item.imgSrc ? (
@@ -168,7 +168,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
         <div className="relative flex-shrink-0">
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className="w-full flex items-center justify-center lg:justify-start space-x-0 lg:space-x-3 p-2 lg:p-3 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-center lg:justify-start space-x-0 lg:space-x-3 p-2 lg:p-3 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition-colors cursor-pointer"
           >
             <Avatar className="w-10 h-10">
               <AvatarImage src={profile.avatar_url || '/default-avatar.svg'} />
@@ -177,20 +177,24 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 text-left hidden lg:block min-w-0">
-              <div className="font-bold text-gray-900 truncate">{profile.nickname}</div>
-              <div className="text-sm text-gray-500 truncate">@{profile.user_id.slice(0, 6)}</div>
+              <div className="font-bold text-gray-900 dark:text-gray-100 truncate">
+                {profile.nickname}{' '}
+              </div>{' '}
+              <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                @{profile.user_id.slice(0, 6)}{' '}
+              </div>
             </div>
-            <i className="ri-more-fill text-gray-500 hidden lg:block flex-shrink-0"></i>
+            <i className="ri-more-fill text-gray-500 dark:text-gray-400 hidden lg:block flex-shrink-0"></i>
           </button>
 
           {showUserMenu && (
-            <div className="absolute bottom-full left-0 w-full bg-white rounded-2xl shadow-lg border border-gray-200 py-2 mb-2 min-w-48 z-50">
+            <div className="absolute bottom-full left-0 w-full bg-white dark:bg-secondary rounded-2xl shadow-lg border border-gray-200 dark:border-secondary py-2 mb-2 min-w-48 z-[999]">
               <button
                 onClick={() => {
                   handleProfileClick();
                   setShowUserMenu(false);
                 }}
-                className="w-full text-left px-4 py-3 hover:bg-gray-100 transition-colors cursor-pointer whitespace-nowrap"
+                className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-primary/10 dark:text-gray-100 transition-colors cursor-pointer whitespace-nowrap"
               >
                 <i className="ri-user-line mr-3 flex-shrink-0"></i>
                 <span className="lg:inline">내 프로필</span>
@@ -201,17 +205,17 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
                   handleNavigation('/settings');
                   setShowUserMenu(false);
                 }}
-                className="w-full text-left px-4 py-3 hover:bg-gray-100 transition-colors cursor-pointer whitespace-nowrap"
+                className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-primary/10 dark:text-gray-100  transition-colors cursor-pointer whitespace-nowrap"
               >
                 <i className="ri-settings-3-line mr-3 flex-shrink-0"></i>
                 <span className="lg:inline">Settings</span>
               </button>
 
-              <hr className="my-2 border-gray-200" />
+              <hr className="my-2 border-gray-200 dark:border-gray-700" />
 
               <button
                 onClick={handleLogout}
-                className="w-full text-left px-4 py-3 hover:bg-gray-100 transition-colors cursor-pointer whitespace-nowrap"
+                className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-primary/10 dark:text-gray-100 transition-colors cursor-pointer whitespace-nowrap"
               >
                 <i className="ri-logout-box-line mr-3"></i>Logout
               </button>

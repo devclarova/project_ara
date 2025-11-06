@@ -120,7 +120,7 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
   const isMyReply = authUser?.id === reply.user.username;
 
   return (
-    <div className="border-b border-gray-200 px-4 py-3 hover:bg-gray-50/50 transition-colors relative">
+    <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-primary/10 transition-colors">
       <div className="flex space-x-3">
         <div onClick={handleAvatarClick} className="cursor-pointer">
           <Avatar>
@@ -175,7 +175,6 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
               </div>
             )}
           </div>
-
           {/* 본문 */}
           <div
             className="mt-1 text-gray-900 whitespace-pre-wrap break-words leading-relaxed"
@@ -185,8 +184,8 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
           {/* 액션 버튼 */}
           <div className="flex items-center justify-between max-w-md mt-3 text-gray-500">
             {/* Reply */}
-            <button className="flex items-center space-x-2 hover:text-blue-500 transition-colors group">
-              <div className="p-2 rounded-full group-hover:bg-blue-50 transition-colors">
+            <button className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400 transition-colors group">
+              <div className="p-2 rounded-full group-hover:bg-blue-50 dark:group-hover:bg-primary/10 transition-colors">
                 <i className="ri-chat-3-line text-lg"></i>
               </div>
               <span className="text-sm">{reply.stats.comments}</span>
@@ -202,15 +201,16 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
                 setLiked(!liked);
               }}
             >
-              <div className="p-2 rounded-full group-hover:bg-red-50 transition-colors">
+              <div className="p-2 rounded-full group-hover:bg-red-50 dark:group-hover:bg-primary/10 transition-colors">
                 <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg`}></i>
               </div>
               <span className="text-sm">{reply.stats.likes + (liked ? 1 : 0)}</span>
             </button>
 
             {/* Views */}
-            <button className="flex items-center space-x-2 hover:text-green-500 transition-colors group">
-              <div className="p-2 rounded-full group-hover:bg-blue-50 transition-colors">
+            <button className="flex items-center space-x-2 hover:text-green-500 dark:hover:text-emerald-400 transition-colors group">
+              {' '}
+              <div className="p-2 rounded-full group-hover:bg-blue-50 dark:group-hover:bg-primary/10 transition-colors">
                 <i className="ri-eye-line text-lg"></i>
               </div>
               <span className="text-sm">{reply.stats.views}</span>
@@ -256,7 +256,7 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
 export default function ReplyList({ replies, onDeleted }: ReplyListProps) {
   if (replies.length === 0) {
     return (
-      <div className="p-8 text-center text-gray-500">
+      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
         <i className="ri-chat-3-line text-4xl mb-2 block"></i>
         <p>No replies yet</p>
         <p className="text-sm mt-1">Be the first to reply!</p>

@@ -32,47 +32,43 @@ export default function ReplyComposer({ onReply }: ReplyComposerProps) {
   };
 
   const remaining = 280 - content.length;
-  const ringColor =
-    content.length > 260 ? '#ef4444' : content.length > 240 ? '#f59e0b' : '#3b82f6';
+  const ringColor = content.length > 260 ? '#ef4444' : content.length > 240 ? '#f59e0b' : '#3b82f6';
 
   return (
-    <div className="border-b border-gray-200 px-4 py-4">
+    <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-4">
       <div className="flex space-x-3">
         {/* shadcn Avatar */}
         <Avatar className="h-10 w-10">
-          <AvatarImage
-            src="/default-avatar.svg"
-            alt="Your avatar"
-          />
+          <AvatarImage src="/default-avatar.svg" alt="Your avatar" />
           <AvatarFallback>YOU</AvatarFallback>
         </Avatar>
 
         <div className="flex-1">
           <textarea
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={e => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Tweet your reply"
-            className="w-full resize-none border-none outline-none text-xl placeholder-gray-500 bg-transparent"
+            className="w-full resize-none border-none outline-none text-xl placeholder-gray-500 bg-transparent text-gray-900 dark:text-gray-100"
             rows={3}
             maxLength={280}
           />
 
           <div className="mt-3 flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <button className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition-colors">
+              <button className="text-blue-500 hover:bg-blue-50 dark:hover:bg-primary/10 p-2 rounded-full transition-colors">
                 <i className="ri-image-line text-xl" />
               </button>
-              <button className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition-colors">
+              <button className="text-blue-500 hover:bg-blue-50 dark:hover:bg-primary/10 p-2 rounded-full transition-colors">
                 <i className="ri-file-gif-line text-xl" />
               </button>
-              <button className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition-colors">
+              <button className="text-blue-500 hover:bg-blue-50 dark:hover:bg-primary/10 p-2 rounded-full transition-colors">
                 <i className="ri-emotion-line text-xl" />
               </button>
-              <button className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition-colors">
+              <button className="text-blue-500 hover:bg-blue-50 dark:hover:bg-primary/10 p-2 rounded-full transition-colors">
                 <i className="ri-calendar-event-line text-xl" />
               </button>
-              <button className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition-colors">
+              <button className="text-blue-500 hover:bg-blue-50 dark:hover:bg-primary/10 p-2 rounded-full transition-colors">
                 <i className="ri-map-pin-line text-xl" />
               </button>
             </div>

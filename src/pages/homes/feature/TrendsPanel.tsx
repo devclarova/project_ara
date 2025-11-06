@@ -59,12 +59,12 @@ export default function TrendsPanel() {
   }, []);
 
   return (
-    <div className="w-80 h-full flex flex-col  lg:px-4 py-6">
+    <div className="w-80 h-full flex flex-col lg:px-4 py-6">
       {/* 🔍 Search Bar */}
-      <div className="sticky top-0 bg-white z-10 pb-4">
+      <div className="sticky top-0 bg-white dark:bg-background z-10 pb-4">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <i className="ri-search-line text-gray-400 text-sm"></i>
+            <i className="ri-search-line text-gray-400 dark:text-gray-500 text-sm"></i>
           </div>
           <input
             type="text"
@@ -86,18 +86,18 @@ export default function TrendsPanel() {
           {loading ? (
             <div className="space-y-3 animate-pulse">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-16 bg-gray-100 rounded-xl"></div>
+                <div key={i} className="h-16 bg-gray-100 dark:bg-gray-800 rounded-xl"></div>
               ))}
             </div>
           ) : trendingTweets.length === 0 ? (
-            <p className="text-gray-500 text-sm">No trending tweets yet</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">No trending tweets yet</p>
           ) : (
             <div className="space-y-2">
               {trendingTweets.map(tweet => (
                 <div
                   key={tweet.id}
                   onClick={() => navigate(`/finalhome/${tweet.id}`)}
-                  className="group flex items-start gap-3 p-2 rounded-xl hover:bg-primary/5 transition-all cursor-pointer"
+                  className="group flex items-start gap-3 p-2 rounded-xl hover:bg-primary/5 dark:hover:bg-primary/10 transition-all cursor-pointer"
                 >
                   <img
                     src={tweet.profiles?.avatar_url || '/default-avatar.svg'}

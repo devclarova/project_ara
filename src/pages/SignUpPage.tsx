@@ -95,7 +95,7 @@ export default function SignUpPage() {
 
   return (
     <div
-      className={`min-h-auto mt- md:min-h-auto w-full bg-white dark:bg-gray-800
+      className={`min-h-auto mt- md:min-h-auto w-full bg-white dark:bg-background
                      flex justify-center items-start ${wrapperPad} overflow-y-auto`}
     >
       <div className="w-full max-w-md sm:max-w-lg md:max-w-2xl px-4 sm:px-6 md:px-8">

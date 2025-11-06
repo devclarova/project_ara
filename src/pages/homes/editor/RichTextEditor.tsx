@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import ReactQuill, { type Value } from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import '@/styles/rich-text-editor.css';
 
 // 임시 미리보기 이미지의 데이터 형태
 interface TempImageFile {
@@ -293,6 +294,7 @@ const RichTextEditor = ({
         formats={formats} // 허용할 HTML 태그
         placeholder={placeholder} // 안내 글자
         readOnly={disabled} // 읽기 전용 여부
+        className="rich-text-editor"
       />
     </div>
   );

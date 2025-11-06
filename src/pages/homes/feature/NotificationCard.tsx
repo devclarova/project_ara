@@ -96,7 +96,7 @@ export default function NotificationCard({ notification, onMarkAsRead }: Notific
   return (
     <div
       onClick={handleClick}
-      className={`p-4 border-b border-gray-100 transition-all duration-200 cursor-pointer hover:bg-primary/5 ${
+      className={`p-4 border-b border-gray-100 dark:border-gray-800 transition-all duration-200 cursor-pointer hover:bg-primary/5 dark:hover:bg-primary/20 ${
         !notification.isRead ? 'bg-primary/10 border-l-4 border-l-primary' : ''
       }`}
     >
@@ -126,7 +126,9 @@ export default function NotificationCard({ notification, onMarkAsRead }: Notific
               <span className="text-gray-600 ml-1">{notification.action}</span>
             </div>
 
-            <span className="text-sm text-gray-500 flex-shrink-0">{notification.timestamp}</span>
+            <span className="text-sm text-gray-500 dark:text-gray-500 flex-shrink-0">
+              {notification.timestamp}
+            </span>
           </div>
 
           {parsedContent && (

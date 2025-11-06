@@ -16,6 +16,27 @@ const secToMMSS = (sec: number | null | undefined) => {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 };
 
+// 반응형 pageSize 훅: Tailwind 브레이크포인트와 동일한 기준 사용
+const useResponsivePageSize = () => {
+  const [pageSize, setPageSize] = useState(6);
+
+  useEffect(() => {
+    const calc = () => {
+      const w = window.innerWidth;
+      if (w < 640)
+        setPageSize(1); // < sm (mobile)
+      else if (w < 1024)
+        setPageSize(2); // < lg (tablet)
+      else setPageSize(3); // >= lg (desktop)
+    };
+    calc();
+    window.addEventListener('resize', calc);
+    return () => window.removeEventListener('resize', calc);
+  }, []);
+
+  return pageSize;
+};
+
 const StudySubtitles: React.FC<SubtitleListProps> = ({
   onSelectDialogue,
   studyId,
@@ -28,7 +49,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
-  const pageSize = 3; // 한번에 보여줄 자막 수
+  const pageSize = useResponsivePageSize(); // 한번에 보여줄 자막 수
 
   useEffect(() => {
     if (!Number.isFinite(resolvedStudyId)) {
@@ -103,6 +124,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
   const handlePrevPage = () => {
     setCurrentPage(prevPage => Math.max(prevPage - 1, 0));
   };
+
   const currentDialogues = dialogues.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
   const showPaginationButtons = dialogues.length > pageSize; // 자막 3개 초과일 때 버튼 보이기
 
@@ -112,49 +134,51 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
 
   return (
     <div>
-      <h2 className="text-xl font-bold ml-2 mb-2 dark:text-gray-100">자막</h2>
+      <h2 className="text-lg sm:text-xl font-bold ml-2 mb-2 dark:text-gray-100">자막</h2>
 
-      {loading && <p>자막 로딩 중...</p>}
-      {error && <p className="text-red-600">오류: {error}</p>}
+      {loading && <p className="text-sm sm:text-base">자막 로딩 중...</p>}
+      {error && <p className="text-sm sm:text-base text-red-600">오류: {error}</p>}
 
       {!loading && !error && currentDialogues.length > 0 ? (
         <>
-          <ul className="space-y-2">
+          <ul className="space-y-1.5 sm:space-y-2">
             {currentDialogues.map(d => (
               <li
-                key={d.id} // 안정적인 key
+                key={d.id}
                 onClick={() => onSelectDialogue(d)}
-                className="p-3 bg-white dark:bg-secondary rounded-lg shadow cursor-pointer hover:bg-gray-50 hover:border-l-4 hover:border-primary dark:hover:border-gray-600"
+                className="p-2.5 sm:p-3 bg-white dark:bg-secondary rounded-lg shadow cursor-pointer hover:bg-gray-50 hover:border-l-4 hover:border-primary dark:hover:border-gray-600"
               >
                 {d.korean_subtitle && (
-                  <p className="text-lg text-gray-600 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400">
+                  <p className="text-base sm:text-lg text-gray-600 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400">
                     {d.korean_subtitle}
                   </p>
                 )}
                 {d.pronunciation && (
-                  <p className="text-lg text-gray-500 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400">
+                  <p className="text-base sm:text-lg text-gray-500 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400">
                     [{d.pronunciation}]
                   </p>
                 )}
                 {d.english_subtitle && (
-                  <p className="text-lg text-gray-700 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400">
+                  <p className="text-base sm:text-lg text-gray-700 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400">
                     {d.english_subtitle}
                   </p>
                 )}
-                {/* <p className="text-xs text-gray-400 mt-1">
-                  {secToMMSS(d.subtitle_start_time)} → {secToMMSS(d.subtitle_end_time)}
-                  {d.level ? ` · ${d.level}` : ''}
-                </p> */}
+                {/* 시간/레벨 표시가 필요하면 아래 주석 해제 후 동일하게 반응형 크기 적용
+            <p className="text-[10px] sm:text-xs text-gray-400 mt-1">
+              {secToMMSS(d.subtitle_start_time)} → {secToMMSS(d.subtitle_end_time)}
+              {d.level ? ` · ${d.level}` : ''}
+            </p> */}
               </li>
             ))}
           </ul>
-          {/* 버튼 */}
+
+          {/* 페이지네이션 버튼 (디자인 유지, 여백/폰트만 반응형) */}
           {showPaginationButtons && (
-            <div className="flex justify-center mt-4">
+            <div className="flex justify-center mt-3 sm:mt-4">
               <button
                 onClick={handlePrevPage}
                 disabled={currentPage === 0}
-                className="px-4 py-2 disabled:opacity-50 ml-4 cursor-pointer"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 disabled:opacity-50 ml-3 sm:ml-4 cursor-pointer"
                 style={{ pointerEvents: currentPage === 0 ? 'none' : 'auto' }}
               >
                 <svg
@@ -187,10 +211,11 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
                   </defs>
                 </svg>
               </button>
+
               <button
                 onClick={handleNextPage}
                 disabled={currentPage * pageSize + pageSize >= dialogues.length}
-                className="px-4 py-2 rounded disabled:opacity-50 ml-4 cursor-pointer"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded disabled:opacity-50 ml-3 sm:ml-4 cursor-pointer"
                 style={{
                   pointerEvents: isLastPage ? 'none' : 'auto',
                   cursor: isLastPage ? 'default' : 'pointer',
@@ -231,7 +256,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
           )}
         </>
       ) : (
-        !loading && !error && <p>자막 데이터가 없습니다.</p>
+        !loading && !error && <p className="text-sm sm:text-base">자막 데이터가 없습니다.</p>
       )}
     </div>
   );

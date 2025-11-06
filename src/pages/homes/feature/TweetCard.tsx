@@ -205,8 +205,9 @@ export default function TweetCard({
               <Badge variant="secondary" className="flex items-center gap-1 px-2 py-1">
                 <ReactCountryFlag countryCode="KR" svg style={{ fontSize: '1em' }} />
               </Badge>
-              <span className="text-gray-500">·</span>
-              <span className="text-gray-500">{timestamp}</span>
+
+              <span className="text-gray-500 dark:text-gray-500">·</span>
+              <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">{timestamp}</span>
             </div>
 
             {/* ✅ 더보기 버튼 */}
@@ -215,9 +216,9 @@ export default function TweetCard({
                 e.stopPropagation();
                 setShowMenu((prev) => !prev);
               }}
-              className="p-2 rounded-full hover:bg-gray-100 transition"
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition"
             >
-              <i className="ri-more-2-fill text-gray-500 text-lg"></i>
+              <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg"></i>
             </button>
 
             {/* ✅ 더보기 메뉴 */}
@@ -243,13 +244,13 @@ export default function TweetCard({
 
           {/* 본문 내용 */}
           <div
-            className="mt-1 text-gray-900 text-[15px] leading-snug whitespace-pre-line break-words"
+            className="mt-1 text-gray-900 dark:text-gray-100 text-[15px] leading-snug whitespace-pre-line break-words"
             dangerouslySetInnerHTML={{ __html: safeContent }}
           />
 
           {image && (
-            <div className="mt-3 rounded-2xl overflow-hidden border border-gray-200">
-              <img src={image} alt="tweet" className="w-full h-auto object-cover" />
+            <div className="mt-3 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
+              <img src={image} alt="Tweet image" className="w-full h-auto object-cover" />
             </div>
           )}
 
@@ -263,7 +264,9 @@ export default function TweetCard({
                 navigate(`/finalhome/${id}`);
               }}
             >
-              <i className="ri-chat-3-line text-lg"></i>
+              <div className="p-2 rounded-full group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 transition-colors">
+                <i className="ri-chat-3-line text-lg"></i>
+              </div>
               <span className="text-sm">{stats.replies ?? 0}</span>
             </button>
 

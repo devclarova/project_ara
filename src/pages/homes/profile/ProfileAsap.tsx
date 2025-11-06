@@ -82,9 +82,9 @@ export default function ProfileAsap() {
 
   if (!userProfile) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center text-gray-500">
-          <i className="ri-user-line text-6xl text-gray-300 mb-4"></i>
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-background">
+        <div className="text-center text-gray-500 dark:text-gray-400">
+          <i className="ri-user-line text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
           <p>프로필을 불러올 수 없습니다.</p>
         </div>
       </div>
@@ -92,15 +92,15 @@ export default function ProfileAsap() {
   }
 
   return (
-    <div className="min-h-screen lg:border-x border-gray-200">
+    <div className="min-h-screen bg-white dark:bg-background lg:border-x border-gray-200 dark:border-gray-700">
       {/* Header */}
-      <div className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-gray-200 p-4 z-20">
+      <div className="sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 z-20">
         <div className="flex items-center space-x-4">
           <button
             onClick={() => navigate(-1)}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition-colors cursor-pointer"
           >
-            <i className="ri-arrow-left-line text-xl text-gray-700"></i>
+            <i className="ri-arrow-left-line text-xl text-gray-700 dark:text-gray-100"></i>
           </button>
           <div>
             <h1 className="text-xl font-bold text-gray-900">{userProfile.name}</h1>

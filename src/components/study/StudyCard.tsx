@@ -15,15 +15,17 @@ const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) =>
   return (
     <div>
       {/* 상단 정보 카드 */}
-      <div className="p-5 rounded-xl space-y-1 mb-4 border bg-white/50 shadow-sm dark:bg-secondary">
-        <h3 className="text-lg ml-2 font-semibold dark:text-gray-100">학습 카드</h3>
+      <div className="p-4 sm:p-5 rounded-xl space-y-1 mb-4 border bg-white/50 shadow-sm dark:bg-secondary">
+        <h3 className="text-base sm:text-lg ml-1 sm:ml-2 font-semibold dark:text-gray-100">
+          학습 카드
+        </h3>
 
         {/* 탭 */}
-        <div className="p-2 space-y-4">
-          <div className="flex space-x-2 mt-1">
+        <div className="p-2 sm:p-3 space-y-3 sm:space-y-4">
+          <div className="flex flex-wrap gap-2 sm:space-x-2 mt-1">
             <button
               onClick={() => setActiveTab('words')}
-              className={`px-4 py-2 rounded-lg transition ${
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base transition ${
                 activeTab === 'words'
                   ? 'bg-primary dark:bg-primary/70 text-white'
                   : 'bg-white dark:bg-secondary text-gray-700 border dark:text-gray-300'
@@ -33,7 +35,7 @@ const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) =>
             </button>
             <button
               onClick={() => setActiveTab('culture')}
-              className={`px-4 py-2 rounded-lg transition ${
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base transition ${
                 activeTab === 'culture'
                   ? 'bg-primary text-white'
                   : 'bg-white dark:bg-secondary text-gray-700 border dark:text-gray-300'
@@ -44,13 +46,15 @@ const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) =>
           </div>
 
           {/* 탭 내용 */}
-          {activeTab === 'words' ? (
-            <StudyVoca studyId={studyId} subscribeRealtime />
-          ) : noteText && noteText.trim() !== '' ? (
-            <StudyCultureNote note={noteText} />
-          ) : (
-            <StudyCultureNote studyId={studyId} />
-          )}
+          <div className="mt-2 sm:mt-3">
+            {activeTab === 'words' ? (
+              <StudyVoca studyId={studyId} subscribeRealtime />
+            ) : noteText && noteText.trim() !== '' ? (
+              <StudyCultureNote note={noteText} />
+            ) : (
+              <StudyCultureNote studyId={studyId} />
+            )}
+          </div>
         </div>
       </div>
     </div>
