@@ -1,5 +1,3 @@
-// 왼쪽 메뉴 (계정 설정)
-
 import type { MenuId, SidebarItem } from '@/types/settings';
 
 type Props = {
@@ -19,9 +17,9 @@ export default function SettingsSidebar({
 }: Props) {
   return (
     <aside
-      className={`bg-white rounded-2xl border border-gray-200 p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)] w-full ${className}`}
+      className={`bg-white dark:bg-secondary rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)] w-full ${className}`}
     >
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">{title}</h2>
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{title}</h2>
       <ul className="space-y-1">
         {items.map(it => {
           const active = activeId === it.id;
@@ -30,10 +28,14 @@ export default function SettingsSidebar({
               <button
                 onClick={() => onChange(it.id)}
                 className={`w-full flex items-center justify-between rounded-xl px-4 py-3 transition text-base
-                  ${active ? 'bg-gray-100 text-gray-900 font-medium' : 'hover:bg-gray-50 text-gray-700'}`}
+                  ${
+                    active
+                      ? 'bg-gray-100 dark:bg-primary/20 text-gray-900 dark:text-gray-100 font-medium'
+                      : 'hover:bg-gray-50 dark:hover:bg-primary/10 text-gray-700 dark:text-gray-200'
+                  }`}
               >
                 <span className="truncate">{it.label}</span>
-                <span className="text-gray-400">›</span>
+                <span className="text-gray-400 dark:text-gray-500">›</span>
               </button>
             </li>
           );

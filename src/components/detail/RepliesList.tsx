@@ -1,35 +1,35 @@
 // src/components/detail/RepliesList.tsx
-import ReplyCard from './ReplyCard'
+import ReplyCard from './ReplyCard';
 
 interface Reply {
-  id: string
-  author: string
-  avatar: string
-  time: string
-  text: string
-  likes: number
-  replies: number
-  retweets: number
+  id: string;
+  author: string;
+  avatar: string;
+  time: string;
+  text: string;
+  likes: number;
+  replies: number;
+  retweets: number;
 }
 
 interface RepliesListProps {
-  replies: Reply[]
+  replies: Reply[];
 }
 
 export default function RepliesList({ replies }: RepliesListProps) {
   if (!replies || replies.length === 0) {
     return (
-      <div className="p-8 text-center text-gray-500 bg-white border-t border-gray-100">
+      <div className="p-8 text-center text-gray-500 dark:text-gray-400 bg-white dark:bg-background border-t border-gray-100 dark:border-gray-800">
         <p className="text-sm">아직 댓글이 없습니다 😌 첫 댓글을 남겨보세요!</p>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="divide-y divide-gray-200 bg-white">
+    <div className="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-background">
       {replies.map(reply => (
         <ReplyCard key={reply.id} {...reply} />
       ))}
     </div>
-  )
+  );
 }

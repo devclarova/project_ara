@@ -27,7 +27,6 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
     const ext = clean.split('.').pop() ?? 'jpg';
     const base = clean.replace(/\.[^/.]+$/, ''); // 기존 확장자 제거
     return `${base.slice(0, 50)}.${ext}`;
-    
   };
 
   const handleSubmit = async () => {
@@ -155,15 +154,15 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-2xl w-full max-w-lg mx-auto shadow-2xl">
+      <div className="bg-white dark:bg-secondary rounded-2xl w-full max-w-lg mx-auto shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-bold text-gray-900">Compose Tweet</h2>
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Compose Tweet</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center"
+            className="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 flex items-center justify-center"
           >
-            <i className="ri-close-line text-xl text-gray-600"></i>
+            <i className="ri-close-line text-xl text-gray-600 dark:text-gray-300"></i>
           </button>
         </div>
 
@@ -177,7 +176,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
           />
 
           {/* Submit Button */}
-          <div className="flex justify-end mt-4 pt-4 border-t border-gray-100">
+          <div className="flex justify-end mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
             <button
               onClick={handleSubmit}
               disabled={!content.trim() || isSubmitting}

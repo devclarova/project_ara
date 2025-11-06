@@ -1,0 +1,52 @@
+/* 📝 전체 에디터 래퍼 스타일 (모달 안에서 깔끔하게 보이도록) */
+.rich-text-editor {
+  border-radius: 0.75rem; /* rounded-2xl 느낌 */
+  border: 1px solid #e5e7eb; /* border-gray-200 */
+  overflow: hidden;
+  background-color: transparent;
+}
+
+/* 다크 모드에서 테두리 살짝 어둡게 */
+.dark .rich-text-editor {
+  border-color: #374151; /* border-gray-700-ish */
+}
+
+/* 🧰 툴바 스타일 */
+.rich-text-editor .ql-toolbar {
+  border: none;
+  border-bottom: 1px solid #e5e7eb; /* 라이트 */
+  background-color: #f9fafb; /* very light gray */
+}
+
+.dark .rich-text-editor .ql-toolbar {
+  border-color: #374151;
+  background-color: #020617; /* 거의 검정 (slate-950 느낌) */
+}
+
+/* 🧾 컨테이너 + 에디터 배경을 투명하게 만들어서
+   모달의 bg-white / dark:bg-secondary 가 비치도록 */
+.rich-text-editor .ql-container {
+  border: none;
+  background-color: transparent;
+}
+
+.rich-text-editor .ql-editor {
+  background-color: transparent;
+  color: #111827; /* 라이트 모드: text-gray-900 */
+}
+
+/* 다크 모드 글자색만 흰색으로 */
+.dark .rich-text-editor .ql-editor {
+  color: #ffffff; /* 다크 모드: 흰색 텍스트 */
+}
+
+/* 🔤 placeholder 텍스트 */
+.rich-text-editor .ql-editor.ql-blank::before {
+  color: #9ca3af; /* text-gray-400 */
+  opacity: 1;
+}
+
+.dark .rich-text-editor .ql-editor.ql-blank::before {
+  color: #6b7280; /* text-gray-500 */
+  opacity: 1;
+}

@@ -1,7 +1,3 @@
-// 개인정보 설정 페이지 - 모달 버전
-// - 각 버튼을 누르면 모달이 뜨고, 모달 내 "뒤로가기"를 누르면 목록으로 복귀
-// - 바깥영역 클릭으로도 닫히도록 처리
-
 import Modal from '@/components/common/Modal';
 import type { ActiveSetting } from '@/types/settings';
 import { getSettingsTitle } from '@/untils/getTitle';
@@ -10,7 +6,11 @@ import { Row } from '../../components/settings/Row';
 import PasswordChange from './PasswordChange';
 import SNSConnect from './SNSConnect';
 
-export default function PrivacySettings() {
+interface PrivacySettingsProps {
+  onBackToMenu?: () => void;
+}
+
+export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) {
   const [active, setActive] = useState<ActiveSetting>(null);
   const open = (key: ActiveSetting) => setActive(key);
   const close = () => setActive(null);
@@ -19,7 +19,18 @@ export default function PrivacySettings() {
     <div className="relative">
       {/* 메인 목록 */}
       <div className={`${active ? 'pointer-events-none blur-[2px]' : ''}`}>
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">개인정보 설정</h3>
+        {/* 헤더 + 모바일 화살표 */}
+        <div className="flex items-center gap-2 mb-6">
+          <button
+            type="button"
+            onClick={onBackToMenu}
+            className="inline-flex md:hidden items-center justify-center w-9 h-9 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            aria-label="뒤로가기"
+          >
+            <i className="ri-arrow-left-line text-lg" />
+          </button>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">개인정보 설정</h3>
+        </div>
 
         <div className="space-y-2">
           <Row label="비밀번호 변경" onClick={() => open('password')} />
@@ -27,17 +38,23 @@ export default function PrivacySettings() {
         </div>
 
         <div className="mt-8 text-right">
-          <button className="text-[11px] text-gray-400 hover:text-gray-600 transition">
+          <button className="text-[11px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">
             탈퇴하기
           </button>
         </div>
+
         {/* 하단 여백 */}
         <div className="h-24" />
       </div>
 
       {/* 모달: active 가 있을 때만 렌더링 */}
       <Modal isOpen={!!active} onClose={close} title={getSettingsTitle(active)}>
-        {active === 'password' && <PasswordChange onDone={close} onClose={close} />}
+        {active === 'password' && (
+          <PasswordChange
+            onDone={close} // 저장 성공 후 닫기
+            onClose={close} // 취소 버튼 또는 X 버튼 눌렀을 때 닫기
+          />
+        )}
         {active === 'sns' && <SNSConnect onClose={close} />}
       </Modal>
     </div>

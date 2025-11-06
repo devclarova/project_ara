@@ -13,9 +13,11 @@ interface MessageGroup {
 // DirectChatRoom 컴포넌트이 Props 타입 정의
 interface DirectChatRoomProps {
   chatId: string;
+  isMobile?: boolean;
+  onBackToList?: () => void;
 }
 
-const DirectChatRoom = ({ chatId }: DirectChatRoomProps) => {
+const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps) => {
   // DirectChatContext 에서 필요한 상태와 함수를 가져오기
   const { messages, loading, error, loadMessages, currentChat, exitDirectChat, getUserProfile } =
     useDirectChat();
@@ -251,8 +253,23 @@ const DirectChatRoom = ({ chatId }: DirectChatRoomProps) => {
       <div className="chat-room-header">
         {/* 채팅방 정보 */}
         <div className="chat-room-info">
-          <h3>1:1 채팅 ({currentChat?.other_user.nickname || '로딩 중...'}) </h3>
+          <div className="chat-room-header-left">
+            {isMobile && onBackToList && (
+              <button
+                className="chat-room-back-btn"
+                onClick={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onBackToList();
+                }}
+              >
+                ←
+              </button>
+            )}
+            <h3>1:1 채팅 ({currentChat?.other_user.nickname || '로딩 중...'}) </h3>
+          </div>
         </div>
+
         {/* 채팅방 액션 버튼들  */}
         <div className="chat-room-actions">
           {/* 채팅 나가기 버튼 */}
@@ -262,17 +279,6 @@ const DirectChatRoom = ({ chatId }: DirectChatRoomProps) => {
               e.preventDefault();
               e.stopPropagation();
               handleExitChat();
-            }}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#ff4444',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              zIndex: 9999,
-              position: 'relative',
             }}
           >
             나가기

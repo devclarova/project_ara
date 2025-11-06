@@ -28,7 +28,7 @@ export default function Input({ placeholder, onSubmit, onClose }: SearchBarProps
   return (
     <div className="flex items-center justify-center pb-5 bg-background text-foreground transition-colors">
       {/* 검색 입력창 */}
-      <div className="flex items-center justify-between h-12 w-full rounded-full border border-input bg-card shadow-sm focus-within:ring-2 focus-within:ring-primary/60 focus-within:border-transparent transition-colors overflow-hidden">
+      <div className="flex items-center justify-between h-12 w-full rounded-full border border-input bg-card dark:bg-secondary shadow-sm focus-within:ring-2 focus-within:ring-primary/60 focus-within:border-transparent transition-colors overflow-hidden">
         {/* 돋보기 아이콘 */}
         <div className="flex items-center pl-4 text-muted-foreground">
           <Search className="w-5 h-5" />
