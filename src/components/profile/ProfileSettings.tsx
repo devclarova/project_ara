@@ -25,7 +25,7 @@ export default function ProfileSettings() {
   const [isMobile, setIsMobile] = useState(false);
   const [showMenuOnMobile, setShowMenuOnMobile] = useState(true);
 
-  const sidebarWidth = 'sm:w-72 md:w-auto flex-1'; // 데스크톱용 공통 폭
+  const sidebarWidth = 'md:w-auto flex-1'; // 데스크톱용 공통 폭
 
   // 화면 크기에 따라 모바일 여부 판단 (채팅 페이지랑 동일한 패턴)
   useEffect(() => {

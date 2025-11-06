@@ -1,12 +1,12 @@
 import Modal from '@/components/common/Modal';
+import CustomerCenterView from '@/components/settings/CustomerCenterView';
+import MarketingConsentView from '@/components/settings/MarketingConsentView';
+import PrivacyPolicyView from '@/components/settings/PrivacyPolicyView';
 import { Row } from '@/components/settings/Row';
+import TermsView from '@/components/settings/TermsView';
 import type { ActiveKey } from '@/types/settings';
 import { getPolicyTitle } from '@/untils/getTitle';
 import { useState } from 'react';
-import { TermsView } from './TermsView';
-import { PrivacyPolicyView } from './PrivacyPolicyView';
-import { MarketingConsentView } from './MarketingConsentView';
-import { CustomerCenterView } from './CustomerCenterView';
 
 interface PrivacySettingsProps {
   onBackToMenu?: () => void; // ← 부모에서 전달받는 콜백 (선택)

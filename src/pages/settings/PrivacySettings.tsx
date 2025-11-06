@@ -42,13 +42,19 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
             탈퇴하기
           </button>
         </div>
+
         {/* 하단 여백 */}
         <div className="h-24" />
       </div>
 
       {/* 모달: active 가 있을 때만 렌더링 */}
       <Modal isOpen={!!active} onClose={close} title={getSettingsTitle(active)}>
-        {active === 'password' && <PasswordChange onDone={close} onClose={close} />}
+        {active === 'password' && (
+          <PasswordChange
+            onDone={close} // 저장 성공 후 닫기
+            onClose={close} // 취소 버튼 또는 X 버튼 눌렀을 때 닫기
+          />
+        )}
         {active === 'sns' && <SNSConnect onClose={close} />}
       </Modal>
     </div>
