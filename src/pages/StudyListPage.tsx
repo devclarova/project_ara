@@ -2,13 +2,15 @@ import CategoryTabs, { type TCategory } from '@/components/study/CategoryTabs';
 import ContentCard from '@/components/study/ContentCard';
 import FilterDropdown, { type TDifficulty } from '@/components/study/FilterDropdown';
 import SearchBar from '@/components/ui/SearchBar';
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Study } from '../types/study';
 import Sidebar from './homes/feature/Sidebar';
 import { useSearchParams } from 'react-router-dom';
+import Pagination from '@/components/common/Pagination';
 
 const ALL_CATEGORIES: TCategory[] = ['전체', '드라마', '영화', '예능', '음악'];
+const ALL_LEVELS: TDifficulty[] = ['', '초급', '중급', '고급'];
 
 const StudyListPage = () => {
   const [clips, setClips] = useState<Study[]>([]); // 콘텐츠 목록
@@ -23,24 +25,21 @@ const StudyListPage = () => {
   const displayCategory: TCategory = useMemo(() => {
     const q = searchParams.get('category') ?? '전체';
     return (ALL_CATEGORIES.includes(q as TCategory) ? q : '전체') as TCategory;
+  }, [searchParams.get('category')]); // 의존성 최소화
+
+  const contentFilter = searchParams.get('content')?.trim() ?? '';
+  const episodeFilter = searchParams.get('episode')?.trim() ?? '';
+
+  // 쿼리에서 초기 lelvels 읽기
+  const displayLevel: TDifficulty = useMemo(() => {
+    const raw = searchParams.get('level') ?? '';
+    return (ALL_LEVELS.includes(raw as TDifficulty) ? (raw as TDifficulty) : '') as TDifficulty;
   }, [searchParams]);
 
   const [activeCategory, setActiveCategory] = useState<TCategory>(displayCategory);
-  const [levelFilter, setLevelFilter] = useState<TDifficulty>('');
+  const [levelFilter, setLevelFilter] = useState<TDifficulty>(displayLevel);
 
   const limit = 9; // 한 페이지당 9개 (3x3 그리드)
-
-  // 콘텐츠 필터링
-  const contentFilter = useMemo(() => {
-    const raw = searchParams.get('content')?.trim() ?? '';
-    return raw.length ? raw : '';
-  }, [searchParams]);
-
-  // 에피소드 필터링
-  const episodeFilter = useMemo(() => {
-    const raw = searchParams.get('episode')?.trim() ?? '';
-    return raw.length ? raw : '';
-  }, [searchParams]);
 
   // 데이터 불러오기
   useEffect(() => {
@@ -48,37 +47,29 @@ const StudyListPage = () => {
       const from = (page - 1) * limit;
       const to = from + limit - 1;
 
-      // 기본 셀렉트
       let query = supabase
         .from('study')
         .select('*, video(*,runtime_bucket)', { count: 'exact' })
         .order('id', { ascending: true });
 
-      // 카테고리/콘텐츠 중 하나라도 필터가 있으면 INNER JOIN 로 전환해 정확히 필터
+      // 필터 조건
       const needsCategory = activeCategory !== '전체';
       const needsContent = !!contentFilter;
       const needsEpisode = !!episodeFilter;
       const needsLevel = !!levelFilter;
 
-      if (needsCategory || needsContent) {
+      if (needsCategory || needsContent || needsEpisode || needsLevel) {
         query = supabase
           .from('study')
           .select('*, video!inner(*,runtime_bucket)', { count: 'exact' })
           .order('id', { ascending: true });
 
-        if (needsCategory) {
-          query = query.eq('video.categories', activeCategory);
-        }
-        if (needsContent) {
-          query = query.eq('video.contents', contentFilter);
-        }
-        if (needsEpisode) {
-          query = query.eq('video.episode', episodeFilter);
-        }
+        if (needsCategory) query = query.eq('video.categories', activeCategory);
+        if (needsContent) query = query.eq('video.contents', contentFilter);
+        if (needsEpisode) query = query.eq('video.episode', episodeFilter);
         if (needsLevel) query = query.eq('video.level', levelFilter);
       }
 
-      // 검색어가 있으면 필터링 추가
       if (keyword.trim()) {
         query = query.or(`title.ilike.%${keyword}%,short_description.ilike.%${keyword}%`);
       }
@@ -93,37 +84,20 @@ const StudyListPage = () => {
     };
 
     fetchData();
-  }, [page, activeCategory, keyword, contentFilter, episodeFilter]);
+  }, [page, activeCategory, levelFilter, keyword, contentFilter, episodeFilter]); // 의존성 최소화
 
-  const filteredClips =
-    activeCategory === '전체'
-      ? clips
-      : clips.filter(study =>
-          (study.video ?? []).some(v => {
-            return v?.categories === activeCategory;
-          }),
-        );
-
-  // 콘텐츠 필터링 추가
-  const filteredContent = contentFilter
-    ? filteredClips.filter(study => (study.video ?? []).some(v => v?.contents === contentFilter))
-    : filteredClips;
-
-  // 에피소드 필터링 추가
-  const filteredEpisode = episodeFilter
-    ? filteredContent.filter(study => (study.video ?? []).some(v => v?.episode === episodeFilter))
-    : filteredContent;
-
-  // ✅ 난이도 보정
-  const finalList = levelFilter
-    ? filteredEpisode.filter(study => (study.video ?? []).some(v => v?.level === levelFilter))
-    : filteredEpisode;
+  const finalList = clips;
 
   // URL이 바뀌면 탭/페이지도 맞춰주기
   useEffect(() => {
     setActiveCategory(displayCategory);
     setPage(1);
   }, [displayCategory, contentFilter, episodeFilter]);
+
+  useEffect(() => {
+    setLevelFilter(displayLevel);
+    setPage(1);
+  }, [displayLevel]);
 
   const totalPages = Math.ceil(total / limit);
 
@@ -136,14 +110,28 @@ const StudyListPage = () => {
     const next = (ALL_CATEGORIES.includes(c as TCategory) ? c : '전체') as TCategory;
     setActiveCategory(next);
     setPage(1);
-    if (next === '전체') {
-      // 전체면 쿼리 제거
-      searchParams.delete('category');
-      setSearchParams(searchParams, { replace: true });
-    } else {
-      setSearchParams({ category: next }, { replace: true });
-    }
+
+    if (next === '전체') updateSearchParam('category', null);
+    else updateSearchParam('category', next);
   };
+
+  const updateSearchParam = (key: string, value: string | null) => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (value === null) nextParams.delete(key);
+    else nextParams.set(key, value);
+    setSearchParams(nextParams, { replace: true });
+  };
+
+  const applyLevel = (next: TDifficulty) => {
+    setLevelFilter(next);
+    setPage(1);
+    // ''(전체)이면 쿼리 제거, 아니면 세팅
+    if (!next) updateSearchParam('level', null);
+    else updateSearchParam('level', next);
+  };
+
+  // 리랜더링 방지
+  const PaginationComponent = React.memo(Pagination);
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-800">
@@ -157,9 +145,9 @@ const StudyListPage = () => {
           {/* 데스크톱에서만 폭 제한해 자연스런 3열 유지 */}
           <main className="flex-1 min-w-0 bg-white dark:bg-gray-800">
             {/* 탭 + 검색 */}
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 bg-white dark:bg-gray-800 sticky top-0 z-10 pb-2 pl-6 pt-8">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 bg-white dark:bg-secondary sticky top-0 z-10 pb-2 pl-6 pt-8 pr-6">
               {/* 왼쪽: 카테고리 + 모바일용 검색 아이콘 */}
-              <div className="flex items-center justify-between ">
+              <div className="flex items-center justify-between w-full md:w-auto">
                 <CategoryTabs active={displayCategory} onChange={handleCategoryChange} />
 
                 {/* 모바일 전용 검색 버튼 (카테고리 옆에 위치) */}
@@ -168,14 +156,14 @@ const StudyListPage = () => {
                   className="md:hidden ml-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
                   aria-label="검색 열기"
                 >
-                  <i className="ri-search-line text-[20px] text-gray-600" />
+                  <i className="ri-search-line text-[20px] sm:text-[24px] md:text-[28px] text-gray-600" />
                 </button>
               </div>
 
               {/* 오른쪽: 필터 + 검색 그룹 (데스크톱 전용) */}
               <div className="hidden md:flex items-center gap-2 mt-3 md:mt-0 flex-nowrap">
                 <div className="flex items-center h-11">
-                  <FilterDropdown value={levelFilter} onApply={setLevelFilter} />
+                  <FilterDropdown value={levelFilter} onApply={applyLevel} />
                 </div>
                 <div className="flex items-center h-11">
                   <SearchBar
@@ -187,7 +175,7 @@ const StudyListPage = () => {
                 </div>
               </div>
 
-              {/* 모바일: 검색 전용 모달  */}
+              {/* 모바일: 검색 전용 모달 */}
               {showSearch && (
                 <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-20 md:hidden">
                   <div className="bg-white w-[90%] max-w-sm rounded-xl shadow-lg p-4 flex flex-col gap-4">
@@ -255,98 +243,13 @@ const StudyListPage = () => {
               </div>
 
               {/* 페이지네이션 */}
-              {filteredClips.length > 0 && totalPages > 1 && (
-                <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 my-6 sm:my-8">
-                  {/* 이전 버튼 */}
-                  {page > 1 && (
-                    <button
-                      onClick={() => setPage(page - 3)}
-                      className="text-sm sm:text-base lg:text-lg text-gray-500 hover:text-gray-900 transition"
-                    >
-                      <i className="ri-arrow-drop-left-line text-3xl transition-transform duration-200 group-hover:-translate-x-1" />
-                    </button>
-                  )}
-
-                  {/* 페이지 번호 표시 (최대 3개까지 표시) */}
-                  {totalPages <= 3 ? (
-                    // 페이지가 3개 이하일 경우 모두 표시
-                    Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
-                      <button
-                        key={num}
-                        onClick={() => setPage(num)}
-                        className={`px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2 text-sm sm:text-base lg:text-lg
-            ${page === num ? 'text-primary underline' : 'text-gray-700 dark:text-gray-600'} transition`}
-                      >
-                        {num}
-                      </button>
-                    ))
-                  ) : (
-                    <>
-                      {/* 첫 페이지 버튼은 페이지가 4개 이상일 때만 표시 */}
-                      {page > 3 && (
-                        <button
-                          onClick={() => setPage(1)}
-                          className={`px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2 text-sm sm:text-base lg:text-lg
-              ${page === 1 ? 'text-primary underline' : 'text-gray-700 dark:text-gray-600'} transition`}
-                        >
-                          1
-                        </button>
-                      )}
-
-                      {/* '...' 표시 */}
-                      {/* {page > 3 && (
-                        <span className="text-gray-700 dark:text-gray-600 px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2">
-                          ...
-                        </span>
-                      )} */}
-
-                      {/* 현재 페이지를 기준으로 앞뒤로 2개의 페이지 번호만 표시 */}
-                      {Array.from({ length: 3 }, (_, i) => page - 1 + i).map(
-                        num =>
-                          num > 0 &&
-                          num <= totalPages && (
-                            <button
-                              key={num}
-                              onClick={() => setPage(num)}
-                              className={`px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2 text-sm sm:text-base lg:text-lg
-                  ${page === num ? 'text-primary underline' : 'text-gray-700 dark:text-gray-600'} transition`}
-                            >
-                              {num}
-                            </button>
-                          ),
-                      )}
-
-                      {/* '...' 표시 */}
-                      {/* {page < totalPages - 2 && (
-                        <span className="text-gray-700 dark:text-gray-600 px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2">
-                          ...
-                        </span>
-                      )} */}
-
-                      {/* 마지막 페이지 버튼은 페이지가 5개 이상일 때만 표시 */}
-                      {page < totalPages - 2 && (
-                        <button
-                          onClick={() => setPage(totalPages)}
-                          className={`px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2 text-sm sm:text-base lg:text-lg
-              ${page === totalPages ? 'text-primary underline' : 'text-gray-700 dark:text-gray-600'} transition`}
-                        >
-                          {totalPages}
-                        </button>
-                      )}
-                    </>
-                  )}
-
-                  {/* 다음 버튼 */}
-                  {page < totalPages && (
-                    <button
-                      onClick={() => setPage(page + 3)}
-                      className="text-sm sm:text-base lg:text-lg text-gray-500 hover:text-gray-900 transition"
-                    >
-                      <i className="ri-arrow-drop-right-line text-3xl transition-transform duration-200 group-hover:-translate-x-1" />
-                    </button>
-                  )}
-                </div>
-              )}
+              <PaginationComponent
+                totalPages={totalPages}
+                page={page}
+                onPageChange={setPage}
+                windowSize={3} // 3개씩 보이기
+                autoScrollTop={true} // 숫자 클릭 시 상단으로
+              />
             </div>
           </main>
         </div>
