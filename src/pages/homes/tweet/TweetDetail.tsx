@@ -192,6 +192,32 @@ export default function TweetDetail() {
     setReplies(mapped);
   };
 
+  // ✅ 댓글 삭제 실시간 반영
+  useEffect(() => {
+    if (!id) return;
+
+    const deleteChannel = supabase
+      .channel(`tweet-${id}-replies-delete`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'tweet_replies',
+          // filter: `tweet_id=eq.${id}`,
+        },
+        payload => {
+          const deletedId = payload.old.id;
+          setReplies(prev => prev.filter(r => r.id !== deletedId));
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(deleteChannel);
+    };
+  }, [id]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
