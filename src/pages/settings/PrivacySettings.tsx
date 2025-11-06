@@ -38,7 +38,7 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
 
     // 1) 확인 문구 검사
     if (confirmText.trim() !== CONFIRM_PHRASE) {
-      setWithdrawError(`확인 문장을 "${CONFIRM_PHRASE}"로 정확히 입력해주세요.`);
+      setWithdrawError(`확인 문장 "${CONFIRM_PHRASE}"을 정확히 입력해주세요.`);
       return;
     }
 
