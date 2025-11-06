@@ -22,7 +22,7 @@ export default function ProfileHeader({ userProfile }: ProfileHeaderProps) {
   const isOwnProfile = user && user.id === userProfile.user_id;
 
   return (
-    <div className="relative">
+    <div className="relative bg-white dark:bg-background">
       {/* Banner */}
       {userProfile.banner ? (
         <div className="h-48 sm:h-64 relative overflow-hidden">
@@ -65,8 +65,9 @@ export default function ProfileHeader({ userProfile }: ProfileHeaderProps) {
         {/* User Info */}
         <div className="space-y-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{userProfile.name}</h1>
-            {/* <p className="text-gray-500">@{userProfile.username}</p> */}
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              {userProfile.name}
+            </h1>
           </div>
           {userProfile.bio && (
             <p className="text-gray-900 dark:text-gray-100 whitespace-pre-line">

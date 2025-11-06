@@ -1,4 +1,3 @@
-// ✅ src/pages/homes/profile/components/ProfileTweets.tsx
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import TweetCard from '../../feature/TweetCard';
@@ -182,7 +181,7 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
 
   if (!tweets.length)
     return (
-      <div className="text-center py-16 text-gray-500">
+      <div className="text-center py-16 text-gray-500 dark:text-gray-400">
         {activeTab === 'posts'
           ? '아직 작성한 게시글이 없습니다.'
           : activeTab === 'replies'

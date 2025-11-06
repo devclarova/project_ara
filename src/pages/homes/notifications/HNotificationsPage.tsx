@@ -1,4 +1,3 @@
-// src/pages/homes/notifications/HNotificationsPage.tsx
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -95,10 +94,8 @@ export default function HNotificationsPage() {
           filter: `receiver_id=eq.${profileId}`,
         },
         async payload => {
-          // console.log('🔥 새 알림 이벤트', payload);
           const newItem = payload.new as any;
 
-          // sender 정보 보강
           const { data: sender } = await supabase
             .from('profiles')
             .select('nickname, user_id, avatar_url')
@@ -146,12 +143,14 @@ export default function HNotificationsPage() {
     );
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-gray-200 z-10 px-4 py-3">
-        <h1 className="text-xl font-bold text-gray-900">알림</h1>
+    <div className="min-h-screen bg-white dark:bg-background">
+      {/* 헤더 */}
+      <div className="sticky top-0 bg-white/80 dark:bg-background/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 z-10 px-4 py-3">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">알림</h1>
       </div>
 
-      <div className="divide-y divide-gray-100">
+      {/* 리스트 */}
+      <div className="divide-y divide-gray-100 dark:divide-gray-900">
         {notifications.length > 0 ? (
           notifications.map(n => (
             <NotificationCard
@@ -184,8 +183,8 @@ export default function HNotificationsPage() {
             />
           ))
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-            <i className="ri-notification-3-line text-3xl mb-2"></i>
+          <div className="flex flex-col items-center justify-center py-20 text-gray-500 dark:text-gray-400">
+            <i className="ri-notification-3-line text-3xl mb-2" />
             아직 새로운 알림이 없습니다
           </div>
         )}

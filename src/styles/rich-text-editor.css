@@ -47,6 +47,35 @@
 }
 
 .dark .rich-text-editor .ql-editor.ql-blank::before {
-  color: #6b7280; /* text-gray-500 */
+  color: #878d98; /* text-gray-500 */
   opacity: 1;
+}
+
+/* 🌙 다크 모드 가독성 강화 버전 */
+.dark .rich-text-editor {
+  border-color: #4b5563; /* border-gray-600 */
+  background-color: transparent;
+}
+
+/* ✏️ 입력 글자 완전 흰색으로 */
+.dark .rich-text-editor .ql-editor {
+  color: #ffffff !important; /* 순백색으로 변경 */
+  background-color: transparent;
+}
+
+/* 🔤 placeholder 살짝 밝게 */
+.dark .rich-text-editor .ql-editor.ql-blank::before {
+  color: #cbd5e1; /* text-gray-300 정도 */
+  opacity: 1;
+}
+
+/* 🧰 툴바 */
+.dark .rich-text-editor .ql-toolbar {
+  border-color: #4b5563; /* gray-600 */
+  background-color: #111827; /* slate-900 */
+}
+
+/* 🧾 컨테이너 */
+.dark .rich-text-editor .ql-container {
+  background-color: transparent;
 }
