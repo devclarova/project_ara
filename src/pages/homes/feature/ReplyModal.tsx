@@ -1,4 +1,4 @@
-// src/pages/homes/feature/ReplyModal.tsx
+// ✅ src/pages/homes/feature/ReplyModal.tsx (수정본)
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,10 +8,9 @@ import { toast } from 'sonner';
 interface ReplyModalProps {
   tweetId: string; // ✅ 부모 트윗 ID
   onClose: () => void;
-  onReplyCreated?: (reply: any) => void; // ✅ 새 댓글을 상위로 전달
 }
 
-export default function ReplyModal({ tweetId, onClose, onReplyCreated }: ReplyModalProps) {
+export default function ReplyModal({ tweetId, onClose }: ReplyModalProps) {
   const { user } = useAuth();
   const [content, setContent] = useState('');
   const [images, setImages] = useState<File[]>([]);
@@ -33,7 +32,7 @@ export default function ReplyModal({ tweetId, onClose, onReplyCreated }: ReplyMo
   const handleSubmit = async () => {
     if (!content.trim() || isSubmitting) return;
     if (!user) {
-      alert('로그인이 필요합니다.');
+      toast.error('로그인이 필요합니다.');
       return;
     }
 
@@ -69,69 +68,37 @@ export default function ReplyModal({ tweetId, onClose, onReplyCreated }: ReplyMo
       // ✅ profiles.id 조회
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, nickname, user_id, avatar_url')
+        .select('id')
         .eq('user_id', user.id)
         .single();
 
       if (profileError || !profile) {
-        alert('⚠️ 프로필이 존재하지 않습니다. 먼저 프로필을 생성해주세요.');
+        toast.error('⚠️ 프로필이 존재하지 않습니다.');
         setIsSubmitting(false);
         return;
       }
 
-      // ✅ Supabase에 reply 저장
-      const { data, error: insertError } = await supabase
-        .from('tweet_replies')
-        .insert([
-          {
-            tweet_id: tweetId,
-            author_id: profile.id,
-            content: finalContent,
-          },
-        ])
-        .select(
-          `
-          id,
-          content,
-          created_at,
-          profiles:author_id (
-            nickname,
-            user_id,
-            avatar_url
-          )
-        `,
-        )
-        .single();
+      // ✅ 댓글 저장 (onReplyCreated 제거)
+      const { error: insertError } = await supabase.from('tweet_replies').insert([
+        {
+          tweet_id: tweetId,
+          author_id: profile.id,
+          content: finalContent,
+        },
+      ]);
 
       if (insertError) {
         console.error('❌ 댓글 저장 실패:', insertError.message);
-        alert('댓글 저장 중 오류가 발생했습니다.');
+        toast.error('댓글 저장 중 오류가 발생했습니다.');
         return;
       }
 
-      const newReply = {
-        id: data.id,
-        user: {
-          name: data.profiles?.nickname || 'Unknown',
-          username: data.profiles?.user_id || 'anonymous',
-          avatar: data.profiles?.avatar_url || '/default-avatar.svg',
-        },
-        content: data.content,
-        timestamp: new Date(data.created_at).toLocaleString('ko-KR', {
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-        stats: { replies: 0, retweets: 0, likes: 0, views: 0 },
-      };
-
-      onReplyCreated?.(newReply);
+      // ✅ 성공 토스트만 띄우고, 나머지는 Realtime이 처리
       toast.success('댓글이 성공적으로 업로드되었습니다!');
       onClose();
     } catch (err) {
       console.error('⚠️ 댓글 업로드 오류:', err);
-      alert('댓글 업로드 중 문제가 발생했습니다.');
+      toast.error('댓글 업로드 중 문제가 발생했습니다.');
     } finally {
       setIsSubmitting(false);
     }
@@ -154,7 +121,7 @@ export default function ReplyModal({ tweetId, onClose, onReplyCreated }: ReplyMo
           </button>
         </div>
 
-        {/* RichTextEditor 영역 */}
+        {/* RichTextEditor */}
         <div className="p-4">
           <RichTextEditor
             value={content}

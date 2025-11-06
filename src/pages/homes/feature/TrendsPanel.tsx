@@ -71,15 +71,15 @@ export default function TrendsPanel() {
             placeholder="Search"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-gray-100 dark:bg-gray-900 rounded-full border-none focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-background transition-all text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+            className="w-full pl-10 pr-4 py-3 bg-gray-100 rounded-full border-none focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white transition-all text-sm"
           />
         </div>
       </div>
 
       {/* 🧾 What's happening */}
       <div className="flex-1 overflow-y-auto space-y-4">
-        <div className="bg-white dark:bg-secondary rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex justify-center items-center gap-2">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <h2 className="text-xl font-bold text-gray-900 mb-4 flex justify-center items-center gap-2">
             실시간 인기 피드
           </h2>
 
@@ -106,17 +106,17 @@ export default function TrendsPanel() {
                     className="w-9 h-9 rounded-full flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900 dark:text-gray-100 line-clamp-3 leading-snug">
+                    <p className="text-sm text-gray-900 line-clamp-3 leading-snug">
                       {tweet.content.replace(/<[^>]*>?/gm, '')}
                     </p>
-                    <div className="flex gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                      <span className="flex items-center gap-1" title="Likes">
-                        <i className="ri-heart-line text-red-500"></i>
-                        {tweet.like_count}
-                      </span>
+                    <div className="flex gap-3 mt-2 text-xs text-gray-500">
                       <span className="flex items-center gap-1" title="Replies">
                         <i className="ri-chat-3-line text-blue-500"></i>
                         {tweet.reply_count}
+                      </span>
+                      <span className="flex items-center gap-1" title="Likes">
+                        <i className="ri-heart-line text-red-500"></i>
+                        {tweet.like_count}
                       </span>
                       <span className="flex items-center gap-1" title="Views">
                         <i className="ri-eye-line text-emerald-500"></i>

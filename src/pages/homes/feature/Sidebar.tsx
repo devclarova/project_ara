@@ -77,7 +77,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
 
   const navigationItems = [
     { icon: 'ri-home-5-fill', label: '홈', path: '/finalhome' },
-    { icon: 'ri-notification-3-line', label: '알림', path: '/finalhome/notifications1' },
+    { icon: 'ri-notification-3-line', label: '알림', path: '/finalhome/hnotifications' },
     { icon: 'ri-chat-3-line', label: '채팅', path: '/finalhome/chat' },
     { icon: 'ri-user-line', label: '프로필', onClick: handleProfileClick },
     { imgSrc: '/apple-touch-icon.png', label: '학습', path: '/studyList' },

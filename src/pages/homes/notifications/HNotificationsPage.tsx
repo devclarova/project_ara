@@ -1,120 +1,192 @@
-import { useState } from 'react';
-import { mockNotifications } from '../mocks/notifications';
+// src/pages/homes/notifications/HNotificationsPage.tsx
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 import NotificationCard from '../feature/NotificationCard';
+import { toast } from 'sonner';
+
+interface Notification {
+  id: string;
+  type: 'comment' | 'like' | 'mention';
+  content: string;
+  is_read: boolean;
+  created_at: string;
+  tweet_id: string | null;
+  sender: {
+    name: string;
+    username: string;
+    avatar: string | null;
+  } | null;
+}
 
 export default function HNotificationsPage() {
-  const [activeTab, setActiveTab] = useState('all');
-  const [notifications, setNotifications] = useState(mockNotifications);
+  const { user } = useAuth();
+  const [profileId, setProfileId] = useState<string | null>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const tabs = [
-    { id: 'all', label: '전체', count: notifications.length },
-    { id: 'replies', label: '댓글', count: notifications.filter(n => n.type === 'comment').length },
-    {
-      id: 'mentions',
-      label: '멘션',
-      count: notifications.filter(n => n.type === 'mention').length,
-    },
-  ];
+  // 내 profile id 로드
+  useEffect(() => {
+    if (!user) return;
+    const loadProfile = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (data) setProfileId(data.id);
+    };
+    loadProfile();
+  }, [user]);
 
-  const filteredNotifications = notifications.filter(notification => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'replies') return notification.type === 'comment';
-    if (activeTab === 'mentions') return notification.type === 'mention';
-    return true;
-  });
+  // 초기 알림 불러오기
+  useEffect(() => {
+    if (!profileId) return;
+    const fetchNotifications = async () => {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select(
+          `
+          id, type, content, is_read, created_at, tweet_id,
+          sender:sender_id (nickname, user_id, avatar_url)
+        `,
+        )
+        .eq('receiver_id', profileId)
+        .order('created_at', { ascending: false });
 
-  const handleMarkAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(notification =>
-        notification.id === id ? { ...notification, isRead: true } : notification,
-      ),
+      if (error) {
+        console.error(error.message);
+        return;
+      }
+
+      setNotifications(
+        (data ?? []).map((n: any) => ({
+          id: n.id,
+          type: n.type,
+          content: n.content,
+          is_read: n.is_read,
+          created_at: n.created_at,
+          tweet_id: n.tweet_id,
+          sender: n.sender
+            ? {
+                name: n.sender.nickname,
+                username: n.sender.user_id,
+                avatar: n.sender.avatar_url,
+              }
+            : null,
+        })),
+      );
+      setLoading(false);
+    };
+    fetchNotifications();
+  }, [profileId]);
+
+  // ✅ 실시간 알림 구독
+  useEffect(() => {
+    if (!profileId) return;
+    const channel = supabase
+      .channel(`notifications-${profileId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `receiver_id=eq.${profileId}`,
+        },
+        async payload => {
+          // console.log('🔥 새 알림 이벤트', payload);
+          const newItem = payload.new as any;
+
+          // sender 정보 보강
+          const { data: sender } = await supabase
+            .from('profiles')
+            .select('nickname, user_id, avatar_url')
+            .eq('id', newItem.sender_id)
+            .maybeSingle();
+
+          const uiItem: Notification = {
+            id: newItem.id,
+            type: newItem.type,
+            content: newItem.content,
+            is_read: newItem.is_read,
+            created_at: newItem.created_at,
+            tweet_id: newItem.tweet_id,
+            sender: sender
+              ? {
+                  name: sender.nickname,
+                  username: sender.user_id,
+                  avatar: sender.avatar_url,
+                }
+              : null,
+          };
+
+          setNotifications(prev => [uiItem, ...prev]);
+          toast.info('💬 새 댓글 알림이 도착했습니다!');
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profileId]);
+
+  // 읽음 처리
+  const markAsRead = async (id: string) => {
+    setNotifications(prev => prev.map(n => (n.id === id ? { ...n, is_read: true } : n)));
+    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+  };
+
+  if (loading)
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
     );
-  };
-
-  const handleMarkAllAsRead = () => {
-    setNotifications(prev => prev.map(notification => ({ ...notification, isRead: true })));
-  };
-
-  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-background">
-      {/* 헤더 */}
-      <div className="sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 z-10">
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">알림</h1>
-              {unreadCount > 0 && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  새로운 알림 {unreadCount}개
-                </p>
-              )}
-            </div>
-            {unreadCount > 0 && (
-              <button
-                onClick={handleMarkAllAsRead}
-                className="text-sm text-primary hover:text-primary/80 font-medium transition-colors"
-              >
-                모두 읽음 처리
-              </button>
-            )}
-          </div>
-
-          {/* 탭 메뉴 */}
-          <div className="flex space-x-1">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  activeTab === tab.id
-                    ? 'bg-primary/10 text-primary font-semibold shadow-sm'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-primary/10'
-                }`}
-              >
-                {tab.label}
-                {tab.count > 0 && (
-                  <span
-                    className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
-                      activeTab === tab.id
-                        ? 'bg-primary/20 text-primary font-medium dark:bg-primary/30'
-                        : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-                    }`}
-                  >
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
+    <div className="min-h-screen bg-white">
+      <div className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-gray-200 z-10 px-4 py-3">
+        <h1 className="text-xl font-bold text-gray-900">알림</h1>
       </div>
 
-      {/* 본문 영역 */}
-      <div className="pb-20">
-        {filteredNotifications.length > 0 ? (
-          <div className="divide-y divide-gray-100 dark:divide-gray-800">
-            {filteredNotifications.map(notification => (
-              <NotificationCard
-                key={notification.id}
-                notification={notification}
-                onMarkAsRead={handleMarkAsRead}
-              />
-            ))}
-          </div>
+      <div className="divide-y divide-gray-100">
+        {notifications.length > 0 ? (
+          notifications.map(n => (
+            <NotificationCard
+              key={n.id}
+              notification={{
+                id: n.id,
+                type: n.type,
+                user: {
+                  name: n.sender?.name || 'Unknown',
+                  username: n.sender?.username || 'anonymous',
+                  avatar: n.sender?.avatar || '/default-avatar.svg',
+                },
+                action:
+                  n.type === 'comment'
+                    ? '당신의 피드에 댓글을 남겼습니다.'
+                    : n.type === 'like'
+                      ? '당신의 피드를 좋아합니다.'
+                      : n.content,
+                content: n.content,
+                timestamp: new Date(n.created_at).toLocaleString('ko-KR', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                }),
+                isRead: n.is_read,
+                tweetId: n.tweet_id,
+              }}
+              onMarkAsRead={markAsRead}
+            />
+          ))
         ) : (
-          /* 빈 상태 */
-          <div className="flex flex-col items-center justify-center py-20 px-4">
-            <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
-              <i className="ri-notification-3-line text-3xl text-gray-400 dark:text-gray-500"></i>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              아직 새로운 알림이 없습니다
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-center max-w-sm">
-              누군가가 내 게시글에 반응하거나 나를 멘션하면 여기에 표시됩니다.
-            </p>
+          <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+            <i className="ri-notification-3-line text-3xl mb-2"></i>
+            아직 새로운 알림이 없습니다
           </div>
         )}
       </div>

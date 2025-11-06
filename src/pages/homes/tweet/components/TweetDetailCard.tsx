@@ -103,15 +103,15 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
         <div className="flex space-x-6 text-sm">
           <span className="text-gray-900">
             <span className="font-bold">{normalizedStats.replies}</span>
-            <span className="text-gray-500 ml-1">Retweets</span>
+            <span className="text-gray-500 ml-1">댓글</span>
           </span>
           <span className="text-gray-900">
             <span className="font-bold">{normalizedStats.likes}</span>
-            <span className="text-gray-500 ml-1">Likes</span>
+            <span className="text-gray-500 ml-1">좋아요</span>
           </span>
           <span className="text-gray-900">
             <span className="font-bold">{normalizedStats.views}</span>
-            <span className="text-gray-500 ml-1">Views</span>
+            <span className="text-gray-500 ml-1">조회수</span>
           </span>
         </div>
       </div>
