@@ -7,13 +7,11 @@ export default function ProfileTabs({ activeTab, onTabChange }: ProfileTabsProps
   const tabs = [
     { id: 'posts', label: '게시글' },
     { id: 'replies', label: '댓글' },
-    // { id: 'highlights', label: 'Highlights' },
-    // { id: 'media', label: 'Media' },
-    { id: 'likes', label: '좋아요' }
+    { id: 'likes', label: '좋아요' },
   ];
 
   return (
-    <div className="border-b border-gray-200 dark:border-gray-700">
+    <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-background">
       <nav className="flex">
         {tabs.map(tab => (
           <button
@@ -27,7 +25,7 @@ export default function ProfileTabs({ activeTab, onTabChange }: ProfileTabsProps
           >
             {tab.label}
             {activeTab === tab.id && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full" />
             )}
           </button>
         ))}

@@ -84,7 +84,7 @@ export default function ProfileAsap() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white dark:bg-background">
         <div className="text-center text-gray-500 dark:text-gray-400">
-          <i className="ri-user-line text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
+          <i className="ri-user-line text-6xl text-gray-300 dark:text-gray-600 mb-4" />
           <p>프로필을 불러올 수 없습니다.</p>
         </div>
       </div>
@@ -100,13 +100,12 @@ export default function ProfileAsap() {
             onClick={() => navigate(-1)}
             className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition-colors cursor-pointer"
           >
-            <i className="ri-arrow-left-line text-xl text-gray-700 dark:text-gray-100"></i>
+            <i className="ri-arrow-left-line text-xl text-gray-700 dark:text-gray-100" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">{userProfile.name}</h1>
-            {/* <p className="text-sm text-gray-500">
-              @{userProfile.username} • {userProfile.followers} followers
-            </p> */}
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+              {userProfile.name}
+            </h1>
           </div>
         </div>
       </div>
