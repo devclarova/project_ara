@@ -68,7 +68,7 @@ export default function ProfileHeader({ userProfile }: ProfileHeaderProps) {
         <div className="space-y-3">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{userProfile.name}</h1>
-            <p className="text-gray-500">@{userProfile.username}</p>
+            {/* <p className="text-gray-500">@{userProfile.username}</p> */}
           </div>
           {userProfile.bio && (
             <p className="text-gray-900 whitespace-pre-line">{userProfile.bio}</p>

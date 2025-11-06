@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import DOMPurify from 'dompurify';
 
 interface NotificationCardProps {
   notification: {
@@ -39,7 +40,6 @@ export default function NotificationCard({ notification, onMarkAsRead }: Notific
     }
   };
 
-  // primary 색상 기반으로 통일
   const getInteractionColor = (type: string) => {
     switch (type) {
       case 'like':
@@ -61,14 +61,37 @@ export default function NotificationCard({ notification, onMarkAsRead }: Notific
     if (notification.type === 'follow') {
       navigate(`/profile/${notification.user.username}`);
     } else if (notification.tweetId) {
-      navigate(`/tweet/${notification.tweetId}`);
+      navigate(`/finalhome/${notification.tweetId}`);
     }
   };
 
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/profile/${notification.user.username}`);
+    navigate(`/finalhome/user/${notification.user.name}`);
   };
+
+  /** ✅ HTML에서 이미지·미디어 제거하고 <p> 내용만 추출하는 함수 */
+  const extractParagraphText = (html: string) => {
+    // 1️⃣ 안전하게 sanitize — <p>, <strong>, <em> 등 텍스트 관련 태그만 허용
+    const clean = DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: ['p', 'strong', 'em', 'b', 'i', 'u', 'br'],
+      ALLOWED_ATTR: [],
+    });
+
+    // 2️⃣ DOMParser로 <p> 내용만 추출
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(clean, 'text/html');
+    const paragraphs = Array.from(doc.querySelectorAll('p'));
+
+    // 3️⃣ 모든 <p>의 텍스트를 이어붙이기
+    const text = paragraphs.map(p => p.textContent?.trim() || '').join('\n');
+
+    return text;
+  };
+
+  const parsedContent = notification.content
+    ? extractParagraphText(notification.content)
+    : '';
 
   return (
     <div
@@ -78,7 +101,7 @@ export default function NotificationCard({ notification, onMarkAsRead }: Notific
       }`}
     >
       <div className="flex items-start space-x-3">
-        {/* shadcn Avatar 사용 */}
+        {/* shadcn Avatar */}
         <div onClick={handleAvatarClick} className="cursor-pointer flex-shrink-0">
           <Avatar className="w-10 h-10">
             <AvatarImage
@@ -99,17 +122,17 @@ export default function NotificationCard({ notification, onMarkAsRead }: Notific
             </span>
 
             <div className="flex-1">
-              <span className="font-semibold text-gray-900">{notification.user.name}</span>
+              <span className="font-semibold text-gray-900">{notification.user.name}님이</span>
               <span className="text-gray-600 ml-1">{notification.action}</span>
             </div>
 
             <span className="text-sm text-gray-500 flex-shrink-0">{notification.timestamp}</span>
           </div>
 
-          {notification.content && (
+          {parsedContent && (
             <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-sm text-gray-700 line-clamp-2">
-                {notification.content}
+              <p className="text-sm text-gray-700 line-clamp-2 whitespace-pre-wrap break-words">
+                {parsedContent}
               </p>
             </div>
           )}

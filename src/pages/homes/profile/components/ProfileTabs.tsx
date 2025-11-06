@@ -5,11 +5,11 @@ interface ProfileTabsProps {
 
 export default function ProfileTabs({ activeTab, onTabChange }: ProfileTabsProps) {
   const tabs = [
-    { id: 'posts', label: 'Posts' },
-    { id: 'replies', label: 'Replies' },
+    { id: 'posts', label: '게시글' },
+    { id: 'replies', label: '댓글' },
     // { id: 'highlights', label: 'Highlights' },
     // { id: 'media', label: 'Media' },
-    { id: 'likes', label: 'Likes' }
+    { id: 'likes', label: '좋아요' }
   ];
 
   return (

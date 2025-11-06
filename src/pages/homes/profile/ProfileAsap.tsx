@@ -1,4 +1,3 @@
-// src/pages/ProfileAsap.tsx
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -6,9 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import ProfileHeader from './components/ProfileHeader';
 import ProfileTabs from './components/ProfileTabs';
 import ProfileTweets from './components/ProfileTweets';
-import type { Profile } from '@/types/database';
 
 interface UserProfile {
+  id: string;
   user_id: string;
   name: string;
   username: string;
@@ -28,20 +27,15 @@ export default function ProfileAsap() {
   const navigate = useNavigate();
   const { username } = useParams<{ username: string }>();
 
-  // DB에서 현재 로그인한 사용자의 프로필 불러오기
   useEffect(() => {
-    if (!username) return;
+    if (!username && !user) return;
 
     const fetchProfile = async () => {
-      // ✅ username(nickname)으로 프로필 검색
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(
-          `
+      try {
+        let query = supabase.from('profiles').select(`
           id,
           user_id,
           nickname,
-          username,
           avatar_url,
           banner_url,
           bio,
@@ -49,36 +43,42 @@ export default function ProfileAsap() {
           followers_count,
           following_count,
           created_at
-        `,
-        )
-        .eq('nickname', username) // 🔥 여기! username 대신 nickname으로 조회
-        .single();
+        `);
 
-      if (error || !data) {
-        console.error('❌ 프로필 불러오기 실패:', error?.message);
+        // ✅ 로그인 유저가 자신의 프로필을 보는 경우
+        if (!username && user) {
+          query = query.eq('user_id', user.id);
+        } else {
+          query = query.eq('nickname', username);
+        }
+
+        const { data, error } = await query.single();
+        if (error || !data) throw error;
+
+        setUserProfile({
+          id: data.id,
+          user_id: data.user_id,
+          name: data.nickname,
+          username: data.user_id,
+          avatar: data.avatar_url ?? '/default-avatar.svg',
+          bio: data.bio ?? '자기소개가 아직 없습니다.',
+          location: data.location ?? 'Earth 🌍',
+          joinDate: new Date(data.created_at).toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: 'long',
+          }),
+          following: data.following_count ?? 0,
+          followers: data.followers_count ?? 0,
+          banner: data.banner_url ?? null,
+        });
+      } catch (err) {
+        console.error('❌ 프로필 불러오기 실패:', err);
         setUserProfile(null);
-        return;
       }
-
-      setUserProfile({
-        user_id: data.user_id,
-        name: data.nickname,
-        username: data.username ?? data.nickname,
-        avatar: data.avatar_url ?? '/default-avatar.svg',
-        bio: data.bio ?? '자기소개가 아직 없습니다.',
-        location: data.location ?? 'Earth 🌍',
-        joinDate: new Date(data.created_at).toLocaleDateString('ko-KR', {
-          year: 'numeric',
-          month: 'long',
-        }),
-        following: data.following_count ?? 0,
-        followers: data.followers_count ?? 0,
-        banner: data.banner_url ?? null,
-      });
     };
 
     fetchProfile();
-  }, [username]);
+  }, [username, user]);
 
   if (!userProfile) {
     return (
@@ -104,14 +104,13 @@ export default function ProfileAsap() {
           </button>
           <div>
             <h1 className="text-xl font-bold text-gray-900">{userProfile.name}</h1>
-            <p className="text-sm text-gray-500">
+            {/* <p className="text-sm text-gray-500">
               @{userProfile.username} • {userProfile.followers} followers
-            </p>
+            </p> */}
           </div>
         </div>
       </div>
 
-      {/* Profile Content */}
       <ProfileHeader userProfile={userProfile} />
       <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
       <ProfileTweets activeTab={activeTab} userProfile={userProfile} />

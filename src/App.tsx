@@ -49,6 +49,7 @@ import TweetDetail from './pages/homes/tweet/TweetDetail';
 import { NewChatNotificationProvider } from './contexts/NewChatNotificationContext';
 import { DirectChatProider } from './contexts/DirectChatContext';
 import DirectChatPage from './pages/chat/DirectChatPage';
+import HNotificationsPage from './pages/homes/notifications/HNotificationsPage';
 
 function RequireAuth() {
   const { session, loading } = useAuth();
@@ -132,7 +133,8 @@ const App = () => {
                           <Route path="user/:username" element={<ProfileAsap />} />
                           {/* <Route path="finalhome" element={<Home />} /> */}
                           <Route path="hometest" element={<HomesTest />} />
-                          <Route path="profileasap" element={<ProfileAsap />} />
+                          {/* <Route path="profileasap" element={<ProfileAsap />} /> */}
+                          <Route path="hnotifications" element={<HNotificationsPage />} />
                           <Route path="studyList" element={<StudyListPage />} />
                           <Route path="chat" element={<DirectChatPage />} />
                         </Route>

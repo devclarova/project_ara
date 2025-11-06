@@ -1,7 +1,9 @@
+// ✅ src/pages/homes/Home.tsx
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import InfiniteScroll from 'react-infinite-scroll-component';
+import { useAuth } from '@/contexts/AuthContext'; // ✅ 로그인 유저 가져오기
 import TweetCard from './feature/TweetCard';
 
 type TweetUser = {
@@ -36,6 +38,7 @@ let HOME_SCROLL_Y = 0;
 
 export default function Home() {
   const { newTweet, setNewTweet } = useOutletContext<OutletCtx>();
+  const { user } = useAuth(); // ✅ 로그인 유저 정보
   const [tweets, setTweets] = useState<UITweet[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
@@ -44,19 +47,16 @@ export default function Home() {
 
   const restoredRef = useRef(false);
 
-  // 1. 스크롤 할 때마다 현재 위치를 계속 저장
+  // ✅ 스크롤 위치 저장
   useEffect(() => {
     const handleScroll = () => {
       HOME_SCROLL_Y = window.scrollY || window.pageYOffset || 0;
     };
-
     window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // 2. 처음 돌아왔을 때, 저장된 위치로 딱 한 번만 복원
+  // ✅ 스크롤 위치 복원
   useLayoutEffect(() => {
     if (loading) return;
     if (restoredRef.current) return;
@@ -69,7 +69,7 @@ export default function Home() {
     });
   }, [loading]);
 
-  //  트윗 불러오기
+  // ✅ 트윗 불러오기
   const fetchTweets = async (reset = false) => {
     try {
       const from = reset ? 0 : page * PAGE_SIZE;
@@ -138,7 +138,7 @@ export default function Home() {
     fetchTweets(true);
   }, []);
 
-  // 새 트윗 작성 시 즉시 반영
+  // ✅ 새 트윗 작성 시 즉시 반영
   useEffect(() => {
     if (newTweet) {
       setTweets(prev => [newTweet, ...prev]);
@@ -146,33 +146,31 @@ export default function Home() {
     }
   }, [newTweet, setNewTweet]);
 
-  // 실시간 댓글 반영
+  // ✅ 실시간 댓글 수 반영 (트리거 기반)
   useEffect(() => {
-    const replyChannel = supabase
-      .channel('tweet-replies-realtime')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'tweet_replies' },
-        payload => {
-          const tweetId = (payload.new as any)?.tweet_id;
-          if (!tweetId) return;
-          setTweets(prev =>
-            prev.map(t =>
-              t.id === tweetId
-                ? { ...t, stats: { ...t.stats, replies: (t.stats.replies ?? 0) + 1 } }
-                : t,
-            ),
-          );
-        },
-      )
+    const replyCountChannel = supabase
+      .channel('tweets-replycount-realtime')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tweets' }, payload => {
+        const tweetId = (payload.new as any)?.id;
+        const newReplyCount = (payload.new as any)?.reply_count;
+        if (!tweetId) return;
+
+        setTweets(prev =>
+          prev.map(t =>
+            t.id === tweetId
+              ? { ...t, stats: { ...t.stats, replies: newReplyCount ?? t.stats.replies } }
+              : t,
+          ),
+        );
+      })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(replyChannel);
+      supabase.removeChannel(replyCountChannel);
     };
   }, []);
 
-  // 댓글 삭제 실시간 반영
+  // ✅ 실시간 댓글 삭제 반영
   useEffect(() => {
     const replyDeleteChannel = supabase
       .channel('tweet-replies-delete-realtime')
@@ -182,11 +180,16 @@ export default function Home() {
         payload => {
           const tweetId = (payload.old as any)?.tweet_id;
           if (!tweetId) return;
-
           setTweets(prev =>
             prev.map(t =>
               t.id === tweetId
-                ? { ...t, stats: { ...t.stats, replies: Math.max((t.stats.replies ?? 1) - 1, 0) } }
+                ? {
+                    ...t,
+                    stats: {
+                      ...t.stats,
+                      replies: Math.max((t.stats.replies ?? 1) - 1, 0),
+                    },
+                  }
                 : t,
             ),
           );
@@ -199,54 +202,45 @@ export default function Home() {
     };
   }, []);
 
-  //  실시간 좋아요 반영
+  // ✅ 실시간 좋아요 반영
   useEffect(() => {
-    const tweetLikeCountChannel = supabase
+    const likeChannel = supabase
       .channel('tweets-likecount-realtime')
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'tweets', filter: 'like_count=not.is.null' },
-        payload => {
-          const tweetId = (payload.new as any)?.id;
-          const likeCount = (payload.new as any)?.like_count;
-          if (!tweetId) return;
-          setTweets(prev =>
-            prev.map(t =>
-              t.id === tweetId
-                ? { ...t, stats: { ...t.stats, likes: likeCount ?? t.stats.likes } }
-                : t,
-            ),
-          );
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tweets' }, payload => {
+        const tweetId = (payload.new as any)?.id;
+        const likeCount = (payload.new as any)?.like_count;
 
-          console.log('🔥 like event:', payload);
-        },
-      )
+        if (!tweetId) return;
+
+        setTweets(prev =>
+          prev.map(t =>
+            t.id === tweetId
+              ? { ...t, stats: { ...t.stats, likes: likeCount ?? t.stats.likes } }
+              : t,
+          ),
+        );
+      })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(tweetLikeCountChannel);
+      supabase.removeChannel(likeChannel);
     };
   }, []);
 
-  // 실시간 조회수 반영
+  // ✅ 실시간 조회수 반영
   useEffect(() => {
     const viewChannel = supabase
       .channel('tweets-views-realtime')
-      .on(
-        'postgres_changes',
-        // { event: 'UPDATE', schema: 'public', table: 'tweets', filter: 'view_count=not.is.null' },
-        { event: 'UPDATE', schema: 'public', table: 'tweets' },
-        payload => {
-          const tweetId = (payload.new as any)?.id;
-          const newViewCount = (payload.new as any)?.view_count;
-          if (!tweetId) return;
-          setTweets(prev =>
-            prev.map(t =>
-              t.id === tweetId ? { ...t, stats: { ...t.stats, views: newViewCount } } : t,
-            ),
-          );
-        },
-      )
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tweets' }, payload => {
+        const tweetId = (payload.new as any)?.id;
+        const newViewCount = (payload.new as any)?.view_count;
+        if (!tweetId) return;
+        setTweets(prev =>
+          prev.map(t =>
+            t.id === tweetId ? { ...t, stats: { ...t.stats, views: newViewCount } } : t,
+          ),
+        );
+      })
       .subscribe();
 
     return () => {
@@ -254,6 +248,64 @@ export default function Home() {
     };
   }, []);
 
+  // ✅ 새 트윗 및 삭제 실시간 반영
+  useEffect(() => {
+    const tweetRealtimeChannel = supabase
+      .channel('tweets-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'tweets' },
+        async payload => {
+          const row = payload.new as any;
+          if (row.author_id === user?.id) return;
+          if (tweets.some(t => t.id === row.id)) return;
+
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('nickname, user_id, avatar_url')
+            .eq('id', row.author_id)
+            .maybeSingle();
+
+          const uiTweet: UITweet = {
+            id: row.id,
+            user: {
+              name: prof?.nickname ?? 'Unknown',
+              username: prof?.user_id ?? 'anonymous',
+              avatar: prof?.avatar_url ?? '/default-avatar.svg',
+            },
+            content: row.content,
+            image: row.image_url || undefined,
+            timestamp: new Date(row.created_at).toLocaleString('ko-KR', {
+              hour: '2-digit',
+              minute: '2-digit',
+              month: 'short',
+              day: 'numeric',
+            }),
+            stats: {
+              replies: row.reply_count ?? 0,
+              retweets: row.repost_count ?? 0,
+              likes: row.like_count ?? 0,
+              bookmarks: row.bookmark_count ?? 0,
+              views: row.view_count ?? 0,
+            },
+          };
+
+          setTweets(prev => [uiTweet, ...prev]);
+        },
+      )
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'tweets' }, payload => {
+        const deletedId = (payload.old as any)?.id;
+        if (!deletedId) return;
+        setTweets(prev => prev.filter(t => t.id !== deletedId));
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(tweetRealtimeChannel);
+    };
+  }, [user, tweets]);
+
+  // ✅ 로딩 중 표시
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -262,6 +314,7 @@ export default function Home() {
     );
   }
 
+  // ✅ 렌더링
   return (
     <div className="lg:border-x border-gray-200">
       {/* Header */}
@@ -290,7 +343,6 @@ export default function Home() {
             key={t.id}
             {...t}
             onDeleted={tweetId => {
-              // ✅ 해당 트윗 삭제 시 상태에서 제거
               setTweets(prev => prev.filter(item => item.id !== tweetId));
             }}
           />
