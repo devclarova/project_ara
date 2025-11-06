@@ -26,6 +26,27 @@ type StudyVocaProps = {
   className?: string;
 };
 
+// 반응형 pageSize 훅: Tailwind 브레이크포인트와 동일한 기준 사용
+const useResponsivePageSize = () => {
+  const [pageSize, setPageSize] = useState(6);
+
+  useEffect(() => {
+    const calc = () => {
+      const w = window.innerWidth;
+      if (w < 640)
+        setPageSize(1); // < sm (mobile)
+      else if (w < 1024)
+        setPageSize(3); // < lg (tablet)
+      else setPageSize(6); // >= lg (desktop)
+    };
+    calc();
+    window.addEventListener('resize', calc);
+    return () => window.removeEventListener('resize', calc);
+  }, []);
+
+  return pageSize;
+};
+
 const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: StudyVocaProps) => {
   const controlled = Array.isArray(words) && words.length > 0;
 
@@ -33,7 +54,7 @@ const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: Stu
   const [loading, setLoading] = useState<boolean>(!controlled && !!studyId);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
-  const pageSize = 6; // 한번에 보여줄 단어 개수
+  const pageSize = useResponsivePageSize(); // 한번에 보여줄 단어 개수
 
   // DB Row -> UI 데이터 매핑
   const mapRow = (row: WordRow): WordItem | null => {
@@ -104,8 +125,18 @@ const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: Stu
     return localWords;
   }, [controlled, words, localWords]);
 
+  // pageSize 또는 data가 바뀔 때 현재 페이지를 안전하게 클램프
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
+    setCurrentPage(prev => Math.min(prev, totalPages - 1));
+  }, [data.length, pageSize]);
+
   // 페이지네이션: 현재 페이지에 해당하는 단어들만 보여주기
-  const currentData = data.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
+  const start = currentPage * pageSize;
+  const end = start + pageSize;
+  const currentData = data.slice(start, end);
+
+  const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
 
   const handleNextPage = () => {
     setCurrentPage(prevPage => prevPage + 1);
@@ -133,11 +164,12 @@ const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: Stu
 
   return (
     <div>
-      <div className={`grid grid-cols-2 gap-4 ${className ?? ''}`}>
+      <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${className ?? ''}`}>
         {currentData.map((w, i) => (
           <div
             key={i}
-            className="p-3 border rounded-lg bg-white dark:bg-secondary shadow-sm hover:bg-gray-50 dark:hover:bg-primary/5 transition-colors"
+            className="p-3 border rounded-lg bg-white dark:bg-secondary shadow-sm hover:bg-gray-50 dark:hover:bg-primary/5 transition-colors w-full
+      h-[140px]"
           >
             <h4 className="font-semibold dark:text-gray-300">{w.term}</h4>
             <p className="text-sm text-gray-600 dark:text-gray-400">{w.meaning}</p>
