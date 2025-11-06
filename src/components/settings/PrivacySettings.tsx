@@ -72,7 +72,7 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
     // 3) 유저가 작성한 게시물, 댓글 등 삭제
     try {
       // 여기를 네 실제 테이블명에 맞게 채워야 해
-      // 예시:
+      // 예시
       // await supabase.from('community_comments').delete().eq('user_id', user.id);
       // await supabase.from('community_posts').delete().eq('user_id', user.id);
       // await supabase.from('tweets').delete().eq('user_id', user.id);
