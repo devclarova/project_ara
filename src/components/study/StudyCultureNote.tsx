@@ -127,7 +127,7 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
 
   return (
     <div>
-      <div className="p-3 sm:p-4 bg-white dark:bg-secondary dark:text-gray-300 border rounded-lg shadow-sm">
+      <div className="p-3 sm:p-4 bg-white dark:bg-secondary dark:text-gray-300 border dark:border-gray-600 rounded-lg shadow-sm">
         <h4 className="text-base sm:text-lg font-semibold mb-1">
           {currentNote.title || '문화 노트'}
         </h4>

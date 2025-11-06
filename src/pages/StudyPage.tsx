@@ -135,11 +135,13 @@ const StudyPage = () => {
         ${
           isActive
             ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10'
-            : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white'
+            : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white dark:hover:bg-gray-600'
         }`}
                   >
-                    <i className="ri-home-5-line text-base opacity-70 group-hover:opacity-100" />
-                    <span className="font-medium hidden sm:inline-block">Studylist</span>{' '}
+                    <i className="ri-home-5-line text-base opacity-70 group-hover:opacity-100 dark:text-gray-100" />
+                    <span className="font-medium hidden sm:inline-block dark:text-gray-100">
+                      Studylist
+                    </span>{' '}
                     {/* 텍스트 숨기기 */}
                   </NavLink>
 
@@ -159,12 +161,12 @@ const StudyPage = () => {
         ${
           isActive
             ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10'
-            : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white'
+            : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white dark:hover:bg-gray-600'
         }`}
                     title={study?.categories ?? '카테고리'}
                   >
-                    <i className="ri-folder-2-line text-base opacity-70 group-hover:opacity-100" />
-                    <span className="font-medium hidden sm:inline-block truncate">
+                    <i className="ri-folder-2-line text-base opacity-70 group-hover:opacity-100 dark:text-gray-100" />
+                    <span className="font-medium hidden sm:inline-block truncate dark:text-gray-100">
                       {study?.categories ?? '카테고리'}
                     </span>{' '}
                     {/* 텍스트 숨기기 */}
@@ -188,13 +190,13 @@ const StudyPage = () => {
         ${
           isActive
             ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10'
-            : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white'
+            : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white dark:hover:bg-gray-600'
         }`
                     }
                     title={loading ? '로딩 중' : (study?.contents ?? '제목 없음')}
                   >
-                    <i className="ri-movie-2-line text-base opacity-70 group-hover:opacity-100" />
-                    <span className="font-medium hidden sm:inline-block truncate">
+                    <i className="ri-movie-2-line text-base opacity-70 group-hover:opacity-100 dark:text-gray-100" />
+                    <span className="font-medium hidden sm:inline-block truncate dark:text-gray-100">
                       {loading ? '로딩 중' : (study?.contents ?? '제목 없음')}
                     </span>{' '}
                     {/* 텍스트 숨기기 */}
@@ -223,8 +225,8 @@ const StudyPage = () => {
                     }
                     title={loading ? '로딩 중' : (study?.episode ?? '에피소드 없음')}
                   >
-                    <i className="ri-hashtag text-base opacity-70 group-hover:opacity-100" />
-                    <span className="font-medium hidden sm:inline-block truncate">
+                    <i className="ri-hashtag text-base opacity-70 group-hover:opacity-100 dark:text-gray-100" />
+                    <span className="font-medium hidden sm:inline-block truncate dark:text-gray-100">
                       {loading ? '로딩 중' : (study?.episode ?? '에피소드 없음')}
                     </span>{' '}
                     {/* 텍스트 숨기기 */}
@@ -250,23 +252,23 @@ const StudyPage = () => {
                 {/* 중앙 타이틀 */}
                 <h1 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center font-bold text-gray-900 select-none tracking-tight transition-all duration-300 whitespace-nowrap">
                   {loading ? (
-                    <span className="animate-pulse text-gray-400 text-lg sm:text-xl lg:text-2xl xl:text-3xl">
+                    <span className="animate-pulse text-gray-400 text-lg sm:text-xl lg:text-2xl xl:text-3xl dark:text-gray-100">
                       로딩 중...
                     </span>
                   ) : (
                     <div className="relative flex items-baseline justify-center">
-                      <span className="text-lg sm:text-xl lg:text-2xl xl:text-3xl">
+                      <span className="text-lg sm:text-xl lg:text-2xl xl:text-3xl dark:text-gray-100">
                         {study?.contents ?? '제목 없음'}
                       </span>
 
                       <div className="flex items-baseline ml-2">
                         {study?.episode && (
-                          <span className="text-sm sm:text-base lg:text-lg text-gray-600 mr-1">
+                          <span className="text-sm sm:text-base lg:text-lg text-gray-600 mr-1 dark:text-gray-300">
                             {study.episode}
                           </span>
                         )}
                         {study?.scene && (
-                          <span className="text-xs sm:text-sm lg:text-base text-gray-500">
+                          <span className="text-xs sm:text-sm lg:text-base text-gray-500 dark:text-gray-400">
                             Scene {study.scene}
                           </span>
                         )}

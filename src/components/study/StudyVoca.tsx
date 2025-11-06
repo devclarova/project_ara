@@ -168,7 +168,7 @@ const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: Stu
         {currentData.map((w, i) => (
           <div
             key={i}
-            className="p-3 border rounded-lg bg-white dark:bg-secondary shadow-sm hover:bg-gray-50 dark:hover:bg-primary/5 transition-colors w-full
+            className="p-3 border dark:border-gray-600  rounded-lg bg-white dark:bg-secondary shadow-sm hover:bg-gray-50 dark:hover:bg-primary/5 transition-colors w-full
       h-[140px]"
           >
             <h4 className="font-semibold dark:text-gray-300">{w.term}</h4>

@@ -6,6 +6,8 @@ export function getSettingsTitle(active: ActiveSetting) {
       return '비밀번호 변경';
     case 'sns':
       return 'SNS 계정 연결';
+      case 'withdraw':
+      return '계정 탈퇴';
     default:
       return '';
   }
