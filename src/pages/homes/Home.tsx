@@ -230,16 +230,16 @@ export default function Home() {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 dark:border-primary" />
       </div>
     );
   }
 
   return (
-    <div className="lg:border-x border-gray-200">
+    <div className="lg:border-x border-gray-200 dark:border-gray-700 dark:bg-background">
       {/* Header */}
-      <div className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-gray-200 p-4 z-20">
-        <h1 className="text-xl font-bold text-gray-900">홈</h1>
+      <div className="sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 z-20">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">홈</h1>
       </div>
 
       {/* Infinite Scroll */}
@@ -248,14 +248,18 @@ export default function Home() {
         next={() => fetchTweets(false)}
         hasMore={hasMore}
         loader={
-          <div className="p-8 text-center text-gray-500">
+          <div className="p-8 text-center text-gray-500 dark:text-gray-400">
             <div className="inline-flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500" />
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 dark:border-primary/80" />
               <span>Loading more tweets...</span>
             </div>
           </div>
         }
-        endMessage={<p className="text-center py-6 text-gray-400">🎉 모든 트윗을 다 봤어요!</p>}
+        endMessage={
+          <p className="text-center py-6 text-gray-400 dark:text-gray-500">
+            🎉 모든 트윗을 다 봤어요!
+          </p>
+        }
         scrollThreshold={0.9}
       >
         {tweets.map(t => (

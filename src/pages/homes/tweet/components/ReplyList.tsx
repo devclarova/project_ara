@@ -41,7 +41,7 @@ function ReplyCard({ reply }: { reply: Reply }) {
   };
 
   return (
-    <div className="border-b border-gray-200 px-4 py-3 hover:bg-gray-50/50 transition-colors">
+    <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-primary/10 transition-colors">
       <div className="flex space-x-3">
         <div onClick={handleAvatarClick} className="cursor-pointer">
           {/* <Avatar src={reply.user.avatar} alt={reply.user.name} size="md" /> */}
@@ -54,20 +54,24 @@ function ReplyCard({ reply }: { reply: Reply }) {
           {/* User Info */}
           <div className="flex items-center space-x-1 flex-wrap">
             <span
-              className="font-bold text-gray-900 hover:underline cursor-pointer truncate"
+              className="font-bold text-gray-900 dark:text-gray-100 hover:underline cursor-pointer truncate"
               onClick={handleAvatarClick}
             >
               {reply.user.name}
             </span>
-            <span className="text-gray-500 truncate">@{reply.user.username}</span>
-            <span className="text-gray-500">·</span>
-            <span className="text-gray-500 flex-shrink-0">{reply.timestamp}</span>
+            <span className="text-gray-500 dark:text-gray-400 truncate">
+              @{reply.user.username}
+            </span>
+            <span className="text-gray-500 dark:text-gray-500">·</span>
+            <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
+              {reply.timestamp}
+            </span>
           </div>
 
           {/* Reply Content */}
           <div className="mt-1">
             <div
-              className="text-gray-900 whitespace-pre-wrap break-words leading-relaxed"
+              className="text-gray-900 dark:text-gray-100 whitespace-pre-wrap break-words leading-relaxed"
               dangerouslySetInnerHTML={{
                 __html: DOMPurify.sanitize(reply.content, {
                   ADD_TAGS: ['iframe', 'video', 'source', 'img'],
@@ -84,10 +88,10 @@ function ReplyCard({ reply }: { reply: Reply }) {
             />
           </div>
           {/* Action Buttons */}
-          <div className="flex items-center justify-between max-w-md mt-3 text-gray-500">
+          <div className="flex items-center justify-between max-w-md mt-3 text-gray-500 dark:text-gray-400">
             {/* Reply */}
-            <button className="flex items-center space-x-2 hover:text-blue-500 transition-colors group">
-              <div className="p-2 rounded-full group-hover:bg-blue-50 transition-colors">
+            <button className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400 transition-colors group">
+              <div className="p-2 rounded-full group-hover:bg-blue-50 dark:group-hover:bg-primary/10 transition-colors">
                 <i className="ri-chat-3-line text-lg"></i>
               </div>
               <span className="text-sm">{reply.stats.comments}</span>
@@ -119,15 +123,16 @@ function ReplyCard({ reply }: { reply: Reply }) {
                 setLiked(!liked);
               }}
             >
-              <div className="p-2 rounded-full group-hover:bg-red-50 transition-colors">
+              <div className="p-2 rounded-full group-hover:bg-red-50 dark:group-hover:bg-primary/10 transition-colors">
                 <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg`}></i>
               </div>
               <span className="text-sm">{reply.stats.likes + (liked ? 1 : 0)}</span>
             </button>
 
             {/* Views */}
-            <button className="flex items-center space-x-2 hover:text-green-500 transition-colors group">
-              <div className="p-2 rounded-full group-hover:bg-blue-50 transition-colors">
+            <button className="flex items-center space-x-2 hover:text-green-500 dark:hover:text-emerald-400 transition-colors group">
+              {' '}
+              <div className="p-2 rounded-full group-hover:bg-blue-50 dark:group-hover:bg-primary/10 transition-colors">
                 <i className="ri-eye-line text-lg"></i>
               </div>
               <span className="text-sm">{reply.stats.views}</span>
@@ -142,7 +147,7 @@ function ReplyCard({ reply }: { reply: Reply }) {
 export default function ReplyList({ replies }: ReplyListProps) {
   if (replies.length === 0) {
     return (
-      <div className="p-8 text-center text-gray-500">
+      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
         <i className="ri-chat-3-line text-4xl mb-2 block"></i>
         <p>No replies yet</p>
         <p className="text-sm mt-1">Be the first to reply!</p>

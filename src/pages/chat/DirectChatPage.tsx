@@ -8,46 +8,96 @@ function DirectChatPage() {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const { markChatAsRead } = useNewChatNotification();
 
+  // 화면 너비에 따라 모바일 여부 판단
+  const [isMobile, setIsMobile] = useState(false);
+  // 모바일일 때: true = 리스트 화면, false = 채팅방 화면
+  const [showListOnMobile, setShowListOnMobile] = useState(true);
+
   useEffect(() => {
     markChatAsRead();
   }, [markChatAsRead]);
 
+  // 처음 로드 + 리사이즈마다 모바일 여부 판단
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768; // 기준 breakpoint
+      setIsMobile(mobile);
+
+      if (!mobile) {
+        // 데스크톱이면 항상 리스트 + 채팅 둘 다 보이게
+        setShowListOnMobile(true);
+      } else {
+        // 모바일이면: 선택된 채팅 있으면 채팅방, 없으면 리스트
+        if (selectedChatId) {
+          setShowListOnMobile(false);
+        } else {
+          setShowListOnMobile(true);
+        }
+      }
+    };
+
+    handleResize(); // 첫 로드 시 한 번 실행
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [selectedChatId]);
+
   const handleChatSelect = (chatId: string) => {
     setSelectedChatId(chatId);
     markChatAsRead();
+
+    // 모바일이면 채팅방 화면으로 전환
+    if (isMobile) {
+      setShowListOnMobile(false);
+    }
+  };
+
+  // 모바일에서 "뒤로가기" 눌렀을 때 리스트로 복귀
+  const handleBackToList = () => {
+    setShowListOnMobile(true);
   };
 
   return (
     <div className={styles.chatPage}>
       <div className={styles.chatContainer}>
-        {/* 왼쪽 사이드바 - 목록 */}
-        <div className="chat-sidebar">
-          <DirectChatList
-            onChatSelect={handleChatSelect}
-            onCreateChat={() => {}}
-            selectedChatId={selectedChatId || undefined}
-          />
-        </div>
+        {/* 왼쪽 사이드바 - 데스크톱에서는 항상 보이고, 모바일에서는 리스트 화면일 때만 보임 */}
+        {(!isMobile || showListOnMobile) && (
+          <div className="chat-sidebar">
+            <DirectChatList
+              onChatSelect={handleChatSelect}
+              onCreateChat={() => {}}
+              selectedChatId={selectedChatId || undefined}
+            />
+          </div>
+        )}
 
-        {/* 오른쪽 메인 - 방/환영 */}
-        <div className="chat-main">
-          {selectedChatId ? (
-            <DirectChatRoom chatId={selectedChatId} />
-          ) : (
-            <div className="chat-welcome">
-              <div className="welcome-content">
-                <h2>1:1 채팅</h2>
-                <p>좌측에서 채팅방을 선택하거나</p>
-                <p>새 채팅 버튼을 눌러 대화를 시작하세요.</p>
-                <div className="feature-info">
-                  <p>💬 실시간 1:1 메시지</p>
-                  <p>👥 사용자 검색 및 초대</p>
-                  <p>📱 반응형 디자인</p>
+        {/* 오른쪽 메인 - 데스크톱에서는 항상 보이고, 모바일에서는 채팅방 화면일 때만 보임 */}
+        {(!isMobile || !showListOnMobile) && (
+          <div className="chat-main">
+            {selectedChatId ? (
+              <DirectChatRoom
+                chatId={selectedChatId}
+                isMobile={isMobile}
+                onBackToList={handleBackToList}
+              />
+            ) : (
+              // 데스크톱에서만 보이는 환영 화면 (모바일에서는 리스트만 보이게 됨)
+              !isMobile && (
+                <div className="chat-welcome">
+                  <div className="welcome-content">
+                    <h2>1:1 채팅</h2>
+                    <p>좌측에서 채팅방을 선택하거나</p>
+                    <p>새 채팅 버튼을 눌러 대화를 시작하세요.</p>
+                    <div className="feature-info">
+                      <p>💬 실시간 1:1 메시지</p>
+                      <p>👥 사용자 검색 및 초대</p>
+                      <p>📱 반응형 디자인</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
-        </div>
+              )
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -73,7 +73,7 @@ export default function NotificationCard({ notification, onMarkAsRead }: Notific
   return (
     <div
       onClick={handleClick}
-      className={`p-4 border-b border-gray-100 transition-all duration-200 cursor-pointer hover:bg-primary/5 ${
+      className={`p-4 border-b border-gray-100 dark:border-gray-800 transition-all duration-200 cursor-pointer hover:bg-primary/5 dark:hover:bg-primary/20 ${
         !notification.isRead ? 'bg-primary/10 border-l-4 border-l-primary' : ''
       }`}
     >
@@ -99,16 +99,20 @@ export default function NotificationCard({ notification, onMarkAsRead }: Notific
             </span>
 
             <div className="flex-1">
-              <span className="font-semibold text-gray-900">{notification.user.name}</span>
-              <span className="text-gray-600 ml-1">{notification.action}</span>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">
+                {notification.user.name}
+              </span>
+              <span className="text-gray-600 dark:text-gray-400 ml-1">{notification.action}</span>
             </div>
 
-            <span className="text-sm text-gray-500 flex-shrink-0">{notification.timestamp}</span>
+            <span className="text-sm text-gray-500 dark:text-gray-500 flex-shrink-0">
+              {notification.timestamp}
+            </span>
           </div>
 
           {notification.content && (
-            <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-sm text-gray-700 line-clamp-2">
+            <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+              <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
                 {notification.content}
               </p>
             </div>

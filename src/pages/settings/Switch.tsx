@@ -10,8 +10,10 @@ export default function Switch({ checked, onChange, label, description }: Switch
     <div className="flex items-center justify-between py-3">
       {/* 왼쪽 텍스트 영역 */}
       <div className="flex flex-col">
-        <span className="text-sm font-medium text-gray-900">{label}</span>
-        {description && <span className="text-xs text-gray-500">{description}</span>}
+        <span className="text-sm font-medium text-gray-900 dark:text-gray-200">{label}</span>
+        {description && (
+          <span className="text-xs text-gray-500 dark:text-gray-400">{description}</span>
+        )}
       </div>
 
       {/* 오른쪽 토글 */}

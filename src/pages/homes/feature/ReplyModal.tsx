@@ -22,7 +22,10 @@ export default function ReplyModal({ tweetId, onClose, onReplyCreated }: ReplyMo
   }, []);
 
   const safeFileName = (name: string) => {
-    const base = name.replace(/\s+/g, '_').replace(/[^\w\-_.]/g, '_').replace(/_+/g, '_');
+    const base = name
+      .replace(/\s+/g, '_')
+      .replace(/[^\w\-_.]/g, '_')
+      .replace(/_+/g, '_');
     const ext = name.split('.').pop() || 'jpg';
     return `${base.slice(0, 50)}.${ext}`;
   };
@@ -96,7 +99,7 @@ export default function ReplyModal({ tweetId, onClose, onReplyCreated }: ReplyMo
             user_id,
             avatar_url
           )
-        `
+        `,
         )
         .single();
 
@@ -124,7 +127,6 @@ export default function ReplyModal({ tweetId, onClose, onReplyCreated }: ReplyMo
       };
 
       onReplyCreated?.(newReply);
-      // alert('✅ 댓글이 성공적으로 등록되었습니다!');
       toast.success('댓글이 성공적으로 업로드되었습니다!');
       onClose();
     } catch (err) {
@@ -140,15 +142,15 @@ export default function ReplyModal({ tweetId, onClose, onReplyCreated }: ReplyMo
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-2xl w-full max-w-lg mx-auto shadow-2xl">
+      <div className="bg-white dark:bg-background rounded-2xl w-full max-w-lg mx-auto shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-bold text-gray-900">Reply to Tweet</h2>
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Reply to Tweet</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center"
+            className="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 flex items-center justify-center"
           >
-            <i className="ri-close-line text-xl text-gray-600"></i>
+            <i className="ri-close-line text-xl text-gray-600 dark:text-gray-300"></i>
           </button>
         </div>
 
@@ -162,7 +164,7 @@ export default function ReplyModal({ tweetId, onClose, onReplyCreated }: ReplyMo
           />
 
           {/* 하단 버튼 */}
-          <div className="flex justify-end mt-4 pt-4 border-t border-gray-100">
+          <div className="flex justify-end mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
             <button
               onClick={handleSubmit}
               disabled={!content.trim() || isSubmitting}

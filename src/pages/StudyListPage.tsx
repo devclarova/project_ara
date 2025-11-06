@@ -54,31 +54,26 @@ const StudyListPage = () => {
         .select('*, video(*,runtime_bucket)', { count: 'exact' })
         .order('id', { ascending: true });
 
-      // 카테고리/콘텐츠 중 하나라도 필터가 있으면 INNER JOIN 로 전환해 정확히 필터
+      // 카테고리/콘텐츠/에피소드/난이도 중 하나라도 필터가 있으면 INNER JOIN
       const needsCategory = activeCategory !== '전체';
       const needsContent = !!contentFilter;
       const needsEpisode = !!episodeFilter;
       const needsLevel = !!levelFilter;
+      const needsJoin = needsCategory || needsContent || needsEpisode || needsLevel;
 
-      if (needsCategory || needsContent) {
+      if (needsJoin) {
         query = supabase
           .from('study')
           .select('*, video!inner(*,runtime_bucket)', { count: 'exact' })
           .order('id', { ascending: true });
 
-        if (needsCategory) {
-          query = query.eq('video.categories', activeCategory);
-        }
-        if (needsContent) {
-          query = query.eq('video.contents', contentFilter);
-        }
-        if (needsEpisode) {
-          query = query.eq('video.episode', episodeFilter);
-        }
+        if (needsCategory) query = query.eq('video.categories', activeCategory);
+        if (needsContent) query = query.eq('video.contents', contentFilter);
+        if (needsEpisode) query = query.eq('video.episode', episodeFilter);
         if (needsLevel) query = query.eq('video.level', levelFilter);
       }
 
-      // 검색어가 있으면 필터링 추가
+      // 검색어 필터
       if (keyword.trim()) {
         query = query.or(`title.ilike.%${keyword}%,short_description.ilike.%${keyword}%`);
       }
@@ -93,7 +88,7 @@ const StudyListPage = () => {
     };
 
     fetchData();
-  }, [page, activeCategory, keyword, contentFilter, episodeFilter]);
+  }, [page, activeCategory, keyword, contentFilter, episodeFilter, levelFilter]);
 
   const filteredClips =
     activeCategory === '전체'
@@ -146,18 +141,18 @@ const StudyListPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-800">
+    <div className="relative min-h-screen bg-white dark:bg-background">
       <div className="flex justify-center min-h-screen">
         <div className="flex w-full max-w-7xl">
           {/* Left Sidebar */}
-          <aside className="w-20 lg:w-64 shrink-0 border-gray-200 h-screen sticky top-0 dark:bg-gray-800">
+          <aside className="w-20 lg:w-64 shrink-0 h-screen sticky top-0 bg-white dark:bg-background z-30">
             <Sidebar onTweetClick={() => setShowTweetModal(true)} />
           </aside>
 
-          {/* 데스크톱에서만 폭 제한해 자연스런 3열 유지 */}
-          <main className="flex-1 min-w-0 bg-white dark:bg-gray-800">
+          {/* 메인 영역 */}
+          <main className="flex-1 min-w-0 bg-white dark:bg-background">
             {/* 탭 + 검색 */}
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 bg-white dark:bg-gray-800 sticky top-0 z-10 pb-2 pl-6 pt-8">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 bg-white dark:bg-background sticky top-0 z-20 pb-2 pl-6 pt-8">
               {/* 왼쪽: 카테고리 + 모바일용 검색 아이콘 */}
               <div className="flex items-center justify-between ">
                 <CategoryTabs active={displayCategory} onChange={handleCategoryChange} />
@@ -165,10 +160,10 @@ const StudyListPage = () => {
                 {/* 모바일 전용 검색 버튼 (카테고리 옆에 위치) */}
                 <button
                   onClick={() => setShowSearch(true)}
-                  className="md:hidden ml-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
+                  className="md:hidden ml-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-secondary transition"
                   aria-label="검색 열기"
                 >
-                  <i className="ri-search-line text-[20px] text-gray-600" />
+                  <i className="ri-search-line text-[20px] text-gray-600 dark:text-gray-200" />
                 </button>
               </div>
 
@@ -190,13 +185,15 @@ const StudyListPage = () => {
               {/* 모바일: 검색 전용 모달  */}
               {showSearch && (
                 <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-20 md:hidden">
-                  <div className="bg-white w-[90%] max-w-sm rounded-xl shadow-lg p-4 flex flex-col gap-4">
+                  <div className="bg-white dark:bg-secondary w-[90%] max-w-sm rounded-xl shadow-lg p-4 flex flex-col gap-4">
                     {/* 헤더 */}
                     <div className="flex justify-between items-center">
-                      <h2 className="text-base font-semibold text-gray-800">검색</h2>
+                      <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100">
+                        검색
+                      </h2>
                       <button
                         onClick={() => setShowSearch(false)}
-                        className="text-gray-500 hover:text-gray-800"
+                        className="text-gray-500 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100"
                         aria-label="닫기"
                       >
                         <i className="ri-close-line text-xl" />
@@ -220,14 +217,11 @@ const StudyListPage = () => {
                 </div>
               )}
             </div>
-            <div className="w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1400px] dark:bg-gray-800">
-              {/* 헤더 */}
-              {/* <div className="flex flex-col sm:flex-row justify-center">
-                <img src="images/sample_font_logo.png" alt="로고이미지" className="h-15 w-20" />
-              </div> */}
 
+            {/* 콘텐츠 영역 */}
+            <div className="w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1400px] bg-white dark:bg-background">
               {/* 카드 그리드 */}
-              <div className="grid gap-6 sm:gap-8  px-0 grid-cols-1 sm:grid-cols-2 lg:[grid-template-columns:repeat(3,minmax(260px,1fr))] dark:bg-gray-800">
+              <div className="grid gap-6 sm:gap-8 px-0 grid-cols-1 sm:grid-cols-2 lg:[grid-template-columns:repeat(3,minmax(260px,1fr))] bg-white dark:bg-background">
                 {finalList.length > 0 ? (
                   finalList.map(study => {
                     const [v] = study.video ?? [];
@@ -248,7 +242,7 @@ const StudyListPage = () => {
                   })
                 ) : (
                   // 빈 결과 문구
-                  <div className="col-span-full text-center py-16 text-gray-500 text-sm sm:text-base">
+                  <div className="col-span-full text-center py-16 text-gray-500 dark:text-gray-400 text-sm sm:text-base">
                     해당 조건에 맞는 학습 콘텐츠가 없습니다.
                   </div>
                 )}
@@ -261,7 +255,7 @@ const StudyListPage = () => {
                   {page > 1 && (
                     <button
                       onClick={() => setPage(page - 3)}
-                      className="text-sm sm:text-base lg:text-lg text-gray-500 hover:text-gray-900 transition"
+                      className="text-sm sm:text-base lg:text-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition"
                     >
                       <i className="ri-arrow-drop-left-line text-3xl transition-transform duration-200 group-hover:-translate-x-1" />
                     </button>
@@ -275,7 +269,7 @@ const StudyListPage = () => {
                         key={num}
                         onClick={() => setPage(num)}
                         className={`px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2 text-sm sm:text-base lg:text-lg
-            ${page === num ? 'text-primary underline' : 'text-gray-700 dark:text-gray-600'} transition`}
+            ${page === num ? 'text-primary underline' : 'text-gray-700 dark:text-gray-300'} transition`}
                       >
                         {num}
                       </button>
@@ -287,18 +281,11 @@ const StudyListPage = () => {
                         <button
                           onClick={() => setPage(1)}
                           className={`px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2 text-sm sm:text-base lg:text-lg
-              ${page === 1 ? 'text-primary underline' : 'text-gray-700 dark:text-gray-600'} transition`}
+              ${page === 1 ? 'text-primary underline' : 'text-gray-700 dark:text-gray-300'} transition`}
                         >
                           1
                         </button>
                       )}
-
-                      {/* '...' 표시 */}
-                      {/* {page > 3 && (
-                        <span className="text-gray-700 dark:text-gray-600 px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2">
-                          ...
-                        </span>
-                      )} */}
 
                       {/* 현재 페이지를 기준으로 앞뒤로 2개의 페이지 번호만 표시 */}
                       {Array.from({ length: 3 }, (_, i) => page - 1 + i).map(
@@ -309,26 +296,21 @@ const StudyListPage = () => {
                               key={num}
                               onClick={() => setPage(num)}
                               className={`px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2 text-sm sm:text-base lg:text-lg
-                  ${page === num ? 'text-primary underline' : 'text-gray-700 dark:text-gray-600'} transition`}
+                  ${page === num ? 'text-primary underline' : 'text-gray-700 dark:text-gray-300'} transition`}
                             >
                               {num}
                             </button>
                           ),
                       )}
 
-                      {/* '...' 표시 */}
-                      {/* {page < totalPages - 2 && (
-                        <span className="text-gray-700 dark:text-gray-600 px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2">
-                          ...
-                        </span>
-                      )} */}
-
                       {/* 마지막 페이지 버튼은 페이지가 5개 이상일 때만 표시 */}
                       {page < totalPages - 2 && (
                         <button
                           onClick={() => setPage(totalPages)}
                           className={`px-3 sm:px-4 lg:px-5 py-1 sm:py-1.5 lg:py-2 text-sm sm:text-base lg:text-lg
-              ${page === totalPages ? 'text-primary underline' : 'text-gray-700 dark:text-gray-600'} transition`}
+              ${
+                page === totalPages ? 'text-primary underline' : 'text-gray-700 dark:text-gray-300'
+              } transition`}
                         >
                           {totalPages}
                         </button>
@@ -340,7 +322,7 @@ const StudyListPage = () => {
                   {page < totalPages && (
                     <button
                       onClick={() => setPage(page + 3)}
-                      className="text-sm sm:text-base lg:text-lg text-gray-500 hover:text-gray-900 transition"
+                      className="text-sm sm:text-base lg:text-lg text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition"
                     >
                       <i className="ri-arrow-drop-right-line text-3xl transition-transform duration-200 group-hover:-translate-x-1" />
                     </button>
