@@ -113,11 +113,11 @@ const StudyPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-800">
       <div className="flex justify-center">
         <div className="flex w-full max-w-7xl min-h-screen">
           {/* Left Sidebar */}
-          <aside className="w-20 lg:w-64 shrink-0 border-r border-gray-200 h-screen sticky top-0">
+          <aside className="w-20 lg:w-64 shrink-0 border-r-2 border-gray-200 dark:border-gray-800 h-screen sticky top-0">
             <Sidebar onTweetClick={() => setShowTweetModal(true)} />
           </aside>
 
@@ -244,7 +244,7 @@ const StudyPage = () => {
                   onClick={handlePrevPage}
                   className="group flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 text-gray-700 hover:text-primary"
                 >
-                  <i className="ri-arrow-drop-left-line text-5xl transition-transform duration-200 group-hover:-translate-x-1" />
+                  <i className="ri-arrow-drop-left-line text-5xl transition-transform duration-200 group-hover:-translate-x-1 dark:text-gray-300" />
                 </button>
 
                 {/* 중앙 타이틀 */}
@@ -280,7 +280,7 @@ const StudyPage = () => {
                   onClick={handleNextPage}
                   className="group flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-200 text-gray-700 hover:text-primary"
                 >
-                  <i className="ri-arrow-drop-right-line text-5xl transition-transform duration-200 group-hover:translate-x-1" />
+                  <i className="ri-arrow-drop-right-line text-5xl transition-transform duration-200 group-hover:-translate-x-1 dark:text-gray-300" />
                 </button>
               </div>
 

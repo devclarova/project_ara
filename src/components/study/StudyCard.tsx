@@ -15,8 +15,8 @@ const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) =>
   return (
     <div>
       {/* 상단 정보 카드 */}
-      <div className="p-5 rounded-xl space-y-1 mb-4 border bg-white/50 shadow-sm">
-        <h3 className="text-lg ml-2 font-semibold">학습 카드</h3>
+      <div className="p-5 rounded-xl space-y-1 mb-4 border bg-white/50 shadow-sm dark:bg-secondary">
+        <h3 className="text-lg ml-2 font-semibold dark:text-gray-100">학습 카드</h3>
 
         {/* 탭 */}
         <div className="p-2 space-y-4">
@@ -24,7 +24,9 @@ const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) =>
             <button
               onClick={() => setActiveTab('words')}
               className={`px-4 py-2 rounded-lg transition ${
-                activeTab === 'words' ? 'bg-primary text-white' : 'bg-white text-gray-700 border'
+                activeTab === 'words'
+                  ? 'bg-primary dark:bg-primary/70 text-white'
+                  : 'bg-white dark:bg-secondary text-gray-700 border dark:text-gray-300'
               }`}
             >
               단어 설명
@@ -32,7 +34,9 @@ const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) =>
             <button
               onClick={() => setActiveTab('culture')}
               className={`px-4 py-2 rounded-lg transition ${
-                activeTab === 'culture' ? 'bg-primary text-white' : 'bg-white text-gray-700 border'
+                activeTab === 'culture'
+                  ? 'bg-primary text-white'
+                  : 'bg-white dark:bg-secondary text-gray-700 border dark:text-gray-300'
               }`}
             >
               문화 노트
