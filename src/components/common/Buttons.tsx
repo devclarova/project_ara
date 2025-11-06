@@ -47,7 +47,7 @@ export default function Button({
           'bg-red-500 text-white hover:bg-red-600': variant === 'danger',
           'bg-transparent text-gray-700 hover:bg-gray-100': variant === 'ghost',
 
-          // 전체 폭 버튼
+          // 전체 폭 버튼.
           'w-full': fullWidth,
         },
         className,
