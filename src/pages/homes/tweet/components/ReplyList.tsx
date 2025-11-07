@@ -139,9 +139,9 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
               >
                 {reply.user.name}
               </span>
-              <span className="text-gray-500 dark:text-gray-400 truncate">
+              {/* <span className="text-gray-500 dark:text-gray-400 truncate">
                 @{reply.user.username}
-              </span>
+              </span> */}
               <span className="text-gray-500 dark:text-gray-400">·</span>
               <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
                 {reply.timestamp}
