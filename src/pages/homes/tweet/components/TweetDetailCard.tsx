@@ -67,9 +67,9 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
             >
               {tweet.user.name}
             </span>
-            <span className="text-gray-500 dark:text-gray-400 truncate">
+            {/* <span className="text-gray-500 dark:text-gray-400 truncate">
               @{tweet.user.username}
-            </span>
+            </span> */}
           </div>
         </div>
       </div>
