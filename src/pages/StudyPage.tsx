@@ -1,9 +1,9 @@
 import { InfoItem } from '@/components/study/ContentCard';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, useNavigate, useParams } from 'react-router-dom';
 import StudyCard from '../components/study/StudyCard';
 import StudySubtitles from '../components/study/StudySubtitles';
-import VideoPlayer from '../components/study/VideoPlayer';
+import VideoPlayer, { type VideoPlayerHandle } from '../components/study/VideoPlayer';
 import { supabase } from '../lib/supabase';
 import type { Subtitle } from '../types/study';
 import Sidebar from './homes/feature/Sidebar';
@@ -38,6 +38,8 @@ const StudyPage = () => {
   const [showTweetModal, setShowTweetModal] = useState(false);
 
   const handleSelectDialogue = (s: Subtitle) => setSelectedSubtitle(s);
+
+  const vref = useRef<VideoPlayerHandle>(null);
 
   // video 단건 조회
   useEffect(() => {
@@ -310,13 +312,16 @@ const StudyPage = () => {
             </div>
 
             {/* 영상 플레이어 */}
-            <VideoPlayer />
+            <VideoPlayer ref={vref} />
 
             {/* 자막 리스트 */}
             <StudySubtitles
               onSelectDialogue={handleSelectDialogue}
               studyId={studyId}
               subscribeRealtime
+              onSeek={(start) => {
+                vref.current?.playDialogue(start);
+              }}
             />
 
             {/* 학습 카드 */}
