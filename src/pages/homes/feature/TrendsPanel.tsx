@@ -1,4 +1,3 @@
-// src/pages/homes/feature/TrendsPanel.tsx
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
@@ -16,9 +15,13 @@ interface TrendingTweet {
   } | null;
 }
 
-export default function TrendsPanel() {
+type Props = {
+  searchQuery: string;
+  onSearchChange: (q: string) => void;
+};
+
+export default function TrendsPanel({ searchQuery, onSearchChange }: Props) {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
   const [trendingTweets, setTrendingTweets] = useState<TrendingTweet[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -29,7 +32,7 @@ export default function TrendsPanel() {
       if (!Array.isArray(data)) return;
       setTrendingTweets(data);
     } catch (err) {
-      console.error('🔥 인기 트윗 불러오기 실패:', err);
+      console.error('인기 트윗 불러오기 실패:', err);
     } finally {
       setLoading(false);
     }
@@ -41,13 +44,9 @@ export default function TrendsPanel() {
     const subscription = supabase
       .channel('trending-tweets-realtime')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tweets' }, payload => {
-        const oldData = payload.old as any;
-        const newData = payload.new as any;
-        if (
-          oldData.like_count !== newData.like_count ||
-          oldData.reply_count !== newData.reply_count ||
-          oldData.view_count !== newData.view_count
-        ) {
+        const o = payload.old as any;
+        const n = payload.new as any;
+        if (o.like_count !== n.like_count || o.reply_count !== n.reply_count || o.view_count !== n.view_count) {
           fetchTrendingTweets();
         }
       })
@@ -60,7 +59,6 @@ export default function TrendsPanel() {
 
   return (
     <div className="w-80 h-full flex flex-col lg:px-4 py-6">
-      {/* 🔍 Search Bar */}
       <div className="sticky top-0 bg-white dark:bg-background z-10 pb-4">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -70,13 +68,12 @@ export default function TrendsPanel() {
             type="text"
             placeholder="Search"
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            onChange={e => onSearchChange(e.target.value)}
             className="w-full pl-10 pr-4 py-3 bg-gray-100 dark:bg-secondary rounded-full border-none focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white transition-all text-sm"
           />
         </div>
       </div>
 
-      {/* 🧾 What's happening */}
       <div className="flex-1 overflow-y-auto space-y-4">
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 dark:bg-secondary">
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex justify-center items-center gap-2">
@@ -128,11 +125,6 @@ export default function TrendsPanel() {
               ))}
             </div>
           )}
-
-          {/* Show more */}
-          {/* <button className="w-full text-center text-primary hover:bg-primary/10 rounded-full py-2 font-medium transition-colors mt-3">
-            Show more
-          </button> */}
         </div>
       </div>
     </div>
