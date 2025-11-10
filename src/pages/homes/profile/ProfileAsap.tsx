@@ -93,45 +93,27 @@ export default function ProfileAsap() {
   }
 
   return (
-    <>
-      <Helmet>
-        <title>My Profile | ARA</title>
-        <meta
-          name="description"
-          content="나의 프로필/피드와 언어/문화 교류 기록을 관리할 수 있는 ARA 프로필 페이지입니다."
-        />
-
-        <meta property="og:title" content="My ARA Profile" />
-        <meta
-          property="og:description"
-          content="나의 교류 내용, 좋아요, 댓글, 팔로워를 확인하세요."
-        />
-        <meta property="og:image" content="/images/sample_font_logo.png" />
-        <meta property="og:url" content="https://project-ara.vercel.app/profile" />
-        <link rel="canonical" href="https://project-ara.vercel.app/profile" />
-      </Helmet>
-      <div className="min-h-screen bg-white dark:bg-background lg:border-x border-gray-200 dark:border-gray-700">
-        {/* Header */}
-        <div className="sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 z-20">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => navigate(-1)}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition-colors cursor-pointer"
-            >
-              <i className="ri-arrow-left-line text-xl text-gray-700 dark:text-gray-100" />
-            </button>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                {userProfile.name}
-              </h1>
-            </div>
+    <div className="min-h-screen bg-white dark:bg-background lg:border-x border-gray-200 dark:border-gray-700">
+      {/* Header */}
+      <div className="sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 z-20">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition-colors cursor-pointer"
+          >
+            <i className="ri-arrow-left-line text-xl text-gray-700 dark:text-gray-100" />
+          </button>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+              {userProfile.name}
+            </h1>
           </div>
         </div>
-
-        <ProfileHeader userProfile={userProfile} />
-        <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
-        <ProfileTweets activeTab={activeTab} userProfile={userProfile} />
       </div>
-    </>
+
+      <ProfileHeader userProfile={userProfile} />
+      <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <ProfileTweets activeTab={activeTab} userProfile={userProfile} />
+    </div>
   );
 }
