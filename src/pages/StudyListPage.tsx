@@ -8,6 +8,7 @@ import type { Study } from '../types/study';
 import Sidebar from './homes/feature/Sidebar';
 import { useSearchParams } from 'react-router-dom';
 import Pagination from '@/components/common/Pagination';
+import { Helmet } from 'react-helmet-async';
 
 const ALL_CATEGORIES: TCategory[] = ['전체', '드라마', '영화', '예능', '음악'];
 const ALL_LEVELS: TDifficulty[] = ['', '초급', '중급', '고급'];
@@ -135,126 +136,166 @@ const StudyListPage = () => {
   const PaginationComponent = React.memo(Pagination);
 
   return (
-    <div className="relative min-h-screen bg-white dark:bg-background">
-      <div className="flex justify-center min-h-screen">
-        <div className="flex w-full max-w-7xl">
-          {/* Left Sidebar */}
-          <aside className="w-20 lg:w-64 shrink-0 h-screen sticky top-0 bg-white dark:bg-background z-30">
-            <Sidebar onTweetClick={() => setShowTweetModal(true)} />
-          </aside>
+    <>
+      <Helmet>
+        {/* ✅ 브라우저 탭 및 검색 타이틀 */}
+        <title>Study List | ARA - Learn Korean with K-Content</title>
 
-          {/* 메인 영역 */}
-          <main className="flex-1 min-w-0 bg-white dark:bg-background">
-            {/* 탭 + 검색 */}
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 bg-white dark:bg-background sticky top-0 z-20 pb-2 pl-6 pt-8 pr-6">
-              {/* 왼쪽: 카테고리 + 모바일용 검색 아이콘 */}
-              <div className="flex items-center justify-between w-full md:w-auto">
-                <CategoryTabs active={displayCategory} onChange={handleCategoryChange} />
+        {/* ✅ 설명 (검색 결과에서 표시됨) */}
+        <meta
+          name="description"
+          content="드라마, 예능, 음악 등 K-콘텐츠로 한국어를 배우는 학습 콘텐츠 목록 페이지입니다. 자신에게 맞는 난이도와 주제를 선택해 재미있게 한국어를 익혀보세요."
+        />
 
-                {/* 모바일 전용 검색 버튼 (카테고리 옆에 위치) */}
-                <button
-                  onClick={() => setShowSearch(true)}
-                  className="md:hidden ml-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-secondary transition"
-                  aria-label="검색 열기"
-                >
-                  <i className="ri-search-line text-[20px] sm:text-[24px] md:text-[28px] text-gray-600 dark:text-gray-200" />
-                </button>
-              </div>
+        {/* ✅ 키워드 */}
+        <meta
+          name="keywords"
+          content="ARA, Study List, Korean learning, Learn Korean, K-Drama, K-POP, K-Content, language learning, 한류, 한국어 공부, 콘텐츠 학습"
+        />
 
-              {/* 오른쪽: 필터 + 검색 그룹 (데스크톱 전용) */}
-              <div className="hidden md:flex items-center gap-2 mt-3 md:mt-0 flex-nowrap">
-                <div className="flex items-center h-11">
-                  <FilterDropdown value={levelFilter} onApply={applyLevel} />
+        {/* ✅ Open Graph (SNS 공유용) */}
+        <meta property="og:title" content="Study List | ARA - Learn Korean with K-Content" />
+        <meta
+          property="og:description"
+          content="K-콘텐츠 기반 한국어 학습 자료를 한눈에! K-드라마, 예능, 음악을 통해 자연스럽게 표현을 배우고 학습을 즐겨보세요."
+        />
+        <meta property="og:image" content="/images/sample_font_logo.png" />
+        <meta property="og:url" content="https://project-ara.vercel.app/studylist" />
+        <meta property="og:type" content="website" />
+
+        {/* ✅ Canonical (대표 주소) */}
+        <link rel="canonical" href="https://project-ara.vercel.app/studylist" />
+
+        {/* ✅ Twitter 카드 */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Study List | ARA - Learn Korean with K-Content" />
+        <meta
+          name="twitter:description"
+          content="K-콘텐츠로 배우는 한국어 학습 리스트 — 나에게 맞는 드라마, 예능, 음악 클립으로 재미있게 공부해요!"
+        />
+        <meta name="twitter:image" content="/images/sample_font_logo.png" />
+      </Helmet>
+      <div className="relative min-h-screen bg-white dark:bg-background">
+        <div className="flex justify-center min-h-screen">
+          <div className="flex w-full max-w-7xl">
+            {/* Left Sidebar */}
+            <aside className="w-20 lg:w-64 shrink-0 h-screen sticky top-0 bg-white dark:bg-background z-30">
+              <Sidebar onTweetClick={() => setShowTweetModal(true)} />
+            </aside>
+
+            {/* 메인 영역 */}
+            <main className="flex-1 min-w-0 bg-white dark:bg-background">
+              {/* 탭 + 검색 */}
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 bg-white dark:bg-background sticky top-0 z-20 pb-2 pl-6 pt-8 pr-6">
+                {/* 왼쪽: 카테고리 + 모바일용 검색 아이콘 */}
+                <div className="flex items-center justify-between w-full md:w-auto">
+                  <CategoryTabs active={displayCategory} onChange={handleCategoryChange} />
+
+                  {/* 모바일 전용 검색 버튼 (카테고리 옆에 위치) */}
+                  <button
+                    onClick={() => setShowSearch(true)}
+                    className="md:hidden ml-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-secondary transition"
+                    aria-label="검색 열기"
+                  >
+                    <i className="ri-search-line text-[20px] sm:text-[24px] md:text-[28px] text-gray-600 dark:text-gray-200" />
+                  </button>
                 </div>
-                <div className="flex items-center h-11">
-                  <SearchBar
-                    placeholder="검색어를 입력해주세요"
-                    value={keyword}
-                    onChange={handleKeywordChange}
-                    onSubmit={q => console.log('검색어:', q)}
-                  />
-                </div>
-              </div>
 
-              {/* 모바일: 검색 전용 모달 */}
-              {showSearch && (
-                <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-20 md:hidden">
-                  <div className="bg-white dark:bg-secondary w-[90%] max-w-sm rounded-xl shadow-lg p-4 flex flex-col gap-4">
-                    {/* 헤더 */}
-                    <div className="flex justify-between items-center">
-                      <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100">
-                        검색
-                      </h2>
-                      <button
-                        onClick={() => setShowSearch(false)}
-                        className="text-gray-500 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100"
-                        aria-label="닫기"
-                      >
-                        <i className="ri-close-line text-xl" />
-                      </button>
-                    </div>
-
-                    {/* 검색만 표시 */}
-                    <div className="mt-2">
-                      <SearchBar
-                        autoFocus
-                        placeholder="검색어를 입력해주세요"
-                        value={keyword}
-                        onChange={handleKeywordChange}
-                        onSubmit={q => {
-                          console.log('검색어:', q); // 실제 검색 로직 연결
-                          setShowSearch(false); // 검색 후 모달 닫기
-                        }}
-                      />
-                    </div>
+                {/* 오른쪽: 필터 + 검색 그룹 (데스크톱 전용) */}
+                <div className="hidden md:flex items-center gap-2 mt-3 md:mt-0 flex-nowrap">
+                  <div className="flex items-center h-11">
+                    <FilterDropdown value={levelFilter} onApply={applyLevel} />
+                  </div>
+                  <div className="flex items-center h-11">
+                    <SearchBar
+                      placeholder="검색어를 입력해주세요"
+                      value={keyword}
+                      onChange={handleKeywordChange}
+                      onSubmit={q => console.log('검색어:', q)}
+                    />
                   </div>
                 </div>
-              )}
-            </div>
 
-            {/* 콘텐츠 영역 */}
-            <div className="w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1400px] bg-white dark:bg-background">
-              {/* 카드 그리드 */}
-              <div className="grid gap-6 sm:gap-8 px-0 grid-cols-1 sm:grid-cols-2 lg:[grid-template-columns:repeat(3,minmax(260px,1fr))] bg-white dark:bg-background">
-                {finalList.length > 0 ? (
-                  finalList.map(study => {
-                    const [v] = study.video ?? [];
-                    return (
-                      <ContentCard
-                        key={study.id}
-                        id={study.id}
-                        image={study.poster_image_url}
-                        title={study.title || '제목 없음'}
-                        short_description={study.short_description || '설명 없음'}
-                        episode={v?.episode || ''}
-                        scene={v?.scene || ''}
-                        level={v?.level || ''}
-                        duration={typeof v?.runtime_bucket === 'string' ? v.runtime_bucket : null}
-                        comments="0개 댓글"
-                      />
-                    );
-                  })
-                ) : (
-                  // 빈 결과 문구
-                  <div className="col-span-full text-center py-16 text-gray-500 dark:text-gray-400 text-sm sm:text-base">
-                    해당 조건에 맞는 학습 콘텐츠가 없습니다.
+                {/* 모바일: 검색 전용 모달 */}
+                {showSearch && (
+                  <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-20 md:hidden">
+                    <div className="bg-white dark:bg-secondary w-[90%] max-w-sm rounded-xl shadow-lg p-4 flex flex-col gap-4">
+                      {/* 헤더 */}
+                      <div className="flex justify-between items-center">
+                        <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100">
+                          검색
+                        </h2>
+                        <button
+                          onClick={() => setShowSearch(false)}
+                          className="text-gray-500 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100"
+                          aria-label="닫기"
+                        >
+                          <i className="ri-close-line text-xl" />
+                        </button>
+                      </div>
+
+                      {/* 검색만 표시 */}
+                      <div className="mt-2">
+                        <SearchBar
+                          autoFocus
+                          placeholder="검색어를 입력해주세요"
+                          value={keyword}
+                          onChange={handleKeywordChange}
+                          onSubmit={q => {
+                            console.log('검색어:', q); // 실제 검색 로직 연결
+                            setShowSearch(false); // 검색 후 모달 닫기
+                          }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* 페이지네이션 */}
-              <PaginationComponent
-                totalPages={totalPages}
-                page={page}
-                onPageChange={setPage}
-                windowSize={3} // 3개씩 보이기
-                autoScrollTop={true} // 숫자 클릭 시 상단으로
-              />
-            </div>
-          </main>
+              {/* 콘텐츠 영역 */}
+              <div className="w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1400px] bg-white dark:bg-background">
+                {/* 카드 그리드 */}
+                <div className="grid gap-6 sm:gap-8 px-0 grid-cols-1 sm:grid-cols-2 lg:[grid-template-columns:repeat(3,minmax(260px,1fr))] bg-white dark:bg-background">
+                  {finalList.length > 0 ? (
+                    finalList.map(study => {
+                      const [v] = study.video ?? [];
+                      return (
+                        <ContentCard
+                          key={study.id}
+                          id={study.id}
+                          image={study.poster_image_url}
+                          title={study.title || '제목 없음'}
+                          short_description={study.short_description || '설명 없음'}
+                          episode={v?.episode || ''}
+                          scene={v?.scene || ''}
+                          level={v?.level || ''}
+                          duration={typeof v?.runtime_bucket === 'string' ? v.runtime_bucket : null}
+                          comments="0개 댓글"
+                        />
+                      );
+                    })
+                  ) : (
+                    // 빈 결과 문구
+                    <div className="col-span-full text-center py-16 text-gray-500 dark:text-gray-400 text-sm sm:text-base">
+                      해당 조건에 맞는 학습 콘텐츠가 없습니다.
+                    </div>
+                  )}
+                </div>
+
+                {/* 페이지네이션 */}
+                <PaginationComponent
+                  totalPages={totalPages}
+                  page={page}
+                  onPageChange={setPage}
+                  windowSize={3} // 3개씩 보이기
+                  autoScrollTop={true} // 숫자 클릭 시 상단으로
+                />
+              </div>
+            </main>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
