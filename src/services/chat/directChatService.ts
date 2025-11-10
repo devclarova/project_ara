@@ -340,7 +340,7 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
             .select('*', { count: 'exact', head: true })
             .eq('chat_id', chat.id)
             .eq('is_read', false)
-            .neq('sender_id', currentUser.profileId); // 상대방이 보낸 메시지만
+            .neq('sender_id', currentUser.id); // 상대방이 보낸 메시지만
 
           if (!unreadCountError && count !== null) {
             unreadCount = count;
@@ -362,7 +362,7 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
                 content: lastMessage.content,
                 created_at: lastMessage.created_at,
                 sender_nickname:
-                  lastMessage.sender_id === currentUser.profileId ? '나' : otherUserInfo.nickname,
+                  lastMessage.sender_id === currentUser.id ? '나' : otherUserInfo.nickname,
               }
             : undefined,
           unread_count: unreadCount || 0,
@@ -536,7 +536,7 @@ export async function getMessages(chatId: string): Promise<ChatApiResponse<Direc
         })
         .eq('chat_id', chatId)
         .eq('is_read', false)
-        .neq('sender_id', currentUser.profileId); // 상대방이 보낸 메시지만
+        .neq('sender_id', currentUser.id); // 상대방이 보낸 메시지만
 
       if (updateError) {
         // 오류가 있어도 메시지 조회는 계속 진행

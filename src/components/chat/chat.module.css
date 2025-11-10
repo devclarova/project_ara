@@ -350,6 +350,7 @@
   cursor: pointer;
   opacity: 0.9;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 .chatPage :global(.exit-chat-btn:hover) {
   opacity: 1;
@@ -475,11 +476,22 @@
   max-width: 100%;
   gap: 8px;
 }
+
+/* ✅ 상대 메시지 말풍선 - 라이트 모드 */
 .chatPage :global(.other-message .message-text) {
-  background-color: color-mix(in srgb, hsl(var(--secondary)) 80%, hsl(var(--background)) 20%);
-  color: hsl(var(--secondary-foreground));
+  background-color: #e5e7eb; /* gray-200 */
+  color: #111827; /* 거의 검정 */
   border-bottom-left-radius: 4px;
 }
+
+/* ✅ 상대 메시지 말풍선 - 다크 모드 */
+:global(.dark) .chatPage :global(.other-message .message-text) {
+  background-color: #394a61; /* gray-800 */
+  color: #f9fafb; /* 흰색에 가까운 텍스트 */
+  border-bottom-left-radius: 4px;
+}
+
+/* 시간 정렬 */
 .chatPage :global(.other-message .message-time) {
   text-align: left;
 }
@@ -747,4 +759,388 @@
 :global(.dark) .chatPage :global(.chat-room-message),
 :global(.dark) .chatPage :global(.message-input) {
   border-color: #475569; /* gray-600 */
+}
+
+.chat-list-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chat-list-new-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background-color: #00bfa5; /* 빨강 */
+  box-shadow: 0 0 4px rgba(103, 226, 242, 0.8);
+}
+
+.chat-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chat-new-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  background-color: #2563eb; /* 파랑 느낌 */
+  color: #fff;
+}
+
+.chat-list-unread-pill {
+  background-color: #00bfa5;
+  color: #fff;
+  border-radius: 9999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+/* 🔍 채팅방 헤더 검색 버튼 */
+.chatPage :global(.chat-room-search-toggle) {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.chatPage :global(.chat-room-search-toggle:hover) {
+  background-color: color-mix(in srgb, hsl(var(--primary)) 8%, hsl(var(--secondary)) 92%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, hsl(var(--primary)) 40%, transparent);
+}
+
+.chatPage :global(.chat-room-search-icon) {
+  width: 18px;
+  height: 18px;
+}
+
+/* 🔍 채팅방 상단 검색 바 */
+.chatPage :global(.chat-room-search-bar) {
+  padding: 10px 20px;
+  border-bottom: 1px solid hsl(var(--border));
+  background-color: hsl(var(--secondary));
+}
+
+.chatPage :global(.chat-room-search-inner) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* 검색 인풋 박스 */
+.chatPage :global(.chat-room-search-input-wrap) {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 9999px;
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--background));
+}
+
+.chatPage :global(.chat-room-search-input-icon) {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+}
+
+.chatPage :global(.chat-room-search-input) {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: hsl(var(--foreground));
+}
+
+.chatPage :global(.chat-room-search-input::placeholder) {
+  color: hsl(var(--muted-foreground));
+}
+
+/* 검색 버튼 */
+.chatPage :global(.chat-room-search-button) {
+  border: none;
+  outline: none;
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter 0.15s ease;
+}
+
+.chatPage :global(.chat-room-search-button:hover) {
+  filter: brightness(0.96);
+}
+
+/* 검색 정보/내비게이션 */
+.chatPage :global(.chat-room-search-meta) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+}
+
+.chatPage :global(.chat-room-search-hint),
+.chatPage :global(.chat-room-search-no-result),
+.chatPage :global(.chat-room-search-count) {
+  white-space: nowrap;
+}
+
+.chatPage :global(.chat-room-search-nav) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chatPage :global(.chat-room-search-nav-btn) {
+  padding: 3px 8px;
+  border-radius: 9999px;
+  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  cursor: pointer;
+  font-size: 11px;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.chatPage :global(.chat-room-search-nav-btn:hover) {
+  background-color: color-mix(in srgb, hsl(var(--primary)) 10%, hsl(var(--secondary)) 90%);
+  border-color: hsl(var(--primary));
+}
+
+/* 모바일에서 검색 정보가 아래로 자연스럽게 내려가도록 */
+@media (max-width: 768px) {
+  .chatPage :global(.chat-room-search-inner) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .chatPage :global(.chat-room-search-meta) {
+    justify-content: space-between;
+  }
+}
+
+/* 🔍 검색 하이라이트 (일치 / 현재 선택) */
+.chatPage :global(.message-item.message-highlight),
+.chatPage :global(.message-item.message-highlight-current) {
+  border-radius: 8px;
+  padding-inline: 4px;
+}
+
+/* 일반 매치된 메시지 */
+.chatPage :global(.message-item.message-highlight) {
+  background-color: color-mix(in srgb, hsl(var(--primary)) 6%, hsl(var(--secondary)) 94%);
+}
+
+/* 현재 선택된 결과 */
+.chatPage :global(.message-item.message-highlight-current) {
+  background-color: color-mix(in srgb, hsl(var(--primary)) 14%, hsl(var(--secondary)) 86%);
+}
+
+/* 다크 모드에서 조금 더 진하게 */
+:global(.dark) .chatPage :global(.message-item.message-highlight) {
+  background-color: color-mix(in srgb, hsl(var(--primary)) 12%, #020617 88%);
+}
+
+:global(.dark) .chatPage :global(.message-item.message-highlight-current) {
+  background-color: color-mix(in srgb, hsl(var(--primary)) 24%, #020617 76%);
+}
+
+/* ============================
+   📱 반응형 레이아웃 재정리
+   - 1210↓, 1010↓, 768↓ 순서
+   ============================ */
+
+/* 1️⃣ 1210px 이하: 살짝 컴팩트 + 검색 영역 여유 있게 */
+@media (max-width: 1210px) {
+  /* 헤더 패딩 줄이기 */
+  .chatPage :global(.chat-room-header) {
+    padding: 12px 16px;
+  }
+
+  /* 검색바도 동일 톤 */
+  .chatPage :global(.chat-room-search-bar) {
+    padding: 8px 16px;
+  }
+
+  /* 검색 인풋 + 메타 영역이 가로로 너무 꽉 안 차게 약간 여유 */
+  .chatPage :global(.chat-room-search-inner) {
+    gap: 8px;
+    flex-wrap: wrap; /* ✅ 공간 부족하면 자연스럽게 밑줄로 내려감 */
+  }
+
+  .chatPage :global(.chat-room-search-meta) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap; /* ✅ 1210~1024 구간에서 깨지지 않도록 */
+    row-gap: 4px;
+  }
+
+  /* 이 구간부터 나가기 버튼 살짝 축소 */
+  .chatPage :global(.exit-chat-btn) {
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+}
+
+/* 2️⃣ 1010px 이하: 검색 메타를 아래쪽으로 빼서 좁은 화면에서 안 깨지게 */
+@media (max-width: 1010px) {
+  /* 검색 인풋/메타를 위·아래로 쌓기 시작 */
+  .chatPage :global(.chat-room-search-inner) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* 메타(“N개 결과 중…”/이전/다음) 영역은 한 줄 가득 차게 */
+  .chatPage :global(.chat-room-search-meta) {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  /* 이전/다음 버튼 조금 더 자잘하게 */
+  .chatPage :global(.chat-room-search-nav-btn) {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+}
+
+/* 3️⃣ 768px 이하(📱모바일): 768도 완전 모바일 취급 */
+@media (max-width: 768px) {
+  /* 헤더 살짝 더 컴팩트 */
+  .chatPage :global(.chat-room-header) {
+    padding: 10px 12px;
+  }
+
+  .chatPage :global(.chat-room-header-left h3) {
+    font-size: 15px;
+  }
+
+  .chatPage :global(.chat-room-actions) {
+    gap: 6px;
+  }
+
+  /* 검색 아이콘 버튼 크기 축소 */
+  .chatPage :global(.chat-room-search-toggle) {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* 나가기 버튼 더 작게 + 절대 줄바꿈 안 되게 */
+  .chatPage :global(.exit-chat-btn) {
+    font-size: 12px;
+    padding: 5px 10px;
+    white-space: nowrap; /* ✅ 768 포함, 항상 한 줄 유지 */
+  }
+
+  /* 검색 바 좌우 여백 줄이기 */
+  .chatPage :global(.chat-room-search-bar) {
+    padding: 8px 12px;
+  }
+
+  /* 인풋/메타 완전 세로 스택 */
+  .chatPage :global(.chat-room-search-inner) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .chatPage :global(.chat-room-search-input-wrap) {
+    width: 100%;
+  }
+
+  .chatPage :global(.chat-room-search-meta) {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .chatPage :global(.chat-room-search-count),
+  .chatPage :global(.chat-room-search-hint),
+  .chatPage :global(.chat-room-search-no-result) {
+    font-size: 11px;
+  }
+
+  .chatPage :global(.chat-room-search-nav-btn) {
+    padding: 2px 6px;
+    font-size: 11px;
+  }
+}
+
+/* ============================
+   ✅ 1200px 이하 레이아웃 오버라이드
+   - 1200~1024 구간 깨지는 것 방지
+   - 검색바는 무조건 위/아래로 쌓이게
+   ============================ */
+
+@media (max-width: 1200px) {
+  /* 헤더 살짝 컴팩트하게 */
+  .chatPage :global(.chat-room-header) {
+    padding: 12px 14px;
+  }
+
+  .chatPage :global(.chat-room-header-left h3) {
+    font-size: 16px;
+  }
+
+  /* 나가기 버튼: 한 줄 유지 + 조금 더 작게 */
+  .chatPage :global(.exit-chat-btn) {
+    font-size: 13px;
+    padding: 5px 10px;
+    white-space: nowrap; /* 줄바꿈 절대 금지 */
+  }
+
+  /* 🔍 검색 영역: 1200부터는 완전히 세로 스택으로 고정 */
+  .chatPage :global(.chat-room-search-inner) {
+    flex-direction: column; /* 한 줄 → 위/아래 */
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .chatPage :global(.chat-room-search-input-wrap) {
+    width: 100%;
+  }
+
+  .chatPage :global(.chat-room-search-meta) {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .chatPage :global(.chat-room-search-count),
+  .chatPage :global(.chat-room-search-hint),
+  .chatPage :global(.chat-room-search-no-result) {
+    font-size: 11px;
+  }
+
+  .chatPage :global(.chat-room-search-nav-btn) {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
 }

@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { useDirectChat } from '../../../contexts/DirectChatContext';
 import type { ChatUser } from '../../../types/ChatType';
 import { supabase } from '../../../lib/supabase';
+import { useNewChatNotification } from '@/contexts/NewChatNotificationContext';
 
 // Props 정의
 interface DirectChatListProps {
@@ -32,6 +33,8 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
   // 사용자 검색 상태 관리
   const [searchTerm, setSearchTerm] = useState<string>(''); // 사용자 검색어
   const [showUserSearch, setShowUserSearch] = useState<boolean>(false); // 사용자 검색 UI 표시 여부
+  // chats 기준으로 읽지 않은 채팅방 개수 계산
+  const unreadCount = chats.filter(chat => (chat.unread_count || 0) > 0).length;
 
   // 최초에 컴포넌트 마운트시 채팅 목록 로드
   useEffect(() => {
@@ -39,29 +42,29 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
   }, [loadChats]); // 신규 또는 메세지 전송 등으로 업데이트 시 채팅목록 호촐
 
   // Supabase Realtime 으로 실시간 동기화
-  useEffect(() => {
-    const subscription = supabase
-      .channel('direct_chats_changes') // direct_chats_changes 라는 이름으로 채널을 만든다.
-      .on(
-        'postgres_changes', // PostgreSQL 데이터 베이스의 변경사항을 알려주는 이벤트 명
-        {
-          event: '*', // 모든 이벤트 타입을 감지함. (INSERT, UPDATE, DELETE..)
-          schema: 'public', // 스키마가 public 인 것이 대상
-          table: 'direct_chats', // 변경이 감시되어질 테이블명
-        },
-        payload => {
-          // 변경사항에 대한 상세 정보(새로운 데이터, 이전 데이터등..)
-          loadChats(); // 변경사항이 있을 때만 새로고침
-        },
-      )
-      .subscribe(); // 구독을 신청한다. (addEventListener 처럼)
+  // useEffect(() => {
+  //   const subscription = supabase
+  //     .channel('direct_chats_changes') // direct_chats_changes 라는 이름으로 채널을 만든다.
+  //     .on(
+  //       'postgres_changes', // PostgreSQL 데이터 베이스의 변경사항을 알려주는 이벤트 명
+  //       {
+  //         event: '*', // 모든 이벤트 타입을 감지함. (INSERT, UPDATE, DELETE..)
+  //         schema: 'public', // 스키마가 public 인 것이 대상
+  //         table: 'direct_chats', // 변경이 감시되어질 테이블명
+  //       },
+  //       payload => {
+  //         // 변경사항에 대한 상세 정보(새로운 데이터, 이전 데이터등..)
+  //         loadChats(); // 변경사항이 있을 때만 새로고침
+  //       },
+  //     )
+  //     .subscribe(); // 구독을 신청한다. (addEventListener 처럼)
 
-    // 클린업 함수 : 컴포넌트가 언마운트 될때, 즉, 화면에서 사라질 때 실행
-    return () => {
-      // 구독 해제
-      subscription.unsubscribe(); // 반드시 해줌. 메모리 누수 방지, 백엔드 부하방지
-    };
-  }, [loadChats]);
+  //   // 클린업 함수 : 컴포넌트가 언마운트 될때, 즉, 화면에서 사라질 때 실행
+  //   return () => {
+  //     // 구독 해제
+  //     subscription.unsubscribe(); // 반드시 해줌. 메모리 누수 방지, 백엔드 부하방지
+  //   };
+  // }, [loadChats]);
 
   // 컴포넌트가 변경시 사용자 검색 즉시 실행
   // 검색어가 비어있지 않을 때만 검색 수행
@@ -130,8 +133,9 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
     <div className="chat-list">
       {/* 채팅 목록 헤더 - 제목과 새 채팅 버튼 */}
       <div className="chat-list-header">
-        <h2>1 : 1 채팅</h2>
-        {/* 사용자가 새채팅 생성시 showUserSearch 를 true 로 변경 */}
+        <div className="chat-list-title">
+          <h2>1 : 1 채팅</h2>
+        </div>
         <button className="new-chat-btn" onClick={() => setShowUserSearch(!showUserSearch)}>
           새 채팅
         </button>
@@ -223,7 +227,15 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
               <div className="chat-info">
                 {/* 채팅 헤더 - 이름과 시간 */}
                 <div className="chat-header">
-                  <div className="chat-name">{chat.other_user.nickname}</div>
+                  {/* 이름 + NEW 뱃지 한 줄 */}
+                  <div className="chat-name-row">
+                    <div className="chat-name">{chat.other_user.nickname}</div>
+
+                    {/* 🔥 새로 생성된/처음 도착한 채팅방이면 NEW 뱃지 */}
+                    {chat.is_new_chat && <span className="chat-new-badge">NEW</span>}
+                  </div>
+
+                  {/* 시간 표시 */}
                   <div className="chat-time">
                     {chat.last_message ? formatTime(chat.last_message.created_at) : ''}
                   </div>
