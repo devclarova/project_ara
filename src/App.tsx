@@ -97,8 +97,8 @@ const App = () => {
                     <Route element={<RequireAuth />}>
                       <Route path="/signup/social" element={<SignUpWizard mode="social" />} />
                       <Route element={<OnboardingWall />}>
-                        <Route path="/profile" element={<ProfilePage />} />
-                        <Route path="/profileo" element={<ProfilePage_old />} />
+                        {/* <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/profileo" element={<ProfilePage_old />} /> */}
                         <Route path="/studyList" element={<StudyListPage />} />
                         <Route path="/study/:id" element={<StudyPage />} />
                         <Route path="/voca" element={<VocaPage />} />
