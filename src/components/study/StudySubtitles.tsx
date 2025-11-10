@@ -70,7 +70,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
       const { data, error } = await supabase
         .from('subtitle')
         .select(
-          'id, study_id, korean_subtitle, pronunciation, english_subtitle, subtitle_start_time, level',
+          'id, study_id, korean_subtitle, pronunciation, english_subtitle, subtitle_start_time',
         )
         .eq('study_id', resolvedStudyId)
         .order('subtitle_start_time', { ascending: true });
