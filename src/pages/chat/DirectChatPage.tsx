@@ -3,6 +3,7 @@ import DirectChatList from '../../components/chat/direct/DirectChatList';
 import DirectChatRoom from '../../components/chat/direct/DirectChatRoom';
 import { useNewChatNotification } from '../../contexts/NewChatNotificationContext';
 import styles from '../../components/chat/chat.module.css';
+import { useDirectChat } from '@/contexts/DirectChatContext';
 
 function DirectChatPage() {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
@@ -13,9 +14,11 @@ function DirectChatPage() {
   // 모바일일 때: true = 리스트 화면, false = 채팅방 화면
   const [showListOnMobile, setShowListOnMobile] = useState(true);
 
-  useEffect(() => {
-    markChatAsRead();
-  }, [markChatAsRead]);
+  const { resetCurrentChat } = useDirectChat();
+
+  // useEffect(() => {
+  //   markChatAsRead();
+  // }, [markChatAsRead]);
 
   // 처음 로드 + 리사이즈마다 모바일 여부 판단
   useEffect(() => {
@@ -51,10 +54,24 @@ function DirectChatPage() {
     }
   };
 
-  // 모바일에서 "뒤로가기" 눌렀을 때 리스트로 복귀
   const handleBackToList = () => {
-    setShowListOnMobile(true);
+    // 🔹 현재 선택된 채팅방 해제
+    setSelectedChatId(null);
+    // 🔹 Context 내부 currentChatId, messages도 초기화
+    resetCurrentChat();
+
+    // 모바일일 때만 리스트 화면으로 전환
+    if (isMobile) {
+      setShowListOnMobile(true);
+    }
   };
+
+  // ✅ 채팅 페이지에서 아예 나갈 때도 현재 채팅 상태를 깔끔히 초기화
+  useEffect(() => {
+    return () => {
+      resetCurrentChat();
+    };
+  }, [resetCurrentChat]);
 
   return (
     <div className={styles.chatPage}>
@@ -70,17 +87,17 @@ function DirectChatPage() {
           </div>
         )}
 
-        {/* 오른쪽 메인 - 데스크톱에서는 항상 보이고, 모바일에서는 채팅방 화면일 때만 보임 */}
+        {/* 오른쪽 채팅방 - 데스크톱에서는 항상, 모바일에서는 채팅방 화면일 때만 */}
         {(!isMobile || !showListOnMobile) && (
           <div className="chat-main">
             {selectedChatId ? (
               <DirectChatRoom
                 chatId={selectedChatId}
                 isMobile={isMobile}
-                onBackToList={handleBackToList}
+                onBackToList={handleBackToList} // 🔥 여기 중요
               />
             ) : (
-              // 데스크톱에서만 보이는 환영 화면 (모바일에서는 리스트만 보이게 됨)
+              // ✅ 데스크톱에서 “채팅방 해제” 했을 때 뜨는 웰컴 화면
               !isMobile && (
                 <div className="chat-welcome">
                   <div className="welcome-content">

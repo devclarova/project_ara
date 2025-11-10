@@ -19,14 +19,19 @@ interface DirectChatRoomProps {
 
 const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps) => {
   // DirectChatContext 에서 필요한 상태와 함수를 가져오기
-  const { messages, loading, error, loadMessages, currentChat, exitDirectChat, getUserProfile } =
-    useDirectChat();
+  const { messages, loading, error, loadMessages, currentChat, exitDirectChat } = useDirectChat();
 
   // 메시지가 개수가 많으면 하단으로 스크롤을 해야 함.
   // 새메시지가 추가될 때 마다 최신 메시지를 볼 수 있도록 해야 함.
   const messageEndRef = useRef<HTMLDivElement>(null);
   const previousMessageCount = useRef<number>(0);
   const isInitialLoad = useRef<boolean>(true);
+
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<string[]>([]);
+  const [currentResultIndex, setCurrentResultIndex] = useState(0);
+  const [hasSearched, setHasSearched] = useState(false);
 
   // DOM 업데이트 후 실행되도록 함.
   const scrollToBottom = (force: boolean = false) => {
@@ -111,6 +116,15 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
       loadMessages(chatId);
     }
   }, [chatId, loadMessages]);
+
+  // 채팅방이 바뀔 때 검색 상태 초기화
+  useEffect(() => {
+    setShowSearch(false);
+    setSearchQuery('');
+    setSearchResults([]);
+    setCurrentResultIndex(0);
+    setHasSearched(false);
+  }, [chatId]);
 
   // 메시지 시간 포맷팅 함수 -  HH:MM:DD 형식 반환
   const formatTime = (dateString: string) => {
@@ -200,28 +214,56 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
     }
   };
 
-  // 디버깅용 함수들 (필요시에만 활성화)
-  // const handleDebugProfile = async () => {
-  //   if (currentChat?.other_user?.id) {
-  //     console.log('=== 디버깅: 상대방 프로필 조회 시작 ===');
-  //     const profile = await getUserProfile(currentChat.other_user.id);
-  //     console.log('상대방 프로필 조회 결과:', profile);
-  //     console.log('=== 디버깅: 상대방 프로필 조회 완료 ===');
-  //   }
-  // };
+  // 특정 메시지로 스크롤
+  const scrollToMessage = (messageId: string) => {
+    const el = document.getElementById(`msg-${messageId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
 
-  // const handleDebugMyProfile = async () => {
-  //   console.log('=== 디버깅: 현재 사용자 프로필 조회 시작 ===');
-  //   const {
-  //     data: { user },
-  //   } = await supabase.auth.getUser();
-  //   if (user) {
-  //     const profile = await getUserProfile(user.id);
-  //     console.log('현재 사용자 프로필 조회 결과:', profile);
-  //     console.log('현재 사용자 user_metadata:', user.user_metadata);
-  //   }
-  //   console.log('=== 디버깅: 현재 사용자 프로필 조회 완료 ===');
-  // };
+  // 검색 실행
+  const handleSearch = () => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) {
+      setSearchResults([]);
+      setCurrentResultIndex(0);
+      setHasSearched(false);
+      return;
+    }
+
+    const matchedIds = messages.filter(m => m.content?.toLowerCase().includes(q)).map(m => m.id);
+
+    setSearchResults(matchedIds);
+    setCurrentResultIndex(0);
+    setHasSearched(true);
+
+    if (matchedIds.length > 0) {
+      scrollToMessage(matchedIds[0]);
+    }
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSearch();
+    }
+  };
+
+  // 이전/다음 결과 이동
+  const goToResult = (direction: 'prev' | 'next') => {
+    if (searchResults.length === 0) return;
+
+    let nextIndex = currentResultIndex;
+    if (direction === 'prev') {
+      nextIndex = (currentResultIndex - 1 + searchResults.length) % searchResults.length;
+    } else {
+      nextIndex = (currentResultIndex + 1) % searchResults.length;
+    }
+
+    setCurrentResultIndex(nextIndex);
+    scrollToMessage(searchResults[nextIndex]);
+  };
 
   //  에러 상태일 때 에러 메시지 표시
   if (error) {
@@ -254,7 +296,7 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
         {/* 채팅방 정보 */}
         <div className="chat-room-info">
           <div className="chat-room-header-left">
-            {isMobile && onBackToList && (
+            {onBackToList && (
               <button
                 className="chat-room-back-btn"
                 onClick={e => {
@@ -272,9 +314,15 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
 
         {/* 채팅방 액션 버튼들  */}
         <div className="chat-room-actions">
-          {/* 채팅 나가기 버튼 */}
           <button
-            className="exit-chat-btn"
+            onClick={() => setShowSearch(prev => !prev)}
+            aria-pressed={showSearch}
+            className="inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800"
+          >
+            <img src="/images/searchT.svg" alt="검색" className="chat-room-search-icon" />
+          </button>
+          <button
+            className="exit-chat-btn px-3 py-1.5 rounded-full border border-gray-300 dark:border-slate-600 text-xs sm:text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-slate-800"
             onClick={e => {
               e.preventDefault();
               e.stopPropagation();
@@ -285,6 +333,59 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
           </button>
         </div>
       </div>
+
+      {/* 검색 바 (헤더 아래에 펼쳐지는 영역) */}
+      {showSearch && (
+        <div className="chat-room-search-bar">
+          <div className="chat-room-search-inner">
+            <div className="chat-room-search-input-wrap">
+              <img src="/images/searchT.svg" alt="검색" className="chat-room-search-input-icon" />
+              <input
+                type="text"
+                placeholder="대화 내용 검색"
+                className="chat-room-search-input"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+              />
+              <button className="chat-room-search-button" onClick={handleSearch}>
+                검색
+              </button>
+            </div>
+
+            {/* 검색 결과 요약 + 이전/다음 */}
+            <div className="chat-room-search-meta">
+              {!hasSearched ? (
+                <span className="chat-room-search-hint">메시지 내용을 검색해보세요.</span>
+              ) : searchResults.length > 0 ? (
+                <>
+                  <span className="chat-room-search-count">
+                    {searchResults.length}개 결과 중 {currentResultIndex + 1}번째
+                  </span>
+                  <div className="chat-room-search-nav">
+                    <button
+                      type="button"
+                      className="chat-room-search-nav-btn"
+                      onClick={() => goToResult('prev')}
+                    >
+                      ↑ 이전
+                    </button>
+                    <button
+                      type="button"
+                      className="chat-room-search-nav-btn"
+                      onClick={() => goToResult('next')}
+                    >
+                      ↓ 다음
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <span className="chat-room-search-no-result">검색 결과가 없습니다.</span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 메시지 목록 영역 */}
       <div className="chat-room-message">
@@ -311,10 +412,24 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
                   const isSystemMessage =
                     message.content && message.content.includes('님이 채팅방을 나갔습니다');
 
+                  // 검색 하이라이트 여부
+                  const lowerQ = searchQuery.trim().toLowerCase();
+                  const isMatched = !!lowerQ && message.content?.toLowerCase().includes(lowerQ);
+                  const isCurrent =
+                    isMatched &&
+                    searchResults.length > 0 &&
+                    searchResults[currentResultIndex] === message.id;
+
+                  const highlightClass = isMatched
+                    ? isCurrent
+                      ? 'message-highlight-current'
+                      : 'message-highlight'
+                    : '';
+
                   // 시스템 메시지인 경우 별도 처리
                   if (isSystemMessage) {
                     return (
-                      <div key={message.id} className="system-message">
+                      <div key={message.id} className="system-message" id={`msg-${message.id}`}>
                         <div className="system-message-content">{message.content}</div>
                       </div>
                     );
@@ -323,7 +438,10 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
                   return (
                     <div
                       key={message.id}
-                      className={`message-item ${isMyMessage ? 'my-message' : 'other-message'} `}
+                      id={`msg-${message.id}`}
+                      className={`message-item ${
+                        isMyMessage ? 'my-message' : 'other-message'
+                      } ${highlightClass}`}
                     >
                       {isMyMessage ? (
                         <>

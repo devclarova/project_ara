@@ -2,6 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDirectChat } from '@/contexts/DirectChatContext';
 import { supabase } from '@/lib/supabase';
 import type { Profile } from '@/types/database';
 import { useEffect, useState } from 'react';
@@ -17,6 +18,11 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
+  // 읽지 않은 "채팅방" 개수 = unread_count > 0 인 방 수
+  const { chats } = useDirectChat();
+  const unreadCount = chats.reduce((sum, chat) => sum + (chat.unread_count || 0), 0);
+
+  // console.log('[Sidebar] computed unreadCount from chats = ', unreadCount);
 
   // ✅ 홈 페이지 여부
   const isHome = location.pathname === '/finalhome';
@@ -124,31 +130,45 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto">
         <ul className="space-y-2">
-          {navigationItems.map((item, index) => (
-            <li key={index}>
-              <button
-                onClick={() => handleNavigation(item.path, item.onClick)}
-                className={`w-full flex items-center justify-center lg:justify-start space-x-0 lg:space-x-4 px-2 lg:px-4 py-3 rounded-full transition-colors cursor-pointer whitespace-nowrap dark:text-gray-300 dark:hover:text-gray-400 ${
-                  location.pathname === item.path
-                    ? 'bg-primary/10 text-primary dark:bg-primary/20'
-                    : 'hover:bg-primary/5 dark:hover:bg-primary/10 text-gray-700 dark:text-gray-100'
-                }`}
-              >
-                {item.imgSrc ? (
-                  <img
-                    src={item.imgSrc}
-                    alt={item.label}
-                    className="w-6 h-6 object-contain flex-shrink-0"
-                  /> // 이미지 추가
-                ) : (
-                  <i
-                    className={`${item.icon} text-xl w-6 h-6 flex items-center justify-center flex-shrink-0`}
-                  ></i>
-                )}
-                <span className="text-lg font-medium hidden lg:block truncate">{item.label}</span>
-              </button>
-            </li>
-          ))}
+          {navigationItems.map((item, index) => {
+            const isActive = item.path && location.pathname === item.path;
+            const isChatItem = item.label === '채팅';
+
+            return (
+              <li key={index}>
+                <button
+                  onClick={() => handleNavigation(item.path, item.onClick)}
+                  className={`w-full flex items-center justify-center lg:justify-start space-x-0 lg:space-x-4 px-2 lg:px-4 py-3 rounded-full transition-colors cursor-pointer whitespace-nowrap dark:text-gray-300 dark:hover:text-gray-400 ${
+                    isActive
+                      ? 'bg-primary/10 text-primary dark:bg-primary/20'
+                      : 'hover:bg-primary/5 dark:hover:bg-primary/10 text-gray-700 dark:text-gray-100'
+                  }`}
+                >
+                  {item.imgSrc ? (
+                    <img
+                      src={item.imgSrc}
+                      alt={item.label}
+                      className="w-6 h-6 object-contain flex-shrink-0"
+                    />
+                  ) : (
+                    // ✅ 아이콘 + 채팅 알림 뱃지
+                    <div className="relative w-6 h-6 flex items-center justify-center flex-shrink-0">
+                      <i className={`${item.icon} text-xl`}></i>
+                      {isChatItem && unreadCount > 0 && !isActive && (
+                        <span
+                          className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-[4px] rounded-full text-[11px] leading-[18px] text-white text-center font-semibold"
+                          style={{ backgroundColor: '#00bfa5' }}
+                        >
+                          {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <span className="text-lg font-medium hidden lg:block truncate">{item.label}</span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
 
         {/* ✅ 게시하기 / 댓글달기 버튼 */}
