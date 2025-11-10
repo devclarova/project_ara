@@ -145,30 +145,11 @@ const ContentGrid = () => {
   ];
 
   return (
-    <>
-      <Helmet>
-        <title>ARA - Learn Korean through K-Culture</title>
-        <meta
-          name="description"
-          content="ARA는 K-콘텐츠를 통해 한국어를 배우고, 전 세계 학습자들과 문화를 교류하는 글로벌 한국어 학습 플랫폼입니다."
-        />
-
-        <meta property="og:title" content="ARA - Learn Korean through K-Culture" />
-        <meta
-          property="og:description"
-          content="K-드라마, 음악, 예능을 즐기며 자연스럽게 한국어를 배우고, 세계 각국 학습자들과 문화를 교류하세요."
-        />
-        <meta property="og:image" content="/images/sample_font_logo.png" />
-        <meta property="og:url" content="https://project-ara.vercel.app/" />
-        <meta property="og:type" content="website" />
-        <link rel="canonical" href="https://project-ara.vercel.app/" />
-      </Helmet>
-
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-screen-xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center mb-4">인기 학습 콘텐츠</h2>
-          <p className="text-gray-600 text-center mb-12">많은 학습자들이 선택한 인기 콘텐츠</p>
-          {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <section className="py-20 bg-gray-50">
+      <div className="max-w-screen-xl mx-auto px-6">
+        <h2 className="text-3xl font-bold text-center mb-4">인기 학습 콘텐츠</h2>
+        <p className="text-gray-600 text-center mb-12">많은 학습자들이 선택한 인기 콘텐츠</p>
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {contents.map(c => (
             <div key={c.title} className="bg-white rounded-xl overflow-hidden">
               <img src={c.img} alt={c.title} className="w-full h-48 object-cover" />
@@ -191,22 +172,21 @@ const ContentGrid = () => {
           ))}
         </div> */}
 
-          <div className="grid-cards">
-            {contents.map(course => (
-              <Link key={course.id} to={`/courses/${course.id}`}>
-                <Card
-                  id={course.id}
-                  image={course.image}
-                  title={course.title}
-                  subtitle={course.subtitle}
-                  meta={`${course.time} · ${course.meta}`}
-                />
-              </Link>
-            ))}
-          </div>
+        <div className="grid-cards">
+          {contents.map(course => (
+            <Link key={course.id} to={`/courses/${course.id}`}>
+              <Card
+                id={course.id}
+                image={course.image}
+                title={course.title}
+                subtitle={course.subtitle}
+                meta={`${course.time} · ${course.meta}`}
+              />
+            </Link>
+          ))}
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 };
 
