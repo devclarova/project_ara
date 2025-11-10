@@ -5,6 +5,7 @@ import type { Subtitle } from '../../types/study';
 
 interface SubtitleListProps {
   onSelectDialogue: (subtitle: Subtitle) => void;
+  onSeek?: (start: number) => void;
   studyId?: number; // 선택: 외부에서 명시적으로 넘길 때
   subscribeRealtime?: boolean; // 선택: 실시간 반영 여부
 }
@@ -41,6 +42,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
   onSelectDialogue,
   studyId,
   subscribeRealtime = false,
+  onSeek,
 }) => {
   const { id } = useParams<{ id: string }>();
   const resolvedStudyId = studyId ?? Number(id);
@@ -68,7 +70,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
       const { data, error } = await supabase
         .from('subtitle')
         .select(
-          'id, study_id, korean_subtitle, pronunciation, english_subtitle, subtitle_start_time, subtitle_end_time, level',
+          'id, study_id, korean_subtitle, pronunciation, english_subtitle, subtitle_start_time, level',
         )
         .eq('study_id', resolvedStudyId)
         .order('subtitle_start_time', { ascending: true });
@@ -145,29 +147,36 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
             {currentDialogues.map(d => (
               <li
                 key={d.id}
-                onClick={() => onSelectDialogue(d)}
                 className="p-2.5 sm:p-3 bg-white dark:bg-secondary rounded-lg shadow cursor-pointer hover:bg-gray-50 hover:border-l-4 hover:border-primary dark:hover:border-gray-600"
               >
                 {d.korean_subtitle && (
-                  <p className="text-base sm:text-lg text-gray-600 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400">
+                  <button
+                    className="block w/full text-base sm:text-lg text-gray-600 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400 text-left"
+                    onClick={() => {
+                      onSelectDialogue(d);
+                      const start = d.subtitle_start_time ?? 0;
+                      onSeek?.(start);
+                    }}
+                  >
                     {d.korean_subtitle}
-                  </p>
+                  </button>
                 )}
                 {d.pronunciation && (
-                  <p className="text-base sm:text-lg text-gray-500 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400">
+                  <button
+                    className="block w-full text-base sm:text-lg text-gray-500 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400 text-left"
+                    onClick={() => onSelectDialogue(d)}
+                  >
                     [{d.pronunciation}]
-                  </p>
+                  </button>
                 )}
                 {d.english_subtitle && (
-                  <p className="text-base sm:text-lg text-gray-700 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400">
+                  <button
+                    className="block w-full text-base sm:text-lg text-gray-700 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400 text-left"
+                    onClick={() => onSelectDialogue(d)}
+                  >
                     {d.english_subtitle}
-                  </p>
+                  </button>
                 )}
-                {/* 시간/레벨 표시가 필요하면 아래 주석 해제 후 동일하게 반응형 크기 적용
-            <p className="text-[10px] sm:text-xs text-gray-400 mt-1">
-              {secToMMSS(d.subtitle_start_time)} → {secToMMSS(d.subtitle_end_time)}
-              {d.level ? ` · ${d.level}` : ''}
-            </p> */}
               </li>
             ))}
           </ul>

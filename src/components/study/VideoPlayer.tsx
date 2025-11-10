@@ -1,19 +1,29 @@
-import { useEffect, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import ReactPlayer from 'react-player';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 
-const VideoPlayer = () => {
+export type VideoPlayerHandle = {
+  /** 절대초 시킹 (autoplay 기본 true) */
+  seekTo: (sec: number, autoplay?: boolean) => void;
+  /** 자막 구간 재생: 전역 경계 내로 자동 클램프 */
+  playDialogue: (start: number, end?: number) => void;
+};
+
+const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
   const playerRef = useRef<ReactPlayer>(null);
   const { id } = useParams<{ id: string }>();
 
   const [playing, setPlaying] = useState(false);
   const [video, setVideo] = useState<string | undefined>(undefined);
 
-  const [startSec, setStartSec] = useState<number>(); // 기본값
-  const [endSec, setEndSec] = useState<number>(); // 기본값
-  const [videoDuration, setVideoDuration] = useState<number>();
+  const [videoStartSec, setVideoStartSec] = useState<number>(0);
+  const [videoEndSec, setVideoEndSec] = useState<number | undefined>(undefined);
 
+  const [segStartSec, setSegStartSec] = useState<number>(0);
+  const [segEndSec, setSegEndSec] = useState<number | undefined>(undefined);
+
+  const [videoDuration, setVideoDuration] = useState<number>();
   const [hasStarted, setHasStarted] = useState(false); // 최초 재생 여부
   const [isBuffering, setIsBuffering] = useState(false); // 버퍼링 중 여부
 
@@ -22,6 +32,60 @@ const VideoPlayer = () => {
 
   const [videoRowId, setVideoRowId] = useState<number | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  // ===== 유틸 =====
+  const clampToVideo = useCallback(
+    (subStart?: number, subEnd?: number) => {
+      const start = Math.max(videoStartSec ?? 0, subStart ?? videoStartSec ?? 0);
+      const hardEnd = typeof videoEndSec === 'number' ? videoEndSec : undefined;
+      const end =
+        typeof subEnd === 'number'
+          ? typeof hardEnd === 'number'
+            ? Math.min(hardEnd, subEnd)
+            : subEnd
+          : hardEnd;
+      return { start, end };
+    },
+    [videoStartSec, videoEndSec],
+  );
+
+  const clampAbs = useCallback(
+    (sec: number) => {
+      const dur = videoDuration ?? Infinity;
+      const upper = Number.isFinite(dur) ? dur - 0.2 : sec;
+      return Math.max(videoStartSec ?? 0, Math.min(sec, videoEndSec ?? upper));
+    },
+    [videoDuration, videoStartSec, videoEndSec],
+  );
+
+  // ===== 외부 제어 API =====
+  const seekTo = useCallback(
+    (sec: number, autoplay = true) => {
+      const target = clampAbs(sec);
+      playerRef.current?.seekTo(target, 'seconds');
+      if (autoplay) setPlaying(true);
+      setHasStarted(true);
+      // 세그먼트를 전역 경계로 리셋 (원하면 유지 가능)
+      setSegStartSec(videoStartSec ?? 0);
+      setSegEndSec(videoEndSec);
+    },
+    [clampAbs, videoStartSec, videoEndSec],
+  );
+
+  const playDialogue = useCallback(
+    (start: number, end?: number) => {
+      // ms로 저장된 경우: 필요 시 start = start/1000, end = end/1000
+      const { start: s, end: e } = clampToVideo(start, end);
+      setSegStartSec(s);
+      setSegEndSec(e);
+      playerRef.current?.seekTo(s, 'seconds');
+      setPlaying(true);
+      setHasStarted(true);
+    },
+    [clampToVideo],
+  );
+
+  useImperativeHandle(ref, () => ({ seekTo, playDialogue }), [seekTo, playDialogue]);
 
   // 조회수 증가
   const registerView = async (rowId: number) => {
@@ -56,8 +120,11 @@ const VideoPlayer = () => {
 
       setVideoRowId(data.id);
       if (data.video_url) setVideo(data.video_url);
-      if (typeof data.video_start_time === 'number') setStartSec(data.video_start_time);
-      if (typeof data.video_end_time === 'number') setEndSec(data.video_end_time);
+      if (typeof data.video_start_time === 'number') setVideoStartSec(data.video_start_time);
+      if (typeof data.video_end_time === 'number') setVideoEndSec(data.video_end_time);
+
+      setSegStartSec(typeof data.video_start_time === 'number' ? data.video_start_time : 0);
+      setSegEndSec(typeof data.video_end_time === 'number' ? data.video_end_time : undefined);
 
       // 이미지 상태 세팅
       setImageUrl(data.image_url ?? undefined);
@@ -68,16 +135,16 @@ const VideoPlayer = () => {
 
   // 영상이 준비되면 시작 지점으로 이동
   const handleReady = () => {
-    const start = startSec ?? 0; // undefined면 0초로
+    const start = videoStartSec ?? 0; // undefined면 0초로
     playerRef.current?.seekTo(start, 'seconds');
   };
 
   // 누적 시청 시간 및 조회수 반영
   const handleProgress = (state: { playedSeconds: number }) => {
-    if (endSec !== undefined && state.playedSeconds >= endSec) {
+    if (videoEndSec !== undefined && state.playedSeconds >= videoEndSec) {
       setPlaying(false);
       setHasStarted(false);
-      playerRef.current?.seekTo(startSec ?? 0, 'seconds');
+      playerRef.current?.seekTo(videoStartSec ?? 0, 'seconds');
       return;
     }
 
@@ -104,13 +171,13 @@ const VideoPlayer = () => {
 
     // 영상 끝에 있을 때 → startSec으로 돌리고 재생 시작
     if (
-      (endSec !== undefined && typeof t === 'number' && t >= endSec) ||
-      (endSec === undefined &&
+      (videoEndSec !== undefined && typeof t === 'number' && t >= videoEndSec) ||
+      (videoEndSec === undefined &&
         typeof t === 'number' &&
         videoDuration !== undefined &&
         t >= videoDuration)
     ) {
-      playerRef.current?.seekTo(startSec ?? 0, 'seconds');
+      playerRef.current?.seekTo(videoStartSec ?? 0, 'seconds');
       setPlaying(true);
       return;
     }
@@ -147,7 +214,7 @@ const VideoPlayer = () => {
             playing={playing}
             controls={false}
             width="100%"
-            height="100%" // ✅ 부모 크기에 맞춰 꽉 채움
+            height="100%" // 부모 크기에 맞춰 꽉 채움
             onReady={handleReady}
             onProgress={handleProgress}
             onDuration={d => setVideoDuration(d)}
@@ -159,7 +226,7 @@ const VideoPlayer = () => {
             onEnded={() => {
               setPlaying(false);
               setHasStarted(false);
-              playerRef.current?.seekTo(startSec ?? 0, 'seconds');
+              playerRef.current?.seekTo(videoStartSec ?? 0, 'seconds');
             }}
           />
 
@@ -265,6 +332,6 @@ const VideoPlayer = () => {
       </div>
     </div>
   );
-};
+});
 
 export default VideoPlayer;
