@@ -12,7 +12,7 @@ import ScrollToTop from './components/common/ScrollToTop';
 import { PostProvider } from './contexts/PostContext';
 import CommunityListPage from './pages/CommunityListPage';
 import CommunityWritePage from './pages/CommunityWritePage';
-import DMPage from './pages/dm/common/DMPage';
+
 import HomePage from './pages/HomePage';
 import LandingPage from './pages/LandingPage';
 import NotFound from './pages/NotFound';
@@ -35,7 +35,7 @@ import Home from './pages/homes/Home';
 import HomesTest from './pages/homes/HomesTest';
 import Layout from './pages/homes/Layout';
 import NotFoundPage from './pages/homes/NotFoundPage';
-import ProfilePage from './pages/ProfilePage';
+// import ProfilePage from './pages/ProfilePage';
 import ProfilePage_old from './pages/ProfilePage_old';
 import FeedMain from './pages/temps/FeedMain';
 import TestSevenShad from './pages/temps/TestSevenShad';
@@ -110,7 +110,7 @@ const App = () => {
                         <Route path="/testC" element={<TempCommunityPage />} />
                         <Route path="/social" element={<HomeFeed />} />
                         <Route path="/social/explore" element={<ExplorePage />} />
-                        <Route path="/social/profile" element={<ProfilePage />} />
+                        {/* <Route path="/social/profile" element={<ProfilePage />} /> */}
                         <Route path="/settings" element={<ProfileSettings />} />
                         <Route path="/social/:id" element={<TweetDetailPage />} />
                         {/* <Route path="/dm" element={<DMPage />} /> */}
@@ -135,7 +135,7 @@ const App = () => {
                           <Route path="hometest" element={<HomesTest />} />
                           {/* <Route path="profileasap" element={<ProfileAsap />} /> */}
                           <Route path="hnotifications" element={<HNotificationsPage />} />
-                          <Route path="studyList" element={<StudyListPage />} />
+                          {/* <Route path="studyList" element={<StudyListPage />} /> */}
                           <Route path="chat" element={<DirectChatPage />} />
                         </Route>
                       </Route>
