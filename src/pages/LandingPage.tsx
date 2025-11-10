@@ -4,6 +4,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Card } from './TempHomePage';
 import { Helmet } from 'react-helmet-async';
 
+import GuideModal, { isGuideModalDismissed } from '@/components/common/GuideModal';
+import { useEffect, useState } from 'react';
+
 type HeroProps = {
   onSignup?: () => void;
 };
@@ -275,9 +278,66 @@ const CTA = ({ onSignup }: CTAProps) => {
 type HomeProps = {
   onSignup?: () => void;
 };
+
+const LANDING_GUIDE_KEY = 'ara-landing-guide';
+
+const LANDING_GUIDE_SLIDES = [
+  {
+    id: 'landing-1',
+    image: '/images/landing_guide_1.png',
+    alt: 'ARA 이용 방법 안내 1',
+  },
+  {
+    id: 'landing-2',
+    image: '/images/landing_guide_2.png',
+    alt: 'ARA 이용 방법 안내 2',
+  },
+  {
+    id: 'landing-3',
+    image: '/images/landing_guide_3.png',
+    alt: 'ARA 이용 방법 안내 3',
+  },
+  {
+    id: 'landing-4',
+    image: '/images/landing_guide_4.gif',
+    alt: 'ARA 이용 방법 안내 4',
+  },
+  {
+    id: 'landing-5',
+    image: '/images/landing_guide_5.gif',
+    alt: 'ARA 이용 방법 안내 5',
+  },
+  {
+    id: 'landing-6',
+    image: '/images/landing_guide_6.png',
+    alt: 'ARA 이용 방법 안내 6',
+  },
+];
+
 const LandingPage = ({ onSignup }: HomeProps) => {
+  const [showGuide, setShowGuide] = useState(false);
+
+  useEffect(() => {
+    if (!isGuideModalDismissed(LANDING_GUIDE_KEY)) {
+      setShowGuide(true);
+    }
+  }, []);
+
   return (
     <main>
+      <GuideModal
+        isOpen={showGuide}
+        onClose={() => setShowGuide(false)}
+        slides={LANDING_GUIDE_SLIDES}
+        storageKey={LANDING_GUIDE_KEY}
+        // 필요하면 버튼 텍스트 커스텀
+        // prevLabel="이전"
+        // nextLabel="다음"
+        // completeLabel="시작하기"
+        // closeLabel="닫기"
+        // neverShowLabel="다시 보지 않기"
+      />
+
       {/* Hero 섹션 */}
       <Hero onSignup={onSignup} />
 
