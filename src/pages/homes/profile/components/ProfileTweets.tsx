@@ -47,7 +47,7 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
       const { data: likes } = await supabase
         .from('tweet_likes')
         .select('tweet_id')
-        .eq('liker_id', userProfile.id);
+        .eq('user_id', userProfile.id);
       tweetIds = likes?.map(l => l.tweet_id) ?? [];
       if (!tweetIds.length) return (setTweets([]), setLoading(false));
       baseQuery = baseQuery.in('id', tweetIds);

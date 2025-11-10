@@ -40,14 +40,14 @@ export default function Home() {
   const { newTweet, setNewTweet, searchQuery } = useOutletContext<OutletCtx>();
   const { user } = useAuth();
   const [tweets, setTweets] = useState<UITweet[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 10;
   const restoredRef = useRef(false);
   const [myProfileId, setMyProfileId] = useState<string | null>(null);
 
-  // ✅ 로그인한 유저의 profiles.id 가져오기
+  // 로그인한 유저의 profiles.id 가져오기
   useEffect(() => {
     const loadProfileId = async () => {
       if (!user) return;
@@ -61,6 +61,7 @@ export default function Home() {
     loadProfileId();
   }, [user]);
 
+  // 스크롤 위치 저장
   useEffect(() => {
     const handleScroll = () => {
       HOME_SCROLL_Y = window.scrollY || window.pageYOffset || 0;
@@ -69,6 +70,7 @@ export default function Home() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // 페이지 복귀 시 스크롤 복원
   useLayoutEffect(() => {
     if (loading) return;
     if (restoredRef.current) return;
@@ -77,12 +79,14 @@ export default function Home() {
   }, [loading]);
 
   const fetchTweets = async (reset = false) => {
+    if (!reset && loading) return;
+
     try {
       setLoading(true);
       let data: any[] = [];
 
-      // ✅ 검색 모드일 경우 RPC 호출
       if (searchQuery.trim()) {
+        // 검색 모드
         const { data: rpcData, error: rpcError } = await supabase.rpc('search_tweets', {
           keyword: searchQuery.trim(),
         });
@@ -90,14 +94,14 @@ export default function Home() {
         data = rpcData ?? [];
         setHasMore(false);
       } else {
-        // ✅ 기본 피드 (무한 스크롤)
-        const from = reset ? 0 : page * PAGE_SIZE;
+        // 기본 피드
+        const currentPage = reset ? 0 : page;
+        const from = currentPage * PAGE_SIZE;
         const to = from + PAGE_SIZE - 1;
 
         const { data: feedData, error } = await supabase
           .from('tweets')
-          .select(
-            `
+          .select(`
             id,
             content,
             image_url,
@@ -112,18 +116,18 @@ export default function Home() {
               user_id,
               avatar_url
             )
-          `
-          )
+          `)
           .order('created_at', { ascending: false })
           .range(from, to);
 
         if (error) throw error;
         data = feedData ?? [];
+
         setHasMore(data.length === PAGE_SIZE);
-        if (!reset) setPage(prev => prev + 1);
+        if (reset) setPage(1);
+        else setPage(prev => prev + 1);
       }
 
-      // ✅ 데이터 매핑
       const mapped: UITweet[] = data.map((t: any) => ({
         id: t.id,
         user: {
@@ -148,7 +152,15 @@ export default function Home() {
         },
       }));
 
-      setTweets(reset ? mapped : [...tweets, ...mapped]);
+      // 중복 tweet ID 제거
+      setTweets(prev => {
+        const combined = reset ? mapped : [...prev, ...mapped];
+        const unique = combined.filter(
+          (t, index, self) => index === self.findIndex(x => x.id === t.id),
+        );
+        return unique;
+      });
+
       setLoading(false);
     } catch (err) {
       console.error('Error fetching tweets:', err);
@@ -156,15 +168,19 @@ export default function Home() {
     }
   };
 
+  // 초기 로드
   useEffect(() => {
     fetchTweets(true);
   }, []);
 
+  // 검색어 있을 때만 재로드
   useEffect(() => {
-    fetchTweets(true);
+    if (searchQuery.trim()) {
+      fetchTweets(true);
+    }
   }, [searchQuery]);
 
-  // ✅ TweetModal에서 새 글을 작성했을 때 (내 클라이언트만 즉시 반영)
+  // 새 트윗 작성 시 즉시 반영
   useEffect(() => {
     if (newTweet) {
       setTweets(prev => [newTweet, ...prev]);
@@ -172,93 +188,76 @@ export default function Home() {
     }
   }, [newTweet, setNewTweet]);
 
-  // ✅ Supabase Realtime: UPDATE + INSERT + DELETE 통합
+  // 실시간 업데이트
   useEffect(() => {
-    // 🟢 UPDATE (좋아요·조회수·댓글수)
     const updateChannel = supabase
       .channel('tweets-update-realtime')
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'tweets' },
-        payload => {
-          const updated = payload.new as any;
-          setTweets(prev =>
-            prev.map(t =>
-              t.id === updated.id
-                ? {
-                    ...t,
-                    stats: {
-                      ...t.stats,
-                      likes: updated.like_count ?? t.stats.likes,
-                      replies: updated.reply_count ?? t.stats.replies,
-                      views: updated.view_count ?? t.stats.views,
-                    },
-                  }
-                : t,
-            ),
-          );
-        },
-      )
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tweets' }, payload => {
+        const updated = payload.new as any;
+        setTweets(prev =>
+          prev.map(t =>
+            t.id === updated.id
+              ? {
+                  ...t,
+                  stats: {
+                    ...t.stats,
+                    likes: updated.like_count ?? t.stats.likes,
+                    replies: updated.reply_count ?? t.stats.replies,
+                    views: updated.view_count ?? t.stats.views,
+                  },
+                }
+              : t,
+          ),
+        );
+      })
       .subscribe();
 
-    // 🟢 INSERT (새 피드 작성 시)
     const insertChannel = supabase
       .channel('tweets-insert-realtime')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'tweets' },
-        async payload => {
-          const newTweet = payload.new as any;
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tweets' }, async payload => {
+        const newTweet = payload.new as any;
+        if (newTweet.author_id === myProfileId) return;
 
-          // ✅ 내가 쓴 트윗이면 이미 onTweetCreated로 반영되므로 중복 방지
-          if (newTweet.author_id === myProfileId) return;
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('nickname, user_id, avatar_url')
+          .eq('id', newTweet.author_id)
+          .maybeSingle();
 
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('nickname, user_id, avatar_url')
-            .eq('id', newTweet.author_id)
-            .maybeSingle();
+        const uiTweet: UITweet = {
+          id: newTweet.id,
+          user: {
+            name: profile?.nickname ?? 'Unknown',
+            username: profile?.user_id ?? 'anonymous',
+            avatar: profile?.avatar_url ?? '/default-avatar.svg',
+          },
+          content: newTweet.content,
+          image: newTweet.image_url || undefined,
+          timestamp: new Date(newTweet.created_at).toLocaleString('ko-KR', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          stats: {
+            replies: newTweet.reply_count ?? 0,
+            retweets: newTweet.repost_count ?? 0,
+            likes: newTweet.like_count ?? 0,
+            bookmarks: newTweet.bookmark_count ?? 0,
+            views: newTweet.view_count ?? 0,
+          },
+        };
 
-          const uiTweet: UITweet = {
-            id: newTweet.id,
-            user: {
-              name: profile?.nickname ?? 'Unknown',
-              username: profile?.user_id ?? 'anonymous',
-              avatar: profile?.avatar_url ?? '/default-avatar.svg',
-            },
-            content: newTweet.content,
-            image: newTweet.image_url || undefined,
-            timestamp: new Date(newTweet.created_at).toLocaleString('ko-KR', {
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            }),
-            stats: {
-              replies: newTweet.reply_count ?? 0,
-              retweets: newTweet.repost_count ?? 0,
-              likes: newTweet.like_count ?? 0,
-              bookmarks: newTweet.bookmark_count ?? 0,
-              views: newTweet.view_count ?? 0,
-            },
-          };
-
-          setTweets(prev => [uiTweet, ...prev]);
-        },
-      )
+        setTweets(prev => [uiTweet, ...prev]);
+      })
       .subscribe();
 
-    // 🟢 DELETE (피드 삭제 시)
     const deleteChannel = supabase
       .channel('tweets-delete-realtime')
-      .on(
-        'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'tweets' },
-        payload => {
-          const deletedId = payload.old.id;
-          setTweets(prev => prev.filter(t => t.id !== deletedId));
-        },
-      )
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'tweets' }, payload => {
+        const deletedId = payload.old.id;
+        setTweets(prev => prev.filter(t => t.id !== deletedId));
+      })
       .subscribe();
 
     return () => {
@@ -268,7 +267,6 @@ export default function Home() {
     };
   }, [myProfileId]);
 
-  // ✅ 로딩 상태
   if (loading && tweets.length === 0) {
     return (
       <div className="flex justify-center items-center py-20">

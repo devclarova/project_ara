@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ProfileHeader from './components/ProfileHeader';
 import ProfileTabs from './components/ProfileTabs';
 import ProfileTweets from './components/ProfileTweets';
-import { Helmet } from 'react-helmet-async';
+import EditProfileModal from './components/EditProfileModal';
 
 interface UserProfile {
   id: string;
@@ -19,17 +19,23 @@ interface UserProfile {
   followers: number;
   following: number;
   banner?: string | null;
+  website?: string | null;
 }
 
 export default function ProfileAsap() {
   const [activeTab, setActiveTab] = useState('posts');
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { username } = useParams<{ username: string }>();
 
+  // ✅ username을 디코딩해서 인코딩 문제(406 오류) 방지
+  const { username } = useParams<{ username: string }>();
+  const decodedUsername = username ? decodeURIComponent(username) : '';
+
+  // 프로필 불러오기
   useEffect(() => {
-    if (!username && !user) return;
+    if (!decodedUsername && !user) return;
 
     const fetchProfile = async () => {
       try {
@@ -46,11 +52,11 @@ export default function ProfileAsap() {
           created_at
         `);
 
-        // ✅ 로그인 유저가 자신의 프로필을 보는 경우
-        if (!username && user) {
+        if (!decodedUsername && user) {
           query = query.eq('user_id', user.id);
         } else {
-          query = query.eq('nickname', username);
+          // ✅ 닉네임 대신 디코딩된 username 사용
+          query = query.eq('nickname', decodedUsername);
         }
 
         const { data, error } = await query.single();
@@ -59,7 +65,7 @@ export default function ProfileAsap() {
         setUserProfile({
           id: data.id,
           user_id: data.user_id,
-          name: data.nickname,
+          name: data.nickname ?? 'Unknown',
           username: data.user_id,
           avatar: data.avatar_url ?? '/default-avatar.svg',
           bio: data.bio ?? '자기소개가 아직 없습니다.',
@@ -71,15 +77,21 @@ export default function ProfileAsap() {
           following: data.following_count ?? 0,
           followers: data.followers_count ?? 0,
           banner: data.banner_url ?? null,
+          website: data.website ?? '',
         });
       } catch (err) {
-        console.error('❌ 프로필 불러오기 실패:', err);
+        console.error('프로필 불러오기 실패:', err);
         setUserProfile(null);
       }
     };
 
     fetchProfile();
-  }, [username, user]);
+  }, [decodedUsername, user]);
+
+  // 프로필 저장 후 상태 갱신
+  const handleSaveProfile = (updatedProfile: any) => {
+    setUserProfile(prev => (prev ? { ...prev, ...updatedProfile } : prev));
+  };
 
   if (!userProfile) {
     return (
@@ -110,10 +122,22 @@ export default function ProfileAsap() {
           </div>
         </div>
       </div>
+      {/* 프로필 헤더 */}
+      <ProfileHeader
+        userProfile={userProfile}
+        onEditClick={() => setIsEditModalOpen(true)}
+      />
 
-      <ProfileHeader userProfile={userProfile} />
       <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
       <ProfileTweets activeTab={activeTab} userProfile={userProfile} />
+
+      {/* 프로필 편집 모달 */}
+      <EditProfileModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        userProfile={userProfile}
+        onSave={handleSaveProfile}
+      />
     </div>
   );
 }
