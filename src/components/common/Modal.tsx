@@ -18,7 +18,7 @@ export default function Modal({
   closeOnBackdrop = true,
   closeOnEsc = true,
 }: ModalProps) {
-  // ✅ 훅은 항상 실행
+  // 훅은 항상 실행
   useEffect(() => {
     if (!isOpen || !closeOnEsc) return;
     const onKey = (e: KeyboardEvent) => {
