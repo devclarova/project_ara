@@ -1,12 +1,11 @@
-// Sidebar.tsx
-
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDirectChat } from '@/contexts/DirectChatContext';
 import { supabase } from '@/lib/supabase';
 import type { Profile } from '@/types/database';
 import { useEffect, useState } from 'react';
-import { useNavigate, useLocation, matchPath } from 'react-router-dom'; // ✅ matchPath 추가
+import { useNavigate, useLocation, matchPath } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface SidebarProps {
   onTweetClick?: () => void;
@@ -18,28 +17,20 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
-  // 읽지 않은 "채팅방" 개수 = unread_count > 0 인 방 수
   const { chats } = useDirectChat();
   const unreadCount = chats.reduce((sum, chat) => sum + (chat.unread_count || 0), 0);
 
-  // console.log('[Sidebar] computed unreadCount from chats = ', unreadCount);
-
-  // 홈 페이지 여부
   const isHome = location.pathname === '/finalhome';
-
-  // 현재 경로가 트윗 상세 페이지인지 확인
   const detailMatch = matchPath({ path: '/finalhome/:id', end: true }, location.pathname);
   const isTweetDetail =
     !!detailMatch &&
     !!detailMatch.params.id &&
-    !['user', 'studyList', 'hometest', 'profileasap', 'chat', 'hnotifications'].includes(detailMatch.params.id);
-
+    !['user', 'studyList', 'hometest', 'profileasap', 'chat', 'hnotifications'].includes(
+      detailMatch.params.id,
+    );
   const actionLabel = isTweetDetail ? '댓글달기' : '게시하기';
-
-  // 홈 또는 상세 페이지에서만 버튼 보이기
   const showPostButton = isHome || isTweetDetail;
 
-  // DB에서 로그인한 유저의 프로필 불러오기
   useEffect(() => {
     if (!user) {
       setProfile(null);
@@ -53,32 +44,73 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
         .from('profiles')
         .select('id, user_id, nickname, avatar_url')
         .eq('user_id', user.id)
-        .limit(1)
         .maybeSingle();
 
-      if (error) {
-        console.error('Failed to load profile:', error.message);
-      } else {
-        setProfile(data);
-      }
+      if (error) console.error('Failed to load profile:', error.message);
+      else if (data) setProfile(data);
     };
 
     fetchProfile();
+
+    const channel = supabase
+      .channel(`sidebar-profile-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `user_id=eq.${user.id}`,
+        },
+        async payload => {
+          // 1. 실시간 이벤트 감지 시 바로 fetch로 최신 데이터 보장
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id, user_id, nickname, avatar_url')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          if (!error && data) {
+            setProfile(data);
+          } else {
+            // fallback: payload 기반 업데이트
+            setProfile(prev => (prev ? { ...prev, ...payload.new } : (payload.new as Profile)));
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
-  // 로그아웃
+  const handleProfileClick = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('nickname')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error || !data) {
+        console.error('프로필 정보를 가져오지 못했습니다:', error?.message);
+        toast.error('프로필 정보를 불러올 수 없습니다.');
+        return;
+      }
+
+      navigate(`/finalhome/user/${encodeURIComponent(data.nickname)}`);
+    } catch (err: any) {
+      console.error('프로필 이동 실패:', err.message);
+      toast.error('프로필로 이동하는 중 오류가 발생했습니다.');
+    }
+  };
+
   const handleLogout = async () => {
     await signOut();
     navigate('/');
-  };
-
-  // 프로필 클릭 시 → 내 닉네임 기반 프로필 페이지로 이동
-  const handleProfileClick = () => {
-    if (profile?.nickname) {
-      navigate(`/finalhome/user/${profile.nickname}`);
-    } else {
-      console.warn('⚠️ 닉네임 정보가 없습니다.');
-    }
   };
 
   const navigationItems = [
@@ -96,44 +128,34 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
 
   return (
     <div className="relative h-full w-full bg-white dark:bg-background border-r-2 border-gray-100 dark:border-gray-700 flex flex-col px-3 lg:px-4 py-6 transition-all duration-300 z-30">
-      {/* Logo */}
-      <div className=" flex justify-center lg:justify-center flex-shrink-0">
+      <div className="flex justify-center lg:justify-center flex-shrink-0">
         <button
           onClick={() => {
             if (location.pathname === '/finalhome') {
-              // 홈일 때 → 스크롤 맨 위 or 새로고침
               if (window.scrollY <= 5) {
                 window.location.reload();
               } else {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }
             } else {
-              // 홈이 아닐 때 → 홈으로 이동
               navigate('/finalhome');
             }
           }}
           className="cursor-pointer"
         >
-          {/* <h1
-            className="text-2xl font-bold hidden lg:block"
-            style={{ fontFamily: '"Pacifico", serif' }}
-          >
-            logo
-          </h1> */}
-          <img src="/images/sample_font_logo.png" alt="" className="w-20 h-auto object-contain" />
-          {/* <div className="lg:hidden w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-            <i className="ri-twitter-fill text-white text-lg"></i>
-          </div> */}
+          <img
+            src="/images/sample_font_logo.png"
+            alt="logo"
+            className="w-20 h-auto object-contain"
+          />
         </button>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto">
         <ul className="space-y-2">
           {navigationItems.map((item, index) => {
             const isActive = item.path && location.pathname === item.path;
             const isChatItem = item.label === '채팅';
-
             return (
               <li key={index}>
                 <button
@@ -151,9 +173,8 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
                       className="w-6 h-6 object-contain flex-shrink-0"
                     />
                   ) : (
-                    // ✅ 아이콘 + 채팅 알림 뱃지
                     <div className="relative w-6 h-6 flex items-center justify-center flex-shrink-0">
-                      <i className={`${item.icon} text-xl`}></i>
+                      <i className={`${item.icon} text-xl`} />
                       {isChatItem && unreadCount > 0 && !isActive && (
                         <span
                           className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-[4px] rounded-full text-[11px] leading-[18px] text-white text-center font-semibold"
@@ -171,7 +192,6 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
           })}
         </ul>
 
-        {/* 게시하기 / 댓글달기 버튼 */}
         {showPostButton && (
           <button
             onClick={onTweetClick}
@@ -183,7 +203,6 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
         )}
       </nav>
 
-      {/* User Profile */}
       {profile && (
         <div className="relative flex-shrink-0">
           <button
@@ -198,10 +217,10 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
             </Avatar>
             <div className="flex-1 text-left hidden lg:block min-w-0">
               <div className="font-bold text-gray-900 dark:text-gray-100 truncate">
-                {profile.nickname}{' '}
-              </div>{' '}
+                {profile.nickname}
+              </div>
               <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                @{profile.user_id.slice(0, 6)}{' '}
+                @{profile.user_id.slice(0, 6)}
               </div>
             </div>
             <i className="ri-more-fill text-gray-500 dark:text-gray-400 hidden lg:block flex-shrink-0"></i>
@@ -216,18 +235,18 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
                 }}
                 className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-primary/10 dark:text-gray-100 transition-colors cursor-pointer whitespace-nowrap"
               >
-                <i className="ri-user-line mr-3 flex-shrink-0"></i>
+                <i className="ri-user-line mr-3 flex-shrink-0" />
                 <span className="lg:inline">내 프로필</span>
               </button>
 
               <button
                 onClick={() => {
-                  handleNavigation('/settings');
+                  navigate('/settings');
                   setShowUserMenu(false);
                 }}
-                className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-primary/10 dark:text-gray-100  transition-colors cursor-pointer whitespace-nowrap"
+                className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-primary/10 dark:text-gray-100 transition-colors cursor-pointer whitespace-nowrap"
               >
-                <i className="ri-settings-3-line mr-3 flex-shrink-0"></i>
+                <i className="ri-settings-3-line mr-3 flex-shrink-0" />
                 <span className="lg:inline">설정</span>
               </button>
 
@@ -237,7 +256,8 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
                 onClick={handleLogout}
                 className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-primary/10 dark:text-gray-100 transition-colors cursor-pointer whitespace-nowrap"
               >
-                <i className="ri-logout-box-line mr-3"></i>로그아웃
+                <i className="ri-logout-box-line mr-3" />
+                로그아웃
               </button>
             </div>
           )}
