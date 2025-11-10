@@ -57,7 +57,7 @@ export default function ProfileHeader({ userProfile }: ProfileHeaderProps) {
               variant="outline"
               className="rounded-full px-6 font-medium text-[#009e89] border-[#009e89] hover:bg-[#00bfa5]/10 dark:hover:bg-primary/10 transition-colors"
             >
-              Edit profile
+              프로필 편집
             </Button>
           </div>
         )}

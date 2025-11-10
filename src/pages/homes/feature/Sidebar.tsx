@@ -18,22 +18,22 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
 
-  // ✅ 홈 페이지 여부
+  // 홈 페이지 여부
   const isHome = location.pathname === '/finalhome';
 
-  // ✅ 현재 경로가 트윗 상세 페이지인지 확인
+  // 현재 경로가 트윗 상세 페이지인지 확인
   const detailMatch = matchPath({ path: '/finalhome/:id', end: true }, location.pathname);
   const isTweetDetail =
     !!detailMatch &&
     !!detailMatch.params.id &&
-    !['user', 'studyList', 'hometest', 'profileasap', 'chat'].includes(detailMatch.params.id);
+    !['user', 'studyList', 'hometest', 'profileasap', 'chat', 'hnotifications'].includes(detailMatch.params.id);
 
   const actionLabel = isTweetDetail ? '댓글달기' : '게시하기';
 
-  // ✅ 홈 또는 상세 페이지에서만 버튼 보이기
+  // 홈 또는 상세 페이지에서만 버튼 보이기
   const showPostButton = isHome || isTweetDetail;
 
-  // ✅ DB에서 로그인한 유저의 프로필 불러오기
+  // DB에서 로그인한 유저의 프로필 불러오기
   useEffect(() => {
     if (!user) {
       setProfile(null);
@@ -60,13 +60,13 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
     fetchProfile();
   }, [user]);
 
-  // ✅ 로그아웃
+  // 로그아웃
   const handleLogout = async () => {
     await signOut();
     navigate('/');
   };
 
-  // ✅ 프로필 클릭 시 → 내 닉네임 기반 프로필 페이지로 이동
+  // 프로필 클릭 시 → 내 닉네임 기반 프로필 페이지로 이동
   const handleProfileClick = () => {
     if (profile?.nickname) {
       navigate(`/finalhome/user/${profile.nickname}`);
@@ -151,7 +151,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
           ))}
         </ul>
 
-        {/* ✅ 게시하기 / 댓글달기 버튼 */}
+        {/* 게시하기 / 댓글달기 버튼 */}
         {showPostButton && (
           <button
             onClick={onTweetClick}
@@ -208,7 +208,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
                 className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-primary/10 dark:text-gray-100  transition-colors cursor-pointer whitespace-nowrap"
               >
                 <i className="ri-settings-3-line mr-3 flex-shrink-0"></i>
-                <span className="lg:inline">Settings</span>
+                <span className="lg:inline">설정</span>
               </button>
 
               <hr className="my-2 border-gray-200 dark:border-gray-700" />
@@ -217,7 +217,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
                 onClick={handleLogout}
                 className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-primary/10 dark:text-gray-100 transition-colors cursor-pointer whitespace-nowrap"
               >
-                <i className="ri-logout-box-line mr-3"></i>Logout
+                <i className="ri-logout-box-line mr-3"></i>로그아웃
               </button>
             </div>
           )}
