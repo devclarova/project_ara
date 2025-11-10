@@ -15,18 +15,11 @@ import HomesTest from './pages/homes/HomesTest';
 import Layout from './pages/homes/Layout';
 import NotFoundPage from './pages/homes/NotFoundPage';
 import LandingPage from './pages/LandingPage';
-import ShancnPage from './pages/ShancnPage';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
 import StudyListPage from './pages/StudyListPage';
 import StudyPage from './pages/StudyPage';
 import TempHomePage from './pages/TempHomePage';
-import HomeFeed from './pages/temps/HomeFeed';
-import SevenShad from './pages/temps/SevenShad';
-import TempCommunityPage from './pages/temps/TempCommunityPage';
-import ExplorePage from './pages/TweetDetail/ExplorePage';
-import NotificationsPage from './pages/TweetDetail/NotificationsPage';
-import TweetDetailPage from './pages/TweetDetail/TweetDetailPage';
 import { DirectChatProider } from './contexts/DirectChatContext';
 import { NewChatNotificationProvider } from './contexts/NewChatNotificationContext';
 import AuthCallback from './pages/AuthCallback';
@@ -35,9 +28,6 @@ import HNotificationsPage from './pages/homes/notifications/HNotificationsPage';
 import ProfileAsap from './pages/homes/profile/ProfileAsap';
 import TweetDetail from './pages/homes/tweet/TweetDetail';
 import SignUpWizard from './pages/SignUpWizard';
-import FeedMain from './pages/temps/FeedMain';
-import TestSevenShad from './pages/temps/TestSevenShad';
-import TestTweetDetailInner from './pages/temps/TestTweetDetailInner';
 import OnboardingWall from './routes/guards/OnboardingWall';
 
 function RequireAuth() {
@@ -84,18 +74,7 @@ const App = () => {
                       <Route path="/studyList" element={<StudyListPage />} />
                       <Route path="/study/:id" element={<StudyPage />} />
                       <Route path="/test" element={<TempHomePage />} />
-                      <Route path="/testC" element={<TempCommunityPage />} />
-                      <Route path="/social" element={<HomeFeed />} />
-                      <Route path="/social/explore" element={<ExplorePage />} />
                       <Route path="/settings" element={<ProfileSettings />} />
-                      <Route path="/social/:id" element={<TweetDetailPage />} />
-                      <Route path="/socialcn" element={<ShancnPage />} />
-                      <Route path="/notifications" element={<NotificationsPage />} />
-                      <Route path="/socialss" element={<SevenShad />} />
-                      <Route path="/feed" element={<TestSevenShad />}>
-                        <Route index element={<FeedMain />} />
-                        <Route path=":id" element={<TestTweetDetailInner />} />{' '}
-                      </Route>
                       <Route path="/finalhome" element={<Layout />}>
                         <Route index element={<Home />} />
                         <Route path=":id" element={<TweetDetail />} />
