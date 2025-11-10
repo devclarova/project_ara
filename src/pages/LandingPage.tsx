@@ -1,8 +1,7 @@
-import { Badge, Film, Languages, Users } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Film, Languages, Users } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card } from './TempHomePage';
-import { useAuth } from '@/contexts/AuthContext';
-import Header from '@/components/common/Header';
 
 type HeroProps = {
   onSignup?: () => void;

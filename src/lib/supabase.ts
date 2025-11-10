@@ -20,14 +20,25 @@ const SUPABASE_URL = mustEnv('VITE_SUPABASE_URL').replace(/\/+$/, '');
 const SUPABASE_ANON_KEY = mustEnv('VITE_SUPABASE_ANON_KEY');
 
 /**
+ * 브라우저 환경에서만 sessionStorage 사용
+ * - 새로고침: 같은 탭에서는 세션 유지
+ * - 탭/브라우저를 닫으면: 세션 삭제 → 재접속 시 로그아웃 상태
+ */
+const browserSessionStorage =
+  typeof window !== 'undefined' && 'sessionStorage' in window
+    ? window.sessionStorage
+    : undefined;
+
+/**
  * Browser Supabase Client (Typed)
- * - persistSession: 브라우저 로컬에 세션 유지
+ * - persistSession: 브라우저 세션 스토리지에 세션 유지
  * - autoRefreshToken: 토큰 만료 전 자동 갱신
  * - detectSessionInUrl: OAuth/Email 링크 콜백 쿼리에서 세션 감지
  */
 export const supabase = createClient<DatabaseWithRPC>(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
+    storage: browserSessionStorage, // ✅ localStorage 대신 sessionStorage 사용
     autoRefreshToken: true,
     detectSessionInUrl: true,
   },
