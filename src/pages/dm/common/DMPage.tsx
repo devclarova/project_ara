@@ -11,7 +11,7 @@ import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import DMList from './DMList';
 import DMRoom from './DMRoom';
-import SidebarLeft from '@/components/layout/SidebarLeft';
+// import SidebarLeft from '@/components/layout/SidebarLeft';
 
 type RoomMeta = { title: string; avatarUrl: string };
 
@@ -153,7 +153,7 @@ function DMPage() {
 
   return (
     <div className="min-h-screen flex max-w-7xl  mx-auto">
-      <SidebarLeft />
+      {/* <SidebarLeft /> */}
       <div className="flex flex-col flex-1 min-h-0 h-full mt-2 mb-2 bg-white text-gray-900 mx-auto w-full max-w-[1200px] px-2 sm:px-4 lg:px-8 overflow-y-auto">
         <div className="flex flex-1 border border-gray-200 rounded-lg overflow-hidden shadow-sm">
           {/* 좌측: 채팅 목록(데스크톱 이상) */}
