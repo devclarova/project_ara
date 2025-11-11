@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface TrendingTweet {
   id: string;
@@ -46,7 +47,11 @@ export default function TrendsPanel({ searchQuery, onSearchChange }: Props) {
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tweets' }, payload => {
         const o = payload.old as any;
         const n = payload.new as any;
-        if (o.like_count !== n.like_count || o.reply_count !== n.reply_count || o.view_count !== n.view_count) {
+        if (
+          o.like_count !== n.like_count ||
+          o.reply_count !== n.reply_count ||
+          o.view_count !== n.view_count
+        ) {
           fetchTrendingTweets();
         }
       })
@@ -96,12 +101,27 @@ export default function TrendsPanel({ searchQuery, onSearchChange }: Props) {
                   onClick={() => navigate(`/finalhome/${tweet.id}`)}
                   className="group flex items-start gap-3 p-2 rounded-xl hover:bg-primary/5 dark:hover:bg-primary/10 transition-all cursor-pointer"
                 >
-                  <img
-                    src={tweet.profiles?.avatar_url || '/default-avatar.svg'}
-                    onError={e => (e.currentTarget.src = '/default-avatar.svg')}
-                    alt={tweet.profiles?.nickname || 'User'}
-                    className="w-9 h-9 rounded-full flex-shrink-0"
-                  />
+                  {/* ✅ 아바타 */}
+                  <div
+                    onClick={e => {
+                      e.stopPropagation();
+                      if (tweet.profiles?.nickname) {
+                        navigate(`/finalhome/user/${encodeURIComponent(tweet.profiles.nickname)}`);
+                      }
+                    }}
+                  >
+                    <Avatar className="w-9 h-9">
+                      <AvatarImage
+                        src={tweet.profiles?.avatar_url || '/default-avatar.svg'}
+                        alt={tweet.profiles?.nickname || 'User'}
+                      />
+                      <AvatarFallback>
+                        {tweet.profiles?.nickname
+                          ? tweet.profiles.nickname.charAt(0).toUpperCase()
+                          : 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-900 dark:text-gray-100 line-clamp-3 leading-snug">
                       {tweet.content.replace(/<[^>]*>?/gm, '')}
