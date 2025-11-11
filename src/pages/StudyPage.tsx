@@ -130,6 +130,7 @@ const StudyPage = () => {
           content="K-콘텐츠로 재미있게 한국어를 배우고, 학습 진도를 관리해보세요."
         />
         <meta property="og:image" content="/images/sample_font_logo.png" />
+        <meta property="og:url" content="https://project-ara.vercel.app/study/:id" />
       </Helmet>
       <div className="min-h-screen bg-white dark:bg-background">
         <div className="flex justify-center">

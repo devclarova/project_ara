@@ -54,7 +54,7 @@ export default function Layout() {
           property="og:description"
           content="K-콘텐츠로 한국어를 배우고, 세계 각국 학습자들과 소통하는 글로벌 홈 피드 ARA."
         />
-        <meta property="og:image" content="/images/sample_font_logo.png" />
+        <meta property="og:image" content="/images/font_slogan_logo.png" />
         <meta property="og:url" content="https://project-ara.vercel.app/finalhome" />
         <meta property="og:type" content="website" />
 
