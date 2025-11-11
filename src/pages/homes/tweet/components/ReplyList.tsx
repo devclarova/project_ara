@@ -264,7 +264,7 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
 export default function ReplyList({ replies, onDeleted }: ReplyListProps) {
   if (replies.length === 0) {
     return (
-      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+      <div className="border-b border-gray-200 p-8 text-center text-gray-500 dark:text-gray-400">
         <i className="ri-chat-3-line text-4xl mb-2 block" />
         <p>No replies yet</p>
         <p className="text-sm mt-1">Be the first to reply!</p>

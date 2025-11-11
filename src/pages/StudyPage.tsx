@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import type { Subtitle } from '../types/study';
 import Sidebar from './homes/feature/Sidebar';
 import { Helmet } from 'react-helmet-async';
+import ShareButton from '@/components/common/ShareButton';
 
 // 이 페이지에서 실제로 사용하는 video 행 타입을 로컬로 정의(컬럼명과 일치)
 type VideoRow = {
@@ -291,10 +292,11 @@ const StudyPage = () => {
                           )}
                         </div>
                       </div>
-                    )}
-                  </h1>
+                  )}
+                </h1>
 
-                  {/* 다음 버튼 */}
+                {/* 다음 버튼 */}
+                <div className="flex items-center gap-2 pr-3">
                   <button
                     onClick={handleNextPage}
                     className="group flex justify-end items-center gap-2 pr-4 py-2 rounded-lg transition-all duration-200 text-gray-700 hover:text-primary dark:text-gray-100"
@@ -302,28 +304,39 @@ const StudyPage = () => {
                     <i className="ri-arrow-drop-right-line text-5xl transition-transform duration-200 group-hover:-translate-x-1" />
                   </button>
                 </div>
+              </div>
 
-                {/* 메타 정보 라인: 시간/난이도/카테고리 */}
-                <div className="flex items-center gap-5 text-sm text-gray-600 dark:text-gray-300">
-                  <span className="flex items-center gap-1">
-                    {/* 시간(runtime) */}
-                    <InfoItem
-                      icon="ri-time-line"
-                      text={loading ? '—' : (study?.runtime_bucket ?? study?.runtime ?? '—')}
-                    />
-                  </span>
-                  <span className="flex items-center gap-1">
-                    {/* 난이도 */}
-                    <InfoItem icon="ri-star-line" text={loading ? '—' : (study?.level ?? '—')} />
-                  </span>
-                  {/* 조회수 */}
-                  <span className="flex items-center gap-1">
-                    <InfoItem
-                      icon="ri-eye-line"
-                      text={loading ? '—' : `${study?.view_count ?? '—'}`}
-                    />
-                  </span>
-                </div>
+              {/* 메타 정보 라인: 시간/난이도/카테고리 */}
+              <div className="flex items-center gap-5 text-sm text-gray-600 dark:text-gray-300">
+                <span className="flex items-center gap-1">
+                  {/* 시간(runtime) */}
+                  <InfoItem
+                    icon="ri-time-line"
+                    text={loading ? '—' : (study?.runtime_bucket ?? study?.runtime ?? '—')}
+                  />
+                </span>
+                <span className="flex items-center gap-1">
+                  {/* 난이도 */}
+                  <InfoItem icon="ri-star-line" text={loading ? '—' : (study?.level ?? '—')} />
+                </span>
+                {/* 조회수 */}
+                <span className="flex items-center gap-1">
+                  <InfoItem
+                    icon="ri-eye-line"
+                    text={loading ? '—' : `${study?.view_count ?? '—'}`}
+                  />
+                </span>
+                {!loading && (
+                  <ShareButton
+                    title={`${study?.contents ?? 'ARA Study'}`}
+                    text={`K-콘텐츠로 배우는 학습 장면${study?.episode ? ` (${study.episode})` : ''}${study?.scene ? ` - Scene ${study.scene}` : ''}`}
+                    // url은 기본적으로 canonical 또는 현재 URL을 사용하므로 생략 가능
+                    onShared={() => {
+                      // 선택: 공유 이벤트 후 조회수 증가 등 트래킹
+                      // console.log('shared!');
+                    }}
+                  />
+                )}
               </div>
 
               {/* 영상 플레이어 */}

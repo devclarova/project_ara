@@ -32,7 +32,7 @@ const CategoryTabs = ({ active, onChange, className = '' }: CategoryTabsProps) =
         role="tablist"
         aria-label="콘텐츠 카테고리"
         onKeyDown={handleKey}
-        className="flex gap-2 xs:gap-2 sm:gap-3 px-1 sm:px-0 min-w-max overflow-x-auto scrollbar-none"
+        className="flex gap-0 xs:gap-2 sm:gap-3 px-1 sm:px-0 min-w-max overflow-x-auto scrollbar-none"
       >
         {CATEGORIES.map(c => {
           const isActive = active === c;

@@ -39,7 +39,7 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
   // 최초에 컴포넌트 마운트시 채팅 목록 로드
   useEffect(() => {
     loadChats();
-  }, [loadChats]); // 신규 또는 메세지 전송 등으로 업데이트 시 채팅목록 호촐
+  }, []); // 신규 또는 메세지 전송 등으로 업데이트 시 채팅목록 호촐
 
   // Supabase Realtime 으로 실시간 동기화
   // useEffect(() => {
