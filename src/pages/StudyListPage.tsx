@@ -145,7 +145,7 @@ const StudyListPage = () => {
           </aside>
 
           {/* 메인 영역 */}
-          <main className="flex-1 min-w-0 bg-white dark:bg-background">
+          <main className="flex-1 min-w-0 overflow-y-auto overflow-x-auto bg-white dark:bg-background">
             {/* 탭 + 검색 */}
             <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 bg-white dark:bg-background sticky top-0 z-20 pb-2 pl-6 pt-8 pr-6">
               {/* 왼쪽: 카테고리 + 모바일용 검색 아이콘 */}
