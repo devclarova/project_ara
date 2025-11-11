@@ -57,8 +57,25 @@ export default function TrendsPanel({ searchQuery, onSearchChange }: Props) {
       })
       .subscribe();
 
+    // 🟢 프로필 수정 실시간 반영
+    const profileChannel = supabase
+      .channel('profiles-update-realtime')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
+        const updatedProfile = payload.new as any;
+        // 트렌드 목록에 이 프로필이 포함되어 있다면 다시 로드
+        setTrendingTweets(prev => {
+          const hasProfile = prev.some(t => t.profiles?.nickname === updatedProfile.nickname);
+          if (hasProfile) {
+            fetchTrendingTweets();
+          }
+          return prev;
+        });
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(subscription);
+      supabase.removeChannel(profileChannel);
     };
   }, []);
 
