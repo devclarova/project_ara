@@ -267,10 +267,10 @@ const RichTextEditor = ({
     const timer = setTimeout(() => {
       const quill = quilRef.current?.getEditor();
       if (quill) {
-        console.log('Quill 에디터 초기화 성공!');
+        // console.log('Quill 에디터 초기화 성공!');
         const toolbar = quill.getModule('toolbar') as any;
         if (toolbar && toolbar.addHandler) {
-          console.log('이미지 핸들러 등록 실행 함');
+          // console.log('이미지 핸들러 등록 실행 함');
           // 우리가 원하는 핸들러 등록
           toolbar.addHandler('image', imageHandler);
         }

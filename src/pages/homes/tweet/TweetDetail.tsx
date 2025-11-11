@@ -75,12 +75,12 @@ export default function TweetDetail() {
     // 전역 변수로 등록 (중복 방지)
     (window as any)._replyInsertChannel = channel;
 
-    console.log('✅ 실시간 댓글 구독 시작:', id);
+    // console.log('✅ 실시간 댓글 구독 시작:', id);
 
     return () => {
       supabase.removeChannel(channel);
       (window as any)._replyInsertChannel = null;
-      console.log('🧹 실시간 댓글 구독 해제:', id);
+      // console.log('🧹 실시간 댓글 구독 해제:', id);
     };
   }, [id]);
 
@@ -124,15 +124,32 @@ export default function TweetDetail() {
 
   const handleViewCount = async (tweetId: string) => {
     try {
+      if (!user) return;
+
       const viewedTweets = JSON.parse(localStorage.getItem('viewedTweets') || '{}');
       const now = Date.now();
 
+      // 1️⃣ 내 프로필 id 가져오기
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (profileError || !profile) {
+        console.error('프로필 조회 실패:', profileError?.message);
+        return;
+      }
+
+      // 2️⃣ Supabase RPC 호출
       const { error } = await supabase.rpc('increment_tweet_view', {
         tweet_id_input: tweetId,
+        viewer_id_input: profile.id, // ✅ 추가
       });
 
       if (error) console.error('조회수 RPC 실패:', error.message);
 
+      // 3️⃣ 로컬 기록 (선택 사항)
       viewedTweets[tweetId] = now;
       localStorage.setItem('viewedTweets', JSON.stringify(viewedTweets));
     } catch (err) {
@@ -225,11 +242,11 @@ export default function TweetDetail() {
       )
       .subscribe();
 
-    console.log('✅ 실시간 stats 구독 시작:', id);
+    // console.log('✅ 실시간 stats 구독 시작:', id);
 
     return () => {
       supabase.removeChannel(statsChannel);
-      console.log('🧹 실시간 stats 구독 해제:', id);
+      // console.log('🧹 실시간 stats 구독 해제:', id);
     };
   }, [id]);
 
