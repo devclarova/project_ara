@@ -80,9 +80,9 @@ export default function EditProfileModal({
     const fileExt = file.name.split('.').pop();
     const fileName = `${userProfile.user_id}-${Date.now()}.${fileExt}`;
     const filePath = `${folder}/${fileName}`;
-    const { error } = await supabase.storage.from('profile_media').upload(filePath, file);
+    const { error } = await supabase.storage.from('tweet_media').upload(filePath, file);
     if (error) throw error;
-    const { data } = supabase.storage.from('profile_media').getPublicUrl(filePath);
+    const { data } = supabase.storage.from('tweet_media').getPublicUrl(filePath);
     return data.publicUrl;
   };
 
