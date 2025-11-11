@@ -42,11 +42,13 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
       if (messageContainer) {
         // 메시지 컨테이너의 스크롤을 맨 아래로 설정
         if (force) {
-          messageContainer.scrollTop = messageContainer.scrollHeight;
+          (messageContainer as HTMLElement).scrollTop = (
+            messageContainer as HTMLElement
+          ).scrollHeight;
         } else {
           // 부드러운 스크롤
-          messageContainer.scrollTo({
-            top: messageContainer.scrollHeight,
+          (messageContainer as HTMLElement).scrollTo({
+            top: (messageContainer as HTMLElement).scrollHeight,
             behavior: 'smooth',
           });
         }
@@ -86,21 +88,36 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
     }
   }, [loading, messages]);
 
-  // Supabase Realtime 으로 메시지 실시간 동기화
+  // ✅ 1) 채팅방 ID 가 변경되면 메시지를 한 번 로드
   useEffect(() => {
     if (!chatId) return;
+
+    // 새 채팅방 들어오면 스크롤 상태 초기화
+    isInitialLoad.current = true;
+    previousMessageCount.current = 0;
+
+    loadMessages(chatId);
+    // loadMessages 는 context 에서 온 함수라 의존성에서 제외
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatId]);
+
+  // ✅ 2) Supabase Realtime 으로 메시지 실시간 동기화 (구독 1개만 유지)
+  useEffect(() => {
+    if (!chatId) return;
+
     const subscription = supabase
       .channel(`direct_messages_${chatId}`)
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT', // ✅ 새 메시지 추가될 때만
           schema: 'public',
           table: 'direct_messages',
           filter: `chat_id=eq.${chatId}`,
         },
-        payload => {
-          loadMessages(chatId); // 변경사항이 있을 때만 새로고침
+        () => {
+          // 새 메시지가 들어온 경우에만 전체 메시지 재로딩
+          loadMessages(chatId);
         },
       )
       .subscribe();
@@ -108,22 +125,7 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
     return () => {
       subscription.unsubscribe();
     };
-  }, [chatId, loadMessages]);
-
-  // 채팅방 ID 가 변경이 되면 메시지를 다시 로드
-  useEffect(() => {
-    if (chatId) {
-      loadMessages(chatId);
-    }
-  }, [chatId, loadMessages]);
-
-  // 채팅방이 바뀔 때 검색 상태 초기화
-  useEffect(() => {
-    setShowSearch(false);
-    setSearchQuery('');
-    setSearchResults([]);
-    setCurrentResultIndex(0);
-    setHasSearched(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId]);
 
   // 메시지 시간 포맷팅 함수 -  HH:MM:DD 형식 반환
@@ -453,15 +455,6 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
                           </div>
                           <div className="message-avatar">
                             {(() => {
-                              // 디버깅용 로그 (필요시에만 활성화)
-                              // console.log('나의 메시지 아바타 렌더링:', {
-                              //   sender: message.sender,
-                              //   avatar_url: message.sender?.avatar_url,
-                              //   nickname: message.sender?.nickname,
-                              //   sender_id: message.sender_id,
-                              //   isMyMessage: isMyMessage,
-                              // });
-
                               return message.sender?.avatar_url ? (
                                 <>
                                   {/* 나의 아바타 이미지가 있는 경우 */}
@@ -495,15 +488,6 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
                           {/* 대상의 메시지 - 왼쪽 정렬 */}
                           <div className="message-avatar">
                             {(() => {
-                              // 디버깅용 로그 (필요시에만 활성화)
-                              // console.log('메시지 아바타 렌더링:', {
-                              //   sender: message.sender,
-                              //   avatar_url: message.sender?.avatar_url,
-                              //   nickname: message.sender?.nickname,
-                              //   sender_id: message.sender_id,
-                              //   isMyMessage: isMyMessage,
-                              // });
-
                               return message.sender?.avatar_url ? (
                                 <>
                                   {/* 대화상대 아바타 이미지가 있는 경우 */}

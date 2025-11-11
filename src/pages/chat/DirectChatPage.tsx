@@ -11,26 +11,21 @@ function DirectChatPage() {
 
   // 화면 너비에 따라 모바일 여부 판단
   const [isMobile, setIsMobile] = useState(false);
-  // 모바일일 때: true = 리스트 화면, false = 채팅방 화면
+  // 모바일 리스트 화면, 채팅방 화면
   const [showListOnMobile, setShowListOnMobile] = useState(true);
-
   const { resetCurrentChat } = useDirectChat();
-
-  // useEffect(() => {
-  //   markChatAsRead();
-  // }, [markChatAsRead]);
 
   // 처음 로드 + 리사이즈마다 모바일 여부 판단
   useEffect(() => {
     const handleResize = () => {
-      const mobile = window.innerWidth < 768; // 기준 breakpoint
+      const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
 
       if (!mobile) {
-        // 데스크톱이면 항상 리스트 + 채팅 둘 다 보이게
+        // 데스크톱 항상 리스트, 채팅
         setShowListOnMobile(true);
       } else {
-        // 모바일이면: 선택된 채팅 있으면 채팅방, 없으면 리스트
+        // 모바일 선택된 채팅 있으면 채팅방, 없으면 리스트
         if (selectedChatId) {
           setShowListOnMobile(false);
         } else {
@@ -39,7 +34,7 @@ function DirectChatPage() {
       }
     };
 
-    handleResize(); // 첫 로드 시 한 번 실행
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [selectedChatId]);
@@ -48,16 +43,14 @@ function DirectChatPage() {
     setSelectedChatId(chatId);
     markChatAsRead();
 
-    // 모바일이면 채팅방 화면으로 전환
+    // 모바일 채팅방 화면으로 전환
     if (isMobile) {
       setShowListOnMobile(false);
     }
   };
 
   const handleBackToList = () => {
-    // 🔹 현재 선택된 채팅방 해제
     setSelectedChatId(null);
-    // 🔹 Context 내부 currentChatId, messages도 초기화
     resetCurrentChat();
 
     // 모바일일 때만 리스트 화면으로 전환
@@ -66,7 +59,7 @@ function DirectChatPage() {
     }
   };
 
-  // ✅ 채팅 페이지에서 아예 나갈 때도 현재 채팅 상태를 깔끔히 초기화
+  // 채팅 페이지 때 채팅상태 초기화
   useEffect(() => {
     return () => {
       resetCurrentChat();
@@ -76,7 +69,7 @@ function DirectChatPage() {
   return (
     <div className={styles.chatPage}>
       <div className={styles.chatContainer}>
-        {/* 왼쪽 사이드바 - 데스크톱에서는 항상 보이고, 모바일에서는 리스트 화면일 때만 보임 */}
+        {/* 왼쪽 사이드바 */}
         {(!isMobile || showListOnMobile) && (
           <div className="chat-sidebar">
             <DirectChatList
@@ -87,17 +80,16 @@ function DirectChatPage() {
           </div>
         )}
 
-        {/* 오른쪽 채팅방 - 데스크톱에서는 항상, 모바일에서는 채팅방 화면일 때만 */}
+        {/* 오른쪽 채팅방 */}
         {(!isMobile || !showListOnMobile) && (
           <div className="chat-main">
             {selectedChatId ? (
               <DirectChatRoom
                 chatId={selectedChatId}
                 isMobile={isMobile}
-                onBackToList={handleBackToList} // 🔥 여기 중요
+                onBackToList={handleBackToList}
               />
             ) : (
-              // ✅ 데스크톱에서 “채팅방 해제” 했을 때 뜨는 웰컴 화면
               !isMobile && (
                 <div className="chat-welcome">
                   <div className="welcome-content">
