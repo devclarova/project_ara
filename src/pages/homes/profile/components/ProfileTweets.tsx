@@ -165,10 +165,30 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
       })
       .subscribe();
 
+    // 프로필 편집
+    const profileChannel = supabase
+      .channel(`profile-update-${userProfile.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userProfile.id}` },
+        payload => {
+          const updated = payload.new as any;
+          setTweets(prev =>
+            prev.map(t =>
+              t.user.username === updated.user_id
+                ? { ...t, user: { ...t.user, avatar: updated.avatar_url, name: updated.nickname } }
+                : t,
+            ),
+          );
+        },
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(updateChannel);
       supabase.removeChannel(insertChannel);
       supabase.removeChannel(deleteChannel);
+      supabase.removeChannel(profileChannel);
     };
   }, [userProfile?.id, activeTab]);
 
