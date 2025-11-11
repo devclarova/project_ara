@@ -292,8 +292,9 @@ const StudyPage = () => {
                           )}
                         </div>
                       </div>
-                  )}
-                </h1>
+                    )}
+                  </h1>
+                </div>
 
                 {/* 다음 버튼 */}
                 <div className="flex items-center gap-2 pr-3">
