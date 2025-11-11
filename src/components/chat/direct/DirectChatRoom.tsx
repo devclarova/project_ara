@@ -110,13 +110,13 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
       .on(
         'postgres_changes',
         {
-          event: 'INSERT', // ✅ 새 메시지 추가될 때만
+          event: '*',
           schema: 'public',
           table: 'direct_messages',
           filter: `chat_id=eq.${chatId}`,
         },
         () => {
-          // 새 메시지가 들어온 경우에만 전체 메시지 재로딩
+          // 변경사항이 있을 때만 새로고침
           loadMessages(chatId);
         },
       )
@@ -125,6 +125,7 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
     return () => {
       subscription.unsubscribe();
     };
+    // loadMessages 는 stable 하지 않을 수 있으므로 chatId 만 의존성으로
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatId]);
 
