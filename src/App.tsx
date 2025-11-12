@@ -20,7 +20,6 @@ import SignUpPage from './pages/SignUpPage';
 import StudyListPage from './pages/StudyListPage';
 import StudyPage from './pages/StudyPage';
 import TempHomePage from './pages/TempHomePage';
-import { DirectChatProider } from './contexts/DirectChatContext';
 import { NewChatNotificationProvider } from './contexts/NewChatNotificationContext';
 import AuthCallback from './pages/AuthCallback';
 import DirectChatPage from './pages/chat/DirectChatPage';
@@ -29,6 +28,7 @@ import ProfileAsap from './pages/homes/profile/ProfileAsap';
 import TweetDetail from './pages/homes/tweet/TweetDetail';
 import SignUpWizard from './pages/SignUpWizard';
 import OnboardingWall from './routes/guards/OnboardingWall';
+import { DirectChatProvider } from './contexts/DirectChatContext';
 
 function RequireAuth() {
   const { session, loading } = useAuth();
@@ -53,7 +53,7 @@ const App = () => {
   return (
     <AuthProvider>
       <NewChatNotificationProvider>
-        <DirectChatProider>
+        <DirectChatProvider>
           <Router>
             <ScrollToTop />
             <div className="layout min-h-screen flex flex-col">
@@ -92,7 +92,7 @@ const App = () => {
               </main>
             </div>
           </Router>
-        </DirectChatProider>
+        </DirectChatProvider>
       </NewChatNotificationProvider>
     </AuthProvider>
   );

@@ -1,7 +1,7 @@
 import Modal from '@/components/common/Modal';
 import { Row } from '@/components/settings/Row';
 import type { ActiveSystem, Lang, Mode } from '@/types/settings';
-import { getSystemTitle } from '@/untils/getTitle';
+import { getSystemTitle } from '@/utils/getTitle';
 import { useState } from 'react';
 import LanguageSelect from './LanguageSelect';
 import ThemeSelect from './ThemeSelect';

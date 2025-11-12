@@ -7,7 +7,7 @@ import SignUpStepper from '@/components/auth/SignUpStepper';
 import StepCard from '@/components/auth/StepCard';
 import type { ConsentResult } from '@/types/consent';
 import type { Step, Verified } from '@/types/signup';
-import { slideVariants } from '@/untils/motion';
+import { slideVariants } from '@/utils/motion';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';

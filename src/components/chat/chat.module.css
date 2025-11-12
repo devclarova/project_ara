@@ -1144,3 +1144,12 @@
     font-size: 11px;
   }
 }
+
+/* 입력창 하단 정책 안내문구 */
+.message-policy-notice {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: hsl(var(--muted-foreground, 215 16% 47%));
+  user-select: none;
+}

@@ -9,31 +9,17 @@ function DirectChatPage() {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const { markChatAsRead } = useNewChatNotification();
 
-  // 화면 너비에 따라 모바일 여부 판단
   const [isMobile, setIsMobile] = useState(false);
-  // 모바일 리스트 화면, 채팅방 화면
   const [showListOnMobile, setShowListOnMobile] = useState(true);
   const { resetCurrentChat } = useDirectChat();
 
-  // 처음 로드 + 리사이즈마다 모바일 여부 판단
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-
-      if (!mobile) {
-        // 데스크톱 항상 리스트, 채팅
-        setShowListOnMobile(true);
-      } else {
-        // 모바일 선택된 채팅 있으면 채팅방, 없으면 리스트
-        if (selectedChatId) {
-          setShowListOnMobile(false);
-        } else {
-          setShowListOnMobile(true);
-        }
-      }
+      if (!mobile) setShowListOnMobile(true);
+      else setShowListOnMobile(!selectedChatId);
     };
-
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -42,34 +28,25 @@ function DirectChatPage() {
   const handleChatSelect = (chatId: string) => {
     setSelectedChatId(chatId);
     markChatAsRead();
-
-    // 모바일 채팅방 화면으로 전환
-    if (isMobile) {
-      setShowListOnMobile(false);
-    }
+    if (isMobile) setShowListOnMobile(false);
   };
 
   const handleBackToList = () => {
     setSelectedChatId(null);
     resetCurrentChat();
-
-    // 모바일일 때만 리스트 화면으로 전환
-    if (isMobile) {
-      setShowListOnMobile(true);
-    }
+    if (isMobile) setShowListOnMobile(true);
   };
 
-  // 채팅 페이지 때 채팅상태 초기화
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       resetCurrentChat();
-    };
-  }, [resetCurrentChat]);
+    },
+    [resetCurrentChat],
+  );
 
   return (
     <div className={styles.chatPage}>
       <div className={styles.chatContainer}>
-        {/* 왼쪽 사이드바 */}
         {(!isMobile || showListOnMobile) && (
           <div className="chat-sidebar">
             <DirectChatList
@@ -79,8 +56,6 @@ function DirectChatPage() {
             />
           </div>
         )}
-
-        {/* 오른쪽 채팅방 */}
         {(!isMobile || !showListOnMobile) && (
           <div className="chat-main">
             {selectedChatId ? (
