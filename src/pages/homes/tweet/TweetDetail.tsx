@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import TweetDetailCard from './components/TweetDetailCard';
 import ReplyList from './components/ReplyList';
+import { Helmet } from 'react-helmet-async';
 
 export default function TweetDetail() {
   const { id } = useParams<{ id: string }>();
@@ -288,6 +289,15 @@ export default function TweetDetail() {
     setReplies(mapped);
   };
 
+  const siteTitle = 'ARA - Learn Korean through K-Culture';
+  const pageTitle = tweet
+    ? `${tweet.user?.name ?? 'ARA 사용자'}님의 게시글 | ${siteTitle}`
+    : `게시글 상세보기 | ${siteTitle}`;
+  const description = tweet
+    ? tweet.content?.slice(0, 80) || 'ARA에서 한국어 학습자들의 이야기를 만나보세요.'
+    : 'ARA에서 한국어 학습자들의 이야기를 만나보세요.';
+  const ogImage = tweet?.image || '/images/font_slogan_logo.png';
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -302,23 +312,43 @@ export default function TweetDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-background overflow-x-hidden">
-      <div className="w-full max-w-2xl mx-auto border-x border-gray-200 dark:border-gray-700 bg-white dark:bg-background">
-        <div className="sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 z-20">
-          <div className="flex items-center">
-            <button
-              onClick={() => navigate(-1)}
-              className="mr-4 p-2 hover:bg-gray-100 dark:hover:bg-primary/10 rounded-full transition-colors"
-            >
-              <i className="ri-arrow-left-line text-xl text-gray-900 dark:text-gray-100" />
-            </button>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">상세보기</h1>
-          </div>
-        </div>
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={description} />
 
-        <TweetDetailCard tweet={tweet} />
-        <ReplyList replies={replies} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:url" content={`https://project-ara.vercel.app/finalhome/${id}`} />
+        <meta property="og:type" content="article" />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={ogImage} />
+
+        <link rel="canonical" href={`https://project-ara.vercel.app/finalhome/${id}`} />
+      </Helmet>
+
+      <div className="min-h-screen bg-white dark:bg-background overflow-x-hidden">
+        <div className="w-full max-w-2xl mx-auto border-x border-gray-200 dark:border-gray-700 bg-white dark:bg-background">
+          <div className="sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 z-20">
+            <div className="flex items-center">
+              <button
+                onClick={() => navigate(-1)}
+                className="mr-4 p-2 hover:bg-gray-100 dark:hover:bg-primary/10 rounded-full transition-colors"
+              >
+                <i className="ri-arrow-left-line text-xl text-gray-900 dark:text-gray-100" />
+              </button>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">상세보기</h1>
+            </div>
+          </div>
+
+          <TweetDetailCard tweet={tweet} />
+          <ReplyList replies={replies} />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -43,6 +43,21 @@ const StudyPage = () => {
 
   const vref = useRef<VideoPlayerHandle>(null);
 
+  const baseTitle = 'ARA - Learn Korean with K-Content';
+  const pageTitle = study
+    ? `${study.contents ?? 'ARA Study'}${study.episode ? ` ${study.episode}` : ''}${
+        study.scene ? ` - Scene ${study.scene}` : ''
+      } | ${baseTitle}`
+    : `Study | ${baseTitle}`;
+
+  const description = study
+    ? `K-콘텐츠 장면으로 한국어 공부하기: ${study.contents ?? ''}${
+        study.episode ? ` ${study.episode}` : ''
+      }${study.scene ? ` - Scene ${study.scene}` : ''}`
+    : 'ARA에서 K-콘텐츠로 즐겁게 한국어를 공부해보세요.';
+
+  const ogImage = study?.image_url ?? '/images/font_slogan_logo.png';
+
   // video 단건 조회
   useEffect(() => {
     if (studyId === undefined) return;
@@ -119,18 +134,22 @@ const StudyPage = () => {
   return (
     <>
       <Helmet>
-        <title>Study | ARA - Learn Korean with K-Content</title>
-        <meta
-          name="description"
-          content="드라마, 예능, 음악 클립으로 자연스럽게 한국어 표현을 배우는 ARA 학습 페이지입니다."
-        />
-        <meta property="og:title" content="Study Korean with K-Content | ARA" />
-        <meta
-          property="og:description"
-          content="K-콘텐츠로 재미있게 한국어를 배우고, 학습 진도를 관리해보세요."
-        />
-        <meta property="og:image" content="/images/sample_font_logo.png" />
-        <meta property="og:url" content="https://project-ara.vercel.app/study/:id" />
+        <title>{pageTitle}</title>
+
+        <meta name="description" content={description} />
+
+        {/* Open Graph */}
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:url" content={`https://ara.com/study/${id}`} />
+        <meta property="og:type" content="article" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={ogImage} />
       </Helmet>
       <div className="min-h-screen bg-white dark:bg-background">
         <div className="flex justify-center">
@@ -200,7 +219,9 @@ const StudyPage = () => {
                         study?.contents
                           ? {
                               pathname: '/studylist',
-                              search: `?category=${encodeURIComponent(study?.categories ?? '전체')}&content=${encodeURIComponent(String(study.contents))}`,
+                              search: `?category=${encodeURIComponent(
+                                study?.categories ?? '전체',
+                              )}&content=${encodeURIComponent(String(study.contents))}`,
                             }
                           : '/studylist'
                       }
@@ -230,7 +251,11 @@ const StudyPage = () => {
                         study?.episode
                           ? {
                               pathname: '/studylist',
-                              search: `?category=${encodeURIComponent(study?.categories ?? '전체')}&content=${encodeURIComponent(String(study.contents))}&episode=${encodeURIComponent(study.episode)}`,
+                              search: `?category=${encodeURIComponent(
+                                study?.categories ?? '전체',
+                              )}&content=${encodeURIComponent(
+                                String(study.contents),
+                              )}&episode=${encodeURIComponent(study.episode)}`,
                             }
                           : '/studylist'
                       }
@@ -331,7 +356,9 @@ const StudyPage = () => {
                 {!loading && (
                   <ShareButton
                     title={`${study?.contents ?? 'ARA Study'}`}
-                    text={`K-콘텐츠로 배우는 학습 장면${study?.episode ? ` (${study.episode})` : ''}${study?.scene ? ` - Scene ${study.scene}` : ''}`}
+                    text={`K-콘텐츠로 배우는 학습 장면${
+                      study?.episode ? ` (${study.episode})` : ''
+                    }${study?.scene ? ` - Scene ${study.scene}` : ''}`}
                     // url은 기본적으로 canonical 또는 현재 URL을 사용하므로 생략 가능
                     onShared={() => {
                       // 선택: 공유 이벤트 후 조회수 증가 등 트래킹
