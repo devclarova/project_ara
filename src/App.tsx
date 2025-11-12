@@ -72,7 +72,9 @@ const App = () => {
                     <Route path="/signup/social" element={<SignUpWizard mode="social" />} />
                     <Route element={<OnboardingWall />}>
                       <Route path="/studyList" element={<StudyListPage />} />
-                      <Route path="/study/:id" element={<StudyPage />} />
+                      <Route path="/study/:contents/:episode" element={<StudyPage />} />
+                      <Route path="/study/:contents/:episode/:scene" element={<StudyPage />} />
+                      {/* <Route path="/study/:id" element={<StudyPage />} /> */}
                       <Route path="/test" element={<TempHomePage />} />
                       <Route path="/settings" element={<ProfileSettings />} />
                       <Route path="/finalhome" element={<Layout />}>

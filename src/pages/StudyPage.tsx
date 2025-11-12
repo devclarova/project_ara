@@ -13,6 +13,7 @@ import ShareButton from '@/components/common/ShareButton';
 // 이 페이지에서 실제로 사용하는 video 행 타입을 로컬로 정의(컬럼명과 일치)
 type VideoRow = {
   id: number;
+  study_id: number;
   categories: string | null;
   contents: string | null; // 작품/콘텐츠 이름
   episode: string | null;
@@ -25,14 +26,19 @@ type VideoRow = {
 };
 
 const StudyPage = () => {
-  const { id } = useParams<{ id: string }>();
+  // const { id } = useParams<{ id: string }>();
+  const { contents, episode, scene } = useParams<{
+    contents: string;
+    episode: string;
+    scene?: string;
+  }>();
   const navigate = useNavigate(); // useNavigate 훅 사용
 
   // 숫자 변환 가드
-  const studyId = useMemo(() => {
-    const n = Number(id);
-    return Number.isFinite(n) ? n : undefined;
-  }, [id]);
+  // const studyId = useMemo(() => {
+  //   const n = Number(id);
+  //   return Number.isFinite(n) ? n : undefined;
+  // }, [id]);
 
   const [selectedSubtitle, setSelectedSubtitle] = useState<Subtitle | null>(null);
   const [study, setStudy] = useState<VideoRow | null>(null);
@@ -40,9 +46,12 @@ const StudyPage = () => {
   const [showTweetModal, setShowTweetModal] = useState(false);
 
   const handleSelectDialogue = (s: Subtitle) => setSelectedSubtitle(s);
-
   const vref = useRef<VideoPlayerHandle>(null);
 
+  const dec = (v?: string | null) => (v == null ? v : decodeURIComponent(v));
+  const enc = (v?: string | number | null) => encodeURIComponent(String(v ?? ''));
+
+  // 페이지 메타
   const baseTitle = 'ARA - Learn Korean with K-Content';
   const pageTitle = study
     ? `${study.contents ?? 'ARA Study'}${study.episode ? ` ${study.episode}` : ''}${
@@ -58,42 +67,104 @@ const StudyPage = () => {
 
   const ogImage = study?.image_url ?? '/images/font_slogan_logo.png';
 
-  // video 단건 조회
-  useEffect(() => {
-    if (studyId === undefined) return;
+  // URL 생성기: scene이 없으면 세그먼트 생략
+  const buildStudyUrl = (row: {
+    contents?: string | null;
+    episode?: string | null;
+    scene?: string | number | null;
+  }) => {
+    const c = enc(row.contents);
+    const e = enc(row.episode);
+    const s = row.scene != null && String(row.scene).length > 0 ? enc(row.scene) : null;
+    return s ? `/study/${c}/${e}/${s}` : `/study/${c}/${e}`;
+  };
 
+  // video 단건 조회
+  // 단건 조회: scene 있으면 정확 매칭, 없으면 첫 장면 선택 후 URL 정규화
+  useEffect(() => {
     const fetchStudy = async () => {
+      if (!contents || !episode) return;
       setLoading(true);
 
+      const c = dec(contents);
+      const e = dec(episode);
+
+      if (scene != null) {
+        const s = dec(scene);
+        const { data, error } = await supabase
+          .from('video')
+          .select(
+            'id,study_id,categories,contents,episode,scene,level,runtime,runtime_bucket,image_url,view_count',
+          )
+          .eq('contents', c)
+          .eq('episode', e)
+          .eq('scene', s)
+          .order('id', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) console.error('[video fetch error]', error);
+        setStudy((data as VideoRow) ?? null);
+        setLoading(false);
+        return;
+      }
+
+      // scene 미지정: 같은 contents/episode에서 첫 장면 고르기
       const { data, error } = await supabase
         .from('video')
         .select(
-          'id,categories,contents,episode,scene,level,runtime,runtime_bucket,image_url,study_id,view_count',
+          'id,study_id,categories,contents,episode,scene,level,runtime,runtime_bucket,image_url,view_count',
         )
-        .eq('study_id', studyId)
-        .order('id', { ascending: true }) // 가장 이른 것 1개
-        .limit(1)
-        .single();
+        .eq('contents', c)
+        .eq('episode', e)
+        .order('scene', { ascending: true, nullsFirst: false })
+        .order('id', { ascending: true })
+        .limit(1);
 
       if (error) {
-        console.error('[video fetch error]', error);
+        console.error('[video fetch first-scene error]', error);
+        setStudy(null);
+      } else {
+        const row = (data?.[0] as VideoRow) ?? null;
+        setStudy(row);
+        if (row) {
+          const canonical = buildStudyUrl(row);
+          if (canonical !== location.pathname) navigate(canonical, { replace: true });
+        }
       }
-
-      setStudy((data as VideoRow) ?? null);
       setLoading(false);
     };
 
-    fetchStudy();
-  }, [studyId]);
+    void fetchStudy();
+  }, [contents, episode, scene, navigate]);
+
+  // 1-1) 보조 함수 추가: study_id로 행을 찾아 새 URL로 이동
+  const goToByStudyId = async (targetStudyId: number) => {
+    const { data, error } = await supabase
+      .from('video')
+      .select('contents,episode,scene')
+      .eq('study_id', targetStudyId)
+      .order('id', { ascending: true })
+      .limit(1);
+
+    if (error) {
+      console.error('[goToByStudyId error]', error);
+      return;
+    }
+    const row = data?.[0];
+    if (!row) return;
+
+    const url = buildStudyUrl(row);
+    navigate(url);
+  };
 
   const gotoNextExisting = async () => {
-    if (studyId === undefined) return;
-
-    // 현재 studyId 보다 큰 것 중 가장 작은 study_id
+    // if (studyId === undefined) return;
+    if (!study?.study_id) return;
     const { data, error } = await supabase
       .from('video')
       .select('study_id')
-      .gt('study_id', studyId)
+      .gt('study_id', study.study_id)
       .order('study_id', { ascending: true })
       .limit(1);
 
@@ -102,17 +173,16 @@ const StudyPage = () => {
       return;
     }
     const next = data?.[0]?.study_id;
-    if (next) navigate(`/study/${next}`);
+    if (next) await goToByStudyId(next);
   };
 
   const gotoPrevExisting = async () => {
-    if (studyId === undefined) return;
-
-    // 현재 studyId 보다 작은 것 중 가장 큰 study_id
+    // if (studyId === undefined) return;
+    if (!study?.study_id) return;
     const { data, error } = await supabase
       .from('video')
       .select('study_id')
-      .lt('study_id', studyId)
+      .lt('study_id', study.study_id)
       .order('study_id', { ascending: false })
       .limit(1);
 
@@ -121,7 +191,7 @@ const StudyPage = () => {
       return;
     }
     const prev = data?.[0]?.study_id;
-    if (prev) navigate(`/study/${prev}`);
+    if (prev) await goToByStudyId(prev);
   };
 
   const handleNextPage = () => {
@@ -142,7 +212,14 @@ const StudyPage = () => {
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={description} />
         <meta property="og:image" content={ogImage} />
-        <meta property="og:url" content={`https://ara.com/study/${id}`} />
+        <meta
+          property="og:url"
+          content={
+            study
+              ? `https://ara.com${buildStudyUrl(study)}`
+              : `https://ara.com/study/${enc(contents)}/${enc(episode)}${scene ? `/${enc(scene)}` : ''}`
+          }
+        />
         <meta property="og:type" content="article" />
 
         {/* Twitter */}
@@ -320,13 +397,11 @@ const StudyPage = () => {
                       </div>
                     )}
                   </h1>
-                </div>
+                  {/* 다음 버튼 */}
 
-                {/* 다음 버튼 */}
-                <div className="flex items-center gap-2 pr-3">
                   <button
                     onClick={handleNextPage}
-                    className="group flex justify-end items-center gap-2 pr-4 py-2 rounded-lg transition-all duration-200 text-gray-700 hover:text-primary dark:text-gray-100"
+                    className="group flex justify-end items-center gap-2 pr-4 py-2 rounded-lg transition-all duration-200 text-gray-700 hover:text-primary w-full sm:w-auto dark:text-gray-100"
                   >
                     <i className="ri-arrow-drop-right-line text-5xl transition-transform duration-200 group-hover:-translate-x-1" />
                   </button>
@@ -354,17 +429,12 @@ const StudyPage = () => {
                   />
                 </span>
                 {!loading && (
-                  <ShareButton
-                    title={`${study?.contents ?? 'ARA Study'}`}
-                    text={`K-콘텐츠로 배우는 학습 장면${
-                      study?.episode ? ` (${study.episode})` : ''
-                    }${study?.scene ? ` - Scene ${study.scene}` : ''}`}
-                    // url은 기본적으로 canonical 또는 현재 URL을 사용하므로 생략 가능
-                    onShared={() => {
-                      // 선택: 공유 이벤트 후 조회수 증가 등 트래킹
-                      // console.log('shared!');
-                    }}
-                  />
+                  <div className="ml-auto">
+                    <ShareButton
+                      title={`${study?.contents ?? 'ARA Study'}`}
+                      text={`K-콘텐츠로 배우는 학습 ${study?.episode ? ` (${study.episode})` : ''}${study?.scene ? ` - Scene ${study.scene}` : ''}`}
+                    />
+                  </div>
                 )}
               </div>
 
@@ -374,7 +444,7 @@ const StudyPage = () => {
               {/* 자막 리스트 */}
               <StudySubtitles
                 onSelectDialogue={handleSelectDialogue}
-                studyId={studyId}
+                studyId={study?.study_id}
                 subscribeRealtime
                 onSeek={start => {
                   vref.current?.playDialogue(start);
@@ -382,7 +452,9 @@ const StudyPage = () => {
               />
 
               {/* 학습 카드 */}
-              {studyId !== undefined && <StudyCard subtitle={selectedSubtitle} studyId={studyId} />}
+              {study?.study_id !== undefined && (
+                <StudyCard subtitle={selectedSubtitle} studyId={study?.study_id} />
+              )}
             </div>
           </div>
         </div>

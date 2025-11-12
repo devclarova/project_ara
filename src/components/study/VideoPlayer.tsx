@@ -10,9 +10,25 @@ export type VideoPlayerHandle = {
   playDialogue: (start: number, end?: number) => void;
 };
 
+type VideoFetchRow = {
+  id: number;
+  study_id: number;
+  video_url: string | null;
+  video_start_time: number | null;
+  video_end_time: number | null;
+  image_url: string | null;
+  contents?: string | null;
+  episode?: string | null;
+  scene?: string | number | null;
+};
+
 const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
   const playerRef = useRef<ReactPlayer>(null);
-  const { id } = useParams<{ id: string }>();
+  const { contents, episode, scene } = useParams<{
+    contents: string;
+    episode: string;
+    scene?: string;
+  }>();
 
   const [playing, setPlaying] = useState(false);
   const [video, setVideo] = useState<string | undefined>(undefined);
@@ -32,6 +48,8 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
 
   const [videoRowId, setVideoRowId] = useState<number | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  const dec = (v?: string) => (v == null ? v : decodeURIComponent(v));
 
   // ===== 유틸 =====
   const clampToVideo = useCallback(
@@ -103,35 +121,79 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
     return typeof data === 'number' ? data > 0 : true;
   };
 
-  // 영상 불러오기
+  // 영상 불러오기: contents, episode, scene 기준
   useEffect(() => {
-    const fetchVideo = async () => {
-      const { data, error } = await supabase
-        .from('video')
-        .select('id, video_url,video_start_time, video_end_time,image_url')
-        .eq('study_id', Number(id))
-        .single(); // id에 해당하는 영상 URL 가져오기
+    const fetchByCES = async () => {
+      const c = dec(contents);
+      const e = dec(episode);
+      const s = scene != null ? dec(scene) : undefined;
 
-      if (error) {
-        console.log('영상 가져오기 오류 : ', error);
+      if (!c || !e) {
+        console.warn('[VideoPlayer] params missing', { contents, episode, scene });
         return;
       }
-      if (!data) return;
 
-      setVideoRowId(data.id);
-      if (data.video_url) setVideo(data.video_url);
-      if (typeof data.video_start_time === 'number') setVideoStartSec(data.video_start_time);
-      if (typeof data.video_end_time === 'number') setVideoEndSec(data.video_end_time);
+      // scene 지정 시 정확 매칭
+      if (s != null) {
+        const { data, error } = await supabase
+          .from('video')
+          .select('id,study_id,video_url,video_start_time,video_end_time,image_url')
+          .eq('contents', c)
+          .eq('episode', e)
+          .eq('scene', s)
+          .order('id', { ascending: true })
+          .maybeSingle();
 
-      setSegStartSec(typeof data.video_start_time === 'number' ? data.video_start_time : 0);
-      setSegEndSec(typeof data.video_end_time === 'number' ? data.video_end_time : undefined);
+        if (error) {
+          console.error('[VideoPlayer] fetch error with scene:', error);
+          return;
+        }
+        if (!data) return;
 
-      // 이미지 상태 세팅
-      setImageUrl(data.image_url ?? undefined);
+        const row = data as VideoFetchRow;
+        setVideoRowId(row.id);
+        setVideo(row.video_url ?? undefined);
+        setVideoStartSec(typeof row.video_start_time === 'number' ? row.video_start_time : 0);
+        setVideoEndSec(typeof row.video_end_time === 'number' ? row.video_end_time : undefined);
+        setSegStartSec(typeof row.video_start_time === 'number' ? row.video_start_time : 0);
+        setSegEndSec(typeof row.video_end_time === 'number' ? row.video_end_time : undefined);
+        setImageUrl(row.image_url ?? null);
+        setViewRecorded(false);
+        setWatchTime(0);
+        return;
+      }
+
+      // scene 미지정 시 첫 장면 선택
+      const { data, error } = await supabase
+        .from('video')
+        .select('id,study_id,video_url,video_start_time,video_end_time,image_url,scene')
+        .eq('contents', c)
+        .eq('episode', e)
+        .order('scene', { ascending: true })
+        .order('id', { ascending: true })
+        .limit(1);
+
+      if (error) {
+        console.error('[VideoPlayer] fetch first scene error:', error);
+        return;
+      }
+      const first = (data?.[0] as VideoFetchRow) ?? null;
+      if (!first) return;
+
+      setVideoRowId(first.id);
+      setVideo(first.video_url ?? undefined);
+      setVideoStartSec(typeof first.video_start_time === 'number' ? first.video_start_time : 0);
+      setVideoEndSec(typeof first.video_end_time === 'number' ? first.video_end_time : undefined);
+      setSegStartSec(typeof first.video_start_time === 'number' ? first.video_start_time : 0);
+      setSegEndSec(typeof first.video_end_time === 'number' ? first.video_end_time : undefined);
+      setImageUrl(first.image_url ?? null);
+      setViewRecorded(false);
+      setWatchTime(0);
     };
 
-    if (id) fetchVideo();
-  }, [id]); // id가 변경될 때마다 호출
+    void fetchByCES();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contents, episode, scene]);
 
   // 영상이 준비되면 시작 지점으로 이동
   const handleReady = () => {
