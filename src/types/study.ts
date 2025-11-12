@@ -5,6 +5,7 @@ export type StudyListProps = {
   id: number;
   image?: string | null;
   title: string;
+  contents: string;
   short_description: string;
   level: string;
   episode?: string;

@@ -14,17 +14,18 @@ const ContentCard = ({
   id,
   image,
   title,
+  contents,
   short_description,
   level,
   episode,
   scene,
-  // levelColor,
   duration,
 }: StudyListProps) => {
   const navigate = useNavigate();
 
   // 파일 상단 훅들 아래 위치에 추가
   const enc = (v?: string | number | null) => encodeURIComponent(String(v ?? ''));
+
   const buildStudyUrl = (row: {
     contents?: string | null;
     episode?: string | null;
@@ -38,15 +39,7 @@ const ContentCard = ({
 
   return (
     <div
-      onClick={() => {
-        // title이 곧 contents로 사용된다고 가정
-        if (title && episode) {
-          navigate(buildStudyUrl({ contents: title, episode, scene }));
-        } else {
-          // 데이터 불완전 시 안전한 최후 fallback
-          navigate(`/study/${id}`);
-        }
-      }}
+      onClick={() => navigate(buildStudyUrl({ contents, episode, scene }))}
       className="group relative rounded-xl shadow-lg cursor-pointer transition-all hover:shadow-xl sm:scale-[0.95] md:scale-100 sm:hover:scale-[0.98] origin-top duration-300 overflow-hidden transform-gpu ring-1 ring-transparent dark:bg-secondary"
     >
       {/* 이미지 */}

@@ -227,6 +227,7 @@ const StudyListPage = () => {
                         image={study.poster_image_url}
                         title={study.title || '제목 없음'}
                         short_description={study.short_description || '설명 없음'}
+                        contents={v?.contents || ''}
                         episode={v?.episode || ''}
                         scene={v?.scene || ''}
                         level={v?.level || ''}
