@@ -5,7 +5,7 @@ import PrivacyPolicyView from '@/components/settings/PrivacyPolicyView';
 import { Row } from '@/components/settings/Row';
 import TermsView from '@/components/settings/TermsView';
 import type { ActiveKey } from '@/types/settings';
-import { getPolicyTitle } from '@/untils/getTitle';
+import { getPolicyTitle } from '@/utils/getTitle';
 import { useState } from 'react';
 
 interface PrivacySettingsProps {

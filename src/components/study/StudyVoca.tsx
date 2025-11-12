@@ -36,7 +36,7 @@ const useResponsivePageSize = () => {
       if (w < 640)
         setPageSize(1); // < sm (mobile)
       else if (w < 1024)
-        setPageSize(3); // < lg (tablet)
+        setPageSize(4); // < lg (tablet)
       else setPageSize(6); // >= lg (desktop)
     };
     calc();

@@ -505,7 +505,7 @@ export async function getMessages(chatId: string): Promise<ChatApiResponse<Direc
     // 사용자가 나간 시점이 있으면 그 이후의 메시지만 조회
     if (userLeftAt) {
       query = query.gte('created_at', userLeftAt);
-      console.log('사용자가 나간 시점 이후의 메시지만 조회:', userLeftAt);
+      // console.log('사용자가 나간 시점 이후의 메시지만 조회:', userLeftAt);
     }
 
     const { data: messages, error: messagesError } = await query;

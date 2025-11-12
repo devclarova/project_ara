@@ -94,7 +94,11 @@ export default function CheckboxSquare({
 
       <span className="font-semibold">
         {label}{' '}
-        {required && <em className="not-italic text-red-600 dark:text-red-400 ml-1">(필수)</em>}
+        {required && (
+          <em className="not-italic text-red-600 dark:text-red-400 ml-1 whitespace-nowrap">
+            (필수)
+          </em>
+        )}
       </span>
     </label>
   );

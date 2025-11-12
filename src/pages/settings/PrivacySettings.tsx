@@ -1,6 +1,6 @@
 import Modal from '@/components/common/Modal';
 import type { ActiveSetting } from '@/types/settings';
-import { getSettingsTitle } from '@/untils/getTitle';
+import { getSettingsTitle } from '@/utils/getTitle';
 import { useState } from 'react';
 import { Row } from '../../components/settings/Row';
 import PasswordChange from './PasswordChange';

@@ -12,7 +12,7 @@ import { buildGuard, useSignupStepper } from '@/hooks/useSignupStepper';
 
 import type { ConsentResult } from '@/types/consent';
 import type { Step, Verified } from '@/types/signup';
-import { slideVariants } from '@/untils/motion';
+import { slideVariants } from '@/utils/motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Helmet } from 'react-helmet-async';
