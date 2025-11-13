@@ -4,6 +4,7 @@ import DirectChatRoom from '../../components/chat/direct/DirectChatRoom';
 import { useNewChatNotification } from '../../contexts/NewChatNotificationContext';
 import styles from '../../components/chat/chat.module.css';
 import { useDirectChat } from '@/contexts/DirectChatContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 function DirectChatPage() {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
@@ -43,6 +44,14 @@ function DirectChatPage() {
     },
     [resetCurrentChat],
   );
+
+  const { user } = useAuth();
+  useEffect(() => {
+    // 계정 바뀌면 선택 해제 + 모바일에선 리스트 화면으로
+    setSelectedChatId(null);
+    resetCurrentChat();
+    if (isMobile) setShowListOnMobile(true);
+  }, [user?.id]);
 
   return (
     <div className={styles.chatPage}>

@@ -1153,3 +1153,18 @@
   color: hsl(var(--muted-foreground, 215 16% 47%));
   user-select: none;
 }
+
+@media (max-width: 768px) {
+  .chatPage :global(.chat-sidebar) {
+    width: 100%;
+    height: 100%; /* 전체 높이 사용 */
+    border-right: none;
+    overflow: hidden; /* 컨테이너는 숨기고, 내부 스크롤은 .chat-items 담당 */
+  }
+}
+
+/* 목록 스크롤은 내부에서만 */
+.chatPage :global(.chat-items) {
+  flex: 1;
+  overflow-y: auto;
+}
