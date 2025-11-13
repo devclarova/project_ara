@@ -54,7 +54,7 @@ export function initProfanity(customWords: string[] = [], whiteList: string[] = 
   const koWords: string[] = [
     '씨발','시발','십알','좆','좆같','조까','병신','븅신','등신','좃',
     '개새끼','꺼져','죽어','지랄','염병','엿먹','미친놈','미친년','또라이',
-    '창녀','걸레','년놈','개새','개자식',
+    '창녀','걸레','년놈','개새','개자식', '바보',
     'fuck','fucking','bitch','asshole','shit','damn','crap','jerk','suck','moron','stupid',
   ];
 
@@ -80,7 +80,7 @@ export function initProfanity(customWords: string[] = [], whiteList: string[] = 
 const BLOCK_LIST = new Set<string>([
   '씨발','ㅅㅂ','ㄱㅅㄲ','ㅁㅊ','미친','병신','호로','잡년','썅','장애','개새끼',
   '개같','개판','개지랄','ㅈㄴ','ㅂㅅ','ㅄ','ㅆㅂ','염병','닥쳐','지랄같','엿같',
-  '나쁜년','나쁜놈','개놈','쓰레기','시바',
+  '나쁜년','나쁜놈','개놈','쓰레기','시바', '멍청이',
   'fuck','motherfucker','nigger','retard',
 ]);
 
