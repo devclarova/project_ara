@@ -462,6 +462,100 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     ],
   );
 
+  const profileCache = useRef<Map<string, ChatUser>>(new Map());
+
+  const fetchProfileByAuthId = useCallback(async (authUserId: string): Promise<ChatUser> => {
+    const cached = profileCache.current.get(authUserId);
+    if (cached) return cached;
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, nickname, avatar_url')
+      .eq('user_id', authUserId)
+      .single();
+    const user: ChatUser = data
+      ? {
+          id: data.id,
+          email: `user-${data.id}@example.com`,
+          nickname: data.nickname,
+          avatar_url: data.avatar_url,
+        }
+      : {
+          id: authUserId,
+          email: `user-${authUserId}@example.com`,
+          nickname: `User ${authUserId.slice(0, 8)}`,
+          avatar_url: null,
+        };
+    profileCache.current.set(authUserId, user);
+    return user;
+  }, []);
+
+  /* 1) 유저가 바뀌면(로그아웃/로그인 전환 포함) 상태 리셋 + 목록 재로딩 */
+  useEffect(() => {
+    if (!currentUserId) return;
+    // 초기화
+    setChats([]);
+    setInactiveChats([]);
+    setMessages([]);
+    setUsers([]);
+    setCurrentChat(null);
+    currentChatId.current = null;
+
+    // 새 사용자 기준으로 로드
+    loadChats();
+  }, [currentUserId, loadChats]);
+
+  /* 2) 인증 세션 이벤트가 바뀌어도 안전하게 초기화 */
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange(() => {
+      setChats([]);
+      setInactiveChats([]);
+      setMessages([]);
+      setUsers([]);
+      setCurrentChat(null);
+      currentChatId.current = null;
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  /* 3) messages 배열에 sender가 비어 있는 항목을 자동 보정(아바타 즉시 표시) */
+  useEffect(() => {
+    // 비어 있으면 스킵
+    if (!messages || messages.length === 0) return;
+
+    const needFill = messages.filter(m => !m.sender && m.sender_id);
+    if (needFill.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      const pairs = await Promise.all(
+        needFill.map(async m => {
+          try {
+            const s = await fetchProfileByAuthId(m.sender_id as string);
+            return { id: m.id, sender: s };
+          } catch {
+            return null;
+          }
+        }),
+      );
+
+      if (cancelled) return;
+      const map = new Map<string, ChatUser>();
+      pairs.filter(Boolean).forEach(p => map.set((p as any).id, (p as any).sender));
+
+      // sender 없는 메시지만 교체
+      setMessages(prev =>
+        prev.map(m => {
+          if (m.sender || !map.has(m.id)) return m;
+          return { ...m, sender: map.get(m.id)! };
+        }),
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [messages, fetchProfileByAuthId]);
+
   return <DirectChatContext.Provider value={value}>{children}</DirectChatContext.Provider>;
 };
 
