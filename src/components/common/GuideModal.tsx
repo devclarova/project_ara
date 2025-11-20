@@ -23,7 +23,6 @@ interface GuideModalProps {
 
 const DEFAULT_STORAGE_KEY = 'ara-guide-modal-dismissed';
 
-// 🔹 방향감만 살짝 주는 부드러운 슬라이드 애니메이션
 const slideVariants = {
   enter: (direction: number) => ({
     x: direction > 0 ? 120 : -120,
@@ -51,7 +50,7 @@ export default function GuideModal({
   neverShowLabel = '다시는 안 보기',
 }: GuideModalProps) {
   const [index, setIndex] = useState(0);
-  const [direction, setDirection] = useState(0); // -1: 이전, 1: 다음
+  const [direction, setDirection] = useState(0);
 
   const total = slides.length;
   const isFirst = index === 0;
@@ -97,7 +96,7 @@ export default function GuideModal({
     onClose();
   };
 
-  // 🔹 드래그 후 슬라이드 전환
+  // 드래그
   const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const swipeThreshold = 60;
     if (info.offset.x < -swipeThreshold && !isLast) {
@@ -121,10 +120,8 @@ export default function GuideModal({
           role="dialog"
         >
           <motion.div
-            // 🔹 너비는 이미지에 맞추되, 화면 기준 최대 90vw / 90vh
             className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/20 dark:border-white/10 bg-white dark:bg-neutral-900 inline-flex flex-col"
             style={{
-              width: 'fit-content',
               maxWidth: '90vw',
               maxHeight: '90vh',
             }}
@@ -143,14 +140,23 @@ export default function GuideModal({
               <X size={18} />
             </button>
 
-            {/* 🔹 이미지 뷰포트: overflow-hidden + 이미지 기준 너비 맞춤 */}
-            <div className="relative overflow-hidden bg-black/5 dark:bg-neutral-800 rounded-t-3xl flex items-center justify-center">
+            {/* 이미지 뷰포트 */}
+            <div
+              className="
+    relative overflow-hidden rounded-t-3xl flex items-center justify-center
+    bg-black/5 dark:bg-neutral-800
+    w-[90vw] max-w-[600px]     /* 데스크톱 최대 */
+    h-[60vh] max-h-[500px]     /* 적당한 높이 */
+    sm:max-w-[500px]           /* 태블릿 */
+    md:max-w-[600px]           /* 데스크톱 */
+  "
+            >
               <AnimatePresence custom={direction} initial={false} mode="wait">
                 <motion.img
                   key={currentSlide.id}
                   src={currentSlide.image}
                   alt={currentSlide.alt}
-                  className="block w-auto h-auto max-w-[90vw] max-h-[60vh] object-contain"
+                  className="block w-full h-full object-contain"
                   custom={direction}
                   variants={slideVariants}
                   initial="enter"
@@ -168,34 +174,36 @@ export default function GuideModal({
                 />
               </AnimatePresence>
 
-              {/* 왼쪽 화살표 (이전) */}
+              {/* 왼쪽/오른쪽 버튼은 그대로 유지 */}
               {!isFirst && (
                 <button
                   type="button"
                   onClick={handlePrev}
-                  className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 inline-flex items-center justify-center h-9 w-9 md:h-10 md:w-10 rounded-full bg-black/40 text-white hover:bg-black/60 transition"
+                  className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 
+                 inline-flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 
+                 rounded-full bg-black/40 text-white hover:bg-black/60 transition"
                   aria-label={prevLabel}
                 >
-                  <ChevronLeft size={20} />
+                  <ChevronLeft size={18} />
                 </button>
               )}
-
-              {/* 오른쪽 화살표 (다음) - 마지막 페이지에서는 숨김 */}
               {!isLast && (
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 inline-flex items-center justify-center h-9 w-9 md:h-10 md:w-10 rounded-full bg-black/40 text-white hover:bg-black/60 transition"
+                  className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 
+                 inline-flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 
+                 rounded-full bg-black/40 text-white hover:bg-black/60 transition"
                   aria-label={primaryLabel}
                 >
-                  <ChevronRight size={20} />
+                  <ChevronRight size={18} />
                 </button>
               )}
             </div>
 
-            {/* 하단 컨트롤 (점 + 다시는 안 보기 / 닫기) */}
+            {/* 하단 컨트롤 */}
             <div className="w-full bg-white dark:bg-neutral-900 px-3.5 sm:px-4 md:px-5 py-2.5 sm:py-3 flex flex-col gap-2">
-              {/* 페이지 인디케이터 – 슬림 */}
+              {/* 페이지 인디케이터 */}
               <div className="flex justify-center gap-1.5 mb-0.5">
                 {slides.map((slide, i) => (
                   <button
@@ -213,7 +221,7 @@ export default function GuideModal({
                 ))}
               </div>
 
-              {/* 버튼 영역 – 반응형 + 슬림 */}
+              {/* 버튼 영역 */}
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <button
                   type="button"
@@ -254,7 +262,7 @@ export default function GuideModal({
   );
 }
 
-/** "다시는 안보기" 여부 확인 헬퍼 */
+/** 다시는 안보기 여부 확인 헬퍼 */
 export function isGuideModalDismissed(storageKey: string = DEFAULT_STORAGE_KEY): boolean {
   if (typeof window === 'undefined') return false;
   try {
