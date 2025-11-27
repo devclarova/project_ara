@@ -29,6 +29,7 @@ import TweetDetail from './pages/homes/tweet/TweetDetail';
 import SignUpWizard from './pages/SignUpWizard';
 import OnboardingWall from './routes/guards/OnboardingWall';
 import { DirectChatProvider } from './contexts/DirectChatContext';
+import Header from './components/common/Headrer';
 
 function RequireAuth() {
   const { session, loading } = useAuth();
@@ -59,10 +60,12 @@ const App = () => {
             <div className="layout min-h-screen flex flex-col">
               <main className="flex-1">
                 {/* <main className="flex-1 mt-[calc(97px)]"> */}
+                {/* <Header /> */}
                 <Routes>
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/landing" element={<LandingPage />} />
+                  <Route path="/studyList" element={<StudyListPage />} />
 
                   <Route element={<RequireGuest />}>
                     <Route path="/signup" element={<SignUpPage />} />
@@ -71,7 +74,6 @@ const App = () => {
                   <Route element={<RequireAuth />}>
                     <Route path="/signup/social" element={<SignUpWizard mode="social" />} />
                     <Route element={<OnboardingWall />}>
-                      <Route path="/studyList" element={<StudyListPage />} />
                       <Route path="/study/:contents/:episode/:scene?" element={<StudyPage />} />
                       <Route path="/test" element={<TempHomePage />} />
                       <Route path="/settings" element={<ProfileSettings />} />
