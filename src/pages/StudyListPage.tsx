@@ -9,9 +9,40 @@ import Sidebar from './homes/feature/Sidebar';
 import { useSearchParams } from 'react-router-dom';
 import Pagination from '@/components/common/Pagination';
 import { Helmet } from 'react-helmet-async';
+import GuideModal, { isGuideModalDismissed } from '@/components/common/GuideModal';
 
 const ALL_CATEGORIES: TCategory[] = ['전체', '드라마', '영화', '예능', '음악'];
 const ALL_LEVELS: TDifficulty[] = ['', '초급', '중급', '고급'];
+
+const LEANING_GUIDE_KEY = 'ara-leaning-guide';
+
+const LEANING_GUIDE_SLIDES = [
+  {
+    id: 'leaning-1',
+    image: '/images/leaning_guide_1.gif',
+    alt: 'ARA Study 이용 방법 안내 1',
+  },
+  {
+    id: 'leaning-2',
+    image: '/images/leaning_guide_2.gif',
+    alt: 'ARA Study 이용 방법 안내 2',
+  },
+  {
+    id: 'leaning-3',
+    image: '/images/leaning_guide_3.gif',
+    alt: 'ARA Study 이용 방법 안내 3',
+  },
+  {
+    id: 'leaning-4',
+    image: '/images/leaning_guide_4.gif',
+    alt: 'ARA Study 이용 방법 안내 4',
+  },
+  {
+    id: 'leaning-5',
+    image: '/images/leaning_guide_5.gif',
+    alt: 'ARA Study 이용 방법 안내 5',
+  },
+];
 
 const StudyListPage = () => {
   const [clips, setClips] = useState<Study[]>([]); // 콘텐츠 목록
@@ -21,6 +52,14 @@ const StudyListPage = () => {
   const [total, setTotal] = useState(0); // 전체 콘텐츠 개수
   const [showSearch, setShowSearch] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams(); // URL 쿼리
+
+  const [showGuide, setShowGuide] = useState(false);
+
+  useEffect(() => {
+    if (!isGuideModalDismissed(LEANING_GUIDE_KEY)) {
+      setShowGuide(true);
+    }
+  }, []);
 
   // 쿼리에서 초기 category 읽기 (유효하지 않으면 '전체')
   const displayCategory: TCategory = useMemo(() => {
@@ -137,6 +176,19 @@ const StudyListPage = () => {
 
   return (
     <div className="relative min-h-screen bg-white dark:bg-background">
+      <GuideModal
+        isOpen={showGuide}
+        onClose={() => setShowGuide(false)}
+        slides={LEANING_GUIDE_SLIDES}
+        storageKey={LEANING_GUIDE_KEY}
+        // 필요하면 버튼 텍스트 커스텀
+        // prevLabel="이전"
+        // nextLabel="다음"
+        // completeLabel="시작하기"
+        // closeLabel="닫기"
+        // neverShowLabel="다시 보지 않기"
+      />
+
       <div className="flex justify-center min-h-screen">
         <div className="flex w-full max-w-7xl">
           {/* Left Sidebar */}

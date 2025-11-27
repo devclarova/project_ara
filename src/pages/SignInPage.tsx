@@ -233,14 +233,31 @@ function SignInPage() {
     <div className="flex items-center justify-center bg-white pt-12 px-4 dark:bg-background">
       <div className="bg-white dark:bg-secondary rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 sm:p-8 md:p-10 lg:p-12 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl text-gray-900 dark:text-gray-100">
         {/* 로고 및 제목 */}
-        <div className="text-center mb-6">
-          <span className="flex items-center justify-center text-3xl sm:text-4xl md:text-5xl font-bold text-red-400">
+        <div className="flex flex-col justify-center items-center text-center mb-6">
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="
+            inline-flex items-center justify-center
+            m-0 p-0
+            bg-transparent border-0
+            select-none
+            outline-none focus:outline-none focus-visible:outline-none
+            focus:ring-0 focus:ring-offset-0 ring-0
+            active:outline-none
+            transition-transform duration-150
+            hover:opacity-95 active:scale-95
+            "
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+          >
             <img
               src="/images/sample_font_logo.png"
               alt="Ara"
               className="mx-auto w-24 sm:w-28 md:w-32 lg:w-30 xl:w-36"
+              draggable={false}
+              onDragStart={e => e.preventDefault()}
             />
-          </span>
+          </button>
           <h2 className="mt-2 text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
             아라에 오신 것을 환영합니다!
           </h2>
