@@ -285,7 +285,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
             playing={playing}
             controls={false}
             width="100%"
-            height="100%" // 부모 크기에 맞춰 꽉 채움
+            height="100%"
             onReady={handleReady}
             onProgress={handleProgress}
             onDuration={d => setVideoDuration(d)}
@@ -298,6 +298,13 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
               setPlaying(false);
               setHasStarted(false);
               playerRef.current?.seekTo(videoStartSec ?? 0, 'seconds');
+            }}
+            config={{
+              youtube: {
+                playerVars: {
+                  origin: window.location.origin,
+                },
+              },
             }}
           />
 

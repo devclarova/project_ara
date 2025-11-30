@@ -21,15 +21,15 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
   const unreadCount = chats.reduce((sum, chat) => sum + (chat.unread_count || 0), 0);
 
   const isHome = location.pathname === '/finalhome';
-  const detailMatch = matchPath({ path: '/finalhome/:id', end: true }, location.pathname);
-  const isTweetDetail =
-    !!detailMatch &&
-    !!detailMatch.params.id &&
-    !['user', 'studyList', 'hometest', 'profileasap', 'chat', 'hnotifications'].includes(
-      detailMatch.params.id,
-    );
-  const actionLabel = isTweetDetail ? '댓글달기' : '게시하기';
-  const showPostButton = isHome || isTweetDetail;
+  // const detailMatch = matchPath({ path: '/finalhome/:id', end: true }, location.pathname);
+  // const isTweetDetail =
+  //   !!detailMatch &&
+  //   !!detailMatch.params.id &&
+  //   !['user', 'studyList', 'hometest', 'profileasap', 'chat', 'hnotifications'].includes(
+  //     detailMatch.params.id,
+  //   );
+  // const actionLabel = isTweetDetail ? '댓글달기' : '게시하기';
+  const showPostButton = isHome;
 
   useEffect(() => {
     if (!user) {
@@ -197,7 +197,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
             onClick={onTweetClick}
             className="w-full bg-primary hover:bg-primary/80 text-white font-bold py-3 px-2 lg:px-8 rounded-full mt-6 transition-colors cursor-pointer whitespace-nowrap"
           >
-            <span className="hidden lg:block">{actionLabel}</span>
+            <span className="hidden lg:block">게시하기</span>
             <i className="ri-add-line text-xl lg:hidden"></i>
           </button>
         )}

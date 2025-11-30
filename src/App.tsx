@@ -65,7 +65,8 @@ const App = () => {
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/landing" element={<LandingPage />} />
-                  <Route path="/studyList" element={<StudyListPage />} />
+                  {/* 🔓 공개용 (랜딩/인기콘텐츠에서만 사용) */}
+                  <Route path="/guest-study/:contents/:episode/:scene?" element={<StudyPage />} />
 
                   <Route element={<RequireGuest />}>
                     <Route path="/signup" element={<SignUpPage />} />
@@ -74,6 +75,7 @@ const App = () => {
                   <Route element={<RequireAuth />}>
                     <Route path="/signup/social" element={<SignUpWizard mode="social" />} />
                     <Route element={<OnboardingWall />}>
+                      <Route path="/studyList" element={<StudyListPage />} />
                       <Route path="/study/:contents/:episode/:scene?" element={<StudyPage />} />
                       <Route path="/test" element={<TempHomePage />} />
                       <Route path="/settings" element={<ProfileSettings />} />
