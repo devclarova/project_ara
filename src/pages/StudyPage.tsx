@@ -1,14 +1,14 @@
+import ShareButton from '@/components/common/ShareButton';
 import { InfoItem } from '@/components/study/ContentCard';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { NavLink, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { NavLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import StudyCard from '../components/study/StudyCard';
 import StudySubtitles from '../components/study/StudySubtitles';
 import VideoPlayer, { type VideoPlayerHandle } from '../components/study/VideoPlayer';
 import { supabase } from '../lib/supabase';
 import type { Subtitle } from '../types/study';
 import Sidebar from './homes/feature/Sidebar';
-import { Helmet } from 'react-helmet-async';
-import ShareButton from '@/components/common/ShareButton';
 
 // 이 페이지에서 실제로 사용하는 video 행 타입을 로컬로 정의(컬럼명과 일치)
 type VideoRow = {
@@ -26,7 +26,6 @@ type VideoRow = {
 };
 
 const StudyPage = () => {
-  // const { id } = useParams<{ id: string }>();
   const { contents, episode, scene } = useParams<{
     contents: string;
     episode: string;
@@ -34,16 +33,13 @@ const StudyPage = () => {
   }>();
   const navigate = useNavigate(); // useNavigate 훅 사용
 
-  // 숫자 변환 가드
-  // const studyId = useMemo(() => {
-  //   const n = Number(id);
-  //   return Number.isFinite(n) ? n : undefined;
-  // }, [id]);
-
   const [selectedSubtitle, setSelectedSubtitle] = useState<Subtitle | null>(null);
   const [study, setStudy] = useState<VideoRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [showTweetModal, setShowTweetModal] = useState(false);
+  const location = useLocation();
+  const isGuestRoute = location.pathname.startsWith('/guest-study');
+  const basePath = isGuestRoute ? '/guest-study' : '/study';
 
   const handleSelectDialogue = (s: Subtitle) => setSelectedSubtitle(s);
   const vref = useRef<VideoPlayerHandle>(null);
@@ -76,7 +72,7 @@ const StudyPage = () => {
     const c = enc(row.contents);
     const e = enc(row.episode);
     const s = row.scene != null && String(row.scene).length > 0 ? enc(row.scene) : null;
-    return s ? `/study/${c}/${e}/${s}` : `/study/${c}/${e}`;
+    return s ? `${basePath}/${c}/${e}/${s}` : `${basePath}/${c}/${e}`;
   };
 
   // video 단건 조회
@@ -122,7 +118,6 @@ const StudyPage = () => {
         .limit(1);
 
       if (error) {
-        console.error('[video fetch first-scene error]', error);
         setStudy(null);
       } else {
         const row = (data?.[0] as VideoRow) ?? null;

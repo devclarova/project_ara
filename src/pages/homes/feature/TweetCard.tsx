@@ -24,7 +24,7 @@ interface TweetCardProps {
   id: string;
   user: User;
   content: string;
-  image?: string;
+  image?: string | string[];
   timestamp: string;
   stats: Stats;
   onDeleted?: (id: string) => void;
@@ -46,9 +46,12 @@ export default function TweetCard({
   const [profileId, setProfileId] = useState<string | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
+  const [currentImage, setCurrentImage] = useState(0);
+  const [contentImages, setContentImages] = useState<string[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const hasChecked = useRef(false);
+  const images = Array.isArray(image) ? image : image ? [image] : [];
 
   /** ✅ 로그인한 프로필 ID 로드 */
   useEffect(() => {
@@ -112,6 +115,28 @@ export default function TweetCard({
     return () => document.removeEventListener('mousedown', handleOutside);
   }, [showDialog]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+    const imgs = Array.from(doc.querySelectorAll('img')).map(img => img.src);
+
+    setContentImages(imgs);
+    setCurrentImage(0); // 트윗 바뀔 때 첫 이미지로 리셋
+  }, [content]);
+
+  // 🔥 prop 으로 온 image(string | string[]) → 배열로 정규화
+  const propImages = Array.isArray(image) ? image : image ? [image] : [];
+
+  // 🔥 최종 슬라이드에 사용할 이미지 목록 (prop 우선, 없으면 content에서 추출한 것)
+  const allImages = propImages.length > 0 ? propImages : contentImages;
+
+  // 🔥 본문에서는 img 태그는 제거 (슬라이드에서만 보여줄 거라)
+  const safeContent = DOMPurify.sanitize(content, {
+    FORBID_TAGS: ['img'],
+  });
+
   /** ✅ 좋아요 토글 */
   const handleLikeToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -174,7 +199,23 @@ export default function TweetCard({
     navigate(`/finalhome/user/${user.name}`);
   };
 
-  const safeContent = DOMPurify.sanitize(content);
+  const handlePrevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImage(prev => {
+      if (prev <= 0) return 0; // 맨 앞이면 더 이상 안 넘어감
+      return prev - 1;
+    });
+  };
+
+  const handleNextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImage(prev => {
+      const lastIndex = allImages.length - 1;
+      if (prev >= lastIndex) return lastIndex; // 맨 뒤이면 더 이상 안 넘어감
+      return prev + 1;
+    });
+  };
+
   const isMyTweet = authUser?.id === user.username;
 
   return (
@@ -250,9 +291,70 @@ export default function TweetCard({
             dangerouslySetInnerHTML={{ __html: safeContent }}
           />
 
-          {image && (
-            <div className="mt-3 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
-              <img src={image} alt="Tweet image" className="w-full h-auto object-cover" />
+          {/* 이미지 슬라이드 + 균일 사이즈 */}
+          {allImages.length > 0 && (
+            <div
+              className="mt-3 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700"
+              onClick={e => e.stopPropagation()}
+            >
+              <div
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: 300,
+                  overflow: 'hidden',
+                  backgroundColor: 'rgba(0,0,0,0.05)',
+                }}
+              >
+                <img
+                  src={allImages[currentImage]}
+                  alt={`Tweet image ${currentImage + 1}`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+
+                {allImages.length > 1 && (
+                  <>
+                    {/* 이전 버튼: 첫 이미지가 아닐 때만 표시 */}
+                    {currentImage > 0 && (
+                      <button
+                        onClick={handlePrevImage}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm"
+                      >
+                        ‹
+                      </button>
+                    )}
+
+                    {/* 다음 버튼: 마지막 이미지가 아닐 때만 표시 */}
+                    {currentImage < allImages.length - 1 && (
+                      <button
+                        onClick={handleNextImage}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm"
+                      >
+                        ›
+                      </button>
+                    )}
+
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                      {allImages.map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={e => {
+                            e.stopPropagation();
+                            setCurrentImage(idx);
+                          }}
+                          className={`w-2 h-2 rounded-full ${
+                            idx === currentImage ? 'bg-white' : 'bg-white/40'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           )}
 

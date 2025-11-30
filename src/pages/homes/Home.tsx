@@ -23,7 +23,7 @@ export type UITweet = {
   id: string;
   user: TweetUser;
   content: string;
-  image?: string;
+  image?: string | string[];
   timestamp: string;
   stats: TweetStats;
 };
@@ -101,7 +101,8 @@ export default function Home() {
 
         const { data: feedData, error } = await supabase
           .from('tweets')
-          .select(`
+          .select(
+            `
             id,
             content,
             image_url,
@@ -116,7 +117,8 @@ export default function Home() {
               user_id,
               avatar_url
             )
-          `)
+          `,
+          )
           .order('created_at', { ascending: false })
           .range(from, to);
 
@@ -214,42 +216,46 @@ export default function Home() {
 
     const insertChannel = supabase
       .channel('tweets-insert-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tweets' }, async payload => {
-        const newTweet = payload.new as any;
-        if (newTweet.author_id === myProfileId) return;
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'tweets' },
+        async payload => {
+          const newTweet = payload.new as any;
+          if (newTweet.author_id === myProfileId) return;
 
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('nickname, user_id, avatar_url')
-          .eq('id', newTweet.author_id)
-          .maybeSingle();
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('nickname, user_id, avatar_url')
+            .eq('id', newTweet.author_id)
+            .maybeSingle();
 
-        const uiTweet: UITweet = {
-          id: newTweet.id,
-          user: {
-            name: profile?.nickname ?? 'Unknown',
-            username: profile?.user_id ?? 'anonymous',
-            avatar: profile?.avatar_url ?? '/default-avatar.svg',
-          },
-          content: newTweet.content,
-          image: newTweet.image_url || undefined,
-          timestamp: new Date(newTweet.created_at).toLocaleString('ko-KR', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          }),
-          stats: {
-            replies: newTweet.reply_count ?? 0,
-            retweets: newTweet.repost_count ?? 0,
-            likes: newTweet.like_count ?? 0,
-            bookmarks: newTweet.bookmark_count ?? 0,
-            views: newTweet.view_count ?? 0,
-          },
-        };
+          const uiTweet: UITweet = {
+            id: newTweet.id,
+            user: {
+              name: profile?.nickname ?? 'Unknown',
+              username: profile?.user_id ?? 'anonymous',
+              avatar: profile?.avatar_url ?? '/default-avatar.svg',
+            },
+            content: newTweet.content,
+            image: newTweet.image_url || undefined,
+            timestamp: new Date(newTweet.created_at).toLocaleString('ko-KR', {
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+            stats: {
+              replies: newTweet.reply_count ?? 0,
+              retweets: newTweet.repost_count ?? 0,
+              likes: newTweet.like_count ?? 0,
+              bookmarks: newTweet.bookmark_count ?? 0,
+              views: newTweet.view_count ?? 0,
+            },
+          };
 
-        setTweets(prev => [uiTweet, ...prev]);
-      })
+          setTweets(prev => [uiTweet, ...prev]);
+        },
+      )
       .subscribe();
 
     const deleteChannel = supabase

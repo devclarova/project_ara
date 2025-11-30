@@ -1,6 +1,10 @@
 import type { StudyListProps } from '@/types/study';
 import { useNavigate } from 'react-router-dom';
 
+type ContentCardProps = StudyListProps & {
+  basePath?: '/study' | '/guest-study';
+};
+
 export const InfoItem = ({ icon, text }: { icon: string; text?: string }) => {
   return (
     <span className="flex items-center gap-1 text-xs sm:text-[12px] md:text-sm text-gray-600 leading-none dark:text-gray-300">
@@ -20,9 +24,9 @@ const ContentCard = ({
   episode,
   scene,
   duration,
-}: StudyListProps) => {
+  basePath = '/study', // 기본: /study
+}: ContentCardProps) => {
   const navigate = useNavigate();
-
   // 파일 상단 훅들 아래 위치에 추가
   const enc = (v?: string | number | null) => encodeURIComponent(String(v ?? ''));
 
@@ -34,7 +38,7 @@ const ContentCard = ({
     const c = enc(row.contents);
     const e = enc(row.episode);
     const s = row.scene != null && String(row.scene).length > 0 ? enc(row.scene) : null;
-    return s ? `/study/${c}/${e}/${s}` : `/study/${c}/${e}`;
+    return s ? `${basePath}/${c}/${e}/${s}` : `${basePath}/${c}/${e}`;
   };
 
   return (

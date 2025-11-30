@@ -274,6 +274,7 @@ const StudyListPage = () => {
                     const [v] = study.video ?? [];
                     return (
                       <ContentCard
+                        basePath="/study"
                         key={study.id}
                         id={study.id}
                         image={study.poster_image_url}
@@ -284,7 +285,6 @@ const StudyListPage = () => {
                         scene={v?.scene || ''}
                         level={v?.level || ''}
                         duration={typeof v?.runtime_bucket === 'string' ? v.runtime_bucket : null}
-                        comments="0개 댓글"
                       />
                     );
                   })

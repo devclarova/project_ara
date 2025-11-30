@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import TweetDetailCard from './components/TweetDetailCard';
 import ReplyList from './components/ReplyList';
+import InlineReplyEditor from './components/InlineReplyEditor';
 
 export default function TweetDetail() {
   const { id } = useParams<{ id: string }>();
@@ -317,7 +318,13 @@ export default function TweetDetail() {
         </div>
 
         <TweetDetailCard tweet={tweet} />
-        <ReplyList replies={replies} />
+        <InlineReplyEditor tweetId={tweet.id} />
+        <ReplyList
+          replies={replies}
+          onDeleted={id => {
+            setReplies(prev => prev.filter(r => r.id !== id));
+          }}
+        />
       </div>
     </div>
   );
