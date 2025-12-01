@@ -31,6 +31,7 @@ import OnboardingWall from './routes/guards/OnboardingWall';
 import { DirectChatProvider } from './contexts/DirectChatContext';
 import Header from './components/common/Headrer';
 
+// ---------- 인증 가드 ----------
 function RequireAuth() {
   const { session, loading } = useAuth();
   const location = useLocation();
@@ -50,51 +51,77 @@ function RequireGuest() {
   return <Outlet />;
 }
 
+// ---------- 실제 라우트 + 헤더 제어 ----------
+function AppInner() {
+  const location = useLocation();
+
+  // ✅ 헤더를 숨길 경로들
+  const HIDE_HEADER_PATHS = ['/signin', '/signup', '/auth/callback', '/signup/social'];
+
+  const hideHeader = HIDE_HEADER_PATHS.some(path => location.pathname.startsWith(path));
+
+  return (
+    <>
+      {/* 공통 스크롤 리셋 */}
+      <ScrollToTop />
+
+      <div className="layout min-h-screen flex flex-col">
+        {/* ✅ 로그인/회원가입/온보딩에서는 헤더 렌더링 안 함 */}
+        {!hideHeader && <Header />}
+
+        {/* ✅ 헤더가 있을 때만 상단 여백 주기 (고정 헤더 높이 보정) */}
+        <main
+          className={
+            hideHeader ? 'flex-1' : 'flex-1 pt-[73px] sm:pt-[81px] mid:pt-[81px] md:pt-[97px]' // 필요하면 값 조정
+          }
+        >
+          <Routes>
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/landing" element={<LandingPage />} />
+            {/* 🔓 공개용 (랜딩/인기콘텐츠에서만 사용) */}
+            <Route path="/guest-study/:contents/:episode/:scene?" element={<StudyPage />} />
+
+            <Route element={<RequireGuest />}>
+              <Route path="/signup" element={<SignUpPage />} />
+              <Route path="/signin" element={<SignInPage />} />
+            </Route>
+
+            <Route element={<RequireAuth />}>
+              <Route path="/signup/social" element={<SignUpWizard mode="social" />} />
+              <Route element={<OnboardingWall />}>
+                <Route path="/study/:contents/:episode/:scene?" element={<StudyPage />} />
+                <Route path="/test" element={<TempHomePage />} />
+                <Route path="/settings" element={<ProfileSettings />} />
+
+                <Route path="/finalhome" element={<Layout />}>
+                  <Route index element={<Home />} />
+                  <Route path=":id" element={<TweetDetail />} />
+                  <Route path="user/:username" element={<ProfileAsap />} />
+                  <Route path="hometest" element={<HomesTest />} />
+                  <Route path="hnotifications" element={<HNotificationsPage />} />
+                  <Route path="chat" element={<DirectChatPage />} />
+                </Route>
+              </Route>
+            </Route>
+
+            {/* 존재하지 않는 경로 */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </main>
+      </div>
+    </>
+  );
+}
+
+// ---------- 최상위 App (Provider + Router 래핑) ----------
 const App = () => {
   return (
     <AuthProvider>
       <NewChatNotificationProvider>
         <DirectChatProvider>
           <Router>
-            <ScrollToTop />
-            <div className="layout min-h-screen flex flex-col">
-              <main className="flex-1">
-                {/* <main className="flex-1 mt-[calc(97px)]"> */}
-                {/* <Header /> */}
-                <Routes>
-                  <Route path="/auth/callback" element={<AuthCallback />} />
-                  <Route path="/" element={<LandingPage />} />
-                  <Route path="/landing" element={<LandingPage />} />
-                  {/* 🔓 공개용 (랜딩/인기콘텐츠에서만 사용) */}
-                  <Route path="/guest-study/:contents/:episode/:scene?" element={<StudyPage />} />
-
-                  <Route element={<RequireGuest />}>
-                    <Route path="/signup" element={<SignUpPage />} />
-                    <Route path="/signin" element={<SignInPage />} />
-                  </Route>
-                  <Route element={<RequireAuth />}>
-                    <Route path="/signup/social" element={<SignUpWizard mode="social" />} />
-                    <Route element={<OnboardingWall />}>
-                      <Route path="/studyList" element={<StudyListPage />} />
-                      <Route path="/study/:contents/:episode/:scene?" element={<StudyPage />} />
-                      <Route path="/test" element={<TempHomePage />} />
-                      <Route path="/settings" element={<ProfileSettings />} />
-                      <Route path="/finalhome" element={<Layout />}>
-                        <Route index element={<Home />} />
-                        <Route path=":id" element={<TweetDetail />} />
-                        <Route path="user/:username" element={<ProfileAsap />} />
-                        <Route path="hometest" element={<HomesTest />} />
-                        <Route path="hnotifications" element={<HNotificationsPage />} />
-                        <Route path="chat" element={<DirectChatPage />} />
-                      </Route>
-                    </Route>
-                  </Route>
-
-                  {/* 존재하지 않는 경로 */}
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-              </main>
-            </div>
+            <AppInner />
           </Router>
         </DirectChatProvider>
       </NewChatNotificationProvider>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+
 import GuideModal, { isGuideModalDismissed } from '@/components/common/GuideModal';
 import HeroSection from '@/components/landing/HeroSection';
 import ProblemSection from '@/components/landing/ProblemSection';
@@ -6,6 +7,7 @@ import SolutionSection from '@/components/landing/SolutionSection';
 import PopularContentSection from '@/components/landing/PopularContentSection';
 import TestimonialsSection from '@/components/landing/TestimonialsSection';
 import CTASection from '@/components/landing/CTASection';
+import HowItWorksSection from '@/components/landing/HowItWorksSection';
 
 type HomeProps = {
   onSignup?: () => void;
@@ -13,11 +15,20 @@ type HomeProps = {
 
 const LANDING_GUIDE_KEY = 'ara-landing-guide';
 const HEADER_OFFSET = 0;
+const SCROLL_SNAP_BREAKPOINT = 1024; // lg 이상일 때만 스냅
 
-type SectionId = 'hero' | 'problems' | 'features' | 'contents' | 'testimonials' | 'cta';
+type SectionId =
+  | 'hero'
+  | 'how-it-works'
+  | 'problems'
+  | 'features'
+  | 'contents'
+  | 'testimonials'
+  | 'cta';
 
 const sectionOrder: SectionId[] = [
   'hero',
+  'how-it-works',
   'problems',
   'features',
   'contents',
@@ -33,6 +44,7 @@ const LandingPage = ({ onSignup }: HomeProps) => {
   const wheelDeltaYRef = useRef(0);
   const touchStartYRef = useRef<number | null>(null);
 
+  // 가이드 모달
   useEffect(() => {
     if (!isGuideModalDismissed(LANDING_GUIDE_KEY)) {
       setShowGuide(true);
@@ -70,6 +82,7 @@ const LandingPage = ({ onSignup }: HomeProps) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // 섹션 인덱스로 스냅 스크롤
   const scrollToIndex = useCallback((nextIndex: number) => {
     const targetId = sectionOrder[nextIndex];
     const el = document.getElementById(targetId);
@@ -81,13 +94,15 @@ const LandingPage = ({ onSignup }: HomeProps) => {
     isScrollingRef.current = true;
     window.scrollTo({ top, behavior: 'smooth' });
 
+    // 부드러운 스크롤이 끝날 시간 즈음에 플래그만 풀어줌 (강제 재스크롤 ❌)
+    const TIMER = 650;
     window.setTimeout(() => {
-      window.scrollTo({ top, behavior: 'auto' });
       isScrollingRef.current = false;
       wheelDeltaYRef.current = 0;
-    }, 700);
+    }, TIMER);
   }, []);
 
+  // 현재 섹션 기준 위/아래 이동
   const goToNeighborSection = useCallback(
     (direction: 1 | -1) => {
       const currentIndex = sectionOrder.indexOf(activeSection);
@@ -106,11 +121,20 @@ const LandingPage = ({ onSignup }: HomeProps) => {
     [activeSection, scrollToIndex],
   );
 
-  // 휠 스크롤 제어
+  // 휠 스크롤 제어 (데스크톱에서만 풀페이지 스냅)
   useEffect(() => {
+    const handleResize = () => {
+      // 리사이즈 후에도 조건 다시 체크할 수 있도록 의도적으로 비움
+    };
+    window.addEventListener('resize', handleResize);
+
     const wheelHandler = (e: WheelEvent) => {
+      const enableSnap = window.innerWidth >= SCROLL_SNAP_BREAKPOINT;
+      if (!enableSnap) return; // 모바일/태블릿에서는 자연 스크롤
+
       const deltaY = e.deltaY;
 
+      // 섹션 스냅 모드에서는 기본 스크롤 막고 우리가 제어
       e.preventDefault();
 
       if (isScrollingRef.current) return;
@@ -128,22 +152,32 @@ const LandingPage = ({ onSignup }: HomeProps) => {
     };
 
     window.addEventListener('wheel', wheelHandler as any, { passive: false });
-    return () => window.removeEventListener('wheel', wheelHandler as any);
+    return () => {
+      window.removeEventListener('wheel', wheelHandler as any);
+      window.removeEventListener('resize', handleResize);
+    };
   }, [goToNeighborSection]);
 
-  // 터치 스와이프 제어
+  // 터치 스와이프 제어 (역시 데스크톱/대화면에서만)
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
+      const enableSnap = window.innerWidth >= SCROLL_SNAP_BREAKPOINT;
+      if (!enableSnap) return;
       const touch = e.touches[0];
       touchStartYRef.current = touch.clientY;
     };
 
     const handleTouchMove = (e: TouchEvent) => {
+      const enableSnap = window.innerWidth >= SCROLL_SNAP_BREAKPOINT;
+      if (!enableSnap) return;
       e.preventDefault();
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
+      const enableSnap = window.innerWidth >= SCROLL_SNAP_BREAKPOINT;
+      if (!enableSnap) return;
       if (touchStartYRef.current == null) return;
+
       const endY = e.changedTouches[0]?.clientY ?? touchStartYRef.current;
       const deltaY = touchStartYRef.current - endY;
       touchStartYRef.current = null;
@@ -176,7 +210,7 @@ const LandingPage = ({ onSignup }: HomeProps) => {
   };
 
   return (
-    <main className="relative bg-white dark:bg-slate-950 text-gray-900 dark:text-gray-100">
+    <main className="relative min-h-screen bg-white dark:bg-background text-slate-900 dark:text-gray-100">
       {/* 상단 진행 바 */}
       <div className="fixed left-0 top-0 z-40 w-full h-0.5 bg-transparent">
         <div
@@ -185,10 +219,11 @@ const LandingPage = ({ onSignup }: HomeProps) => {
         />
       </div>
 
-      {/* 오른쪽 미니 내비 */}
+      {/* 오른쪽 미니 내비 (xl부터 표시) */}
       <div className="fixed right-4 top-1/2 z-30 -translate-y-1/2 hidden xl:flex flex-col gap-3">
         {[
           { id: 'hero' as SectionId, label: 'Top' },
+          { id: 'how-it-works' as SectionId, label: 'How' },
           { id: 'problems' as SectionId, label: 'Problems' },
           { id: 'features' as SectionId, label: 'Features' },
           { id: 'contents' as SectionId, label: 'Contents' },
@@ -209,8 +244,8 @@ const LandingPage = ({ onSignup }: HomeProps) => {
               <span
                 className={`h-2.5 rounded-full transition-all ${
                   isActive
-                    ? 'w-5 bg-primary'
-                    : 'w-2 bg-gray-300 dark:bg-slate-600 group-hover:w-3 group-hover:bg-primary/60'
+                    ? 'w-5 bg-primary shadow-[0_0_12px_rgba(0,191,165,0.7)]'
+                    : 'w-2 bg-gray-300 dark:bg-slate-600 group-hover:w-3 group-hover:bg-primary/70'
                 }`}
               />
             </button>
@@ -218,14 +253,8 @@ const LandingPage = ({ onSignup }: HomeProps) => {
         })}
       </div>
 
-      <GuideModal
-        isOpen={showGuide}
-        onClose={() => setShowGuide(false)}
-        slides={LANDING_GUIDE_SLIDES}
-        storageKey={LANDING_GUIDE_KEY}
-      />
-
       <HeroSection onSignup={onSignup} />
+      <HowItWorksSection />
       <ProblemSection />
       <SolutionSection />
       <PopularContentSection />
@@ -234,14 +263,5 @@ const LandingPage = ({ onSignup }: HomeProps) => {
     </main>
   );
 };
-
-const LANDING_GUIDE_SLIDES = [
-  { id: 'landing-1', image: '/images/landing_guide_1.png', alt: 'ARA 이용 방법 안내 1' },
-  { id: 'landing-2', image: '/images/landing_guide_2.png', alt: 'ARA 이용 방법 안내 2' },
-  { id: 'landing-3', image: '/images/landing_guide_3.png', alt: 'ARA 이용 방법 안내 3' },
-  { id: 'landing-4', image: '/images/landing_guide_4.gif', alt: 'ARA 이용 방법 안내 4' },
-  { id: 'landing-5', image: '/images/landing_guide_5.gif', alt: 'ARA 이용 방법 안내 5' },
-  { id: 'landing-6', image: '/images/landing_guide_6.png', alt: 'ARA 이용 방법 안내 6' },
-];
 
 export default LandingPage;

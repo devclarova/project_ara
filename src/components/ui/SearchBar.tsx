@@ -26,7 +26,7 @@ export default function SearchBar({
   };
 
   return (
-    <div className="flex items-center justify-center bg-white dark:bg-secondary text-foreground transition-colors px-2 sm:px-0">
+    <div className="flex items-center justify-center bg-white dark:bg-background text-foreground transition-colors px-2 sm:px-0">
       {/* 검색 입력창 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center justify-between h-10 sm:h-11 md:h-12 w-full max-w-[95%] sm:max-w-xl md:max-w-2xl rounded-full border dark:border-gray-700 border-input bg-card dark:bg-secondary shadow-sm focus-within:ring-2 focus-within:ring-primary/60 focus-within:border-transparent transition-colors overflow-hidden">

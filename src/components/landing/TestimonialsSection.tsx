@@ -58,19 +58,28 @@ export default function TestimonialsSection() {
   return (
     <motion.section
       id="testimonials"
-      // ✅ 모바일에서는 위에서부터 시작, md 이상에서만 가운데 정렬
-      className="bg-white dark:bg-slate-950 min-h-screen flex items-start md:items-center"
+      className="
+        relative overflow-x-hidden 
+        bg-white dark:bg-background 
+        min-h-[calc(100vh-100px)]
+        flex items-center
+      "
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ amount: 0.3, once: true }}
       transition={{ duration: 0.5 }}
     >
-      <div className="w-full max-w-screen-xl mx-auto px-6 py-14 md:py-20">
+      {/* 배경 포인트 */}
+      <div className="pointer-events-none absolute -left-10 -top-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl dark:bg-primary/25" />
+      <div className="pointer-events-none absolute -right-10 bottom-0 h-64 w-64 rounded-full bg-sky-200/40 blur-3xl dark:bg-sky-700/40" />
+
+      {/* 🔧 다른 섹션과 패딩/높이 통일 */}
+      <div className="w-full max-w-screen-xl mx-auto px-6 pt-8 pb-12 md:pt-10 md:pb-14 lg:pt-12 lg:pb-16">
         <div className="grid gap-10 lg:gap-16 md:grid-cols-2 items-start">
-          {/* 왼쪽 */}
+          {/* 왼쪽 영역 */}
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold mb-3 text-gray-900 dark:text-gray-100 break-keep">
+              <h2 className="text-2xl md:text-3xl font-bold mb-3 text-slate-900 dark:text-gray-100 break-keep">
                 ARA는 이런 학습자들을
                 <br className="hidden sm:block" />
                 떠올리며 설계되고 있어요
@@ -79,7 +88,6 @@ export default function TestimonialsSection() {
                 아직 정식 출시 전이지만, ARA는 한 명의 전형적인 학습자가 아니라{' '}
                 <span className="font-semibold">여러 타입의 학습자</span>를 동시에 상상하면서
                 만들어지고 있습니다.
-                {/* ✅ 긴 설명은 sm 이상에서만 노출 */}
                 <span className="hidden sm:inline">
                   {' '}
                   드라마로 한국어를 시작하는 사람, 워홀·유학을 준비하는 사람, 회사에서 한국어를 써야
@@ -93,13 +101,12 @@ export default function TestimonialsSection() {
               {stats.map(stat => (
                 <div
                   key={stat.label}
-                  className="rounded-2xl bg-gray-50 dark:bg-slate-900 px-3 py-2 sm:px-4 sm:py-3 shadow-sm border border-gray-100 dark:border-slate-700 h-full flex flex-col"
+                  className="rounded-2xl bg-gray-50 dark:bg-secondary px-3 py-2 sm:px-4 sm:py-3 shadow-sm border border-gray-100 dark:border-slate-700 h-full flex flex-col"
                 >
                   <div className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1 break-keep">
                     {stat.label}
                   </div>
                   <div className="text-lg sm:text-xl font-bold text-primary mb-1">{stat.value}</div>
-                  {/* ✅ 설명은 모바일에서 숨김 (높이 절약) */}
                   <div className="hidden sm:block text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed break-keep flex-1">
                     {stat.desc}
                   </div>
@@ -108,19 +115,19 @@ export default function TestimonialsSection() {
             </div>
           </div>
 
-          {/* 오른쪽 */}
+          {/* 오른쪽 영역 */}
           <div className="w-full mt-10 md:mt-0 md:justify-self-end max-w-full overflow-hidden">
             <BaseCarousel autoplay loop slidesPerView={1} spaceBetween={20}>
               {reviews.map(r => (
                 <SwiperSlide key={r.name} className="pb-10">
-                  <div className="relative rounded-2xl bg-gray-50 dark:bg-slate-900 px-5 py-6 shadow-sm border border-gray-100 dark:border-slate-700 h-full flex flex-col">
+                  <div className="relative rounded-2xl bg-gray-50 dark:bg-secondary px-5 py-6 shadow-sm border border-gray-100 dark:border-slate-700 h-full flex flex-col">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/60 to-sky-400 text-white flex items-center justify-center text-sm font-semibold">
                         {r.name.split(' ')[0][0]}
                         {r.name.split(' ')[1]?.[0] ?? ''}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">
+                        <p className="font-medium text-slate-900 dark:text-gray-100 text-sm">
                           {r.name}
                         </p>
                         <p className="text-[11px] text-gray-500 dark:text-gray-400">{r.country}</p>
@@ -140,7 +147,7 @@ export default function TestimonialsSection() {
               ))}
             </BaseCarousel>
 
-            {/* ✅ 모바일: 짧은 한 줄, sm 이상: 기존 긴 설명 */}
+            {/* 설명 문구 */}
             <p className="mt-4 text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed break-keep sm:hidden">
               지금 보시는 후기는 ARA가 상정한 학습자 페르소나를 바탕으로 만든 시나리오형 예시
               리뷰입니다.

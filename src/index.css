@@ -1102,3 +1102,32 @@ hr {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* 랜딩용 스와이퍼 페이지네이션 공통 스타일 */
+.landing-swiper .swiper-pagination {
+  bottom: 0.2rem !important;
+}
+
+.landing-swiper .swiper-pagination-bullet {
+  width: 6px;
+  height: 6px;
+  margin: 0 3px !important;
+  border-radius: 9999px;
+  background: rgba(148, 163, 184, 0.4); /* 기본은 옅은 회색 */
+  opacity: 1; /* 항상 동일하게 보이도록 */
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.landing-swiper .swiper-pagination-bullet-active {
+  /* 모양은 그대로, 색만 포커스 */
+  background: rgb(0, 191, 165); /* primary */
+  box-shadow: 0 0 6px rgba(0, 191, 165, 0.7);
+  width: 7px;
+  height: 7px;
+}
+
+.hero-slider .swiper-pagination {
+  bottom: 195px;
+}
