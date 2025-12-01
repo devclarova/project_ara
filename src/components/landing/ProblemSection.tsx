@@ -12,15 +12,25 @@ export default function ProblemSection() {
   return (
     <motion.section
       id="problems"
-      className="bg-sky-50/40 dark:bg-slate-950 min-h-screen flex items-center"
+      className="
+        relative overflow-x-hidden 
+        bg-sky-50/40 dark:bg-background 
+        min-h-[calc(100vh-100px)]
+        flex items-center
+      "
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ amount: 0.3, once: true }}
       transition={{ duration: 0.5 }}
     >
-      <div className="w-full max-w-screen-xl mx-auto px-6 py-16">
+      {/* Hero와 같은 톤의 배경 포인트 */}
+      <div className="pointer-events-none absolute -left-10 -top-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl dark:bg-primary/25" />
+      <div className="pointer-events-none absolute -right-10 bottom-0 h-64 w-64 rounded-full bg-sky-200/40 blur-3xl dark:bg-sky-700/40" />
+
+      {/* 🔧 Hero / HowItWorks와 패딩 통일 */}
+      <div className="w-full max-w-screen-xl mx-auto px-6 pt-8 pb-12 md:pt-10 md:pb-14 lg:pt-12 lg:pb-16">
         <div className="max-w-2xl mx-auto text-center mb-10">
-          <h2 className="text-2xl md:text-3xl font-bold mb-3 text-gray-900 dark:text-gray-100 break-keep">
+          <h2 className="text-2xl md:text-3xl font-bold mb-3 text-slate-900 dark:text-gray-100 break-keep">
             혹시 이런 고민, 해본 적 있나요?
           </h2>
           <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base break-keep">
@@ -32,7 +42,7 @@ export default function ProblemSection() {
           {problems.map((text, idx) => (
             <div key={text} className={`flex ${idx % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
               <motion.div
-                className="max-w-[80%] rounded-2xl bg-white dark:bg-slate-900 px-4 py-3 text-sm text-left shadow-sm border border-sky-100 dark:border-slate-700"
+                className="max-w-[80%] rounded-2xl bg-white dark:bg-secondary px-4 py-3 text-sm text-left shadow-sm border border-sky-100 dark:border-slate-700"
                 initial={{ opacity: 0, y: 16, scale: 0.98 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ amount: 0.4, once: true }}
@@ -42,7 +52,7 @@ export default function ProblemSection() {
                   <span className="text-[11px] text-gray-400 dark:text-gray-500">
                     learner #{idx + 1}
                   </span>
-                  <span className="inline-flex items-center rounded-full bg-sky-50 dark:bg-slate-800 px-2 py-[2px] text-[10px] text-sky-700 dark:text-sky-300 border border-sky-100 dark:border-slate-700">
+                  <span className="inline-flex items-center rounded-full bg-sky-50 dark:bg-background px-2 py-[2px] text-[10px] text-sky-700 dark:text-sky-300 border border-sky-100 dark:border-slate-700">
                     real 고민
                   </span>
                 </div>

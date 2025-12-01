@@ -9,6 +9,7 @@ type BaseCarouselProps = {
   autoplay?: boolean;
   loop?: boolean;
   className?: string;
+  swiperClassName?: string;
 };
 
 export default function BaseCarousel({
@@ -18,9 +19,10 @@ export default function BaseCarousel({
   autoplay = false,
   loop = false,
   className = '',
+  swiperClassName = '',
 }: BaseCarouselProps) {
   return (
-    <div className={`relative w-full ${className}`}>
+    <div className={`relative w-full group ${className}`}>
       <Swiper
         modules={[Pagination, Autoplay]}
         loop={loop}
@@ -34,23 +36,20 @@ export default function BaseCarousel({
             ? {
                 delay: 4500,
                 disableOnInteraction: false,
+                pauseOnMouseEnter: true, // ✅ 바로 이 기능!
               }
             : undefined
         }
-        // ✅ 반응형 레이아웃 변경 시 강제로 다시 계산하도록
         observer
         observeParents
         observeSlideChildren
-        onResize={swiper => {
-          // Swiper가 devtools로 viewport를 줄였을 때도 즉시 width 다시 계산
-          swiper.update();
-        }}
+        onResize={swiper => swiper.update()}
         style={
           {
             '--swiper-pagination-color': 'rgb(0,191,165)',
           } as any
         }
-        className="w-full max-w-full"
+        className={`w-full max-w-full landing-swiper ${swiperClassName}`}
       >
         {children}
       </Swiper>

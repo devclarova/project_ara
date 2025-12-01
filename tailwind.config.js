@@ -4,6 +4,11 @@ export default {
   content: ['./src/**/*.{js,jsx,ts,tsx}'],
   theme: {
     extend: {
+      // ✅ 여기만 새로 추가
+      screens: {
+        mid: { min: '767px', max: '1023px' }, // 767~1023px 구간
+      },
+
       colors: {
         primary: {
           DEFAULT: 'hsl(var(--primary))',
