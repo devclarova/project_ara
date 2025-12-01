@@ -219,7 +219,7 @@ export default function EditProfileModal({
           <div className="mt-12 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                이름
+                닉네임
               </label>
               <input
                 type="text"

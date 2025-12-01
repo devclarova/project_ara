@@ -30,6 +30,8 @@ import SignUpWizard from './pages/SignUpWizard';
 import OnboardingWall from './routes/guards/OnboardingWall';
 import { DirectChatProvider } from './contexts/DirectChatContext';
 import Header from './components/common/Headrer';
+import SnsPage from './pages/sns/SnsPage';
+import SnsDetailPage from './pages/sns/SnsDetailPage';
 
 // ---------- 인증 가드 ----------
 function RequireAuth() {
@@ -46,7 +48,7 @@ function RequireGuest() {
   if (session) {
     const provider = (session.user.app_metadata?.provider as string | undefined) ?? 'email';
     // 세션 있으면: 소셜은 온보딩으로, 이메일은 홈으로
-    return <Navigate to={provider === 'email' ? '/finalhome' : '/signup/social'} replace />;
+    return <Navigate to={provider === 'email' ? '/studyList' : '/signup/social'} replace />;
   }
   return <Outlet />;
 }
@@ -81,6 +83,7 @@ function AppInner() {
             <Route path="/landing" element={<LandingPage />} />
             {/* 🔓 공개용 (랜딩/인기콘텐츠에서만 사용) */}
             <Route path="/guest-study/:contents/:episode/:scene?" element={<StudyPage />} />
+            <Route path="/studyList" element={<StudyListPage />} />
 
             <Route element={<RequireGuest />}>
               <Route path="/signup" element={<SignUpPage />} />
@@ -93,17 +96,19 @@ function AppInner() {
                 <Route path="/study/:contents/:episode/:scene?" element={<StudyPage />} />
                 <Route path="/test" element={<TempHomePage />} />
                 <Route path="/settings" element={<ProfileSettings />} />
+                <Route path="/sns" element={<SnsPage />} />
+                <Route path="/sns/:id" element={<SnsDetailPage />} />
+                <Route path="/profile" element={<ProfileAsap />} />
+                <Route path="/profile/:username" element={<ProfileAsap />} />
+                <Route path="hometest" element={<HomesTest />} />
+                <Route path="hnotifications" element={<HNotificationsPage />} />
+                <Route path="chat" element={<DirectChatPage />} />
 
-                <Route path="/finalhome" element={<Layout />}>
-                  <Route index element={<Home />} />
-                  <Route path=":id" element={<TweetDetail />} />
-                  <Route path="user/:username" element={<ProfileAsap />} />
-                  <Route path="hometest" element={<HomesTest />} />
-                  <Route path="hnotifications" element={<HNotificationsPage />} />
-                  <Route path="chat" element={<DirectChatPage />} />
-                </Route>
+                {/* <Route path="/finalhome" element={<Layout />}>
+                  <Route index element={<Home />} /> */}
               </Route>
             </Route>
+            {/* </Route> */}
 
             {/* 존재하지 않는 경로 */}
             <Route path="*" element={<NotFoundPage />} />

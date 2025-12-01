@@ -135,59 +135,101 @@ export default function HNotificationsPage() {
     await supabase.from('notifications').update({ is_read: true }).eq('id', id);
   };
 
-  if (loading)
+  // 🔹 로딩 상태도 같은 레이아웃 구조 유지
+  if (loading) {
     return (
-      <div className="flex justify-center items-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="flex justify-center bg-white dark:bg-background">
+        <div
+          className="
+            flex flex-col 
+            w-full max-w-2xl lg:max-w-3xl
+            border-x border-gray-200 dark:border-gray-700
+            min-h-[calc(100vh-73px)]
+            sm:min-h-[calc(100vh-81px)]
+            md:min-h-[calc(100vh-97px)]
+          "
+        >
+          {/* 헤더 */}
+          <div className="shrink-0 sticky top-0 bg-white/80 dark:bg-background/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 px-4 py-3 z-10">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">알림</h1>
+          </div>
+
+          {/* 로딩 스피너 영역 */}
+          <div className="flex-1 min-h-0 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+          </div>
+        </div>
       </div>
     );
+  }
 
+  // 🔹 알림 목록 레이아웃 (홈/프로필과 동일 구조)
   return (
-    <div className="min-h-screen bg-white dark:bg-background">
-      {/* 헤더 */}
-      <div className="sticky top-0 bg-white/80 dark:bg-background/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 z-10 px-4 py-3">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">알림</h1>
-      </div>
+    <div className="flex justify-center bg-white dark:bg-background">
+      <div
+        className="
+        flex flex-col 
+        w-full max-w-2xl lg:max-w-3xl
+        border-x border-gray-200 dark:border-gray-700
+        min-h-[calc(100vh-73px)]
+        sm:min-h-[calc(100vh-81px)]
+        md:min-h-[calc(100vh-97px)]
+      "
+      >
+        {/* 🔹 헤더 (자동 높이, shrink-0) */}
+        <div
+          className="
+        shrink-0 
+        sticky top-0 
+        bg-white/80 dark:bg-background/90 
+        backdrop-blur-md 
+        border-b border-gray-200 dark:border-gray-700 
+        px-4 py-3 z-10
+      "
+        >
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">알림</h1>
+        </div>
 
-      {/* 리스트 */}
-      <div className="divide-y divide-gray-100 dark:divide-gray-900">
-        {notifications.length > 0 ? (
-          notifications.map(n => (
-            <NotificationCard
-              key={n.id}
-              notification={{
-                id: n.id,
-                type: n.type,
-                user: {
-                  name: n.sender?.name || 'Unknown',
-                  username: n.sender?.username || 'anonymous',
-                  avatar: n.sender?.avatar || '/default-avatar.svg',
-                },
-                action:
-                  n.type === 'comment'
-                    ? '당신의 피드에 댓글을 남겼습니다.'
-                    : n.type === 'like'
-                      ? '당신의 피드를 좋아합니다.'
-                      : n.content,
-                content: n.content,
-                timestamp: new Date(n.created_at).toLocaleString('ko-KR', {
-                  month: 'short',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                }),
-                isRead: n.is_read,
-                tweetId: n.tweet_id,
-              }}
-              onMarkAsRead={markAsRead}
-            />
-          ))
-        ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-gray-500 dark:text-gray-400">
-            <i className="ri-notification-3-line text-3xl mb-2" />
-            아직 새로운 알림이 없습니다
-          </div>
-        )}
+        {/* 🔹 콘텐츠: 남은 높이 flex-1 + 내부 스크롤 */}
+        <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-900">
+          {notifications.length > 0 ? (
+            notifications.map(n => (
+              <NotificationCard
+                key={n.id}
+                notification={{
+                  id: n.id,
+                  type: n.type,
+                  user: {
+                    name: n.sender?.name || 'Unknown',
+                    username: n.sender?.username || 'anonymous',
+                    avatar: n.sender?.avatar || '/default-avatar.svg',
+                  },
+                  action:
+                    n.type === 'comment'
+                      ? '당신의 피드에 댓글을 남겼습니다.'
+                      : n.type === 'like'
+                        ? '당신의 피드를 좋아합니다.'
+                        : n.content,
+                  content: n.content,
+                  timestamp: new Date(n.created_at).toLocaleString('ko-KR', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  }),
+                  isRead: n.is_read,
+                  tweetId: n.tweet_id,
+                }}
+                onMarkAsRead={markAsRead}
+              />
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
+              <i className="ri-notification-3-line text-3xl mb-2" />
+              아직 새로운 알림이 없습니다
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

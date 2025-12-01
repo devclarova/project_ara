@@ -73,24 +73,19 @@ export default function ProfileSettings() {
     );
 
   return (
-    <div className="min-h-screen bg-white dark:bg-background overflow-x-hidden">
-      {/* Centered Container for all three sections */}
-      <div className="flex justify-center min-h-screen">
-        <div className="flex w-full max-w-7xl">
-          {/* Left Sidebar - Now part of centered layout */}
-          <div className="w-20 lg:w-64 flex-shrink-0">
-            <div className="fixed w-20 lg:w-64 h-full z-10">
-              <Sidebar onTweetClick={() => setShowTweetModal(true)} />
+    <div className="min-h-screen bg-white dark:bg-background">
+      <div className="flex justify-center">
+        {/* 가운데 설정 컬럼 (프로필 페이지와 동일한 폭/보더 톤) */}
+        <div className="w-full max-w-2xl lg:max-w-3xl dark:border-gray-700 dark:bg-background">
+          <main className="px-4 sm:px-6 md:px-8 py-6 md:py-8 text-[17px] md:text-[18px] text-gray-900 dark:text-gray-100 transition-colors">
+            {/* 상단 검색 인풋 여백 */}
+            <div className="mb-4 md:mb-6">
+              <Input placeholder="검색어를 입력해주세요" />
             </div>
-          </div>
-
-          {/* Central Content with spacing */}
-          <main className="p-6 md:p-10 text-[17px] md:text-[18px] w-full bg-white dark:bg-background text-gray-900 dark:text-gray-100 transition-colors">
-            <Input placeholder="검색어를 입력해주세요" />
 
             {/* ✅ 반응형: 데스크톱(양쪽) vs 모바일(한 화면씩) */}
             {!isMobile ? (
-              // 🔹 데스크톱 / 태블릿(>=768px): 기존처럼 좌/우 모두 보이기
+              // 🔹 데스크톱 / 태블릿(>=768px): 좌/우 모두 보이기
               <SettingsLayout
                 left={
                   <SettingsSidebar
@@ -115,7 +110,7 @@ export default function ProfileSettings() {
                 />
               </div>
             ) : (
-              // 🔹 모바일: 설정 내용 화면 (화살표 ❌ 완전 제거)
+              // 🔹 모바일: 설정 내용 화면
               <div className="mt-4">{rightPanel}</div>
             )}
           </main>

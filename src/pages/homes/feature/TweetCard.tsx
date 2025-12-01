@@ -29,6 +29,7 @@ interface TweetCardProps {
   timestamp: string;
   stats: Stats;
   onDeleted?: (id: string) => void;
+  dimmed?: boolean; // 🔹 검색 상태에 따른 음영 여부
 }
 
 export default function TweetCard({
@@ -39,6 +40,7 @@ export default function TweetCard({
   timestamp,
   stats,
   onDeleted,
+  dimmed = false,
 }: TweetCardProps) {
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
@@ -52,8 +54,9 @@ export default function TweetCard({
   const menuRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const hasChecked = useRef(false);
-  const images = Array.isArray(image) ? image : image ? [image] : [];
   const [direction, setDirection] = useState(0);
+
+  const images = Array.isArray(image) ? image : image ? [image] : [];
 
   /** ✅ 로그인한 프로필 ID 로드 */
   useEffect(() => {
@@ -195,30 +198,29 @@ export default function TweetCard({
     }
   };
 
-  const handleCardClick = () => navigate(`/finalhome/${id}`);
+  const handleCardClick = () => navigate(`/sns/${id}`);
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/finalhome/user/${user.name}`);
-  };
-
-  const handlePrevImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImage(prev => {
-      if (prev <= 0) return 0; // 맨 앞이면 더 이상 안 넘어감
-      return prev - 1;
-    });
-  };
-
-  const handleNextImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImage(prev => {
-      const lastIndex = allImages.length - 1;
-      if (prev >= lastIndex) return lastIndex; // 맨 뒤이면 더 이상 안 넘어감
-      return prev + 1;
-    });
+    navigate(`/profile/${encodeURIComponent(user.name)}`);
   };
 
   const isMyTweet = authUser?.id === user.username;
+
+  // 🔹 dimmed 상태에 따른 텍스트 클래스
+  const nameClass = `
+    font-bold cursor-pointer hover:underline
+    ${dimmed ? 'text-gray-800 dark:text-gray-200' : 'text-gray-900 dark:text-gray-100'}
+  `;
+
+  const metaClass = `
+    text-gray-500 dark:text-gray-400
+    ${dimmed ? 'opacity-80' : ''}
+  `;
+
+  const contentClass = `
+    mt-1 text-[15px] leading-snug whitespace-pre-line break-words
+    ${dimmed ? 'text-gray-800 dark:text-gray-200 opacity-90' : 'text-gray-900 dark:text-gray-100'}
+  `;
 
   return (
     <div
@@ -239,18 +241,15 @@ export default function TweetCard({
           {/* 상단 영역 (이름 + 시간 + 더보기 버튼) */}
           <div className="flex items-start justify-between relative" ref={menuRef}>
             <div className="flex items-center space-x-1 flex-wrap">
-              <span
-                className="font-bold text-gray-900 dark:text-gray-100 hover:underline cursor-pointer"
-                onClick={handleAvatarClick}
-              >
+              <span className={nameClass} onClick={handleAvatarClick}>
                 {user.name}
               </span>
               <Badge variant="secondary" className="flex items-center gap-1 px-2 py-1">
                 <ReactCountryFlag countryCode="KR" svg style={{ fontSize: '1em' }} />
               </Badge>
 
-              <span className="text-gray-500 dark:text-gray-400">·</span>
-              <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">{timestamp}</span>
+              <span className={`${metaClass}`}>·</span>
+              <span className={`${metaClass} flex-shrink-0`}>{timestamp}</span>
             </div>
 
             {/* ✅ 더보기 버튼 */}
@@ -288,109 +287,17 @@ export default function TweetCard({
           </div>
 
           {/* 본문 내용 */}
-          <div
-            className="mt-1 text-gray-900 dark:text-gray-100 text-[15px] leading-snug whitespace-pre-line break-words"
-            dangerouslySetInnerHTML={{ __html: safeContent }}
-          />
+          <div className={contentClass} dangerouslySetInnerHTML={{ __html: safeContent }} />
 
           {/* 이미지 슬라이드 */}
           {allImages.length > 0 && (
-            <div
-              className="mt-3 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 relative"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="relative w-full h-[300px] bg-black/5 dark:bg-black/20 flex items-center justify-center">
-                {/* 페이지 표시 — 이미지가 2장 이상일 때만 표시 */}
-                {allImages.length > 1 && (
-                  <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full z-20">
-                    {currentImage + 1} / {allImages.length}
-                  </div>
-                )}
-
-                <AnimatePresence mode="wait" initial={false} custom={direction}>
-                  <motion.img
-                    key={allImages[currentImage]}
-                    src={allImages[currentImage]}
-                    draggable={false}
-                    className="absolute w-full h-full object-cover"
-                    custom={direction}
-                    variants={{
-                      enter: d => ({
-                        x: d > 0 ? 40 : -40,
-                      }),
-                      center: {
-                        x: 0,
-                      },
-                      exit: d => ({
-                        x: d > 0 ? -40 : 40,
-                      }),
-                    }}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={{ duration: 0.25, ease: 'easeInOut' }}
-                    drag="x"
-                    dragConstraints={{ left: 0, right: 0 }}
-                    dragElastic={0.2}
-                    onDragEnd={(e, info) => {
-                      const threshold = 60;
-                      if (info.offset.x < -threshold && currentImage < allImages.length - 1) {
-                        setDirection(1);
-                        setCurrentImage(prev => prev + 1);
-                      } else if (info.offset.x > threshold && currentImage > 0) {
-                        setDirection(-1);
-                        setCurrentImage(prev => prev - 1);
-                      }
-                    }}
-                  />
-                </AnimatePresence>
-
-                {/* 왼쪽 버튼 */}
-                {currentImage > 0 && (
-                  <button
-                    onClick={e => {
-                      e.stopPropagation();
-                      setDirection(-1);
-                      setCurrentImage(prev => prev - 1);
-                    }}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center"
-                  >
-                    ‹
-                  </button>
-                )}
-
-                {/* 오른쪽 버튼 */}
-                {currentImage < allImages.length - 1 && (
-                  <button
-                    onClick={e => {
-                      e.stopPropagation();
-                      setDirection(1);
-                      setCurrentImage(prev => prev + 1);
-                    }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center"
-                  >
-                    ›
-                  </button>
-                )}
-
-                {/* 하단 점 */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-                  {allImages.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={e => {
-                        e.stopPropagation();
-                        setDirection(i > currentImage ? 1 : -1);
-                        setCurrentImage(i);
-                      }}
-                      className={`w-2 h-2 rounded-full ${
-                        i === currentImage ? 'bg-white' : 'bg-white/40'
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
+            <ImageSlider
+              allImages={allImages}
+              currentImage={currentImage}
+              setCurrentImage={setCurrentImage}
+              setDirection={setDirection}
+              direction={direction}
+            />
           )}
 
           {/* ✅ 액션 버튼 */}
@@ -400,7 +307,7 @@ export default function TweetCard({
               className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400"
               onClick={e => {
                 e.stopPropagation();
-                navigate(`/finalhome/${id}`);
+                navigate(`/sns/${id}`);
               }}
             >
               <div className="p-2 rounded-full transition-colors">
@@ -447,7 +354,7 @@ export default function TweetCard({
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setShowDialog(false)}
-                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10"
+                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg:white/10"
               >
                 취소
               </button>
@@ -461,6 +368,120 @@ export default function TweetCard({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** 🔹 이미지 슬라이더 부분을 서브 컴포넌트로 분리 (가독성용) */
+type ImageSliderProps = {
+  allImages: string[];
+  currentImage: number;
+  setCurrentImage: (value: number | ((prev: number) => number)) => void;
+  setDirection: (dir: number) => void;
+  direction: number;
+};
+
+function ImageSlider({
+  allImages,
+  currentImage,
+  setCurrentImage,
+  setDirection,
+  direction,
+}: ImageSliderProps) {
+  return (
+    <div
+      className="mt-3 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 relative"
+      onClick={e => e.stopPropagation()}
+    >
+      <div className="relative w-full h-[300px] bg-black/5 dark:bg-black/20 flex items-center justify-center">
+        {/* 페이지 표시 — 이미지가 2장 이상일 때만 표시 */}
+        {allImages.length > 1 && (
+          <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full z-20">
+            {currentImage + 1} / {allImages.length}
+          </div>
+        )}
+
+        <AnimatePresence mode="wait" initial={false} custom={direction}>
+          <motion.img
+            key={allImages[currentImage]}
+            src={allImages[currentImage]}
+            draggable={false}
+            className="absolute w-full h-full object-cover"
+            custom={direction}
+            variants={{
+              enter: d => ({
+                x: d > 0 ? 40 : -40,
+              }),
+              center: {
+                x: 0,
+              },
+              exit: d => ({
+                x: d > 0 ? -40 : 40,
+              }),
+            }}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.2}
+            onDragEnd={(e, info) => {
+              const threshold = 60;
+              if (info.offset.x < -threshold && currentImage < allImages.length - 1) {
+                setDirection(1);
+                setCurrentImage(prev => prev + 1);
+              } else if (info.offset.x > threshold && currentImage > 0) {
+                setDirection(-1);
+                setCurrentImage(prev => prev - 1);
+              }
+            }}
+          />
+        </AnimatePresence>
+
+        {/* 왼쪽 버튼 */}
+        {currentImage > 0 && (
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              setDirection(-1);
+              setCurrentImage(prev => prev - 1);
+            }}
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center"
+          >
+            ‹
+          </button>
+        )}
+
+        {/* 오른쪽 버튼 */}
+        {currentImage < allImages.length - 1 && (
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              setDirection(1);
+              setCurrentImage(prev => prev + 1);
+            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center"
+          >
+            ›
+          </button>
+        )}
+
+        {/* 하단 점 */}
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+          {allImages.map((_, i) => (
+            <button
+              key={i}
+              onClick={e => {
+                e.stopPropagation();
+                setDirection(i > currentImage ? 1 : -1);
+                setCurrentImage(i);
+              }}
+              className={`w-2 h-2 rounded-full ${i === currentImage ? 'bg-white' : 'bg-white/40'}`}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

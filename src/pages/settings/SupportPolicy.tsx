@@ -50,7 +50,7 @@ export default function SupportPolicy({ onBackToMenu }: PrivacySettingsProps) {
         {active === 'terms' && <TermsView onClose={close} />}
         {active === 'privacy' && <PrivacyPolicyView onClose={close} />}
         {active === 'marketing' && <MarketingConsentView onClose={close} />}
-        {active === 'support' && <CustomerCenterView />}
+        {active === 'support' && <CustomerCenterView onClose={close} />}
       </Modal>
     </div>
   );

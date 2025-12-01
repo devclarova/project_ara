@@ -31,7 +31,7 @@ export default function HeroSection({ onSignup }: HeroProps) {
       id="hero"
       className="
     relative overflow-hidden 
-    min-h-[calc(100vh-100px)]
+    min-h-[calc(100vh-80px)]
     flex items-center
     bg-gradient-to-b from-primary/5 via-white to-sky-50 
     dark:from-background dark:via-background dark:to-background
