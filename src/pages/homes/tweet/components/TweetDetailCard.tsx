@@ -1,3 +1,4 @@
+import type React from 'react'; // 🔹 React 네임스페이스 타입용
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -38,9 +39,10 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
   const [bookmarked, setBookmarked] = useState(false);
   const [contentImages, setContentImages] = useState<string[]>([]);
 
-  const handleAvatarClick = (e: React.MouseEvent) => {
+  // ✅ 여기서 user가 아니라 tweet.user 사용해야 함
+  const handleAvatarClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
-    navigate(`/finalhome/user/${tweet.user.name}`);
+    navigate(`/profile/${encodeURIComponent(tweet.user.name)}`);
   };
 
   const normalizedStats = {
@@ -74,7 +76,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
   const safeContent = DOMPurify.sanitize(tweet.content, {
     ADD_TAGS: ['iframe', 'video', 'source'],
     ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
-    FORBID_TAGS: ['img'], // 이미지 태그는 제거
+    FORBID_TAGS: ['img'],
   });
 
   // 🔥 디테일 그리드: 최대 6장 보여주고, 나머지는 +N
@@ -84,8 +86,8 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
 
   // 🔥 텍스트가 실제로 있는지 확인 (태그/공백 제거 후)
   const hasText = !!safeContent
-    .replace(/<[^>]+>/g, '') // 태그 제거
-    .replace(/&nbsp;/g, ' ') // nbsp 제거
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
     .trim();
 
   return (
@@ -106,6 +108,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
             >
               {tweet.user.name}
             </span>
+            {/* 필요하면 핸들(@username)도 표시 가능 */}
             {/* <span className="text-gray-500 dark:text-gray-400 truncate">
               @{tweet.user.username}
             </span> */}
@@ -115,7 +118,6 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
 
       {/* Tweet Content */}
       <div className="mt-4">
-        {/* 글이 있을 때만 본문 렌더 */}
         {hasText && (
           <div
             className="text-gray-900 dark:text-gray-100 text-xl leading-relaxed break-words"
@@ -123,7 +125,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
           />
         )}
 
-        {/* Tweet Image (fallback for old content) */}
+        {/* 이미지 그리드 */}
         {allImages.length > 0 && (
           <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl overflow-hidden">
             {visibleImages.map((src, idx) => {
@@ -136,7 +138,6 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
                 >
                   <img src={src} alt={`이미지 ${idx + 1}`} className="w-full h-full object-cover" />
 
-                  {/* 🔥 남은 이미지가 있으면 마지막 칸에 +N 오버레이 */}
                   {isLastSlot && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                       <span className="text-white text-sm font-semibold">
@@ -171,8 +172,6 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
           </span>
         </div>
       </div>
-
-      {/* 액션 버튼은 주석 그대로 유지 */}
     </div>
   );
 }

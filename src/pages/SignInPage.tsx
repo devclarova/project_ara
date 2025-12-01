@@ -286,7 +286,7 @@ function SignInPage() {
                 peer-focus:-top-3 peer-focus:text-sm peer-focus:text-[#00BFA5]
                 px-1`}
             >
-              Email
+              이메일
             </label>
             {errors.email && (
               <p className="text-red-500 text-xs mt-1 ml-2 dark:text-red-400">{errors.email}</p>
@@ -314,7 +314,7 @@ function SignInPage() {
                 peer-focus:-top-3 peer-focus:text-sm peer-focus:text-[#00BFA5]
                 px-1`}
             >
-              Password
+              비밀번호
             </label>
             {errors.pw && (
               <p className="text-red-500 text-xs mt-1 ml-2 dark:text-red-400">{errors.pw}</p>
@@ -332,7 +332,7 @@ function SignInPage() {
             className="w-full bg-primary text-white py-2 sm:py-3 rounded-xl font-semibold hover:opacity-80 text-sm sm:text-base disabled:opacity-50"
             disabled={loading}
           >
-            {loading ? 'Signing In...' : 'Sign In'}
+            {loading ? '로그인 중...' : '로그인'}
           </button>
         </form>
 

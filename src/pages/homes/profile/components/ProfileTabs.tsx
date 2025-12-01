@@ -1,21 +1,26 @@
+// src/pages/homes/profile/components/ProfileTabs.tsx (예시 경로)
+
+export type ProfileTabKey = 'posts' | 'replies' | 'likes';
+
 interface ProfileTabsProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
+  activeTab: ProfileTabKey;
+  onTabChange: (tab: ProfileTabKey) => void;
 }
 
-export default function ProfileTabs({ activeTab, onTabChange }: ProfileTabsProps) {
-  const tabs = [
-    { id: 'posts', label: '게시글' },
-    { id: 'replies', label: '댓글' },
-    { id: 'likes', label: '좋아요' },
-  ];
+const tabs: { id: ProfileTabKey; label: string }[] = [
+  { id: 'posts', label: '게시글' },
+  { id: 'replies', label: '댓글' },
+  { id: 'likes', label: '좋아요' },
+];
 
+export default function ProfileTabs({ activeTab, onTabChange }: ProfileTabsProps) {
   return (
     <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-background">
       <nav className="flex">
         {tabs.map(tab => (
           <button
             key={tab.id}
+            type="button"
             onClick={() => onTabChange(tab.id)}
             className={`flex-1 px-4 py-4 text-center font-medium transition-colors cursor-pointer whitespace-nowrap relative ${
               activeTab === tab.id

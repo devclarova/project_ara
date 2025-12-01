@@ -25,7 +25,6 @@ export default function TweetDetail() {
   useEffect(() => {
     if (!id) return;
 
-    // 이미 등록된 채널이 있으면 제거
     if ((window as any)._replyInsertChannel) {
       supabase.removeChannel((window as any)._replyInsertChannel);
     }
@@ -43,7 +42,6 @@ export default function TweetDetail() {
         async payload => {
           const newReply = payload.new as any;
 
-          // 댓글 작성자의 프로필 정보 가져오기
           const { data: profile } = await supabase
             .from('profiles')
             .select('nickname, user_id, avatar_url')
@@ -67,21 +65,16 @@ export default function TweetDetail() {
             stats: { replies: 0, retweets: 0, likes: 0, views: 0 },
           };
 
-          // 댓글 목록에만 추가 (카운트는 트리거 처리)
           setReplies(prev => [formattedReply, ...prev]);
         },
       )
       .subscribe();
 
-    // 전역 변수로 등록 (중복 방지)
     (window as any)._replyInsertChannel = channel;
-
-    // console.log('✅ 실시간 댓글 구독 시작:', id);
 
     return () => {
       supabase.removeChannel(channel);
       (window as any)._replyInsertChannel = null;
-      // console.log('🧹 실시간 댓글 구독 해제:', id);
     };
   }, [id]);
 
@@ -117,7 +110,7 @@ export default function TweetDetail() {
     };
   }, [id]);
 
-  // ✅ 조회수 증가 (트리거로 관리)
+  // ✅ 조회수 증가
   useEffect(() => {
     if (!id || !user) return;
     handleViewCount(id);
@@ -130,7 +123,6 @@ export default function TweetDetail() {
       const viewedTweets = JSON.parse(localStorage.getItem('viewedTweets') || '{}');
       const now = Date.now();
 
-      // 1️⃣ 내 프로필 id 가져오기
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
@@ -142,15 +134,13 @@ export default function TweetDetail() {
         return;
       }
 
-      // 2️⃣ Supabase RPC 호출
       const { error } = await supabase.rpc('increment_tweet_view', {
         tweet_id_input: tweetId,
-        viewer_id_input: profile.id, // ✅ 추가
+        viewer_id_input: profile.id,
       });
 
       if (error) console.error('조회수 RPC 실패:', error.message);
 
-      // 3️⃣ 로컬 기록 (선택 사항)
       viewedTweets[tweetId] = now;
       localStorage.setItem('viewedTweets', JSON.stringify(viewedTweets));
     } catch (err) {
@@ -175,7 +165,7 @@ export default function TweetDetail() {
 
     if (error || !data) {
       console.error('트윗 불러오기 실패:', error?.message);
-      navigate('/finalhome');
+      navigate('/sns'); // 상세에서 실패 시 SNS 리스트로
       return;
     }
 
@@ -206,7 +196,7 @@ export default function TweetDetail() {
     setIsLoading(false);
   };
 
-  // ✅ 트윗 stats(댓글·좋아요·조회수) 실시간 반영
+  // ✅ 트윗 stats 실시간 반영
   useEffect(() => {
     if (!id) return;
 
@@ -225,7 +215,6 @@ export default function TweetDetail() {
           const newLikeCount = (payload.new as any)?.like_count ?? 0;
           const newViewCount = (payload.new as any)?.view_count ?? 0;
 
-          // ✅ setTweet으로 stats 업데이트
           setTweet((prev: any) =>
             prev
               ? {
@@ -243,11 +232,8 @@ export default function TweetDetail() {
       )
       .subscribe();
 
-    // console.log('✅ 실시간 stats 구독 시작:', id);
-
     return () => {
       supabase.removeChannel(statsChannel);
-      // console.log('🧹 실시간 stats 구독 해제:', id);
     };
   }, [id]);
 
@@ -289,22 +275,10 @@ export default function TweetDetail() {
     setReplies(mapped);
   };
 
+  // 🔹 로딩 상태도 Home이랑 비슷한 레이아웃
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 dark:border-primary" />
-      </div>
-    );
-  }
-
-  if (!tweet) {
-    navigate('/finalhome');
-    return null;
-  }
-
-  return (
-    <div className="min-h-screen bg-white dark:bg-background overflow-x-hidden">
-      <div className="w-full max-w-2xl mx-auto border-x border-gray-200 dark:border-gray-700 bg-white dark:bg-background">
+      <div className="border-x border-gray-200 dark:border-gray-700 dark:bg-background">
         <div className="sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 z-20">
           <div className="flex items-center">
             <button
@@ -317,15 +291,43 @@ export default function TweetDetail() {
           </div>
         </div>
 
-        <TweetDetailCard tweet={tweet} />
-        <InlineReplyEditor tweetId={tweet.id} />
-        <ReplyList
-          replies={replies}
-          onDeleted={id => {
-            setReplies(prev => prev.filter(r => r.id !== id));
-          }}
-        />
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 dark:border-primary" />
+        </div>
       </div>
+    );
+  }
+
+  if (!tweet) {
+    navigate('/sns');
+    return null;
+  }
+
+  // 🔹 여기부터가 실제 상세 페이지 레이아웃 (Home과 동일 구조)
+  return (
+    <div className="border-x border-gray-200 dark:border-gray-700 dark:bg-background">
+      {/* 상단 스티키 헤더 */}
+      <div className="sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 z-20">
+        <div className="flex items-center">
+          <button
+            onClick={() => navigate(-1)}
+            className="mr-4 p-2 hover:bg-gray-100 dark:hover:bg-primary/10 rounded-full transition-colors"
+          >
+            <i className="ri-arrow-left-line text-xl text-gray-900 dark:text-gray-100" />
+          </button>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">상세보기</h1>
+        </div>
+      </div>
+
+      {/* 본문 영역: Tweet + 댓글 작성 + 댓글 리스트 */}
+      <TweetDetailCard tweet={tweet} />
+      <InlineReplyEditor tweetId={tweet.id} />
+      <ReplyList
+        replies={replies}
+        onDeleted={id => {
+          setReplies(prev => prev.filter(r => r.id !== id));
+        }}
+      />
     </div>
   );
 }

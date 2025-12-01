@@ -24,7 +24,7 @@ export function CustomerCenterView({ onClose }: CustomerCenterViewProps) {
 
           <section>
             <h4 className="text-base md:text-[17px] font-semibold text-gray-900 dark:text-gray-100 mb-1">
-              앱 내 신고/문의
+              앱 내 신고/문의 (예정)
             </h4>
             <ul className="list-disc pl-5 space-y-1 text-[13px] md:text-[14px]">
               <li>게시물 · 댓글 오른쪽 상단 메뉴에서 바로 신고할 수 있어요.</li>
@@ -41,7 +41,7 @@ export function CustomerCenterView({ onClose }: CustomerCenterViewProps) {
               <li>신고/차단 및 커뮤니티 가이드라인</li>
               <li>데이터/개인정보 관련 문의</li>
             </ul>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               정식 런칭 시, FAQ 페이지가 추가될 예정입니다.
             </p>
           </section>
@@ -52,8 +52,7 @@ export function CustomerCenterView({ onClose }: CustomerCenterViewProps) {
         <div className="flex justify-end gap-2 px-4 md:px-6 pb-4 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50
-                       dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800 text-xs md:text-sm"
+            className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800 text-xs md:text-sm"
           >
             닫기
           </button>

@@ -34,10 +34,29 @@ type OutletCtx = {
   searchQuery: string;
 };
 
+type HomeProps = {
+  // SnsPage에서 넘기는 searchQuery (optional로 만들어서 /finalhome에서도 사용 가능)
+  searchQuery?: string;
+};
+
+// 🔹 Outlet이 없을 때 사용할 기본값
+const defaultOutletCtx: OutletCtx = {
+  newTweet: null,
+  setNewTweet: () => {},
+  searchQuery: '',
+};
+
 let HOME_SCROLL_Y = 0;
 
-export default function Home() {
-  const { newTweet, setNewTweet, searchQuery } = useOutletContext<OutletCtx>();
+export default function Home({ searchQuery }: HomeProps) {
+  // 🔹 Outlet context 있으면 받고, 없으면 기본값 사용
+  const outletCtx = useOutletContext<OutletCtx | null>() ?? defaultOutletCtx;
+  const { newTweet, setNewTweet, searchQuery: outletSearchQuery } = outletCtx;
+
+  // 🔹 props > outlet 순으로 searchQuery 통합
+  const mergedSearchQuery = (searchQuery ?? outletSearchQuery ?? '').trim();
+  const isSearching = mergedSearchQuery.length > 0;
+
   const { user } = useAuth();
   const [tweets, setTweets] = useState<UITweet[]>([]);
   const [loading, setLoading] = useState(false);
@@ -85,10 +104,10 @@ export default function Home() {
       setLoading(true);
       let data: any[] = [];
 
-      if (searchQuery.trim()) {
+      if (mergedSearchQuery) {
         // 검색 모드
         const { data: rpcData, error: rpcError } = await supabase.rpc('search_tweets', {
-          keyword: searchQuery.trim(),
+          keyword: mergedSearchQuery,
         });
         if (rpcError) throw rpcError;
         data = rpcData ?? [];
@@ -173,16 +192,21 @@ export default function Home() {
   // 초기 로드
   useEffect(() => {
     fetchTweets(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 검색어 있을 때만 재로드
+  // 검색어 있을 때/없을 때 재로드
   useEffect(() => {
-    if (searchQuery.trim()) {
+    if (mergedSearchQuery) {
+      fetchTweets(true);
+    } else {
+      // 검색어 지워지면 기본 피드로 복원
       fetchTweets(true);
     }
-  }, [searchQuery]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mergedSearchQuery]);
 
-  // 새 트윗 작성 시 즉시 반영
+  // 새 트윗 작성 시 즉시 반영 (Outlet context 사용 시에만 의미 있음)
   useEffect(() => {
     if (newTweet) {
       setTweets(prev => [newTweet, ...prev]);
@@ -282,18 +306,19 @@ export default function Home() {
   }
 
   return (
-    <div className="lg:border-x border-gray-200 dark:border-gray-700 dark:bg-background">
+    <div className="border-x border-gray-200 dark:border-gray-700 dark:bg-background">
       <div className="sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 z-20">
         <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">홈</h1>
       </div>
 
-      {searchQuery.trim() ? (
+      {isSearching ? (
         <div>
           {tweets.length > 0 ? (
             tweets.map(t => (
               <TweetCard
                 key={t.id}
                 {...t}
+                dimmed={true} // 🔹 검색 중일 때 글자 톤 다운
                 onDeleted={tweetId => {
                   setTweets(prev => prev.filter(item => item.id !== tweetId));
                 }}
@@ -329,6 +354,7 @@ export default function Home() {
             <TweetCard
               key={t.id}
               {...t}
+              dimmed={false}
               onDeleted={tweetId => {
                 setTweets(prev => prev.filter(item => item.id !== tweetId));
               }}

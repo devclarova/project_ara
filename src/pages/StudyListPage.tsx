@@ -192,9 +192,9 @@ const StudyListPage = () => {
       <div className="flex justify-center min-h-screen">
         <div className="flex w-full max-w-7xl">
           {/* Left Sidebar */}
-          <aside className="w-20 lg:w-64 shrink-0 h-screen sticky top-0 bg-white dark:bg-background z-30">
+          {/* <aside className="w-20 lg:w-64 shrink-0 h-screen sticky top-0 bg-white dark:bg-background z-30">
             <Sidebar onTweetClick={() => setShowTweetModal(true)} />
-          </aside>
+          </aside> */}
 
           {/* 메인 영역 */}
           <main className="flex-1 min-w-0 overflow-y-auto overflow-x-auto bg-white dark:bg-background">

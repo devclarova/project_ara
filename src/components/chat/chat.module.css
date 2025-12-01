@@ -1,21 +1,32 @@
 /* 루트만 모듈 클래스, 내부는 :global로 브리지 */
 /* 전역 오염 방지: 모든 규칙은 .chatPage 아래로 제한 */
 .chatPage {
-  height: calc(100vh - 120px);
+  /* 🔹 헤더 높이(예: 80px) + 위/아래 여백 10px씩 = 20px 를 뺀 값 */
+  height: calc(100vh - 100px);
+  max-height: calc(100vh - 100px);
+
   display: flex;
   flex-direction: column;
-  margin-top: 50px;
-  margin-left: 30px;
 
-  /* 전체 배경은 app background, 컨테이너는 secondary 톤 */
+  /* 위/아래 여백 10px (이 여백까지 포함해서 위 calc에 반영됨) */
+  margin-top: 0px;
+  margin-bottom: 0px;
+  margin-left: 0;
+  padding-top: 10px;
+  padding-bottom: 10px;
+
+  /* 바깥쪽에서는 스크롤 안 생기게 */
+  overflow: hidden;
+
   background-color: hsl(var(--background));
 }
 
 /* 컨테이너 기본 테두리 + 배경 */
 .chatContainer {
-  /* 모듈 클래스(부모에서 직접 사용) */
   display: flex;
-  height: 100%;
+  flex: 1;
+  min-height: 0; /* 🔹 내부 스크롤 영역이 부모 높이를 넘지 않도록 */
+
   border: 1px solid hsl(var(--border));
   border-radius: 8px;
   overflow: hidden;
@@ -29,6 +40,7 @@
   background-color: hsl(var(--secondary));
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .chatPage :global(.chat-main) {
@@ -36,6 +48,7 @@
   display: flex;
   flex-direction: column;
   background-color: hsl(var(--secondary));
+  min-height: 0;
 }
 
 /* 리스트 영역 */
@@ -294,6 +307,7 @@
   height: 100%;
   /* 👉 메인 영역 안쪽 세로 테두리 (라이트/다크 공통) */
   border-left: 1px solid hsl(var(--border));
+  min-height: 0;
 }
 
 .chatPage :global(.chat-room-header) {
@@ -520,7 +534,7 @@
 .chatPage :global(.message-input) {
   border-top: 1px solid hsl(var(--border));
   background-color: hsl(var(--secondary));
-  padding: 16px;
+  padding: 10px 16px;
 }
 .chatPage :global(.message-form) {
   width: 100%;
@@ -620,52 +634,6 @@
   font-style: italic;
   max-width: 80%;
   text-align: center;
-}
-
-/* 📱 살짝만 반응형 여백 정리 */
-@media (max-width: 1024px) {
-  .chatPage {
-    margin-top: 16px;
-    margin-left: 0;
-    height: calc(100vh - 80px);
-  }
-
-  .chatContainer {
-    margin: 0 8px 16px;
-    border-radius: 8px;
-  }
-}
-
-@media (max-width: 768px) {
-  .chatPage {
-    margin-top: 8px;
-    margin-left: 0;
-    height: calc(100vh - 72px);
-  }
-
-  .chatContainer {
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
-    margin: 0;
-  }
-
-  .chatPage :global(.chat-sidebar) {
-    width: 100%;
-    max-height: 45vh;
-    border-right: none;
-  }
-
-  .chatPage :global(.chat-main) {
-    width: 100%;
-    flex: 1;
-  }
-
-  /* 모바일일 때 안쪽 세로 테두리는 chat-room 쪽만 유지 */
-  .chatPage :global(.chat-room) {
-    border-left: none;
-  }
 }
 
 /* 🌞 라이트모드: 안쪽 분리선 (리스트 | 메인 사이) */
@@ -1152,6 +1120,11 @@
   line-height: 1.4;
   color: hsl(var(--muted-foreground, 215 16% 47%));
   user-select: none;
+}
+
+/* 🌙 다크 모드에서 살짝 더 밝게 보이도록 */
+:global(.dark) .message-policy-notice {
+  color: hsl(var(--muted-foreground, 215 16% 75%));
 }
 
 @media (max-width: 768px) {
