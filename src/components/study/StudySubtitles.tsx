@@ -10,13 +10,6 @@ interface SubtitleListProps {
   subscribeRealtime?: boolean; // 선택: 실시간 반영 여부
 }
 
-const secToMMSS = (sec: number | null | undefined) => {
-  if (sec == null || Number.isNaN(sec)) return '';
-  const m = Math.floor(sec / 60);
-  const s = Math.floor(sec % 60);
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-};
-
 // 반응형 pageSize 훅: Tailwind 브레이크포인트와 동일한 기준 사용
 const useResponsivePageSize = () => {
   const [pageSize, setPageSize] = useState(6);
@@ -78,7 +71,6 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
       if (!alive) return;
 
       if (error) {
-        console.error('자막 데이터 가져오기 오류:', error);
         setError(error.message);
         setDialogues([]);
       } else {
@@ -163,7 +155,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
                 )}
                 {d.pronunciation && (
                   <button
-                    className="block w-full text-base sm:text-lg text-gray-500 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400 text-left"
+                    className="block w-full text-base sm:text-lg text-gray-500 dark:text-gray-100 dark:hover:text-gray-400 text-left"
                     onClick={() => onSelectDialogue(d)}
                   >
                     [{d.pronunciation}]
@@ -171,7 +163,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
                 )}
                 {d.english_subtitle && (
                   <button
-                    className="block w-full text-base sm:text-lg text-gray-700 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400 text-left"
+                    className="block w-full text-base sm:text-lg text-gray-700 dark:text-gray-100 dark:hover:text-gray-400 text-left"
                     onClick={() => onSelectDialogue(d)}
                   >
                     {d.english_subtitle}

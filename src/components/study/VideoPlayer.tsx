@@ -195,6 +195,15 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contents, episode, scene]);
 
+  useEffect(() => {
+    setPlaying(false);
+    setHasStarted(false);
+    setIsBuffering(false);
+
+    // 썸네일 먼저 보이기 위해
+    playerRef.current?.seekTo(videoStartSec ?? 0, 'seconds');
+  }, [contents, episode, scene]);
+
   // 영상이 준비되면 시작 지점으로 이동
   const handleReady = () => {
     const start = videoStartSec ?? 0; // undefined면 0초로
@@ -276,7 +285,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
             playing={playing}
             controls={false}
             width="100%"
-            height="100%" // 부모 크기에 맞춰 꽉 채움
+            height="100%"
             onReady={handleReady}
             onProgress={handleProgress}
             onDuration={d => setVideoDuration(d)}
@@ -289,6 +298,13 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
               setPlaying(false);
               setHasStarted(false);
               playerRef.current?.seekTo(videoStartSec ?? 0, 'seconds');
+            }}
+            config={{
+              youtube: {
+                playerVars: {
+                  origin: window.location.origin,
+                },
+              },
             }}
           />
 

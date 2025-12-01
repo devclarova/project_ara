@@ -1,14 +1,14 @@
+import ShareButton from '@/components/common/ShareButton';
 import { InfoItem } from '@/components/study/ContentCard';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { NavLink, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { NavLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import StudyCard from '../components/study/StudyCard';
 import StudySubtitles from '../components/study/StudySubtitles';
 import VideoPlayer, { type VideoPlayerHandle } from '../components/study/VideoPlayer';
 import { supabase } from '../lib/supabase';
 import type { Subtitle } from '../types/study';
 import Sidebar from './homes/feature/Sidebar';
-import { Helmet } from 'react-helmet-async';
-import ShareButton from '@/components/common/ShareButton';
 
 // 이 페이지에서 실제로 사용하는 video 행 타입을 로컬로 정의(컬럼명과 일치)
 type VideoRow = {
@@ -26,7 +26,6 @@ type VideoRow = {
 };
 
 const StudyPage = () => {
-  // const { id } = useParams<{ id: string }>();
   const { contents, episode, scene } = useParams<{
     contents: string;
     episode: string;
@@ -34,16 +33,13 @@ const StudyPage = () => {
   }>();
   const navigate = useNavigate(); // useNavigate 훅 사용
 
-  // 숫자 변환 가드
-  // const studyId = useMemo(() => {
-  //   const n = Number(id);
-  //   return Number.isFinite(n) ? n : undefined;
-  // }, [id]);
-
   const [selectedSubtitle, setSelectedSubtitle] = useState<Subtitle | null>(null);
   const [study, setStudy] = useState<VideoRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [showTweetModal, setShowTweetModal] = useState(false);
+  const location = useLocation();
+  const isGuestRoute = location.pathname.startsWith('/guest-study');
+  const basePath = isGuestRoute ? '/guest-study' : '/study';
 
   const handleSelectDialogue = (s: Subtitle) => setSelectedSubtitle(s);
   const vref = useRef<VideoPlayerHandle>(null);
@@ -76,7 +72,7 @@ const StudyPage = () => {
     const c = enc(row.contents);
     const e = enc(row.episode);
     const s = row.scene != null && String(row.scene).length > 0 ? enc(row.scene) : null;
-    return s ? `/study/${c}/${e}/${s}` : `/study/${c}/${e}`;
+    return s ? `${basePath}/${c}/${e}/${s}` : `${basePath}/${c}/${e}`;
   };
 
   // video 단건 조회
@@ -122,7 +118,6 @@ const StudyPage = () => {
         .limit(1);
 
       if (error) {
-        console.error('[video fetch first-scene error]', error);
         setStudy(null);
       } else {
         const row = (data?.[0] as VideoRow) ?? null;
@@ -256,8 +251,7 @@ const StudyPage = () => {
                       <i className="ri-home-5-line text-base opacity-70 group-hover:opacity-100 dark:text-gray-100" />
                       <span className="font-medium hidden sm:inline-block dark:text-gray-100">
                         Studylist
-                      </span>{' '}
-                      {/* 텍스트 숨기기 */}
+                      </span>
                     </NavLink>
 
                     {/* chevron */}
@@ -283,8 +277,7 @@ const StudyPage = () => {
                       <i className="ri-folder-2-line text-base opacity-70 group-hover:opacity-100 dark:text-gray-100" />
                       <span className="font-medium hidden sm:inline-block truncate dark:text-gray-100">
                         {study?.categories ?? '카테고리'}
-                      </span>{' '}
-                      {/* 텍스트 숨기기 */}
+                      </span>
                     </NavLink>
 
                     {/* chevron (sm↑에서만 보이게) */}
@@ -315,8 +308,7 @@ const StudyPage = () => {
                       <i className="ri-movie-2-line text-base opacity-70 group-hover:opacity-100 dark:text-gray-100" />
                       <span className="font-medium hidden sm:inline-block truncate dark:text-gray-100">
                         {loading ? '로딩 중' : (study?.contents ?? '제목 없음')}
-                      </span>{' '}
-                      {/* 텍스트 숨기기 */}
+                      </span>
                     </NavLink>
 
                     {/* chevron (md↑에서만) */}
@@ -349,14 +341,8 @@ const StudyPage = () => {
                       <i className="ri-hashtag text-base opacity-70 group-hover:opacity-100 dark:text-gray-100" />
                       <span className="font-medium hidden sm:inline-block truncate dark:text-gray-100">
                         {loading ? '로딩 중' : (study?.episode ?? '에피소드 없음')}
-                      </span>{' '}
-                      {/* 텍스트 숨기기 */}
+                      </span>
                     </NavLink>
-
-                    {/* 로딩일 때 스켈레톤 */}
-                    {loading && (
-                      <span className="ml-auto h-6 w-24 rounded-full bg-gray-200/70 dark:bg-gray-700/60 animate-pulse" />
-                    )}
                   </div>
                 </nav>
 
@@ -432,14 +418,16 @@ const StudyPage = () => {
                   <div className="ml-auto">
                     <ShareButton
                       title={`${study?.contents ?? 'ARA Study'}`}
-                      text={`K-콘텐츠로 배우는 학습 ${study?.episode ? ` (${study.episode})` : ''}${study?.scene ? ` - Scene ${study.scene}` : ''}`}
+                      text={`K-콘텐츠로 배우는 학습 ${
+                        study?.episode ? ` (${study.episode})` : ''
+                      }${study?.scene ? ` - Scene ${study.scene}` : ''}`}
                     />
                   </div>
                 )}
               </div>
 
               {/* 영상 플레이어 */}
-              <VideoPlayer ref={vref} />
+              <VideoPlayer key={`${contents}-${episode}-${scene}`} ref={vref} />
 
               {/* 자막 리스트 */}
               <StudySubtitles

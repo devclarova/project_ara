@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import DOMPurify from 'dompurify';
@@ -22,7 +22,7 @@ interface Tweet {
   id: string;
   user: User;
   content: string;
-  image?: string;
+  image?: string | string[];
   timestamp: string;
   stats: Stats;
 }
@@ -36,6 +36,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
   const [liked, setLiked] = useState(false);
   const [retweeted, setRetweeted] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const [contentImages, setContentImages] = useState<string[]>([]);
 
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -48,6 +49,44 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
     likes: tweet.stats.likes || 0,
     views: tweet.stats.views || 0,
   };
+
+  // 🔥 content에서 <img> 태그 src 추출
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(tweet.content, 'text/html');
+
+    const imgs = Array.from(doc.querySelectorAll('img'))
+      .map(img => img.src)
+      .filter(Boolean);
+
+    setContentImages(imgs);
+  }, [tweet.content]);
+
+  // 🔥 prop 으로 온 image(string | string[]) → 배열로 정규화
+  const propImages = Array.isArray(tweet.image) ? tweet.image : tweet.image ? [tweet.image] : [];
+
+  // 🔥 최종적으로 사용할 이미지 목록 (prop 우선, 없으면 contentImages)
+  const allImages = propImages.length > 0 ? propImages : contentImages;
+
+  // 🔥 본문에서는 img 태그 제거 (이미지는 아래 그리드에서만 보여줄 것)
+  const safeContent = DOMPurify.sanitize(tweet.content, {
+    ADD_TAGS: ['iframe', 'video', 'source'],
+    ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
+    FORBID_TAGS: ['img'], // 이미지 태그는 제거
+  });
+
+  // 🔥 디테일 그리드: 최대 6장 보여주고, 나머지는 +N
+  const MAX_GRID = 6;
+  const hasMoreImages = allImages.length > MAX_GRID;
+  const visibleImages = hasMoreImages ? allImages.slice(0, MAX_GRID) : allImages;
+
+  // 🔥 텍스트가 실제로 있는지 확인 (태그/공백 제거 후)
+  const hasText = !!safeContent
+    .replace(/<[^>]+>/g, '') // 태그 제거
+    .replace(/&nbsp;/g, ' ') // nbsp 제거
+    .trim();
 
   return (
     <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-6 bg-white dark:bg-background">
@@ -76,20 +115,38 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
 
       {/* Tweet Content */}
       <div className="mt-4">
-        <div
-          className="text-gray-900 dark:text-gray-100 text-xl leading-relaxed break-words"
-          dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(tweet.content, {
-              ADD_TAGS: ['iframe', 'video', 'source', 'img'],
-              ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
-            }),
-          }}
-        />
+        {/* 글이 있을 때만 본문 렌더 */}
+        {hasText && (
+          <div
+            className="text-gray-900 dark:text-gray-100 text-xl leading-relaxed break-words"
+            dangerouslySetInnerHTML={{ __html: safeContent }}
+          />
+        )}
 
         {/* Tweet Image (fallback for old content) */}
-        {tweet.image && (
-          <div className="mt-4 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
-            <img src={tweet.image} alt="Tweet image" className="w-full h-auto object-cover" />
+        {allImages.length > 0 && (
+          <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl overflow-hidden">
+            {visibleImages.map((src, idx) => {
+              const isLastSlot = hasMoreImages && idx === visibleImages.length - 1;
+
+              return (
+                <div
+                  key={src + idx}
+                  className="relative w-full aspect-[4/3] overflow-hidden bg-black/5 dark:bg-black/20"
+                >
+                  <img src={src} alt={`이미지 ${idx + 1}`} className="w-full h-full object-cover" />
+
+                  {/* 🔥 남은 이미지가 있으면 마지막 칸에 +N 오버레이 */}
+                  {isLastSlot && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span className="text-white text-sm font-semibold">
+                        +{allImages.length - MAX_GRID}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

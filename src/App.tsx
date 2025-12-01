@@ -79,7 +79,8 @@ function AppInner() {
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/" element={<LandingPage />} />
             <Route path="/landing" element={<LandingPage />} />
-            <Route path="/studyList" element={<StudyListPage />} />
+            {/* 🔓 공개용 (랜딩/인기콘텐츠에서만 사용) */}
+            <Route path="/guest-study/:contents/:episode/:scene?" element={<StudyPage />} />
 
             <Route element={<RequireGuest />}>
               <Route path="/signup" element={<SignUpPage />} />
