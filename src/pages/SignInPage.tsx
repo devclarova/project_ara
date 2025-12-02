@@ -82,7 +82,7 @@ async function postSignInRoute(navigate: ReturnType<typeof useNavigate>) {
 
   if (provider === 'email') {
     // 이메일은 인증이 끝나야 로그인 성공하므로, 바로 홈
-    navigate('/finalhome', { replace: true });
+    navigate('/studyList', { replace: true });
     return;
   }
 
@@ -95,12 +95,13 @@ async function postSignInRoute(navigate: ReturnType<typeof useNavigate>) {
 
   if (error) {
     console.warn('[signin route] profiles select error:', error.message);
-    navigate('/finalhome', { replace: true });
+    // 프로필 조회 실패 → 로그인 페이지로 돌리기 (또는 전용 에러 페이지)
+    navigate('/signin', { replace: true, state: { from: 'oauth-profile-error' } });
     return;
   }
 
   if (prof?.is_onboarded) {
-    navigate('/finalhome', { replace: true });
+    navigate('/studyList', { replace: true });
   } else {
     navigate('/signup', { replace: true, state: { from: 'oauth' } });
   }
