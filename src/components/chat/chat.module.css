@@ -1114,7 +1114,7 @@
 }
 
 /* 입력창 하단 정책 안내문구 */
-.message-policy-notice {
+.chatPage :global(.message-policy-notice) {
   margin-top: 6px;
   font-size: 12px;
   line-height: 1.4;
@@ -1123,7 +1123,7 @@
 }
 
 /* 🌙 다크 모드에서 살짝 더 밝게 보이도록 */
-:global(.dark) .message-policy-notice {
+:global(.dark) .chatPage :global(.message-policy-notice) {
   color: hsl(var(--muted-foreground, 215 16% 75%));
 }
 
