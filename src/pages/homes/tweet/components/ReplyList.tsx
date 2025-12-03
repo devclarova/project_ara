@@ -30,7 +30,9 @@ interface Reply {
 
 interface ReplyListProps {
   replies: Reply[];
-  onDeleted?: (id: string) => void; // ✅ 삭제 후 부모에 알림
+  onDeleted?: (id: string) => void;
+  // ✅ 내가 방금 단 댓글 id를 위에서 내려주기 위한 prop
+  scrollTargetId?: string | null;
 }
 
 function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string) => void }) {
@@ -120,7 +122,10 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
   const isMyReply = authUser?.id === reply.user.username;
 
   return (
-    <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-primary/10 transition-colors bg-white dark:bg-background">
+    <div
+      id={`reply-${reply.id}`} // ✅ 스크롤 타겟 id
+      className="border-b border-gray-200 dark:border-gray-700 px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-primary/10 transition-colors bg-white dark:bg-background"
+    >
       <div className="flex space-x-3">
         <div onClick={handleAvatarClick} className="cursor-pointer">
           <Avatar>
@@ -139,9 +144,6 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
               >
                 {reply.user.name}
               </span>
-              {/* <span className="text-gray-500 dark:text-gray-400 truncate">
-                @{reply.user.username}
-              </span> */}
               <span className="text-gray-500 dark:text-gray-400">·</span>
               <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
                 {reply.timestamp}
@@ -261,7 +263,19 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
   );
 }
 
-export default function ReplyList({ replies, onDeleted }: ReplyListProps) {
+export default function ReplyList({ replies, onDeleted, scrollTargetId }: ReplyListProps) {
+  // ✅ 새로 생성된 댓글 id가 바뀌면 해당 카드로 스크롤
+  useEffect(() => {
+    if (!scrollTargetId) return;
+    const el = document.getElementById(`reply-${scrollTargetId}`);
+    if (!el) return;
+
+    el.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    });
+  }, [scrollTargetId, replies.length]);
+
   if (replies.length === 0) {
     return (
       <div className="border-b border-gray-200 p-8 text-center text-gray-500 dark:text-gray-400">

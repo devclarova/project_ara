@@ -32,7 +32,7 @@ export default function SignUpWizard({ mode = 'social' }: { mode?: 'social' }) {
         .select('is_onboarded')
         .eq('user_id', u.id)
         .maybeSingle();
-      if (prof?.is_onboarded) navigate('/finalhome', { replace: true });
+      if (prof?.is_onboarded) navigate('/studyList', { replace: true });
     })();
   }, [navigate]);
 

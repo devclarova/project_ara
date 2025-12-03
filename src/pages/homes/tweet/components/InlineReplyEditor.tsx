@@ -8,9 +8,11 @@ import { toast } from 'sonner';
 
 interface InlineReplyEditorProps {
   tweetId: string;
+  // ✅ 새로 생성된 댓글 id를 부모(TweetDetail)로 올려주는 콜백 (추가)
+  onReplyCreated?: (replyId: string) => void;
 }
 
-export default function InlineReplyEditor({ tweetId }: InlineReplyEditorProps) {
+export default function InlineReplyEditor({ tweetId, onReplyCreated }: InlineReplyEditorProps) {
   const { user } = useAuth();
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [value, setValue] = useState('');
@@ -18,7 +20,7 @@ export default function InlineReplyEditor({ tweetId }: InlineReplyEditorProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // 내 아바타
+  // 🔹 내 아바타 불러오기
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
@@ -65,7 +67,7 @@ export default function InlineReplyEditor({ tweetId }: InlineReplyEditorProps) {
 
     setIsSubmitting(true);
     try {
-      // profiles.id 조회
+      // 🔹 profiles.id 조회
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
@@ -80,7 +82,7 @@ export default function InlineReplyEditor({ tweetId }: InlineReplyEditorProps) {
 
       let finalContent = value.trim();
 
-      // 이미지가 있으면 업로드 후 <img> 태그를 content 뒤에 붙이기
+      // 🔹 이미지 업로드 후 <img> 태그를 content 뒤에 붙이기
       if (files.length > 0) {
         const imgTags: string[] = [];
 
@@ -128,19 +130,27 @@ export default function InlineReplyEditor({ tweetId }: InlineReplyEditorProps) {
         return;
       }
 
-      const { error: insertError } = await supabase.from('tweet_replies').insert([
-        {
+      // ✅ 댓글 insert 시 새로 생성된 id까지 함께 받아오기 (수정 포인트 ①)
+      const { data: inserted, error: insertError } = await supabase
+        .from('tweet_replies')
+        .insert({
           tweet_id: tweetId,
           author_id: profile.id,
           content: finalContent,
-        },
-      ]);
+        })
+        .select('id')
+        .single();
 
-      if (insertError) {
-        console.error('❌ 댓글 저장 실패:', insertError.message);
+      if (insertError || !inserted) {
+        console.error('❌ 댓글 저장 실패:', insertError?.message);
         toast.error('댓글 저장 중 오류가 발생했습니다.');
         setIsSubmitting(false);
         return;
+      }
+
+      // ✅ 부모(TweetDetail)에게 "이 댓글로 스크롤해"라고 id 전달 (수정 포인트 ②)
+      if (onReplyCreated && inserted.id) {
+        onReplyCreated(inserted.id);
       }
 
       // Realtime으로 리스트는 자동 갱신되니까 초기화만

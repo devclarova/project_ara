@@ -84,6 +84,8 @@ function AppInner() {
             {/* 🔓 공개용 (랜딩/인기콘텐츠에서만 사용) */}
             <Route path="/guest-study/:contents/:episode/:scene?" element={<StudyPage />} />
             <Route path="/studyList" element={<StudyListPage />} />
+            <Route path="/sns" element={<SnsPage />} />
+            <Route path="/sns/:id" element={<SnsDetailPage />} />
 
             <Route element={<RequireGuest />}>
               <Route path="/signup" element={<SignUpPage />} />
@@ -96,8 +98,6 @@ function AppInner() {
                 <Route path="/study/:contents/:episode/:scene?" element={<StudyPage />} />
                 <Route path="/test" element={<TempHomePage />} />
                 <Route path="/settings" element={<ProfileSettings />} />
-                <Route path="/sns" element={<SnsPage />} />
-                <Route path="/sns/:id" element={<SnsDetailPage />} />
                 <Route path="/profile" element={<ProfileAsap />} />
                 <Route path="/profile/:username" element={<ProfileAsap />} />
                 <Route path="hometest" element={<HomesTest />} />
