@@ -10,9 +10,13 @@ export default function TweetDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+
   const [tweet, setTweet] = useState<any | null>(null);
   const [replies, setReplies] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // 🔥 내가 방금 작성한 댓글로 스크롤하기 위한 타겟 id
+  const [scrollTargetId, setScrollTargetId] = useState<string | null>(null);
 
   // ✅ 트윗 + 댓글 불러오기
   useEffect(() => {
@@ -21,7 +25,7 @@ export default function TweetDetail() {
     fetchReplies(id);
   }, [id]);
 
-  // ✅ 실시간 댓글 추가 (중복 구독 방지)
+  // ✅ 실시간 댓글 추가 채널 (이미 있으니 유지, 여기서는 스크롤 X)
   useEffect(() => {
     if (!id) return;
 
@@ -65,7 +69,8 @@ export default function TweetDetail() {
             stats: { replies: 0, retweets: 0, likes: 0, views: 0 },
           };
 
-          setReplies(prev => [formattedReply, ...prev]);
+          // 🔹 댓글은 오래된 → 최신 순이므로, 새 댓글은 맨 아래에 추가
+          setReplies(prev => [...prev, formattedReply]);
         },
       )
       .subscribe();
@@ -110,7 +115,7 @@ export default function TweetDetail() {
     };
   }, [id]);
 
-  // ✅ 조회수 증가
+  // ✅ 조회수 증가 (로그인 유저에게만)
   useEffect(() => {
     if (!id || !user) return;
     handleViewCount(id);
@@ -196,48 +201,7 @@ export default function TweetDetail() {
     setIsLoading(false);
   };
 
-  // ✅ 트윗 stats 실시간 반영
-  useEffect(() => {
-    if (!id) return;
-
-    const statsChannel = supabase
-      .channel(`tweet-${id}-stats`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'tweets',
-          filter: `id=eq.${id}`,
-        },
-        payload => {
-          const newReplyCount = (payload.new as any)?.reply_count ?? 0;
-          const newLikeCount = (payload.new as any)?.like_count ?? 0;
-          const newViewCount = (payload.new as any)?.view_count ?? 0;
-
-          setTweet((prev: any) =>
-            prev
-              ? {
-                  ...prev,
-                  stats: {
-                    ...prev.stats,
-                    replies: newReplyCount,
-                    likes: newLikeCount,
-                    views: newViewCount,
-                  },
-                }
-              : prev,
-          );
-        },
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(statsChannel);
-    };
-  }, [id]);
-
-  // ✅ 댓글 목록 불러오기
+  // ✅ 댓글 목록 불러오기 (오래된 → 최신)
   const fetchReplies = async (tweetId: string) => {
     const { data, error } = await supabase
       .from('tweet_replies')
@@ -248,7 +212,7 @@ export default function TweetDetail() {
       `,
       )
       .eq('tweet_id', tweetId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: true });
 
     if (error) {
       console.error('댓글 불러오기 실패:', error.message);
@@ -275,7 +239,14 @@ export default function TweetDetail() {
     setReplies(mapped);
   };
 
-  // 🔹 로딩 상태도 Home이랑 비슷한 레이아웃
+  // ✅ 새 댓글 작성 후 불려오는 콜백
+  const handleReplyCreated = (replyId: string) => {
+    // 이미 realtime으로 replies에 추가되도록 되어 있으니
+    // 여기서는 "어떤 댓글으로 스크롤할지"만 표시해주면 됩니다.
+    setScrollTargetId(replyId);
+  };
+
+  // 🔹 로딩 상태
   if (isLoading) {
     return (
       <div className="border-x border-gray-200 dark:border-gray-700 dark:bg-background">
@@ -303,7 +274,7 @@ export default function TweetDetail() {
     return null;
   }
 
-  // 🔹 여기부터가 실제 상세 페이지 레이아웃 (Home과 동일 구조)
+  // 🔹 실제 상세 페이지 레이아웃
   return (
     <div className="border-x border-gray-200 dark:border-gray-700 dark:bg-background">
       {/* 상단 스티키 헤더 */}
@@ -319,11 +290,44 @@ export default function TweetDetail() {
         </div>
       </div>
 
-      {/* 본문 영역: Tweet + 댓글 작성 + 댓글 리스트 */}
       <TweetDetailCard tweet={tweet} />
-      <InlineReplyEditor tweetId={tweet.id} />
+
+      {/* 비로그인 시 댓글 작성 막기 (이전 답변 그대로) */}
+      {!user && (
+        <div className="border-y border-gray-200 dark:border-gray-700 px-4 py-7 bg-gray-50/80 dark:bg-muted/40 flex items-center justify-between gap-3">
+          <div className="flex flex-col">
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              댓글은 로그인 후 작성하실 수 있어요.
+            </span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              커뮤니티에 참여하려면 로그인 또는 회원가입을 진행해주세요.
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => navigate('/signin')}
+              className="px-3 py-1.5 text-xs sm:text-sm rounded-full bg-primary text-white hover:opacity-90"
+            >
+              로그인
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/signup')}
+              className="px-3 py-1.5 text-xs sm:text-sm rounded-full border border-primary text-primary hover:bg-primary/5"
+            >
+              회원가입
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 로그인 상태일 때만 댓글 작성 에디터 + 콜백 전달 */}
+      {user && <InlineReplyEditor tweetId={tweet.id} onReplyCreated={handleReplyCreated} />}
+
       <ReplyList
         replies={replies}
+        scrollTargetId={scrollTargetId}
         onDeleted={id => {
           setReplies(prev => prev.filter(r => r.id !== id));
         }}

@@ -307,9 +307,9 @@ export default function Home({ searchQuery }: HomeProps) {
 
   return (
     <div className="border-x border-gray-200 dark:border-gray-700 dark:bg-background">
-      <div className="sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 z-20">
+      {/* <div className="sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 z-20">
         <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">홈</h1>
-      </div>
+      </div> */}
 
       {isSearching ? (
         <div>

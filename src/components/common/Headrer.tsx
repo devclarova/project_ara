@@ -24,7 +24,6 @@ function Header() {
     { name: '커뮤니티', path: '/sns', matchPaths: ['/sns'] },
     { name: '채팅', path: '/chat', matchPaths: ['/chat'] },
     { name: '알림', path: '/hnotifications', matchPaths: ['/hnotifications'] },
-    { name: '프로필', path: '/profile', matchPaths: ['/profile'] },
     { name: '설정', path: '/settings', matchPaths: ['/settings'] },
   ];
 

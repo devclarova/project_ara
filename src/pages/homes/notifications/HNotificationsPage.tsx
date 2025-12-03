@@ -150,9 +150,9 @@ export default function HNotificationsPage() {
           "
         >
           {/* 헤더 */}
-          <div className="shrink-0 sticky top-0 bg-white/80 dark:bg-background/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 px-4 py-3 z-10">
+          {/* <div className="shrink-0 sticky top-0 bg-white/80 dark:bg-background/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 px-4 py-3 z-10">
             <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">알림</h1>
-          </div>
+          </div> */}
 
           {/* 로딩 스피너 영역 */}
           <div className="flex-1 min-h-0 flex items-center justify-center">
@@ -177,7 +177,7 @@ export default function HNotificationsPage() {
       "
       >
         {/* 🔹 헤더 (자동 높이, shrink-0) */}
-        <div
+        {/* <div
           className="
         shrink-0 
         sticky top-0 
@@ -188,7 +188,7 @@ export default function HNotificationsPage() {
       "
         >
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">알림</h1>
-        </div>
+        </div> */}
 
         {/* 🔹 콘텐츠: 남은 높이 flex-1 + 내부 스크롤 */}
         <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-900">
