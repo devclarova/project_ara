@@ -155,7 +155,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
                 )}
                 {d.pronunciation && (
                   <button
-                    className="block w-full text-base sm:text-lg text-gray-500 dark:text-gray-100 dark:hover:text-gray-400 text-left"
+                    className="block w-full text-base sm:text-lg text-gray-500 dark:text-gray-100 text-left"
                     onClick={() => onSelectDialogue(d)}
                   >
                     [{d.pronunciation}]
@@ -163,7 +163,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
                 )}
                 {d.english_subtitle && (
                   <button
-                    className="block w-full text-base sm:text-lg text-gray-700 dark:text-gray-100 dark:hover:text-gray-400 text-left"
+                    className="block w-full text-base sm:text-lg text-gray-700 dark:text-gray-100 text-left"
                     onClick={() => onSelectDialogue(d)}
                   >
                     {d.english_subtitle}
