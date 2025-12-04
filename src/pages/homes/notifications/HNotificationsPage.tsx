@@ -11,6 +11,7 @@ interface Notification {
   is_read: boolean;
   created_at: string;
   tweet_id: string | null;
+  comment_id: string | null; // DB 컬럼명은 그대로 유지
   sender: {
     name: string;
     username: string;
@@ -46,7 +47,7 @@ export default function HNotificationsPage() {
         .from('notifications')
         .select(
           `
-          id, type, content, is_read, created_at, tweet_id,
+          id, type, content, is_read, created_at, tweet_id, comment_id,
           sender:sender_id (nickname, user_id, avatar_url)
         `,
         )
@@ -66,6 +67,7 @@ export default function HNotificationsPage() {
           is_read: n.is_read,
           created_at: n.created_at,
           tweet_id: n.tweet_id,
+          comment_id: n.comment_id,
           sender: n.sender
             ? {
                 name: n.sender.nickname,
@@ -109,6 +111,7 @@ export default function HNotificationsPage() {
             is_read: newItem.is_read,
             created_at: newItem.created_at,
             tweet_id: newItem.tweet_id,
+            comment_id: newItem.comment_id,
             sender: sender
               ? {
                   name: sender.nickname,
@@ -135,7 +138,30 @@ export default function HNotificationsPage() {
     await supabase.from('notifications').update({ is_read: true }).eq('id', id);
   };
 
-  // 🔹 로딩 상태도 같은 레이아웃 구조 유지
+  // ✅ 전체 비우기
+  const handleClearAll = async () => {
+    if (!profileId) return;
+
+    try {
+      const { error } = await supabase.from('notifications').delete().eq('receiver_id', profileId);
+
+      if (error) {
+        console.error('❌ 알림 비우기 실패:', error.message);
+        toast.error('알림을 비우는 중 오류가 발생했습니다.');
+        return;
+      }
+
+      setNotifications([]);
+
+      window.dispatchEvent(new Event('notifications:cleared'));
+
+      toast.success('알림을 모두 비웠습니다.');
+    } catch (err: any) {
+      console.error('❌ 알림 비우기 예외:', err.message);
+      toast.error('알림을 비우는 중 오류가 발생했습니다.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center bg-white dark:bg-background">
@@ -149,12 +175,6 @@ export default function HNotificationsPage() {
             md:min-h-[calc(100vh-97px)]
           "
         >
-          {/* 헤더 */}
-          {/* <div className="shrink-0 sticky top-0 bg-white/80 dark:bg-background/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 px-4 py-3 z-10">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">알림</h1>
-          </div> */}
-
-          {/* 로딩 스피너 영역 */}
           <div className="flex-1 min-h-0 flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
           </div>
@@ -163,7 +183,6 @@ export default function HNotificationsPage() {
     );
   }
 
-  // 🔹 알림 목록 레이아웃 (홈/프로필과 동일 구조)
   return (
     <div className="flex justify-center bg-white dark:bg-background">
       <div
@@ -176,53 +195,75 @@ export default function HNotificationsPage() {
         md:min-h-[calc(100vh-97px)]
       "
       >
-        {/* 🔹 헤더 (자동 높이, shrink-0) */}
-        {/* <div
+        {/* 상단 헤더 + 비우기 버튼 */}
+        <div
           className="
-        shrink-0 
-        sticky top-0 
-        bg-white/80 dark:bg-background/90 
-        backdrop-blur-md 
-        border-b border-gray-200 dark:border-gray-700 
-        px-4 py-3 z-10
-      "
+            shrink-0 
+            sticky top-0 
+            bg-white/90 dark:bg-background/90 
+            backdrop-blur-md 
+            border-b border-gray-200 dark:border-gray-700 
+            px-4 py-3 z-10
+            flex items-center justify-between
+          "
         >
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">알림</h1>
-        </div> */}
 
-        {/* 🔹 콘텐츠: 남은 높이 flex-1 + 내부 스크롤 */}
+          {notifications.length > 0 && (
+            <button
+              type="button"
+              onClick={handleClearAll}
+              className="text-xs sm:text-sm px-2 py-1 rounded-full
+                         border border-gray-300 text-gray-600 hover:bg-gray-100
+                         dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800
+                         transition-colors"
+            >
+              비우기
+            </button>
+          )}
+        </div>
+
+        {/* 콘텐츠 */}
         <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-900">
           {notifications.length > 0 ? (
-            notifications.map(n => (
-              <NotificationCard
-                key={n.id}
-                notification={{
-                  id: n.id,
-                  type: n.type,
-                  user: {
-                    name: n.sender?.name || 'Unknown',
-                    username: n.sender?.username || 'anonymous',
-                    avatar: n.sender?.avatar || '/default-avatar.svg',
-                  },
-                  action:
-                    n.type === 'comment'
-                      ? '당신의 피드에 댓글을 남겼습니다.'
-                      : n.type === 'like'
-                        ? '당신의 피드를 좋아합니다.'
-                        : n.content,
-                  content: n.content,
-                  timestamp: new Date(n.created_at).toLocaleString('ko-KR', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  }),
-                  isRead: n.is_read,
-                  tweetId: n.tweet_id,
-                }}
-                onMarkAsRead={markAsRead}
-              />
-            ))
+            <>
+              {notifications.map(n => (
+                <NotificationCard
+                  key={n.id}
+                  notification={{
+                    id: n.id,
+                    type: n.type,
+                    user: {
+                      name: n.sender?.name || 'Unknown',
+                      username: n.sender?.username || 'anonymous',
+                      avatar: n.sender?.avatar || '/default-avatar.svg',
+                    },
+                    action:
+                      n.type === 'comment'
+                        ? '당신의 피드에 댓글을 남겼습니다.'
+                        : n.type === 'like'
+                          ? n.comment_id
+                            ? '당신의 댓글을 좋아합니다.' // 🔥 댓글 좋아요
+                            : '당신의 피드를 좋아합니다.' // 🔥 피드 좋아요
+                          : n.content,
+                    content: n.content,
+                    timestamp: new Date(n.created_at).toLocaleString('ko-KR', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    }),
+                    isRead: n.is_read,
+                    tweetId: n.tweet_id,
+                    replyId: n.comment_id, // ✅ 여기서 replyId로 맞춰서 전달 (댓글 id / 없으면 null)
+                  }}
+                  onMarkAsRead={markAsRead}
+                />
+              ))}
+
+              {/* 리스트 맨 아래 보더라인 */}
+              <div className="h-px bg-gray-100 dark:bg-gray-900" />
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
               <i className="ri-notification-3-line text-3xl mb-2" />

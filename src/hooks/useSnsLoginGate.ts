@@ -1,14 +1,13 @@
-// src/hooks/useSnsLoginGate.ts (가정)
-
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { User } from '@supabase/supabase-js';
 
 const LOGIN_MODAL_DELAY = 60 * 1000; // 60초
-const SNS_STAY_MS_KEY = 'sns-stay-ms';       // SNS/SnsDetail 실제 체류 시간(ms) 누적
+const SNS_STAY_MS_KEY = 'sns-stay-ms'; // SNS/SnsDetail 실제 체류 시간(ms) 누적
 const SNS_TIMEOUT_KEY = 'sns-login-timeout'; // 이미 60초 넘긴 세션 플래그
 
-export function useSnsLoginGate(user: any) {
-  const [showLoginModal, setShowLoginModal] = useState(false);
+export function useSnsLoginGate(user: User | null) {
+  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
   const navigate = useNavigate();
 
   // 이번 "방문"에 대해 언제 SNS에 들어왔는지 기록
