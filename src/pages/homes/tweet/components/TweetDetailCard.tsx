@@ -3,6 +3,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import DOMPurify from 'dompurify';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface User {
   name: string;
@@ -34,12 +37,14 @@ interface TweetDetailCardProps {
 
 export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
   const navigate = useNavigate();
-  const [liked, setLiked] = useState(false);
-  const [retweeted, setRetweeted] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
-  const [contentImages, setContentImages] = useState<string[]>([]);
+  const { user: authUser } = useAuth();
 
-  // ✅ 여기서 user가 아니라 tweet.user 사용해야 함
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(tweet.stats.likes || 0);
+  const [contentImages, setContentImages] = useState<string[]>([]);
+  const [profileId, setProfileId] = useState<string | null>(null);
+
+  // 여기서 user가 아니라 tweet.user 사용해야 함
   const handleAvatarClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
     // 닉네임 기반 프로필
@@ -68,7 +73,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
     loadProfileId();
   }, [authUser]);
 
-  // 🔥 content에서 <img> 태그 src 추출
+  // content에서 <img> 태그 src 추출
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -82,31 +87,31 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
     setContentImages(imgs);
   }, [tweet.content]);
 
-  // 🔥 prop 으로 온 image(string | string[]) → 배열로 정규화
+  // prop 으로 온 image(string | string[]) → 배열로 정규화
   const propImages = Array.isArray(tweet.image) ? tweet.image : tweet.image ? [tweet.image] : [];
 
-  // 🔥 최종적으로 사용할 이미지 목록 (prop 우선, 없으면 contentImages)
+  // 최종적으로 사용할 이미지 목록 (prop 우선, 없으면 contentImages)
   const allImages = propImages.length > 0 ? propImages : contentImages;
 
-  // 🔥 본문에서는 img 태그 제거 (이미지는 아래 그리드에서만 보여줄 것)
+  // 본문에서는 img 태그 제거 (이미지는 아래 그리드에서만 보여줄 것)
   const safeContent = DOMPurify.sanitize(tweet.content, {
     ADD_TAGS: ['iframe', 'video', 'source'],
     ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
     FORBID_TAGS: ['img'],
   });
 
-  // 🔥 디테일 그리드: 최대 6장 보여주고, 나머지는 +N
+  // 디테일 그리드: 최대 6장 보여주고, 나머지는 +N
   const MAX_GRID = 6;
   const hasMoreImages = allImages.length > MAX_GRID;
   const visibleImages = hasMoreImages ? allImages.slice(0, MAX_GRID) : allImages;
 
-  // 🔥 텍스트가 실제로 있는지 확인 (태그/공백 제거 후)
+  // 텍스트가 실제로 있는지 확인 (태그/공백 제거 후)
   const hasText = !!safeContent
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ')
     .trim();
 
-  // ✅ 내가 이 트윗에 좋아요 눌렀는지 초기 로드
+  // 내가 이 트윗에 좋아요 눌렀는지 초기 로드
   useEffect(() => {
     if (!authUser || !profileId) return;
 
@@ -116,7 +121,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
           .from('tweet_likes')
           .select('id')
           .eq('tweet_id', tweet.id)
-          .eq('user_id', profileId) // ✅ profiles.id 기준
+          .eq('user_id', profileId)
           .maybeSingle();
 
         if (!error && data) {
@@ -130,7 +135,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
     loadLiked();
   }, [authUser, profileId, tweet.id]);
 
-  // ✅ 상세에서 트윗 좋아요 토글
+  // 상세에서 트윗 좋아요 토글
   const toggleTweetLike = async () => {
     if (!authUser) {
       toast.error('로그인이 필요합니다.');
@@ -147,7 +152,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
         .from('tweet_likes')
         .select('id')
         .eq('tweet_id', tweet.id)
-        .eq('user_id', profileId) // ✅ 동일 기준
+        .eq('user_id', profileId)
         .maybeSingle();
 
       if (existingError) {
@@ -171,7 +176,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
       // 새 좋아요
       const { error: insertError } = await supabase.from('tweet_likes').insert({
         tweet_id: tweet.id,
-        user_id: profileId, // ✅ FK 맞게
+        user_id: profileId,
       });
 
       if (insertError) throw insertError;
@@ -179,7 +184,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
       setLiked(true);
       setLikeCount(prev => prev + 1);
     } catch (err: any) {
-      console.error('❌ 트윗 좋아요 처리 실패:', err.message);
+      console.error('트윗 좋아요 처리 실패:', err.message);
       toast.error('좋아요 처리 중 오류가 발생했습니다.');
     }
   };
@@ -219,15 +224,30 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
           />
         )}
 
-        {/* 이미지 슬라이드 */}
+        {/* 이미지 그리드 */}
         {allImages.length > 0 && (
-          <ImageSlider
-            allImages={allImages}
-            currentImage={currentImage}
-            setCurrentImage={setCurrentImage}
-            setDirection={setDirection}
-            direction={direction}
-          />
+          <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl overflow-hidden">
+            {visibleImages.map((src, idx) => {
+              const isLastSlot = hasMoreImages && idx === visibleImages.length - 1;
+
+              return (
+                <div
+                  key={src + idx}
+                  className="relative w-full aspect-[4/3] overflow-hidden bg-black/5 dark:bg-black/20"
+                >
+                  <img src={src} alt={`이미지 ${idx + 1}`} className="w-full h-full object-cover" />
+
+                  {isLastSlot && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span className="text-white text-sm font-semibold">
+                        +{allImages.length - MAX_GRID}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
 
