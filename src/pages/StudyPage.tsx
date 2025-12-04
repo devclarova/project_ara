@@ -225,13 +225,13 @@ const StudyPage = () => {
       </Helmet>
       <div className="min-h-screen bg-white dark:bg-background">
         <div className="flex justify-center">
-          <div className="flex w-full max-w-7xl min-h-screen">
+          <div className="flex w-full max-w-5xl min-h-screen">
             {/* Left Sidebar */}
             {/* <aside className="w-20 lg:w-64 shrink-0 border-r-2 border-gray-200 dark:border-gray-700 h-screen sticky top-0 bg-white dark:bg-background">
               <Sidebar onTweetClick={() => setShowTweetModal(true)} />
             </aside> */}
 
-            <div className="max-w-4xl mx-auto ml-10 mr-10 space-y-6 overflow-y-auto hide-scrollbar flex-1">
+            <div className="max-w-4xl mx-auto space-y-6 overflow-y-auto hide-scrollbar flex-1">
               <div className="p-1 max-w-5xl mx-auto">
                 {/* 링크 */}
                 <nav aria-label="Breadcrumb" className="mb-4">
