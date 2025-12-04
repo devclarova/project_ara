@@ -7,16 +7,16 @@ import { useNavigate } from 'react-router-dom';
 import ContentCard from '@/components/study/ContentCard';
 import type { StudyListProps } from '@/types/study';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 type SwiperStyle = CSSProperties & {
   '--swiper-pagination-color': string;
 };
 
 export default function PopularContentSection() {
-  const navigate = useNavigate();
-
   const [items, setItems] = useState<StudyListProps[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -153,6 +153,7 @@ export default function PopularContentSection() {
                     level={item.level}
                     duration={item.duration}
                     comments={item.comments}
+                    basePath={user ? '/study' : '/guest-study'}
                   />
                 </div>
               </SwiperSlide>

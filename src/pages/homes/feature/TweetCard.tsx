@@ -325,20 +325,15 @@ export default function TweetCard({
           {showImageModal && (
             <div
               className="fixed inset-0 bg-black/80 flex items-center justify-center z-[2000]"
-              onClick={() => setShowImageModal(false)}
+              onClick={e => e.stopPropagation()}
             >
-              <div
-                className="relative max-w-5xl w-full max-h-[90vh] flex items-center justify-center"
-                onClick={e => e.stopPropagation()}
-              >
-                {/* 전체 모달 UI는 여기서 처리됨 */}
-                <ModalImageSlider
-                  allImages={allImages}
-                  modalIndex={modalIndex}
-                  setModalIndex={setModalIndex}
-                  onClose={() => setShowImageModal(false)}
-                />
-              </div>
+              {/* 전체 모달 UI는 여기서 처리됨 */}
+              <ModalImageSlider
+                allImages={allImages}
+                modalIndex={modalIndex}
+                setModalIndex={setModalIndex}
+                onClose={() => setShowImageModal(false)}
+              />
             </div>
           )}
 
