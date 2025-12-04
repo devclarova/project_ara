@@ -8,6 +8,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import type { Study } from '../types/study';
+import { useAuth } from '@/contexts/AuthContext';
+import SignInModal from '@/components/auth/SignInModal';
 
 const ALL_CATEGORIES: TCategory[] = ['전체', '드라마', '영화', '예능', '음악'];
 const ALL_LEVELS: TDifficulty[] = ['', '초급', '중급', '고급'];
@@ -49,8 +51,12 @@ const StudyListPage = () => {
   const [total, setTotal] = useState(0); // 전체 콘텐츠 개수
   const [showSearch, setShowSearch] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams(); // URL 쿼리
+  const { user } = useAuth();
+  const [showSignIn, setShowSignIn] = useState(false);
 
   const [showGuide, setShowGuide] = useState(false);
+
+  const limit = 9; // 한 페이지당 9개 (3x3 그리드)
 
   useEffect(() => {
     if (!isGuideModalDismissed(LEANING_GUIDE_KEY)) {
@@ -75,8 +81,6 @@ const StudyListPage = () => {
 
   const [activeCategory, setActiveCategory] = useState<TCategory>(displayCategory);
   const [levelFilter, setLevelFilter] = useState<TDifficulty>(displayLevel);
-
-  const limit = 9; // 한 페이지당 9개 (3x3 그리드)
 
   // 데이터 불러오기
   useEffect(() => {
@@ -294,7 +298,6 @@ const StudyListPage = () => {
                     const [v] = study.video ?? [];
                     return (
                       <ContentCard
-                        basePath="/study"
                         key={study.id}
                         id={study.id}
                         image={study.poster_image_url}
@@ -305,6 +308,10 @@ const StudyListPage = () => {
                         scene={v?.scene || ''}
                         level={v?.level || ''}
                         duration={typeof v?.runtime_bucket === 'string' ? v.runtime_bucket : null}
+                        basePath={user ? '/study' : '/guest-study'} // 로그인/게스트에 따라 이동 경로 달라짐
+                        isGuest={!user} // 게스트 여부
+                        isPreview={study.is_featured}
+                        openLoginModal={() => setShowSignIn(true)} // 잠금 콘텐츠 눌렀을 때 로그인 모달 열기
                       />
                     );
                   })
@@ -314,6 +321,7 @@ const StudyListPage = () => {
                     해당 조건에 맞는 학습 콘텐츠가 없습니다.
                   </div>
                 )}
+                <SignInModal isOpen={showSignIn} onClose={() => setShowSignIn(false)} />
               </div>
 
               {/* 페이지네이션 */}

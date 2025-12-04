@@ -1,9 +1,10 @@
-import type React from 'react'; // 🔹 React 네임스페이스 타입용
+import type React from 'react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import DOMPurify from 'dompurify';
 import ImageSlider from './ImageSlider';
+import ModalImageSlider from './ModalImageSlider';
 
 interface User {
   name: string;
@@ -41,6 +42,8 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
   const [currentImage, setCurrentImage] = useState(0);
   const [contentImages, setContentImages] = useState<string[]>([]);
   const [direction, setDirection] = useState(0);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [modalIndex, setModalIndex] = useState(0);
 
   // ✅ 여기서 user가 아니라 tweet.user 사용해야 함
   const handleAvatarClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -136,7 +139,26 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
             setCurrentImage={setCurrentImage}
             setDirection={setDirection}
             direction={direction}
+            onOpen={index => {
+              setModalIndex(index);
+              setShowImageModal(true);
+            }}
           />
+        )}
+
+        {/* 이미지 모달 */}
+        {showImageModal && (
+          <div
+            className="fixed inset-0 bg-black/80 z-[2000] flex items-center justify-center"
+            onClick={e => e.stopPropagation()}
+          >
+            <ModalImageSlider
+              allImages={allImages}
+              modalIndex={modalIndex}
+              setModalIndex={setModalIndex}
+              onClose={() => setShowImageModal(false)}
+            />
+          </div>
         )}
       </div>
 

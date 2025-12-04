@@ -1,8 +1,12 @@
 import type { StudyListProps } from '@/types/study';
 import { useNavigate } from 'react-router-dom';
+import SignInModal from '../auth/SignInModal';
 
 type ContentCardProps = StudyListProps & {
   basePath?: '/study' | '/guest-study';
+  isPreview?: boolean;
+  isGuest?: boolean;
+  openLoginModal?: () => void; // 게스트가 잠금콘텐츠 클릭할 때 호출
 };
 
 export const InfoItem = ({ icon, text }: { icon: string; text?: string }) => {
@@ -25,6 +29,9 @@ const ContentCard = ({
   scene,
   duration,
   basePath = '/study', // 기본: /study
+  isPreview,
+  isGuest,
+  openLoginModal,
 }: ContentCardProps) => {
   const navigate = useNavigate();
   // 파일 상단 훅들 아래 위치에 추가
@@ -41,9 +48,17 @@ const ContentCard = ({
     return s ? `${basePath}/${c}/${e}/${s}` : `${basePath}/${c}/${e}`;
   };
 
+  const handleClick = () => {
+    if (isGuest && !isPreview) {
+      openLoginModal?.(); // 로그인 모달
+      return;
+    }
+    navigate(buildStudyUrl({ contents, episode, scene }));
+  };
+
   return (
     <div
-      onClick={() => navigate(buildStudyUrl({ contents, episode, scene }))}
+      onClick={handleClick}
       className="group relative rounded-xl shadow-lg cursor-pointer transition-all hover:shadow-xl sm:scale-[0.95] md:scale-100 sm:hover:scale-[0.98] origin-top duration-300 overflow-hidden transform-gpu ring-1 ring-transparent dark:bg-secondary"
     >
       {/* 이미지 */}
@@ -138,6 +153,21 @@ const ContentCard = ({
           </div>
         </div>
       </div>
+
+      {/* 게스트 */}
+      {isGuest && !isPreview && (
+        <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-30">
+          <div className="text-white text-sm font-semibold flex items-center gap-1">
+            <i className="ri-lock-line text-lg"></i> 로그인 필요
+          </div>
+        </div>
+      )}
+      {/* 미리보기 */}
+      {isGuest && isPreview && (
+        <span className="absolute top-3 left-3 z-30 bg-primary text-white px-2 py-1 text-[12px] font-semibold rounded-full">
+          미리보기
+        </span>
+      )}
     </div>
   );
 };

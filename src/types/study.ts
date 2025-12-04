@@ -22,6 +22,7 @@ export interface Study {
   created_at: string; // ISO timestamp
   poster_image_url: string;
   short_description: string;
+  is_featured?: boolean;
   video?: Video[];
 }
 
