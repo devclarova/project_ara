@@ -1,15 +1,13 @@
+import GuideModal, { isGuideModalDismissed } from '@/components/common/GuideModal';
+import Pagination from '@/components/common/Pagination';
 import CategoryTabs, { type TCategory } from '@/components/study/CategoryTabs';
 import ContentCard from '@/components/study/ContentCard';
 import FilterDropdown, { type TDifficulty } from '@/components/study/FilterDropdown';
 import SearchBar from '@/components/ui/SearchBar';
 import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import type { Study } from '../types/study';
-import Sidebar from './homes/feature/Sidebar';
-import { useSearchParams } from 'react-router-dom';
-import Pagination from '@/components/common/Pagination';
-import { Helmet } from 'react-helmet-async';
-import GuideModal, { isGuideModalDismissed } from '@/components/common/GuideModal';
 
 const ALL_CATEGORIES: TCategory[] = ['전체', '드라마', '영화', '예능', '음악'];
 const ALL_LEVELS: TDifficulty[] = ['', '초급', '중급', '고급'];
@@ -46,7 +44,6 @@ const LEANING_GUIDE_SLIDES = [
 
 const StudyListPage = () => {
   const [clips, setClips] = useState<Study[]>([]); // 콘텐츠 목록
-  const [showTweetModal, setShowTweetModal] = useState(false);
   const [keyword, setKeyword] = useState(''); // 검색
   const [page, setPage] = useState(1); // 현재 페이지
   const [total, setTotal] = useState(0); // 전체 콘텐츠 개수
@@ -175,7 +172,30 @@ const StudyListPage = () => {
   const PaginationComponent = React.memo(Pagination);
 
   return (
-    <div className="relative min-h-screen bg-white dark:bg-background">
+    <div className="study-page relative min-h-screen bg-white dark:bg-background">
+      {/* StudyListPage 전용 미디어쿼리 */}
+      <style>
+        {`
+  @media (max-width: 900px) {
+    /* md:hidden → 보이게 하는 기존 override */
+    .md\\:hidden {
+      display: inline-flex !important;
+    }
+
+    /* desktop 검색바 숨기기 */
+    .desktop-search-only {
+      display: none !important;
+    }
+
+  /* 모바일: 돋보기 아이콘을 오른쪽으로 밀기 */
+   .mobile-search-absolute {
+    position: absolute !important;
+    right: 16px !important;
+  }
+  }
+`}
+      </style>
+
       <GuideModal
         isOpen={showGuide}
         onClose={() => setShowGuide(false)}
@@ -201,13 +221,13 @@ const StudyListPage = () => {
             {/* 탭 + 검색 */}
             <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 bg-white dark:bg-background sticky top-0 z-20 pb-2 pl-6 pt-8 pr-6">
               {/* 왼쪽: 카테고리 + 모바일용 검색 아이콘 */}
-              <div className="flex items-center justify-between w-full md:w-auto">
+              <div className="flex items-center justify-between w-full md:w-auto search-row">
                 <CategoryTabs active={displayCategory} onChange={handleCategoryChange} />
 
                 {/* 모바일 전용 검색 버튼 (카테고리 옆에 위치) */}
                 <button
                   onClick={() => setShowSearch(true)}
-                  className="md:hidden ml-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-secondary transition"
+                  className="md:hidden mobile-search-absolute ml-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-secondary transition"
                   aria-label="검색 열기"
                 >
                   <i className="ri-search-line text-[20px] sm:text-[24px] md:text-[28px] text-gray-600 dark:text-gray-200" />
@@ -215,7 +235,7 @@ const StudyListPage = () => {
               </div>
 
               {/* 오른쪽: 필터 + 검색 그룹 (데스크톱 전용) */}
-              <div className="hidden md:flex items-center gap-2 mt-3 md:mt-0 flex-nowrap">
+              <div className="hidden md:flex desktop-search-only items-center gap-2 mt-3 md:mt-0 flex-nowrap">
                 <div className="flex items-center h-11">
                   <FilterDropdown value={levelFilter} onApply={applyLevel} />
                 </div>
