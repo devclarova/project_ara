@@ -46,6 +46,7 @@ const defaultOutletCtx: OutletCtx = {
   searchQuery: '',
 };
 
+// 🔹 SNS 홈 전역 스크롤 위치 (라우트 이동 간 유지)
 let HOME_SCROLL_Y = 0;
 
 export default function Home({ searchQuery }: HomeProps) {
@@ -66,6 +67,30 @@ export default function Home({ searchQuery }: HomeProps) {
   const restoredRef = useRef(false);
   const [myProfileId, setMyProfileId] = useState<string | null>(null);
 
+  // 🔹 window 기준 스크롤 위치 저장
+  useEffect(() => {
+    const handleScroll = () => {
+      HOME_SCROLL_Y = window.scrollY || window.pageYOffset || 0;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 🔹 페이지 복귀 시 스크롤 복원 (처음 마운트 시 한 번만)
+  useLayoutEffect(() => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+
+    if (HOME_SCROLL_Y > 0) {
+      window.scrollTo({
+        top: HOME_SCROLL_Y,
+        left: 0,
+        behavior: 'instant' as ScrollBehavior,
+      });
+    }
+  }, []);
+
   // 로그인한 유저의 profiles.id 가져오기
   useEffect(() => {
     const loadProfileId = async () => {
@@ -79,23 +104,6 @@ export default function Home({ searchQuery }: HomeProps) {
     };
     loadProfileId();
   }, [user]);
-
-  // 스크롤 위치 저장
-  useEffect(() => {
-    const handleScroll = () => {
-      HOME_SCROLL_Y = window.scrollY || window.pageYOffset || 0;
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // 페이지 복귀 시 스크롤 복원
-  useLayoutEffect(() => {
-    if (loading) return;
-    if (restoredRef.current) return;
-    restoredRef.current = true;
-    window.scrollTo({ top: HOME_SCROLL_Y, left: 0, behavior: 'instant' as ScrollBehavior });
-  }, [loading]);
 
   const fetchTweets = async (reset = false) => {
     if (!reset && loading) return;
@@ -197,12 +205,7 @@ export default function Home({ searchQuery }: HomeProps) {
 
   // 검색어 있을 때/없을 때 재로드
   useEffect(() => {
-    if (mergedSearchQuery) {
-      fetchTweets(true);
-    } else {
-      // 검색어 지워지면 기본 피드로 복원
-      fetchTweets(true);
-    }
+    fetchTweets(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mergedSearchQuery]);
 
