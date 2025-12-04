@@ -100,13 +100,13 @@ const FilterDropdown = ({ value, onApply }: FilterDropdownProps) => {
             </div> */}
 
             {/* 정렬 */}
-            <div>
+            {/* <div>
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">정렬</h3>
               <select className="w-full text-sm text-gray-600 border dark:text-gray-100 dark:bg-secondary border-gray-200 dark:border-gray-500 rounded-button px-3 py-2">
                 <option>최신순</option>
                 <option>인기순</option>
               </select>
-            </div>
+            </div> */}
 
             <div className="flex justify-end pt-2 gap-2">
               <button

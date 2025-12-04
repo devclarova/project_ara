@@ -141,10 +141,7 @@ export default function PopularContentSection() {
           >
             {items.map(item => (
               <SwiperSlide key={item.id} className="pb-10">
-                <div
-                  className="h-full cursor-pointer"
-                  onClick={() => navigate(`/courses/${item.id}`)}
-                >
+                <div className="h-full cursor-pointer">
                   <ContentCard
                     id={item.id}
                     image={item.image}

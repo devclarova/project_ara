@@ -3,9 +3,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import DOMPurify from 'dompurify';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
 
 interface User {
   name: string;
@@ -37,12 +34,10 @@ interface TweetDetailCardProps {
 
 export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
   const navigate = useNavigate();
-  const { user: authUser } = useAuth();
-
   const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(tweet.stats.likes || 0);
+  const [retweeted, setRetweeted] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
   const [contentImages, setContentImages] = useState<string[]>([]);
-  const [profileId, setProfileId] = useState<string | null>(null);
 
   // ✅ 여기서 user가 아니라 tweet.user 사용해야 함
   const handleAvatarClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -224,30 +219,15 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
           />
         )}
 
-        {/* 이미지 그리드 */}
+        {/* 이미지 슬라이드 */}
         {allImages.length > 0 && (
-          <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl overflow-hidden">
-            {visibleImages.map((src, idx) => {
-              const isLastSlot = hasMoreImages && idx === visibleImages.length - 1;
-
-              return (
-                <div
-                  key={src + idx}
-                  className="relative w-full aspect-[4/3] overflow-hidden bg-black/5 dark:bg-black/20"
-                >
-                  <img src={src} alt={`이미지 ${idx + 1}`} className="w-full h-full object-cover" />
-
-                  {isLastSlot && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                      <span className="text-white text-sm font-semibold">
-                        +{allImages.length - MAX_GRID}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <ImageSlider
+            allImages={allImages}
+            currentImage={currentImage}
+            setCurrentImage={setCurrentImage}
+            setDirection={setDirection}
+            direction={direction}
+          />
         )}
       </div>
 
