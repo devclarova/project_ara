@@ -9,6 +9,9 @@ import ReactCountryFlag from 'react-country-flag';
 import { Badge } from '@/components/ui/badge';
 import { AnimatePresence, motion } from 'framer-motion';
 
+const SNS_SCROLL_Y_KEY = 'sns-scroll-y';
+const SNS_RESTORE_FLAG_KEY = 'sns-restore-flag';
+
 interface User {
   name: string;
   username: string;
@@ -198,7 +201,13 @@ export default function TweetCard({
     }
   };
 
-  const handleCardClick = () => navigate(`/sns/${id}`);
+  const handleCardClick = () => {
+    if (typeof window !== 'undefined') {
+      const y = window.scrollY || window.pageYOffset || 0;
+      sessionStorage.setItem(SNS_SCROLL_Y_KEY, String(y));
+    }
+    navigate(`/sns/${id}`);
+  };
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/profile/${encodeURIComponent(user.name)}`);
@@ -307,6 +316,10 @@ export default function TweetCard({
               className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400"
               onClick={e => {
                 e.stopPropagation();
+                if (typeof window !== 'undefined') {
+                  const y = window.scrollY || window.pageYOffset || 0;
+                  sessionStorage.setItem(SNS_SCROLL_Y_KEY, String(y));
+                }
                 navigate(`/sns/${id}`);
               }}
             >

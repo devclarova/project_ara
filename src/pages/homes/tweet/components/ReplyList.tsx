@@ -31,20 +31,48 @@ interface Reply {
 interface ReplyListProps {
   replies: Reply[];
   onDeleted?: (id: string) => void;
-  // ✅ 내가 방금 단 댓글 id를 위에서 내려주기 위한 prop
+  // ✅ 알림/방금 단 댓글 등에서 스크롤 타겟으로 쓸 id
   scrollTargetId?: string | null;
 }
 
-function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string) => void }) {
+function ReplyCard({
+  reply,
+  onDeleted,
+  highlight = false,
+}: {
+  reply: Reply;
+  onDeleted?: (id: string) => void;
+  highlight?: boolean;
+}) {
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
 
   const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(reply.stats.likes);
   const [showMenu, setShowMenu] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [profileId, setProfileId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+
+  // 🔥 하이라이트 상태 (잠깐 색 들어왔다 빠지는 용도)
+  const [isHighlighted, setIsHighlighted] = useState(false);
+
+  // ✅ highlight prop이 true일 때 잠깐 하이라이트
+  useEffect(() => {
+    if (highlight) {
+      // highlight=true로 바뀔 때마다 다시 점등
+      setIsHighlighted(true);
+      const timer = setTimeout(() => {
+        setIsHighlighted(false);
+      }, 1200);
+
+      return () => clearTimeout(timer);
+    } else {
+      // prop이 false로 바뀌면 바로 끔
+      setIsHighlighted(false);
+    }
+  }, [highlight]);
 
   // ✅ 로그인한 사용자의 profiles.id 가져오기
   useEffect(() => {
@@ -59,6 +87,30 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
     };
     loadProfileId();
   }, [authUser]);
+
+  // ✅ 내가 이미 좋아요 눌렀는지 확인 (🔥 user_id = profileId 기준으로 수정)
+  useEffect(() => {
+    if (!authUser || !profileId) return;
+
+    const loadLiked = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('tweet_replies_likes')
+          .select('id')
+          .eq('reply_id', reply.id)
+          .eq('user_id', profileId)
+          .maybeSingle();
+
+        if (!error && data) {
+          setLiked(true);
+        }
+      } catch (err) {
+        console.error('❌ 댓글 좋아요 상태 조회 실패:', err);
+      }
+    };
+
+    loadLiked();
+  }, [authUser, profileId, reply.id]);
 
   // ✅ 외부 클릭 시 메뉴 닫기
   useEffect(() => {
@@ -79,7 +131,9 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
       }
     };
     if (showDialog) document.addEventListener('mousedown', handleOutside);
-    return () => document.removeEventListener('mousedown', handleOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleOutside);
+    };
   }, [showDialog]);
 
   // ✅ 댓글 삭제
@@ -94,17 +148,94 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
         .from('tweet_replies')
         .delete()
         .eq('id', reply.id)
-        .eq('author_id', profileId); // ✅ DB 구조에 맞게 수정
+        .eq('author_id', profileId);
 
       if (error) throw error;
 
       toast.success('댓글이 삭제되었습니다.');
       setShowDialog(false);
       setShowMenu(false);
-      onDeleted?.(reply.id); // 부모에게 알림
+      onDeleted?.(reply.id);
     } catch (err: any) {
       console.error('❌ 댓글 삭제 실패:', err.message);
       toast.error('삭제 중 오류가 발생했습니다.');
+    }
+  };
+
+  // ✅ 댓글 좋아요 토글 (🔥 user_id = profileId 기준으로 수정)
+  const toggleLike = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (!authUser) {
+      toast.error('로그인이 필요합니다.');
+      return;
+    }
+    if (!profileId) {
+      toast.error('프로필 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+
+    try {
+      // 이미 좋아요 했는지 확인
+      const { data: existing, error: existingError } = await supabase
+        .from('tweet_replies_likes')
+        .select('id')
+        .eq('reply_id', reply.id)
+        .eq('user_id', profileId)
+        .maybeSingle();
+
+      if (existingError) {
+        console.error('❌ 좋아요 조회 실패:', existingError.message);
+      }
+
+      if (existing) {
+        // 좋아요 취소
+        const { error: deleteError } = await supabase
+          .from('tweet_replies_likes')
+          .delete()
+          .eq('id', existing.id);
+
+        if (deleteError) throw deleteError;
+
+        setLiked(false);
+        setLikeCount(prev => Math.max(0, prev - 1));
+        return;
+      }
+
+      // 새 좋아요 추가
+      const { error: insertError } = await supabase.from('tweet_replies_likes').insert({
+        reply_id: reply.id,
+        user_id: profileId,
+      });
+
+      if (insertError) throw insertError;
+
+      setLiked(true);
+      setLikeCount(prev => prev + 1);
+
+      // // 🔔 알림 생성 (본인 댓글이 아닐 때만)
+      // if (reply.user.username !== authUser.id) {
+      //   // 댓글 작성자 프로필 찾기
+      //   const { data: receiverProfile, error: receiverError } = await supabase
+      //     .from('profiles')
+      //     .select('id')
+      //     .eq('user_id', reply.user.username)
+      //     .maybeSingle();
+
+      //   if (!receiverError && receiverProfile && receiverProfile.id !== profileId) {
+      //     await supabase.from('notifications').insert({
+      //       receiver_id: receiverProfile.id, // 댓글 주인 (profiles.id)
+      //       sender_id: profileId, // 좋아요 누른 사람 (profiles.id)
+      //       type: 'like', // 기존 enum 유지
+      //       content: reply.content, // 댓글 내용
+      //       tweet_id: reply.tweetId, // 어떤 피드인지
+      //       comment_id: reply.id, // 어떤 댓글인지 → 알림에서 스크롤/하이라이트에 사용
+      //     });
+      //   }
+      // }
+    } catch (err: any) {
+      console.error('❌ 좋아요 처리 실패:', err.message);
+      toast.error('좋아요 처리 중 오류가 발생했습니다.');
     }
   };
 
@@ -115,17 +246,31 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
 
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/finalhome/user/${reply.user.name}`);
+    // ✅ URL에는 닉네임(name)을 넣고, ProfileAsap에서 nickname 기준으로 조회
+    navigate(`/profile/${encodeURIComponent(reply.user.name)}`);
   };
 
   // ✅ 본인 댓글 여부 (profiles.id 비교 불가하므로 user_id 비교)
   const isMyReply = authUser?.id === reply.user.username;
 
+  // ✅ 배경 빼고 공통 카드 스타일만
+  const baseCardClasses =
+    'border-b border-gray-200 dark:border-gray-700 px-4 py-3 hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors';
+
+  // ✅ 하이라이트/일반 배경을 분리
+  const containerClasses = `${baseCardClasses} ${
+    isHighlighted
+      ? 'bg-primary/15 dark:bg-primary/25 border-l-4 border-l-primary' // 🔥 눈에 확 띄게
+      : 'bg-white dark:bg-background'
+  }`;
+
+  // 🔥 라이트/다크 모두 primary 색감이 눈에 띄게 배경 강조
+  const highlightClasses = isHighlighted
+    ? 'bg-[hsl(var(--primary)/0.3)] dark:bg-[hsl(var(--primary)/0.20)]'
+    : '';
+
   return (
-    <div
-      id={`reply-${reply.id}`} // ✅ 스크롤 타겟 id
-      className="border-b border-gray-200 dark:border-gray-700 px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-primary/10 transition-colors bg-white dark:bg-background"
-    >
+    <div id={`reply-${reply.id}`} className={containerClasses}>
       <div className="flex space-x-3">
         <div onClick={handleAvatarClick} className="cursor-pointer">
           <Avatar>
@@ -150,7 +295,7 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
               </span>
             </div>
 
-            {/* ✅ 더보기 버튼 */}
+            {/* 더보기 버튼 */}
             <button
               onClick={e => {
                 e.stopPropagation();
@@ -161,7 +306,7 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
               <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
             </button>
 
-            {/* ✅ 더보기 메뉴 */}
+            {/* 더보기 메뉴 */}
             {showMenu && (
               <div className="absolute right-0 top-8 w-36 bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
                 {isMyReply ? (
@@ -191,7 +336,7 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
           />
 
           {/* 액션 버튼 */}
-          <div className="flex items-center justify-between max-w-md mt-3 text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-start gap-7 max-w-md mt-3 text-gray-500 dark:text-gray-400">
             {/* Reply */}
             <button className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400 transition-colors group">
               <div className="p-2 rounded-full group-hover:bg-blue-50 dark:group-hover:bg-primary/10 transition-colors">
@@ -205,29 +350,26 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
               className={`flex items-center space-x-2 transition-colors group ${
                 liked ? 'text-red-500' : 'hover:text-red-500'
               }`}
-              onClick={e => {
-                e.stopPropagation();
-                setLiked(!liked);
-              }}
+              onClick={toggleLike}
             >
               <div className="p-2 rounded-full group-hover:bg-red-50 dark:group-hover:bg-primary/10 transition-colors">
                 <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg`} />
               </div>
-              <span className="text-sm">{reply.stats.likes + (liked ? 1 : 0)}</span>
+              <span className="text-sm">{likeCount}</span>
             </button>
 
             {/* Views */}
-            <button className="flex items-center space-x-2 hover:text-green-500 dark:hover:text-emerald-400 transition-colors group">
+            {/* <button className="flex items-center space-x-2 hover:text-green-500 dark:hover:text-emerald-400 transition-colors group">
               <div className="p-2 rounded-full group-hover:bg-blue-50 dark:group-hover:bg-primary/10 transition-colors">
                 <i className="ri-eye-line text-lg" />
               </div>
               <span className="text-sm">{reply.stats.views}</span>
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
 
-      {/* ✅ 삭제 다이얼로그 */}
+      {/* 삭제 다이얼로그 */}
       {showDialog && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[1000]">
           <div
@@ -264,21 +406,26 @@ function ReplyCard({ reply, onDeleted }: { reply: Reply; onDeleted?: (id: string
 }
 
 export default function ReplyList({ replies, onDeleted, scrollTargetId }: ReplyListProps) {
-  // ✅ 새로 생성된 댓글 id가 바뀌면 해당 카드로 스크롤
+  // ✅ 스크롤 타겟 id가 바뀌면 해당 카드로 스크롤
   useEffect(() => {
     if (!scrollTargetId) return;
     const el = document.getElementById(`reply-${scrollTargetId}`);
     if (!el) return;
 
-    el.scrollIntoView({
+    // 🔥 헤더 높이만큼 위로 여유를 두고 스크롤
+    const headerOffset = 120; // 필요하면 80~140 사이에서 조절
+    const rect = el.getBoundingClientRect();
+    const absoluteY = window.scrollY + rect.top;
+
+    window.scrollTo({
+      top: absoluteY - headerOffset,
       behavior: 'smooth',
-      block: 'center',
     });
   }, [scrollTargetId, replies.length]);
 
   if (replies.length === 0) {
     return (
-      <div className="border-b border-gray-200 p-8 text-center text-gray-500 dark:text-gray-400">
+      <div className="border-b border-gray-200 dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
         <i className="ri-chat-3-line text-4xl mb-2 block" />
         <p>No replies yet</p>
         <p className="text-sm mt-1">Be the first to reply!</p>
@@ -289,7 +436,13 @@ export default function ReplyList({ replies, onDeleted, scrollTargetId }: ReplyL
   return (
     <div>
       {replies.map(reply => (
-        <ReplyCard key={reply.id} reply={reply} onDeleted={onDeleted} />
+        <ReplyCard
+          key={reply.id}
+          reply={reply}
+          onDeleted={onDeleted}
+          // ✅ 이 댓글이 스크롤 타겟이면 하이라이트
+          highlight={scrollTargetId === reply.id}
+        />
       ))}
     </div>
   );

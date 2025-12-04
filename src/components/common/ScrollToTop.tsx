@@ -6,8 +6,8 @@ function ScrollToTop() {
   const navType = useNavigationType();
 
   useEffect(() => {
-    // ✅ finalhome 계열은 전혀 건드리지 않기
-    if (pathname.startsWith('/finalhome')) {
+    // sns 계열은 전혀 건드리지 않기
+    if (pathname.startsWith('/sns')) {
       return;
     }
 

@@ -16,6 +16,7 @@ interface NotificationCardProps {
     timestamp: string;
     isRead: boolean;
     tweetId: string | null;
+    replyId?: string | null; // ✅ 여기 기준으로 통일
   };
   onMarkAsRead?: (id: string) => void;
 }
@@ -58,19 +59,33 @@ export default function NotificationCard({ notification, onMarkAsRead }: Notific
       onMarkAsRead(notification.id);
     }
 
+    // ✅ 팔로우 알림 → 프로필로 이동
     if (notification.type === 'follow') {
-      navigate(`/profile/${notification.user.username}`);
-    } else if (notification.tweetId) {
-      navigate(`/finalhome/${notification.tweetId}`);
+      navigate(`/profile/${encodeURIComponent(notification.user.username)}`);
+      return;
+    }
+
+    // ✅ 댓글/댓글 좋아요 알림: tweetId + replyId 둘 다 있을 때 → 해당 댓글로 스크롤
+    if (notification.tweetId && notification.replyId) {
+      navigate(`/sns/${notification.tweetId}`, {
+        state: {
+          highlightCommentId: notification.replyId,
+        },
+      });
+      return;
+    }
+
+    // ✅ 그 외(피드 좋아요 등)는 피드 디테일로만 이동
+    if (notification.tweetId) {
+      navigate(`/sns/${notification.tweetId}`);
     }
   };
 
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/finalhome/user/${notification.user.name}`);
+    navigate(`/profile/${encodeURIComponent(notification.user.username)}`);
   };
 
-  /** ✅ HTML에서 이미지·미디어 제거하고 <p> 내용만 추출하는 함수 */
   const extractParagraphText = (html: string) => {
     const clean = DOMPurify.sanitize(html, {
       ALLOWED_TAGS: ['p', 'strong', 'em', 'b', 'i', 'u', 'br'],
@@ -79,12 +94,22 @@ export default function NotificationCard({ notification, onMarkAsRead }: Notific
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(clean, 'text/html');
+
     const paragraphs = Array.from(doc.querySelectorAll('p'));
-    const text = paragraphs.map(p => p.textContent?.trim() || '').join('\n');
-    return text;
+
+    if (paragraphs.length > 0) {
+      return paragraphs.map(p => p.textContent?.trim() || '').join('\n');
+    }
+
+    const bodyText = doc.body.textContent || '';
+    return bodyText.trim();
   };
 
   const parsedContent = notification.content ? extractParagraphText(notification.content) : '';
+
+  // 🔥 어떤 타입에 대해 내용 박스를 보여줄지 결정
+  const shouldShowPreview =
+    (notification.type === 'comment' || notification.type === 'like') && !!parsedContent;
 
   const unreadClasses = !notification.isRead
     ? 'bg-primary/10 dark:bg-primary/20 border-l-4 border-l-primary'
@@ -95,7 +120,6 @@ export default function NotificationCard({ notification, onMarkAsRead }: Notific
       onClick={handleClick}
       className={`
         p-4 cursor-pointer transition-all duration-200
-        border-b border-gray-100 dark:border-gray-800
         bg-white dark:bg-secondary
         hover:bg-primary/5 dark:hover:bg-primary/10
         ${unreadClasses}
@@ -134,7 +158,8 @@ export default function NotificationCard({ notification, onMarkAsRead }: Notific
             </span>
           </div>
 
-          {parsedContent && (
+          {/* 댓글/좋아요 알림일 때 내용 미리보기 */}
+          {shouldShowPreview && (
             <div className="mt-2 p-3 bg-gray-50 dark:bg-background rounded-lg border border-gray-200 dark:border-gray-700">
               <p className="text-sm text-gray-700 dark:text-gray-100 line-clamp-2 whitespace-pre-wrap break-words">
                 {parsedContent}
