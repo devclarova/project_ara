@@ -103,7 +103,7 @@ export default function ModalImageSlider({
           }}
           className="absolute left-5 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white text-4xl w-8 h-8 rounded-full flex justify-center items-center z-30"
         >
-          ‹
+          <span className="absolute -translate-y-1 -translate-x-0.7">‹</span>
         </button>
       )}
 
@@ -117,7 +117,7 @@ export default function ModalImageSlider({
           }}
           className="absolute right-5 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white text-4xl w-8 h-8 rounded-full flex justify-center items-center z-30"
         >
-          ›
+          <span className="absolute -translate-y-1 -translate-x-0.7">›</span>
         </button>
       )}
 

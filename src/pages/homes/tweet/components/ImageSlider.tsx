@@ -81,7 +81,7 @@ export default function ImageSlider({
             }}
             className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white text-4xl rounded-full w-8 h-8 flex items-center justify-center"
           >
-            ‹
+            <span className="absolute -translate-y-1 -translate-x-0">‹</span>
           </button>
         )}
 
@@ -95,7 +95,7 @@ export default function ImageSlider({
             }}
             className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white text-4xl w-8 h-8 rounded-full flex items-center justify-center"
           >
-            ›
+            <span className="absolute -translate-y-1 -translate-x-0">›</span>
           </button>
         )}
 

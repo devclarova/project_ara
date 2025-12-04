@@ -48,6 +48,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalIndex, setModalIndex] = useState(0);
   const [profileId, setProfileId] = useState<string | null>(null);
+  const [currentImage, setCurrentImage] = useState(0);
 
   // 여기서 user가 아니라 tweet.user 사용해야 함
   const handleAvatarClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -98,17 +99,12 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
   // 최종적으로 사용할 이미지 목록 (prop 우선, 없으면 contentImages)
   const allImages = propImages.length > 0 ? propImages : contentImages;
 
-  // 본문에서는 img 태그 제거 (이미지는 아래 그리드에서만 보여줄 것)
+  // 본문에서는 img 태그 제거 (이미지는 아래 슬라이더에서만 보여줄 것)
   const safeContent = DOMPurify.sanitize(tweet.content, {
     ADD_TAGS: ['iframe', 'video', 'source'],
     ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
     FORBID_TAGS: ['img'],
   });
-
-  // 디테일 그리드: 최대 6장 보여주고, 나머지는 +N
-  const MAX_GRID = 6;
-  const hasMoreImages = allImages.length > MAX_GRID;
-  const visibleImages = hasMoreImages ? allImages.slice(0, MAX_GRID) : allImages;
 
   // 텍스트가 실제로 있는지 확인 (태그/공백 제거 후)
   const hasText = !!safeContent
@@ -229,7 +225,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
           />
         )}
 
-        {/* 이미지 그리드 */}
+        {/* 이미지 슬라이더 */}
         {allImages.length > 0 && (
           <ImageSlider
             allImages={allImages}
@@ -266,7 +262,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
       {/* Stats + 액션 버튼 (댓글/좋아요/조회수) */}
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-start gap-8 text-sm text-gray-500 dark:text-gray-400">
-          {/* 댓글 수 (클릭 동작은 나중에 붙여도 되고 지금은 카운트만) */}
+          {/* 댓글 수 */}
           <button className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400 transition-colors group">
             <div className="p-2 rounded-full group-hover:bg-primary/10 dark:group-hover:bg-primary/15 transition-colors">
               <i className="ri-chat-3-line text-lg" />
