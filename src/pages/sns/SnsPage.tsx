@@ -1,4 +1,3 @@
-// src/pages/sns/SnsPage.tsx
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import SnsLayout from './SnsLayout';
