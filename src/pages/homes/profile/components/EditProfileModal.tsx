@@ -39,7 +39,7 @@ export default function EditProfileModal({
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
-  // ✅ 모달이 열릴 때마다 초기화
+  // 모달이 열릴 때마다 초기화
   useEffect(() => {
     if (isOpen) {
       setFormData({
@@ -123,13 +123,13 @@ export default function EditProfileModal({
       };
       onSave(updated);
 
-      // ✅ 닉네임 변경 후 URL도 새 닉네임으로 이동
-      navigate(`/finalhome/user/${encodeURIComponent(formData.name)}`);
+      // 닉네임 변경 후 URL도 새 닉네임으로 이동
+      navigate(`/profile/${encodeURIComponent(formData.name)}`);
 
-      // ✅ 토스트 먼저 출력 (모달 닫기보다 먼저)
+      // 토스트 먼저 출력 (모달 닫기보다 먼저)
       toast.success('프로필이 성공적으로 업데이트되었습니다.');
 
-      // ✅ 약간의 딜레이 후 모달 닫기 (토스트 표시 보장)
+      // 약간의 딜레이 후 모달 닫기 (토스트 표시 보장)
       setTimeout(() => {
         onClose();
       }, 300);

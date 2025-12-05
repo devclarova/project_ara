@@ -105,7 +105,7 @@ export default function TrendsPanel({
         </div>
       )}
 
-      {/* 🔥 실시간 인기 피드 카드 영역 */}
+      {/* 실시간 인기 피드 카드 영역 */}
       <div className="space-y-4">
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 dark:bg-secondary">
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex justify-center items-center gap-2">

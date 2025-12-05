@@ -107,7 +107,7 @@ export default function NotificationCard({ notification, onMarkAsRead }: Notific
 
   const parsedContent = notification.content ? extractParagraphText(notification.content) : '';
 
-  // 🔥 어떤 타입에 대해 내용 박스를 보여줄지 결정
+  // 어떤 타입에 대해 내용 박스를 보여줄지 결정
   const shouldShowPreview =
     (notification.type === 'comment' || notification.type === 'like') && !!parsedContent;
 

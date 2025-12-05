@@ -29,11 +29,11 @@ export default function ProfileAsap() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // ✅ URL에서 username 추출 + 디코딩
+  // URL에서 username 추출 + 디코딩
   const { username } = useParams<{ username: string }>();
   const decodedUsername = username ? decodeURIComponent(username) : '';
 
-  // ✅ 프로필 불러오기 (로직 그대로 유지)
+  // 프로필 불러오기 (로직 그대로 유지)
   useEffect(() => {
     if (!decodedUsername && !user) return;
 
@@ -55,10 +55,10 @@ export default function ProfileAsap() {
         );
 
         if (!decodedUsername && user) {
-          // 🔹 /profile 처럼 username 없이 접속했을 때 → 내 프로필
+          // /profile 처럼 username 없이 접속했을 때 → 내 프로필
           query = query.eq('user_id', user.id);
         } else {
-          // 🔹 /profile/:username → 닉네임으로 조회
+          // /profile/:username → 닉네임으로 조회
           query = query.eq('nickname', decodedUsername);
         }
 
@@ -90,12 +90,12 @@ export default function ProfileAsap() {
     fetchProfile();
   }, [decodedUsername, user]);
 
-  // ✅ 프로필 저장 후 상태 갱신
+  // 프로필 저장 후 상태 갱신
   const handleSaveProfile = (updatedProfile: Partial<UserProfile>) => {
     setUserProfile(prev => (prev ? { ...prev, ...updatedProfile } : prev));
   };
 
-  // ✅ 로딩 / 에러 상태
+  // 로딩 / 에러 상태
   if (!userProfile) {
     return (
       <div className="min-h-screen bg-white dark:bg-background">
@@ -114,7 +114,7 @@ export default function ProfileAsap() {
   }
 
   return (
-    // 🔹 홈 피드처럼: 전체 배경 + 가운데 정렬 + 가운데 컬럼만 border-x
+    // 홈 피드처럼: 전체 배경 + 가운데 정렬 + 가운데 컬럼만 border-x
     <div className="min-h-screen bg-white dark:bg-background">
       <div className="flex justify-center">
         {/* 가운데 프로필 컬럼 */}

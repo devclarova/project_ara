@@ -259,9 +259,7 @@ function ReplyCard({
 
   // ✅ 하이라이트/일반 배경을 분리
   const containerClasses = `${baseCardClasses} ${
-    isHighlighted
-      ? 'bg-primary/15 dark:bg-primary/25 border-l-4 border-l-primary' // 🔥 눈에 확 띄게
-      : 'bg-white dark:bg-background'
+    isHighlighted ? 'bg-primary/15 dark:bg-primary/25' : 'bg-white dark:bg-background'
   }`;
 
   // 🔥 라이트/다크 모두 primary 색감이 눈에 띄게 배경 강조
