@@ -67,20 +67,14 @@ function Header() {
     }
   };
 
-  // 로고 클릭: 홈 이동 / 스크롤 / 새로고침
+  // 로고 클릭: 홈이 아니면 홈으로 이동, 이미 홈이면 아무 동작 없음
   const handleLogoClick = () => {
     const isOnHome = location.pathname === homePath;
 
     if (!isOnHome) {
       navigate(homePath);
-      return;
     }
-
-    if (window.scrollY > 0) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      window.location.reload();
-    }
+    // 홈일 때는 스크롤/새로고침 동작 제거
   };
 
   // 1차 기본 닉네임: user_metadata → 이메일 → 기본문구
