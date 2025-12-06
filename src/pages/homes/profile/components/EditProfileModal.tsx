@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import CountrySelect from '@/components/auth/CountrySelect';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -13,11 +14,20 @@ interface EditProfileModalProps {
     username: string;
     avatar: string;
     bio: string;
-    location: string;
     banner?: string | null;
+    country?: string | null; // 🔹 화면에 보이는 "국가 이름" (예: 대한민국)
+    countryFlagUrl?: string | null; // 🔹 현재 국기 URL
   };
   onSave: (updatedProfile: any) => void;
 }
+
+// 🔹 countries 테이블 구조에 맞게 타입 수정 (id + name 기준)
+type CountryOption = {
+  id: number;
+  name: string;
+  flag: string | null;
+  flag_url: string | null;
+};
 
 export default function EditProfileModal({
   isOpen,
@@ -27,38 +37,78 @@ export default function EditProfileModal({
 }: EditProfileModalProps) {
   const [formData, setFormData] = useState({
     name: userProfile.name,
-    bio: userProfile.bio,
-    location: userProfile.location,
+    bio: userProfile.bio ?? '',
+    // 🔹 여기서는 일단 빈 문자열로 두고, countries를 불러온 뒤에 id로 다시 채워줄 거라 상관 없음
+    country: '',
   });
+
+  const [countries, setCountries] = useState<CountryOption[]>([]);
+  const [countriesLoading, setCountriesLoading] = useState(false);
 
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [previewAvatar, setPreviewAvatar] = useState(userProfile.avatar);
-  const [previewBanner, setPreviewBanner] = useState(userProfile.banner);
+  const [previewBanner, setPreviewBanner] = useState(userProfile.banner ?? null);
   const [charCount, setCharCount] = useState(userProfile.bio?.length || 0);
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
-  // 모달이 열릴 때마다 초기화
+  // 🔹 모달이 열릴 때마다 초기화
   useEffect(() => {
     if (isOpen) {
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         name: userProfile.name,
-        bio: userProfile.bio,
-        location: userProfile.location,
-      });
+        bio: userProfile.bio ?? '',
+        // country는 아래 fetchCountries에서 "id"로 다시 세팅
+        country: '',
+      }));
       setAvatarFile(null);
       setBannerFile(null);
       setPreviewAvatar(userProfile.avatar);
-      setPreviewBanner(userProfile.banner);
+      setPreviewBanner(userProfile.banner ?? null);
       setCharCount(userProfile.bio?.length || 0);
       setSaving(false);
+
+      const fetchCountries = async () => {
+        try {
+          setCountriesLoading(true);
+          const { data, error } = await supabase
+            .from('countries')
+            .select('id, name, flag, flag_url') // ✅ id + name 기준으로 수정
+            .order('id', { ascending: true });
+
+          if (error) throw error;
+
+          const list = data || [];
+          setCountries(list);
+
+          // ✅ 현재 프로필의 국가 이름(userProfile.country)에 해당하는 id를 찾아서
+          //    formData.country를 그 id로 세팅 → CountrySelect가 처음부터 선택된 상태로 표시됨
+          if (userProfile.country) {
+            const matched = list.find(c => c.name === userProfile.country);
+            if (matched) {
+              setFormData(prev => ({
+                ...prev,
+                country: String(matched.id), // CountrySelect는 String(c.id)를 value로 사용
+              }));
+            }
+          }
+        } catch (err) {
+          console.error('국가 목록 불러오기 실패:', err);
+          toast.error('국가 목록을 불러오는 중 오류가 발생했습니다.');
+        } finally {
+          setCountriesLoading(false);
+        }
+      };
+
+      fetchCountries();
     }
   }, [isOpen, userProfile]);
 
   if (!isOpen) return null;
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: 'name' | 'bio' | 'country', value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (field === 'bio') setCharCount(value.length);
   };
@@ -92,19 +142,23 @@ export default function EditProfileModal({
 
     try {
       let avatarUrl = userProfile.avatar;
-      let bannerUrl = userProfile.banner;
+      let bannerUrl = userProfile.banner ?? null;
 
-      // 아바타 및 배너 업로드
+      // 🔹 아바타 및 배너 업로드
       if (avatarFile) avatarUrl = await uploadImage(avatarFile, 'avatars');
       if (bannerFile) bannerUrl = await uploadImage(bannerFile, 'banners');
 
-      // Supabase 프로필 업데이트
+      // 🔹 formData.country = countries.id (문자열)
+      const selectedCountry = countries.find(c => String(c.id) === formData.country) || null;
+
+      // 🔹 Supabase 프로필 업데이트
       const { error } = await supabase
         .from('profiles')
         .update({
           nickname: formData.name,
           bio: formData.bio,
-          location: formData.location,
+          // DB에는 id 저장 (profiles.country = countries.id)
+          country: formData.country || null,
           avatar_url: avatarUrl,
           banner_url: bannerUrl,
         })
@@ -112,29 +166,28 @@ export default function EditProfileModal({
 
       if (error) throw error;
 
-      // 로컬 상태 업데이트
+      // 🔹 로컬 상태 업데이트
       const updated = {
         ...userProfile,
         name: formData.name,
         bio: formData.bio,
-        location: formData.location,
+        country: selectedCountry?.name ?? userProfile.country ?? null, // 화면용 "국가 이름"
+        countryFlagUrl: selectedCountry?.flag_url ?? userProfile.countryFlagUrl ?? null,
         avatar: avatarUrl,
         banner: bannerUrl,
       };
       onSave(updated);
 
-      // 닉네임 변경 후 URL도 새 닉네임으로 이동
+      // 🔹 닉네임 변경 후 URL도 새 닉네임으로 이동
       navigate(`/profile/${encodeURIComponent(formData.name)}`);
 
-      // 토스트 먼저 출력 (모달 닫기보다 먼저)
       toast.success('프로필이 성공적으로 업데이트되었습니다.');
 
-      // 약간의 딜레이 후 모달 닫기 (토스트 표시 보장)
       setTimeout(() => {
         onClose();
       }, 300);
     } catch (err: any) {
-      console.error('프로필 업데이트 실패:', err.message);
+      console.error('프로필 업데이트 실패:', err?.message || err);
       toast.error('프로필 저장 중 오류가 발생했습니다.');
     } finally {
       setSaving(false);
@@ -144,6 +197,11 @@ export default function EditProfileModal({
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) onClose();
   };
+
+  // 🔹 현재 선택된 국가의 플래그 (미리보기용)
+  const currentCountry = countries.find(c => String(c.id) === formData.country) || null;
+  const currentFlagUrl = currentCountry?.flag_url ?? userProfile.countryFlagUrl ?? null;
+  const currentFlagEmoji = currentCountry?.flag ?? null;
 
   return (
     <div
@@ -217,6 +275,7 @@ export default function EditProfileModal({
 
           {/* Form */}
           <div className="mt-12 space-y-4">
+            {/* 닉네임 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 닉네임
@@ -231,6 +290,7 @@ export default function EditProfileModal({
               <p className="text-right text-xs text-gray-500">{formData.name.length}/50</p>
             </div>
 
+            {/* 소개글 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 소개글
@@ -246,19 +306,17 @@ export default function EditProfileModal({
               <p className="text-right text-xs text-gray-500">{charCount}/160</p>
             </div>
 
+            {/* 국가 선택 (CountrySelect 사용) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                위치
-              </label>
-              <input
-                type="text"
-                value={formData.location}
-                onChange={e => handleInputChange('location', e.target.value)}
-                maxLength={30}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-background focus:ring-2 focus:ring-primary focus:outline-none"
-                placeholder="예: 서울, 대한민국"
+              <CountrySelect
+                value={formData.country} // ✅ countries.id (문자열)
+                onChange={value => handleInputChange('country', value)}
+                error={false}
               />
-              <p className="text-right text-xs text-gray-500">{formData.location.length}/30</p>
+              {/* 필요하면 로딩 표시 추가 가능 */}
+              {countriesLoading && (
+                <p className="text-xs text-gray-400 mt-1">국가 목록 불러오는 중...</p>
+              )}
             </div>
           </div>
         </div>

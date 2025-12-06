@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import DOMPurify from 'dompurify';
 import { useEffect, useRef, useState } from 'react';
-import ReactCountryFlag from 'react-country-flag';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import ImageSlider from '../tweet/components/ImageSlider';
@@ -60,6 +59,8 @@ export default function TweetCard({
   const [direction, setDirection] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalIndex, setModalIndex] = useState(0);
+  const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
+  const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
 
   const images = Array.isArray(image) ? image : image ? [image] : [];
 
@@ -135,6 +136,56 @@ export default function TweetCard({
     setContentImages(imgs);
     setCurrentImage(0); // 트윗 바뀔 때 첫 이미지로 리셋
   }, [content]);
+
+  /** 트윗 작성자 국적 / 국기 로드 */
+  useEffect(() => {
+    const fetchAuthorCountry = async () => {
+      try {
+        // 1) 트윗 작성자의 프로필에서 country(id) 가져오기
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('country')
+          .eq('user_id', user.username) // 🔥 user.username = auth.user.id 로 쓰고 있으니 이 기준으로 조회
+          .maybeSingle();
+
+        if (profileError) {
+          console.error('작성자 프로필(country) 로드 실패:', profileError.message);
+          return;
+        }
+
+        if (!profile || !profile.country) {
+          setAuthorCountryFlagUrl(null);
+          setAuthorCountryName(null);
+          return;
+        }
+
+        // 2) countries에서 flag_url, name 조회 (profiles.country = countries.id)
+        const { data: country, error: countryError } = await supabase
+          .from('countries')
+          .select('name, flag_url')
+          .eq('id', profile.country)
+          .maybeSingle();
+
+        if (countryError) {
+          console.error('작성자 국가 정보 로드 실패:', countryError.message);
+          return;
+        }
+
+        if (!country) {
+          setAuthorCountryFlagUrl(null);
+          setAuthorCountryName(null);
+          return;
+        }
+
+        setAuthorCountryFlagUrl(country.flag_url ?? null);
+        setAuthorCountryName(country.name ?? null);
+      } catch (err) {
+        console.error('작성자 국기 정보 로드 중 예외:', err);
+      }
+    };
+
+    fetchAuthorCountry();
+  }, [user.username]);
 
   // prop 으로 온 image(string | string[]) → 배열로 정규화
   const propImages = Array.isArray(image) ? image : image ? [image] : [];
@@ -213,6 +264,12 @@ export default function TweetCard({
 
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    // 🔥 프로필로 이동할 때도 마지막으로 보고 있던 트윗 id 저장
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, id);
+    }
+
     navigate(`/profile/${encodeURIComponent(user.name)}`);
   };
 
@@ -262,11 +319,29 @@ export default function TweetCard({
               <span className={nameClass} onClick={handleAvatarClick}>
                 {user.name}
               </span>
-              <Badge variant="secondary" className="flex items-center gap-1 px-2 py-1">
-                <ReactCountryFlag countryCode="KR" svg style={{ fontSize: '1em' }} />
-              </Badge>
+              {authorCountryFlagUrl && (
+                <Badge variant="secondary" className="flex items-center px-1 py-0.5 ml-2">
+                  <img
+                    src={authorCountryFlagUrl}
+                    alt={authorCountryName ?? '국가'}
+                    title={authorCountryName ?? ''} // 마우스 올리면 국가 이름 툴팁
+                    className="w-4 h-4 rounded-sm object-cover"
+                  />
+                </Badge>
+              )}
 
-              <span className={`${metaClass}`}>·</span>
+              {/* 2) 국기 URL은 없는데 국가 이름은 있는 경우 → 기본 아이콘 표시 */}
+              {!authorCountryFlagUrl && authorCountryName && (
+                <Badge
+                  variant="secondary"
+                  className="flex items-center px-1 py-0.5 ml-2"
+                  title={authorCountryName}
+                >
+                  <span className="text-xs">🌐</span>
+                </Badge>
+              )}
+
+              <span className={`${metaClass} mx-1`}>·</span>
               <span className={`${metaClass} flex-shrink-0`}>{timestamp}</span>
             </div>
 

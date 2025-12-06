@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useAuth } from '@/contexts/AuthContext';
 import TweetCard from './feature/TweetCard';
+import SnsInlineEditor from '@/components/common/SnsInlineEditor';
 
 type TweetUser = {
   name: string;
@@ -340,6 +341,17 @@ export default function Home({ searchQuery }: HomeProps) {
 
   return (
     <div className="border-x border-gray-200 dark:border-gray-700 dark:bg-background">
+      {/* ✅ 검색 중이 아닐 때만 글쓰기 박스 보여주기 */}
+      {!isSearching && (
+        <SnsInlineEditor
+          mode="tweet"
+          onTweetCreated={tweet => {
+            // 새 트윗을 피드 맨 앞에 붙이기
+            setTweets(prev => [tweet, ...prev]);
+          }}
+        />
+      )}
+
       {isSearching ? (
         <div>
           {tweets.length > 0 ? (

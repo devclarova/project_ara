@@ -14,12 +14,13 @@ interface UserProfile {
   username: string;
   avatar: string;
   bio: string;
-  location: string;
   joinDate: string;
   followers: number;
   following: number;
   banner?: string | null;
   website?: string | null;
+  country?: string | null;
+  countryFlagUrl?: string | null;
 }
 
 export default function ProfileAsap() {
@@ -33,53 +34,79 @@ export default function ProfileAsap() {
   const { username } = useParams<{ username: string }>();
   const decodedUsername = username ? decodeURIComponent(username) : '';
 
-  // 프로필 불러오기 (로직 그대로 유지)
   useEffect(() => {
     if (!decodedUsername && !user) return;
 
     const fetchProfile = async () => {
       try {
-        let query = supabase.from('profiles').select(
+        // 1) 프로필만 먼저 가져오기
+        let baseQuery = supabase.from('profiles').select(
           `
-          id,
-          user_id,
-          nickname,
-          avatar_url,
-          banner_url,
-          bio,
-          location,
-          followers_count,
-          following_count,
-          created_at
-        `,
+        id,
+        user_id,
+        nickname,
+        avatar_url,
+        banner_url,
+        bio,
+        country,
+        followers_count,
+        following_count,
+        created_at
+      `,
         );
 
         if (!decodedUsername && user) {
-          // /profile 처럼 username 없이 접속했을 때 → 내 프로필
-          query = query.eq('user_id', user.id);
+          baseQuery = baseQuery.eq('user_id', user.id);
         } else {
-          // /profile/:username → 닉네임으로 조회
-          query = query.eq('nickname', decodedUsername);
+          baseQuery = baseQuery.eq('nickname', decodedUsername);
         }
 
-        const { data, error } = await query.single();
-        if (error || !data) throw error;
+        const { data: profile, error: profileError } = await baseQuery.single();
+        if (profileError || !profile) throw profileError;
 
+        // 2) country 값이 "countries.id" 라고 가정하고 조회
+        let countryName: string | null = null;
+        let countryFlagUrl: string | null = null;
+
+        if (profile.country) {
+          // profile.country가 숫자든 문자열이든 eq에서 캐스팅해줌
+          const { data: countryRow, error: countryError } = await supabase
+            .from('countries')
+            .select('id, name, flag_url')
+            .eq('id', profile.country) // 🔥 여기: iso_code가 아니라 id로 조회
+            .maybeSingle();
+
+          if (!countryError && countryRow) {
+            countryName = countryRow.name ?? null;
+            countryFlagUrl = countryRow.flag_url ?? null;
+          }
+        }
+
+        // 디버깅용으로 한 번 확인해보고 싶으면 잠깐 켜두셔도 됨
+        // console.log('ProfileAsap userProfile:', {
+        //   profile,
+        //   countryName,
+        //   countryFlagUrl,
+        // });
+
+        // 3) 최종 상태 세팅
         setUserProfile({
-          id: data.id,
-          user_id: data.user_id,
-          name: data.nickname ?? 'Unknown',
-          username: data.user_id,
-          avatar: data.avatar_url ?? '/default-avatar.svg',
-          bio: data.bio ?? '자기소개가 아직 없습니다.',
-          location: data.location ?? 'Earth 🌍',
-          joinDate: new Date(data.created_at).toLocaleDateString('ko-KR', {
+          id: profile.id,
+          user_id: profile.user_id,
+          name: profile.nickname ?? 'Unknown',
+          username: profile.user_id,
+          avatar: profile.avatar_url ?? '/default-avatar.svg',
+          bio: profile.bio ?? '자기소개가 아직 없습니다.',
+          country: countryName, // 화면에 보여줄 국가명
+          countryFlagUrl: countryFlagUrl, // 국기 URL
+          joinDate: new Date(profile.created_at).toLocaleDateString('ko-KR', {
             year: 'numeric',
             month: 'long',
+            day: 'numeric',
           }),
-          following: data.following_count ?? 0,
-          followers: data.followers_count ?? 0,
-          banner: data.banner_url ?? null,
+          following: profile.following_count ?? 0,
+          followers: profile.followers_count ?? 0,
+          banner: profile.banner_url ?? null,
         });
       } catch (err) {
         console.error('프로필 불러오기 실패:', err);
