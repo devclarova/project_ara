@@ -10,8 +10,7 @@ import { toast } from 'sonner';
 import ImageSlider from '../tweet/components/ImageSlider';
 import ModalImageSlider from '../tweet/components/ModalImageSlider';
 
-const SNS_SCROLL_Y_KEY = 'sns-scroll-y';
-const SNS_RESTORE_FLAG_KEY = 'sns-restore-flag';
+const SNS_LAST_TWEET_ID_KEY = 'sns-last-tweet-id';
 
 interface User {
   name: string;
@@ -207,10 +206,11 @@ export default function TweetCard({
   const handleCardClick = () => {
     if (typeof window !== 'undefined') {
       const y = window.scrollY || window.pageYOffset || 0;
-      sessionStorage.setItem(SNS_SCROLL_Y_KEY, String(y));
+      sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, id);
     }
     navigate(`/sns/${id}`);
   };
+
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/profile/${encodeURIComponent(user.name)}`);
@@ -241,6 +241,7 @@ export default function TweetCard({
 
   return (
     <div
+      data-tweet-id={id}
       className="relative px-4 py-3 cursor-pointer transition-colors border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-background hover:bg-gray-50/50 dark:hover:bg-primary/10"
       onClick={handleCardClickSafe}
     >
@@ -346,7 +347,7 @@ export default function TweetCard({
                 e.stopPropagation();
                 if (typeof window !== 'undefined') {
                   const y = window.scrollY || window.pageYOffset || 0;
-                  sessionStorage.setItem(SNS_SCROLL_Y_KEY, String(y));
+                  sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, id);
                 }
                 navigate(`/sns/${id}`);
               }}
