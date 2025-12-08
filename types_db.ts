@@ -244,21 +244,18 @@ export type Database = {
       }
       culture_note: {
         Row: {
-          contents: string | null
           id: number
           study_id: number | null
           subtitle: string | null
           title: string | null
         }
         Insert: {
-          contents?: string | null
           id?: never
           study_id?: number | null
           subtitle?: string | null
           title?: string | null
         }
         Update: {
-          contents?: string | null
           id?: never
           study_id?: number | null
           subtitle?: string | null
@@ -279,19 +276,16 @@ export type Database = {
           content_value: string | null
           culture_note_id: number | null
           id: number
-          study_id: number | null
         }
         Insert: {
           content_value?: string | null
           culture_note_id?: number | null
           id?: number
-          study_id?: number | null
         }
         Update: {
           content_value?: string | null
           culture_note_id?: number | null
           id?: number
-          study_id?: number | null
         }
         Relationships: [
           {
@@ -588,6 +582,71 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          comment_id: string | null
+          content: string | null
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          receiver_id: string
+          sender_id: string | null
+          tweet_id: string | null
+          type: string
+        }
+        Insert: {
+          comment_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          receiver_id: string
+          sender_id?: string | null
+          tweet_id?: string | null
+          type: string
+        }
+        Update: {
+          comment_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          receiver_id?: string
+          sender_id?: string | null
+          tweet_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "tweet_replies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_tweet_id_fkey"
+            columns: ["tweet_id"]
+            isOneToOne: false
+            referencedRelation: "tweets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_dislikes: {
         Row: {
           created_at: string
@@ -691,6 +750,7 @@ export type Database = {
           birthday: string
           country: string
           created_at: string
+          deleted_at: string | null
           followers_count: number | null
           following_count: number | null
           gender: Database["public"]["Enums"]["gender_enum"]
@@ -723,6 +783,7 @@ export type Database = {
           birthday?: string
           country?: string
           created_at?: string
+          deleted_at?: string | null
           followers_count?: number | null
           following_count?: number | null
           gender: Database["public"]["Enums"]["gender_enum"]
@@ -755,6 +816,7 @@ export type Database = {
           birthday?: string
           country?: string
           created_at?: string
+          deleted_at?: string | null
           followers_count?: number | null
           following_count?: number | null
           gender?: Database["public"]["Enums"]["gender_enum"]
@@ -821,26 +883,38 @@ export type Database = {
       }
       reserved_words: {
         Row: {
+          category: string
           id: number
           lang: Database["public"]["Enums"]["nickname_lang_enum"] | null
-          lang_code: string
+          lang_code: string | null
+          phrase: string | null
+          phrase_normalized: string | null
           reason: string | null
+          severity: number
           word: string
           word_normalized: string | null
         }
         Insert: {
+          category?: string
           id?: number
           lang?: Database["public"]["Enums"]["nickname_lang_enum"] | null
-          lang_code: string
+          lang_code?: string | null
+          phrase?: string | null
+          phrase_normalized?: string | null
           reason?: string | null
+          severity?: number
           word: string
           word_normalized?: string | null
         }
         Update: {
+          category?: string
           id?: number
           lang?: Database["public"]["Enums"]["nickname_lang_enum"] | null
-          lang_code?: string
+          lang_code?: string | null
+          phrase?: string | null
+          phrase_normalized?: string | null
           reason?: string | null
+          severity?: number
           word?: string
           word_normalized?: string | null
         }
@@ -919,6 +993,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: number
+          is_featured: boolean | null
           poster_image_url: string | null
           short_description: string | null
           title: string
@@ -926,6 +1001,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: never
+          is_featured?: boolean | null
           poster_image_url?: string | null
           short_description?: string | null
           title: string
@@ -933,6 +1009,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: never
+          is_featured?: boolean | null
           poster_image_url?: string | null
           short_description?: string | null
           title?: string
@@ -944,30 +1021,24 @@ export type Database = {
           english_subtitle: string | null
           id: number
           korean_subtitle: string | null
-          level: Database["public"]["Enums"]["difficulty_level"] | null
           pronunciation: string | null
           study_id: number | null
-          subtitle_end_time: number | null
           subtitle_start_time: number | null
         }
         Insert: {
           english_subtitle?: string | null
           id?: never
           korean_subtitle?: string | null
-          level?: Database["public"]["Enums"]["difficulty_level"] | null
           pronunciation?: string | null
           study_id?: number | null
-          subtitle_end_time?: number | null
           subtitle_start_time?: number | null
         }
         Update: {
           english_subtitle?: string | null
           id?: never
           korean_subtitle?: string | null
-          level?: Database["public"]["Enums"]["difficulty_level"] | null
           pronunciation?: string | null
           study_id?: number | null
-          subtitle_end_time?: number | null
           subtitle_start_time?: number | null
         }
         Relationships: [
@@ -979,6 +1050,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      translations: {
+        Row: {
+          content_id: string
+          created_at: string
+          id: number
+          original_text: string
+          translated_text: string
+          user_id: string
+        }
+        Insert: {
+          content_id: string
+          created_at?: string
+          id?: number
+          original_text: string
+          translated_text: string
+          user_id: string
+        }
+        Update: {
+          content_id?: string
+          created_at?: string
+          id?: number
+          original_text?: string
+          translated_text?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       tweet_likes: {
         Row: {
@@ -1089,6 +1187,78 @@ export type Database = {
             columns: ["tweet_id"]
             isOneToOne: false
             referencedRelation: "tweets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tweet_replies_likes: {
+        Row: {
+          created_at: string | null
+          id: string
+          reply_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          reply_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          reply_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tweet_replies_likes_reply_id_fkey"
+            columns: ["reply_id"]
+            isOneToOne: false
+            referencedRelation: "tweet_replies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tweet_replies_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tweet_views: {
+        Row: {
+          id: string
+          tweet_id: string
+          viewed_at: string
+          viewer_id: string
+        }
+        Insert: {
+          id?: string
+          tweet_id: string
+          viewed_at?: string
+          viewer_id: string
+        }
+        Update: {
+          id?: string
+          tweet_id?: string
+          viewed_at?: string
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tweet_views_tweet_id_fkey"
+            columns: ["tweet_id"]
+            isOneToOne: false
+            referencedRelation: "tweets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tweet_views_viewer_id_fkey"
+            columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1286,7 +1456,7 @@ export type Database = {
           auth_user_id: string
           created_at?: string
           email: string
-          id: string
+          id?: string
           is_online?: boolean
           last_login?: string
           last_seen?: string | null
@@ -1380,6 +1550,7 @@ export type Database = {
           video_end_time: number | null
           video_start_time: number | null
           video_url: string | null
+          view_count: number | null
         }
         Insert: {
           categories?: Database["public"]["Enums"]["category_enum"] | null
@@ -1394,6 +1565,7 @@ export type Database = {
           video_end_time?: number | null
           video_start_time?: number | null
           video_url?: string | null
+          view_count?: number | null
         }
         Update: {
           categories?: Database["public"]["Enums"]["category_enum"] | null
@@ -1408,6 +1580,7 @@ export type Database = {
           video_end_time?: number | null
           video_start_time?: number | null
           video_url?: string | null
+          view_count?: number | null
         }
         Relationships: [
           {
@@ -1552,7 +1725,26 @@ export type Database = {
         Returns: undefined
       }
       fn_normalize_nickname: { Args: { nick: string }; Returns: string }
+      get_trending_tweets: {
+        Args: never
+        Returns: {
+          content: string
+          created_at: string
+          id: string
+          like_count: number
+          profiles: Json
+          reply_count: number
+          view_count: number
+        }[]
+      }
       hhmmss_to_seconds: { Args: { t: string }; Returns: number }
+      increment_tweet_view:
+        | {
+            Args: { tweet_id_input: string; viewer_id_input: string }
+            Returns: undefined
+          }
+        | { Args: { tweet_id_input: string }; Returns: undefined }
+      increment_video_view: { Args: { _video_id: number }; Returns: number }
       is_admin: { Args: never; Returns: boolean }
       load_wordlists: {
         Args: { _reserved?: Json; _restricted?: Json }
@@ -1563,10 +1755,30 @@ export type Database = {
       nickname_exists:
         | { Args: { _lang: string; _nickname: string }; Returns: boolean }
         | { Args: { _nickname: string }; Returns: boolean }
+      normalize_nickname: { Args: { txt: string }; Returns: string }
+      normalize_profanity: { Args: { txt: string }; Returns: string }
       record_login: { Args: never; Returns: undefined }
       runtime_bucket: {
         Args: { v: Database["public"]["Tables"]["video"]["Row"] }
         Returns: string
+      }
+      search_tweets: {
+        Args: { keyword: string }
+        Returns: {
+          author_id: string
+          avatar_url: string
+          bookmark_count: number
+          content: string
+          created_at: string
+          id: string
+          image_url: string
+          like_count: number
+          nickname: string
+          reply_count: number
+          repost_count: number
+          user_id: string
+          view_count: number
+        }[]
       }
       set_nickname: {
         Args: {
@@ -1579,11 +1791,12 @@ export type Database = {
       show_trgm: { Args: { "": string }; Returns: string[] }
       unaccent: { Args: { "": string }; Returns: string }
       unaccent_immutable: { Args: { txt: string }; Returns: string }
+      update_tweet_like_count: {
+        Args: { is_increment: boolean; tweet_id_input: string }
+        Returns: undefined
+      }
       validate_nickname_policy: {
-        Args: {
-          in_lang: Database["public"]["Enums"]["nickname_lang_enum"]
-          in_nick: string
-        }
+        Args: { in_lang: string; in_nick: string }
         Returns: string
       }
     }
@@ -1613,6 +1826,8 @@ export type Database = {
         | "fr"
         | "pt"
         | "pt-br"
+        | "fi"
+        | "de"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1766,6 +1981,8 @@ export const Constants = {
         "fr",
         "pt",
         "pt-br",
+        "fi",
+        "de",
       ],
     },
   },

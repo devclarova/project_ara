@@ -1,5 +1,7 @@
+import SignInModal from '@/components/auth/SignInModal';
 import ShareButton from '@/components/common/ShareButton';
 import { InfoItem } from '@/components/study/ContentCard';
+import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { NavLink, useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -8,7 +10,6 @@ import StudySubtitles from '../components/study/StudySubtitles';
 import VideoPlayer, { type VideoPlayerHandle } from '../components/study/VideoPlayer';
 import { supabase } from '../lib/supabase';
 import type { Subtitle } from '../types/study';
-import Sidebar from './homes/feature/Sidebar';
 
 // 이 페이지에서 실제로 사용하는 video 행 타입을 로컬로 정의(컬럼명과 일치)
 type VideoRow = {
@@ -19,7 +20,7 @@ type VideoRow = {
   episode: string | null;
   scene: string | number | null;
   level: string | null;
-  runtime: string | null; // 예: "1:50" 등
+  runtime: string | null;
   runtime_bucket: string | null;
   image_url: string | null;
   view_count: number | null;
@@ -31,15 +32,18 @@ const StudyPage = () => {
     episode: string;
     scene?: string;
   }>();
-  const navigate = useNavigate(); // useNavigate 훅 사용
+  const navigate = useNavigate();
 
   const [selectedSubtitle, setSelectedSubtitle] = useState<Subtitle | null>(null);
   const [study, setStudy] = useState<VideoRow | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showTweetModal, setShowTweetModal] = useState(false);
   const location = useLocation();
   const isGuestRoute = location.pathname.startsWith('/guest-study');
   const basePath = isGuestRoute ? '/guest-study' : '/study';
+
+  const { user } = useAuth();
+  const isGuest = !user;
+  const [showSignIn, setShowSignIn] = useState(false);
 
   const handleSelectDialogue = (s: Subtitle) => setSelectedSubtitle(s);
   const vref = useRef<VideoPlayerHandle>(null);
@@ -75,8 +79,18 @@ const StudyPage = () => {
     return s ? `${basePath}/${c}/${e}/${s}` : `${basePath}/${c}/${e}`;
   };
 
-  // video 단건 조회
-  // 단건 조회: scene 있으면 정확 매칭, 없으면 첫 장면 선택 후 URL 정규화
+  // 게스트용 콘텐츠인지 확인
+  const checkIsFeatured = async (studyId: number): Promise<boolean> => {
+    const { data, error } = await supabase
+      .from('study')
+      .select('is_featured')
+      .eq('id', studyId)
+      .maybeSingle();
+
+    if (error) return false;
+    return !!data?.is_featured;
+  };
+
   useEffect(() => {
     const fetchStudy = async () => {
       if (!contents || !episode) return;
@@ -85,8 +99,10 @@ const StudyPage = () => {
       const c = dec(contents);
       const e = dec(episode);
 
+      // CASE 1: scene 존재하는 경우
       if (scene != null) {
         const s = dec(scene);
+
         const { data, error } = await supabase
           .from('video')
           .select(
@@ -95,98 +111,128 @@ const StudyPage = () => {
           .eq('contents', c)
           .eq('episode', e)
           .eq('scene', s)
-          .order('id', { ascending: true })
           .limit(1)
           .maybeSingle();
 
         if (error) console.error('[video fetch error]', error);
+
+        // 보호처리 — 게스트 접근 차단
+        if (isGuest && data) {
+          const free = await checkIsFeatured(data.study_id);
+          if (!free) {
+            setShowSignIn(true);
+            setStudy(null);
+            setLoading(false);
+            return;
+          }
+        }
+
         setStudy((data as VideoRow) ?? null);
         setLoading(false);
         return;
       }
 
-      // scene 미지정: 같은 contents/episode에서 첫 장면 고르기
-      const { data, error } = await supabase
+      // CASE 2: scene 없이 들어온 경우 → 첫 scene 선택
+      const { data } = await supabase
         .from('video')
         .select(
           'id,study_id,categories,contents,episode,scene,level,runtime,runtime_bucket,image_url,view_count',
         )
         .eq('contents', c)
         .eq('episode', e)
-        .order('scene', { ascending: true, nullsFirst: false })
-        .order('id', { ascending: true })
+        .order('scene', { ascending: true })
         .limit(1);
 
-      if (error) {
-        setStudy(null);
-      } else {
-        const row = (data?.[0] as VideoRow) ?? null;
-        setStudy(row);
-        if (row) {
-          const canonical = buildStudyUrl(row);
-          if (canonical !== location.pathname) navigate(canonical, { replace: true });
+      const row = (data?.[0] as VideoRow) ?? null;
+
+      // 게스트 보호 처리
+      if (isGuest && row) {
+        const free = await checkIsFeatured(row.study_id);
+        if (!free) {
+          setShowSignIn(true);
+          setStudy(null);
+          setLoading(false);
+          return;
         }
       }
+
+      setStudy(row);
+
+      // URL 정규화
+      if (row) {
+        const canonical = buildStudyUrl(row);
+        if (canonical !== location.pathname) navigate(canonical, { replace: true });
+      }
+
       setLoading(false);
     };
 
     void fetchStudy();
   }, [contents, episode, scene, navigate]);
 
-  // 1-1) 보조 함수 추가: study_id로 행을 찾아 새 URL로 이동
+  // Next/Prev 이동 보호 처리
   const goToByStudyId = async (targetStudyId: number) => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('video')
       .select('contents,episode,scene')
       .eq('study_id', targetStudyId)
       .order('id', { ascending: true })
       .limit(1);
 
-    if (error) {
-      console.error('[goToByStudyId error]', error);
-      return;
-    }
     const row = data?.[0];
     if (!row) return;
 
-    const url = buildStudyUrl(row);
-    navigate(url);
+    navigate(buildStudyUrl(row));
   };
 
   const gotoNextExisting = async () => {
-    // if (studyId === undefined) return;
     if (!study?.study_id) return;
-    const { data, error } = await supabase
+
+    const { data } = await supabase
       .from('video')
       .select('study_id')
       .gt('study_id', study.study_id)
       .order('study_id', { ascending: true })
       .limit(1);
 
-    if (error) {
-      console.error('[next study_id error]', error);
-      return;
-    }
     const next = data?.[0]?.study_id;
-    if (next) await goToByStudyId(next);
+    if (!next) return;
+
+    // 게스트 보호조건
+    if (isGuest) {
+      const free = await checkIsFeatured(next);
+      if (!free) {
+        setShowSignIn(true);
+        return;
+      }
+    }
+
+    await goToByStudyId(next);
   };
 
   const gotoPrevExisting = async () => {
-    // if (studyId === undefined) return;
     if (!study?.study_id) return;
-    const { data, error } = await supabase
+
+    const { data } = await supabase
       .from('video')
       .select('study_id')
       .lt('study_id', study.study_id)
       .order('study_id', { ascending: false })
       .limit(1);
 
-    if (error) {
-      console.error('[prev study_id error]', error);
-      return;
-    }
     const prev = data?.[0]?.study_id;
-    if (prev) await goToByStudyId(prev);
+    if (!prev) return;
+
+    // 게스트 보호조건
+    if (isGuest) {
+      const free = await checkIsFeatured(prev);
+      if (!free) {
+        setShowSignIn(true);
+        return;
+      }
+    }
+
+    await goToByStudyId(prev);
   };
 
   const handleNextPage = () => {
@@ -446,6 +492,7 @@ const StudyPage = () => {
             </div>
           </div>
         </div>
+        <SignInModal isOpen={showSignIn} onClose={() => setShowSignIn(false)} />
       </div>
     </>
   );
