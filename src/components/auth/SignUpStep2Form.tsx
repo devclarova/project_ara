@@ -176,7 +176,7 @@ function detectLang(nick: string): Lang | null {
   const hasLatin = /[A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/.test(s);
   if (!hasLatin) return null;
 
-  // 🔹 악센트(다이아크리틱)가 하나도 없으면 → 영어로 취급
+  // 악센트(다이아크리틱)가 하나도 없으면 → 영어로 취급
   const hasAnyDiacritic =
     DIACRITIC_HINT.es.test(s) ||
     DIACRITIC_HINT.fr.test(s) ||
@@ -190,7 +190,7 @@ function detectLang(nick: string): Lang | null {
     return 'en';
   }
 
-  // 🔹 라틴 계열 후보들 점수 계산
+  // 라틴 계열 후보들 점수 계산
   //   - 기본 우선순위: es → pt-br → pt → fr → de → fi → vi
   const latinCandidates: Lang[] = ['es', 'pt-br', 'pt', 'fr', 'de', 'fi', 'vi'];
 
@@ -216,7 +216,7 @@ function detectLang(nick: string): Lang | null {
     }
 
     // 3) 언어별 보정(heuristics)
-    //    🎯 베트남어: 짧은 이름 + nh/ng 패턴은 가산점
+    // 베트남어: 짧은 이름 + nh/ng 패턴은 가산점
     if (lang === 'vi') {
       const hasVNCore = /[ĂăÂâÊêÔôƠơƯưĐđ]/.test(s); // 전형적인 베트남어 글자
       const hasNhNg = /(nh|ng)/i.test(s);
@@ -230,14 +230,14 @@ function detectLang(nick: string): Lang | null {
       }
     }
 
-    //    🇪🇸 스페인어: 거의 쓰지 않는 'nh'가 있으면 약간 감점
+    // 🇪🇸 스페인어: 거의 쓰지 않는 'nh'가 있으면 약간 감점
     if (lang === 'es') {
       if (/nh/i.test(s)) {
         score -= 1;
       }
     }
 
-    //    🇵🇹 포르투갈어: ã/õ/ç가 없고 nh도 없으면 살짝 감점
+    // 🇵🇹 포르투갈어: ã/õ/ç가 없고 nh도 없으면 살짝 감점
     if (lang === 'pt' || lang === 'pt-br') {
       const hasPtCore = /[ãÃõÕçÇ]/.test(s);
       if (!hasPtCore && !/nh/i.test(s)) {
@@ -245,7 +245,7 @@ function detectLang(nick: string): Lang | null {
       }
     }
 
-    // 🔚 최고 점수 갱신
+    // 최고 점수 갱신
     if (score > bestScore) {
       bestScore = score;
       bestLang = lang;
@@ -678,7 +678,7 @@ export default function SignUpStep2Form({
                   onFocus: e => e.currentTarget.blur(), // 포커스 들어와도 즉시 해제
                   onMouseDown: e => e.preventDefault(), // 마우스 포커스 차단
                   onKeyDown: e => e.preventDefault(), // 키입력 방지
-                  // ✅ 크기 유지: 클래스는 안 건드리고 색상만 인라인 스타일로
+                  // 크기 유지: 클래스는 안 건드리고 색상만 인라인 스타일로
                   style: {
                     backgroundColor: 'rgb(243 244 246)', // bg-gray-100
                     color: 'rgb(107 114 128)', // text-gray-500
@@ -711,7 +711,7 @@ export default function SignUpStep2Form({
                   onFocus: e => e.currentTarget.blur(), // 포커스 들어와도 즉시 해제
                   onMouseDown: e => e.preventDefault(), // 마우스 포커스 차단
                   onKeyDown: e => e.preventDefault(), // 키입력 방지
-                  // ✅ 크기 유지: 클래스는 안 건드리고 색상만 인라인 스타일로
+                  // 크기 유지: 클래스는 안 건드리고 색상만 인라인 스타일로
                   style: {
                     backgroundColor: 'rgb(243 244 246)', // bg-gray-100
                     color: 'rgb(107 114 128)', // text-gray-500
@@ -744,7 +744,7 @@ export default function SignUpStep2Form({
                   onFocus: e => e.currentTarget.blur(), // 포커스 들어와도 즉시 해제
                   onMouseDown: e => e.preventDefault(), // 마우스 포커스 차단
                   onKeyDown: e => e.preventDefault(), // 키입력 방지
-                  // ✅ 크기 유지: 클래스는 안 건드리고 색상만 인라인 스타일로
+                  // 크기 유지: 클래스는 안 건드리고 색상만 인라인 스타일로
                   style: {
                     backgroundColor: 'rgb(243 244 246)', // bg-gray-100
                     color: 'rgb(107 114 128)', // text-gray-500
