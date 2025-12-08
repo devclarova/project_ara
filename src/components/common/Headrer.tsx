@@ -20,15 +20,15 @@ function Header() {
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const profileButtonRef = useRef<HTMLButtonElement>(null);
 
-  // 🔹 profiles 테이블 기반 프로필 정보
+  // profiles 테이블 기반 프로필 정보
   const [profileNickname, setProfileNickname] = useState<string | null>(null);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
 
-  // 🔹 알림 미읽음 개수
+  // 알림 미읽음 개수
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
-  // 🔹 채팅 미읽음 개수
+  // 채팅 미읽음 개수
   const { chats } = useDirectChat();
   const unreadChatCount = chats.reduce((sum, chat) => sum + (chat.unread_count || 0), 0);
 
@@ -49,7 +49,7 @@ function Header() {
     return item.matchPaths.some(p => path.startsWith(p));
   };
 
-  // ✅ 메뉴 이름별 아이콘 매핑 (모바일용)
+  // 메뉴 이름별 아이콘 매핑 (모바일용)
   const getMenuIcon = (name: string) => {
     switch (name) {
       case '학습':
@@ -67,23 +67,17 @@ function Header() {
     }
   };
 
-  // ✅ 로고 클릭: 홈 이동 / 스크롤 / 새로고침
+  // 로고 클릭: 홈이 아니면 홈으로 이동, 이미 홈이면 아무 동작 없음
   const handleLogoClick = () => {
     const isOnHome = location.pathname === homePath;
 
     if (!isOnHome) {
       navigate(homePath);
-      return;
     }
-
-    if (window.scrollY > 0) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      window.location.reload();
-    }
+    // 홈일 때는 스크롤/새로고침 동작 제거
   };
 
-  // ✅ 1차 기본 닉네임: user_metadata → 이메일 → 기본문구
+  // 1차 기본 닉네임: user_metadata → 이메일 → 기본문구
   const rawNickname =
     (user?.user_metadata as Record<string, unknown> | undefined)?.nickname &&
     typeof (user?.user_metadata as any).nickname === 'string'
@@ -93,7 +87,7 @@ function Header() {
   const fallbackNickname =
     rawNickname ?? (user?.email ? user.email.split('@')[0] : '로그인 해주세요');
 
-  // ✅ Supabase profiles에서 id, nickname, avatar_url 가져오기
+  // Supabase profiles에서 id, nickname, avatar_url 가져오기
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) {
@@ -110,7 +104,7 @@ function Header() {
         .maybeSingle();
 
       if (error) {
-        console.error('❌ 헤더 프로필 로드 실패:', error.message);
+        console.error('헤더 프로필 로드 실패:', error.message);
         return;
       }
 
@@ -124,7 +118,7 @@ function Header() {
     loadProfile();
   }, [user]);
 
-  // ✅ 알림 미읽음 개수 계산 (receiver_id + is_read = false)
+  // 알림 미읽음 개수 계산 (receiver_id + is_read = false)
   useEffect(() => {
     if (!profileId) {
       setUnreadNotificationCount(0);
@@ -139,7 +133,7 @@ function Header() {
         .eq('is_read', false);
 
       if (error) {
-        console.error('❌ 알림 개수 불러오기 실패:', error.message);
+        console.error('알림 개수 불러오기 실패:', error.message);
         return;
       }
 
@@ -170,7 +164,7 @@ function Header() {
     };
   }, [profileId]);
 
-  // 🔔 알림 전체 비우기 이벤트 감지 → 뱃지 0으로
+  // 알림 전체 비우기 이벤트 감지 → 뱃지 0으로
   useEffect(() => {
     const handleCleared = () => {
       setUnreadNotificationCount(0);
@@ -222,7 +216,7 @@ function Header() {
     navigate('/');
   };
 
-  // ✅ 실제 보여줄 값
+  // 실제 보여줄 값
   const displayNickname = profileNickname ?? fallbackNickname;
   const headerAvatar = profileAvatar ?? '/default-avatar.svg';
 
@@ -300,7 +294,7 @@ function Header() {
         <div className="hidden md:flex items-center gap-3 sm:gap-4">
           {user ? (
             <>
-              {/* ✅ 프로필 버튼 + 드롭다운 (가운데 정렬) */}
+              {/* 프로필 버튼 + 드롭다운 (가운데 정렬) */}
               <div className="relative inline-flex">
                 <button
                   ref={profileButtonRef}

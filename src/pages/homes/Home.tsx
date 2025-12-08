@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useAuth } from '@/contexts/AuthContext';
 import TweetCard from './feature/TweetCard';
+import SnsInlineEditor from '@/components/common/SnsInlineEditor';
 
 type TweetUser = {
   name: string;
@@ -35,26 +36,25 @@ type OutletCtx = {
 };
 
 type HomeProps = {
-  // SnsPage에서 넘기는 searchQuery (optional로 만들어서 /finalhome에서도 사용 가능)
   searchQuery?: string;
 };
 
-// 🔹 Outlet이 없을 때 사용할 기본값
 const defaultOutletCtx: OutletCtx = {
   newTweet: null,
   setNewTweet: () => {},
   searchQuery: '',
 };
 
-// 🔹 SNS 홈 전역 스크롤 위치 (라우트 이동 간 유지)
-let HOME_SCROLL_Y = 0;
+let SNS_FEED_CACHE: UITweet[] | null = null;
+let SNS_FEED_HAS_MORE = true;
+let SNS_FEED_PAGE = 0;
+
+const SNS_LAST_TWEET_ID_KEY = 'sns-last-tweet-id';
 
 export default function Home({ searchQuery }: HomeProps) {
-  // 🔹 Outlet context 있으면 받고, 없으면 기본값 사용
   const outletCtx = useOutletContext<OutletCtx | null>() ?? defaultOutletCtx;
   const { newTweet, setNewTweet, searchQuery: outletSearchQuery } = outletCtx;
 
-  // 🔹 props > outlet 순으로 searchQuery 통합
   const mergedSearchQuery = (searchQuery ?? outletSearchQuery ?? '').trim();
   const isSearching = mergedSearchQuery.length > 0;
 
@@ -63,33 +63,45 @@ export default function Home({ searchQuery }: HomeProps) {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
-  const PAGE_SIZE = 10;
   const restoredRef = useRef(false);
+  const PAGE_SIZE = 10;
   const [myProfileId, setMyProfileId] = useState<string | null>(null);
 
-  // 🔹 window 기준 스크롤 위치 저장
-  useEffect(() => {
-    const handleScroll = () => {
-      HOME_SCROLL_Y = window.scrollY || window.pageYOffset || 0;
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // 🔹 페이지 복귀 시 스크롤 복원 (처음 마운트 시 한 번만)
+  // ✅ SNS 상세 → /sns 복귀 시: 마지막으로 클릭한 카드 위치로 복원
   useLayoutEffect(() => {
     if (restoredRef.current) return;
-    restoredRef.current = true;
+    if (loading) return;
+    if (tweets.length === 0) return;
+    if (typeof window === 'undefined') return;
 
-    if (HOME_SCROLL_Y > 0) {
-      window.scrollTo({
-        top: HOME_SCROLL_Y,
-        left: 0,
-        behavior: 'instant' as ScrollBehavior,
-      });
+    const lastId = sessionStorage.getItem(SNS_LAST_TWEET_ID_KEY);
+    if (!lastId) {
+      restoredRef.current = true;
+      return;
     }
-  }, []);
+
+    // DOM 렌더가 끝난 뒤에 위치 계산
+    requestAnimationFrame(() => {
+      const el = document.querySelector<HTMLElement>(`[data-tweet-id="${lastId}"]`);
+      if (!el) {
+        restoredRef.current = true;
+        sessionStorage.removeItem(SNS_LAST_TWEET_ID_KEY);
+        return;
+      }
+
+      const headerOffset = 96; // 고정 헤더 높이만큼 조정 (필요하면 80~110 사이 조절)
+      const y = el.offsetTop - headerOffset;
+
+      window.scrollTo({
+        top: y > 0 ? y : 0,
+        left: 0,
+        behavior: 'auto',
+      });
+
+      restoredRef.current = true;
+      sessionStorage.removeItem(SNS_LAST_TWEET_ID_KEY);
+    });
+  }, [loading, tweets.length]);
 
   // 로그인한 유저의 profiles.id 가져오기
   useEffect(() => {
@@ -113,7 +125,6 @@ export default function Home({ searchQuery }: HomeProps) {
       let data: any[] = [];
 
       if (mergedSearchQuery) {
-        // 검색 모드
         const { data: rpcData, error: rpcError } = await supabase.rpc('search_tweets', {
           keyword: mergedSearchQuery,
         });
@@ -121,7 +132,6 @@ export default function Home({ searchQuery }: HomeProps) {
         data = rpcData ?? [];
         setHasMore(false);
       } else {
-        // 기본 피드
         const currentPage = reset ? 0 : page;
         const from = currentPage * PAGE_SIZE;
         const to = from + PAGE_SIZE - 1;
@@ -181,7 +191,6 @@ export default function Home({ searchQuery }: HomeProps) {
         },
       }));
 
-      // 중복 tweet ID 제거
       setTweets(prev => {
         const combined = reset ? mapped : [...prev, ...mapped];
         const unique = combined.filter(
@@ -197,19 +206,29 @@ export default function Home({ searchQuery }: HomeProps) {
     }
   };
 
-  // 초기 로드
+  // 🔥 초기 로드 + 검색어 변경 시 처리
   useEffect(() => {
+    // 1) 검색 중일 때는 캐시를 무시하고 항상 새로 검색
+    if (isSearching) {
+      fetchTweets(true);
+      return;
+    }
+
+    // 2) 검색이 아니고, 이전 피드 캐시가 있으면 그걸 우선 사용
+    if (SNS_FEED_CACHE) {
+      setTweets(SNS_FEED_CACHE);
+      setHasMore(SNS_FEED_HAS_MORE);
+      setPage(SNS_FEED_PAGE);
+      setLoading(false);
+      return;
+    }
+
+    // 3) 캐시가 없을 때만 서버에서 새로 로드
     fetchTweets(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mergedSearchQuery, isSearching]);
 
-  // 검색어 있을 때/없을 때 재로드
-  useEffect(() => {
-    fetchTweets(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mergedSearchQuery]);
-
-  // 새 트윗 작성 시 즉시 반영 (Outlet context 사용 시에만 의미 있음)
+  // 새 트윗 작성 시 앞에 추가
   useEffect(() => {
     if (newTweet) {
       setTweets(prev => [newTweet, ...prev]);
@@ -217,7 +236,7 @@ export default function Home({ searchQuery }: HomeProps) {
     }
   }, [newTweet, setNewTweet]);
 
-  // 실시간 업데이트
+  // 실시간 업데이트 (UPDATE / INSERT / DELETE) - 여기부터는 기존 코드 그대로
   useEffect(() => {
     const updateChannel = supabase
       .channel('tweets-update-realtime')
@@ -247,36 +266,36 @@ export default function Home({ searchQuery }: HomeProps) {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'tweets' },
         async payload => {
-          const newTweet = payload.new as any;
-          if (newTweet.author_id === myProfileId) return;
+          const newTweetRow = payload.new as any;
+          if (newTweetRow.author_id === myProfileId) return;
 
           const { data: profile } = await supabase
             .from('profiles')
             .select('nickname, user_id, avatar_url')
-            .eq('id', newTweet.author_id)
+            .eq('id', newTweetRow.author_id)
             .maybeSingle();
 
           const uiTweet: UITweet = {
-            id: newTweet.id,
+            id: newTweetRow.id,
             user: {
               name: profile?.nickname ?? 'Unknown',
               username: profile?.user_id ?? 'anonymous',
               avatar: profile?.avatar_url ?? '/default-avatar.svg',
             },
-            content: newTweet.content,
-            image: newTweet.image_url || undefined,
-            timestamp: new Date(newTweet.created_at).toLocaleString('ko-KR', {
+            content: newTweetRow.content,
+            image: newTweetRow.image_url || undefined,
+            timestamp: new Date(newTweetRow.created_at).toLocaleString('ko-KR', {
               month: 'short',
               day: 'numeric',
               hour: '2-digit',
               minute: '2-digit',
             }),
             stats: {
-              replies: newTweet.reply_count ?? 0,
-              retweets: newTweet.repost_count ?? 0,
-              likes: newTweet.like_count ?? 0,
-              bookmarks: newTweet.bookmark_count ?? 0,
-              views: newTweet.view_count ?? 0,
+              replies: newTweetRow.reply_count ?? 0,
+              retweets: newTweetRow.repost_count ?? 0,
+              likes: newTweetRow.like_count ?? 0,
+              bookmarks: newTweetRow.bookmark_count ?? 0,
+              views: newTweetRow.view_count ?? 0,
             },
           };
 
@@ -300,6 +319,18 @@ export default function Home({ searchQuery }: HomeProps) {
     };
   }, [myProfileId]);
 
+  // 🔥 언마운트 시 현재 피드를 전역 캐시에 저장 (이건 별도 useEffect로!)
+  useEffect(() => {
+    return () => {
+      // 검색 중인 상태에서는 캐시로 안 씀
+      if (isSearching) return;
+
+      SNS_FEED_CACHE = tweets;
+      SNS_FEED_HAS_MORE = hasMore;
+      SNS_FEED_PAGE = page;
+    };
+  }, [tweets, hasMore, page, isSearching]);
+
   if (loading && tweets.length === 0) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -310,9 +341,16 @@ export default function Home({ searchQuery }: HomeProps) {
 
   return (
     <div className="border-x border-gray-200 dark:border-gray-700 dark:bg-background">
-      {/* <div className="sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 z-20">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">홈</h1>
-      </div> */}
+      {/* ✅ 검색 중이 아닐 때만 글쓰기 박스 보여주기 */}
+      {!isSearching && (
+        <SnsInlineEditor
+          mode="tweet"
+          onTweetCreated={tweet => {
+            // 새 트윗을 피드 맨 앞에 붙이기
+            setTweets(prev => [tweet, ...prev]);
+          }}
+        />
+      )}
 
       {isSearching ? (
         <div>
@@ -321,7 +359,7 @@ export default function Home({ searchQuery }: HomeProps) {
               <TweetCard
                 key={t.id}
                 {...t}
-                dimmed={true} // 🔹 검색 중일 때 글자 톤 다운
+                dimmed={true}
                 onDeleted={tweetId => {
                   setTweets(prev => prev.filter(item => item.id !== tweetId));
                 }}

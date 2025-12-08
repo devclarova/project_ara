@@ -1,10 +1,10 @@
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import SnsInlineEditor from '@/components/common/SnsInlineEditor';
 import { useAuth } from '@/contexts/AuthContext';
-import TweetDetailCard from './components/TweetDetailCard';
+import { supabase } from '@/lib/supabase';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import ReplyList from './components/ReplyList';
-import InlineReplyEditor from './components/InlineReplyEditor';
+import TweetDetailCard from './components/TweetDetailCard';
 
 export default function TweetDetail() {
   const { id } = useParams<{ id: string }>();
@@ -252,7 +252,6 @@ export default function TweetDetail() {
       stats: {
         comments: 0,
         retweets: 0,
-        // 🔥 embed된 tweet_replies_likes에서 count 뽑기
         likes: Array.isArray(r.tweet_replies_likes) ? (r.tweet_replies_likes[0]?.count ?? 0) : 0,
         views: 0,
       },
@@ -261,26 +260,15 @@ export default function TweetDetail() {
     setReplies(mapped);
   };
 
-  // ✅ 새 댓글 작성 후 콜백 (기존 그대로 유지)
+  // ✅ 새 댓글 작성 후 콜백
   const handleReplyCreated = (replyId: string) => {
     setScrollTargetId(replyId);
   };
 
+  // ✅ 로딩 상태 (상단 헤더 없이 스피너만)
   if (isLoading) {
     return (
       <div className="border-x border-gray-200 dark:border-gray-700 dark:bg-background">
-        <div className="sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 z-20">
-          <div className="flex items-center">
-            <button
-              onClick={() => navigate(-1)}
-              className="mr-4 p-2 hover:bg-gray-100 dark:hover:bg-primary/10 rounded-full transition-colors"
-            >
-              <i className="ri-arrow-left-line text-xl text-gray-900 dark:text-gray-100" />
-            </button>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">상세보기</h1>
-          </div>
-        </div>
-
         <div className="flex justify-center items-center py-20">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 dark:border-primary" />
         </div>
@@ -295,18 +283,7 @@ export default function TweetDetail() {
 
   return (
     <div className="border-x border-gray-200 dark:border-gray-700 dark:bg-background">
-      <div className="sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 z-20">
-        <div className="flex items-center">
-          <button
-            onClick={() => navigate(-1)}
-            className="mr-4 p-2 hover:bg-gray-100 dark:hover:bg-primary/10 rounded-full transition-colors"
-          >
-            <i className="ri-arrow-left-line text-xl text-gray-900 dark:text-gray-100" />
-          </button>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">상세보기</h1>
-        </div>
-      </div>
-
+      {/* ⛔ 기존 상단 고정 헤더(상세보기 타이틀 + 뒤로가기 버튼) 제거 */}
       <TweetDetailCard tweet={tweet} />
 
       {!user && (
@@ -338,7 +315,9 @@ export default function TweetDetail() {
         </div>
       )}
 
-      {user && <InlineReplyEditor tweetId={tweet.id} onReplyCreated={handleReplyCreated} />}
+      {user && (
+        <SnsInlineEditor mode="reply" tweetId={tweet.id} onReplyCreated={handleReplyCreated} />
+      )}
 
       <ReplyList
         replies={replies}

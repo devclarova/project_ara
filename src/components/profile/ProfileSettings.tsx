@@ -83,9 +83,9 @@ export default function ProfileSettings() {
               <Input placeholder="검색어를 입력해주세요" />
             </div>
 
-            {/* ✅ 반응형: 데스크톱(양쪽) vs 모바일(한 화면씩) */}
+            {/* 반응형: 데스크톱(양쪽) vs 모바일(한 화면씩) */}
             {!isMobile ? (
-              // 🔹 데스크톱 / 태블릿(>=768px): 좌/우 모두 보이기
+              // 데스크톱 / 태블릿(>=768px): 좌/우 모두 보이기
               <SettingsLayout
                 left={
                   <SettingsSidebar
@@ -99,7 +99,7 @@ export default function ProfileSettings() {
                 right={rightPanel}
               />
             ) : showMenuOnMobile ? (
-              // 🔹 모바일: 메뉴 화면
+              // 모바일: 메뉴 화면
               <div className="mt-4">
                 <SettingsSidebar
                   title="계정 설정"
@@ -110,7 +110,7 @@ export default function ProfileSettings() {
                 />
               </div>
             ) : (
-              // 🔹 모바일: 설정 내용 화면
+              // 모바일: 설정 내용 화면
               <div className="mt-4">{rightPanel}</div>
             )}
           </main>

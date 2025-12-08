@@ -9,14 +9,15 @@ interface ProfileHeaderProps {
     username: string;
     avatar: string;
     bio: string;
-    location: string;
     joinDate: string;
     followers: number;
     following: number;
     banner?: string | null;
     website?: string | null;
+    country?: string | null;
+    countryFlagUrl?: string | null;
   };
-  onEditClick?: () => void; // ✅ 모달 오픈 콜백
+  onEditClick?: () => void;
 }
 
 export default function ProfileHeader({ userProfile, onEditClick }: ProfileHeaderProps) {
@@ -79,12 +80,18 @@ export default function ProfileHeader({ userProfile, onEditClick }: ProfileHeade
             </p>
           )}
 
-          {/* 위치, 가입일 */}
+          {/* 🔥 원래 location 들어가던 자리 → 국적 + 국기 */}
           <div className="flex flex-wrap gap-3 text-gray-500 dark:text-gray-400 text-sm mt-2">
-            {userProfile.location && (
-              <span className="flex items-center gap-1">
-                <i className="ri-map-pin-line" />
-                {userProfile.location}
+            {(userProfile.country || userProfile.countryFlagUrl) && (
+              <span className="flex items-center gap-2">
+                {userProfile.countryFlagUrl && (
+                  <img
+                    src={userProfile.countryFlagUrl}
+                    alt={userProfile.country ?? '국가'}
+                    className="w-5 h-5 rounded-full object-cover border border-gray-200 dark:border-gray-600"
+                  />
+                )}
+                <span>{userProfile.country ?? '국가 미설정'}</span>
               </span>
             )}
 

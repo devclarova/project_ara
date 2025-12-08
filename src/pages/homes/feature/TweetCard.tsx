@@ -4,15 +4,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import DOMPurify from 'dompurify';
 import { useEffect, useRef, useState } from 'react';
-import ReactCountryFlag from 'react-country-flag';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import ImageSlider from '../tweet/components/ImageSlider';
 import ModalImageSlider from '../tweet/components/ModalImageSlider';
 import TranslateButton from '@/components/common/TranslateButton';
 
-const SNS_SCROLL_Y_KEY = 'sns-scroll-y';
-const SNS_RESTORE_FLAG_KEY = 'sns-restore-flag';
+const SNS_LAST_TWEET_ID_KEY = 'sns-last-tweet-id';
 
 interface User {
   name: string;
@@ -34,7 +32,7 @@ interface TweetCardProps {
   timestamp: string;
   stats: Stats;
   onDeleted?: (id: string) => void;
-  dimmed?: boolean; // 검색 상태에 따른 음영 여부
+  dimmed?: boolean;
 }
 
 export default function TweetCard({
@@ -63,10 +61,12 @@ export default function TweetCard({
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalIndex, setModalIndex] = useState(0);
   const [translated, setTranslated] = useState<string>('');
+  const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
+  const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
 
   // const images = Array.isArray(image) ? image : image ? [image] : [];
 
-  // 로그인한 프로필 ID 로드
+  /** 로그인한 프로필 ID 로드 */
   useEffect(() => {
     const loadProfile = async () => {
       if (!authUser) return;
@@ -77,7 +77,7 @@ export default function TweetCard({
         .maybeSingle();
 
       if (error) {
-        console.error('❌ 프로필 로드 실패:', error.message);
+        console.error('프로필 로드 실패:', error.message);
       } else if (data) {
         setProfileId(data.id);
       }
@@ -85,7 +85,7 @@ export default function TweetCard({
     loadProfile();
   }, [authUser]);
 
-  // 내가 이미 좋아요한 트윗인지 확인
+  /** 내가 이미 좋아요한 트윗인지 확인 */
   useEffect(() => {
     if (!profileId || hasChecked.current) return;
     hasChecked.current = true;
@@ -99,14 +99,14 @@ export default function TweetCard({
         .maybeSingle();
 
       if (error) {
-        console.error('❌ 좋아요 상태 확인 실패:', error.message);
+        console.error('좋아요 상태 확인 실패:', error.message);
         return;
       }
       if (data) setLiked(true);
     })();
   }, [profileId, id]);
 
-  // 외부 클릭 시 메뉴 닫기
+  /** 외부 클릭 시 메뉴 닫기 */
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -117,7 +117,7 @@ export default function TweetCard({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // 외부 클릭 시 다이얼로그 닫기
+  /** 외부 클릭 시 다이얼로그 닫기 */
   useEffect(() => {
     const handleOutside = (e: MouseEvent) => {
       if (dialogRef.current && !dialogRef.current.contains(e.target as Node)) {
@@ -139,6 +139,56 @@ export default function TweetCard({
     setCurrentImage(0); // 트윗 바뀔 때 첫 이미지로 리셋
   }, [content]);
 
+  /** 트윗 작성자 국적 / 국기 로드 */
+  useEffect(() => {
+    const fetchAuthorCountry = async () => {
+      try {
+        // 1) 트윗 작성자의 프로필에서 country(id) 가져오기
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('country')
+          .eq('user_id', user.username) // 🔥 user.username = auth.user.id 로 쓰고 있으니 이 기준으로 조회
+          .maybeSingle();
+
+        if (profileError) {
+          console.error('작성자 프로필(country) 로드 실패:', profileError.message);
+          return;
+        }
+
+        if (!profile || !profile.country) {
+          setAuthorCountryFlagUrl(null);
+          setAuthorCountryName(null);
+          return;
+        }
+
+        // 2) countries에서 flag_url, name 조회 (profiles.country = countries.id)
+        const { data: country, error: countryError } = await supabase
+          .from('countries')
+          .select('name, flag_url')
+          .eq('id', profile.country)
+          .maybeSingle();
+
+        if (countryError) {
+          console.error('작성자 국가 정보 로드 실패:', countryError.message);
+          return;
+        }
+
+        if (!country) {
+          setAuthorCountryFlagUrl(null);
+          setAuthorCountryName(null);
+          return;
+        }
+
+        setAuthorCountryFlagUrl(country.flag_url ?? null);
+        setAuthorCountryName(country.name ?? null);
+      } catch (err) {
+        console.error('작성자 국기 정보 로드 중 예외:', err);
+      }
+    };
+
+    fetchAuthorCountry();
+  }, [user.username]);
+
   // prop 으로 온 image(string | string[]) → 배열로 정규화
   const propImages = Array.isArray(image) ? image : image ? [image] : [];
 
@@ -150,7 +200,7 @@ export default function TweetCard({
     FORBID_TAGS: ['img'],
   });
 
-  // 좋아요 토글
+  /** 좋아요 토글 */
   const handleLikeToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!profileId) {
@@ -176,13 +226,13 @@ export default function TweetCard({
         if (error) throw error;
       }
     } catch (err: any) {
-      console.error('❌ 좋아요 토글 실패:', err.message);
+      console.error('좋아요 토글 실패:', err.message);
       toast.error('좋아요 처리 중 오류가 발생했습니다.');
       setLiked(!optimisticLiked);
     }
   };
 
-  // 트윗 삭제
+  /** 트윗 삭제 */
   const handleDelete = async () => {
     if (!profileId) {
       toast.error('로그인이 필요합니다.');
@@ -201,7 +251,7 @@ export default function TweetCard({
       setShowMenu(false);
       onDeleted?.(id);
     } catch (err: any) {
-      console.error('❌ 삭제 실패:', err.message);
+      console.error('삭제 실패:', err.message);
       toast.error('삭제 중 오류가 발생했습니다.');
     }
   };
@@ -209,12 +259,19 @@ export default function TweetCard({
   const handleCardClick = () => {
     if (typeof window !== 'undefined') {
       const y = window.scrollY || window.pageYOffset || 0;
-      sessionStorage.setItem(SNS_SCROLL_Y_KEY, String(y));
+      sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, id);
     }
     navigate(`/sns/${id}`);
   };
+
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    // 프로필로 이동할 때도 마지막으로 보고 있던 트윗 id 저장
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, id);
+    }
+
     navigate(`/profile/${encodeURIComponent(user.name)}`);
   };
 
@@ -250,6 +307,7 @@ export default function TweetCard({
 
   return (
     <div
+      data-tweet-id={id}
       className="relative px-4 py-3 cursor-pointer transition-colors border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-background hover:bg-gray-50/50 dark:hover:bg-primary/10"
       onClick={handleCardClickSafe}
     >
@@ -270,11 +328,29 @@ export default function TweetCard({
               <span className={nameClass} onClick={handleAvatarClick}>
                 {user.name}
               </span>
-              <Badge variant="secondary" className="flex items-center gap-1 px-2 py-1">
-                <ReactCountryFlag countryCode="KR" svg style={{ fontSize: '1em' }} />
-              </Badge>
+              {authorCountryFlagUrl && (
+                <Badge variant="secondary" className="flex items-center px-1 py-0.5 ml-2">
+                  <img
+                    src={authorCountryFlagUrl}
+                    alt={authorCountryName ?? '국가'}
+                    title={authorCountryName ?? ''} // 마우스 올리면 국가 이름 툴팁
+                    className="w-4 h-4 rounded-sm object-cover"
+                  />
+                </Badge>
+              )}
 
-              <span className={`${metaClass}`}>·</span>
+              {/* 2) 국기 URL은 없는데 국가 이름은 있는 경우 → 기본 아이콘 표시 */}
+              {!authorCountryFlagUrl && authorCountryName && (
+                <Badge
+                  variant="secondary"
+                  className="flex items-center px-1 py-0.5 ml-2"
+                  title={authorCountryName}
+                >
+                  <span className="text-xs">🌐</span>
+                </Badge>
+              )}
+
+              <span className={`${metaClass} mx-1`}>·</span>
               <span className={`${metaClass} flex-shrink-0`}>{timestamp}</span>
             </div>
 
@@ -373,7 +449,7 @@ export default function TweetCard({
                 e.stopPropagation();
                 if (typeof window !== 'undefined') {
                   const y = window.scrollY || window.pageYOffset || 0;
-                  sessionStorage.setItem(SNS_SCROLL_Y_KEY, String(y));
+                  sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, id);
                 }
                 navigate(`/sns/${id}`);
               }}
