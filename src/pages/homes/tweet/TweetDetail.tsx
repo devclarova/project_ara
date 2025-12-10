@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import ReplyList from './components/ReplyList';
 import TweetDetailCard from './components/TweetDetailCard';
+import { toast } from 'sonner';
 
 export default function TweetDetail() {
   const { id } = useParams<{ id: string }>();
@@ -16,28 +17,53 @@ export default function TweetDetail() {
   const [replies, setReplies] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 🔥 알림에서 넘어올 때 state로 받은 highlightCommentId
-  const locationState = location.state as { highlightCommentId?: string } | null;
+  // 알림에서 넘어올 때 state로 받은 값들
+  const locationState = location.state as {
+    highlightCommentId?: string;
+    deletedComment?: boolean;
+  } | null;
   const highlightFromNotification = locationState?.highlightCommentId ?? null;
+  const deletedCommentFromNotification = locationState?.deletedComment ?? false;
 
-  // 🔥 스크롤 / 하이라이트 타겟 id
+  // 스크롤 타겟 id (내가 이동시키고 싶은 순간에만 변경)
   const [scrollTargetId, setScrollTargetId] = useState<string | null>(null);
 
-  // ✅ 처음 진입 시: 알림에서 넘어온 값이 있으면 그걸 타겟으로 사용
+  // 알림에서 처음 진입할 때만 한 번 스크롤 타깃 설정
   useEffect(() => {
-    if (highlightFromNotification) {
+    if (!id || !highlightFromNotification) return;
+
+    const storageKey = `sns-highlight-consumed-${id}-${highlightFromNotification}`;
+
+    try {
+      const consumed = sessionStorage.getItem(storageKey);
+      if (consumed === '1') {
+        // 이미 이 알림으로 스크롤 한 번 했으면 더 이상 스크롤하지 않음
+        return;
+      }
+
+      setScrollTargetId(highlightFromNotification);
+      sessionStorage.setItem(storageKey, '1');
+    } catch {
+      // sessionStorage 사용이 불가한 환경에서는 그냥 한 번만 설정
       setScrollTargetId(highlightFromNotification);
     }
-  }, [highlightFromNotification]);
+  }, [id, highlightFromNotification]);
 
-  // ✅ 트윗 + 댓글 불러오기
+  // 삭제된 댓글 플래그가 있을 때 토스트 표시
+  useEffect(() => {
+    if (deletedCommentFromNotification) {
+      toast.info('삭제된 댓글입니다.');
+    }
+  }, [deletedCommentFromNotification]);
+
+  // 트윗 + 댓글 불러오기
   useEffect(() => {
     if (!id) return;
     fetchTweetById(id);
     fetchReplies(id);
   }, [id]);
 
-  // ✅ 실시간 댓글 추가 채널
+  // 실시간 댓글 추가 채널 (추가만 반영, 스크롤은 건드리지 않음)
   useEffect(() => {
     if (!id) return;
 
@@ -46,7 +72,7 @@ export default function TweetDetail() {
     }
 
     const channel = supabase
-      .channel(`tweet-${id}-replies`)
+      .channel(`tweet-${id}-replies-insert`)
       .on(
         'postgres_changes',
         {
@@ -87,8 +113,9 @@ export default function TweetDetail() {
             },
           };
 
-          // 🔹 댓글은 오래된 → 최신 순이므로, 새 댓글은 맨 아래에 추가
+          // 새 댓글은 맨 아래에 추가
           setReplies(prev => [...prev, formattedReply]);
+          // 여기서는 scrollTargetId 를 변경하지 않음 (다른 사람 댓글 때문에 내 화면이 움직이면 안 됨)
         },
       )
       .subscribe();
@@ -101,7 +128,7 @@ export default function TweetDetail() {
     };
   }, [id]);
 
-  // ✅ 댓글 삭제 실시간 반영
+  // 댓글 삭제 실시간 반영
   useEffect(() => {
     if (!id) return;
 
@@ -117,6 +144,7 @@ export default function TweetDetail() {
           event: 'DELETE',
           schema: 'public',
           table: 'tweet_replies',
+          filter: `tweet_id=eq.${id}`,
         },
         payload => {
           const deletedId = payload.old.id;
@@ -133,7 +161,7 @@ export default function TweetDetail() {
     };
   }, [id]);
 
-  // ✅ 조회수 증가 (로그인 유저에게만)
+  // 조회수 증가 (로그인 유저에게만)
   useEffect(() => {
     if (!id || !user) return;
     handleViewCount(id);
@@ -171,7 +199,7 @@ export default function TweetDetail() {
     }
   };
 
-  // ✅ 트윗 데이터 불러오기
+  // 트윗 데이터 불러오기
   const fetchTweetById = async (tweetId: string) => {
     setIsLoading(true);
     const { data, error } = await supabase
@@ -188,7 +216,8 @@ export default function TweetDetail() {
 
     if (error || !data) {
       console.error('트윗 불러오기 실패:', error?.message);
-      navigate('/sns');
+      toast.info('삭제된 게시글이거나 존재하지 않는 게시글입니다.');
+      navigate(-1);
       return;
     }
 
@@ -219,7 +248,7 @@ export default function TweetDetail() {
     setIsLoading(false);
   };
 
-  // ✅ 댓글 목록 불러오기 (오래된 → 최신)
+  // 댓글 목록 불러오기 (오래된 → 최신)
   const fetchReplies = async (tweetId: string) => {
     const { data, error } = await supabase
       .from('tweet_replies')
@@ -260,12 +289,49 @@ export default function TweetDetail() {
     setReplies(mapped);
   };
 
-  // ✅ 새 댓글 작성 후 콜백
+  // 새 댓글 작성 후 콜백: 여기에서만 스크롤 타깃 설정
   const handleReplyCreated = (replyId: string) => {
     setScrollTargetId(replyId);
   };
 
-  // ✅ 로딩 상태 (상단 헤더 없이 스피너만)
+  // 스크롤 이펙트: scrollTargetId 가 바뀔 때만 한 번 실행
+  useEffect(() => {
+    if (!scrollTargetId) return;
+
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 8; // 최대 8번 재시도
+
+    const tryScroll = () => {
+      if (cancelled) return;
+
+      const el = document.getElementById(`reply-${scrollTargetId}`);
+      if (el) {
+        const headerOffset = 120;
+        const rect = el.getBoundingClientRect();
+        const absoluteY = window.scrollY + rect.top;
+
+        window.scrollTo({
+          top: absoluteY - headerOffset,
+          behavior: 'smooth',
+        });
+        return;
+      }
+
+      if (attempts < maxAttempts) {
+        attempts += 1;
+        setTimeout(tryScroll, 200);
+      }
+    };
+
+    tryScroll();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [scrollTargetId]);
+
+  // 로딩 상태
   if (isLoading) {
     return (
       <div className="border-x border-gray-200 dark:border-gray-700 dark:bg-background">
@@ -283,8 +349,8 @@ export default function TweetDetail() {
 
   return (
     <div className="border-x border-gray-200 dark:border-gray-700 dark:bg-background">
-      {/* ⛔ 기존 상단 고정 헤더(상세보기 타이틀 + 뒤로가기 버튼) 제거 */}
-      <TweetDetailCard tweet={tweet} />
+      {/* 댓글 수는 항상 replies.length 기준으로 표시 */}
+      <TweetDetailCard tweet={tweet} replyCount={replies.length} />
 
       {!user && (
         <div className="border-y border-gray-200 dark:border-gray-700 px-4 py-7 bg-gray-50/80 dark:bg-muted/40 flex items-center justify-between gap-3">

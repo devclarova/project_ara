@@ -2,7 +2,7 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge'; // ✅ 추가
+import { Badge } from '@/components/ui/badge';
 import DOMPurify from 'dompurify';
 import ImageSlider from './ImageSlider';
 import ModalImageSlider from './ModalImageSlider';
@@ -36,9 +36,10 @@ interface Tweet {
 
 interface TweetDetailCardProps {
   tweet: Tweet;
+  replyCount: number; // ✅ 상세 페이지에서 내려주는 실시간 댓글 수
 }
 
-export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
+export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardProps) {
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
 
@@ -51,24 +52,25 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
   const [profileId, setProfileId] = useState<string | null>(null);
   const [currentImage, setCurrentImage] = useState(0);
 
-  // ✅ 트윗 작성자의 국기/국가명
   const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
   const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
 
-  // ✅ 뒤로가기 버튼
   const handleBackClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     navigate(-1);
   };
 
-  // 아바타 클릭 → 작성자 프로필로 이동
   const handleAvatarClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
     navigate(`/profile/${encodeURIComponent(tweet.user.name)}`);
   };
 
+  // ✅ replies 는 외부에서 받은 값 우선 사용
   const normalizedStats = {
-    replies: tweet.stats.replies || tweet.stats.comments || 0,
+    replies:
+      typeof replyCount === 'number'
+        ? replyCount
+        : tweet.stats.replies || tweet.stats.comments || 0,
     retweets: tweet.stats.retweets || 0,
     likes: tweet.stats.likes || 0,
     views: tweet.stats.views || 0,
@@ -89,15 +91,14 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
     loadProfileId();
   }, [authUser]);
 
-  // ✅ 트윗 작성자 프로필 → country(id) → countries에서 국기 URL/이름 가져오기
+  // 작성자 국가 정보
   useEffect(() => {
     const fetchAuthorCountry = async () => {
       try {
-        // 1) 작성자 프로필에서 country(id) 조회
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('country')
-          .eq('user_id', tweet.user.username) // 🔥 tweet.user.username = auth.user.id 기준
+          .eq('user_id', tweet.user.username)
           .maybeSingle();
 
         if (profileError) {
@@ -111,7 +112,6 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
           return;
         }
 
-        // 2) countries.id 기준으로 name, flag_url 조회
         const { data: country, error: countryError } = await supabase
           .from('countries')
           .select('name, flag_url')
@@ -184,7 +184,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
           setLiked(true);
         }
       } catch (err) {
-        console.error('❌ 트윗 좋아요 상태 조회 실패:', err);
+        console.error('트윗 좋아요 상태 조회 실패:', err);
       }
     };
 
@@ -211,7 +211,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
         .maybeSingle();
 
       if (existingError) {
-        console.error('❌ 트윗 좋아요 조회 실패:', existingError.message);
+        console.error('트윗 좋아요 조회 실패:', existingError.message);
       }
 
       if (existing) {
@@ -244,9 +244,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
 
   return (
     <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-6 bg-white dark:bg-background">
-      {/* ✅ 상단: 뒤로가기 버튼 + 아바타 + 이름/국기/시간 */}
       <div className="flex items-start space-x-3">
-        {/* 뒤로가기 버튼: 아바타와 분리, 클릭 영역 안 겹치도록 여백 확보 */}
         <button
           type="button"
           onClick={handleBackClick}
@@ -255,7 +253,6 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
           <i className="ri-arrow-left-line text-lg text-gray-700 dark:text-gray-100" />
         </button>
 
-        {/* 아바타 */}
         <div onClick={handleAvatarClick} className="cursor-pointer flex-shrink-0">
           <Avatar>
             <AvatarImage src={tweet.user.avatar || '/default-avatar.svg'} alt={tweet.user.name} />
@@ -263,10 +260,8 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
           </Avatar>
         </div>
 
-        {/* 이름 + 국기 + 점 + 시간 */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center flex-wrap gap-x-2">
-            {/* 이름 */}
             <span
               className="font-bold text-gray-900 dark:text-gray-100 hover:underline cursor-pointer truncate"
               onClick={handleAvatarClick}
@@ -274,7 +269,6 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
               {tweet.user.name}
             </span>
 
-            {/* 국기 (있으면만 표시, 이름은 title로만) */}
             {authorCountryFlagUrl && (
               <Badge variant="secondary" className="flex items-center px-1 py-0.5">
                 <img
@@ -286,7 +280,6 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
               </Badge>
             )}
 
-            {/* 국기는 없는데 국가 이름만 있는 경우 → 간단 아이콘 */}
             {!authorCountryFlagUrl && authorCountryName && (
               <Badge
                 variant="secondary"
@@ -297,14 +290,12 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
               </Badge>
             )}
 
-            {/* 점 + 작성 시간 */}
             <span className="mx-1 text-gray-500 dark:text-gray-400">·</span>
             <span className="text-gray-500 dark:text-gray-400 text-sm">{tweet.timestamp}</span>
           </div>
         </div>
       </div>
 
-      {/* 내용 */}
       <div className="mt-4">
         {hasText && (
           <div
@@ -313,7 +304,6 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
           />
         )}
 
-        {/* 이미지 슬라이더 */}
         {allImages.length > 0 && (
           <ImageSlider
             allImages={allImages}
@@ -328,7 +318,6 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
           />
         )}
 
-        {/* 이미지 모달 */}
         {showImageModal && (
           <div
             className="fixed inset-0 bg-black/80 z-[2000] flex items-center justify-center"
@@ -344,10 +333,9 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
         )}
       </div>
 
-      {/* 액션 버튼 (댓글/좋아요/조회수) */}
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-start gap-8 text-sm text-gray-500 dark:text-gray-400">
-          {/* 댓글 수 */}
+          {/* ✅ 댓글 수: 항상 replyCount 기반 */}
           <button className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400 transition-colors group">
             <div className="p-2 rounded-full group-hover:bg-primary/10 dark:group-hover:bg-primary/15 transition-colors">
               <i className="ri-chat-3-line text-lg" />

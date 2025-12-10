@@ -1,6 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import DOMPurify from 'dompurify';
+import { toast } from 'sonner';
+
+const FEED_LIKE_MESSAGE = '당신의 피드를 좋아합니다.'; // 피드 좋아요 알림 content
 
 interface NotificationCardProps {
   notification: {
@@ -16,7 +19,7 @@ interface NotificationCardProps {
     timestamp: string;
     isRead: boolean;
     tweetId: string | null;
-    replyId?: string | null; // ✅ 여기 기준으로 통일
+    replyId?: string | null;
   };
   onMarkAsRead?: (id: string) => void;
 }
@@ -54,38 +57,6 @@ export default function NotificationCard({ notification, onMarkAsRead }: Notific
     }
   };
 
-  const handleClick = () => {
-    if (!notification.isRead && onMarkAsRead) {
-      onMarkAsRead(notification.id);
-    }
-
-    // ✅ 팔로우 알림 → 프로필로 이동
-    if (notification.type === 'follow') {
-      navigate(`/profile/${encodeURIComponent(notification.user.username)}`);
-      return;
-    }
-
-    // ✅ 댓글/댓글 좋아요 알림: tweetId + replyId 둘 다 있을 때 → 해당 댓글로 스크롤
-    if (notification.tweetId && notification.replyId) {
-      navigate(`/sns/${notification.tweetId}`, {
-        state: {
-          highlightCommentId: notification.replyId,
-        },
-      });
-      return;
-    }
-
-    // ✅ 그 외(피드 좋아요 등)는 피드 디테일로만 이동
-    if (notification.tweetId) {
-      navigate(`/sns/${notification.tweetId}`);
-    }
-  };
-
-  const handleAvatarClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigate(`/profile/${encodeURIComponent(notification.user.username)}`);
-  };
-
   const extractParagraphText = (html: string) => {
     const clean = DOMPurify.sanitize(html, {
       ALLOWED_TAGS: ['p', 'strong', 'em', 'b', 'i', 'u', 'br'],
@@ -112,8 +83,69 @@ export default function NotificationCard({ notification, onMarkAsRead }: Notific
     (notification.type === 'comment' || notification.type === 'like') && !!parsedContent;
 
   const unreadClasses = !notification.isRead
-    ? 'bg-primary/10 dark:bg-primary/20 border-l-4 border-l-primary'
+    ? 'relative bg-primary/10 dark:bg-primary/20 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary'
     : '';
+
+  // ✅ "삭제된 댓글"로 취급해야 하는 알림인지 판별
+  // 1) type === 'comment' 이면서 replyId 없음 → 원래 댓글 알림인데 댓글이 삭제된 케이스
+  // 2) type === 'like' 이면서:
+  //    - replyId 없음
+  //    - 내용(parsedContent)이 있고
+  //    - 그 내용이 우리가 피드 좋아요에서 넣은 고정 문구가 아닐 때
+  //    → 원래는 댓글 좋아요였는데 댓글이 지워진 케이스로 판단
+  const isDeletedCommentNotification =
+    !notification.replyId &&
+    (notification.type === 'comment' ||
+      (notification.type === 'like' && !!parsedContent && parsedContent !== FEED_LIKE_MESSAGE));
+
+  const handleClick = () => {
+    if (!notification.isRead && onMarkAsRead) {
+      onMarkAsRead(notification.id);
+    }
+
+    // 팔로우 알림 → 프로필로 이동
+    if (notification.type === 'follow') {
+      navigate(`/profile/${encodeURIComponent(notification.user.username)}`);
+      return;
+    }
+
+    // 게시글 자체가 삭제된 경우: 이동하지 않고 여기서 토스트
+    if (!notification.tweetId) {
+      toast.info('삭제된 게시글입니다.');
+      return;
+    }
+
+    // ✅ "삭제된 댓글"로 판단되는 알림이면:
+    //    → 게시글 상세로 이동 + 디테일 페이지에서 '삭제된 댓글입니다.' 토스트
+    if (isDeletedCommentNotification) {
+      navigate(`/sns/${notification.tweetId}`, {
+        state: {
+          deletedComment: true,
+        },
+      });
+      return;
+    }
+
+    // 댓글/댓글 좋아요 알림: tweetId + replyId 둘 다 있을 때 → 해당 댓글로 스크롤
+    if (notification.tweetId && notification.replyId) {
+      navigate(`/sns/${notification.tweetId}`, {
+        state: {
+          highlightCommentId: notification.replyId,
+        },
+      });
+      return;
+    }
+
+    // 그 외(피드 좋아요, 멘션 등)는 피드 디테일로만 이동
+    if (notification.tweetId) {
+      navigate(`/sns/${notification.tweetId}`);
+    }
+  };
+
+  const handleAvatarClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/profile/${encodeURIComponent(notification.user.username)}`);
+  };
 
   return (
     <div

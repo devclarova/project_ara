@@ -32,6 +32,7 @@ import { DirectChatProvider } from './contexts/DirectChatContext';
 import Header from './components/common/Headrer';
 import SnsPage from './pages/sns/SnsPage';
 import SnsDetailPage from './pages/sns/SnsDetailPage';
+import { Toaster } from 'sonner'; // ✅ 토스트 컴포넌트 추가
 
 // ---------- 인증 가드 ----------
 function RequireAuth() {
@@ -74,14 +75,14 @@ function AppInner() {
         {/* ✅ 헤더가 있을 때만 상단 여백 주기 (고정 헤더 높이 보정) */}
         <main
           className={
-            hideHeader ? 'flex-1' : 'flex-1 pt-[73px] sm:pt-[81px] mid:pt-[81px] md:pt-[97px]' // 필요하면 값 조정
+            hideHeader ? 'flex-1' : 'flex-1 pt-[73px] sm:pt-[81px] mid:pt-[81px] md:pt-[97px]'
           }
         >
           <Routes>
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/" element={<LandingPage />} />
             <Route path="/landing" element={<LandingPage />} />
-            {/* 🔓 공개용 (랜딩/인기콘텐츠에서만 사용) */}
+            {/* 공개용 (랜딩/인기콘텐츠에서만 사용) */}
             <Route path="/guest-study/:contents/:episode/:scene?" element={<StudyPage />} />
             <Route path="/studyList" element={<StudyListPage />} />
             <Route path="/sns" element={<SnsPage />} />
@@ -128,6 +129,32 @@ const App = () => {
           <Router>
             <AppInner />
           </Router>
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              duration: 2500,
+              style: {
+                background: 'hsl(var(--primary) / 0.35)', // 은은한 primary 반투명
+                border: '1px solid hsl(var(--primary) / 0.25)',
+                backdropFilter: 'blur(10px)', // 더 부드러운 유리 효과
+                WebkitBackdropFilter: 'blur(10px)',
+
+                color: 'hsl(var(--foreground))',
+                borderRadius: '14px',
+
+                // 🔥 사이즈 업! (기존보다 1.4배 정도 커짐)
+                padding: '14px 18px',
+                fontSize: '15px',
+
+                // 🔥 토스트 기본 폭을 넓게 → 더 브랜드스럽고 안정감 있는 느낌
+                minWidth: '340px',
+                maxWidth: '440px',
+
+                boxShadow: '0 6px 28px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1)',
+              },
+              className: 'font-medium',
+            }}
+          />
         </DirectChatProvider>
       </NewChatNotificationProvider>
     </AuthProvider>
