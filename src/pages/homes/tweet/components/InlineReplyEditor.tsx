@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 interface InlineReplyEditorProps {
   tweetId: string;
-  // ✅ 새로 생성된 댓글 id를 부모(TweetDetail)로 올려주는 콜백 (추가)
+  // 새로 생성된 댓글 id를 부모(TweetDetail)로 올려주는 콜백 (추가)
   onReplyCreated?: (replyId: string) => void;
 }
 
@@ -100,7 +100,7 @@ export default function InlineReplyEditor({ tweetId, onReplyCreated }: InlineRep
             });
 
           if (uploadError) {
-            console.error('❌ 이미지 업로드 실패:', uploadError.message);
+            console.error('이미지 업로드 실패:', uploadError.message);
             // 일부만 실패해도 나머지는 계속 시도
             continue;
           }
@@ -130,7 +130,7 @@ export default function InlineReplyEditor({ tweetId, onReplyCreated }: InlineRep
         return;
       }
 
-      // ✅ 댓글 insert 시 새로 생성된 id까지 함께 받아오기 (수정 포인트 ①)
+      // 댓글 insert 시 새로 생성된 id까지 함께 받아오기 (수정 포인트 ①)
       const { data: inserted, error: insertError } = await supabase
         .from('tweet_replies')
         .insert({
@@ -142,13 +142,13 @@ export default function InlineReplyEditor({ tweetId, onReplyCreated }: InlineRep
         .single();
 
       if (insertError || !inserted) {
-        console.error('❌ 댓글 저장 실패:', insertError?.message);
+        console.error('댓글 저장 실패:', insertError?.message);
         toast.error('댓글 저장 중 오류가 발생했습니다.');
         setIsSubmitting(false);
         return;
       }
 
-      // ✅ 부모(TweetDetail)에게 "이 댓글로 스크롤해"라고 id 전달 (수정 포인트 ②)
+      // 부모(TweetDetail)에게 "이 댓글로 스크롤해"라고 id 전달 (수정 포인트 ②)
       if (onReplyCreated && inserted.id) {
         onReplyCreated(inserted.id);
       }
@@ -161,7 +161,7 @@ export default function InlineReplyEditor({ tweetId, onReplyCreated }: InlineRep
       }
       toast.success('댓글이 등록되었습니다.');
     } catch (err) {
-      console.error('❌ 댓글 등록 오류:', err);
+      console.error('댓글 등록 오류:', err);
       toast.error('댓글 등록 중 문제가 발생했습니다.');
     } finally {
       setIsSubmitting(false);

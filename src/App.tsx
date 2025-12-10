@@ -32,7 +32,7 @@ import { DirectChatProvider } from './contexts/DirectChatContext';
 import Header from './components/common/Headrer';
 import SnsPage from './pages/sns/SnsPage';
 import SnsDetailPage from './pages/sns/SnsDetailPage';
-import { Toaster } from 'sonner'; // ✅ 토스트 컴포넌트 추가
+import { Toaster } from 'sonner'; // 토스트 컴포넌트 추가
 
 // ---------- 인증 가드 ----------
 function RequireAuth() {
@@ -58,7 +58,7 @@ function RequireGuest() {
 function AppInner() {
   const location = useLocation();
 
-  // ✅ 헤더를 숨길 경로들
+  // 헤더를 숨길 경로들
   const HIDE_HEADER_PATHS = ['/signin', '/signup', '/auth/callback', '/signup/social'];
 
   const hideHeader = HIDE_HEADER_PATHS.some(path => location.pathname.startsWith(path));
@@ -69,10 +69,10 @@ function AppInner() {
       <ScrollToTop />
 
       <div className="layout min-h-screen flex flex-col">
-        {/* ✅ 로그인/회원가입/온보딩에서는 헤더 렌더링 안 함 */}
+        {/* 로그인/회원가입/온보딩에서는 헤더 렌더링 안 함 */}
         {!hideHeader && <Header />}
 
-        {/* ✅ 헤더가 있을 때만 상단 여백 주기 (고정 헤더 높이 보정) */}
+        {/* 헤더가 있을 때만 상단 여백 주기 (고정 헤더 높이 보정) */}
         <main
           className={
             hideHeader ? 'flex-1' : 'flex-1 pt-[73px] sm:pt-[81px] mid:pt-[81px] md:pt-[97px]'
@@ -142,11 +142,11 @@ const App = () => {
                 color: 'hsl(var(--foreground))',
                 borderRadius: '14px',
 
-                // 🔥 사이즈 업! (기존보다 1.4배 정도 커짐)
+                // 사이즈 업! (기존보다 1.4배 정도 커짐)
                 padding: '14px 18px',
                 fontSize: '15px',
 
-                // 🔥 토스트 기본 폭을 넓게 → 더 브랜드스럽고 안정감 있는 느낌
+                // 토스트 기본 폭을 넓게 → 더 브랜드스럽고 안정감 있는 느낌
                 minWidth: '340px',
                 maxWidth: '440px',
 

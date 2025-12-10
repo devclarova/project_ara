@@ -236,6 +236,13 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
     }
   };
 
+  // 지정된 SEGMENT 안에서만 이동
+  const clampToSegment = (sec: number) => {
+    const start = segStartSec ?? videoStartSec ?? 0;
+    const end = segEndSec ?? videoEndSec ?? videoDuration ?? Infinity;
+    return Math.max(start, Math.min(sec, end));
+  };
+
   // 재생/일시정지
   const handlePlayPause = () => {
     const t = playerRef.current?.getCurrentTime?.();
@@ -259,22 +266,23 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
 
   // 영상 구간 이동
   const handleBackward = (seconds: number) => {
-    if (playerRef.current) {
-      const currentTime = playerRef.current.getCurrentTime();
-      playerRef.current.seekTo(currentTime - seconds, 'seconds');
-    }
+    if (!playerRef.current) return;
+    const current = playerRef.current.getCurrentTime();
+    const target = clampToSegment(current - seconds);
+    playerRef.current.seekTo(target, 'seconds');
   };
+
   const handleForward = (seconds: number) => {
-    if (playerRef.current) {
-      const currentTime = playerRef.current.getCurrentTime();
-      playerRef.current.seekTo(currentTime + seconds, 'seconds');
-    }
+    if (!playerRef.current) return;
+    const current = playerRef.current.getCurrentTime();
+    const target = clampToSegment(current + seconds);
+    playerRef.current.seekTo(target, 'seconds');
   };
 
   return (
     <div className="w-full max-w-4xl mx-auto">
       <div className="relative w-full rounded-t-xl overflow-hidden">
-        {/* ✅ 반응형 높이: 모바일 높이↓, 데스크톱 높이↑ */}
+        {/* 반응형 높이: 모바일 높이↓, 데스크톱 높이↑ */}
         <div className="w-full pt-[72%] xs:pt-[68%] sm:pt-[62%] md:pt-[56.25%] lg:pt-[52%]" />
 
         {/* 실제 플레이어/오버레이는 비율 상자 위에 절대배치 */}

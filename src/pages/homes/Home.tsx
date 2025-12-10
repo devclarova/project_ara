@@ -67,7 +67,7 @@ export default function Home({ searchQuery }: HomeProps) {
   const PAGE_SIZE = 10;
   const [myProfileId, setMyProfileId] = useState<string | null>(null);
 
-  // ✅ SNS 상세 → /sns 복귀 시: 마지막으로 클릭한 카드 위치로 복원
+  // SNS 상세 → /sns 복귀 시: 마지막으로 클릭한 카드 위치로 복원
   useLayoutEffect(() => {
     if (restoredRef.current) return;
     if (loading) return;
@@ -206,7 +206,7 @@ export default function Home({ searchQuery }: HomeProps) {
     }
   };
 
-  // 🔥 초기 로드 + 검색어 변경 시 처리
+  // 초기 로드 + 검색어 변경 시 처리
   useEffect(() => {
     // 1) 검색 중일 때는 캐시를 무시하고 항상 새로 검색
     if (isSearching) {
@@ -319,7 +319,7 @@ export default function Home({ searchQuery }: HomeProps) {
     };
   }, [myProfileId]);
 
-  // 🔥 언마운트 시 현재 피드를 전역 캐시에 저장 (이건 별도 useEffect로!)
+  // 언마운트 시 현재 피드를 전역 캐시에 저장 (이건 별도 useEffect로!)
   useEffect(() => {
     return () => {
       // 검색 중인 상태에서는 캐시로 안 씀
@@ -341,7 +341,7 @@ export default function Home({ searchQuery }: HomeProps) {
 
   return (
     <div className="border-x border-gray-200 dark:border-gray-700 dark:bg-background">
-      {/* ✅ 검색 중이 아닐 때만 글쓰기 박스 보여주기 */}
+      {/* 검색 중이 아닐 때만 글쓰기 박스 보여주기 */}
       {!isSearching && (
         <SnsInlineEditor
           mode="tweet"

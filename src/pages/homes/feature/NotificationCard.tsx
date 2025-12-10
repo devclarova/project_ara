@@ -22,9 +22,14 @@ interface NotificationCardProps {
     replyId?: string | null;
   };
   onMarkAsRead?: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
-export default function NotificationCard({ notification, onMarkAsRead }: NotificationCardProps) {
+export default function NotificationCard({
+  notification,
+  onMarkAsRead,
+  onDelete,
+}: NotificationCardProps) {
   const navigate = useNavigate();
 
   const getInteractionIcon = (type: string) => {
@@ -86,7 +91,7 @@ export default function NotificationCard({ notification, onMarkAsRead }: Notific
     ? 'relative bg-primary/10 dark:bg-primary/20 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary'
     : '';
 
-  // ✅ "삭제된 댓글"로 취급해야 하는 알림인지 판별
+  // "삭제된 댓글"로 취급해야 하는 알림인지 판별
   // 1) type === 'comment' 이면서 replyId 없음 → 원래 댓글 알림인데 댓글이 삭제된 케이스
   // 2) type === 'like' 이면서:
   //    - replyId 없음
@@ -112,17 +117,15 @@ export default function NotificationCard({ notification, onMarkAsRead }: Notific
     // 게시글 자체가 삭제된 경우: 이동하지 않고 여기서 토스트
     if (!notification.tweetId) {
       toast.info('삭제된 게시글입니다.');
+      onDelete?.(notification.id);
       return;
     }
 
-    // ✅ "삭제된 댓글"로 판단되는 알림이면:
+    // "삭제된 댓글"로 판단되는 알림이면:
     //    → 게시글 상세로 이동 + 디테일 페이지에서 '삭제된 댓글입니다.' 토스트
     if (isDeletedCommentNotification) {
-      navigate(`/sns/${notification.tweetId}`, {
-        state: {
-          deletedComment: true,
-        },
-      });
+      toast.info('삭제된 댓글입니다.');
+      onDelete?.(notification.id);
       return;
     }
 

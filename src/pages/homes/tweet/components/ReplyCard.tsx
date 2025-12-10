@@ -11,16 +11,18 @@ import TranslateButton from '@/components/common/TranslateButton';
 export function ReplyCard({
   reply,
   onDeleted,
+  onUnlike,
   highlight = false,
 }: {
   reply: Reply;
   onDeleted?: (id: string) => void;
+  onUnlike?: (id: string) => void;
   highlight?: boolean;
 }) {
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
 
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(reply.liked ?? false);
   const [likeCount, setLikeCount] = useState(reply.stats.likes);
   const [showMenu, setShowMenu] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
@@ -173,6 +175,10 @@ export function ReplyCard({
 
         setLiked(false);
         setLikeCount(prev => Math.max(0, prev - 1));
+
+        // 좋아요 탭에서 좋아요 취소하면 즉시 목록에서 제거
+        onUnlike?.(reply.id);
+
         return;
       }
 
@@ -187,7 +193,7 @@ export function ReplyCard({
       setLiked(true);
       setLikeCount(prev => prev + 1);
 
-      // // 🔔 알림 생성 (본인 댓글이 아닐 때만)
+      // 알림 생성 (본인 댓글이 아닐 때만)
       // if (reply.user.username !== authUser.id) {
       //   // 댓글 작성자 프로필 찾기
       //   const { data: receiverProfile, error: receiverError } = await supabase
@@ -249,7 +255,19 @@ export function ReplyCard({
   })();
 
   return (
-    <div id={`reply-${reply.id}`} className={containerClasses}>
+    <div
+      id={`reply-${reply.id}`}
+      className={containerClasses + ' cursor-pointer'}
+      onClick={e => {
+        e.stopPropagation();
+        navigate(`/sns/${reply.tweetId}`, {
+          state: {
+            highlightCommentId: reply.id,
+            scrollKey: Date.now(),
+          },
+        });
+      }}
+    >
       <div className="flex space-x-3">
         <div onClick={handleAvatarClick} className="cursor-pointer">
           <Avatar>

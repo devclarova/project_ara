@@ -37,7 +37,7 @@ interface Tweet {
 
 interface TweetDetailCardProps {
   tweet: Tweet;
-  replyCount: number; // ✅ 상세 페이지에서 내려주는 실시간 댓글 수
+  replyCount: number; // 상세 페이지에서 내려주는 실시간 댓글 수
 }
 
 export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardProps) {
@@ -53,7 +53,7 @@ export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardPr
   const [profileId, setProfileId] = useState<string | null>(null);
   const [currentImage, setCurrentImage] = useState(0);
   const [translated, setTranslated] = useState<string>('');
-    
+
   const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
   const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
   const handleBackClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -66,7 +66,7 @@ export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardPr
     navigate(`/profile/${encodeURIComponent(tweet.user.name)}`);
   };
 
-  // ✅ replies 는 외부에서 받은 값 우선 사용
+  // replies 는 외부에서 받은 값 우선 사용
   const normalizedStats = {
     replies:
       typeof replyCount === 'number'
@@ -307,7 +307,7 @@ export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardPr
       <div className="mt-4">
         {hasText && (
           <div
-            className="text-gray-900 dark:text-gray-100 text-xl leading-relaxed break-words"
+            className="text-gray-900 dark:text-gray-100 text-xl leading-relaxed break-words whitespace-pre-line"
             dangerouslySetInnerHTML={{ __html: safeContent }}
           />
         )}
@@ -362,7 +362,7 @@ export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardPr
 
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-start gap-8 text-sm text-gray-500 dark:text-gray-400">
-          {/* ✅ 댓글 수: 항상 replyCount 기반 */}
+          {/* 댓글 수: 항상 replyCount 기반 */}
           <button className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400 transition-colors group">
             <div className="p-2 rounded-full group-hover:bg-primary/10 dark:group-hover:bg-primary/15 transition-colors">
               <i className="ri-chat-3-line text-lg" />
