@@ -8,6 +8,8 @@ import { useEffect, useMemo, useRef, useState, useCallback, memo } from 'react';
 import { useDirectChat } from '../../../contexts/DirectChatContext';
 import type { DirectMessage } from '../../../types/ChatType';
 import MessageInput from '../common/MessageInput';
+import TranslateButton from '@/components/common/TranslateButton';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface MessageGroup {
   [date: string]: DirectMessage[];
@@ -15,11 +17,11 @@ interface MessageGroup {
 
 interface DirectChatRoomProps {
   chatId: string;
-  isMobile?: boolean;
+  isMobile: boolean | null;
   onBackToList?: () => void;
 }
 
-// 🚀 전역 이미지 캐시
+// 전역 이미지 캐시
 const imageCache = new Map<string, string>();
 const loadingImages = new Map<string, Promise<string>>();
 
@@ -50,7 +52,7 @@ const loadImage = (url: string): Promise<string> => {
   return promise;
 };
 
-// 🚀 LazyImage 최적화
+// LazyImage 최적화
 const LazyImage = memo(
   ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
     const [loaded, setLoaded] = useState(() => imageCache.has(src));
@@ -107,7 +109,7 @@ const CachedAvatar = memo(
 );
 CachedAvatar.displayName = 'CachedAvatar';
 
-// 🚀 메시지 아이템 최적화
+// 메시지 아이템 최적화
 const MessageItem = memo(
   ({
     message,
@@ -122,6 +124,7 @@ const MessageItem = memo(
   }) => {
     const isMyMessage = message.sender_id === currentUserId;
     const isSystemMessage = message.content?.includes('님이 채팅방을 나갔습니다');
+    const [translated, setTranslated] = useState<string>('');
 
     const formatTime = useCallback(
       (dateString: string) =>
@@ -174,9 +177,27 @@ const MessageItem = memo(
                 nickname={message.sender?.nickname || '?'}
               />
             </div>
-            <div className="message-bubble">
-              <div className="message-text">{message.content}</div>
-              <div className="message-time">{formatTime(message.created_at)}</div>
+
+            <div className="message-bubble relative px-3 py-2">
+              {/* 원문 */}
+              <div className="message-text whitespace-pre-line break-words">{message.content}</div>
+
+              {/* 번역 결과 (말풍선 안쪽에서 자연스럽게 아래에 붙음) */}
+              {translated && (
+                <div className="mt-2 p-2 rounded-lg text-sm bg-gray-100 dark:bg-gray-800 dark:text-gray-400 whitespace-pre-line break-words">
+                  {translated}
+                </div>
+              )}
+
+              {/* 번역 버튼 - 말풍선 오른쪽 상단에 고정 (예쁘게 배치됨) */}
+              <TranslateButton
+                text={message.content}
+                contentId={`dm_${message.id}`}
+                setTranslated={setTranslated}
+              />
+
+              {/* 시간 */}
+              <div className="message-time mt-1">{formatTime(message.created_at)}</div>
             </div>
           </>
         )}
@@ -197,6 +218,8 @@ MessageItem.displayName = 'MessageItem';
 const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps) => {
   const { messages, error, loadMessages, currentChat, exitDirectChat } = useDirectChat();
 
+  if (isMobile === null) return null;
+
   const messageEndRef = useRef<HTMLDivElement>(null);
   const previousMessageCount = useRef<number>(0);
   const isInitialLoad = useRef<boolean>(true);
@@ -206,22 +229,10 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [currentResultIndex, setCurrentResultIndex] = useState(0);
   const [hasSearched, setHasSearched] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string>('');
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
-  // 🚀 현재 유저 ID 가져오기
-  useEffect(() => {
-    const getCurrentUserId = async () => {
-      try {
-        const { supabase } = await import('../../../lib/supabase');
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (user) setCurrentUserId(user.id);
-      } catch {}
-    };
-    getCurrentUserId();
-  }, []);
+  const { user } = useAuth();
+  const currentUserId = user?.id ?? '';
 
   const scrollToBottom = useCallback((force = false) => {
     requestAnimationFrame(() => {
@@ -242,7 +253,7 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
     });
   }, []);
 
-  // 🚀 메시지 변경 시 스크롤
+  // 메시지 변경 시 스크롤
   useEffect(() => {
     if (messages.length > 0) {
       if (isInitialLoad.current) {
@@ -255,7 +266,7 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
     }
   }, [messages, scrollToBottom]);
 
-  // 🚀 채팅방 변경 시 로드 최적화
+  // 채팅방 변경 시 로드 최적화
   useEffect(() => {
     if (!chatId) return;
 
@@ -282,7 +293,7 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
       : date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
   }, []);
 
-  // 🚀 메시지 그룹핑 최적화
+  // 메시지 그룹핑 최적화
   const messageGroups = useMemo(() => {
     const groups: MessageGroup = {};
     messages.forEach(message => {

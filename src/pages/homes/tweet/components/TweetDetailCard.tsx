@@ -9,6 +9,7 @@ import ModalImageSlider from './ModalImageSlider';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import TranslateButton from '@/components/common/TranslateButton';
 
 interface User {
   name: string;
@@ -51,10 +52,10 @@ export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardPr
   const [modalIndex, setModalIndex] = useState(0);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [currentImage, setCurrentImage] = useState(0);
-
+  const [translated, setTranslated] = useState<string>('');
+    
   const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
   const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
-
   const handleBackClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     navigate(-1);
@@ -166,6 +167,13 @@ export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardPr
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ')
     .trim();
+
+  // 택스트만 번역
+  const plainTextContent = (() => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = safeContent;
+    return tmp.textContent || tmp.innerText || '';
+  })();
 
   // 내가 이 트윗에 좋아요 눌렀는지 초기 로드
   useEffect(() => {
@@ -304,6 +312,25 @@ export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardPr
           />
         )}
 
+        {/* 번역 버튼 */}
+        {plainTextContent.trim().length > 0 && (
+          <div className="mt-2">
+            <TranslateButton
+              text={plainTextContent}
+              contentId={`tweet_${tweet.id}`}
+              setTranslated={setTranslated}
+            />
+          </div>
+        )}
+
+        {/* 번역 결과 */}
+        {translated && (
+          <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 rounded-lg text-sm whitespace-pre-line break-words">
+            {translated}
+          </div>
+        )}
+
+        {/* 이미지 슬라이더 */}
         {allImages.length > 0 && (
           <ImageSlider
             allImages={allImages}

@@ -10,7 +10,7 @@ function DirectChatPage() {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const { markChatAsRead } = useNewChatNotification();
 
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
   const [showListOnMobile, setShowListOnMobile] = useState(true);
   const { resetCurrentChat } = useDirectChat();
 
@@ -18,13 +18,28 @@ function DirectChatPage() {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      if (!mobile) setShowListOnMobile(true);
-      else setShowListOnMobile(!selectedChatId);
+      if (!mobile) {
+        setShowListOnMobile(true);
+      }
     };
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [selectedChatId]);
+  }, []);
+
+  useEffect(() => {
+    const restore = () => {
+      if (!document.hidden) {
+        // 화면에 돌아왔을 때 데스크탑이면 리스트 강제 표시
+        if (!isMobile) {
+          setShowListOnMobile(true);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', restore);
+    return () => document.removeEventListener('visibilitychange', restore);
+  }, [isMobile]);
 
   const handleChatSelect = (chatId: string) => {
     setSelectedChatId(chatId);
@@ -45,16 +60,25 @@ function DirectChatPage() {
     [resetCurrentChat],
   );
 
-  const { user } = useAuth();
   useEffect(() => {
-    // 계정 바뀌면 선택 해제 + 모바일에선 리스트 화면으로
+    if (isMobile) {
+      setShowListOnMobile(!selectedChatId);
+    }
+  }, [selectedChatId, isMobile]);
+
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user?.id) return;
+
     setSelectedChatId(null);
     resetCurrentChat();
+
     if (isMobile) setShowListOnMobile(true);
-  }, [user?.id]);
+  }, [user?.id, isMobile]);
 
   return (
-    // 🔹 SNS 레이아웃과 비슷하게: 바깥은 Tailwind, 안쪽은 CSS 모듈
+    // SNS 레이아웃과 비슷하게: 바깥은 Tailwind, 안쪽은 CSS 모듈
     <div className=" bg-white dark:bg-background overflow-x-hidden">
       <div className="flex justify-center">
         <div className="w-full max-w-6xl px-4 sm:px-5 lg:px-6">

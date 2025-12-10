@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { useState } from 'react';
 
 type ImageSliderProps = {
   allImages: string[];
@@ -17,6 +18,29 @@ export default function ImageSlider({
   direction,
   onOpen,
 }: ImageSliderProps) {
+  const [startX, setStartX] = useState(0);
+  const [dragged, setDragged] = useState(false);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setStartX(e.clientX);
+    setDragged(false);
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    const diff = Math.abs(e.clientX - startX);
+
+    // 움직임이 있으면 → 드래그
+    if (diff > 5) {
+      setDragged(true);
+      return;
+    }
+
+    // 움직임 거의 없음 → 클릭
+    if (!dragged) {
+      onOpen?.(currentImage);
+    }
+  };
+
   return (
     <div
       className="mt-3 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 relative"
@@ -34,11 +58,9 @@ export default function ImageSlider({
           <motion.img
             key={allImages[currentImage]}
             src={allImages[currentImage]}
-            onClick={e => {
-              e.preventDefault();
-              e.stopPropagation();
-              onOpen?.(currentImage);
-            }}
+            // 드래그 vs 클릭 판단
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
             draggable={false}
             className="absolute w-full h-full object-cover"
             custom={direction}
@@ -66,6 +88,10 @@ export default function ImageSlider({
               } else if (info.offset.x > threshold && currentImage > 0) {
                 setDirection(-1);
                 setCurrentImage(prev => prev - 1);
+              }
+              // 드래그로 판단
+              if (Math.abs(info.offset.x) > 5) {
+                setDragged(true);
               }
             }}
           />

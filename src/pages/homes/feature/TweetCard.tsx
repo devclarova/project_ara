@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import ImageSlider from '../tweet/components/ImageSlider';
 import ModalImageSlider from '../tweet/components/ModalImageSlider';
+import TranslateButton from '@/components/common/TranslateButton';
 
 const SNS_LAST_TWEET_ID_KEY = 'sns-last-tweet-id';
 
@@ -59,7 +60,7 @@ export default function TweetCard({
   const [direction, setDirection] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalIndex, setModalIndex] = useState(0);
-
+  const [translated, setTranslated] = useState<string>('');
   const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
   const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
   const [authorProfileId, setAuthorProfileId] = useState<string | null>(null);
@@ -67,7 +68,7 @@ export default function TweetCard({
   const [replyCount, setReplyCount] = useState(stats.replies ?? 0);
   const [likeCount, setLikeCount] = useState(stats.likes ?? 0);
 
-  const images = Array.isArray(image) ? image : image ? [image] : [];
+  // const images = Array.isArray(image) ? image : image ? [image] : [];
 
   /** 로그인한 프로필 ID 로드 (트윗 삭제/좋아요용) */
   useEffect(() => {
@@ -237,7 +238,7 @@ export default function TweetCard({
   // 최종 슬라이드에 사용할 이미지 목록 (prop 우선, 없으면 content에서 추출한 것)
   const allImages = propImages.length > 0 ? propImages : contentImages;
 
-  // 본문에서는 img 태그는 제거 (슬라이드에서만 보여줄 거라)
+  // 본문에서는 img 태그는 제거 (슬라이드에서만 보여줌)
   const safeContent = DOMPurify.sanitize(content, {
     FORBID_TAGS: ['img'],
   });
@@ -351,7 +352,7 @@ export default function TweetCard({
 
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-
+      
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, id);
     }
@@ -380,6 +381,13 @@ export default function TweetCard({
     if (showImageModal) return;
     handleCardClick();
   };
+
+  // 택스트만 번역
+  const plainTextContent = (() => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = safeContent;
+    return tmp.textContent || tmp.innerText || '';
+  })();
 
   return (
     <div
@@ -462,6 +470,26 @@ export default function TweetCard({
 
           <div className={contentClass} dangerouslySetInnerHTML={{ __html: safeContent }} />
 
+
+          {/* 번역 버튼 */}
+          {plainTextContent.trim().length > 0 && (
+            <div className="mt-2">
+              <TranslateButton
+                text={plainTextContent}
+                contentId={`tweet_${id}`}
+                setTranslated={setTranslated}
+              />
+            </div>
+          )}
+
+          {/* 번역 결과 */}
+          {translated && (
+            <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 rounded-lg text-sm whitespace-pre-line break-words">
+              {translated}
+            </div>
+          )}
+
+          {/* 이미지 슬라이드 */}
           {allImages.length > 0 && (
             <ImageSlider
               allImages={allImages}
