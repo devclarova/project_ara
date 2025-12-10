@@ -11,6 +11,30 @@ export default function TranslateButton({ text, contentId, setTranslated }: Tran
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
+  // 사용자 타겟 언어 가져오기
+  const getUserTargetLang = async () => {
+    const authUser = (await supabase.auth.getUser()).data.user;
+    if (!authUser) return 'en';
+
+    // profiles.country = country_id (예: 106)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('country')
+      .eq('user_id', authUser.id)
+      .maybeSingle();
+
+    if (!profile?.country) return 'en';
+
+    // country_id 로 countries 테이블 조회
+    const { data: countryRow } = await supabase
+      .from('countries')
+      .select('language_code, name')
+      .eq('id', profile.country)
+      .maybeSingle();
+
+    return countryRow?.language_code || 'en';
+  };
+
   // 의미 없는 문자 감지
   const detectLanguage = async (inputText: string) => {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -41,8 +65,8 @@ export default function TranslateButton({ text, contentId, setTranslated }: Tran
     return data.choices?.[0]?.message?.content?.trim() || 'invalid';
   };
 
+  // 번역 처리
   const handleTranslate = async () => {
-    // 토글 OFF → 번역 숨기기
     if (isOpen) {
       setIsOpen(false);
       setTranslated('');
@@ -50,42 +74,53 @@ export default function TranslateButton({ text, contentId, setTranslated }: Tran
     }
 
     setIsOpen(true);
-
     if (!text.trim()) return;
-
     setIsLoading(true);
 
     try {
-      // 1) Supabase에서 기존 번역 조회 (캐시 확인)
+      const authUser = (await supabase.auth.getUser()).data.user;
+      const userId = authUser?.id;
+
+      // (1) 타깃 언어 가져오기
+      const targetLang = await getUserTargetLang();
+
+      // (2) 캐시 확인
       const { data: existing } = await supabase
         .from('translations')
         .select('translated_text')
         .eq('content_id', contentId)
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('user_id', userId)
+        .eq('target_lang', targetLang) // 언어가 다르면 캐시 무효
         .maybeSingle();
 
-      // ▶ 기존 번역 존재 → 바로 적용 (API 비용 0원)
       if (existing) {
         setTranslated(existing.translated_text);
         return;
       }
 
-      // 2) 의미 없는 문자 감지
+      // (3) 의미 없는 문장 검출
       const validation = await detectLanguage(text);
-
       if (validation !== 'valid') {
-        setTranslated('❗ 의미를 파악할 수 없어 번역할 수 없는 문장입니다.');
+        setTranslated('의미를 파악할 수 없어 번역할 수 없는 문장입니다.');
         return;
       }
 
-      // 3) URL placeholder 처리
+      // (4) URL placeholder 처리
       const urls = text.match(/https?:\/\/\S+/g) || [];
       let replacedText = text;
       urls.forEach((url, index) => {
         replacedText = replacedText.replace(url, `<URL_${index}>`);
       });
 
-      // 4) 번역 API 호출
+      // (5) 번역 API 요청
+      const systemPrompt = `
+너는 전문 번역가다.
+사용자의 국가 언어 코드: "${targetLang}"
+텍스트를 반드시 이 언어("${targetLang}")로 번역하라.
+<URL_n> 패턴은 절대 변경 금지.
+설명 없이 번역만 출력하라.
+      `;
+
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -95,17 +130,10 @@ export default function TranslateButton({ text, contentId, setTranslated }: Tran
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           messages: [
-            {
-              role: 'system',
-              content: `
-너는 번역가다.
-<URL_n> 패턴은 절대 번역하지 말고 그대로 두어라.
-설명 없이 번역만 출력한다.
-              `,
-            },
+            { role: 'system', content: systemPrompt },
             { role: 'user', content: replacedText },
           ],
-          max_tokens: 200,
+          max_tokens: 500,
         }),
       });
 
@@ -119,21 +147,24 @@ export default function TranslateButton({ text, contentId, setTranslated }: Tran
         translatedText = translatedText.replace(`<URL_${index}>`, url);
       });
 
-      // 5) 번역 결과 Supabase 저장
-      const user = (await supabase.auth.getUser()).data.user;
+      // (6) 번역 결과 저장
+      await supabase.from('translations').upsert(
+        {
+          user_id: userId,
+          content_id: contentId,
+          original_text: text,
+          translated_text: translatedText,
+          target_lang: targetLang,
+        },
+        {
+          onConflict: 'user_id,content_id,target_lang',
+        },
+      );
 
-      await supabase.from('translations').insert({
-        user_id: user?.id,
-        content_id: contentId,
-        original_text: text,
-        translated_text: translatedText,
-      });
-
-      // 6) UI에 반영
       setTranslated(translatedText);
     } catch (err) {
       console.error(err);
-      setTranslated('번역 중 문제가 발생했습니다. 다시 시도해주세요.');
+      setTranslated('번역 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }
