@@ -404,7 +404,7 @@ export default function TweetCard({
 
           {/* 번역 결과 */}
           {translated && (
-            <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm whitespace-pre-line break-words">
+            <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 rounded-lg text-sm whitespace-pre-line break-words">
               {translated}
             </div>
           )}

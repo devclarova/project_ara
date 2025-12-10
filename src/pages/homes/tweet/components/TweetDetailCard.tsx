@@ -2,13 +2,14 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge'; // ✅ 추가
+import { Badge } from '@/components/ui/badge'; // 추가
 import DOMPurify from 'dompurify';
 import ImageSlider from './ImageSlider';
 import ModalImageSlider from './ModalImageSlider';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import TranslateButton from '@/components/common/TranslateButton';
 
 interface User {
   name: string;
@@ -50,12 +51,13 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
   const [modalIndex, setModalIndex] = useState(0);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [currentImage, setCurrentImage] = useState(0);
+  const [translated, setTranslated] = useState<string>('');
 
-  // ✅ 트윗 작성자의 국기/국가명
+  // 트윗 작성자의 국기/국가명
   const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
   const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
 
-  // ✅ 뒤로가기 버튼
+  // 뒤로가기 버튼
   const handleBackClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     navigate(-1);
@@ -89,7 +91,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
     loadProfileId();
   }, [authUser]);
 
-  // ✅ 트윗 작성자 프로필 → country(id) → countries에서 국기 URL/이름 가져오기
+  // 트윗 작성자 프로필 → country(id) → countries에서 국기 URL/이름 가져오기
   useEffect(() => {
     const fetchAuthorCountry = async () => {
       try {
@@ -167,6 +169,13 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
     .replace(/&nbsp;/g, ' ')
     .trim();
 
+  // 택스트만 번역
+  const plainTextContent = (() => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = safeContent;
+    return tmp.textContent || tmp.innerText || '';
+  })();
+
   // 내가 이 트윗에 좋아요 눌렀는지 초기 로드
   useEffect(() => {
     if (!authUser || !profileId) return;
@@ -184,7 +193,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
           setLiked(true);
         }
       } catch (err) {
-        console.error('❌ 트윗 좋아요 상태 조회 실패:', err);
+        console.error('트윗 좋아요 상태 조회 실패:', err);
       }
     };
 
@@ -211,7 +220,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
         .maybeSingle();
 
       if (existingError) {
-        console.error('❌ 트윗 좋아요 조회 실패:', existingError.message);
+        console.error('트윗 좋아요 조회 실패:', existingError.message);
       }
 
       if (existing) {
@@ -244,7 +253,7 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
 
   return (
     <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-6 bg-white dark:bg-background">
-      {/* ✅ 상단: 뒤로가기 버튼 + 아바타 + 이름/국기/시간 */}
+      {/* 상단: 뒤로가기 버튼 + 아바타 + 이름/국기/시간 */}
       <div className="flex items-start space-x-3">
         {/* 뒤로가기 버튼: 아바타와 분리, 클릭 영역 안 겹치도록 여백 확보 */}
         <button
@@ -311,6 +320,24 @@ export default function TweetDetailCard({ tweet }: TweetDetailCardProps) {
             className="text-gray-900 dark:text-gray-100 text-xl leading-relaxed break-words"
             dangerouslySetInnerHTML={{ __html: safeContent }}
           />
+        )}
+
+        {/* 번역 버튼 */}
+        {plainTextContent.trim().length > 0 && (
+          <div className="mt-2">
+            <TranslateButton
+              text={plainTextContent}
+              contentId={`tweet_${tweet.id}`}
+              setTranslated={setTranslated}
+            />
+          </div>
+        )}
+
+        {/* 번역 결과 */}
+        {translated && (
+          <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 rounded-lg text-sm whitespace-pre-line break-words">
+            {translated}
+          </div>
         )}
 
         {/* 이미지 슬라이더 */}

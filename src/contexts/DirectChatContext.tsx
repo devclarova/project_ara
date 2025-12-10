@@ -76,13 +76,13 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
   const currentUserId = user?.id;
   const { setUnreadCount } = useNewChatNotification();
 
-  // 🚀 chats를 ref로 관리 (의존성 배열에서 제거하기 위함)
+  // chats를 ref로 관리 (의존성 배열에서 제거하기 위함)
   const chatsRef = useRef<ChatListItem[]>([]);
   useEffect(() => {
     chatsRef.current = chats;
   }, [chats]);
 
-  // 🚀 loadChats 디바운스 (중복 호출 방지)
+  // loadChats 디바운스 (중복 호출 방지)
   const loadChatsTimeoutRef = useRef<number | null>(null);
   const isLoadingChatsRef = useRef(false);
 
@@ -96,7 +96,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     setMessages([]);
   }, []);
 
-  // 🚀 채팅 목록 로드 (디바운스 적용)
+  // 채팅 목록 로드 (디바운스 적용)
   const loadChats = useCallback(async () => {
     if (isLoadingChatsRef.current) return;
 
@@ -143,7 +143,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     }
   }, []);
 
-  // 🚀 loadMessages - chats 의존성 제거, ref 사용
+  // loadMessages - chats 의존성 제거, ref 사용
   const loadMessages = useCallback(
     async (chatId: string) => {
       try {
@@ -334,7 +334,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     setError(null);
   }, []);
 
-  // 🚀 Realtime: 단일 채널로 통합
+  // Realtime: 단일 채널로 통합
   useEffect(() => {
     if (!currentUserId) return;
 
@@ -370,9 +370,11 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
 
           if (currentChatId.current === chatId) {
             setMessages(prev => {
-              const exists = prev.some(msg => msg.id === newMessage.id);
+              const exists = prev.some(msg => String(msg.id) === String(newMessage.id));
               if (exists) return prev;
-              return [...prev, newMessage as DirectMessage];
+              return [...prev, newMessage].sort(
+                (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+              );
             });
 
             if (senderId !== currentUserId) {
@@ -399,7 +401,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     };
   }, [currentUserId, loadChats]);
 
-  // 🚀 초기 로드 - 딱 한번만
+  // 초기 로드 - 딱 한번만
   const initialLoadDone = useRef(false);
   useEffect(() => {
     if (!currentUserId || initialLoadDone.current) return;

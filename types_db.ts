@@ -194,6 +194,7 @@ export type Database = {
           flag_url: string | null
           id: number
           iso_code: string | null
+          language_code: string | null
           name: string
           phone_code: number
         }
@@ -202,6 +203,7 @@ export type Database = {
           flag_url?: string | null
           id?: number
           iso_code?: string | null
+          language_code?: string | null
           name: string
           phone_code: number
         }
@@ -210,6 +212,7 @@ export type Database = {
           flag_url?: string | null
           id?: number
           iso_code?: string | null
+          language_code?: string | null
           name?: string
           phone_code?: number
         }
@@ -1057,6 +1060,7 @@ export type Database = {
           created_at: string
           id: number
           original_text: string
+          target_lang: string | null
           translated_text: string
           user_id: string
         }
@@ -1065,6 +1069,7 @@ export type Database = {
           created_at?: string
           id?: number
           original_text: string
+          target_lang?: string | null
           translated_text: string
           user_id: string
         }
@@ -1073,6 +1078,7 @@ export type Database = {
           created_at?: string
           id?: number
           original_text?: string
+          target_lang?: string | null
           translated_text?: string
           user_id?: string
         }
@@ -1739,11 +1745,11 @@ export type Database = {
       }
       hhmmss_to_seconds: { Args: { t: string }; Returns: number }
       increment_tweet_view:
+        | { Args: { tweet_id_input: string }; Returns: undefined }
         | {
             Args: { tweet_id_input: string; viewer_id_input: string }
             Returns: undefined
           }
-        | { Args: { tweet_id_input: string }; Returns: undefined }
       increment_video_view: { Args: { _video_id: number }; Returns: number }
       is_admin: { Args: never; Returns: boolean }
       load_wordlists: {
@@ -1753,8 +1759,8 @@ export type Database = {
       mark_offline: { Args: never; Returns: undefined }
       mark_online: { Args: never; Returns: undefined }
       nickname_exists:
-        | { Args: { _lang: string; _nickname: string }; Returns: boolean }
         | { Args: { _nickname: string }; Returns: boolean }
+        | { Args: { _lang: string; _nickname: string }; Returns: boolean }
       normalize_nickname: { Args: { txt: string }; Returns: string }
       normalize_profanity: { Args: { txt: string }; Returns: string }
       record_login: { Args: never; Returns: undefined }

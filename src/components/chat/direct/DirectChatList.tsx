@@ -14,7 +14,7 @@ interface DirectChatListProps {
   selectedChatId?: string;
 }
 
-// 🚀 채팅 아이템 메모이제이션
+// 채팅 아이템 메모이제이션
 const ChatItem = memo(
   ({
     chat,
@@ -89,7 +89,7 @@ const ChatItem = memo(
 );
 ChatItem.displayName = 'ChatItem';
 
-// 🚀 사용자 검색 아이템 메모이제이션
+// 사용자 검색 아이템 메모이제이션
 const UserItem = memo(
   ({ user, onSelect }: { user: ChatUser; onSelect: (user: ChatUser) => void }) => {
     return (
@@ -117,7 +117,7 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [showUserSearch, setShowUserSearch] = useState<boolean>(false);
 
-  // 🚀 디바운스 개선 (useRef + cleanup)
+  // 디바운스 개선 (useRef + cleanup)
   const debounceRef = useRef<number | null>(null);
 
   useEffect(() => {
