@@ -63,10 +63,14 @@ export default function TweetCard({
   const [translated, setTranslated] = useState<string>('');
   const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
   const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
+  const [authorProfileId, setAuthorProfileId] = useState<string | null>(null);
+
+  const [replyCount, setReplyCount] = useState(stats.replies ?? 0);
+  const [likeCount, setLikeCount] = useState(stats.likes ?? 0);
 
   // const images = Array.isArray(image) ? image : image ? [image] : [];
 
-  /** 로그인한 프로필 ID 로드 */
+  /** 로그인한 프로필 ID 로드 (트윗 삭제/좋아요용) */
   useEffect(() => {
     const loadProfile = async () => {
       if (!authUser) return;
@@ -85,7 +89,7 @@ export default function TweetCard({
     loadProfile();
   }, [authUser]);
 
-  /** 내가 이미 좋아요한 트윗인지 확인 */
+  /** 내가 이미 좋아요한 트윗인지 확인 (user_id = profiles.id 기준) */
   useEffect(() => {
     if (!profileId || hasChecked.current) return;
     hasChecked.current = true;
@@ -136,18 +140,17 @@ export default function TweetCard({
     const imgs = Array.from(doc.querySelectorAll('img')).map(img => img.src);
 
     setContentImages(imgs);
-    setCurrentImage(0); // 트윗 바뀔 때 첫 이미지로 리셋
+    setCurrentImage(0);
   }, [content]);
 
-  /** 트윗 작성자 국적 / 국기 로드 */
+  /** 트윗 작성자 국적 / 국기 + 작성자 profileId 로드 */
   useEffect(() => {
     const fetchAuthorCountry = async () => {
       try {
-        // 1) 트윗 작성자의 프로필에서 country(id) 가져오기
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('country')
-          .eq('user_id', user.username) // 🔥 user.username = auth.user.id 로 쓰고 있으니 이 기준으로 조회
+          .select('id, country')
+          .eq('user_id', user.username)
           .maybeSingle();
 
         if (profileError) {
@@ -155,13 +158,21 @@ export default function TweetCard({
           return;
         }
 
-        if (!profile || !profile.country) {
+        if (!profile) {
+          setAuthorCountryFlagUrl(null);
+          setAuthorCountryName(null);
+          setAuthorProfileId(null);
+          return;
+        }
+
+        setAuthorProfileId(profile.id);
+
+        if (!profile.country) {
           setAuthorCountryFlagUrl(null);
           setAuthorCountryName(null);
           return;
         }
 
-        // 2) countries에서 flag_url, name 조회 (profiles.country = countries.id)
         const { data: country, error: countryError } = await supabase
           .from('countries')
           .select('name, flag_url')
@@ -189,6 +200,38 @@ export default function TweetCard({
     fetchAuthorCountry();
   }, [user.username]);
 
+  // props가 바뀔 때 동기화
+  useEffect(() => {
+    setReplyCount(stats.replies ?? 0);
+  }, [stats.replies]);
+
+  useEffect(() => {
+    setLikeCount(stats.likes ?? 0);
+  }, [stats.likes]);
+
+  // 댓글 삭제 실시간 반영
+  useEffect(() => {
+    const channel = supabase
+      .channel(`tweet-${id}-replies`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'tweet_replies',
+          filter: `tweet_id=eq.${id}`,
+        },
+        () => {
+          setReplyCount(prev => (prev > 0 ? prev - 1 : 0));
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id]);
+
   // prop 으로 온 image(string | string[]) → 배열로 정규화
   const propImages = Array.isArray(image) ? image : image ? [image] : [];
 
@@ -200,35 +243,78 @@ export default function TweetCard({
     FORBID_TAGS: ['img'],
   });
 
-  /** 좋아요 토글 */
+  /** 좋아요 토글 (user_id = profiles.id 사용 + 알림 생성) */
   const handleLikeToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!profileId) {
+    if (!authUser) {
       toast.error('로그인이 필요합니다.');
       return;
     }
+    if (!profileId) {
+      toast.error('프로필 정보가 없습니다. 다시 로그인해 주세요.');
+      return;
+    }
+
+    const likeUserId = profileId;
 
     const optimisticLiked = !liked;
     setLiked(optimisticLiked);
 
+    // 숫자도 낙관적 업데이트
+    setLikeCount(prev => {
+      const next = optimisticLiked ? prev + 1 : prev - 1;
+      return next < 0 ? 0 : next;
+    });
+
     try {
       if (optimisticLiked) {
-        const { error } = await supabase
+        // 1) 좋아요 레코드 추가
+        const { error: likeError } = await supabase
           .from('tweet_likes')
-          .insert([{ tweet_id: id, user_id: profileId }]);
-        if (error && error.code !== '23505') throw error;
+          .insert([{ tweet_id: id, user_id: likeUserId }]);
+
+        // 이미 눌렀던 경우(UNIQUE 충돌)만 조용히 무시
+        if (likeError && likeError.code !== '23505') throw likeError;
+
+        // 2) 알림 추가 (자기 글 좋아요면 알림 안 보냄, 작성자 프로필 없으면 스킵)
+        if (authorProfileId && authorProfileId !== likeUserId) {
+          const { error: notiError } = await supabase.from('notifications').insert([
+            {
+              type: 'like',
+              content: '당신의 피드를 좋아합니다.',
+              is_read: false,
+              tweet_id: id,
+              comment_id: null,
+              sender_id: likeUserId,
+              receiver_id: authorProfileId,
+            },
+          ]);
+
+          if (notiError) {
+            console.error('좋아요 알림 생성 실패:', notiError.message);
+          }
+        }
       } else {
+        // 좋아요 취소
         const { error } = await supabase
           .from('tweet_likes')
           .delete()
           .eq('tweet_id', id)
-          .eq('user_id', profileId);
+          .eq('user_id', likeUserId);
+
         if (error) throw error;
+        // 알림은 취소해도 남겨두는 정책이므로 건드리지 않음
       }
     } catch (err: any) {
       console.error('좋아요 토글 실패:', err.message);
       toast.error('좋아요 처리 중 오류가 발생했습니다.');
+
+      // 실패 시 원상복구
       setLiked(!optimisticLiked);
+      setLikeCount(prev => {
+        const next = optimisticLiked ? prev - 1 : prev + 1;
+        return next < 0 ? 0 : next;
+      });
     }
   };
 
@@ -266,8 +352,7 @@ export default function TweetCard({
 
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-
-    // 프로필로 이동할 때도 마지막으로 보고 있던 트윗 id 저장
+      
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, id);
     }
@@ -277,7 +362,6 @@ export default function TweetCard({
 
   const isMyTweet = authUser?.id === user.username;
 
-  // dimmed 상태에 따른 텍스트 클래스
   const nameClass = `
     font-bold cursor-pointer hover:underline
     ${dimmed ? 'text-gray-800 dark:text-gray-200' : 'text-gray-900 dark:text-gray-100'}
@@ -294,7 +378,7 @@ export default function TweetCard({
   `;
 
   const handleCardClickSafe = () => {
-    if (showImageModal) return; // 모달 열려있으면 상세 페이지 이동 금지
+    if (showImageModal) return;
     handleCardClick();
   };
 
@@ -322,7 +406,6 @@ export default function TweetCard({
 
         {/* 본문 */}
         <div className="flex-1 min-w-0">
-          {/* 상단 영역 (이름 + 시간 + 더보기 버튼) */}
           <div className="flex items-center justify-between relative" ref={menuRef}>
             <div className="flex items-center flex-wrap">
               <span className={nameClass} onClick={handleAvatarClick}>
@@ -333,13 +416,12 @@ export default function TweetCard({
                   <img
                     src={authorCountryFlagUrl}
                     alt={authorCountryName ?? '국가'}
-                    title={authorCountryName ?? ''} // 마우스 올리면 국가 이름 툴팁
+                    title={authorCountryName ?? ''}
                     className="w-4 h-4 rounded-sm object-cover"
                   />
                 </Badge>
               )}
 
-              {/* 2) 국기 URL은 없는데 국가 이름은 있는 경우 → 기본 아이콘 표시 */}
               {!authorCountryFlagUrl && authorCountryName && (
                 <Badge
                   variant="secondary"
@@ -354,7 +436,6 @@ export default function TweetCard({
               <span className={`${metaClass} flex-shrink-0`}>{timestamp}</span>
             </div>
 
-            {/* 더보기 버튼 */}
             <button
               onClick={e => {
                 e.stopPropagation();
@@ -365,7 +446,6 @@ export default function TweetCard({
               <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
             </button>
 
-            {/* 더보기 메뉴 */}
             {showMenu && (
               <div className="absolute right-0 top-8 w-36 bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
                 {isMyTweet ? (
@@ -388,8 +468,8 @@ export default function TweetCard({
             )}
           </div>
 
-          {/* 본문 내용 */}
           <div className={contentClass} dangerouslySetInnerHTML={{ __html: safeContent }} />
+
 
           {/* 번역 버튼 */}
           {plainTextContent.trim().length > 0 && (
@@ -424,13 +504,11 @@ export default function TweetCard({
             />
           )}
 
-          {/* 이미지 모달 */}
           {showImageModal && (
             <div
               className="fixed inset-0 bg-black/80 flex items-center justify-center z-[2000]"
               onClick={e => e.stopPropagation()}
             >
-              {/* 전체 모달 UI는 여기서 처리됨 */}
               <ModalImageSlider
                 allImages={allImages}
                 modalIndex={modalIndex}
@@ -440,7 +518,6 @@ export default function TweetCard({
             </div>
           )}
 
-          {/* 액션 버튼 */}
           <div className="flex items-center justify-between max-w-md mt-3 text-gray-500 dark:text-gray-400">
             {/* 댓글 버튼 */}
             <button
@@ -457,7 +534,7 @@ export default function TweetCard({
               <div className="p-2 rounded-full transition-colors">
                 <i className="ri-chat-3-line text-lg" />
               </div>
-              <span className="text-sm">{stats.replies ?? 0}</span>
+              <span className="text-sm">{replyCount}</span>
             </button>
 
             {/* 좋아요 버튼 */}
@@ -468,7 +545,7 @@ export default function TweetCard({
               onClick={handleLikeToggle}
             >
               <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg`} />
-              <span className="text-sm">{stats.likes ?? 0}</span>
+              <span className="text-sm">{likeCount}</span>
             </button>
 
             {/* 조회수 버튼 */}
@@ -480,7 +557,6 @@ export default function TweetCard({
         </div>
       </div>
 
-      {/* 삭제 확인 다이얼로그 */}
       {showDialog && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[1000]">
           <div

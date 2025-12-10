@@ -11,7 +11,7 @@ interface Notification {
   is_read: boolean;
   created_at: string;
   tweet_id: string | null;
-  comment_id: string | null; // DB 컬럼명은 그대로 유지
+  comment_id: string | null;
   sender: {
     name: string;
     username: string;
@@ -82,7 +82,7 @@ export default function HNotificationsPage() {
     fetchNotifications();
   }, [profileId]);
 
-  // ✅ 실시간 알림 구독
+  // 실시간 알림 구독
   useEffect(() => {
     if (!profileId) return;
     const channel = supabase
@@ -111,7 +111,7 @@ export default function HNotificationsPage() {
             is_read: newItem.is_read,
             created_at: newItem.created_at,
             tweet_id: newItem.tweet_id,
-            comment_id: newItem.comment_id,
+            comment_id: newItem.comment_id, // null 가능
             sender: sender
               ? {
                   name: sender.nickname,
@@ -122,7 +122,7 @@ export default function HNotificationsPage() {
           };
 
           setNotifications(prev => [uiItem, ...prev]);
-          toast.info('💬 새 댓글 알림이 도착했습니다!');
+          toast.info('새 알림이 도착했습니다.');
         },
       )
       .subscribe();
@@ -138,7 +138,7 @@ export default function HNotificationsPage() {
     await supabase.from('notifications').update({ is_read: true }).eq('id', id);
   };
 
-  // ✅ 전체 비우기
+  // 전체 비우기
   const handleClearAll = async () => {
     if (!profileId) return;
 
@@ -146,18 +146,17 @@ export default function HNotificationsPage() {
       const { error } = await supabase.from('notifications').delete().eq('receiver_id', profileId);
 
       if (error) {
-        console.error('❌ 알림 비우기 실패:', error.message);
+        console.error('알림 비우기 실패:', error.message);
         toast.error('알림을 비우는 중 오류가 발생했습니다.');
         return;
       }
 
       setNotifications([]);
-
       window.dispatchEvent(new Event('notifications:cleared'));
 
       toast.success('알림을 모두 비웠습니다.');
     } catch (err: any) {
-      console.error('❌ 알림 비우기 예외:', err.message);
+      console.error('알림 비우기 예외:', err.message);
       toast.error('알림을 비우는 중 오류가 발생했습니다.');
     }
   };
@@ -195,7 +194,7 @@ export default function HNotificationsPage() {
         md:min-h-[calc(100vh-97px)]
       "
       >
-        {/* 상단 헤더 + 비우기 버튼 */}
+        {/* 상단 헤더 */}
         <div
           className="
             shrink-0 
@@ -223,7 +222,7 @@ export default function HNotificationsPage() {
           )}
         </div>
 
-        {/* 콘텐츠 */}
+        {/* 알림 리스트 */}
         <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-900">
           {notifications.length > 0 ? (
             <>
@@ -243,8 +242,8 @@ export default function HNotificationsPage() {
                         ? '당신의 피드에 댓글을 남겼습니다.'
                         : n.type === 'like'
                           ? n.comment_id
-                            ? '당신의 댓글을 좋아합니다.' // 🔥 댓글 좋아요
-                            : '당신의 피드를 좋아합니다.' // 🔥 피드 좋아요
+                            ? '당신의 댓글을 좋아합니다.'
+                            : '당신의 피드를 좋아합니다.'
                           : n.content,
                     content: n.content,
                     timestamp: new Date(n.created_at).toLocaleString('ko-KR', {
@@ -255,13 +254,12 @@ export default function HNotificationsPage() {
                     }),
                     isRead: n.is_read,
                     tweetId: n.tweet_id,
-                    replyId: n.comment_id, // ✅ 여기서 replyId로 맞춰서 전달 (댓글 id / 없으면 null)
+                    replyId: n.comment_id, // null 가능
                   }}
                   onMarkAsRead={markAsRead}
                 />
               ))}
 
-              {/* 리스트 맨 아래 보더라인 */}
               <div className="h-px bg-gray-100 dark:bg-gray-900" />
             </>
           ) : (
