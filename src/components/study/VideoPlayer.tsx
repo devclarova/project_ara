@@ -212,13 +212,20 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
 
   // 누적 시청 시간 및 조회수 반영
   const handleProgress = (state: { playedSeconds: number }) => {
-    if (videoEndSec !== undefined && state.playedSeconds >= videoEndSec) {
+    const now = state.playedSeconds;
+
+    // 세그먼트 끝에 도달하면 자동 정지
+    if (segEndSec !== undefined && now >= segEndSec) {
       setPlaying(false);
       setHasStarted(false);
-      playerRef.current?.seekTo(videoStartSec ?? 0, 'seconds');
+
+      // 끝난 후 구간 시작점으로 자동 복귀
+      const startPos = segStartSec ?? videoStartSec ?? 0;
+      playerRef.current?.seekTo(startPos, 'seconds');
       return;
     }
 
+    // 조회수 기록
     if (playing && !viewRecorded) {
       setWatchTime(prev => {
         const next = prev + 0.1; // progressInterval 100ms
