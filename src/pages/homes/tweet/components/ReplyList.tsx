@@ -5,6 +5,8 @@ import DOMPurify from 'dompurify';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import ReportButton from '@/components/common/ReportButton';
+import BlockButton from '@/components/common/BlockButton';
 
 interface User {
   name: string; // nickname
@@ -58,6 +60,8 @@ function ReplyCard({
 
   // 하이라이트 상태 (잠깐 색 들어왔다 빠지는 용도)
   const [isHighlighted, setIsHighlighted] = useState(false);
+
+  const [isBlocked, setIsBlocked] = useState(false);
 
   // highlight prop이 true일 때 잠깐 하이라이트
   useEffect(() => {
@@ -288,9 +292,14 @@ function ReplyCard({
                     <span>삭제</span>
                   </button>
                 ) : (
-                  <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-2">
-                    삭제 불가
-                  </p>
+                  <>
+                    <ReportButton onClose={() => setShowMenu(false)} />
+                    <BlockButton
+                      isBlocked={isBlocked}
+                      onToggle={() => setIsBlocked(prev => !prev)}
+                      onClose={() => setShowMenu(false)}
+                    />
+                  </>
                 )}
               </div>
             )}

@@ -62,36 +62,29 @@ export default function ImageSlider({
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
             draggable={false}
-            className="absolute w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover"
             custom={direction}
             variants={{
-              enter: (d: number) => ({
-                x: d > 0 ? 40 : -40,
-              }),
-              center: { x: 0 },
-              exit: (d: number) => ({
-                x: d > 0 ? -40 : 40,
-              }),
+              enter: d => ({ x: d > 0 ? 60 : -60, opacity: 0 }),
+              center: { x: 0, opacity: 1 },
+              exit: d => ({ x: d > 0 ? -60 : 60, opacity: 0 }),
             }}
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            transition={{ duration: 0.28, ease: 'easeOut' }}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.2}
+            dragElastic={0.25}
             onDragEnd={(e, info) => {
-              const threshold = 60;
+              const threshold = 80;
+
               if (info.offset.x < -threshold && currentImage < allImages.length - 1) {
                 setDirection(1);
                 setCurrentImage(prev => prev + 1);
               } else if (info.offset.x > threshold && currentImage > 0) {
                 setDirection(-1);
                 setCurrentImage(prev => prev - 1);
-              }
-              // 드래그로 판단
-              if (Math.abs(info.offset.x) > 5) {
-                setDragged(true);
               }
             }}
           />

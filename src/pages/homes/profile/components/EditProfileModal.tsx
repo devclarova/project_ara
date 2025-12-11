@@ -15,13 +15,13 @@ interface EditProfileModalProps {
     avatar: string;
     bio: string;
     banner?: string | null;
-    country?: string | null; // 🔹 화면에 보이는 "국가 이름" (예: 대한민국)
-    countryFlagUrl?: string | null; // 🔹 현재 국기 URL
+    country?: string | null; // 화면에 보이는 "국가 이름" (예: 대한민국)
+    countryFlagUrl?: string | null; // 현재 국기 URL
   };
   onSave: (updatedProfile: any) => void;
 }
 
-// 🔹 countries 테이블 구조에 맞게 타입 수정 (id + name 기준)
+// countries 테이블 구조에 맞게 타입 수정 (id + name 기준)
 type CountryOption = {
   id: number;
   name: string;
@@ -38,7 +38,7 @@ export default function EditProfileModal({
   const [formData, setFormData] = useState({
     name: userProfile.name,
     bio: userProfile.bio ?? '',
-    // 🔹 여기서는 일단 빈 문자열로 두고, countries를 불러온 뒤에 id로 다시 채워줄 거라 상관 없음
+    // 여기서는 일단 빈 문자열로 두고, countries를 불러온 뒤에 id로 다시 채워줄 거라 상관 없음
     country: '',
   });
 
@@ -53,7 +53,7 @@ export default function EditProfileModal({
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
-  // 🔹 모달이 열릴 때마다 초기화
+  // 모달이 열릴 때마다 초기화
   useEffect(() => {
     if (isOpen) {
       setFormData(prev => ({
@@ -75,7 +75,7 @@ export default function EditProfileModal({
           setCountriesLoading(true);
           const { data, error } = await supabase
             .from('countries')
-            .select('id, name, flag, flag_url') // ✅ id + name 기준으로 수정
+            .select('id, name, flag, flag_url') // id + name 기준으로 수정
             .order('id', { ascending: true });
 
           if (error) throw error;
@@ -83,7 +83,7 @@ export default function EditProfileModal({
           const list = data || [];
           setCountries(list);
 
-          // ✅ 현재 프로필의 국가 이름(userProfile.country)에 해당하는 id를 찾아서
+          // 현재 프로필의 국가 이름(userProfile.country)에 해당하는 id를 찾아서
           //    formData.country를 그 id로 세팅 → CountrySelect가 처음부터 선택된 상태로 표시됨
           if (userProfile.country) {
             const matched = list.find(c => c.name === userProfile.country);
@@ -144,14 +144,14 @@ export default function EditProfileModal({
       let avatarUrl = userProfile.avatar;
       let bannerUrl = userProfile.banner ?? null;
 
-      // 🔹 아바타 및 배너 업로드
+      // 아바타 및 배너 업로드
       if (avatarFile) avatarUrl = await uploadImage(avatarFile, 'avatars');
       if (bannerFile) bannerUrl = await uploadImage(bannerFile, 'banners');
 
-      // 🔹 formData.country = countries.id (문자열)
+      // formData.country = countries.id (문자열)
       const selectedCountry = countries.find(c => String(c.id) === formData.country) || null;
 
-      // 🔹 Supabase 프로필 업데이트
+      // Supabase 프로필 업데이트
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -166,7 +166,7 @@ export default function EditProfileModal({
 
       if (error) throw error;
 
-      // 🔹 로컬 상태 업데이트
+      // 로컬 상태 업데이트
       const updated = {
         ...userProfile,
         name: formData.name,
@@ -178,7 +178,7 @@ export default function EditProfileModal({
       };
       onSave(updated);
 
-      // 🔹 닉네임 변경 후 URL도 새 닉네임으로 이동
+      // 닉네임 변경 후 URL도 새 닉네임으로 이동
       navigate(`/profile/${encodeURIComponent(formData.name)}`);
 
       toast.success('프로필이 성공적으로 업데이트되었습니다.');
@@ -198,7 +198,7 @@ export default function EditProfileModal({
     if (e.target === e.currentTarget) onClose();
   };
 
-  // 🔹 현재 선택된 국가의 플래그 (미리보기용)
+  // 현재 선택된 국가의 플래그 (미리보기용)
   const currentCountry = countries.find(c => String(c.id) === formData.country) || null;
   const currentFlagUrl = currentCountry?.flag_url ?? userProfile.countryFlagUrl ?? null;
   const currentFlagEmoji = currentCountry?.flag ?? null;
@@ -285,7 +285,7 @@ export default function EditProfileModal({
                 value={formData.name}
                 onChange={e => handleInputChange('name', e.target.value)}
                 maxLength={50}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-background focus:ring-2 focus:ring-primary focus:outline-none"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:text-gray-300 rounded-lg bg-white dark:bg-background focus:ring-2 focus:ring-primary focus:outline-none"
               />
               <p className="text-right text-xs text-gray-500">{formData.name.length}/50</p>
             </div>
@@ -301,15 +301,15 @@ export default function EditProfileModal({
                 maxLength={160}
                 rows={3}
                 placeholder="자기소개를 작성해보세요."
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-background focus:ring-2 focus:ring-primary focus:outline-none resize-none"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:text-gray-300 rounded-lg bg-white dark:bg-background focus:ring-2 focus:ring-primary focus:outline-none resize-none"
               />
-              <p className="text-right text-xs text-gray-500">{charCount}/160</p>
+              <p className="text-right text-xs text-gray-500 ">{charCount}/160</p>
             </div>
 
             {/* 국가 선택 (CountrySelect 사용) */}
             <div>
               <CountrySelect
-                value={formData.country} // ✅ countries.id (문자열)
+                value={formData.country} // countries.id (문자열)
                 onChange={value => handleInputChange('country', value)}
                 error={false}
               />
