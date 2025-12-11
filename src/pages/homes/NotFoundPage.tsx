@@ -11,7 +11,7 @@ export default function NotFoundPage() {
 
   return (
     <div className="relative min-h-[calc(100vh-4.75rem)] sm:min-h-[calc(100vh-5.25rem)] lg:min-h-[calc(100vh-6.25rem)] flex items-center md:items-start justify-center overflow-hidden bg-gradient-to-b from-sky-100 via-white to-sky-50 dark:from-[#020617] dark:via-[#020617] dark:to-sky-950 px-4 pt-6 sm:pt-8 lg:pt-10 pb-10">
-      {/* ✨ 부드러운 글로우 / 파도 느낌 배경 */}
+      {/* 부드러운 글로우 / 파도 느낌 배경 */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* 상단 블러 */}
         <div className="absolute -top-32 -right-10 w-64 h-64 rounded-full bg-teal-300/35 blur-3xl dark:bg-teal-500/20" />
@@ -41,7 +41,7 @@ export default function NotFoundPage() {
         draggable="false"
       />
 
-      {/* 🌊 메인 카드 (유리 느낌) */}
+      {/* 메인 카드 (유리 느낌) */}
       <motion.div
         className="relative z-10 max-w-xl w-full rounded-[2rem] border border-border/60 bg-background/80 shadow-[0_18px_55px_rgba(15,23,42,0.25)] backdrop-blur-2xl px-6 py-8 sm:px-10 sm:py-10 text-center"
         initial={{ opacity: 0, y: 26, scale: 0.96 }}
@@ -85,7 +85,7 @@ export default function NotFoundPage() {
             <span className="h-px w-6 bg-gray-200 dark:bg-gray-700" />
           </div>
           <p className="italic text-center">
-            “언젠가 이 페이지도{' '}
+            “언젠가 이 페이지도
             <span className="mx-1 font-medium text-primary dark:text-teal-300">하나의 장면</span>
             으로 채워질 거예요.”
           </p>

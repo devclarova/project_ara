@@ -126,6 +126,10 @@ export default function NotificationCard({
     if (isDeletedCommentNotification) {
       toast.info('삭제된 댓글입니다.');
       onDelete?.(notification.id);
+
+      // 댓글은 삭제됐지만 게시글은 존재 → 게시글로 이동해야 함
+      navigate(`/sns/${notification.tweetId}`);
+
       return;
     }
 

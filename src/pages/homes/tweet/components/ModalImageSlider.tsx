@@ -16,6 +16,8 @@ export default function ModalImageSlider({
 }: ModalImageSliderProps) {
   // 이동 방향 상태
   const [direction, setDirection] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [blockClick, setBlockClick] = useState(false);
 
   // ESC 로 모달 닫기
   useEffect(() => {
@@ -33,7 +35,14 @@ export default function ModalImageSlider({
     // 모달 바깥 overlay 클릭하시 닫힘
     <div
       className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] cursor-default"
-      onClick={onClose}
+      onClick={e => {
+        if (isDragging) return; // 드래그 중 → 닫힘 금지
+        if (blockClick) return; // 드래그 직후 click 버블 → 닫힘 금지
+
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
     >
       <div
         className=" relative w-[min(750px,90vw)] h-[min(90vh,900px)] bg-black/20 backdrop-blur-md flex items-center justify-center rounded-xl overflow-hidden select-none"
@@ -80,9 +89,15 @@ export default function ModalImageSlider({
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.25}
+              onDragStart={() => {
+                setIsDragging(true);
+                setBlockClick(true);
+              }}
               onDragEnd={(e, info) => {
-                const threshold = 80;
+                setIsDragging(false);
+                setTimeout(() => setBlockClick(false), 100);
 
+                const threshold = 80;
                 // 오른쪽 → 왼쪽 swipe (다음 이미지)
                 if (info.offset.x < -threshold && modalIndex < allImages.length - 1) {
                   setDirection(1);

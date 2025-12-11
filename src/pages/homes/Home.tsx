@@ -238,26 +238,33 @@ export default function Home({ searchQuery }: HomeProps) {
 
   // 실시간 업데이트 (UPDATE / INSERT / DELETE) - 여기부터는 기존 코드 그대로
   useEffect(() => {
+    if (!myProfileId) return;
+
     const updateChannel = supabase
       .channel('tweets-update-realtime')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tweets' }, payload => {
-        const updated = payload.new as any;
-        setTweets(prev =>
-          prev.map(t =>
-            t.id === updated.id
-              ? {
-                  ...t,
-                  stats: {
-                    ...t.stats,
-                    likes: updated.like_count ?? t.stats.likes,
-                    replies: updated.reply_count ?? t.stats.replies,
-                    views: updated.view_count ?? t.stats.views,
-                  },
-                }
-              : t,
-          ),
-        );
-      })
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'tweets', filter: 'id=not.is.null' },
+        payload => {
+          const updated = payload.new as any;
+
+          setTweets(prev =>
+            prev.map(t =>
+              t.id === updated.id
+                ? {
+                    ...t,
+                    stats: {
+                      ...t.stats,
+                      likes: updated.like_count ?? t.stats.likes,
+                      replies: updated.reply_count ?? t.stats.replies,
+                      views: updated.view_count ?? t.stats.views,
+                    },
+                  }
+                : t,
+            ),
+          );
+        },
+      )
       .subscribe();
 
     const insertChannel = supabase
@@ -267,6 +274,7 @@ export default function Home({ searchQuery }: HomeProps) {
         { event: 'INSERT', schema: 'public', table: 'tweets' },
         async payload => {
           const newTweetRow = payload.new as any;
+
           if (newTweetRow.author_id === myProfileId) return;
 
           const { data: profile } = await supabase
@@ -312,25 +320,56 @@ export default function Home({ searchQuery }: HomeProps) {
       })
       .subscribe();
 
+    const replyChannel = supabase
+      .channel('tweet-replies-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'tweet_replies' },
+        payload => {
+          const tweetId = payload.new.tweet_id;
+          setTweets(prev =>
+            prev.map(t =>
+              t.id === tweetId ? { ...t, stats: { ...t.stats, replies: t.stats.replies + 1 } } : t,
+            ),
+          );
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'tweet_replies' },
+        payload => {
+          const tweetId = payload.old.tweet_id;
+          setTweets(prev =>
+            prev.map(t =>
+              t.id === tweetId
+                ? { ...t, stats: { ...t.stats, replies: Math.max(t.stats.replies - 1, 0) } }
+                : t,
+            ),
+          );
+        },
+      )
+      .subscribe();
+
+    // 모든 채널 cleanup을 한 번에 처리
     return () => {
       supabase.removeChannel(updateChannel);
       supabase.removeChannel(insertChannel);
       supabase.removeChannel(deleteChannel);
+      supabase.removeChannel(replyChannel);
     };
-  }, [myProfileId]);
+  }, []);
 
-  // 언마운트 시 현재 피드를 전역 캐시에 저장 (이건 별도 useEffect로!)
   useEffect(() => {
     return () => {
-      // 검색 중인 상태에서는 캐시로 안 씀
+      // 검색 중이라면 캐시 사용 안 함
       if (isSearching) return;
 
-      SNS_FEED_CACHE = tweets;
-      SNS_FEED_HAS_MORE = hasMore;
-      SNS_FEED_PAGE = page;
+      // 뒤로가기 시 무조건 최신 데이터 fetch 되게 캐시 초기화
+      SNS_FEED_CACHE = null;
+      SNS_FEED_HAS_MORE = true;
+      SNS_FEED_PAGE = 0;
     };
-  }, [tweets, hasMore, page, isSearching]);
-
+  }, [isSearching]);
   if (loading && tweets.length === 0) {
     return (
       <div className="flex justify-center items-center py-20">
