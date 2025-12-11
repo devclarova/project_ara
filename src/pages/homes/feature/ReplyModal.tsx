@@ -1,4 +1,4 @@
-// ✅ src/pages/homes/feature/ReplyModal.tsx (수정본)
+// src/pages/homes/feature/ReplyModal.tsx (수정본)
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,7 +6,7 @@ import RichTextEditor from '../editor/RichTextEditor';
 import { toast } from 'sonner';
 
 interface ReplyModalProps {
-  tweetId: string; // ✅ 부모 트윗 ID
+  tweetId: string; // 부모 트윗 ID
   onClose: () => void;
 }
 
@@ -40,7 +40,7 @@ export default function ReplyModal({ tweetId, onClose }: ReplyModalProps) {
     try {
       let finalContent = content;
 
-      // ✅ 이미지 업로드
+      // 이미지 업로드
       if (images.length > 0) {
         const blobUrls = finalContent.match(/blob:[^"'\s]+/g) || [];
         for (let i = 0; i < blobUrls.length && i < images.length; i++) {
@@ -54,7 +54,7 @@ export default function ReplyModal({ tweetId, onClose }: ReplyModalProps) {
             .from('tweet_media')
             .upload(filePath, file, { cacheControl: '3600', upsert: false });
           if (uploadError) {
-            console.error('❌ 업로드 실패:', uploadError.message);
+            console.error('업로드 실패:', uploadError.message);
             continue;
           }
 
@@ -65,7 +65,7 @@ export default function ReplyModal({ tweetId, onClose }: ReplyModalProps) {
         }
       }
 
-      // ✅ profiles.id 조회
+      // profiles.id 조회
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
@@ -73,12 +73,12 @@ export default function ReplyModal({ tweetId, onClose }: ReplyModalProps) {
         .single();
 
       if (profileError || !profile) {
-        toast.error('⚠️ 프로필이 존재하지 않습니다.');
+        toast.error('프로필이 존재하지 않습니다.');
         setIsSubmitting(false);
         return;
       }
 
-      // ✅ 댓글 저장 (onReplyCreated 제거)
+      // 댓글 저장 (onReplyCreated 제거)
       const { error: insertError } = await supabase.from('tweet_replies').insert([
         {
           tweet_id: tweetId,
@@ -88,16 +88,16 @@ export default function ReplyModal({ tweetId, onClose }: ReplyModalProps) {
       ]);
 
       if (insertError) {
-        console.error('❌ 댓글 저장 실패:', insertError.message);
+        console.error('댓글 저장 실패:', insertError.message);
         toast.error('댓글 저장 중 오류가 발생했습니다.');
         return;
       }
 
-      // ✅ 성공 토스트만 띄우고, 나머지는 Realtime이 처리
+      // 성공 토스트만 띄우고, 나머지는 Realtime이 처리
       toast.success('댓글이 성공적으로 업로드되었습니다!');
       onClose();
     } catch (err) {
-      console.error('⚠️ 댓글 업로드 오류:', err);
+      console.error('댓글 업로드 오류:', err);
       toast.error('댓글 업로드 중 문제가 발생했습니다.');
     } finally {
       setIsSubmitting(false);

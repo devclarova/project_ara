@@ -25,7 +25,9 @@ interface Stats {
 }
 
 interface TweetCardProps {
-  id: string;
+  id: string; // 댓글ID 또는 트윗ID
+  tweetId?: string; // reply일 때 원본 트윗ID
+  type?: 'tweet' | 'reply'; // reply인지 tweet인지 구분
   user: User;
   content: string;
   image?: string | string[];
@@ -33,10 +35,13 @@ interface TweetCardProps {
   stats: Stats;
   onDeleted?: (id: string) => void;
   dimmed?: boolean;
+  onUnlike?: (id: string) => void;
 }
 
 export default function TweetCard({
   id,
+  tweetId,
+  type = 'tweet', // 기본값은 tweet
   user,
   content,
   image,
@@ -68,7 +73,22 @@ export default function TweetCard({
   const [replyCount, setReplyCount] = useState(stats.replies ?? 0);
   const [likeCount, setLikeCount] = useState(stats.likes ?? 0);
 
-  // const images = Array.isArray(image) ? image : image ? [image] : [];
+  // 글 줄수 제한 기능
+  const [expanded, setExpanded] = useState(false);
+  const [isLong, setIsLong] = useState(false);
+
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // prop 으로 온 image(string | string[]) → 배열로 정규화
+  const propImages = Array.isArray(image) ? image : image ? [image] : [];
+
+  // 최종 슬라이드에 사용할 이미지 목록 (prop 우선, 없으면 content에서 추출한 것)
+  const allImages = propImages.length > 0 ? propImages : contentImages;
+
+  // 본문에서는 img 태그는 제거 (슬라이드에서만 보여줌)
+  const safeContent = DOMPurify.sanitize(content, {
+    FORBID_TAGS: ['img'],
+  });
 
   /** 로그인한 프로필 ID 로드 (트윗 삭제/좋아요용) */
   useEffect(() => {
@@ -232,16 +252,16 @@ export default function TweetCard({
     };
   }, [id]);
 
-  // prop 으로 온 image(string | string[]) → 배열로 정규화
-  const propImages = Array.isArray(image) ? image : image ? [image] : [];
+  // 글 줄수 검사
+  useEffect(() => {
+    if (!contentRef.current) return;
+    const lineHeight = 20; // 15px 폰트 기준 line-height 20px
+    const maxHeight = lineHeight * 3; // 3줄 높이
 
-  // 최종 슬라이드에 사용할 이미지 목록 (prop 우선, 없으면 content에서 추출한 것)
-  const allImages = propImages.length > 0 ? propImages : contentImages;
-
-  // 본문에서는 img 태그는 제거 (슬라이드에서만 보여줌)
-  const safeContent = DOMPurify.sanitize(content, {
-    FORBID_TAGS: ['img'],
-  });
+    if (contentRef.current.scrollHeight > maxHeight) {
+      setIsLong(true);
+    }
+  }, [safeContent]);
 
   /** 좋아요 토글 (user_id = profiles.id 사용 + 알림 생성) */
   const handleLikeToggle = async (e: React.MouseEvent) => {
@@ -345,14 +365,19 @@ export default function TweetCard({
   const handleCardClick = () => {
     if (typeof window !== 'undefined') {
       const y = window.scrollY || window.pageYOffset || 0;
-      sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, id);
+      sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, type === 'reply' ? tweetId! : id);
     }
-    navigate(`/sns/${id}`);
+
+    if (type === 'reply') {
+      navigate(`/sns/${tweetId}?highlight=${id}`);
+    } else {
+      navigate(`/sns/${id}`);
+    }
   };
 
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-      
+
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, id);
     }
@@ -460,16 +485,59 @@ export default function TweetCard({
                     <span>삭제</span>
                   </button>
                 ) : (
-                  <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-2">
-                    삭제 불가
-                  </p>
+                  <>
+                    {/* 다른 사람 게시글 → 신고 */}
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setShowMenu(false);
+                        toast.success('신고가 접수되었습니다.');
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 flex items-center gap-2 text-gray-800 dark:text-gray-200"
+                    >
+                      <i className="ri-flag-line" />
+                      신고하기
+                    </button>
+
+                    {/* 다른 사람 게시글 → 차단 */}
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setShowMenu(false);
+                        toast.success('해당 유저를 차단했습니다.');
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 flex items-center gap-2 text-gray-800 dark:text-gray-200"
+                    >
+                      <i className="ri-forbid-line" />
+                      차단하기
+                    </button>
+                  </>
                 )}
               </div>
             )}
           </div>
 
-          <div className={contentClass} dangerouslySetInnerHTML={{ __html: safeContent }} />
+          <div
+            ref={contentRef}
+            className={`${contentClass} transition-all ${
+              expanded ? 'max-h-none' : 'overflow-hidden'
+            }`}
+            style={!expanded ? { maxHeight: '60px' } : undefined} // 약 3줄
+            dangerouslySetInnerHTML={{ __html: safeContent }}
+          />
 
+          {/* 더보기 버튼 */}
+          {isLong && (
+            <button
+              className="mt-1 text-blue-500 text-sm font-medium hover:underline"
+              onClick={e => {
+                e.stopPropagation();
+                setExpanded(prev => !prev);
+              }}
+            >
+              {expanded ? '접기' : '더보기'}
+            </button>
+          )}
 
           {/* 번역 버튼 */}
           {plainTextContent.trim().length > 0 && (

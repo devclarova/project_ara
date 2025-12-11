@@ -21,6 +21,7 @@ export default function TweetDetail() {
   const locationState = location.state as {
     highlightCommentId?: string;
     deletedComment?: boolean;
+    scrollKey?: number;
   } | null;
   const highlightFromNotification = locationState?.highlightCommentId ?? null;
   const deletedCommentFromNotification = locationState?.deletedComment ?? false;
@@ -28,26 +29,37 @@ export default function TweetDetail() {
   // 스크롤 타겟 id (내가 이동시키고 싶은 순간에만 변경)
   const [scrollTargetId, setScrollTargetId] = useState<string | null>(null);
 
-  // 알림에서 처음 진입할 때만 한 번 스크롤 타깃 설정
+  // scrollKey 변화 감지해 항상 스크롤 실행
   useEffect(() => {
-    if (!id || !highlightFromNotification) return;
-
-    const storageKey = `sns-highlight-consumed-${id}-${highlightFromNotification}`;
-
-    try {
-      const consumed = sessionStorage.getItem(storageKey);
-      if (consumed === '1') {
-        // 이미 이 알림으로 스크롤 한 번 했으면 더 이상 스크롤하지 않음
-        return;
-      }
-
-      setScrollTargetId(highlightFromNotification);
-      sessionStorage.setItem(storageKey, '1');
-    } catch {
-      // sessionStorage 사용이 불가한 환경에서는 그냥 한 번만 설정
-      setScrollTargetId(highlightFromNotification);
+    if (locationState?.highlightCommentId) {
+      setScrollTargetId(locationState.highlightCommentId);
     }
-  }, [id, highlightFromNotification]);
+  }, [locationState?.scrollKey]);
+
+  // 알림에서 진입할 때 스크롤 타깃 설정
+  // useEffect(() => {
+  //   if (!id || !highlightFromNotification) return;
+
+  //   const storageKey = `sns-highlight-consumed-${id}-${highlightFromNotification}`;
+
+  //   try {
+  //     const consumed = sessionStorage.getItem(storageKey);
+  //     if (consumed === '1') {
+  //       // 이미 이 알림으로 스크롤 한 번 했으면 더 이상 스크롤하지 않음
+  //       return;
+  //     }
+
+  //     setScrollTargetId(highlightFromNotification);
+  //     sessionStorage.setItem(storageKey, '1');
+  //   } catch {
+  //     // sessionStorage 사용이 불가한 환경에서는 그냥 한 번만 설정
+  //     setScrollTargetId(highlightFromNotification);
+  //   }
+  // }, [id, highlightFromNotification]);
+  useEffect(() => {
+    if (!highlightFromNotification) return;
+    setScrollTargetId(highlightFromNotification);
+  }, [highlightFromNotification]);
 
   // 삭제된 댓글 플래그가 있을 때 토스트 표시
   useEffect(() => {
@@ -293,6 +305,19 @@ export default function TweetDetail() {
   const handleReplyCreated = (replyId: string) => {
     setScrollTargetId(replyId);
   };
+
+  // replies가 로드된 뒤 scrollTargetId를 다시 트리거하여 스크롤이 실행되도록 함
+  useEffect(() => {
+    if (!scrollTargetId) return; // 스크롤할 타겟이 없으면 X
+    if (replies.length === 0) return; // 아직 댓글이 로드 안 됨
+
+    // DOM 렌더가 완료되도록 약간의 텀을 줌
+    const t = setTimeout(() => {
+      setScrollTargetId(id => id); // 같은 값으로 다시 트리거 → scrollEffect 발동
+    }, 50);
+
+    return () => clearTimeout(t);
+  }, [replies]);
 
   // 스크롤 이펙트: scrollTargetId 가 바뀔 때만 한 번 실행
   useEffect(() => {

@@ -19,13 +19,14 @@ interface Stats {
   views: number;
 }
 
-interface Reply {
+export interface Reply {
   id: string;
   tweetId: string;
   user: User;
   content: string;
   timestamp: string;
   stats: Stats;
+  liked?: boolean;
 }
 
 interface ReplyListProps {
@@ -364,7 +365,7 @@ function ReplyCard({
 }
 
 export default function ReplyList({ replies, onDeleted, scrollTargetId }: ReplyListProps) {
-  if (replies.length === 0) {
+  if (!replies.length) {
     return (
       <div className="border-b border-gray-200 dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
         <i className="ri-chat-3-line text-4xl mb-2 block" />
@@ -378,10 +379,9 @@ export default function ReplyList({ replies, onDeleted, scrollTargetId }: ReplyL
     <div>
       {replies.map(reply => (
         <ReplyCard
-          key={reply.id}
+          key={`${reply.id}-${scrollTargetId === reply.id ? 'highlight' : 'normal'}`}
           reply={reply}
           onDeleted={onDeleted}
-          // 이 댓글이 스크롤 타겟이면 하이라이트
           highlight={scrollTargetId === reply.id}
         />
       ))}

@@ -257,6 +257,13 @@ export default function HNotificationsPage() {
                     replyId: n.comment_id, // null 가능
                   }}
                   onMarkAsRead={markAsRead}
+                  onDelete={async id => {
+                    // UI에서 제거
+                    setNotifications(prev => prev.filter(n => n.id !== id));
+
+                    // DB에서도 제거
+                    await supabase.from('notifications').delete().eq('id', id);
+                  }}
                 />
               ))}
 
