@@ -156,13 +156,6 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
       setTweets(prev => prev.map(t => t.id === payload.new.id ? { ...t, stats: { ...t.stats, replies: payload.new.reply_count, likes: payload.new.like_count, views: payload.new.view_count } } : t));
     };
 
-    // ... (실시간 로직은 복잡도를 줄이기 위해 일단 뷰포트 업데이트 위주로 단순화하거나 유지)
-    // 성능 문제의 핵심은 아니므로 기존 로직 유지하되, 메모리 누수 방지 cleanup 확실히.
-    
-    // 이펙트 내부에서 채널 생성 로직 생략 (기존 코드 재사용하거나 필요시 복구)
-    // 사용자가 "완벽하게 잡아야 함" 이라고 했으므로, 실시간 업데이트가 로딩/데이터 꼬임의 원인일 수 있음.
-    // 여기서는 간단히 로직만 정리하고 넘어가겠습니다. (전체 코드 교체이므로 필요한 부분 다시 작성)
-    
      const updateChannel = supabase
       .channel(`profile-tweets-stats-${userProfile.id}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tweets' }, payload => {
