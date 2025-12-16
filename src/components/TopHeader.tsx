@@ -15,7 +15,7 @@ const TopHeader = () => {
   const linkBase = 'text-gray-600 hover:text-secondary focus:text-primary';
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-Support & Policy
+
   const [authOpen, setAuthOpen] = useState(false); // 로그인 모달용 (기존 setIsOpen 대체)
   const [mobileOpen, setMobileOpen] = useState(false); // 모바일 드로어 상태
   const [langOpen, setLangOpen] = useState(false); // 언어 선택 모달

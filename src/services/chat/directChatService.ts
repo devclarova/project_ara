@@ -797,6 +797,10 @@ export async function searchMessagesGlobal(searchTerm: string): Promise<ChatApiR
     }
 
     // 3. 발신자 정보 수동 조회를 위한 sender_id 수집
+    if (!messages || messages.length === 0) {
+      return { success: true, data: [] };
+    }
+
     const senderIds = Array.from(new Set(messages.map((msg: any) => msg.sender_id)));
     
     // 4. profiles 테이블에서 발신자 정보 일괄 조회
@@ -998,6 +1002,8 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
     if (!chats || chats.length === 0) {
       return { success: true, data: [] };
     }
+
+
 
     // 각 채팅방의 마지막 메시지와 읽지 않은 메시지 수 조회
     const chatListItems: ChatListItem[] = await Promise.all(
@@ -1325,7 +1331,7 @@ export async function searchMessagesInChat(chatId: string, query: string): Promi
         created_at: msg.created_at,
         is_read: true,
         is_system_message: false,
-        read_at: null,
+        read_at: undefined,
         sender: undefined // 렌더링 시 보완되거나 필요한 곳에서만 쓰임
     }));
 

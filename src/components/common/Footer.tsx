@@ -35,7 +35,7 @@ export default function Footer() {
 
   // States for modals
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
-  const [policyModalOpen, setPolicyModalOpen] = useState<ConsentKey | null>(null);
+  const [policyModalOpen, setPolicyModalOpen] = useState<ConsentKey | 'support' | null>(null);
 
   const currentLang = LANGUAGES.find(l => l.code === i18n.language)?.label || 'English (US)';
 

@@ -6,11 +6,20 @@ import { supabase } from './supabase';
  * - 없으면 새로 생성
  * - 반환값: profiles.id (FK로 쓰는 값)
  */
+// 메모리 캐싱을 위한 변수
+let cachedAuthId: string | null = null;
+let cachedProfileId: string | null = null;
+
 export async function ensureMyProfileId(): Promise<string> {
   // 1️⃣ 현재 세션 사용자 정보 가져오기
   const { data: userRes, error: userErr } = await supabase.auth.getUser();
   if (userErr || !userRes.user) throw userErr ?? new Error('No auth user');
   const authId = userRes.user.id;
+
+  // 캐시된 ID가 있고, 현재 로그인한 사용자와 같다면 바로 반환
+  if (cachedAuthId === authId && cachedProfileId) {
+    return cachedProfileId;
+  }
 
   // 2️⃣ profiles 테이블에서 user_id = authId 검색
   const { data: prof, error: selErr } = await supabase
@@ -21,8 +30,12 @@ export async function ensureMyProfileId(): Promise<string> {
 
   if (selErr) throw selErr;
 
-  // 이미 있으면 그 ID 반환
-  if (prof?.id) return prof.id as string;
+  // 이미 있으면 그 ID 반환 (캐시 업데이트)
+  if (prof?.id) {
+    cachedAuthId = authId;
+    cachedProfileId = prof.id;
+    return prof.id as string;
+  }
 
   // 3️⃣ 없으면 새 프로필 생성
   //    id를 authId로 넣을지 여부는 스키마에 따라 다르지만,
@@ -42,6 +55,10 @@ export async function ensureMyProfileId(): Promise<string> {
 
   if (insErr) throw insErr;
   if (!created?.id) throw new Error('프로필 생성 실패');
+
+  // 캐시 업데이트
+  cachedAuthId = authId;
+  cachedProfileId = created.id;
 
   return created.id as string;
 }
