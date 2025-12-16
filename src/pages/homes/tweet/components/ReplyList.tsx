@@ -8,7 +8,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import TranslateButton from '@/components/common/TranslateButton';
 import { useTranslation } from 'react-i18next';
-
+import ReportButton from '@/components/common/ReportButton';
+import BlockButton from '@/components/common/BlockButton';
 import type { UIReply } from '@/types/sns';
 
 interface ReplyListProps {
@@ -46,6 +47,8 @@ function ReplyCard({
   const [translated, setTranslated] = useState<string>('');
   // 하이라이트 상태 (잠깐 색 들어왔다 빠지는 용도)
   const [isHighlighted, setIsHighlighted] = useState(false);
+
+  const [isBlocked, setIsBlocked] = useState(false);
 
   // highlight prop이 true일 때 잠깐 하이라이트
   useEffect(() => {
@@ -302,9 +305,14 @@ function ReplyCard({
                     <span>{t('common.delete')}</span>
                   </button>
                 ) : (
-                  <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-2">
-                    {t('tweet.cannot_delete')}
-                  </p>
+                  <>
+                    <ReportButton onClose={() => setShowMenu(false)} />
+                    <BlockButton
+                      isBlocked={isBlocked}
+                      onToggle={() => setIsBlocked(prev => !prev)}
+                      onClose={() => setShowMenu(false)}
+                    />
+                  </>
                 )}
               </div>
             )}

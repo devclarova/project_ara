@@ -12,6 +12,8 @@ import TranslateButton from '@/components/common/TranslateButton';
 import { useTranslation } from 'react-i18next';
 import { type UITweet, type TweetStats, type TweetUser } from '@/types/sns';
 import { SnsStore } from '@/lib/snsState';
+import ReportButton from '@/components/common/ReportButton';
+import BlockButton from '@/components/common/BlockButton';
 
 const SNS_LAST_TWEET_ID_KEY = 'sns-last-tweet-id';
 
@@ -67,6 +69,7 @@ export default function TweetCard({
 
   const [replyCount, setReplyCount] = useState(stats.replies ?? 0);
   const [likeCount, setLikeCount] = useState(stats.likes ?? 0);
+  const [viewCount, setViewCount] = useState(stats.views ?? 0);
 
   // 글 줄수 제한 기능
   const [expanded, setExpanded] = useState(false);
@@ -79,6 +82,17 @@ export default function TweetCard({
 
   // 최종 슬라이드에 사용할 이미지 목록 (prop 우선, 없으면 content에서 추출한 것)
   const allImages = propImages.length > 0 ? propImages : contentImages;
+
+  const [isDraggingText, setIsDraggingText] = useState(false);
+  const textDragStartX = useRef(0);
+  const textDragStartY = useRef(0);
+  const dragInfo = useRef({
+    startX: 0,
+    startY: 0,
+    moved: false,
+  });
+
+  const [isBlocked, setIsBlocked] = useState(false);
 
   // 본문에서는 img 태그는 제거 (슬라이드에서만 보여줌)
   const safeContent = DOMPurify.sanitize(content, {
@@ -442,6 +456,8 @@ export default function TweetCard({
   `;
 
   const handleCardClickSafe = () => {
+    // 텍스트 드래그 중이면 이동 막기
+    if (isDraggingText) return;
     if (showImageModal) return;
     handleCardClick();
   };
@@ -562,31 +578,13 @@ export default function TweetCard({
                   </button>
                 ) : (
                   <>
-                    {/* 다른 사람 게시글 → 신고 */}
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        setShowMenu(false);
-                        toast.success(t('common.success_report'));
-                      }}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 flex items-center gap-2 text-gray-800 dark:text-gray-200"
-                    >
-                      <i className="ri-flag-line" />
-                      신고하기
-                    </button>
-
-                    {/* 다른 사람 게시글 → 차단 */}
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        setShowMenu(false);
-                        toast.success(t('common.success_block'));
-                      }}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 flex items-center gap-2 text-gray-800 dark:text-gray-200"
-                    >
-                      <i className="ri-forbid-line" />
-                      차단하기
-                    </button>
+                    
+                    <ReportButton onClose={() => setShowMenu(false)} />
+                    <BlockButton
+                      isBlocked={isBlocked}
+                      onToggle={() => setIsBlocked(prev => !prev)}
+                      onClose={() => setShowMenu(false)}
+                    />
                   </>
                 )}
               </div>
@@ -600,12 +598,40 @@ export default function TweetCard({
             }`}
             style={!expanded ? { maxHeight: '60px' } : undefined} // 약 3줄
             dangerouslySetInnerHTML={{ __html: safeContent }}
+            // 드래그 시작
+            onMouseDown={e => {
+              dragInfo.current.startX = e.clientX;
+              dragInfo.current.startY = e.clientY;
+              dragInfo.current.moved = false;
+            }}
+            // 드래그 중 감지
+            onMouseMove={e => {
+              const dx = Math.abs(e.clientX - dragInfo.current.startX);
+              const dy = Math.abs(e.clientY - dragInfo.current.startY);
+
+              // 5px 이상 움직이면 드래그로 판단
+              if (dx > 5 || dy > 5) {
+                setIsDraggingText(true);
+              }
+            }}
+            // 드래그 종료 시 (클릭으로 취급되지 않게 해야 함)
+            onMouseUp={() => {
+              // 드래그 후 mouseup이 발생해 click 이벤트로 이어지지 않도록 50ms block
+              if (isDraggingText) {
+                setTimeout(() => setIsDraggingText(false), 50);
+              }
+            }}
+            onClick={e => {
+              if (!dragInfo.current.moved) {
+                handleCardClick(); // 클릭일 때만 이동
+              }
+            }}
           />
 
           {/* 더보기 버튼 */}
           {isLong && (
             <button
-              className="mt-1 text-blue-500 text-sm font-medium hover:underline"
+              className="mt-1 text-gray-400 text-sm font-medium hover:underline"
               onClick={e => {
                 e.stopPropagation();
                 
@@ -644,7 +670,37 @@ export default function TweetCard({
 
           {/* 번역 결과 */}
           {translated && (
-            <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 rounded-lg text-sm whitespace-pre-line break-words">
+            <div
+              className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 rounded-lg text-sm whitespace-pre-line break-words" // 드래그 시작
+              // 드래그 시작
+              onMouseDown={e => {
+                dragInfo.current.startX = e.clientX;
+                dragInfo.current.startY = e.clientY;
+                dragInfo.current.moved = false;
+              }}
+              // 드래그 중 감지
+              onMouseMove={e => {
+                const dx = Math.abs(e.clientX - dragInfo.current.startX);
+                const dy = Math.abs(e.clientY - dragInfo.current.startY);
+
+                // 5px 이상 움직이면 드래그로 판단
+                if (dx > 5 || dy > 5) {
+                  setIsDraggingText(true);
+                }
+              }}
+              // 드래그 종료 시 (클릭으로 취급되지 않게 해야 함)
+              onMouseUp={() => {
+                // 드래그 후 mouseup이 발생해 click 이벤트로 이어지지 않도록 50ms block
+                if (isDraggingText) {
+                  setTimeout(() => setIsDraggingText(false), 50);
+                }
+              }}
+              onClick={e => {
+                if (!dragInfo.current.moved) {
+                  handleCardClick(); // 클릭일 때만 이동
+                }
+              }}
+            >
               {translated}
             </div>
           )}
@@ -711,7 +767,7 @@ export default function TweetCard({
             {/* 조회수 버튼 */}
             <button className="flex items-center space-x-2 hover:text-green-500 dark:hover:text-green-400">
               <i className="ri-eye-line text-lg" />
-              <span className="text-sm">{stats.views ?? 0}</span>
+              <span className="text-sm">{viewCount}</span>
             </button>
           </div>
         </div>

@@ -28,7 +28,7 @@ interface EditProfileModalProps {
   onSave: (updatedProfile: any) => void;
 }
 
-// 🔹 countries 테이블 구조에 맞게 타입 수정 (id + name 기준)
+// countries 테이블 구조에 맞게 타입 수정 (id + name 기준)
 type CountryOption = {
   id: number;
   name: string;
@@ -50,7 +50,7 @@ export default function EditProfileModal({
   const [formData, setFormData] = useState({
     name: userProfile.name,
     bio: userProfile.bio ?? '',
-    // 🔹 여기서는 일단 빈 문자열로 두고, countries를 불러온 뒤에 id로 다시 채워줄 거라 상관 없음
+    // 여기서는 일단 빈 문자열로 두고, countries를 불러온 뒤에 id로 다시 채워줄 거라 상관 없음
     country: '',
   });
 
@@ -64,7 +64,7 @@ export default function EditProfileModal({
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
-  // 🔹 모달이 열릴 때마다 초기화
+  // 모달이 열릴 때마다 초기화
   useEffect(() => {
     if (isOpen) {
       setFormData(prev => ({
@@ -88,7 +88,7 @@ export default function EditProfileModal({
           setCountriesLoading(true);
           const { data, error } = await supabase
             .from('countries')
-            .select('id, name, flag, flag_url') // ✅ id + name 기준으로 수정
+            .select('id, name, flag, flag_url') // id + name 기준으로 수정
             .order('id', { ascending: true });
 
           if (error) throw error;
@@ -96,7 +96,7 @@ export default function EditProfileModal({
           const list = data || [];
           setCountries(list);
 
-          // ✅ 현재 프로필의 국가 이름(userProfile.country)에 해당하는 id를 찾아서
+          // 현재 프로필의 국가 이름(userProfile.country)에 해당하는 id를 찾아서
           //    formData.country를 그 id로 세팅 → CountrySelect가 처음부터 선택된 상태로 표시됨
           if (userProfile.country) {
             const matched = list.find(c => c.name === userProfile.country);
@@ -225,6 +225,7 @@ export default function EditProfileModal({
 
       if (error) throw error;
 
+      // 로컬 상태 업데이트
       const updated = {
         ...userProfile,
         name: formData.name,
@@ -260,6 +261,7 @@ export default function EditProfileModal({
     if (e.target === e.currentTarget) onClose();
   };
 
+  // 현재 선택된 국가의 플래그 (미리보기용)
   const currentCountry = countries.find(c => String(c.id) === formData.country) || null;
   const currentFlagUrl = currentCountry?.flag_url ?? userProfile.countryFlagUrl ?? null;
   const currentFlagEmoji = currentCountry?.flag ?? null;

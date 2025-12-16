@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,8 @@ import { toast } from 'sonner';
 import TranslateButton from '@/components/common/TranslateButton';
 import { useTranslation } from 'react-i18next';
 import { SnsStore } from '@/lib/snsState';
+import ReportButton from '@/components/common/ReportButton';
+import BlockButton from '@/components/common/BlockButton';
 
 import type { UIPost } from '@/types/sns';
 
@@ -41,6 +43,9 @@ export default function TweetDetailCard({ tweet, replyCount, onDeleted, onReplyC
   const [profileId, setProfileId] = useState<string | null>(null);
   const [currentImage, setCurrentImage] = useState(0);
   const [translated, setTranslated] = useState<string>('');
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [isBlocked, setIsBlocked] = useState(false);
 
   const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
   const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
@@ -303,8 +308,20 @@ export default function TweetDetailCard({ tweet, replyCount, onDeleted, onReplyC
     }
   };
 
+  // 메뉴 밖 클릭 시 닫힘
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-6 bg-white dark:bg-background">
+    <div className="relative border-b border-gray-200 dark:border-gray-700 px-4 py-6 bg-white dark:bg-background">
       <div className="flex items-start space-x-3">
         <button
           type="button"
@@ -354,6 +371,42 @@ export default function TweetDetailCard({ tweet, replyCount, onDeleted, onReplyC
             <span className="mx-1 text-gray-500 dark:text-gray-400">·</span>
             <span className="text-gray-500 dark:text-gray-400 text-sm">{tweet.timestamp}</span>
           </div>
+        </div>
+        <div className="relative ml-auto" ref={menuRef}>
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              setShowMenu(prev => !prev);
+            }}
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition"
+          >
+            <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
+          </button>
+          {showMenu && (
+            <div className="absolute right-3 top-8 w-36 bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
+              {authUser?.id === tweet.user.username ? (
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    setShowMenu(prev => !prev);
+                  }}
+                  className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
+                >
+                  <i className="ri-delete-bin-line" />
+                  삭제
+                </button>
+              ) : (
+                <>
+                  <ReportButton onClose={() => setShowMenu(false)} />
+                  <BlockButton
+                    isBlocked={isBlocked}
+                    onToggle={() => setIsBlocked(prev => !prev)}
+                    onClose={() => setShowMenu(false)}
+                  />
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

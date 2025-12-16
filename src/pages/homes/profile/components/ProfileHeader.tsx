@@ -28,7 +28,7 @@ export default function ProfileHeader({ userProfile, onEditClick }: ProfileHeade
 
   return (
     <div className="relative bg-white dark:bg-background">
-      {/* ✅ 배너 */}
+      {/* 배너 */}
       {userProfile.banner ? (
         <div className="h-48 sm:h-64 relative overflow-hidden">
           <img
@@ -43,8 +43,8 @@ export default function ProfileHeader({ userProfile, onEditClick }: ProfileHeade
       )}
 
       <div className="px-4 pb-4">
-        {/* ✅ 아바타 */}
-        <div className="relative -mt-16 mb-4">
+        {/* 아바타 */}
+        <div className="relative -mt-16 mb-1">
           <div className="w-32 h-32 rounded-full border-4 border-white bg-white overflow-hidden shadow-md dark:border-gray-900 dark:bg-gray-900">
             <Avatar className="w-full h-full">
               <AvatarImage
@@ -56,20 +56,20 @@ export default function ProfileHeader({ userProfile, onEditClick }: ProfileHeade
           </div>
         </div>
 
-        {/* ✅ 내 프로필일 때만 “프로필 편집” 버튼 */}
+        {/* 내 프로필일 때만 “프로필 편집” 버튼 */}
         {isOwnProfile && (
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-end mb-4 -mt-8 relative z-10">
             <Button
               variant="outline"
               onClick={onEditClick}
-              className="rounded-full px-6 font-medium text-[#009e89] border-[#009e89] hover:bg-[#00bfa5]/10 dark:hover:bg-primary/10 transition-colors"
+              className="rounded-full px-6 font-medium bg-primary/10 text-[#009e89] border-[#009e89] hover:bg-[#00bfa5]/10 dark:hover:bg-primary/30 transition-colors"
             >
               {t('profile.edit_profile')}
             </Button>
           </div>
         )}
 
-        {/* ✅ 사용자 정보 */}
+        {/* 사용자 정보 */}
         <div className="space-y-3">
           {/* 이름 */}
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -77,13 +77,17 @@ export default function ProfileHeader({ userProfile, onEditClick }: ProfileHeade
           </h1>
 
           {/* 자기소개 */}
-          {userProfile.bio && (
-            <p className="text-gray-800 dark:text-gray-200 whitespace-pre-line leading-snug">
-              {userProfile.bio}
-            </p>
-          )}
+          <div className="min-h-[1.25rem]">
+            {userProfile.bio ? (
+              <p className="text-gray-800 dark:text-gray-200 whitespace-pre-line leading-snug">
+                {userProfile.bio}
+              </p>
+            ) : (
+              <p className="opacity-0 select-none">.</p>
+            )}
+          </div>
 
-          {/* 🔥 원래 location 들어가던 자리 → 국적 + 국기 */}
+          {/* 원래 location 들어가던 자리 → 국적 + 국기 */}
           <div className="flex flex-wrap gap-3 text-gray-500 dark:text-gray-400 text-sm mt-2">
             {(userProfile.country || userProfile.countryFlagUrl) && (
               <span className="flex items-center gap-2">

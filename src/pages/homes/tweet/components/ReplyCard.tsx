@@ -8,6 +8,8 @@ import { toast } from 'sonner';
 import type { UIReply } from '@/types/sns';
 import TranslateButton from '@/components/common/TranslateButton';
 import { useTranslation } from 'react-i18next';
+import BlockButton from '@/components/common/BlockButton';
+import ReportButton from '@/components/common/ReportButton';
 
 interface ReplyCardProps {
   reply: UIReply;
@@ -39,6 +41,8 @@ export function ReplyCard({
 
   // 하이라이트 상태 (잠깐 색 들어왔다 빠지는 용도)
   const [isHighlighted, setIsHighlighted] = useState(false);
+
+  const [isBlocked, setIsBlocked] = useState(false);
 
   // highlight prop이 true일 때 잠깐 하이라이트
   useEffect(() => {
@@ -362,9 +366,14 @@ export function ReplyCard({
                     <span>삭제</span>
                   </button>
                 ) : (
-                  <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-2">
-                    삭제 불가
-                  </p>
+                  <>
+                    <ReportButton onClose={() => setShowMenu(false)} />
+                    <BlockButton
+                      isBlocked={isBlocked}
+                      onToggle={() => setIsBlocked(prev => !prev)}
+                      onClose={() => setShowMenu(false)}
+                    />
+                  </>
                 )}
               </div>
             )}
