@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import GuideModal, { isGuideModalDismissed } from '@/components/common/GuideModal';
+import { isGuideModalDismissed } from '@/components/common/GuideModal';
+import CTASection from '@/components/landing/CTASection';
 import HeroSection from '@/components/landing/HeroSection';
+import HowItWorksSection from '@/components/landing/HowItWorksSection';
+import PopularContentSection from '@/components/landing/PopularContentSection';
 import ProblemSection from '@/components/landing/ProblemSection';
 import SolutionSection from '@/components/landing/SolutionSection';
-import PopularContentSection from '@/components/landing/PopularContentSection';
 import TestimonialsSection from '@/components/landing/TestimonialsSection';
-import CTASection from '@/components/landing/CTASection';
-import HowItWorksSection from '@/components/landing/HowItWorksSection';
 
 type HomeProps = {
   onSignup?: () => void;
@@ -131,6 +131,16 @@ const LandingPage = ({ onSignup }: HomeProps) => {
     const wheelHandler = (e: WheelEvent) => {
       const enableSnap = window.innerWidth >= SCROLL_SNAP_BREAKPOINT;
       if (!enableSnap) return; // 모바일/태블릿에서는 자연 스크롤
+
+      // 모달이 열려 있으면 모달 내부 스크롤을 방해하지 않음
+      const modalRoot = document.getElementById('modal-root');
+      if (modalRoot && modalRoot.children.length > 0) {
+        // 모달 내부에서 발생한 이벤트인지 확인
+        const target = e.target as Node;
+        if (modalRoot.contains(target)) {
+          return; // 모달 내부에서는 기본 스크롤 허용
+        }
+      }
 
       const deltaY = e.deltaY;
 

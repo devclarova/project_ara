@@ -4,10 +4,11 @@ import { useState } from 'react';
 interface SearchBarProps {
   placeholder?: string;
   onSubmit?: (query: string) => void;
+  onChange?: (query: string) => void; // 실시간 변경 핸들러 추가
   onClose?: () => void;
 }
 
-export default function Input({ placeholder, onSubmit, onClose }: SearchBarProps) {
+export default function Input({ placeholder, onSubmit, onChange, onClose }: SearchBarProps) {
   const [q, setQ] = useState('');
   const [isHovered, setIsHovered] = useState(false);
 
@@ -18,6 +19,12 @@ export default function Input({ placeholder, onSubmit, onClose }: SearchBarProps
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') handleSubmit();
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setQ(value);
+    onChange?.(value); // 변경 시 부모에게 알림
   };
 
   const handleClose = () => {
@@ -38,7 +45,7 @@ export default function Input({ placeholder, onSubmit, onClose }: SearchBarProps
         <input
           type="text"
           value={q}
-          onChange={e => setQ(e.target.value)}
+          onChange={handleChange}
           onKeyDown={handleKeyDown}
           placeholder={placeholder ?? '검색어를 입력하세요'}
           className="flex-1 h-full px-3 bg-transparent outline-none text-sm placeholder-muted-foreground border-none focus:outline-none focus:ring-0 focus:border-transparent"

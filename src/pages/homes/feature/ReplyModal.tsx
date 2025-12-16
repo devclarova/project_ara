@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import RichTextEditor from '../editor/RichTextEditor';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface ReplyModalProps {
   tweetId: string; // 부모 트윗 ID
@@ -11,6 +12,7 @@ interface ReplyModalProps {
 }
 
 export default function ReplyModal({ tweetId, onClose }: ReplyModalProps) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [content, setContent] = useState('');
   const [images, setImages] = useState<File[]>([]);
@@ -32,7 +34,7 @@ export default function ReplyModal({ tweetId, onClose }: ReplyModalProps) {
   const handleSubmit = async () => {
     if (!content.trim() || isSubmitting) return;
     if (!user) {
-      toast.error('로그인이 필요합니다.');
+      toast.error(t('auth.login_needed'));
       return;
     }
 
@@ -73,7 +75,7 @@ export default function ReplyModal({ tweetId, onClose }: ReplyModalProps) {
         .single();
 
       if (profileError || !profile) {
-        toast.error('프로필이 존재하지 않습니다.');
+        toast.error(t('common.error_no_profile'));
         setIsSubmitting(false);
         return;
       }
@@ -89,16 +91,16 @@ export default function ReplyModal({ tweetId, onClose }: ReplyModalProps) {
 
       if (insertError) {
         console.error('댓글 저장 실패:', insertError.message);
-        toast.error('댓글 저장 중 오류가 발생했습니다.');
+        toast.error(t('tweets.error_reply_save'));
         return;
       }
 
       // 성공 토스트만 띄우고, 나머지는 Realtime이 처리
-      toast.success('댓글이 성공적으로 업로드되었습니다!');
+      toast.success(t('tweets.success_reply'));
       onClose();
     } catch (err) {
       console.error('댓글 업로드 오류:', err);
-      toast.error('댓글 업로드 중 문제가 발생했습니다.');
+      toast.error(t('tweets.error_reply_upload'));
     } finally {
       setIsSubmitting(false);
     }

@@ -22,6 +22,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { User } from '@supabase/supabase-js';
 import { Button } from './ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 // profiles 테이블 타입에 맞게 지정
 interface Profile {
@@ -36,6 +37,7 @@ export function NavUser() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -70,7 +72,7 @@ export function NavUser() {
           onClick={() => navigate('/signin')}
           className="w-full bg-primary text-white hover:bg-primary/90"
         >
-          로그인하기
+          {t('auth.login')}
         </Button>
       </div>
     );
@@ -140,7 +142,7 @@ export function NavUser() {
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={() => navigate('/profile')}>
                 <BadgeCheck />
-                프로필
+                {t('nav.profile')}
               </DropdownMenuItem>
               {/* <DropdownMenuItem>
                 <CreditCard />
@@ -148,7 +150,7 @@ export function NavUser() {
               </DropdownMenuItem> */}
               <DropdownMenuItem onClick={() => navigate('/')}>
                 <Bell />
-                알림
+                {t('nav.notifications')}
               </DropdownMenuItem>
             </DropdownMenuGroup>
 
@@ -160,7 +162,7 @@ export function NavUser() {
               }}
             >
               <LogOut />
-              로그아웃
+              {t('auth.logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

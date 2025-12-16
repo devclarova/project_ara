@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 interface ProfileHeaderProps {
   userProfile: {
@@ -21,6 +22,7 @@ interface ProfileHeaderProps {
 }
 
 export default function ProfileHeader({ userProfile, onEditClick }: ProfileHeaderProps) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const isOwnProfile = user && user.id === userProfile.user_id;
 
@@ -33,6 +35,7 @@ export default function ProfileHeader({ userProfile, onEditClick }: ProfileHeade
             src={userProfile.banner}
             alt="Profile banner"
             className="w-full h-full object-cover object-center"
+            decoding="async"
           />
         </div>
       ) : (
@@ -61,7 +64,7 @@ export default function ProfileHeader({ userProfile, onEditClick }: ProfileHeade
               onClick={onEditClick}
               className="rounded-full px-6 font-medium text-[#009e89] border-[#009e89] hover:bg-[#00bfa5]/10 dark:hover:bg-primary/10 transition-colors"
             >
-              프로필 편집
+              {t('profile.edit_profile')}
             </Button>
           </div>
         )}
@@ -89,15 +92,17 @@ export default function ProfileHeader({ userProfile, onEditClick }: ProfileHeade
                     src={userProfile.countryFlagUrl}
                     alt={userProfile.country ?? '국가'}
                     className="w-5 h-5 rounded-full object-cover border border-gray-200 dark:border-gray-600"
+                    loading="lazy"
+                    decoding="async"
                   />
                 )}
-                <span>{userProfile.country ?? '국가 미설정'}</span>
+                <span>{userProfile.country}</span>
               </span>
             )}
 
             <span className="flex items-center gap-1">
               <i className="ri-calendar-line" />
-              {userProfile.joinDate} 가입
+              {t('profile.joined', { date: userProfile.joinDate })}
             </span>
           </div>
         </div>

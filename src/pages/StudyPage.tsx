@@ -2,9 +2,11 @@ import SignInModal from '@/components/auth/SignInModal';
 import ShareButton from '@/components/common/ShareButton';
 import { InfoItem } from '@/components/study/ContentCard';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { NavLink, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useAutoTranslation } from '@/hooks/useAutoTranslation';
 import StudyCard from '../components/study/StudyCard';
 import StudySubtitles from '../components/study/StudySubtitles';
 import VideoPlayer, { type VideoPlayerHandle } from '../components/study/VideoPlayer';
@@ -45,6 +47,10 @@ const StudyPage = () => {
   const isGuest = !user;
   const [showSignIn, setShowSignIn] = useState(false);
 
+  // Auto Translation Hooks
+  const { i18n, t } = useTranslation();
+  const targetLang = i18n.language;
+
   const handleSelectDialogue = (s: Subtitle) => setSelectedSubtitle(s);
   const vref = useRef<VideoPlayerHandle>(null);
 
@@ -53,17 +59,65 @@ const StudyPage = () => {
 
   // 페이지 메타
   const baseTitle = 'ARA - Learn Korean with K-Content';
-  const pageTitle = study
+  const pageTitleOriginal = study
     ? `${study.contents ?? 'ARA Study'}${study.episode ? ` ${study.episode}` : ''}${
         study.scene ? ` - Scene ${study.scene}` : ''
       } | ${baseTitle}`
     : `Study | ${baseTitle}`;
 
-  const description = study
+  // Title Logic (Korean Mode & Auto Translation)
+  const isKoreanTitle = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(study?.contents ?? '');
+  const { translatedText: translatedTitle } = useAutoTranslation(study?.contents ?? '', `study_title_${study?.id ?? '0'}`, targetLang);
+  const { translatedText: translatedRuntime } = useAutoTranslation(study?.runtime_bucket ?? '', `study_runtime_${study?.id ?? '0'}`, targetLang);
+  const { translatedText: translatedCategory } = useAutoTranslation(study?.categories ?? '', `category_${study?.categories}`, targetLang);
+
+  let displayTitle = study?.contents ?? t('study.no_title');
+
+  if (translatedTitle && study?.contents) {
+     if (targetLang.startsWith('en')) {
+         if (isKoreanTitle && translatedTitle.toLowerCase() !== study.contents.toLowerCase()) {
+            displayTitle = `${study.contents} - ${translatedTitle}`;
+         }
+     } else if (targetLang.startsWith('ko')) {
+         displayTitle = study.contents;
+     } else {
+         if (translatedTitle !== study.contents) {
+             displayTitle = `${study.contents} - ${translatedTitle}`;
+         }
+     }
+  }
+
+  const formatValue = (key: string, val: string | number | null | undefined) => {
+      if (!val) return '';
+      if (String(val).match(/^\d+$/)) {
+          return t(`study.formats.${key}`, { val });
+      }
+      return String(val);
+  };
+  const displayEpisode = formatValue('episode', study?.episode);
+  const displayScene = formatValue('scene', study?.scene);
+
+  const translatedLevel = useMemo(() => {
+    const lvl = study?.level;
+    if (lvl === '초급') return t('study.level.beginner');
+    if (lvl === '중급') return t('study.level.intermediate');
+    if (lvl === '고급') return t('study.level.advanced');
+    return lvl;
+  }, [study?.level, t]);
+
+  const pageTitle = study
+    ? `${displayTitle} ${displayEpisode} ${displayScene} | ARA`
+    : `Study | ARA`;
+
+  const descriptionOriginal = study
     ? `K-콘텐츠 장면으로 한국어 공부하기: ${study.contents ?? ''}${
         study.episode ? ` ${study.episode}` : ''
       }${study.scene ? ` - Scene ${study.scene}` : ''}`
     : 'ARA에서 K-콘텐츠로 즐겁게 한국어를 공부해보세요.';
+
+  const description = study
+    ? `${t('study.share_text_prefix')} ${displayTitle} ${displayEpisode} ${displayScene}`
+    : t('study.meta_desc_default');
 
   const ogImage = study?.image_url ?? '/images/font_slogan_logo.png';
 
@@ -322,7 +376,7 @@ const StudyPage = () => {
                     >
                       <i className="ri-folder-2-line text-base opacity-70 group-hover:opacity-100 dark:text-gray-100" />
                       <span className="font-medium hidden sm:inline-block truncate dark:text-gray-100">
-                        {study?.categories ?? '카테고리'}
+                        {translatedCategory ?? study?.categories ?? '카테고리'}
                       </span>
                     </NavLink>
 
@@ -353,7 +407,7 @@ const StudyPage = () => {
                     >
                       <i className="ri-movie-2-line text-base opacity-70 group-hover:opacity-100 dark:text-gray-100" />
                       <span className="font-medium hidden sm:inline-block truncate dark:text-gray-100">
-                        {loading ? '로딩 중' : (study?.contents ?? '제목 없음')}
+                        {loading ? t('common.loading') : (displayTitle ?? '제목 없음')}
                       </span>
                     </NavLink>
 
@@ -406,23 +460,23 @@ const StudyPage = () => {
                   <h1 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center font-bold text-gray-900 select-none tracking-tight transition-all duration-300 whitespace-nowrap">
                     {loading ? (
                       <span className="animate-pulse text-gray-400 text-lg sm:text-xl lg:text-2xl xl:text-3xl dark:text-gray-100">
-                        로딩 중...
+                        {t('common.loading')}
                       </span>
                     ) : (
                       <div className="relative flex items-baseline justify-center">
                         <span className="text-lg sm:text-xl lg:text-2xl xl:text-3xl dark:text-gray-100">
-                          {study?.contents ?? '제목 없음'}
+                          {displayTitle}
                         </span>
 
                         <div className="flex items-baseline ml-2">
-                          {study?.episode && (
+                          {displayEpisode && (
                             <span className="text-sm sm:text-base lg:text-lg text-gray-600 mr-1 dark:text-gray-300">
-                              {study.episode}
+                              {displayEpisode}
                             </span>
                           )}
-                          {study?.scene && (
+                          {displayScene && (
                             <span className="text-xs sm:text-sm lg:text-base text-gray-500 dark:text-gray-400">
-                              Scene {study.scene}
+                              {displayScene}
                             </span>
                           )}
                         </div>
@@ -446,12 +500,12 @@ const StudyPage = () => {
                   {/* 시간(runtime) */}
                   <InfoItem
                     icon="ri-time-line"
-                    text={loading ? '—' : (study?.runtime_bucket ?? study?.runtime ?? '—')}
+                    text={loading ? '—' : (translatedRuntime ?? study?.runtime_bucket ?? study?.runtime ?? '—')}
                   />
                 </span>
                 <span className="flex items-center gap-1">
                   {/* 난이도 */}
-                  <InfoItem icon="ri-star-line" text={loading ? '—' : (study?.level ?? '—')} />
+                  <InfoItem icon="ri-star-line" text={loading ? '—' : (translatedLevel ?? study?.level ?? '—')} />
                 </span>
                 {/* 조회수 */}
                 <span className="flex items-center gap-1">
@@ -463,10 +517,8 @@ const StudyPage = () => {
                 {!loading && (
                   <div className="ml-auto">
                     <ShareButton
-                      title={`${study?.contents ?? 'ARA Study'}`}
-                      text={`K-콘텐츠로 배우는 학습 ${
-                        study?.episode ? ` (${study.episode})` : ''
-                      }${study?.scene ? ` - Scene ${study.scene}` : ''}`}
+                      title={`${displayTitle}`}
+                      text={`${t('study.share_text_prefix')} ${displayTitle} ${displayEpisode} ${displayScene}`}
                     />
                   </div>
                 )}

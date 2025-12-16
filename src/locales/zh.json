@@ -1,0 +1,555 @@
+{
+  "nav": {
+    "home": "首页",
+    "study": "学习",
+    "community": "社区",
+    "chat": "聊天",
+    "notifications": "通知",
+    "more": "更多",
+    "settings": "设置",
+    "profile": "个人资料",
+    "post": "发布"
+  },
+  "notification": {
+    "like_feed": "赞了你的动态。",
+    "user_action": "{{name}}",
+    "new": "新",
+    "deleted_post": "已删除的帖子。",
+    "deleted_comment": "已删除的评论。",
+    "comment_feed": "评论了你的动态。",
+    "like_comment": "赞了你的评论。",
+    "follow_msg": "关注了你。",
+    "repost_msg": "转发了你的动态。",
+    "mention_msg": "提到了你。",
+    "clear_all": "清空",
+    "action_comment": "您在您的动态中留下了评论。",
+    "action_like_comment": "我们喜欢您的评论。",
+    "action_like_feed": "我喜欢您的动态。",
+    "no_notifications": "尚无新的通知。"
+  },
+  "study": {
+    "search_placeholder": "搜索...",
+    "no_content": "未找到内容。",
+    "category": {
+      "all": "全部",
+      "drama": "电视剧",
+      "movie": "电影",
+      "entertainment": "综艺",
+      "music": "音乐"
+    },
+    "level": {
+      "title": "难度",
+      "all": "全部",
+      "beginner": "初级",
+      "intermediate": "中级",
+      "advanced": "高级"
+    },
+    "guide": {
+      "prev": "上一页",
+      "next": "下一页",
+      "start": "开始",
+      "close": "关闭",
+      "never_show": "不再显示"
+    },
+    "formats": {
+      "episode": "第{{val}}集",
+      "scene": "场景 {{val}}"
+    },
+    "no_title": "无标题",
+    "no_episode": "无剧集",
+    "share_text_prefix": "学习K-内容: ",
+    "meta_desc_default": "在ARA愉快地学习韩语",
+    "study_card_title": "学习卡片",
+    "vocab_explanation": "单词解释",
+    "culture_note": "文化笔记",
+    "login_required": "需要登录",
+    "preview": "预览"
+  },
+  "auth": {
+    "login": "登录",
+    "signup": "注册",
+    "logout": "退出",
+    "login_needed": "需要登录",
+    "please_login": "请登录",
+    "click_to_login": "点击登录",
+    "welcome": "欢迎",
+    "email": "邮箱",
+    "password": "密码",
+    "logging_in": "登录中...",
+    "auto_login": "自动登录",
+    "find_email": "找回邮箱",
+    "find_password": "找回密码",
+    "resend_verification": "重发验证邮件",
+    "first_time": "第一次访问？",
+    "login_with_google": "Google登录",
+    "login_with_kakao": "Kakao登录",
+    "verification_sent": "验证邮件已发送",
+    "check_verification_email": "请查看邮箱中的验证链接",
+    "verify_before_login": "请先验证邮箱",
+    "invalid_credentials": "邮箱或密码错误",
+    "session_expired": "会话已过期",
+    "avatar_upload_failed": "头像上传失败",
+    "profile_save_failed": "资料保存失败",
+    "network_error": "网络错误",
+    "previous": "上一步",
+    "signing_up": "注册中...",
+    "signup_complete": "完成注册",
+    "signup_complete_message": "注册完成！",
+    "service_ready": "现在可以使用服务了。",
+    "start_now": "立即开始",
+    "go_home": "返回首页",
+    "signup_error": "注册时发生错误"
+  },
+  "signup": {
+    "title_social": "社交账号注册",
+    "title_email": "注册",
+    "later": "稍后进行",
+    "go_home": "返回首页",
+    "step1_title": "注册协议",
+    "step1_desc": "使用服务前请同意相关条款。",
+    "agree_all": "全部同意",
+    "agree_terms": "同意服务条款",
+    "agree_privacy": "同意隐私政策",
+    "agree_age": "我已年满14岁",
+    "agree_marketing": "同意接收营销信息(可选)",
+    "next_step": "下一步",
+    "step2_title": "填写信息",
+    "label_email": "邮箱",
+    "label_password": "密码",
+    "label_password_confirm": "确认密码",
+    "label_nickname": "昵称",
+    "error_email_taken": "该邮箱已被使用。",
+    "error_nickname_taken": "该昵称已被使用。",
+    "error_email_check_retry": "请重试邮箱重复检查。",
+    "error_nickname_check_retry": "请重试昵称重复检查。",
+    "nickname_detected_lang": "检测到的语言:",
+    "nickname_lang_unknown": "未知",
+    "nickname_hint": "长度{{min}}~{{max}}字符，最多2个下划线",
+    "image_size_hint": "最大2MB · JPG/PNG/GIF",
+    "agree_and_close": "同意并关闭"
+  },
+  "footer": {
+    "brand": {
+      "slogan_main": "Connect Culture, Expand World.",
+      "slogan_sub": "跨越语言障碍，体验真正的沟通。"
+    },
+    "social": {
+      "youtube": "YouTube",
+      "instagram": "Instagram",
+      "threads": "Threads",
+      "x": "X",
+      "facebook": "Facebook"
+    },
+    "columns": {
+      "product": {
+        "title": "产品",
+        "features": "功能",
+        "enterprise": "企业版",
+        "security": "安全",
+        "pricing": "价格"
+      },
+      "resources": {
+        "title": "资源",
+        "documentation": "文档",
+        "api": "API参考",
+        "community": "社区",
+        "help_center": "帮助中心"
+      },
+      "company": {
+        "title": "公司",
+        "about": "关于我们",
+        "careers": "招聘",
+        "blog": "博客",
+        "contact": "联系我们"
+      }
+    },
+    "newsletter": {
+      "title": "订阅最新消息",
+      "desc": "获取最新功能和更新消息。",
+      "placeholder": "电子邮件地址"
+    },
+    "bottom": {
+      "rights": "© {{year}} Ara Inc.",
+      "terms": "服务条款",
+      "privacy": "隐私政策",
+      "cookies": "Cookie"
+    }
+  },
+  "common": {
+    "save": "保存",
+    "saving": "保存中...",
+    "apply": "应用",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "my_profile": "我的资料",
+    "my_account": "我的账户",
+    "view_profile": "查看资料",
+    "settings_desc": "个人资料/设置",
+    "search": "搜索",
+    "back": "返回",
+    "loading": "加载中...",
+    "error": "发生错误",
+    "close": "关闭",
+    "share": "分享",
+    "link_copied": "链接已复制"
+  },
+  "settings": {
+    "languageSelect": "语言选择",
+    "themeSelect": "选择主题",
+    "theme_options": {
+      "light": "亮色",
+      "dark": "暗色",
+      "system": "系统"
+    },
+    "system": "系统设置",
+    "language": "语言",
+    "theme": "主题",
+    "notifications": "通知设置",
+    "alarm_comment": "评论通知",
+    "alarm_comment_desc": "有人评论您的帖子时接收通知。",
+    "alarm_like": "点赞通知",
+    "alarm_like_desc": "有人点赞您的帖子时接收通知。",
+    "alarm_follow": "关注通知",
+    "alarm_follow_desc": "有人关注您时接收通知。",
+    "privacy": "隐私设置",
+    "change_password": "修改密码",
+    "connect_sns": "关联SNS账号",
+    "withdraw": "注销账号",
+    "withdraw_phrase": "我要注销账号",
+    "withdraw_verify_placeholder": "Please type \"{{phrase}}\" to confirm",
+    "withdraw_modal_title": "Are you sure you want to delete your account?",
+    "withdraw_warning_1": "Your account information cannot be recovered.",
+    "withdraw_warning_2": "All posts and comments will be deleted.",
+    "withdraw_warning_3": "Follow/Following information will be lost.",
+    "withdraw_warning_4": "This action cannot be undone.",
+    "confirm_password": "确认密码",
+    "confirm_password_placeholder": "Enter your password",
+    "confirm_password_desc": "Please enter your password to confirm your identity.",
+    "withdraw_verify_label": "Type the phrase below",
+    "withdraw_btn_cancel": "Cancel",
+    "withdraw_btn_processing": "Processing...",
+    "withdraw_btn_confirm": "注销",
+    "pw_change_guide": "我们建议使用至少8个字符，包含字母、数字和符号的组合。",
+    "current_pw": "当前密码",
+    "current_pw_placeholder": "请输入当前密码",
+    "new_pw": "新密码",
+    "new_pw_placeholder": "请输入新密码",
+    "confirm_new_pw": "确认新密码",
+    "confirm_new_pw_placeholder": "请再次输入新密码",
+    "pw_mismatch": "新密码不匹配。",
+    "pw_check_req": "请检查您的密码（至少8个字符且匹配）。",
+    "hide": "隐藏",
+    "show": "显示",
+    "sns_connect_desc": "关联社交账号以方便登录和找回。",
+    "connect_google": "关联Google账号",
+    "connect_kakao": "关联Kakao账号",
+    "sns_connect_note": "您可以随时在设置 > 隐私中取消关联账号。（即将推出）",
+    "account_settings": "Settings",
+    "support_policy": "支持与政策",
+    "help_center": "帮助中心",
+    "terms": "服务条款",
+    "privacy_policy": "隐私政策",
+    "marketing_consent": "营销同意",
+
+    "title_language": "更改语言",
+    "title_theme": "更改主题",
+    "title_password_change": "修改密码",
+    "title_sns_connect": "关联SNS账号",
+    "title_withdraw": "注销账号",
+    "title_terms": "服务条款",
+    "title_privacy": "隐私政策",
+    "title_marketing": "营销同意",
+    "title_support": "帮助中心",
+    "security_title": "安全设置",
+    "session_management": "会话管理"
+  },
+  "profile": {
+    "edit_profile": "编辑资料",
+    "following": "关注中",
+    "followers": "粉丝",
+    "joined": "加入于 {{date}}",
+    "tabs": {
+      "posts": "帖子",
+      "replies": "回复",
+      "media": "媒体",
+      "likes": "喜欢"
+    },
+    "no_posts": "暂无帖子",
+    "no_replies": "暂无回复",
+    "profile_optional": "资料设置（可选）",
+    "profile_image": "头像",
+    "select_image": "选择图片",
+    "bio": "个人简介",
+    "bio_placeholder": "介绍一下自己",
+    "tab_posts": "帖子",
+    "tab_replies": "评论",
+    "tab_likes": "点赞",
+    "nickname_change_warning": "⚠️ 昵称只能修改一次。",
+    "nickname_disabled_reason": "昵称已经修改过一次。",
+    "nickname_change_forbidden": "昵称无法再次修改。",
+    "country_change_warning": "⚠️ 国籍只能修改一次。",
+    "country_disabled_reason": "国籍已经修改过一次。",
+    "country_change_forbidden": "国籍无法再次修改。"
+  },
+  "tweets": {
+    "placeholder_tweet": "你在想什么？",
+    "placeholder_reply": "发布你的回复",
+    "btn_post": "发布",
+    "btn_posting": "Posting...",
+    "btn_reply": "回复",
+    "btn_replying": "Replying...",
+    "error_profile": "Loading profile information. Please try again later.",
+    "error_general": "An error occurred.",
+    "add_photo": "添加图片",
+    "images_selected": "{{count}} images selected",
+    "preview_alt": "Preview {{index}}"
+  },
+  "tweet": {
+    "delete_msg_title": "确定删除吗？",
+    "delete_msg_desc": "删除后无法恢复。",
+    "delete_success": "已删除。",
+    "delete_failed": "Failed to delete.",
+    "no_replies": "暂无回复",
+    "be_first": "抢占沙发！",
+    "cannot_delete": "Cannot delete"
+  },
+  "trending": {
+    "title": "趋势",
+    "no_trending": "暂无趋势"
+  },
+  "chat": {
+    "direct_chat": "私信",
+    "select_or_start": "从左侧选择聊天室或点击+按钮开始对话。",
+    "start_conversation": "点击+按钮开始对话",
+    "feature_realtime": "💬 实时1:1聊天",
+    "feature_search": "👥 用户搜索与邀请",
+    "feature_responsive": "📱 响应式设计",
+    "room_title": "Direct Chat",
+    "loading": "加载中...",
+    "me": "我",
+    "unknown": "Unknown",
+    "today": "Today",
+    "exit": "Exit",
+    "search_placeholder": "搜索消息",
+    "search_btn": "搜索",
+    "search_hint": "搜索消息内容。",
+    "no_result": "未找到结果。",
+    "no_messages": "暂无消息。",
+    "send_first_message": "发送第一条消息！",
+    "system_leave": " 离开了聊天",
+    "confirm_exit": "确定要退出此聊天吗？",
+    "exit_fail": "退出聊天失败。",
+    "exit_error": "退出时发生错误。",
+    "result_count": "{{count}} 条中的第 {{index}} 条",
+    "prev": "上一个",
+    "next": "下一个",
+    "new_chat": "新聊天",
+    "user_search_placeholder": "搜索用户...",
+    "user_search_loading": "正在搜索用户...",
+    "no_chats": "暂无聊天。",
+    "new_badge": "NEW",
+    "loading_messages": "正在加载消息...",
+    "input_placeholder": "请输入消息...（按回车发送，Shift+Enter换行）",
+    "notice_profanity": "⚠️ 粗俗语言、仇恨言论和歧视性发言将被自动检测、屏蔽或阻止。重复此行为可能会受到处罚。",
+    "notice_blocked": "🚫 由于包含不当表达，发送已被阻止。",
+    "notice_masked": "🔒 部分词汇已根据政策进行了屏蔽。",
+    "title_direct_chat": "聊天",
+    "action_exit": "退出",
+    "btn_new_chat": "新聊天",
+    "title_chat_room": "聊天房间",
+    "btn_leave": "退出",
+    "search_placeholder_history": "搜索聊天房间或对话内容...",
+    "search_result_rooms": "聊天房间",
+    "search_result_messages": "对话内容",
+    "last_message_label": "最后对话",
+    "searching": "搜索中...",
+    "no_search_result_desc": "无法找到关于 '{{query}}' 的对话记录。"
+  },
+  "policy": {
+    "close": "关闭",
+    "help_center": {
+      "intro": "如果您在使用服务时遇到任何困难，请随时通过以下渠道联系我们。",
+      "email_title": "邮件咨询",
+      "email_address": "koreara25@gmail.com",
+      "email_hours": "工作日 10:00 ~ 18:00（周末及节假日休息）",
+      "app_report_title": "应用内举报/咨询（即将推出）",
+      "app_report_post": "可以从帖子和评论右上角菜单直接举报。",
+      "app_report_dm": "也可以从私信列表 > 用户资料 > 举报/屏蔽菜单进行举报。",
+      "faq_title": "常见问题（FAQ）",
+      "faq_account": "账号/密码、登录问题",
+      "faq_report": "举报/屏蔽及社区准则",
+      "faq_privacy": "数据/隐私相关咨询",
+      "faq_note": "正式发布时将添加FAQ页面。"
+    },
+    "terms": {
+      "title": "服务条款",
+      "purpose": {
+        "h": "第1条（目的）",
+        "body": "本条款旨在规定\"ARA\"（以下简称\"公司\"）提供的SNS/社区服务（包括移动/网页，以下简称\"服务\"）使用相关的公司与会员之间的权利、义务及责任事项以及其他必要事项。"
+      },
+      "definition": {
+        "h": "第2条（定义）",
+        "member": "\"会员\"是指同意公司条款并创建账号使用服务的人。",
+        "content": "\"内容\"是指会员在服务中上传/传输/发布的文本、图片、音频、视频、链接及其他资料。",
+        "paid_service": "\"付费服务\"是指数字道具、订阅、去广告、额外存储空间等需要付费使用的服务。"
+      },
+      "contract": {
+        "h": "第3条（使用协议的成立及资格）",
+        "agreement": "会员同意条款及隐私政策并完成注册程序后，使用协议即告成立。",
+        "verification": "可能需要包括社交登录在内的身份验证程序。",
+        "age_limit": "未满14周岁不能注册。公司必要时可要求提交年龄确认资料。"
+      },
+      "community": {
+        "h": "第4条（社区管理及禁止行为）",
+        "guidelines": "须遵守法律法规、条款及社区准则。",
+        "prohibited_content": "禁止发布/传输/宣传侵犯他人权利或违法、有害、歧视、仇恨、淫秽、暴力的内容。",
+        "prohibited_actions": "禁止未经授权收集/发布个人信息（本人或他人）、垃圾邮件、广告、网络钓鱼、账号出租/转让、使用自动化手段访问/收集/爬取。",
+        "violations": "公司可在违反准则时删除帖子、限制曝光、暂停或永久封禁账号。"
+      },
+      "member_duty": {
+        "h": "第5条（会员义务）",
+        "password": "会员有责任管理账号密码。",
+        "identity": "不得盗用他人身份/支付方式或登记虚假信息。",
+        "ai_output": "不得以侵犯第三方权利的方式使用服务内AI功能的输出内容。"
+      },
+      "license": {
+        "h": "第6条（内容权利及许可）",
+        "copyright": "会员发布内容的著作权原则上归会员所有。",
+        "grant": "会员授予公司为提供/运营/改进/推广服务之目的，存储、复制、发布、展示、传输、编辑（仅限格式变更）该内容的非独占、免费、全球性许可。会员可在删除帖子或账号后撤回上述许可（备份/法律合规保存除外）。",
+        "responsibility": "发布侵犯他人权利的内容时，所有法律责任由会员承担。"
+      },
+      "ai": {
+        "h": "第7条（AI功能告知）",
+        "usage": "服务可能使用帖子推荐、内容生成/摘要、举报审核辅助等AI/算法功能。",
+        "disclaimer": "AI结果可能包含错误，仅供参考。会员应自行审查后使用结果。"
+      },
+      "payment": {
+        "h": "第8条（付费服务及支付）",
+        "pricing": "付费服务的价格、支付条件、退款政策将在界面另行告知。",
+        "policy": "应用市场/支付代理政策可能优先适用。"
+      },
+      "service_change": {
+        "h": "第9条（服务变更/中断）",
+        "body": "公司在运营/技术需要或法律政策变更时，可变更或中断全部或部分服务，重要变更将提前告知。"
+      },
+      "termination": {
+        "h": "第10条（合同解除及使用限制）",
+        "withdrawal": "会员可随时从设置中注销。",
+        "restriction": "违反条款/准则、多次侵权举报、安全威胁等情况发生时，公司可在事先通知后删除帖子、限制曝光、暂停/终止账号（紧急情况事后通知）。"
+      },
+      "ip_report": {
+        "h": "第11条（权利侵权举报及反通知）",
+        "takedown": "权利人证明侵权时，公司可临时屏蔽或删除相关内容。",
+        "counter": "发布者可通过提交反驳资料请求恢复。"
+      },
+      "disclaimer": {
+        "h": "第12条（免责及责任限制）",
+        "force_majeure": "对于不可抗力如自然灾害、通信故障造成的损失，公司不承担责任。",
+        "disputes": "会员之间或会员与第三方之间的纠纷由当事方负责处理，公司在无故意或重大过失的情况下不承担责任。"
+      },
+      "law": {
+        "h": "第13条（准据法及管辖）",
+        "body": "本条款以大韩民国法律为准据法，发生纠纷时，以公司总部所在地法院为专属管辖法院。"
+      },
+      "notice": {
+        "h": "第14条（条款修订及告知）",
+        "body": "公司可在遵守相关法律范围内修订条款，修订内容及生效日期将在服务内提前至少7天告知（对会员不利时提前30天）。"
+      }
+    },
+    "privacy": {
+      "title": "隐私政策",
+      "collect": {
+        "h": "第1条（收集的个人信息项目）",
+        "required_title": "必填",
+        "required_items": "邮箱、密码（哈希）、昵称、服务标识符（UID）",
+        "optional_title": "选填",
+        "optional_items": "出生日期、性别、头像、国家/语言、自我介绍",
+        "auto_title": "自动收集",
+        "auto_items": "访问/使用日志、IP/设备信息、Cookie/类似技术、错误/崩溃日志、通知令牌、广告标识符（选择加入时）",
+        "social_title": "社交登录",
+        "social_items": "提供商政策范围内的信息，如个人资料昵称/邮箱、平台标识符等"
+      },
+      "purpose": {
+        "h": "第2条（个人信息使用目的）",
+        "account": "会员注册/身份验证/账号管理",
+        "sns_features": "提供好友推荐、动态曝光等SNS核心功能",
+        "support": "客户咨询响应及公告、服务稳定化及质量改进",
+        "analytics": "统计/分析及个性化内容推荐（同意范围内）",
+        "security": "安全、防止欺诈、举报处理",
+        "payment": "付费服务支付/退款/发票开具"
+      },
+      "share": {
+        "h": "第3条（个人信息第三方提供及委托处理）",
+        "principle": "公司原则上不会在未经会员同意的情况下提供给第三方。",
+        "outsourcing": "为运营服务，可能将云/数据托管、日志分析、消息发送等业务委托给专业机构，受托公司名称、业务、保存期限将在服务内\"受托方\"公开页面告知。",
+        "legal": "法律要求的情况下可能例外提供。"
+      },
+      "xborder": {
+        "h": "第4条（境外传输）",
+        "body": "服务器位置或受托公司设施可能位于境外。传输国家、传输日期和方式、保存期限、保护措施等将在服务内告知。"
+      },
+      "store": {
+        "h": "第5条（保存及使用期限）",
+        "withdrawal": "会员注销时将立即销毁，但根据相关法律可能保存一定期限。",
+        "legal_retention": "电子商务/支付、通信事实确认资料等按法定保存期限执行。",
+        "backup": "由于备份系统技术限制难以立即删除时，将分离保管后定期销毁。"
+      },
+      "security": {
+        "h": "第6条（安全措施）",
+        "encryption": "密码及敏感信息加密存储",
+        "access_control": "访问权限最小化及定期检查",
+        "logs": "访问记录保存及防止伪造/篡改",
+        "backup_recovery": "运营备份/灾难恢复体系应对安全事件"
+      },
+      "rights": {
+        "h": "第7条（用户及法定代理人权利）",
+        "data_rights": "可请求查看、更正、删除、停止处理、转移个人信息。",
+        "settings": "可更改个人资料公开范围、通知/个性化推荐设置。",
+        "cookies": "Cookie设置可在浏览器中管理。"
+      },
+      "children": {
+        "h": "第8条（儿童个人信息保护）",
+        "body": "不允许未満14周岁儿童注册，确认时可能限制账号。"
+      },
+      "notice": {
+        "h": "第9条（隐私政策变更）",
+        "body": "因法律/服务变更可能修订本政策，重要变更将在实施前至少7天告知（对会员不利时提前30天）。"
+      },
+      "contact": {
+        "h": "第10条（个人信息保护负责人）",
+        "name": "姓名：洪吉童",
+        "email": "邮箱：privacy@ara-service.com",
+        "hours": "咨询时间：工作日10:00~18:00"
+      }
+    },
+    "marketing": {
+      "title": "营销信息接收同意",
+      "purpose": {
+        "h": "第1条（接收目的）",
+        "body": "通过邮件/推送/短信等提供新内容、活动、优惠等有用信息。"
+      },
+      "contents": {
+        "h": "第2条（接收内容）",
+        "features": "新功能及推荐动态摘要",
+        "events": "活动/促销/推广通知",
+        "discounts": "折扣、优惠券、合作伙伴优惠",
+        "reports": "个性化报告（活动摘要、趋势）"
+      },
+      "channels": {
+        "h": "第3条（接收渠道及设置）",
+        "individual": "可按渠道（邮件/推送/短信）单独同意/撤回。",
+        "settings": "可在设置 > 通知/营销菜单或接收消息底部链接更改。",
+        "apply": "撤回时从后续发送开始适用。"
+      },
+      "partners": {
+        "h": "第4条（第三方营销及委托）",
+        "body": "部分发送业务可能委托给专业代理机构，合作伙伴营销将另行获得同意后进行。"
+      },
+      "note": {
+        "h": "第5条（必要通知）",
+        "body": "服务运营必要通知（条款/安全等）可能不论接收同意与否均会发送。"
+      }
+    }
+  }
+}

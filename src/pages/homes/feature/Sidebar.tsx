@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDirectChat } from '@/contexts/DirectChatContext';
 import { supabase } from '@/lib/supabase';
@@ -12,6 +13,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ onTweetClick }: SidebarProps) {
+  const { t } = useTranslation();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -97,14 +99,14 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
 
       if (error || !data) {
         console.error('프로필 정보를 가져오지 못했습니다:', error?.message);
-        toast.error('프로필 정보를 불러올 수 없습니다.');
+        toast.error(t('common.error_profile_not_load'));
         return;
       }
 
       navigate(`/finalhome/user/${encodeURIComponent(data.nickname)}`);
     } catch (err: any) {
       console.error('프로필 이동 실패:', err.message);
-      toast.error('프로필로 이동하는 중 오류가 발생했습니다.');
+      toast.error(t('common.error_navigate_profile'));
     }
   };
 
@@ -114,11 +116,11 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
   };
 
   const navigationItems = [
-    { icon: 'ri-home-5-fill', label: '홈', path: '/finalhome' },
-    { icon: 'ri-notification-3-line', label: '알림', path: '/finalhome/hnotifications' },
-    { icon: 'ri-chat-3-line', label: '채팅', path: '/finalhome/chat' },
-    { icon: 'ri-user-line', label: '프로필', onClick: handleProfileClick },
-    { imgSrc: '/apple-touch-icon.png', label: '학습', path: '/studyList' },
+    { icon: 'ri-home-5-fill', label: t('nav.home'), path: '/finalhome' },
+    { icon: 'ri-notification-3-line', label: t('nav.notifications'), path: '/finalhome/hnotifications' },
+    { icon: 'ri-chat-3-line', label: t('nav.chat'), path: '/finalhome/chat' },
+    { icon: 'ri-user-line', label: t('nav.profile'), onClick: handleProfileClick },
+    { imgSrc: '/apple-touch-icon.png', label: t('nav.study'), path: '/studyList' },
   ];
 
   const handleNavigation = (path?: string, onClick?: () => void) => {
@@ -155,7 +157,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
         <ul className="space-y-2">
           {navigationItems.map((item, index) => {
             const isActive = item.path && location.pathname === item.path;
-            const isChatItem = item.label === '채팅';
+            const isChatItem = item.label === t('nav.chat'); // check against translated label
             return (
               <li key={index}>
                 <button
@@ -197,7 +199,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
             onClick={onTweetClick}
             className="w-full bg-primary hover:bg-primary/80 text-white font-bold py-3 px-2 lg:px-8 rounded-full mt-6 transition-colors cursor-pointer whitespace-nowrap"
           >
-            <span className="hidden lg:block">게시하기</span>
+            <span className="hidden lg:block">{t('nav.post')}</span>
             <i className="ri-add-line text-xl lg:hidden"></i>
           </button>
         )}
@@ -236,7 +238,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
                 className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-primary/10 dark:text-gray-100 transition-colors cursor-pointer whitespace-nowrap"
               >
                 <i className="ri-user-line mr-3 flex-shrink-0" />
-                <span className="lg:inline">내 프로필</span>
+                <span className="lg:inline">{t('common.my_profile')}</span>
               </button>
 
               <button
@@ -247,7 +249,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
                 className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-primary/10 dark:text-gray-100 transition-colors cursor-pointer whitespace-nowrap"
               >
                 <i className="ri-settings-3-line mr-3 flex-shrink-0" />
-                <span className="lg:inline">설정</span>
+                <span className="lg:inline">{t('nav.settings')}</span>
               </button>
 
               <hr className="my-2 border-gray-200 dark:border-gray-700" />
@@ -257,7 +259,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
                 className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-primary/10 dark:text-gray-100 transition-colors cursor-pointer whitespace-nowrap"
               >
                 <i className="ri-logout-box-line mr-3" />
-                로그아웃
+                {t('auth.logout')}
               </button>
             </div>
           )}

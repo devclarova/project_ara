@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export type Step = 1 | 2 | 3;
 
@@ -19,10 +20,11 @@ type AnimSeq = {
 } | null;
 
 export default function SignUpStepper({ current, onStepChange, guard, onBeforeChange }: Props) {
+  const { t } = useTranslation();
   const steps = [
-    { n: 1 as Step, label: '동의' },
-    { n: 2 as Step, label: '정보 입력' },
-    { n: 3 as Step, label: '프로필' },
+    { n: 1 as Step, label: t('signup.step_agreement') },
+    { n: 2 as Step, label: t('signup.step_info') },
+    { n: 3 as Step, label: t('signup.step_profile') },
   ] as const;
 
   const prevRef = useRef<Step>(current);
@@ -90,7 +92,7 @@ export default function SignUpStepper({ current, onStepChange, guard, onBeforeCh
 
   return (
     <div
-      aria-label="회원가입 단계"
+      aria-label={t('signup.stepper_aria')}
       className="grid grid-cols-[auto_1fr_auto_1fr_auto] items-center w-full mb-4 sm:mb-6"
     >
       {steps.map((s, i) => {

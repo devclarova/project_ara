@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import RichTextEditor from '../editor/RichTextEditor';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface TweetModalProps {
   onClose: () => void;
@@ -11,6 +12,7 @@ interface TweetModalProps {
 }
 
 export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [content, setContent] = useState('');
   const [images, setImages] = useState<File[]>([]);
@@ -139,7 +141,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
 
       onTweetCreated?.(newTweet);
       // alert('트윗이 성공적으로 업로드되었습니다!');
-      toast.success('트윗이 성공적으로 업로드되었습니다!');
+      toast.success(t('tweets.success_tweet'));
       onClose();
     } catch (err) {
       console.error('⚠️ 트윗 업로드 오류:', err);

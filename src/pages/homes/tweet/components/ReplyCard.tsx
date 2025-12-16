@@ -1,26 +1,32 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import DOMPurify from 'dompurify';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import type { Reply } from './ReplyList';
+import type { UIReply } from '@/types/sns';
 import TranslateButton from '@/components/common/TranslateButton';
+import { useTranslation } from 'react-i18next';
+
+interface ReplyCardProps {
+  reply: UIReply;
+  onDeleted?: (replyId: string) => void;
+  onUnlike?: (id: string) => void;
+  highlight?: boolean;
+}
 
 export function ReplyCard({
   reply,
   onDeleted,
   onUnlike,
   highlight = false,
-}: {
-  reply: Reply;
-  onDeleted?: (id: string) => void;
-  onUnlike?: (id: string) => void;
-  highlight?: boolean;
-}) {
+}: ReplyCardProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const params = useParams();
   const { user: authUser } = useAuth();
+  const { t, i18n } = useTranslation();
 
   const [liked, setLiked] = useState(reply.liked ?? false);
   const [likeCount, setLikeCount] = useState(reply.stats.likes);
@@ -115,7 +121,7 @@ export function ReplyCard({
   // 댓글 삭제
   const handleDelete = async () => {
     if (!profileId) {
-      toast.error('로그인이 필요합니다.');
+      toast.error(t('auth.login_needed'));
       return;
     }
 
@@ -128,13 +134,13 @@ export function ReplyCard({
 
       if (error) throw error;
 
-      toast.success('댓글이 삭제되었습니다.');
+      toast.success(t('common.success_delete'));
       setShowDialog(false);
       setShowMenu(false);
       onDeleted?.(reply.id);
     } catch (err: any) {
       console.error('댓글 삭제 실패:', err.message);
-      toast.error('삭제 중 오류가 발생했습니다.');
+      toast.error(t('common.error_delete'));
     }
   };
 
@@ -143,11 +149,11 @@ export function ReplyCard({
     e.stopPropagation();
 
     if (!authUser) {
-      toast.error('로그인이 필요합니다.');
+      toast.error(t('auth.login_needed'));
       return;
     }
     if (!profileId) {
-      toast.error('프로필 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+      toast.error(t('common.error_profile_loading'));
       return;
     }
 
@@ -215,7 +221,7 @@ export function ReplyCard({
       // }
     } catch (err: any) {
       console.error('좋아요 처리 실패:', err.message);
-      toast.error('좋아요 처리 중 오류가 발생했습니다.');
+      toast.error(t('common.error_like'));
     }
   };
 
@@ -260,11 +266,22 @@ export function ReplyCard({
       className={containerClasses + ' cursor-pointer'}
       onClick={e => {
         e.stopPropagation();
-        navigate(`/sns/${reply.tweetId}`, {
+        
+        // useParams로 가져온 id(문자열)와 reply.tweetId(문자열 or 숫자) 비교
+        const currentTweetId = params.id;
+        const targetTweetId = String(reply.tweetId);
+        
+        // 현재 보고 있는 트윗 내에서의 이동(대댓글 등)이면 History 쌓지 않음
+        const isSamePage = currentTweetId === targetTweetId;
+        
+        const targetPath = `/sns/${targetTweetId}`;
+        
+        navigate(targetPath, {
           state: {
             highlightCommentId: reply.id,
             scrollKey: Date.now(),
           },
+          replace: isSamePage,
         });
       }}
     >
@@ -288,7 +305,34 @@ export function ReplyCard({
               </span>
               <span className="text-gray-500 dark:text-gray-400">·</span>
               <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
-                {reply.timestamp}
+                {(() => {
+                  if (!reply.timestamp) return '';
+                  try {
+                    const date = new Date(reply.timestamp);
+                    if (isNaN(date.getTime())) return reply.timestamp;
+
+                    const now = new Date();
+                    const diff = now.getTime() - date.getTime();
+                    const currentLang = i18n.language || 'ko';
+
+                    if (diff < 24 * 60 * 60 * 1000) {
+                      return new Intl.DateTimeFormat(currentLang, { 
+                        hour: 'numeric', 
+                        minute: 'numeric', 
+                        hour12: true 
+                      }).format(date);
+                    }
+                    return new Intl.DateTimeFormat(currentLang, { 
+                      month: 'short', 
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    }).format(date);
+                  } catch {
+                    return reply.timestamp;
+                  }
+                })()}
               </span>
             </div>
 
@@ -357,7 +401,7 @@ export function ReplyCard({
               <div className="p-2 rounded-full group-hover:bg-blue-50 dark:group-hover:bg-primary/10 transition-colors">
                 <i className="ri-chat-3-line text-lg" />
               </div>
-              <span className="text-sm">{reply.stats.comments}</span>
+              <span className="text-sm">{reply.stats.replies}</span>
             </button>
 
             {/* Like */}

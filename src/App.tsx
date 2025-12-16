@@ -29,10 +29,12 @@ import TweetDetail from './pages/homes/tweet/TweetDetail';
 import SignUpWizard from './pages/SignUpWizard';
 import OnboardingWall from './routes/guards/OnboardingWall';
 import { DirectChatProvider } from './contexts/DirectChatContext';
-import Header from './components/common/Headrer';
+import Header from './components/common/Header';
 import SnsPage from './pages/sns/SnsPage';
 import SnsDetailPage from './pages/sns/SnsDetailPage';
 import { Toaster } from 'sonner'; // 토스트 컴포넌트 추가
+import Footer from './components/common/Footer';
+import { ThemeProvider } from './components/theme-provider';
 
 // ---------- 인증 가드 ----------
 function RequireAuth() {
@@ -60,8 +62,17 @@ function AppInner() {
 
   // 헤더를 숨길 경로들
   const HIDE_HEADER_PATHS = ['/signin', '/signup', '/auth/callback', '/signup/social'];
-
   const hideHeader = HIDE_HEADER_PATHS.some(path => location.pathname.startsWith(path));
+
+  // 푸터를 숨길 경로들 (채팅방, 로그인 등)
+  // 채팅방(/chat)은 헤더는 필요하지만, 푸터는 화면 높이를 위해 숨김
+  const HIDE_FOOTER_PATHS = [...HIDE_HEADER_PATHS, '/chat', '/sns']; 
+  // 참고: /sns도 무한 스크롤 피드라면 푸터가 도달 불가능하므로 사이드바에 두는 게 낫지만,
+  // 일단 사용자 요청에 따라 헤더가 있는 곳엔 붙이되, '채팅'은 확실히 뺌. 
+  // (사용자 질문에 답변하기 위해 일단 로직 분리. /sns는 아래 답변에서 설명 후 결정 가능하지만, 
+  // 현재 코드상으로는 /sns에서 푸터를 보면 어색할 수 있음. 일단 /chat만 확실히 추가하고 /sns는 답변에 맡김)
+  
+  const hideFooter = [...HIDE_HEADER_PATHS, '/chat'].some(path => location.pathname.startsWith(path));
 
   return (
     <>
@@ -115,6 +126,9 @@ function AppInner() {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
+
+        {/* 푸터 노출 조건: hideFooter가 아닐 때만 */}
+        {!hideFooter && <Footer />}
       </div>
     </>
   );
@@ -124,39 +138,41 @@ function AppInner() {
 const App = () => {
   return (
     <AuthProvider>
-      <NewChatNotificationProvider>
-        <DirectChatProvider>
-          <Router>
-            <AppInner />
-          </Router>
-          <Toaster
-            position="top-center"
-            toastOptions={{
-              duration: 2500,
-              style: {
-                background: 'hsl(var(--primary) / 0.35)', // 은은한 primary 반투명
-                border: '1px solid hsl(var(--primary) / 0.25)',
-                backdropFilter: 'blur(10px)', // 더 부드러운 유리 효과
-                WebkitBackdropFilter: 'blur(10px)',
+      <ThemeProvider defaultTheme="system" storageKey="theme-mode">
+        <NewChatNotificationProvider>
+          <DirectChatProvider>
+            <Router>
+              <AppInner />
+            </Router>
+            <Toaster
+              position="top-center"
+              toastOptions={{
+                duration: 2500,
+                style: {
+                  background: 'hsl(var(--primary) / 0.35)', // 은은한 primary 반투명
+                  border: '1px solid hsl(var(--primary) / 0.25)',
+                  backdropFilter: 'blur(10px)', // 더 부드러운 유리 효과
+                  WebkitBackdropFilter: 'blur(10px)',
 
-                color: 'hsl(var(--foreground))',
-                borderRadius: '14px',
+                  color: 'hsl(var(--foreground))',
+                  borderRadius: '14px',
 
-                // 사이즈 업! (기존보다 1.4배 정도 커짐)
-                padding: '14px 18px',
-                fontSize: '15px',
+                  // 사이즈 업! (기존보다 1.4배 정도 커짐)
+                  padding: '14px 18px',
+                  fontSize: '15px',
 
-                // 토스트 기본 폭을 넓게 → 더 브랜드스럽고 안정감 있는 느낌
-                minWidth: '340px',
-                maxWidth: '440px',
+                  // 토스트 기본 폭을 넓게 → 더 브랜드스럽고 안정감 있는 느낌
+                  minWidth: '340px',
+                  maxWidth: '440px',
 
-                boxShadow: '0 6px 28px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1)',
-              },
-              className: 'font-medium',
-            }}
-          />
-        </DirectChatProvider>
-      </NewChatNotificationProvider>
+                  boxShadow: '0 6px 28px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1)',
+                },
+                className: 'font-medium',
+              }}
+            />
+          </DirectChatProvider>
+        </NewChatNotificationProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 };

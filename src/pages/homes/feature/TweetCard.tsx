@@ -9,33 +9,26 @@ import { toast } from 'sonner';
 import ImageSlider from '../tweet/components/ImageSlider';
 import ModalImageSlider from '../tweet/components/ModalImageSlider';
 import TranslateButton from '@/components/common/TranslateButton';
+import { useTranslation } from 'react-i18next';
+import { type UITweet, type TweetStats, type TweetUser } from '@/types/sns';
+import { SnsStore } from '@/lib/snsState';
 
 const SNS_LAST_TWEET_ID_KEY = 'sns-last-tweet-id';
-
-interface User {
-  name: string;
-  username: string;
-  avatar: string;
-}
-
-interface Stats {
-  replies?: number;
-  likes?: number;
-  views?: number;
-}
 
 interface TweetCardProps {
   id: string; // 댓글ID 또는 트윗ID
   tweetId?: string; // reply일 때 원본 트윗ID
-  type?: 'tweet' | 'reply'; // reply인지 tweet인지 구분
-  user: User;
+  type?: 'tweet' | 'reply' | 'post'; // reply인지 tweet인지 구분
+  user: TweetUser;
   content: string;
   image?: string | string[];
   timestamp: string;
-  stats: Stats;
+  createdAt?: string;
+  stats: TweetStats;
   onDeleted?: (id: string) => void;
   dimmed?: boolean;
   onUnlike?: (id: string) => void;
+  liked?: boolean;
 }
 
 export default function TweetCard({
@@ -49,11 +42,13 @@ export default function TweetCard({
   stats,
   onDeleted,
   dimmed = false,
+  liked: initialLiked,
 }: TweetCardProps) {
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
+  const { t, i18n } = useTranslation();
 
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(initialLiked ?? false);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
@@ -245,6 +240,18 @@ export default function TweetCard({
           setReplyCount(prev => (prev > 0 ? prev - 1 : 0));
         },
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'tweet_replies',
+          filter: `tweet_id=eq.${id}`,
+        },
+        () => {
+          setReplyCount(prev => prev + 1);
+        },
+      )
       .subscribe();
 
     return () => {
@@ -263,15 +270,43 @@ export default function TweetCard({
     }
   }, [safeContent]);
 
+  // 이미지 모달 열릴 때 바깥 스크롤 완전 차단
+  useEffect(() => {
+    if (!showImageModal) return;
+
+    const body = document.body;
+    const originalOverflow = body.style.overflow;
+    const originalTouchAction = (body.style as any).touchAction;
+
+    const preventScroll = (e: Event) => {
+      e.preventDefault();
+    };
+
+    body.style.overflow = 'hidden';
+    (body.style as any).touchAction = 'none';
+
+    document.addEventListener('touchmove', preventScroll, { passive: false });
+    document.addEventListener('wheel', preventScroll, { passive: false });
+    document.addEventListener('mousewheel', preventScroll, { passive: false });
+
+    return () => {
+      body.style.overflow = originalOverflow || '';
+      (body.style as any).touchAction = originalTouchAction || '';
+      document.removeEventListener('touchmove', preventScroll);
+      document.removeEventListener('wheel', preventScroll);
+      document.removeEventListener('mousewheel', preventScroll);
+    };
+  }, [showImageModal]);
+
   /** 좋아요 토글 (user_id = profiles.id 사용 + 알림 생성) */
   const handleLikeToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!authUser) {
-      toast.error('로그인이 필요합니다.');
+      toast.error(t('auth.login_needed'));
       return;
     }
     if (!profileId) {
-      toast.error('프로필 정보가 없습니다. 다시 로그인해 주세요.');
+      toast.error(t('common.error_profile_missing'));
       return;
     }
 
@@ -327,7 +362,7 @@ export default function TweetCard({
       }
     } catch (err: any) {
       console.error('좋아요 토글 실패:', err.message);
-      toast.error('좋아요 처리 중 오류가 발생했습니다.');
+      toast.error(t('common.error_like'));
 
       // 실패 시 원상복구
       setLiked(!optimisticLiked);
@@ -336,29 +371,33 @@ export default function TweetCard({
         return next < 0 ? 0 : next;
       });
     }
+
+    // SnsStore 동기화 (리스트 페이지 캐시 업데이트)
+    // SnsStore가 없거나 로드되지 않았을 수도 있으니 안전하게 호출
+    SnsStore.updateStats(id, {
+      likes: optimisticLiked ? likeCount + 1 : Math.max(0, likeCount - 1)
+    });
   };
 
   /** 트윗 삭제 */
   const handleDelete = async () => {
-    if (!profileId) {
-      toast.error('로그인이 필요합니다.');
-      return;
-    }
+    if (!profileId) return;
+    
+    const confirmed = window.confirm(t('tweet.delete_confirm'));
+    if (!confirmed) return;
+
     try {
-      const { error } = await supabase
-        .from('tweets')
-        .delete()
-        .eq('id', id)
-        .eq('author_id', profileId);
+      const table = type === 'reply' ? 'replies' : 'tweets';
+      const { error } = await supabase.from(table).delete().eq('id', id);
 
       if (error) throw error;
-      toast.success('피드가 삭제되었습니다.');
-      setShowDialog(false);
-      setShowMenu(false);
+
+      toast.success(t('tweet.delete_success'));
       onDeleted?.(id);
-    } catch (err: any) {
-      console.error('삭제 실패:', err.message);
-      toast.error('삭제 중 오류가 발생했습니다.');
+      setShowMenu(false);
+    } catch (error) {
+      console.error('Error deleting:', error);
+      toast.error(t('tweet.delete_failed'));
     }
   };
 
@@ -437,12 +476,14 @@ export default function TweetCard({
                 {user.name}
               </span>
               {authorCountryFlagUrl && (
-                <Badge variant="secondary" className="flex items-center px-1 py-0.5 ml-2">
+                <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 ml-2 h-5">
                   <img
                     src={authorCountryFlagUrl}
                     alt={authorCountryName ?? '국가'}
                     title={authorCountryName ?? ''}
-                    className="w-4 h-4 rounded-sm object-cover"
+                    className="w-5 h-3.5 rounded-[2px] object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </Badge>
               )}
@@ -457,8 +498,43 @@ export default function TweetCard({
                 </Badge>
               )}
 
+
               <span className={`${metaClass} mx-1`}>·</span>
-              <span className={`${metaClass} flex-shrink-0`}>{timestamp}</span>
+              <span className={`${metaClass} flex-shrink-0`}>
+                {(() => {
+                  if (!timestamp) return '';
+                  try {
+                    const date = new Date(timestamp);
+                    if (isNaN(date.getTime())) return timestamp; // 원본 반환 (ISO string 등)
+
+                    const now = new Date();
+                    const diff = now.getTime() - date.getTime();
+                    
+                    // 언어 설정 확인 (i18n.language가 없으면 기본값 'ko')
+                    const currentLang = i18n.language || 'ko';
+                    
+                    // 24시간 이내는 시간만 표시
+                    if (diff < 24 * 60 * 60 * 1000) {
+                      return new Intl.DateTimeFormat(currentLang, { 
+                        hour: 'numeric', 
+                        minute: 'numeric', 
+                        hour12: true 
+                      }).format(date);
+                    }
+                    // 24시간 이후는 날짜 + 시간 표시 (원복)
+                    return new Intl.DateTimeFormat(currentLang, { 
+                      month: 'short', 
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    }).format(date);
+                  } catch (e) {
+                    console.error('Date formatting error:', e);
+                    return timestamp;
+                  }
+                })()}
+              </span>
             </div>
 
             <button
@@ -482,7 +558,7 @@ export default function TweetCard({
                     className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
                   >
                     <i className="ri-delete-bin-line" />
-                    <span>삭제</span>
+                    <span>{t('common.delete')}</span>
                   </button>
                 ) : (
                   <>
@@ -491,7 +567,7 @@ export default function TweetCard({
                       onClick={e => {
                         e.stopPropagation();
                         setShowMenu(false);
-                        toast.success('신고가 접수되었습니다.');
+                        toast.success(t('common.success_report'));
                       }}
                       className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 flex items-center gap-2 text-gray-800 dark:text-gray-200"
                     >
@@ -504,7 +580,7 @@ export default function TweetCard({
                       onClick={e => {
                         e.stopPropagation();
                         setShowMenu(false);
-                        toast.success('해당 유저를 차단했습니다.');
+                        toast.success(t('common.success_block'));
                       }}
                       className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 flex items-center gap-2 text-gray-800 dark:text-gray-200"
                     >
@@ -532,6 +608,22 @@ export default function TweetCard({
               className="mt-1 text-blue-500 text-sm font-medium hover:underline"
               onClick={e => {
                 e.stopPropagation();
+                
+                // 접기 동작일 때만 스크롤 이동
+                if (expanded) {
+                  const cardElement = e.currentTarget.closest('[data-tweet-id]'); // 부모 카드 찾기
+                  if (cardElement) {
+                     const rect = cardElement.getBoundingClientRect();
+                     const absoluteTop = window.scrollY + rect.top;
+                     const offset = 100; // 헤더 높이 여유분
+                     
+                     window.scrollTo({
+                       top: absoluteTop - offset,
+                       behavior: 'smooth'
+                     });
+                  }
+                }
+                
                 setExpanded(prev => !prev);
               }}
             >
@@ -633,10 +725,10 @@ export default function TweetCard({
             onClick={e => e.stopPropagation()}
           >
             <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
-              이 게시글을 삭제하시겠어요?
+              {t('tweet.delete_confirm')}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-              삭제한 게시글은 되돌릴 수 없습니다. 정말 삭제하시겠습니까?
+              {t('tweet.delete_confirm')}
             </p>
 
             <div className="flex justify-end space-x-2">
@@ -644,13 +736,13 @@ export default function TweetCard({
                 onClick={() => setShowDialog(false)}
                 className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg:white/10"
               >
-                취소
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleDelete}
                 className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
               >
-                삭제하기
+                {t('tweet.delete')}
               </button>
             </div>
           </div>

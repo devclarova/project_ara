@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import CheckboxSquare from '../common/CheckboxSquare';
+import { useTranslation } from 'react-i18next';
 
 const DRAFT_KEY = 'signup-profile-draft';
 
@@ -107,6 +108,7 @@ async function postSignInRoute(navigate: ReturnType<typeof useNavigate>) {
 }
 
 function SignInCard() {
+  const { t } = useTranslation();
   const { signIn, session, signInWithGoogle, signInWithKakao } = useAuth();
   const [email, setEmail] = useState<string>('');
   const [pw, setPw] = useState<string>('');
@@ -136,7 +138,7 @@ function SignInCard() {
     setResendMsg('');
     const normalizedEmail = email.trim().toLowerCase();
     const { error } = await supabase.auth.resend({ type: 'signup', email: normalizedEmail });
-    setResendMsg(error ? error.message : '인증 메일이 발송되었습니다. 이메일을 확인해주세요.');
+    setResendMsg(error ? error.message : t('auth.verification_sent'));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -155,8 +157,8 @@ function SignInCard() {
     // 필수 체크
     if (!normalizedEmail || !pwValue) {
       setErrors({
-        email: !normalizedEmail ? '이메일을 입력해주세요.' : '',
-        pw: !pwValue ? '패스워드를 입력해주세요.' : '',
+        email: !normalizedEmail ? t('validation.required_email') : '',
+        pw: !pwValue ? t('validation.required_password') : '',
       });
       setLoading(false);
       return;
@@ -186,10 +188,10 @@ function SignInCard() {
         } catch {}
         setErrors(prev => ({
           ...prev,
-          email: '이메일 인증 실패, 이메일을 확인해주세요.',
+          email: t('auth.email_verification_failed'),
           pw: '',
         }));
-        setMsg('로그인 전 이메일 인증을 해주세요.');
+        setMsg(t('auth.verify_before_login'));
         setLoading(false);
         return;
       }
@@ -206,14 +208,14 @@ function SignInCard() {
 
       if (isInvalidCred) {
         setErrors(prev => ({ ...prev, email: '', pw: '' }));
-        setMsg('이메일 또는 비밀번호가 올바르지 않습니다.');
+        setMsg(t('auth.invalid_credentials'));
         setSuppressEffects(false);
         setLoading(false);
         return;
       }
 
       // 기타 오류
-      setMsg(raw || '알 수 없는 오류로 인해 로그인에 실패했습니다.');
+      setMsg(raw || t('common.error'));
       setLoading(false);
       return;
     }
@@ -258,7 +260,7 @@ function SignInCard() {
           />
         </button>
         <h2 className="mt-2 text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
-          아라에 오신 것을 환영합니다!
+          {t('auth.welcome')}
         </h2>
       </div>
 
@@ -285,7 +287,7 @@ function SignInCard() {
                 peer-focus:-top-3 peer-focus:text-sm peer-focus:text-[#00BFA5]
                 px-1`}
           >
-            이메일
+            {t('auth.email')}
           </label>
           {errors.email && (
             <p className="text-red-500 text-xs mt-1 ml-2 dark:text-red-400">{errors.email}</p>
@@ -313,7 +315,7 @@ function SignInCard() {
                 peer-focus:-top-3 peer-focus:text-sm peer-focus:text-[#00BFA5]
                 px-1`}
           >
-            비밀번호
+            {t('auth.password')}
           </label>
           {errors.pw && (
             <p className="text-red-500 text-xs mt-1 ml-2 dark:text-red-400">{errors.pw}</p>
@@ -331,7 +333,7 @@ function SignInCard() {
           className="w-full bg-primary text-white py-2 sm:py-3 rounded-xl font-semibold hover:opacity-80 text-sm sm:text-base disabled:opacity-50"
           disabled={loading}
         >
-          {loading ? '로그인 중...' : '로그인'}
+          {loading ? t('auth.logging_in') : t('auth.login')}
         </button>
       </form>
 
@@ -357,7 +359,7 @@ function SignInCard() {
             checked={remember}
             onChange={e => setRemember(e.target.checked)}
           />
-          <CheckboxSquare checked={remember} onChange={setRemember} label="자동 로그인" />
+          <CheckboxSquare checked={remember} onChange={setRemember} label={t('auth.auto_login')} />
         </label>
 
         {/* 이메일/비밀번호 찾기 (그대로 유지) */}
@@ -365,17 +367,17 @@ function SignInCard() {
           <button
             type="button"
             className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary underline-offset-2 hover:underline"
-            aria-label="이메일 찾기"
+            aria-label={t('auth.find_email')}
           >
-            이메일 찾기
+            {t('auth.find_email')}
           </button>
           <span className="text-gray-300 dark:text-gray-600">|</span>
           <button
             type="button"
             className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary underline-offset-2 hover:underline"
-            aria-label="비밀번호 찾기"
+            aria-label={t('auth.find_password')}
           >
-            비밀번호 찾기
+            {t('auth.find_password')}
           </button>
         </div>
       </div>
@@ -387,7 +389,7 @@ function SignInCard() {
             onClick={handleResend}
             className="text-primary underline hover:opacity-80"
           >
-            인증 메일 재발송
+            {t('auth.resend_verification')}
           </button>
           {resendMsg && (
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{resendMsg}</p>
@@ -396,12 +398,12 @@ function SignInCard() {
       )}
 
       <p className="mt-4 text-center text-sm sm:text-base text-gray-500 dark:text-gray-400">
-        처음 오시나요? 계정을 생성해보세요.{' '}
+        {t('auth.first_time')}{' '}
         <span
           onClick={() => navigate('/signup')}
           className="text-primary font-medium cursor-pointer"
         >
-          회원가입
+          {t('auth.signup')}
         </span>
       </p>
 
@@ -418,7 +420,7 @@ function SignInCard() {
           onClick={signInWithGoogle}
         >
           <img src="/images/google_logo.png" alt="Sign in with Google" className="w-5 h-5" />
-          <span>Google 로그인</span>
+          <span>{t('auth.login_with_google')}</span>
         </button>
         <button
           type="button"
@@ -426,7 +428,7 @@ function SignInCard() {
           onClick={signInWithKakao}
         >
           <img src="/images/kakao_logo.png" alt="Sign in with Kakao" className="w-5 h-5" />
-          <span>카카오 로그인</span>
+          <span>{t('auth.login_with_kakao')}</span>
         </button>
       </div>
     </div>

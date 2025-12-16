@@ -3,6 +3,7 @@ import { Row } from '@/components/settings/Row';
 import type { ActiveSystem, Lang, Mode } from '@/types/settings';
 import { getSystemTitle } from '@/utils/getTitle';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import LanguageSelect from './LanguageSelect';
 import ThemeSelect from './ThemeSelect';
 
@@ -11,10 +12,11 @@ interface PrivacySettingsProps {
 }
 
 function SystemSettings({ onBackToMenu }: PrivacySettingsProps) {
+  const { t, i18n } = useTranslation();
   const [active, setActive] = useState<ActiveSystem>(null);
 
   // ✅ 실제로 앱에 적용된 현재값(저장된 값)
-  const [committedLanguage, setCommittedLanguage] = useState<Lang>('ko');
+  const [committedLanguage, setCommittedLanguage] = useState<Lang>((i18n.language as Lang) || 'ko');
   const [committedTheme, setCommittedTheme] = useState<Mode>('system');
 
   // ✅ 모달에서만 사용하는 임시값(초안)
@@ -23,7 +25,7 @@ function SystemSettings({ onBackToMenu }: PrivacySettingsProps) {
 
   // 미리보기/글로벌 적용 훅
   const applyLanguage = (l: Lang) => {
-    // i18n 사용 시: i18n.changeLanguage(l);
+    i18n.changeLanguage(l);
     document.documentElement.dataset.lang = l; // 미리보기용 fallback
   };
 
@@ -53,7 +55,7 @@ function SystemSettings({ onBackToMenu }: PrivacySettingsProps) {
     if (active === 'language') {
       setCommittedLanguage(draftLanguage);
       applyLanguage(draftLanguage);
-      // i18n.changeLanguage(draftLanguage);
+      i18n.changeLanguage(draftLanguage);
     }
     if (active === 'theme') {
       setCommittedTheme(draftTheme);
@@ -95,35 +97,37 @@ function SystemSettings({ onBackToMenu }: PrivacySettingsProps) {
             type="button"
             onClick={onBackToMenu}
             className="inline-flex md:hidden items-center justify-center w-9 h-9 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="뒤로가기"
+            aria-label={t('common.back')}
           >
             <i className="ri-arrow-left-line text-lg" />
           </button>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">시스템 설정</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('settings.system')}</h3>
         </div>
 
         <div className="space-y-2">
-          <Row label="언어선택" onClick={() => open('language')} />
-          <Row label="테마선택" onClick={() => open('theme')} />
+          <Row label={t('settings.language')} onClick={() => open('language')} />
+          <Row label={t('settings.theme')} onClick={() => open('theme')} />
         </div>
 
-        <div className="h-24" />
+
       </div>
 
-      {/* 모달 */}
-      <Modal isOpen={!!active} onClose={handleCancel} title={getSystemTitle(active)}>
+      {/* 모달: active 가 있을 때만 렌더링 */}
+      <Modal isOpen={!!active} onClose={close} title={t(getSystemTitle(active))}>
         {active === 'language' && (
           <LanguageSelect
-            value={draftLanguage} // 🔁 임시값 바인딩
+            value={draftLanguage}
             onChange={handleChangeLanguage}
+            onClose={close}
             onSave={handleSave}
             onCancel={handleCancel}
           />
         )}
         {active === 'theme' && (
           <ThemeSelect
-            value={draftTheme} // 🔁 임시값 바인딩
+            value={draftTheme}
             onChange={handleChangeTheme}
+            onClose={close}
             onSave={handleSave}
             onCancel={handleCancel}
           />

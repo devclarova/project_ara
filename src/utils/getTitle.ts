@@ -3,11 +3,11 @@ import type { ActiveKey, ActiveSetting, ActiveSystem } from '@/types/settings';
 export function getSettingsTitle(active: ActiveSetting) {
   switch (active) {
     case 'password':
-      return '비밀번호 변경';
+      return 'settings.title_password_change';
     case 'sns':
-      return 'SNS 계정 연결';
+      return 'settings.title_sns_connect';
       case 'withdraw':
-      return '계정 탈퇴';
+      return 'settings.title_withdraw';
     default:
       return '';
   }
@@ -15,13 +15,13 @@ export function getSettingsTitle(active: ActiveSetting) {
 export function getPolicyTitle(active: ActiveKey) {
   switch (active) {
     case 'terms':
-      return '이용약관';
+      return 'settings.title_terms';
     case 'privacy':
-      return '개인정보처리방침';
+      return 'settings.title_privacy';
     case 'marketing':
-      return '마케팅 정보 수신';
+      return 'settings.title_marketing';
     case 'support':
-      return '고객센터';
+      return 'settings.title_support';
     default:
       return '';
   }
@@ -30,9 +30,9 @@ export function getPolicyTitle(active: ActiveKey) {
 export function getSystemTitle(active: ActiveSystem) {
   switch (active) {
     case 'language':
-      return '언어 변경';
+      return 'settings.title_language';
     case 'theme':
-      return '테마 변경';
+      return 'settings.title_theme';
     default:
       return '';
   }

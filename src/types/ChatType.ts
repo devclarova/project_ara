@@ -52,9 +52,11 @@ export interface ChatListItem {
     content: string; // 마지막 메시지 내용
     created_at: string; // 작성시간
     sender_nickname: string; // 보낸사람 닉네임
+    sender_id: string; // 보낸사람 ID (for 'Me' check)
   };
   unread_count: number; // 읽지 않은 메시지 수
   is_new_chat?: boolean; // 새 채팅방 알림 여부
+  last_message_at?: string; // 마지막 메시지 시간
 }
 
 // 채팅방 생성용

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type Mode = 'year' | 'month' | 'day';
 
@@ -19,8 +20,10 @@ export default function BirthInput({
   value,
   onChange,
   error = false,
-  errorMessage = '생년월일을 입력해주세요.',
+  errorMessage,
 }: BirthInputProps): JSX.Element {
+  const { t } = useTranslation();
+  const defaultErrorMessage = errorMessage || t('signup.error_birth_required');
   const maxDate14 = (() => {
     const t = new Date();
     return new Date(t.getFullYear() - 14, t.getMonth(), t.getDate());
@@ -193,7 +196,7 @@ export default function BirthInput({
       ${inputValue ? '-top-2 text-xs' : 'top-3 text-sm'}
       peer-focus:-top-2 peer-focus:text-xs peer-focus:text-primary`}
         >
-          생년월일
+          {t('signup.label_birth')}
         </label>
         <button
           type="button"
@@ -204,7 +207,7 @@ export default function BirthInput({
           className="absolute right-8 top-1/2 -translate-y-1/2 px-1 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white/90"
           aria-label="Toggle calendar"
         >
-          <img src="/images/calendar.png" alt="달력" className="w-5" />
+          <img src="/images/calendar.png" alt={t('signup.calendar_alt')} className="w-5" />
         </button>
         {inputValue && (
           <button
@@ -218,7 +221,7 @@ export default function BirthInput({
         )}
       </div>
 
-      {error && <p className="text-red-500 text-xs sm:text-sm mt-1">{errorMessage}</p>}
+      {error && <p className="text-red-500 text-xs sm:text-sm mt-1">{defaultErrorMessage}</p>}
 
       {open && (
         <div

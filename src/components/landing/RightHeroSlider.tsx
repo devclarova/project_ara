@@ -73,18 +73,19 @@ export default function RightHeroSlider() {
         loop
         aria-live="polite"
       >
-        {SLIDES.map(s => (
+        {SLIDES.map((s, idx) => (
           <SwiperSlide key={s.id}>
             <article
               className="relative rounded-3xl bg-white/95 dark:bg-secondary p-4 sm:p-5 border border-white/60 dark:border-slate-700 flex flex-col h-full"
               aria-labelledby={`hero-slide-title-${s.id}`}
             >
-              <div className="overflow-hidden rounded-2xl bg-gray-100 dark:bg-background/70">
+              <div className="relative w-full h-48 xs:h-56 sm:h-60 md:h-64 overflow-hidden rounded-2xl bg-gray-100 dark:bg-background/70">
                 <img
                   src={s.thumbnail}
                   alt={s.alt ?? s.title}
-                  className="w-full h-48 xs:h-56 sm:h-60 md:h-64 object-cover"
-                  loading="lazy"
+                  className="w-full h-full object-cover"
+                  loading={idx === 0 ? "eager" : "lazy"}
+                  decoding="async"
                   draggable={false}
                 />
               </div>

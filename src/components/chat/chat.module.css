@@ -21,6 +21,15 @@
   background-color: hsl(var(--background));
 }
 
+@keyframes flash {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: hsl(var(--primary) / 0.2); }
+}
+
+.message-highlight-flash {
+  animation: flash 1s ease-in-out 3;
+}
+
 /* 컨테이너 기본 테두리 + 배경 */
 .chatContainer {
   display: flex;
@@ -36,7 +45,8 @@
 /* 사이드/메인 */
 .chatPage :global(.chat-sidebar) {
   width: 300px;
-  border-right: 1px solid hsl(var(--border));
+  flex-shrink: 0; /* 🔹 사이드바가 눌려 사라지지 않도록 고정 */
+  /* border-right removed */
   background-color: hsl(var(--secondary));
   display: flex;
   flex-direction: column;
@@ -48,6 +58,7 @@
   display: flex;
   flex-direction: column;
   background-color: hsl(var(--secondary));
+  min-width: 0; /* 🔹 내부 콘텐츠(긴 텍스트 등)가 있어도 영역 밖으로 밀려나지 않게 함 */
   min-height: 0;
 }
 
@@ -57,16 +68,18 @@
   flex-direction: column;
   height: 100%;
   background-color: hsl(var(--secondary));
-  border-right: 1px solid hsl(var(--border));
+  /* border-right removed */
 }
 
 .chatPage :global(.chat-list-header) {
-  padding: 20px;
+  padding: 17px 20px;
   border-bottom: 1px solid hsl(var(--border));
+  border-right: 1px solid hsl(var(--border));
   display: flex;
   justify-content: space-between;
   align-items: center;
   background-color: hsl(var(--secondary));
+  /* flex-wrap 줄바꿈 제거: 아이콘 버튼으로 공간 확보됨 */
 }
 
 .chatPage :global(.chat-list-header h2) {
@@ -76,28 +89,36 @@
   color: hsl(var(--secondary-foreground));
 }
 
-/* 새 채팅 버튼 */
+/* 새 채팅 버튼 (아이콘형) */
 .chatPage :global(.new-chat-btn) {
   background-color: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
   border: none;
-  padding: 10px 20px;
-  border-radius: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
   opacity: 0.9;
   transition: all 0.2s ease;
+  padding: 0; /* 패딩 초기화 */
 }
 .chatPage :global(.new-chat-btn:hover) {
   opacity: 1;
+  transform: rotate(90deg); /* 호버 시 살짝 회전 효과 */
 }
 
 /* 검색 */
 .chatPage :global(.user-search) {
-  padding: 16px;
+  padding: 6px 20px;
+  display: flex-column;
+  align-items: center;
+  justify-content: center;
   border-bottom: 1px solid hsl(var(--border));
   background-color: hsl(var(--secondary));
+  border-right: 1px solid hsl(var(--border));
 }
 .chatPage :global(.search-input) {
   width: 100%;
@@ -105,7 +126,10 @@
   border: 1px solid hsl(var(--border));
   border-radius: 4px;
   font-size: 14px;
-  background-color: hsl(var(--background));
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--foreground));
   color: hsl(var(--foreground));
 }
 .chatPage :global(.search-input::placeholder) {
@@ -128,6 +152,21 @@
 .chatPage :global(.user-item:hover) {
   background-color: color-mix(in srgb, hsl(var(--primary)) 10%, hsl(var(--secondary)) 90%);
 }
+
+.chatPage :global(.no-chats) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: hsl(var(--muted-foreground));
+  font-size: 14px;
+  gap: 8px;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
 .chatPage :global(.user-avatar) {
   margin-right: 12px;
 }
@@ -170,12 +209,20 @@
 /* 채팅 아이템 목록 */
 .chatPage :global(.chat-items) {
   flex: 1;
+  flex: 1;
   overflow-y: auto;
+  /* 스크롤바 복구 (글로벌 스타일 적용) */
+  /* scrollbar-width: none; */
+  box-shadow: inset -1px 0 0 0 hsl(var(--border));
 }
+/* .chatPage :global(.chat-items)::-webkit-scrollbar {
+  display: none;
+} */
 .chatPage :global(.no-chats) {
   padding: 32px 16px;
   text-align: center;
   color: hsl(var(--muted-foreground));
+  border-right: 1px solid hsl(var(--border));
 }
 /* 💬 각 채팅방 사이 테두리 */
 .chatPage :global(.chat-item) {
@@ -184,8 +231,10 @@
   padding: 18px 20px;
   cursor: pointer;
   border-bottom: 1px solid hsl(var(--border));
+  border-right: 1px solid hsl(var(--border));
   transition: all 0.2s;
   background-color: hsl(var(--secondary));
+  position: relative;
 }
 .chatPage :global(.chat-item:hover) {
   background-color: color-mix(in srgb, hsl(var(--primary)) 6%, hsl(var(--secondary)) 94%);
@@ -247,10 +296,17 @@
   font-weight: 600;
   color: hsl(var(--secondary-foreground));
   font-size: 14px;
+  /* 말줄임표 처리 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .chatPage :global(.chat-time) {
   font-size: 12px;
   color: hsl(var(--muted-foreground));
+  /* 시간 영역 고정 및 줄바꿈 방지 */
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .chatPage :global(.chat-preview) {
   font-size: 13px;
@@ -290,7 +346,10 @@
 .chatPage :global(.feature-info) {
   margin-top: 24px;
   padding: 16px;
-  background: hsl(var(--background));
+  margin-top: 24px;
+  padding: 16px;
+  background: hsl(var(--secondary));
+  border-radius: 8px;
   border-radius: 8px;
   border: 1px solid hsl(var(--border));
 }
@@ -308,6 +367,7 @@
   /* 👉 메인 영역 안쪽 세로 테두리 (라이트/다크 공통) */
   border-left: 1px solid hsl(var(--border));
   min-height: 0;
+  position: relative; /* 스크롤 버튼 위치 기준 */
 }
 
 .chatPage :global(.chat-room-header) {
@@ -367,7 +427,7 @@
   white-space: nowrap;
 }
 .chatPage :global(.exit-chat-btn:hover) {
-  opacity: 1;
+  opacity: 0.6;
 }
 
 /* 메시지 영역 */
@@ -394,7 +454,8 @@
   font-size: 14px;
 }
 .chatPage :global(.message-group) {
-  margin-bottom: 24px;
+  /* margin-bottom 삭제: flex gap으로 제어 */
+  margin-bottom: 0;
 }
 .chatPage :global(.date-divider) {
   text-align: center;
@@ -454,7 +515,10 @@
   border-radius: 18px;
   font-size: 14px;
   line-height: 1.4;
+  /* 🔹 긴 단어/URL 등에 의해 레이아웃 깨짐 방지 */
   word-wrap: break-word;
+  word-break: break-word; 
+  overflow-wrap: anywhere;
   position: relative;
 }
 .chatPage :global(.message-time) {
@@ -545,6 +609,7 @@
 }
 .chatPage :global(.message-textarea) {
   flex: 1;
+  min-width: 0; /* 🔹 Flex child가 콘텐츠 크기에 맞춰 무한히 늘어나는 현상 방지 */
   min-height: 40px;
   max-height: 120px;
   border: 1px solid hsl(var(--border));
@@ -579,12 +644,6 @@
 .chatPage :global(.send-button:hover:not(:disabled)) {
   filter: brightness(0.95);
 }
-.chatPage :global(.send-button:disabled) {
-  background-color: hsl(var(--muted));
-  color: hsl(var(--muted-foreground));
-  cursor: not-allowed;
-}
-
 /* 로딩 스피너 */
 .chatPage :global(.loading-spinner) {
   width: 16px;
@@ -593,6 +652,70 @@
   border-top: 2px solid transparent;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+/* 메시지 영역 래퍼 (버튼 위치 기준점) */
+.chatPage :global(.chat-message-wrapper) {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chatPage :global(.chat-room-message) {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 20px 10px 20px; /* 하단 패딩 축소 (20px -> 10px) */
+  /* border-bottom 등은 유지 */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 🔽 스크롤 바닥 이동 버튼 */
+.chatPage :global(.scroll-bottom-btn) {
+  position: absolute;
+  bottom: 20px; /* Wrapper 바닥(입력창 바로 위) 기준 20px */
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.2); /* 반투명 검정 */
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  backdrop-filter: blur(2px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+.chatPage :global(.scroll-bottom-btn:hover) {
+  background-color: rgba(0, 0, 0, 0.6);
+  transform: translateY(-2px);
+}
+:global(.dark) .chatPage :global(.scroll-bottom-btn) {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #f9fafb;
+}
+:global(.dark) .chatPage :global(.scroll-bottom-btn:hover) {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 586px) {
+  .chatPage :global(.scroll-bottom-btn) {
+    bottom: 30px; /* 작은 화면에서도 입력창 바로 위 유지 */
+  }
+}
+
+/* 전송 버튼 비활성화 스타일 (기존 유지) */
+.chatPage :global(.send-button:disabled) {
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  cursor: not-allowed;
 }
 @keyframes spin {
   0% {
@@ -729,13 +852,13 @@
   border-color: #475569; /* gray-600 */
 }
 
-.chat-list-title {
+.chatPage :global(.chat-list-title) {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.chat-list-new-dot {
+.chatPage :global(.chat-list-new-dot) {
   width: 8px;
   height: 8px;
   border-radius: 9999px;
@@ -743,13 +866,17 @@
   box-shadow: 0 0 4px rgba(103, 226, 242, 0.8);
 }
 
-.chat-name-row {
+.chatPage :global(.chat-name-row) {
   display: flex;
   align-items: center;
   gap: 6px;
+  /* 남은 공간 차지 및 말줄임표 허용 */
+  flex: 1;
+  min-width: 0;
+  margin-right: 8px; /* 시간과의 간격 */
 }
 
-.chat-new-badge {
+.chatPage :global(.chat-new-badge) {
   font-size: 10px;
   font-weight: 600;
   padding: 2px 6px;
@@ -758,7 +885,7 @@
   color: #fff;
 }
 
-.chat-list-unread-pill {
+.chatPage :global(.chat-list-unread-pill) {
   background-color: #00bfa5;
   color: #fff;
   border-radius: 9999px;
@@ -817,7 +944,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
+  height: 40px;
+  padding: 0 12px;
   border-radius: 9999px;
   border: 1px solid hsl(var(--border));
   background-color: hsl(var(--background));
@@ -915,8 +1043,10 @@
 /* 🔍 검색 하이라이트 (일치 / 현재 선택) */
 .chatPage :global(.message-item.message-highlight),
 .chatPage :global(.message-item.message-highlight-current) {
-  border-radius: 8px;
-  padding-inline: 4px;
+  border-radius: 12px;
+  padding: 10px;
+  margin-block: 6px;
+  transition: all 0.3s ease;
 }
 
 /* 일반 매치된 메시지 */
@@ -1113,6 +1243,11 @@
   }
 }
 
+/* 입력창 스크롤바가 둥근 모서리(20px)를 침범하지 않도록 상하 여백 부여 */
+.chatPage :global(.message-textarea::-webkit-scrollbar-track) {
+  margin-block: 16px;
+}
+
 /* 입력창 하단 정책 안내문구 */
 .chatPage :global(.message-policy-notice) {
   margin-top: 6px;
@@ -1140,4 +1275,25 @@
 .chatPage :global(.chat-items) {
   flex: 1;
   overflow-y: auto;
+}
+
+/* 🔧 반응형: 화면이 좁을 때(모바일) 닉네임과 날짜 줄바꿈 */
+@media (max-width: 400px) {
+  .chatPage :global(.chat-header) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+  }
+
+  .chatPage :global(.chat-name-row) {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 2px;
+  }
+
+  /* 시간은 우측 정렬 */
+  .chatPage :global(.chat-time) {
+    align-self: flex-end; 
+    line-height: 1;
+  }
 }

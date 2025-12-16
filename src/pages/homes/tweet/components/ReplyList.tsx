@@ -1,61 +1,49 @@
 import { useState, useEffect, useRef } from 'react';
+import InfiniteScroll from 'react-infinite-scroll-component';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import DOMPurify from 'dompurify';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import TranslateButton from '@/components/common/TranslateButton';
+import { useTranslation } from 'react-i18next';
 
-interface User {
-  name: string; // nickname
-  username: string; // user_id
-  avatar: string;
-}
-
-interface Stats {
-  comments: number;
-  retweets: number;
-  likes: number;
-  views: number;
-}
-
-export interface Reply {
-  id: string;
-  tweetId: string;
-  user: User;
-  content: string;
-  timestamp: string;
-  stats: Stats;
-  liked?: boolean;
-}
+import type { UIReply } from '@/types/sns';
 
 interface ReplyListProps {
-  replies: Reply[];
+  replies: UIReply[];
   onDeleted?: (id: string) => void;
   // 알림/방금 단 댓글 등에서 스크롤 타겟으로 쓸 id
   scrollTargetId?: string | null;
+  onCommentClick?: (id: string) => void;
+  hasMore: boolean;
+  fetchMore: () => void;
 }
 
 function ReplyCard({
   reply,
   onDeleted,
   highlight = false,
+  onCommentClick,
 }: {
-  reply: Reply;
+  reply: UIReply;
   onDeleted?: (id: string) => void;
   highlight?: boolean;
+  onCommentClick?: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
 
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(reply.liked ?? false);
   const [likeCount, setLikeCount] = useState(reply.stats.likes);
   const [showMenu, setShowMenu] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [profileId, setProfileId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
-
+  const [translated, setTranslated] = useState<string>('');
   // 하이라이트 상태 (잠깐 색 들어왔다 빠지는 용도)
   const [isHighlighted, setIsHighlighted] = useState(false);
 
@@ -138,7 +126,7 @@ function ReplyCard({
   // 댓글 삭제
   const handleDelete = async () => {
     if (!profileId) {
-      toast.error('로그인이 필요합니다.');
+      toast.error(t('auth.login_needed'));
       return;
     }
 
@@ -151,13 +139,13 @@ function ReplyCard({
 
       if (error) throw error;
 
-      toast.success('댓글이 삭제되었습니다.');
+      toast.success(t('tweet.delete_success'));
       setShowDialog(false);
       setShowMenu(false);
       onDeleted?.(reply.id);
     } catch (err: any) {
       console.error('댓글 삭제 실패:', err.message);
-      toast.error('삭제 중 오류가 발생했습니다.');
+      toast.error(t('tweet.delete_failed'));
     }
   };
 
@@ -166,11 +154,11 @@ function ReplyCard({
     e.stopPropagation();
 
     if (!authUser) {
-      toast.error('로그인이 필요합니다.');
+      toast.error(t('auth.login_needed'));
       return;
     }
     if (!profileId) {
-      toast.error('프로필 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+      toast.error(t('tweets.error_profile'));
       return;
     }
 
@@ -210,7 +198,7 @@ function ReplyCard({
       setLikeCount(prev => prev + 1);
     } catch (err: any) {
       console.error('좋아요 처리 실패:', err.message);
-      toast.error('좋아요 처리 중 오류가 발생했습니다.');
+      toast.error(t('tweets.error_general'));
     }
   };
 
@@ -236,8 +224,34 @@ function ReplyCard({
     isHighlighted ? 'bg-primary/15 dark:bg-primary/25' : 'bg-white dark:bg-background'
   }`;
 
+  const plainTextContent = (() => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = safeContent;
+    return tmp.textContent || tmp.innerText || '';
+  })();
+
   return (
-    <div id={`reply-${reply.id}`} className={containerClasses}>
+    <div
+      id={`reply-${reply.id}`}
+      className={containerClasses + ' cursor-pointer'}
+      onClick={e => {
+        e.stopPropagation();
+        
+        // 1. 내부 핸들러가 있으면 라우터 이동 없이 처리 (History보호)
+        if (onCommentClick) {
+            onCommentClick(reply.id);
+            return;
+        }
+
+        // 2. 없으면 기존 로직 (다른 페이지에서 온 경우 등)
+        navigate(`/sns/${reply.tweetId}`, {
+          state: {
+            highlightCommentId: reply.id,
+            scrollKey: Date.now(),
+          },
+        });
+      }}
+    >
       <div className="flex space-x-3">
         <div onClick={handleAvatarClick} className="cursor-pointer">
           <Avatar>
@@ -285,11 +299,11 @@ function ReplyCard({
                     className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
                   >
                     <i className="ri-delete-bin-line" />
-                    <span>삭제</span>
+                    <span>{t('common.delete')}</span>
                   </button>
                 ) : (
                   <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-2">
-                    삭제 불가
+                    {t('tweet.cannot_delete')}
                   </p>
                 )}
               </div>
@@ -302,6 +316,22 @@ function ReplyCard({
             dangerouslySetInnerHTML={{ __html: safeContent }}
           />
 
+          {plainTextContent.trim().length > 0 && (
+            <div className="mt-2">
+              <TranslateButton
+                text={plainTextContent}
+                contentId={`reply_${reply.id}`}
+                setTranslated={setTranslated}
+              />
+            </div>
+          )}
+
+          {translated && (
+            <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 rounded-lg text-sm whitespace-pre-line break-words">
+              {translated}
+            </div>
+          )}
+
           {/* 액션 버튼 */}
           <div className="flex items-center justify-start gap-7 max-w-md mt-3 text-gray-500 dark:text-gray-400">
             {/* Reply */}
@@ -309,7 +339,7 @@ function ReplyCard({
               <div className="p-2 rounded-full group-hover:bg-blue-50 dark:group-hover:bg-primary/10 transition-colors">
                 <i className="ri-chat-3-line text-lg" />
               </div>
-              <span className="text-sm">{reply.stats.comments}</span>
+              <span className="text-sm">{reply.stats.replies}</span>
             </button>
 
             {/* Like */}
@@ -337,10 +367,10 @@ function ReplyCard({
             onClick={e => e.stopPropagation()}
           >
             <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
-              이 댓글을 삭제하시겠어요?
+              {t('tweet.delete_msg_title')}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-              삭제한 댓글은 되돌릴 수 없습니다. 정말 삭제하시겠습니까?
+              {t('tweet.delete_msg_desc')}
             </p>
 
             <div className="flex justify-end space-x-2">
@@ -348,13 +378,13 @@ function ReplyCard({
                 onClick={() => setShowDialog(false)}
                 className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10"
               >
-                취소
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleDelete}
                 className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
               >
-                삭제하기
+                {t('common.delete')}
               </button>
             </div>
           </div>
@@ -364,27 +394,46 @@ function ReplyCard({
   );
 }
 
-export default function ReplyList({ replies, onDeleted, scrollTargetId }: ReplyListProps) {
+export default function ReplyList({ replies, onDeleted, scrollTargetId, hasMore, fetchMore, onCommentClick }: ReplyListProps) {
+  const { t } = useTranslation();
+
   if (!replies.length) {
     return (
       <div className="border-b border-gray-200 dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
         <i className="ri-chat-3-line text-4xl mb-2 block" />
-        <p>No replies yet</p>
-        <p className="text-sm mt-1">Be the first to reply!</p>
+        <p>{t('tweet.no_replies')}</p>
+        <p className="text-sm mt-1">{t('tweet.be_first')}</p>
       </div>
     );
   }
 
   return (
-    <div>
-      {replies.map(reply => (
-        <ReplyCard
-          key={`${reply.id}-${scrollTargetId === reply.id ? 'highlight' : 'normal'}`}
-          reply={reply}
-          onDeleted={onDeleted}
-          highlight={scrollTargetId === reply.id}
-        />
-      ))}
-    </div>
+    <InfiniteScroll
+      dataLength={replies.length}
+      next={fetchMore}
+      hasMore={hasMore}
+      loader={
+        <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+          <div className="inline-flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 dark:border-primary/80" />
+            <span>Loading comments...</span>
+          </div>
+        </div>
+      }
+      scrollThreshold={0.8}
+      style={{ overflow: 'visible' }} // 중요: window 스크롤 사용 시 overflow visible
+    >
+      <div>
+        {replies.map(reply => (
+          <ReplyCard
+            key={`${reply.id}-${scrollTargetId === reply.id ? 'highlight' : 'normal'}`}
+            reply={reply}
+            onDeleted={onDeleted}
+            highlight={scrollTargetId === reply.id}
+            onCommentClick={onCommentClick}
+          />
+        ))}
+      </div>
+    </InfiniteScroll>
   );
 }
