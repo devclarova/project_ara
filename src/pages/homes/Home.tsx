@@ -51,6 +51,7 @@ export default function Home({ searchQuery }: HomeProps) {
 
     const lastId = sessionStorage.getItem(SNS_LAST_TWEET_ID_KEY);
     if (!lastId) {
+      window.scrollTo(0, 0);
       restoredRef.current = true;
       return;
     }
@@ -59,6 +60,7 @@ export default function Home({ searchQuery }: HomeProps) {
     requestAnimationFrame(() => {
       const el = document.querySelector<HTMLElement>(`[data-tweet-id="${lastId}"]`);
       if (!el) {
+        window.scrollTo(0, 0); // 못 찾으면 최상단
         restoredRef.current = true;
         sessionStorage.removeItem(SNS_LAST_TWEET_ID_KEY);
         return;
@@ -186,7 +188,7 @@ export default function Home({ searchQuery }: HomeProps) {
 
     // 2) 검색이 아니고, 이전 피드 캐시가 있으면 그걸 우선 사용
     const cachedFeed = SnsStore.getFeed();
-    if (cachedFeed) {
+    if (cachedFeed && cachedFeed.length > 0) {
       setTweets(cachedFeed);
       setHasMore(SnsStore.getHasMore());
       setPage(SnsStore.getPage());
@@ -337,6 +339,19 @@ export default function Home({ searchQuery }: HomeProps) {
       SnsStore.setPage(page);
     };
   }, [isSearching]);
+
+  // 안전장치: 로딩이 너무 오래 걸리면 강제 종료 (10초)
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => {
+        if (loading) {
+           console.warn('Tweet loading timed out - forcing loading off');
+           setLoading(false);
+        }
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
   if (loading && tweets.length === 0) {
     return (
       <div className="flex justify-center items-center py-20">

@@ -284,18 +284,28 @@ export default function TweetCard({
     }
   }, [safeContent]);
 
-  // 이미지 모달 열릴 때 바깥 스크롤 완전 차단
+  // 이미지 모달 열릴 때 바깥 스크롤 완전 차단 & 스크롤 위치 고정
   useEffect(() => {
     if (!showImageModal) return;
 
+    const scrollY = window.scrollY;
     const body = document.body;
-    const originalOverflow = body.style.overflow;
-    const originalTouchAction = (body.style as any).touchAction;
-
-    const preventScroll = (e: Event) => {
-      e.preventDefault();
+    
+    // 기존 스타일 저장
+    const originalStyle = {
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      overflow: body.style.overflow,
+      touchAction: (body.style as any).touchAction
     };
 
+    const preventScroll = (e: Event) => e.preventDefault();
+
+    // 스크롤 위치만큼 올려서 고정
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.width = '100%';
     body.style.overflow = 'hidden';
     (body.style as any).touchAction = 'none';
 
@@ -304,11 +314,19 @@ export default function TweetCard({
     document.addEventListener('mousewheel', preventScroll, { passive: false });
 
     return () => {
-      body.style.overflow = originalOverflow || '';
-      (body.style as any).touchAction = originalTouchAction || '';
+      // 스타일 복구
+      body.style.position = originalStyle.position;
+      body.style.top = originalStyle.top;
+      body.style.width = originalStyle.width;
+      body.style.overflow = originalStyle.overflow;
+      (body.style as any).touchAction = originalStyle.touchAction;
+
       document.removeEventListener('touchmove', preventScroll);
       document.removeEventListener('wheel', preventScroll);
       document.removeEventListener('mousewheel', preventScroll);
+      
+      // 스크롤 위치 복구
+      window.scrollTo(0, scrollY);
     };
   }, [showImageModal]);
 
@@ -456,9 +474,13 @@ export default function TweetCard({
   `;
 
   const handleCardClickSafe = () => {
-    // 텍스트 드래그 중이면 이동 막기
-    if (isDraggingText) return;
+    // 텍스트 선택 확인은 content onClick에서 처리, 여기는 카드 배경 클릭
     if (showImageModal) return;
+    
+    // 혹시라도 배경에서 선택이 일어나고 있었을 수 있으니 체크
+    const selection = window.getSelection();
+    if (selection && selection.toString().length > 0) return;
+
     handleCardClick();
   };
 
@@ -598,33 +620,12 @@ export default function TweetCard({
             }`}
             style={!expanded ? { maxHeight: '60px' } : undefined} // 약 3줄
             dangerouslySetInnerHTML={{ __html: safeContent }}
-            // 드래그 시작
-            onMouseDown={e => {
-              dragInfo.current.startX = e.clientX;
-              dragInfo.current.startY = e.clientY;
-              dragInfo.current.moved = false;
-            }}
-            // 드래그 중 감지
-            onMouseMove={e => {
-              const dx = Math.abs(e.clientX - dragInfo.current.startX);
-              const dy = Math.abs(e.clientY - dragInfo.current.startY);
-
-              // 5px 이상 움직이면 드래그로 판단
-              if (dx > 5 || dy > 5) {
-                setIsDraggingText(true);
-              }
-            }}
-            // 드래그 종료 시 (클릭으로 취급되지 않게 해야 함)
-            onMouseUp={() => {
-              // 드래그 후 mouseup이 발생해 click 이벤트로 이어지지 않도록 50ms block
-              if (isDraggingText) {
-                setTimeout(() => setIsDraggingText(false), 50);
-              }
-            }}
             onClick={e => {
-              if (!dragInfo.current.moved) {
-                handleCardClick(); // 클릭일 때만 이동
-              }
+              // 텍스트 선택 중이면 이동 방지
+              const selection = window.getSelection();
+              if (selection && selection.toString().length > 0) return;
+              
+              handleCardClick();
             }}
           />
 
@@ -673,32 +674,10 @@ export default function TweetCard({
             <div
               className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 rounded-lg text-sm whitespace-pre-line break-words" // 드래그 시작
               // 드래그 시작
-              onMouseDown={e => {
-                dragInfo.current.startX = e.clientX;
-                dragInfo.current.startY = e.clientY;
-                dragInfo.current.moved = false;
-              }}
-              // 드래그 중 감지
-              onMouseMove={e => {
-                const dx = Math.abs(e.clientX - dragInfo.current.startX);
-                const dy = Math.abs(e.clientY - dragInfo.current.startY);
-
-                // 5px 이상 움직이면 드래그로 판단
-                if (dx > 5 || dy > 5) {
-                  setIsDraggingText(true);
-                }
-              }}
-              // 드래그 종료 시 (클릭으로 취급되지 않게 해야 함)
-              onMouseUp={() => {
-                // 드래그 후 mouseup이 발생해 click 이벤트로 이어지지 않도록 50ms block
-                if (isDraggingText) {
-                  setTimeout(() => setIsDraggingText(false), 50);
-                }
-              }}
               onClick={e => {
-                if (!dragInfo.current.moved) {
-                  handleCardClick(); // 클릭일 때만 이동
-                }
+                const selection = window.getSelection();
+                if (selection && selection.toString().length > 0) return;
+                handleCardClick();
               }}
             >
               {translated}

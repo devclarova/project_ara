@@ -125,7 +125,10 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
 
   const handleNavigation = (path?: string, onClick?: () => void) => {
     if (onClick) onClick();
-    else if (path) navigate(path);
+    else if (path) {
+      if (path === '/finalhome') sessionStorage.removeItem('sns-last-tweet-id');
+      navigate(path);
+    }
   };
 
   return (
@@ -140,6 +143,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }
             } else {
+              sessionStorage.removeItem('sns-last-tweet-id');
               navigate('/finalhome');
             }
           }}

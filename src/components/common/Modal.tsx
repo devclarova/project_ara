@@ -29,18 +29,36 @@ export default function Modal({
     setMounted(true);
   }, []);
   
-  // 모달 열릴 때 body 스크롤 잠금
+  // 모달 열릴 때 body 스크롤 잠금 & 현재 위치 고정 (시각적 점프 방지)
   useEffect(() => {
     if (!isOpen) return;
 
+    const scrollY = window.scrollY;
     const body = document.body;
-    const originalOverflow = body.style.overflow;
     
-    // 단순 overflow hidden으로 변경
+    // 기존 스타일 저장
+    const originalStyle = {
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      overflow: body.style.overflow
+    };
+
+    // 스크롤 위치만큼 올려서 고정 (맨 위로 튀는 현상 방지)
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.width = '100%';
     body.style.overflow = 'hidden';
 
     return () => {
-      body.style.overflow = originalOverflow;
+      // 스타일 복구
+      body.style.position = originalStyle.position;
+      body.style.top = originalStyle.top;
+      body.style.width = originalStyle.width;
+      body.style.overflow = originalStyle.overflow;
+      
+      // 스크롤 위치 복구
+      window.scrollTo(0, scrollY);
     };
   }, [isOpen]);
 

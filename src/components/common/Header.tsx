@@ -261,7 +261,12 @@ function Header() {
                 <button
                   key={item.key}
                   type="button"
-                  onClick={() => navigate(target)}
+                  onClick={() => {
+                    if (target === '/sns') {
+                      sessionStorage.removeItem('sns-last-tweet-id');
+                    }
+                    navigate(target);
+                  }}
                   aria-current={active ? 'page' : undefined}
                   className={`relative inline-flex items-center text-sm lg:text-base xl:text-lg font-bold p-0 ${
                     active
@@ -560,6 +565,9 @@ function Header() {
                     key={item.key}
                     type="button"
                     onClick={() => {
+                      if (target === '/sns') {
+                        sessionStorage.removeItem('sns-last-tweet-id');
+                      }
                       navigate(target);
                       setIsOpen(false);
                     }}

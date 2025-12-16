@@ -51,6 +51,9 @@ export default function Footer() {
     } else if (type === 'policy' && value) {
       setPolicyModalOpen(value as ConsentKey);
     } else if (type === 'impl' && value) {
+      if (value === '/sns') {
+        sessionStorage.removeItem('sns-last-tweet-id');
+      }
       navigate(value);
     }
   };
