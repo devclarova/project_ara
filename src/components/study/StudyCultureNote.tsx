@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import type { CultureNote } from '../../types/study';
+import TranslatedCultureNoteView from './TranslatedCultureNoteView';
 
 // DB 테이블 타입
 type CultureNoteRow = {
@@ -127,33 +128,7 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
 
   return (
     <div>
-      <div className="p-3 sm:p-4 bg-white dark:bg-secondary dark:text-gray-300 border dark:border-gray-600 rounded-lg shadow-sm">
-        <h4 className="text-base sm:text-lg font-semibold mb-1">
-          {currentNote.title || '문화 노트'}
-        </h4>
-
-        {currentNote.subtitle && (
-          <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line p-1">
-            {currentNote.subtitle}
-          </p>
-        )}
-
-        <ul className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2">
-          {currentContents.length > 0 ? (
-            currentContents.map((item, index) => (
-              <li key={index} className="flex items-start text-sm sm:text-base">
-                <span className="text-pink-500 mr-2">•</span>
-                <span>{item.content_value}</span>
-              </li>
-            ))
-          ) : (
-            <li className="flex items-start text-sm sm:text-base">
-              <span className="text-pink-500 mr-2">•</span>
-              <span>리스트 항목이 없습니다.</span>
-            </li>
-          )}
-        </ul>
-      </div>
+      <TranslatedCultureNoteView note={currentNote} contents={currentContents} />
 
       {/* 버튼들 */}
       {data.length > 1 && (

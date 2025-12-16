@@ -1,15 +1,16 @@
 import type { MenuId, SidebarItem } from '@/types/settings';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import SettingsLayout from './SettingsLayout';
 import SettingsSidebar from './SettingsSidebar';
 import SettingsContent from './SettingsContent';
 
-const items: SidebarItem[] = [
-  { id: 'security', label: '보안 설정' },
-  { id: 'sessions', label: '세션 관리' },
-];
-
 export default function SecuritySettingsPage() {
+  const { t } = useTranslation();
+  const items: SidebarItem[] = [
+    { id: 'security', label: t('settings.security_title') },
+    { id: 'sessions', label: t('settings.session_management') },
+  ];
   const [active, setActive] = useState<MenuId>('security');
   const sidebarWidth = 'md:w-[28rem]'; // 이 페이지만 28rem로 더 넓게
 

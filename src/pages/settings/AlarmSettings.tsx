@@ -5,7 +5,10 @@ interface PrivacySettingsProps {
   onBackToMenu?: () => void; // ← 부모에서 전달받는 콜백 (선택)
 }
 
+import { useTranslation } from 'react-i18next';
+
 export default function AlarmSettings({ onBackToMenu }: PrivacySettingsProps) {
+  const { t } = useTranslation();
   const [commentPush, setCommentPush] = useState(true);
   const [likePush, setLikePush] = useState(true);
   const [followPush, setFollowPush] = useState(true);
@@ -18,31 +21,31 @@ export default function AlarmSettings({ onBackToMenu }: PrivacySettingsProps) {
           type="button"
           onClick={onBackToMenu}
           className="inline-flex md:hidden items-center justify-center w-9 h-9 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          aria-label="뒤로가기"
+          aria-label={t('common.back', 'Back')}
         >
           <i className="ri-arrow-left-line text-lg" />
         </button>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">알림 설정</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('settings.notifications')}</h3>
       </div>
 
       <div className="space-y-1">
         <Switch
           checked={commentPush}
           onChange={setCommentPush}
-          label="댓글 알림"
-          description="내 게시물에 댓글이 달리면 알림"
+          label={t('settings.alarm_comment')}
+          description={t('settings.alarm_comment_desc')}
         />
         <Switch
           checked={likePush}
           onChange={setLikePush}
-          label="좋아요 알림"
-          description="내 게시물에 좋아요가 눌리면 알림"
+          label={t('settings.alarm_like')}
+          description={t('settings.alarm_like_desc')}
         />
         <Switch
           checked={followPush}
           onChange={setFollowPush}
-          label="새 팔로워"
-          description="누군가 나를 팔로우하면 알림"
+          label={t('settings.alarm_follow')}
+          description={t('settings.alarm_follow_desc')}
         />
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const mockPosts = [
   {
@@ -185,6 +186,7 @@ export function PostCard({
 }
 
 export default function MyProfile() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('posts');
 
   const profileData = {
@@ -203,10 +205,10 @@ export default function MyProfile() {
   const userPosts = mockPosts.filter((_, index) => index < 3);
 
   const tabs = [
-    { id: 'posts', label: 'Posts', count: userPosts.length },
-    { id: 'replies', label: 'Replies', count: 12 },
-    { id: 'media', label: 'Media', count: 8 },
-    { id: 'likes', label: 'Likes', count: 45 },
+    { id: 'posts', label: t('profile.tabs.posts'), count: userPosts.length },
+    { id: 'replies', label: t('profile.tabs.replies'), count: 12 },
+    { id: 'media', label: t('profile.tabs.media'), count: 8 },
+    { id: 'likes', label: t('profile.tabs.likes'), count: 45 },
   ];
 
   return (
@@ -237,7 +239,7 @@ export default function MyProfile() {
 
               <div className="absolute top-3 right-6">
                 <button className="px-6 py-2 bg-[#00bdaa] text-white font-medium rounded-full hover:bg-[#14c7bb] transition-all duration-200 cursor-pointer whitespace-nowrap shadow-sm">
-                  Edit Profile
+                  {t('profile.edit_profile')}
                 </button>
               </div>
             </div>
@@ -272,18 +274,18 @@ export default function MyProfile() {
                   <div className="w-4 h-4 flex items-center justify-center">
                     <i className="ri-calendar-line"></i>
                   </div>
-                  <span>Joined {profileData.joinedDate}</span>
+                  <span>{t('profile.joined', { date: profileData.joinedDate })}</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-6 text-sm pt-4 border-t border-[#e5e7eb]">
                 <button className="hover:underline cursor-pointer transition-all duration-200">
                   <span className="font-bold text-[#111827]">{profileData.following}</span>
-                  <span className="text-[#6b7280] ml-1">Following</span>
+                  <span className="text-[#6b7280] ml-1">{t('profile.following')}</span>
                 </button>
                 <button className="hover:underline cursor-pointer transition-all duration-200">
                   <span className="font-bold text-[#111827]">{profileData.followers}</span>
-                  <span className="text-[#6b7280] ml-1">Followers</span>
+                  <span className="text-[#6b7280] ml-1">{t('profile.followers')}</span>
                 </button>
               </div>
             </div>
@@ -329,7 +331,7 @@ export default function MyProfile() {
                       <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 text-[#9ca3af]">
                         <i className="ri-file-list-line text-5xl"></i>
                       </div>
-                      <p className="text-[#9ca3af] text-lg">No posts yet.</p>
+                      <p className="text-[#9ca3af] text-lg">{t('profile.no_posts')}</p>
                     </div>
                   )}
                 </div>
@@ -341,7 +343,7 @@ export default function MyProfile() {
                     <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 text-[#9ca3af]">
                       <i className="ri-chat-3-line text-5xl"></i>
                     </div>
-                    <p className="text-[#9ca3af] text-lg">No replies yet.</p>
+                    <p className="text-[#9ca3af] text-lg">{t('profile.no_replies')}</p>
                   </div>
                 </div>
               )}

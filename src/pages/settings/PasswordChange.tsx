@@ -1,12 +1,15 @@
 import Button from '@/components/common/Buttons';
 import { useEffect, useState } from 'react';
 
+import { useTranslation } from 'react-i18next';
+
 interface PasswordChangeProps {
   onDone?: () => void;
   onClose?: () => void;
 }
 
 function PasswordChange({ onDone, onClose }: PasswordChangeProps) {
+  const { t } = useTranslation();
   const [pw, setPw] = useState('');
   const [pw2, setPw2] = useState('');
   const [pw3, setPw3] = useState('');
@@ -21,15 +24,15 @@ function PasswordChange({ onDone, onClose }: PasswordChangeProps) {
   // 새 비밀번호 일치 여부 검사
   useEffect(() => {
     if (pw2 && pw3 && !passwordsMatch) {
-      setErr('새 비밀번호가 일치하지 않습니다.');
+      setErr(t('settings.pw_mismatch'));
     } else {
       setErr(null);
     }
-  }, [pw2, pw3, passwordsMatch]);
+  }, [pw2, pw3, passwordsMatch, t]);
 
   const submit = () => {
     if (!canSubmit) {
-      setErr('비밀번호를 확인해주세요. (8자 이상 & 동일 입력)');
+      setErr(t('settings.pw_check_req'));
       return;
     }
     // TODO: 실제 비밀번호 변경 API 호출
@@ -53,17 +56,17 @@ function PasswordChange({ onDone, onClose }: PasswordChangeProps) {
       {/* 내용 */}
       <div className="flex-1 min-h-0 px-4 md:px-6 py-4 md:py-5 space-y-4 md:space-y-5 bg-white dark:bg-secondary">
         <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-1">
-          안전한 계정 사용을 위해 8자 이상, 영문/숫자/기호 조합을 권장합니다.
+          {t('settings.pw_change_guide')}
         </p>
 
         <div>
-          <label className={labelBase}>기존 비밀번호</label>
+          <label className={labelBase}>{t('settings.current_pw')}</label>
           <div className="relative">
             <input
               type={show ? 'text' : 'password'}
               value={pw}
               onChange={e => setPw(e.target.value)}
-              placeholder="현재 비밀번호를 입력하세요"
+              placeholder={t('settings.current_pw_placeholder')}
               className={inputBase}
             />
             <button
@@ -71,19 +74,19 @@ function PasswordChange({ onDone, onClose }: PasswordChangeProps) {
               onClick={() => setShow(s => !s)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] md:text-xs text-gray-500 dark:text-gray-400"
             >
-              {show ? '숨기기' : '보기'}
+              {show ? t('settings.hide') : t('settings.show')}
             </button>
           </div>
         </div>
 
         <div>
-          <label className={labelBase}>새 비밀번호</label>
+          <label className={labelBase}>{t('settings.new_pw')}</label>
           <div className="relative">
             <input
               type={show2 ? 'text' : 'password'}
               value={pw2}
               onChange={e => setPw2(e.target.value)}
-              placeholder="새 비밀번호를 입력하세요"
+              placeholder={t('settings.new_pw_placeholder')}
               className={inputBase}
             />
             <button
@@ -91,19 +94,19 @@ function PasswordChange({ onDone, onClose }: PasswordChangeProps) {
               onClick={() => setShow2(s => !s)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] md:text-xs text-gray-500 dark:text-gray-400"
             >
-              {show2 ? '숨기기' : '보기'}
+              {show2 ? t('settings.hide') : t('settings.show')}
             </button>
           </div>
         </div>
 
         <div>
-          <label className={labelBase}>새 비밀번호 확인</label>
+          <label className={labelBase}>{t('settings.confirm_new_pw')}</label>
           <div className="relative">
             <input
               type={show3 ? 'text' : 'password'}
               value={pw3}
               onChange={e => setPw3(e.target.value)}
-              placeholder="다시 입력해주세요"
+              placeholder={t('settings.confirm_new_pw_placeholder')}
               className={inputBase}
             />
             <button
@@ -111,7 +114,7 @@ function PasswordChange({ onDone, onClose }: PasswordChangeProps) {
               onClick={() => setShow3(s => !s)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] md:text-xs text-gray-500 dark:text-gray-400"
             >
-              {show3 ? '숨기기' : '보기'}
+              {show3 ? t('settings.hide') : t('settings.show')}
             </button>
           </div>
         </div>
@@ -122,10 +125,10 @@ function PasswordChange({ onDone, onClose }: PasswordChangeProps) {
       {/* 푸터 */}
       <div className="mt-auto border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-secondary px-4 md:px-6 py-3.5 md:py-4 flex justify-end gap-2">
         <Button type="button" variant="ghost" size="md" onClick={onClose}>
-          취소
+          {t('common.cancel')}
         </Button>
         <Button type="button" variant="primary" size="md" onClick={submit} disabled={!canSubmit}>
-          저장
+          {t('common.save')}
         </Button>
       </div>
     </div>

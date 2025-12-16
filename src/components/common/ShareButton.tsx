@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type ShareButtonProps = {
   title?: string;
@@ -24,6 +25,7 @@ export default function ShareButton({
   className = '',
   onShared,
 }: ShareButtonProps) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const canUseShare =
@@ -94,11 +96,11 @@ export default function ShareButton({
         border-gray-200 dark:border-gray-700
         hover:bg-gray-50 dark:hover:bg-gray-700
         text-gray-700 dark:text-gray-100 transition ${className}`}
-        aria-label="공유하기"
-        title="공유하기"
+        aria-label={t('common.share', '공유')}
+        title={t('common.share', '공유')}
       >
         <i className="ri-share-forward-line text-base" />
-        <span className="hidden sm:inline">공유</span>
+        <span className="hidden sm:inline">{t('common.share', '공유')}</span>
       </button>
 
       {/* 복사 완료 미니 토스트 */}
@@ -108,7 +110,7 @@ export default function ShareButton({
         transition-opacity duration-200
         ${copied ? 'opacity-100' : 'opacity-0'}`}
       >
-        링크가 복사되었습니다
+        {t('common.link_copied', '링크가 복사되었습니다')}
       </div>
     </div>
   );

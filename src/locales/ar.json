@@ -1,0 +1,407 @@
+{
+  "nav": {
+    "home": "الرئيسية",
+    "study": "دراسة",
+    "community": "مجتمع",
+    "chat": "دردشة",
+    "notifications": "إشعارات",
+    "more": "المزيد",
+    "settings": "إعدادات",
+    "profile": "ملف الشخصي",
+    "post": "نشر"
+  },
+  "notification": {
+    "like_feed": "أعجب بمنشورك.",
+    "user_action": "{{name}}",
+    "new": "جديد",
+    "deleted_post": "تم حذف المنشور.",
+    "deleted_comment": "تم حذف التعليق.",
+    "comment_feed": "علق على منشورك.",
+    "like_comment": "أعجب بتعليقك.",
+    "follow_msg": "بدأ بمتابعتك.",
+    "repost_msg": "أعاد نشر منشورك.",
+    "mention_msg": "أشار إليك.",
+    "clear_all": "إفراغ",
+    "action_comment": "لقد تركت تعليقًا على خلاصتك.",
+    "action_like_comment": "نحن نحب تعليقك.",
+    "action_like_feed": "أحب تغذيتك.",
+    "no_notifications": "لا توجد إشعارات جديدة بعد"
+  },
+  "study": {
+    "search_placeholder": "بحث...",
+    "no_content": "لا يوجد محتوى.",
+    "category": {
+      "all": "الكل",
+      "drama": "دراما",
+      "movie": "أفلام",
+      "entertainment": "ترفيه",
+      "music": "موسيقى"
+    },
+    "level": {
+      "title": "مستوى",
+      "all": "الكل",
+      "beginner": "مبتدئ",
+      "intermediate": "متوسط",
+      "advanced": "متقدم"
+    },
+    "guide": {
+      "prev": "سابق",
+      "next": "تالية",
+      "start": "بدء",
+      "close": "إغلاق",
+      "never_show": "لا تظهر مرة أخرى"
+    },
+    "formats": {
+      "episode": "حلقة {{val}}",
+      "scene": "مشهد {{val}}"
+    },
+    "no_title": "بلا عنوان",
+    "no_episode": "بلا حلقة",
+    "share_text_prefix": "تعلم مع المحتوى الكوري: ",
+    "meta_desc_default": "تعلم الكورية مع ARA",
+    "study_card_title": "بطاقة الدراسة",
+    "vocab_explanation": "شرح المفردات",
+    "culture_note": "ملاحظة ثقافية",
+    "login_required": "تسجيل الدخول مطلوب",
+    "preview": "معاينة"
+  },
+  "auth": {
+    "login": "دخول",
+    "signup": "تسجيل",
+    "logout": "خروج",
+    "login_needed": "يجب تسجيل الدخول",
+    "please_login": "يرجى تسجيل الدخول",
+    "click_to_login": "انقر للدخول",
+    "welcome": "مرحباً",
+    "email": "بريد إلكتروني",
+    "password": "كلمة المرور",
+    "logging_in": "جاري الدخول...",
+    "auto_login": "دخول تلقائي",
+    "find_email": "بحث عن بريد",
+    "find_password": "استعادة كلمة المرور",
+    "resend_verification": "إعادة إرسال",
+    "first_time": "لأول مرة؟",
+    "login_with_google": "دخول بـ Google",
+    "login_with_kakao": "دخول بـ Kakao",
+    "verification_sent": "تم إرسال التحقق",
+    "email_verification_failed": "فشل التحقق",
+    "verify_before_login": "تحقق من بريدك",
+    "invalid_credentials": "بيانات غير صالحة",
+    "session_expired": "انتهت صلاحية الجلسة",
+    "avatar_upload_failed": "فشل تحميل الصورة",
+    "profile_save_failed": "فشل حفظ الملف",
+    "network_error": "خطأ في الشبكة",
+    "previous": "السابق",
+    "signing_up": "جاري التسجيل...",
+    "signup_complete": "إكمال التسجيل",
+    "signup_complete_message": "تم التسجيل بنجاح!",
+    "service_ready": "يمكنك استخدام الخدمة الآن.",
+    "start_now": "ابدأ الآن",
+    "go_home": "العودة للرئيسية",
+    "signup_error": "حدث خطأ أثناء التسجيل"
+  },
+  "signup": {
+    "title_social": "التسجيل عبر وسائل التواصل",
+    "title_email": "التسجيل",
+    "later": "لاحقاً",
+    "go_home": "العودة للرئيسية",
+    "step1_title": "اتفاقية التسجيل",
+    "step1_desc": "يرجى الموافقة على الشروط لاستخدام الخدمة.",
+    "agree_all": "الموافقة على الكل",
+    "agree_terms": "الموافقة على شروط الاستخدام",
+    "agree_privacy": "الموافقة على سياسة الخصوصية",
+    "agree_age": "أبلغ من العمر 14 عامًا أو أكثر",
+    "agree_marketing": "الموافقة على تلقي معلومات تسويقية (اختياري)",
+    "next_step": "الخطوة التالية",
+    "step2_title": "إدخال المعلومات",
+    "label_email": "البريد الإلكتروني",
+    "label_password": "كلمة المرور",
+    "label_password_confirm": "تأكيد كلمة المرور",
+    "label_nickname": "الاسم المستعار",
+    "error_email_taken": "هذا البريد الإلكتروني مستخدم بالفعل.",
+    "error_nickname_taken": "هذا الاسم المستعار مستخدم بالفعل.",
+    "error_email_check_retry": "يرجى إعادة المحاولة للتحقق من البريد الإلكتروني المكرر.",
+    "error_nickname_check_retry": "يرجى إعادة المحاولة للتحقق من الاسم المستعار المكرر.",
+    "nickname_detected_lang": "اللغة المكتشفة:",
+    "nickname_lang_unknown": "غير معروف",
+    "nickname_hint": "الطول {{min}}~{{max}} حرفًا، حد أقصى شرطتان سفليتان",
+    "image_size_hint": "الحد الأقصى 2 ميجابايت · JPG/PNG/GIF",
+    "step_agreement": "الاتفاقية",
+    "step_info": "المعلومات",
+    "step_profile": "الملف الشخصي",
+    "stepper_aria": "خطوات التسجيل",
+    "detail_view": "عرض التفاصيل",
+    "required_mark": "(مطلوب)",
+    "checking": "جاري التحقق...",
+    "check_duplicate": "التحقق من التكرار",
+    "available": "متاح.",
+    "already_in_use": "قيد الاستخدام بالفعل.",
+    "gender_male": "ذكر",
+    "gender_female": "أنثى",
+    "label_gender": "الجنس",
+    "error_gender_required": "يرجى اختيار الجنس.",
+    "label_birth": "تاريخ الميلاد",
+    "error_birth_required": "يرجى إدخال تاريخ الميلاد.",
+    "calendar_alt": "التقويم",
+    "label_country": "الجنسية",
+    "error_country_required": "يرجى اختيار الجنسية.",
+    "lang_korean": "الكورية",
+    "lang_english": "الإنجليزية",
+    "lang_japanese": "اليابانية",
+    "lang_chinese": "الصينية",
+    "lang_russian": "الروسية",
+    "lang_vietnamese": "الفيتنامية",
+    "lang_bengali": "البنغالية",
+    "lang_arabic": "العربية",
+    "lang_hindi": "الهندية",
+    "lang_thai": "التايلاندية",
+    "lang_spanish": "الإسبانية",
+    "lang_french": "الفرنسية",
+    "lang_portuguese": "البرتغالية",
+    "lang_portuguese_brazil": "البرتغالية (البرازيل)",
+    "lang_german": "الألمانية",
+    "lang_finnish": "الفنلندية",
+    "btn_previous": "السابق",
+    "btn_next_step": "الخطوة التالية",
+    "agree_and_close": "موافق وإغلاق"
+  },
+  "common": {
+    "save": "حفظ",
+    "saving": "جاري الحفظ...",
+    "apply": "تطبيق",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "my_profile": "ملفي",
+    "my_account": "حسابي",
+    "view_profile": "عرض الملف",
+    "settings_desc": "ملف/إعدادات",
+    "search": "بحث",
+    "back": "عودة",
+    "loading": "تحميل...",
+    "error": "خطأ",
+    "close": "إغلاق",
+    "share": "مشاركة",
+    "link_copied": "تم نسخ الرابط"
+  },
+  "settings": {
+    "languageSelect": "اختيار اللغة",
+    "themeSelect": "اختيار المظهر",
+    "theme_options": {
+      "light": "فاتح",
+      "dark": "داكن",
+      "system": "النظام"
+    },
+    "system": "إعدادات النظام",
+    "language": "اللغة",
+    "theme": "السمة",
+    "notifications": "إعدادات الإشعارات",
+    "alarm_comment": "إشعارات التعليقات",
+    "alarm_comment_desc": "تلقي إشعارات عندما يعلق شخص ما على منشورك.",
+    "alarm_like": "الإعجابات",
+    "alarm_like_desc": "تلقي إشعارات عندما يعجب شخص ما بمنشورك.",
+    "alarm_follow": "المتابعات",
+    "alarm_follow_desc": "تلقي إشعارات عندما يتابعك شخص ما.",
+    "privacy": "إعدادات الخصوصية",
+    "change_password": "تغيير كلمة المرور",
+    "connect_sns": "ربط حساب SNS",
+    "withdraw": "حذف الحساب",
+    "withdraw_phrase": "حذف حسابي",
+    "withdraw_verify_placeholder": "Please type \"{{phrase}}\" to confirm",
+    "withdraw_modal_title": "Are you sure you want to delete your account?",
+    "withdraw_warning_1": "Your account information cannot be recovered.",
+    "withdraw_warning_2": "All posts and comments will be deleted.",
+    "withdraw_warning_3": "Follow/Following information will be lost.",
+    "withdraw_warning_4": "This action cannot be undone.",
+    "confirm_password": "تأكيد كلمة المرور",
+    "confirm_password_placeholder": "Enter your password",
+    "confirm_password_desc": "Please enter your password to confirm your identity.",
+    "withdraw_verify_label": "Type the phrase below",
+    "withdraw_btn_cancel": "Cancel",
+    "withdraw_btn_processing": "Processing...",
+    "withdraw_btn_confirm": "حذف",
+    "pw_change_guide": "نوصي باستخدام 8 أحرف على الأقل مع مزيج من الحروف والأرقام والرموز.",
+    "current_pw": "كلمة المرور الحالية",
+    "current_pw_placeholder": "أدخل كلمة المرور الحالية",
+    "new_pw": "كلمة مرور جديدة",
+    "new_pw_placeholder": "أدخل كلمة مرور جديدة",
+    "confirm_new_pw": "تأكيد كلمة المرور الجديدة",
+    "confirm_new_pw_placeholder": "أدخل كلمة المرور الجديدة مرة أخرى",
+    "pw_mismatch": "كلمات المرور الجديدة غير متطابقة.",
+    "pw_check_req": "يرجى التحقق من كلمة المرور (8 أحرف على الأقل ومطابقة).",
+    "hide": "إخفاء",
+    "show": "عرض",
+    "sns_connect_desc": "قم بربط حسابك مع تسجيل الدخول الاجتماعي ليسهل الوصول والاسترداد.",
+    "connect_google": "ربط حساب Google",
+    "connect_kakao": "ربط حساب Kakao",
+    "sns_connect_note": "يمكنك إلغاء ربط الحسابات في الإعدادات > الخصوصية في أي وقت. (قريباً)",
+    "account_settings": "Settings",
+    "support_policy": "الدعم والسياسة",
+    "help_center": "مركز المساعدة",
+    "terms": "شروط الخدمة",
+    "privacy_policy": "سياسة الخصوصية",
+    "marketing_consent": "موافقة التسويق",
+
+    "title_language": "تغيير اللغة",
+    "title_theme": "تغيير النسق",
+    "title_password_change": "تغيير كلمة المرور",
+    "title_sns_connect": "ربط حساب SNS",
+    "title_withdraw": "حذف الحساب",
+    "title_terms": "شروط الخدمة",
+    "title_privacy": "سياسة الخصوصية",
+    "title_marketing": "موافقة التسويق",
+    "title_support": "مركز المساعدة",
+    "security_title": "إعدادات الأمان",
+    "session_management": "إدارة الجلسات"
+
+  },
+  "profile": {
+    "edit_profile": "تعديل الملف الشخصي",
+    "following": "أتابع",
+    "followers": "المتابعون",
+    "joined": "انضم في {{date}}",
+    "tabs": {
+      "posts": "المنشورات",
+      "replies": "الردود",
+      "media": "الوسائط",
+      "likes": "الإعجابات"
+    },
+    "no_posts": "لا توجد منشورات حتى الآن",
+    "no_replies": "لا توجد ردود حتى الآن",
+    "profile_optional": "إعداد الملف الشخصي (اختياري)",
+    "profile_image": "صورة الملف",
+    "select_image": "اختر صورة",
+    "bio": "السيرة الذاتية",
+    "bio_placeholder": "أخبرنا عن نفسك",
+    "tab_posts": "منشور",
+    "tab_replies": "تعليق",
+    "tab_likes": "إعجابات",
+    "nickname_change_warning": "⚠️ يمكنك تغيير لقبك مرة واحدة فقط.",
+    "nickname_disabled_reason": "تم تغيير اللقب مرة واحدة بالفعل.",
+    "nickname_change_forbidden": "لا يمكن تغيير اللقب مرة أخرى.",
+    "country_change_warning": "⚠️ يمكنك تغيير بلدك مرة واحدة فقط.",
+    "country_disabled_reason": "تم تغيير البلد مرة واحدة بالفعل.",
+    "country_change_forbidden": "لا يمكن تغيير البلد مرة أخرى."
+  },
+  "tweets": {
+    "placeholder_tweet": "ماذا يحدث؟",
+    "placeholder_reply": "انشر ردك",
+    "btn_post": "نشر",
+    "btn_posting": "Posting...",
+    "btn_reply": "رد",
+    "btn_replying": "Replying...",
+    "error_profile": "Loading profile information. Please try again later.",
+    "error_general": "An error occurred.",
+    "add_photo": "إضافة صورة",
+    "images_selected": "{{count}} images selected",
+    "preview_alt": "Preview {{index}}"
+  },
+  "tweet": {
+    "delete_msg_title": "حذف المنشور؟",
+    "delete_msg_desc": "لا يمكن التراجع عن هذا.",
+    "delete_success": "تم الحذف.",
+    "delete_failed": "Failed to delete.",
+    "no_replies": "لا توجد ردود حتى الآن",
+    "be_first": "كن أول من يرد!",
+    "cannot_delete": "Cannot delete"
+  },
+  "trending": {
+    "title": "المتداول لك",
+    "no_trending": "لا توجد اتجاهات متاحة"
+  },
+  "chat": {
+    "direct_chat": "الرسائل",
+    "select_or_start": "حدد غرفة دردشة من اليسار أو انقر فوق زر الدردشة الجديدة لبدء محادثة.",
+    "start_conversation": "ابدأ محادثة جديدة",
+    "feature_realtime": "💬 مراسلة 1:1 فورية",
+    "feature_search": "👥 بحث ودعوة",
+    "feature_responsive": "📱 تصميم متجاوب",
+    "room_title": "Direct Chat",
+    "loading": "جارٍ التحميل...",
+    "me": "أنا",
+    "unknown": "Unknown",
+    "today": "Today",
+    "exit": "Exit",
+    "search_placeholder": "بحث في الرسائل",
+    "search_btn": "بحث",
+    "search_hint": "ابحث عن محتوى الرسالة.",
+    "no_result": "لم يتم العثور على نتائج.",
+    "no_messages": "لا توجد رسائل بعد.",
+    "send_first_message": "أرسل رسالتك الأولى!",
+    "system_leave": " left the chat",
+    "confirm_exit": "Do you want to leave this chat?",
+    "exit_fail": "Failed to leave chat.",
+    "exit_error": "An error occurred while leaving.",
+    "result_count": "{{index}} من {{count}} نتائج",
+    "prev": "السابق",
+    "next": "التالي",
+    "new_chat": "New Chat",
+    "user_search_placeholder": "بحث عن المستخدمين...",
+    "user_search_loading": "جارٍ البحث عن المستخدمين...",
+    "no_chats": "لا توجد محادثات بعد.",
+    "new_badge": "NEW",
+    "loading_messages": "جاري تحميل الرسائل...",
+    "input_placeholder": "أدخل الرسالة... (إرسال باستخدام Enter، وإضافة سطر جديد باستخدام Shift+Enter)",
+    "notice_profanity": "⚠️ سيتم الكشف عن الألفاظ النابية والتعبيرات الكراهية والتصريحات التمييزية تلقائيًا وتعتيمها/حظرها. قد يتم فرض عقوبات في حالة التكرار.",
+    "notice_blocked": "🚫 تم حظر الإرسال بسبب احتوائه على تعبيرات غير ملائمة.",
+    "notice_masked": "🔒 تم إخفاء بعض الكلمات وفقًا للسياسة.",
+    "title_direct_chat": "دردشة",
+    "action_exit": "خروج",
+    "btn_new_chat": "دردشة جديدة",
+    "title_chat_room": "غرفة الدردشة",
+    "btn_leave": "خروج",
+    "search_placeholder_history": "البحث في غرفة الدردشة أو محتوى المحادثة...",
+    "search_result_rooms": "غرفة الدردشة",
+    "search_result_messages": "محتوى المحادثة",
+    "last_message_label": "آخر محادثة",
+    "searching": "جارٍ البحث...",
+    "no_search_result_desc": "لا يمكن العثور على سجل المحادثة لـ '{{query}}'."
+  },
+  "footer": {
+    "brand": {
+      "slogan_main": "Connect Culture, Expand World.",
+      "slogan_sub": "تجربة التواصل الحقيقي تتجاوز حواجز اللغة."
+    },
+    "social": {
+      "youtube": "YouTube",
+      "instagram": "Instagram",
+      "threads": "Threads",
+      "x": "X",
+      "facebook": "Facebook"
+    },
+    "columns": {
+      "product": {
+        "title": "المنتج",
+        "features": "الميزات",
+        "enterprise": "المؤسسة",
+        "security": "الأمان",
+        "pricing": "الأسعار"
+      },
+      "resources": {
+        "title": "الموارد",
+        "documentation": "الوثائق",
+        "api": "واجهة برمجة التطبيقات (API)",
+        "community": "المجتمع",
+        "help_center": "مركز المساعدة"
+      },
+      "company": {
+        "title": "الشركة",
+        "about": "معلومات عنا",
+        "careers": "وظائف",
+        "blog": "المدونة",
+        "contact": "اتصل بنا"
+      }
+    },
+    "newsletter": {
+      "title": "اشتراك",
+      "desc": "احصل على آخر الأخبار والتحديثات.",
+      "placeholder": "عنوان البريد الإلكتروني"
+    },
+    "bottom": {
+      "rights": "© {{year}} Ara Inc.",
+      "terms": "الشروط",
+      "privacy": "الخصوصية",
+      "cookies": "ملفات تعريف الارتباط (Cookies)"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+/* 커스텀 스크롤바 전역 스타일 (모든 요소에 적용) */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px; /* 가로 스크롤바 대응 */
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.6);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.8);
+}
+
+.dark *::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.6);
+}
+
+.dark *::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.8);
+}

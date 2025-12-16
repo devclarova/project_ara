@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 function useAutoId(prefix = 'chk') {
   const ref = useRef<string>();
@@ -23,6 +24,7 @@ export default function CheckboxSquare({
   className?: string;
   visualState?: 'checked' | 'indeterminate' | 'unchecked';
 }) {
+  const { t } = useTranslation();
   const autoId = useAutoId();
   const inputId = id || autoId;
 
@@ -96,7 +98,7 @@ export default function CheckboxSquare({
         {label}{' '}
         {required && (
           <em className="not-italic text-red-600 dark:text-red-400 ml-1 whitespace-nowrap">
-            (필수)
+            {t('signup.required_mark')}
           </em>
         )}
       </span>

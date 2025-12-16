@@ -206,6 +206,7 @@ export type Database = {
           flag_url: string | null;
           id: number;
           iso_code: string | null;
+          language_code: string | null;
           name: string;
           phone_code: number;
         };
@@ -214,6 +215,7 @@ export type Database = {
           flag_url?: string | null;
           id?: number;
           iso_code?: string | null;
+          language_code?: string | null;
           name: string;
           phone_code: number;
         };
@@ -222,6 +224,7 @@ export type Database = {
           flag_url?: string | null;
           id?: number;
           iso_code?: string | null;
+          language_code?: string | null;
           name?: string;
           phone_code?: number;
         };

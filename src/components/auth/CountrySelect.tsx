@@ -2,6 +2,7 @@ import Select, { components, type SingleValue, type StylesConfig } from 'react-s
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 type Option = {
   value: string;
@@ -22,6 +23,7 @@ interface CountrySelectProps {
   value: string;
   onChange: (value: string) => void;
   error?: boolean;
+  isDisabled?: boolean;
 }
 
 const CustomDropdownIndicator = (props: any) => {
@@ -34,7 +36,8 @@ const CustomDropdownIndicator = (props: any) => {
   );
 };
 
-export default function CountrySelect({ value, onChange, error = false }: CountrySelectProps) {
+export default function CountrySelect({ value, onChange, error = false, isDisabled }: CountrySelectProps) {
+  const { t } = useTranslation();
   const [countries, setCountries] = useState<Country[]>([]);
   const [isFocused, setIsFocused] = useState(false);
 
@@ -84,8 +87,11 @@ export default function CountrySelect({ value, onChange, error = false }: Countr
         borderWidth: 1,
         outline: 'none',
         boxShadow: state.isFocused ? '0 0 0 3px var(--ara-ring)' : 'none',
-        backgroundColor: isDark ? 'hsl(var(--secondary))' : '#fff',
+        backgroundColor: state.isDisabled 
+          ? (isDark ? 'hsl(var(--secondary) / 0.5)' : '#f3f4f6') 
+          : (isDark ? 'hsl(var(--secondary))' : '#fff'),
         color: isDark ? '#9CA3AF' : '#111827',
+        opacity: state.isDisabled ? 0.7 : 1,
         '&:hover': {
           borderColor: state.isFocused
             ? 'var(--ara-primary)'
@@ -177,6 +183,7 @@ export default function CountrySelect({ value, onChange, error = false }: Countr
           (document.activeElement as HTMLElement)?.blur();
         }}
         options={options}
+        isDisabled={isDisabled}
         formatOptionLabel={(opt: Option) => (
           <div className="flex items-center gap-2">
             <img
@@ -213,10 +220,10 @@ export default function CountrySelect({ value, onChange, error = false }: Countr
           }
         `}
       >
-        국적
+        {t('signup.label_country')}
       </label>
 
-      {error && !value && <p className="text-red-500 text-sm mt-1">국적을 선택해주세요.</p>}
+      {error && !value && <p className="text-red-500 text-sm mt-1">{t('signup.error_country_required')}</p>}
     </div>
   );
 }

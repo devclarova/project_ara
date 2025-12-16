@@ -1,0 +1,16 @@
+# Signup Translation Template Generator
+
+빠른 작업을 위해 8개 언어의 signup 섹션 번역을 준비했습니다.
+지금부터 각 언어 파일에 순차적으로 추가하겠습니다.
+
+Languages remaining:
+- ru (Russian)
+- bn (Bengali)
+- th (Thai)
+- ar (Arabic)
+- hi (Hindi)
+- pt (Portuguese)
+- pt-br (Brazilian Portuguese)
+- fi (Finnish)
+
+Progress: 1/9 complete (Vietnamese ✅)

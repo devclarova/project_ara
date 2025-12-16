@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
 import { supabase } from '../../lib/supabase';
 import type { ConsentResult } from '@/types/consent';
+import { useTranslation } from 'react-i18next';
 
 type ProfileDraft = {
   bio: string;
@@ -61,6 +62,7 @@ export default function SignUpStep3Profile(props: Props) {
     signupKind,
   } = props;
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
@@ -90,36 +92,36 @@ export default function SignUpStep3Profile(props: Props) {
       const birthdayStr = birth ? toYMDLocal(birth) : '';
 
       if (!email?.trim()) {
-        setMsg('이메일을 입력해 주세요.');
+        setMsg(t('validation.required_email'));
         return;
       }
       if (!nickname?.trim()) {
-        setMsg('닉네임을 입력해 주세요.');
+        setMsg(t('validation.required_nickname'));
         return;
       }
       if (!gender?.trim()) {
-        setMsg('성별을 선택해 주세요.');
+        setMsg(t('validation.required_gender'));
         return;
       }
       if (!birthdayStr) {
-        setMsg('생년월일을 입력해 주세요.');
+        setMsg(t('validation.required_birthday'));
         return;
       }
       if (!country?.trim()) {
-        setMsg('국적을 선택해 주세요.');
+        setMsg(t('validation.required_country'));
         return;
       }
 
       // [추가] 만 14세 미만 최종 차단 (프론트 우회 대비)
       if (!isAge14Plus(birth)) {
-        setMsg('만 14세 미만은 가입할 수 없습니다.');
+        setMsg(t('validation.age_restriction'));
         return;
       }
 
       // 소셜이 아닌 경우에만 비밀번호 확인(소셜은 임의값/비활성화)
       if (signupKind !== 'social') {
         if (!pw?.trim()) {
-          setMsg('비밀번호를 입력해 주세요.');
+          setMsg(t('validation.required_password'));
           return;
         }
       }
@@ -141,7 +143,7 @@ export default function SignUpStep3Profile(props: Props) {
           const { data: s1 } = await supabase.auth.getSession();
           const uid = s1.session?.user?.id;
           if (!uid) {
-            setMsg('세션이 만료되었습니다. 소셜 로그인부터 다시 진행해 주세요.');
+            setMsg(t('auth.session_expired'));
             return;
           }
           const path = `avatars/${uid}/${uuid()}.${ext}`;
@@ -149,7 +151,7 @@ export default function SignUpStep3Profile(props: Props) {
             .from('avatars')
             .upload(path, draft.file, { upsert: true });
           if (upErr) {
-            setMsg(`아바타 업로드 실패: ${upErr.message}`);
+            setMsg(`${t('auth.avatar_upload_failed')}: ${upErr.message}`);
             return;
           }
           const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
@@ -219,9 +221,9 @@ export default function SignUpStep3Profile(props: Props) {
           console.error('[signUp:error]', { message: error.message, name: error.name });
           const low = (error.message || '').toLowerCase();
           if (low.includes('already registered')) {
-            setMsg('이미 가입된 이메일입니다. 로그인을 시도해 주세요.');
+            setMsg(t('validation.email_already_exists'));
           } else {
-            setMsg('회원가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+            setMsg(t('auth.signup_error'));
           }
           return;
         }
@@ -236,7 +238,7 @@ export default function SignUpStep3Profile(props: Props) {
       const { data: s1 } = await supabase.auth.getSession();
       const uid = s1.session?.user?.id;
       if (!uid) {
-        setMsg('세션이 만료되었습니다. 소셜 로그인부터 다시 진행해 주세요.');
+        setMsg(t('auth.session_expired'));
         return;
       }
 
@@ -261,7 +263,7 @@ export default function SignUpStep3Profile(props: Props) {
       );
 
       if (upErr) {
-        setMsg(`프로필 저장 실패: ${upErr.message}`);
+        setMsg(`${t('auth.profile_save_failed')}: ${upErr.message}`);
         return;
       }
 
@@ -270,7 +272,7 @@ export default function SignUpStep3Profile(props: Props) {
       setShowSuccess(true);
     } catch (e: any) {
       console.error('[handleSubmit:exception]', e);
-      setMsg('네트워크 또는 서버 통신 중 오류가 발생했습니다.');
+      setMsg(t('auth.network_error'));
     } finally {
       setLoading(false);
     }
@@ -279,13 +281,13 @@ export default function SignUpStep3Profile(props: Props) {
   return (
     <section className="bg-white rounded-2xl p-4 sm:p-6 md:p-8 shadow dark:bg-secondary">
       <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
-        프로필 (선택)
+        {t('profile.profile_optional')}
       </h2>
 
       {/* 아바타 업로더 */}
       <div className="flex flex-col items-center mt-1 sm:mt-2">
         <label className="mb-2 font-semibold text-gray-700 dark:text-gray-200 text-sm sm:text-base">
-          프로필 이미지
+          {t('profile.profile_image')}
         </label>
         <label
           htmlFor="avatar-upload"
@@ -299,7 +301,7 @@ export default function SignUpStep3Profile(props: Props) {
             />
           ) : (
             <span className="text-gray-400 dark:text-gray-500 text-xs sm:text-sm text-center">
-              이미지 선택
+              {t('profile.select_image')}
             </span>
           )}
           <input
@@ -315,20 +317,20 @@ export default function SignUpStep3Profile(props: Props) {
             }}
           />
         </label>
-        <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">최대 2MB · JPG/PNG/GIF</p>
+        <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">{t('signup.image_size_hint')}</p>
       </div>
 
       {/* 자기소개 */}
       <div className="mt-5">
         <label htmlFor="bio" className="block font-semibold text-gray-800 dark:text-gray-100 mb-2">
-          자기소개
+          {t('profile.bio')}
         </label>
         <textarea
           id="bio"
           value={draft.bio}
           onChange={e => onChangeDraft(d => ({ ...d, bio: e.target.value.slice(0, 300) }))}
           rows={4}
-          placeholder="간단한 소개를 작성해주세요."
+          placeholder={t('profile.bio_placeholder')}
           className="w-full h-32 resize-none rounded-lg border border-gray-300 dark:border-white/15 bg-transparent px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--ara-ring)]"
         />
         <div className="mt-1 text-right text-[11px] text-gray-400 dark:text-gray-500">
@@ -349,7 +351,7 @@ export default function SignUpStep3Profile(props: Props) {
           disabled={loading}
           className="bg-gray-100 dark:bg-neutral-500 text-gray-800 dark:text-gray-100 font-semibold py-2 px-4 rounded-lg hover:opacity-80 transition disabled:opacity-50"
         >
-          이전
+          {t('auth.previous')}
         </button>
         <button
           type="button"
@@ -357,7 +359,7 @@ export default function SignUpStep3Profile(props: Props) {
           onClick={handleSubmit}
           className="bg-[var(--ara-primary)] text-white font-semibold py-2 px-4 rounded-lg hover:opacity-85 transition disabled:opacity-50"
         >
-          {loading ? '회원가입 중...' : '회원가입 완료'}
+          {loading ? t('auth.signing_up') : t('auth.signup_complete')}
         </button>
       </div>
 
@@ -365,13 +367,13 @@ export default function SignUpStep3Profile(props: Props) {
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/50">
           <div className="w-[360px] rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-neutral-900 p-6 text-center shadow-xl">
             <h3 className="mb-1 text-base font-semibold text-gray-900 dark:text-gray-100">
-              회원가입 완료!
+              {t('auth.signup_complete_message')}
             </h3>
 
             <p className="mb-5 text-sm text-gray-600 dark:text-gray-300">
               {successKind === 'social'
-                ? '이제 서비스를 이용할 수 있어요.'
-                : '인증 메일을 확인해주세요.'}
+                ? t('auth.service_ready')
+                : t('auth.check_verification_email')}
             </p>
 
             <button
@@ -383,7 +385,7 @@ export default function SignUpStep3Profile(props: Props) {
               className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white"
               style={{ background: 'var(--ara-primary)' }}
             >
-              {successKind === 'social' ? '시작하기' : '홈으로 이동'}
+              {successKind === 'social' ? t('auth.start_now') : t('auth.go_home')}
             </button>
           </div>
         </div>

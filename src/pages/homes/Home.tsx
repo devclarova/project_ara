@@ -5,29 +5,8 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import { useAuth } from '@/contexts/AuthContext';
 import TweetCard from './feature/TweetCard';
 import SnsInlineEditor from '@/components/common/SnsInlineEditor';
-
-type TweetUser = {
-  name: string;
-  username: string;
-  avatar: string;
-};
-
-type TweetStats = {
-  replies: number;
-  retweets: number;
-  likes: number;
-  bookmarks?: number;
-  views: number;
-};
-
-export type UITweet = {
-  id: string;
-  user: TweetUser;
-  content: string;
-  image?: string | string[];
-  timestamp: string;
-  stats: TweetStats;
-};
+import { SnsStore } from '@/lib/snsState';
+import type { UITweet } from '@/types/sns';
 
 type OutletCtx = {
   newTweet: UITweet | null;
@@ -44,10 +23,6 @@ const defaultOutletCtx: OutletCtx = {
   setNewTweet: () => {},
   searchQuery: '',
 };
-
-let SNS_FEED_CACHE: UITweet[] | null = null;
-let SNS_FEED_HAS_MORE = true;
-let SNS_FEED_PAGE = 0;
 
 const SNS_LAST_TWEET_ID_KEY = 'sns-last-tweet-id';
 
@@ -176,12 +151,7 @@ export default function Home({ searchQuery }: HomeProps) {
         },
         content: t.content,
         image: t.image_url || undefined,
-        timestamp: new Date(t.created_at).toLocaleString('ko-KR', {
-          hour: '2-digit',
-          minute: '2-digit',
-          month: 'short',
-          day: 'numeric',
-        }),
+        timestamp: t.created_at,
         stats: {
           replies: t.reply_count ?? 0,
           retweets: t.repost_count ?? 0,
@@ -215,10 +185,11 @@ export default function Home({ searchQuery }: HomeProps) {
     }
 
     // 2) 검색이 아니고, 이전 피드 캐시가 있으면 그걸 우선 사용
-    if (SNS_FEED_CACHE) {
-      setTweets(SNS_FEED_CACHE);
-      setHasMore(SNS_FEED_HAS_MORE);
-      setPage(SNS_FEED_PAGE);
+    const cachedFeed = SnsStore.getFeed();
+    if (cachedFeed) {
+      setTweets(cachedFeed);
+      setHasMore(SnsStore.getHasMore());
+      setPage(SnsStore.getPage());
       setLoading(false);
       return;
     }
@@ -292,12 +263,7 @@ export default function Home({ searchQuery }: HomeProps) {
             },
             content: newTweetRow.content,
             image: newTweetRow.image_url || undefined,
-            timestamp: new Date(newTweetRow.created_at).toLocaleString('ko-KR', {
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            }),
+            timestamp: newTweetRow.created_at,
             stats: {
               replies: newTweetRow.reply_count ?? 0,
               retweets: newTweetRow.repost_count ?? 0,
@@ -359,15 +325,16 @@ export default function Home({ searchQuery }: HomeProps) {
     };
   }, []);
 
+  // 언마운트 시 현재 피드를 전역 캐시에 저장
   useEffect(() => {
     return () => {
       // 검색 중이라면 캐시 사용 안 함
       if (isSearching) return;
 
-      // 뒤로가기 시 무조건 최신 데이터 fetch 되게 캐시 초기화
-      SNS_FEED_CACHE = null;
-      SNS_FEED_HAS_MORE = true;
-      SNS_FEED_PAGE = 0;
+
+      SnsStore.setFeed(tweets);
+      SnsStore.setHasMore(hasMore);
+      SnsStore.setPage(page);
     };
   }, [isSearching]);
   if (loading && tweets.length === 0) {
@@ -385,8 +352,13 @@ export default function Home({ searchQuery }: HomeProps) {
         <SnsInlineEditor
           mode="tweet"
           onTweetCreated={tweet => {
-            // 새 트윗을 피드 맨 앞에 붙이기
             setTweets(prev => [tweet, ...prev]);
+          }}
+          onFocus={() => {
+            window.scrollTo({ top: 0, behavior: 'auto' });
+          }}
+          onInput={() => {
+            window.scrollTo({ top: 0, behavior: 'auto' });
           }}
         />
       )}

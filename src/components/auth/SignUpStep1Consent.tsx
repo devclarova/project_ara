@@ -3,6 +3,7 @@ import type { ConsentResult } from '@/types/consent';
 import { useConsentDraft } from './consent/useConsentDraft';
 import AgreeRow from './consent/AgreeRow';
 import ConsentModal from './consent/ConsentModal';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   onNext: (c: ConsentResult) => void;
@@ -11,6 +12,7 @@ type Props = {
 };
 
 export default function SignUpStep1Consent({ onNext, value, onChange }: Props) {
+  const { t } = useTranslation();
   const [terms, setTerms] = useState(value?.terms ?? false);
   const [privacy, setPrivacy] = useState(value?.privacy ?? false);
   const [age, setAge] = useState(value?.age ?? false);
@@ -65,20 +67,20 @@ export default function SignUpStep1Consent({ onNext, value, onChange }: Props) {
   return (
     <section className="bg-white p-4 sm:p-6 md:p-8 shadow overflow-x-hidden dark:bg-secondary">
       <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1 dark:text-gray-100">
-        회원가입 동의
+        {t('signup.step1_title')}
       </h2>
       <p className="text-gray-500 mb-4 sm:mb-5 dark:text-gray-400">
-        서비스 이용을 위해 약관에 동의해주세요.
+        {t('signup.step1_desc')}
       </p>
 
       <div className="grid grid-cols-[1fr,auto] gap-x-4">
-        <AgreeRow label="전체 동의" checked={allSelected} onChange={handleAll} />
+        <AgreeRow label={t('signup.agree_all')} checked={allSelected} onChange={handleAll} />
         {/* 인디케이터 표현은 CheckboxSquare 내부 visualState로 처리해도 됨 */}
         <div className="col-span-2 h-px bg-gray-100 dark:bg-gray-700 my-1" />
 
         <AgreeRow
           required
-          label="이용약관 동의"
+          label={t('signup.agree_terms')}
           checked={terms}
           onChange={v => {
             setTerms(v);
@@ -88,7 +90,7 @@ export default function SignUpStep1Consent({ onNext, value, onChange }: Props) {
         />
         <AgreeRow
           required
-          label="개인정보처리방침 동의"
+          label={t('signup.agree_privacy')}
           checked={privacy}
           onChange={v => {
             setPrivacy(v);
@@ -98,7 +100,7 @@ export default function SignUpStep1Consent({ onNext, value, onChange }: Props) {
         />
         <AgreeRow
           required
-          label="만 14세 이상입니다"
+          label={t('signup.agree_age')}
           checked={age}
           onChange={v => {
             setAge(v);
@@ -106,7 +108,7 @@ export default function SignUpStep1Consent({ onNext, value, onChange }: Props) {
           }}
         />
         <AgreeRow
-          label="마케팅 정보 수신 동의(선택)"
+          label={t('signup.agree_marketing')}
           checked={marketing}
           onChange={v => {
             setMarketing(v);
@@ -129,7 +131,7 @@ export default function SignUpStep1Consent({ onNext, value, onChange }: Props) {
             !allRequired ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-85',
           ].join(' ')}
         >
-          다음 단계
+          {t('signup.next_step')}
         </button>
       </div>
 

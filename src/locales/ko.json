@@ -1,0 +1,635 @@
+{
+  "nav": {
+    "home": "홈",
+    "study": "학습",
+    "community": "커뮤니티",
+    "chat": "채팅",
+    "notifications": "알림",
+    "more": "더보기",
+    "settings": "설정",
+    "profile": "프로필",
+    "post": "게시하기"
+  },
+  "notification": {
+    "like_feed": "님이 회원님의 게시물을 좋아합니다.",
+    "user_action": "{{name}}",
+    "new": "신규",
+    "deleted_post": "삭제된 게시물입니다.",
+    "deleted_comment": "삭제된 댓글입니다.",
+    "comment_feed": "님이 회원님의 게시물에 댓글을 남겼습니다.",
+    "like_comment": "님이 회원님의 댓글을 좋아합니다.",
+    "follow_msg": "님이 회원님을 팔로우합니다.",
+    "repost_msg": "님이 회원님의 게시물을 리포스트했습니다.",
+    "mention_msg": "님이 회원님을 언급했습니다.",
+    "success_clear_all": "알림을 모두 비웠습니다",
+    "error_clear_all": "알림을 비우는 중 오류가 발생했습니다",
+    "new_arrived": "새 알림이 도착했습니다",
+    "clear_all": "비우기",
+    "action_comment": "당신의 피드에 댓글을 남겼습니다.",
+    "action_like_comment": "당신의 댓글을 좋아합니다.",
+    "action_like_feed": "당신의 피드를 좋아합니다.",
+    "no_notifications": "아직 새로운 알림이 없습니다",
+    "delete_confirm_title": "알림 삭제",
+    "delete_confirm_desc": "이 알림을 삭제하시겠습니까?"
+  },
+  "study": {
+    "search_placeholder": "검색...",
+    "no_content": "콘텐츠가 없습니다.",
+    "category": {
+      "all": "전체",
+      "drama": "드라마",
+      "movie": "영화",
+      "entertainment": "예능",
+      "music": "음악"
+    },
+    "level": {
+      "title": "난이도",
+      "all": "전체",
+      "beginner": "초급",
+      "intermediate": "중급",
+      "advanced": "고급"
+    },
+    "guide": {
+      "prev": "이전",
+      "next": "다음",
+      "start": "시작",
+      "close": "닫기",
+      "never_show": "다시 보지 않기"
+    },
+    "formats": {
+      "episode": "제{{val}}화",
+      "scene": "장면 {{val}}"
+    },
+    "no_title": "제목 없음",
+    "no_episode": "에피소드 없음",
+    "share_text_prefix": "K-콘텐츠로 배우기: ",
+    "meta_desc_default": "ARA에서 즐겁게 한국어를 배워보세요",
+    "study_card_title": "학습 카드",
+    "vocab_explanation": "단어 설명",
+    "culture_note": "문화 노트",
+    "login_required": "로그인 필요",
+    "preview": "미리보기"
+  },
+  "auth": {
+    "login": "로그인",
+    "signup": "회원가입",
+    "logout": "로그아웃",
+    "login_needed": "로그인이 필요합니다",
+    "please_login": "로그인 해주세요",
+    "click_to_login": "눌러서 로그인",
+    "welcome": "환영합니다",
+    "email": "이메일",
+    "password": "비밀번호",
+    "logging_in": "로그인 중...",
+    "auto_login": "자동 로그인",
+    "find_email": "이메일 찾기",
+    "find_password": "비밀번호 찾기",
+    "resend_verification": "인증 메일 재발송",
+    "first_time": "처음이신가요?",
+    "login_with_google": "Google로 로그인",
+    "login_with_kakao": "Kakao로 로그인",
+    "verification_sent": "인증 메일이 전송되었습니다",
+    "check_verification_email": "이메일로 전송된 인증 링크를 확인해주세요",
+    "email_verification_failed": "이메일 인증에 실패했습니다",
+    "verify_before_login": "로그인 전 이메일 인증을 완료해주세요",
+    "invalid_credentials": "아이디 또는 비밀번호가 잘못되었습니다",
+    "session_expired": "세션이 만료되었습니다",
+    "avatar_upload_failed": "프로필 이미지 업로드 실패",
+    "profile_save_failed": "프로필 저장 실패",
+    "network_error": "네트워크 오류가 발생했습니다",
+    "previous": "이전",
+    "signing_up": "가입 중...",
+    "signup_complete": "가입 완료",
+    "signup_complete_message": "회원가입이 완료되었습니다!",
+    "service_ready": "이제 서비스를 이용하실 수 있습니다.",
+    "start_now": "시작하기",
+    "go_home": "홈으로",
+    "signup_error": "회원가입 중 오류가 발생했습니다"
+  },
+  "signup": {
+    "title_social": "소셜 회원가입",
+    "title_email": "회원가입",
+    "later": "다음에 하기",
+    "go_home": "홈으로",
+    "step1_title": "회원가입 동의",
+    "step1_desc": "서비스 이용을 위해 약관에 동의해주세요.",
+    "agree_all": "전체 동의",
+    "agree_terms": "이용약관 동의",
+    "agree_privacy": "개인정보처리방침 동의",
+    "agree_age": "만 14세 이상입니다",
+    "agree_marketing": "마케팅 정보 수신 동의(선택)",
+    "next_step": "다음 단계",
+    "step2_title": "회원 정보 입력",
+    "label_email": "이메일",
+    "label_password": "비밀번호",
+    "label_password_confirm": "비밀번호 확인",
+    "label_nickname": "닉네임",
+    "error_email_taken": "해당 이메일은 이미 사용 중입니다.",
+    "error_nickname_taken": "해당 닉네임은 이미 사용 중입니다.",
+    "error_email_check_retry": "이메일 중복체크를 다시 시도해주세요.",
+    "error_nickname_check_retry": "닉네임 중복체크를 다시 시도해주세요.",
+    "nickname_detected_lang": "감지된 언어:",
+    "nickname_lang_unknown": "알 수 없음",
+    "nickname_hint": "길이 {{min}}~{{max}}자, 언더바 최대 2개",
+    "image_size_hint": "최대 2MB · JPG/PNG/GIF",
+    "step_agreement": "동의",
+    "step_info": "정보 입력",
+    "step_profile": "프로필",
+    "stepper_aria": "회원가입 단계",
+    "detail_view": "상세보기",
+    "required_mark": "(필수)",
+    "checking": "확인 중...",
+    "check_duplicate": "중복확인",
+    "available": "사용 가능합니다.",
+    "already_in_use": "이미 사용 중입니다.",
+    "gender_male": "남성",
+    "gender_female": "여성",
+    "label_gender": "성별",
+    "error_gender_required": "성별을 선택해주세요.",
+    "label_birth": "생년월일",
+    "error_birth_required": "생년월일을 입력해주세요.",
+    "calendar_alt": "달력",
+    "label_country": "국적",
+    "error_country_required": "국적을 선택해주세요.",
+    "lang_korean": "한국어",
+    "lang_english": "영어",
+    "lang_japanese": "일본어",
+    "lang_chinese": "중국어",
+    "lang_russian": "러시아어",
+    "lang_vietnamese": "베트남어",
+    "lang_bengali": "벵골어",
+    "lang_arabic": "아랍어",
+    "lang_hindi": "힌디어",
+    "lang_thai": "태국어",
+    "lang_spanish": "스페인어",
+    "lang_french": "프랑스어",
+    "lang_portuguese": "포르투갈어",
+    "lang_portuguese_brazil": "브라질 포르투갈어",
+    "lang_german": "독일어",
+    "lang_finnish": "핀란드어",
+    "btn_previous": "이전",
+    "btn_next_step": "다음 단계",
+    "agree_and_close": "동의하고 닫기"
+  },
+  "common": {
+    "save": "저장",
+    "saving": "저장 중...",
+    "apply": "적용하기",
+    "cancel": "취소",
+    "delete": "삭제",
+    "edit": "수정",
+    "my_profile": "내 프로필",
+    "my_account": "내 계정",
+    "view_profile": "내 프로필 보기",
+    "settings_desc": "프로필/설정",
+    "search": "검색",
+    "back": "뒤로가기",
+    "loading": "로딩 중...",
+    "error": "오류가 발생했습니다",
+    "error_profile_load": "프로필 정보를 불러오지 못했습니다",
+    "error_profile_missing": "프로필 정보가 없습니다. 다시 로그인해 주세요",
+    "error_profile_loading": "프로필 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요",
+    "error_navigate_profile": "프로필로 이동하는 중 오류가 발생했습니다",
+    "error_profile_not_load": "프로필 정보를 불러올 수 없습니다",
+    "error_like": "좋아요 처리 중 오류가 발생했습니다",
+    "error_delete": "삭제 중 오류가 발생했습니다",
+    "success_delete": "삭제되었습니다",
+    "success_report": "신고가 접수되었습니다",
+    "success_block": "해당 유저를 차단했습니다",
+    "error_no_profile": "프로필이 존재하지 않습니다",
+    "error_empty_content": "내용이 비어 있습니다",
+    "close": "닫기",
+    "share": "공유",
+    "link_copied": "링크가 복사되었습니다"
+  },
+  "settings": {
+    "themeSelect": "테마 선택",
+    "theme_options": {
+      "light": "라이트",
+      "dark": "다크",
+      "system": "시스템"
+    },
+    "system": "시스템 설정",
+    "language": "언어",
+    "theme": "테마",
+    "theme_light": "라이트",
+    "theme_dark": "다크",
+    "theme_system": "시스템 설정",
+    "title_language": "언어 변경",
+    "title_theme": "테마 변경",
+    "title_password_change": "비밀번호 변경",
+    "title_sns_connect": "SNS 계정 연결",
+    "title_withdraw": "계정 탈퇴",
+    "title_terms": "이용약관",
+    "title_privacy": "개인정보처리방침",
+    "title_marketing": "마케팅 정보 수신",
+    "title_support": "고객센터",
+    "security_title": "보안 설정",
+    "session_management": "세션 관리",
+    "notifications": "알림 설정",
+    "alarm_comment": "댓글 알림",
+    "alarm_comment_desc": "누군가가 게시물에 댓글을 남기면 알림을 받습니다.",
+    "alarm_like": "좋아요 알림",
+    "alarm_like_desc": "누군가가 게시물을 좋아하면 알림을 받습니다.",
+    "alarm_follow": "팔로우 알림",
+    "alarm_follow_desc": "누군가가 회원님을 팔로우하면 알림을 받습니다.",
+    "privacy": "개인정보 설정",
+    "change_password": "비밀번호 변경",
+    "connect_sns": "SNS 계정 연결",
+    "withdraw": "회원 탈퇴",
+    "withdraw_phrase": "탈퇴하겠습니다.",
+    "withdraw_verify_placeholder": "확인을 위해 \"{{phrase}}\"를 입력하세요",
+    "withdraw_modal_title": "정말로 계정을 삭제하시겠습니까?",
+    "withdraw_warning_1": "계정 정보는 복구할 수 없습니다.",
+    "withdraw_warning_2": "모든 게시물과 댓글이 삭제됩니다.",
+    "withdraw_warning_3": "팔로우/팔로잉 정보가 사라집니다.",
+    "withdraw_warning_4": "이 작업은 취소할 수 없습니다.",
+    "confirm_password": "비밀번호 확인",
+    "confirm_password_placeholder": "비밀번호를 입력하세요",
+    "confirm_password_desc": "본인 확인을 위해 비밀번호를 입력해주세요.",
+    "withdraw_verify_label": "아래 문구를 입력하세요",
+    "withdraw_btn_cancel": "취소",
+    "withdraw_btn_processing": "처리 중...",
+    "withdraw_btn_confirm": "삭제하기",
+    "pw_change_guide": "최소 8자 이상, 문자, 숫자, 기호를 혼합하여 사용하는 것을 권장합니다.",
+    "current_pw": "현재 비밀번호",
+    "current_pw_placeholder": "현재 비밀번호 입력",
+    "new_pw": "새 비밀번호",
+    "new_pw_placeholder": "새 비밀번호 입력",
+    "confirm_new_pw": "새 비밀번호 확인",
+    "confirm_new_pw_placeholder": "새 비밀번호 다시 입력",
+    "pw_mismatch": "새 비밀번호가 일치하지 않습니다.",
+    "pw_check_req": "비밀번호를 확인해주세요 (최소 8자 & 일치).",
+    "hide": "숨기기",
+    "show": "보이기",
+    "sns_connect_desc": "소셜 로그인으로 계정을 연결하면 더 쉽게 접속하고 복구할 수 있습니다.",
+    "connect_google": "Google 계정 연결",
+    "connect_kakao": "Kakao 계정 연결",
+    "sns_connect_note": "연결된 계정은 설정 > 개인정보에서 언제든지 연결 해제할 수 있습니다. (추후 제공)",
+    "account_settings": "설정",
+    "support_policy": "지원 및 정책",
+    "help_center": "도움말 센터",
+    "terms": "이용약관",
+    "privacy_policy": "개인정보 처리방침",
+    "marketing_consent": "마케팅 동의"
+  },
+  "profile": {
+    "edit_profile": "프로필 편집",
+    "following": "팔로잉",
+    "followers": "팔로워",
+    "joined": "{{date}}에 가입",
+    "tabs": {
+      "posts": "게시물",
+      "replies": "답글",
+      "media": "미디어",
+      "likes": "마음에 들어요"
+    },
+    "no_posts": "게시물이 없습니다",
+    "no_replies": "답글이 없습니다",
+    "view_profile": "프로필 보기",
+    "profile_optional": "프로필 설정 (선택사항)",
+    "profile_image": "프로필 이미지",
+    "select_image": "이미지 선택",
+    "bio": "자기소개",
+    "bio_placeholder": "자신을 소개해주세요",
+    "tab_posts": "게시글",
+    "tab_replies": "댓글",
+    "tab_likes": "좋아요",
+    "nickname_change_warning": "⚠️ 닉네임은 한 번만 변경 가능합니다.",
+    "nickname_disabled_reason": "닉네임은 이미 한 번 변경되었습니다.",
+    "nickname_change_forbidden": "닉네임은 다시 변경할 수 없습니다.",
+    "country_change_warning": "⚠️ 국적은 한 번만 변경 가능합니다.",
+    "country_disabled_reason": "국적은 이미 한 번 변경되었습니다.",
+    "country_change_forbidden": "국적은 다시 변경할 수 없습니다."
+  },
+  "tweets": {
+    "placeholder_tweet": "무슨 생각을 하고 계신가요?",
+    "placeholder_reply": "답글을 게시하세요",
+    "btn_post": "게시하기",
+    "btn_posting": "게시 중...",
+    "btn_reply": "답글",
+    "btn_replying": "답글 작성 중...",
+    "error_profile": "프로필 정보를 불러오는 중입니다. 나중에 다시 시도해주세요.",
+    "error_general": "오류가 발생했습니다.",
+    "add_photo": "사진 추가",
+    "images_selected": "{{count}}개의 이미지 선택됨",
+    "preview_alt": "미리보기 {{index}}",
+    "success_tweet": "트윗이 성공적으로 업로드되었습니다!",
+    "success_reply": "댓글이 성공적으로 업로드되었습니다!",
+    "success_reply_posted": "댓글이 등록되었습니다",
+    "error_reply_save": "댓글 저장 중 오류가 발생했습니다",
+    "error_tweet_save": "트윗 저장 중 오류가 발생했습니다",
+    "error_reply_upload": "댓글 업로드 중 문제가 발생했습니다",
+    "error_tweet_upload": "트윗 업로드 중 문제가 발생했습니다",
+    "error_login": "로그인이 필요합니다",
+    "error_empty": "내용이 비어 있습니다"
+  },
+  "tweet": {
+    "delete_msg_title": "삭제하시겠습니까?",
+    "delete_msg_desc": "이 동작은 되돌릴 수 없습니다.",
+    "delete_success": "삭제되었습니다.",
+    "delete_failed": "삭제에 실패했습니다.",
+    "no_replies": "답글이 없습니다",
+    "be_first": "가장 먼저 답글을 남겨보세요!",
+    "cannot_delete": "본인이 작성한 트윗만 삭제할 수 있습니다.",
+    "deleted_reply": "삭제된 댓글입니다",
+    "deleted_or_not_exist": "삭제된 게시글이거나 존재하지 않는 게시글입니다"
+  },
+  "trending": {
+    "title": "실시간 인기 피드",
+    "no_trending": "트렌드가 없습니다"
+  },
+  "chat": {
+    "direct_chat": "채팅",
+    "select_or_start": "좌측 목록에서 채팅을 선택하거나 + 버튼을 눌러 대화를 시작하세요.",
+    "start_conversation": "+ 버튼을 눌러 대화를 시작하세요.",
+    "feature_realtime": "💬 실시간 1:1 채팅",
+    "feature_search": "👥 유저 검색 및 초대",
+    "feature_responsive": "📱 반응형 디자인",
+    "room_title": "채팅방",
+    "loading": "로딩 중...",
+    "me": "나",
+    "unknown": "알 수 없음",
+    "today": "오늘",
+    "exit": "나가기",
+    "search_placeholder": "채팅 검색",
+    "search_btn": "검색",
+    "search_hint": "메시지 내용을 검색하세요.",
+    "no_result": "결과가 없습니다.",
+    "no_messages": "아직 메시지가 없습니다.",
+    "send_first_message": "첫 번째 메시지를 보내보세요!",
+    "system_leave": "님이 채팅방을 나갔습니다",
+    "confirm_exit": "이 채팅방을 나가시겠습니까?",
+    "exit_fail": "채팅방 나가기에 실패했습니다.",
+    "exit_error": "나가는 중 오류가 발생했습니다.",
+    "result_count": "{{count}}개 중 {{index}}번째",
+    "prev": "이전",
+    "next": "다음",
+    "new_chat": "새 채팅",
+    "user_search_placeholder": "사용자 검색...",
+    "user_search_loading": "사용자 검색 중...",
+    "no_chats": "아직 채팅이 없습니다.",
+    "new_badge": "새글",
+    "loading_messages": "메시지를 불러오는 중...",
+    "input_placeholder": "메시지를 입력하세요... (Enter 전송, Shift+Enter 줄바꿈)",
+    "notice_profanity": "⚠️ 비속어·혐오표현·차별적 발언은 자동 감지·마스킹/차단됩니다. 반복 시 제재될 수 있습니다.",
+    "notice_blocked": "🚫 부적절한 표현이 포함되어 전송이 차단되었습니다.",
+    "notice_masked": "🔒 일부 단어가 정책에 따라 마스킹되었습니다.",
+    "title_direct_chat": "채팅",
+    "action_exit": "나가기",
+    "btn_leave": "나가기",
+    "btn_new_chat": "새 채팅",
+    "title_chat_room": "채팅방",
+    "search_placeholder_history": "채팅방 또는 대화 내용 검색...",
+    "search_result_rooms": "채팅방",
+    "search_result_messages": "대화 내용",
+    "last_message_label": "마지막 대화",
+    "searching": "검색 중...",
+    "no_search_result_desc": "'{{query}}'에 대한 대화 내역을 찾을 수 없습니다."
+  },
+  "policy": {
+    "close": "닫기",
+    "help_center": {
+      "intro": "서비스 이용 중 어려움이 있다면 아래 채널로 언제든지 문의해주세요.",
+      "email_title": "이메일 문의",
+      "email_address": "koreara25@gmail.com",
+      "email_hours": "평일 10:00 ~ 18:00 (주말/공휴일 휴무)",
+      "app_report_title": "앱 내 신고/문의 (예정)",
+      "app_report_post": "게시물 · 댓글 오른쪽 상단 메뉴에서 바로 신고할 수 있어요.",
+      "app_report_dm": "DM 목록 > 사용자 프로필 > 신고/차단 메뉴에서도 제보 가능합니다.",
+      "faq_title": "자주 묻는 질문 (FAQ)",
+      "faq_account": "계정/비밀번호, 로그인 문제",
+      "faq_report": "신고/차단 및 커뮤니티 가이드라인",
+      "faq_privacy": "데이터/개인정보 관련 문의",
+      "faq_note": "정식 런칭 시, FAQ 페이지가 추가될 예정입니다."
+    },
+    "terms": {
+      "title": "이용약관",
+      "purpose": {
+        "h": "제1조 (목적)",
+        "body": "본 약관은 \"ARA\"(이하 \"회사\")가 제공하는 SNS/커뮤니티 기반 서비스(모바일/웹 포함, 이하 \"서비스\")의 이용과 관련하여 회사와 회원 간 권리·의무 및 책임 사항, 기타 필요한 사항을 규정함을 목적으로 합니다."
+      },
+      "definition": {
+        "h": "제2조 (정의)",
+        "member": "\"회원\"이란 회사의 약관에 동의하고 계정을 생성하여 서비스를 이용하는 자를 말합니다.",
+        "content": "\"콘텐츠\"란 회원이 서비스에 업로드/전송/게시하는 텍스트, 이미지, 음성, 영상, 링크 기타 자료 일체를 의미합니다.",
+        "paid_service": "\"유료서비스\"란 디지털 아이템, 구독, 광고제거, 추가 저장공간 등 대가를 지급하고 이용하는 서비스를 말합니다."
+      },
+      "contract": {
+        "h": "제3조 (이용계약의 성립 및 자격)",
+        "agreement": "회원이 약관 및 개인정보처리방침에 동의하고 가입절차를 완료함으로써 이용계약이 성립합니다.",
+        "verification": "소셜 로그인을 포함한 본인 확인 절차가 필요할 수 있습니다.",
+        "age_limit": "만 14세 미만은 가입할 수 없습니다. 회사는 필요 시 연령 확인 자료 제출을 요구할 수 있습니다."
+      },
+      "community": {
+        "h": "제4조 (커뮤니티 운영 및 금지행위)",
+        "guidelines": "법령·약관·커뮤니티 가이드라인을 준수해야 합니다.",
+        "prohibited_content": "타인의 권리를 침해하거나 위법·유해·차별·혐오·음란·폭력적 내용을 게시/전송/홍보하는 행위를 금지합니다.",
+        "prohibited_actions": "개인정보(본인·타인) 무단 수집/게시, 스팸·광고·피싱, 계정 대여/양도, 자동화 수단을 이용한 접근/수집/스크래핑을 금지합니다.",
+        "violations": "회사는 가이드라인 위반 시 게시물 삭제, 노출 제한, 계정 일시정지 또는 영구정지를 할 수 있습니다."
+      },
+      "member_duty": {
+        "h": "제5조 (회원의 의무)",
+        "password": "계정의 비밀번호 관리 책임은 회원에게 있습니다.",
+        "identity": "타인의 명의/결제수단을 도용하거나 허위 정보를 등록해서는 안 됩니다.",
+        "ai_output": "서비스 내 AI 기능의 출력물을 제3자 권리를 침해하는 방식으로 사용해서는 안 됩니다."
+      },
+      "license": {
+        "h": "제6조 (콘텐츠 권리 및 사용허락)",
+        "copyright": "회원이 게시한 콘텐츠의 저작권은 원칙적으로 회원에게 귀속됩니다.",
+        "grant": "회원은 서비스 제공/운영/개선/프로모션을 위해 해당 콘텐츠를 저장, 복제, 게시, 전시, 전송, 편집(형식 변경에 한함)할 수 있는 비독점적·무상·전 세계적 라이선스를 회사에 부여합니다. 회원은 게시물 삭제 또는 계정 삭제 시점 이후부터 위 라이선스를 철회할 수 있습니다(백업/법령 준수 목적 보관 제외).",
+        "responsibility": "타인의 권리를 침해하는 콘텐츠를 게시할 경우 모든 법적 책임은 회원에게 있습니다."
+      },
+      "ai": {
+        "h": "제7조 (AI 기능 고지)",
+        "usage": "서비스는 게시물 추천, 콘텐츠 생성·요약, 신고 검토 보조 등 AI/알고리즘 기능을 사용할 수 있습니다.",
+        "disclaimer": "AI 결과는 오류가 포함될 수 있으며, 참고 용도로 제공됩니다. 회원은 결과를 자체 검토 후 활용해야 합니다."
+      },
+      "payment": {
+        "h": "제8조 (유료서비스 및 결제)",
+        "pricing": "유료서비스의 가격, 결제 조건, 환불 정책은 화면에 별도 고지합니다.",
+        "policy": "앱마켓/결제대행사 정책이 우선 적용될 수 있습니다."
+      },
+      "service_change": {
+        "h": "제9조 (서비스 변경/중단)",
+        "body": "회사는 운영상·기술상 필요 또는 법령/정책 변경 시 서비스의 전부 또는 일부를 변경·중단할 수 있으며, 중요한 변경은 사전에 공지합니다."
+      },
+      "termination": {
+        "h": "제10조 (계약 해지 및 이용제한)",
+        "withdrawal": "회원은 언제든지 설정에서 탈퇴할 수 있습니다.",
+        "restriction": "약관/가이드라인 위반, 권리침해 신고 다수, 보안 위해 등 사유 발생 시 회사는 사전 통지 후 게시물 삭제/노출 제한/계정 정지·해지를 할 수 있습니다(긴급 시 사후 통지)."
+      },
+      "ip_report": {
+        "h": "제11조 (권리침해 신고 및 재게시)",
+        "takedown": "권리자가 침해를 소명하면 회사는 해당 콘텐츠를 임시 차단하거나 삭제할 수 있습니다.",
+        "counter": "게시자는 반박 자료 제출을 통해 재게시를 요청할 수 있습니다."
+      },
+      "disclaimer": {
+        "h": "제12조 (면책 및 책임제한)",
+        "force_majeure": "천재지변, 통신 장애 등 불가항력 사유로 인한 손해에 대하여 회사는 책임을 지지 않습니다.",
+        "disputes": "회원 상호 간 또는 회원과 제3자 간 분쟁은 당사자 책임으로 처리하며, 회사는 고의·중과실이 없는 한 책임을 지지 않습니다."
+      },
+      "law": {
+        "h": "제13조 (준거법 및 관할)",
+        "body": "본 약관은 대한민국 법령을 준거법으로 하며, 분쟁이 발생할 경우 회사의 본점 소재지를 관할하는 법원을 전속 관할로 합니다."
+      },
+      "notice": {
+        "h": "제14조 (약관의 개정 및 고지)",
+        "body": "회사는 관련 법령을 준수하는 범위 내에서 약관을 개정할 수 있으며, 개정 내용 및 시행일을 최소 7일(회원에게 불리한 경우 30일) 전에 서비스 내 공지합니다."
+      }
+    },
+    "privacy": {
+      "title": "개인정보처리방침",
+      "collect": {
+        "h": "제1조 (수집하는 개인정보의 항목)",
+        "required_title": "필수",
+        "required_items": "이메일, 비밀번호(해시), 닉네임, 서비스 식별자(UID)",
+        "optional_title": "선택",
+        "optional_items": "생년월일, 성별, 프로필 사진, 국가/언어, 자기소개",
+        "auto_title": "자동 수집",
+        "auto_items": "접속/이용 로그, IP/기기 정보, 쿠키/유사 기술, 오류/충돌 로그, 알림 토큰, 광고 식별자(옵트인 시)",
+        "social_title": "소셜 로그인",
+        "social_items": "프로필 닉네임/이메일, 플랫폼 식별자 등 제공자 정책 범위 내 정보"
+      },
+      "purpose": {
+        "h": "제2조 (개인정보의 이용 목적)",
+        "account": "회원 가입/본인확인/계정 관리",
+        "sns_features": "친구 추천·피드 노출 등 SNS 핵심 기능 제공",
+        "support": "고객 문의 응대 및 공지, 서비스 안정화·품질 개선",
+        "analytics": "통계/분석 및 맞춤형 콘텐츠 추천(동의 범위 내)",
+        "security": "보안, 부정 이용 방지, 신고 처리",
+        "payment": "유료서비스 결제/환불/영수증 발행"
+      },
+      "share": {
+        "h": "제3조 (개인정보의 제3자 제공 및 처리위탁)",
+        "principle": "회사는 원칙적으로 회원의 동의 없이 제3자에게 제공하지 않습니다.",
+        "outsourcing": "서비스 운영을 위해 클라우드/데이터 호스팅, 로그 분석, 메시지 발송 등 업무를 전문 업체에 위탁할 수 있으며, 수탁사 명칭·업무·보유기간은 서비스 내 '위탁처' 공개 페이지에 고지합니다.",
+        "legal": "법령에 따른 요청이 있는 경우 예외적으로 제공될 수 있습니다."
+      },
+      "xborder": {
+        "h": "제4조 (국외 이전)",
+        "body": "서버 위치 또는 수탁사의 설비가 국외에 소재할 수 있습니다. 이전 국가, 이전 일시 및 방법, 보유·이용 기간, 보호조치 등은 서비스 내 고지합니다."
+      },
+      "store": {
+        "h": "제5조 (보유 및 이용기간)",
+        "withdrawal": "회원 탈퇴 시 지체 없이 파기하되, 관련 법령에 따라 일정 기간 보관할 수 있습니다.",
+        "legal_retention": "전자상거래/결제, 통신사실확인자료 등은 법정 보관기간을 따릅니다.",
+        "backup": "백업 시스템의 기술적 한계로 즉시 삭제가 어려운 경우, 분리 보관 후 주기적으로 파기합니다."
+      },
+      "security": {
+        "h": "제6조 (안전성 확보조치)",
+        "encryption": "비밀번호 및 민감 정보 암호화 저장",
+        "access_control": "접근 권한 최소화 및 정기 점검",
+        "logs": "접속 기록 보관 및 위·변조 방지",
+        "backup_recovery": "침해사고 대비 백업/재해복구 체계 운영"
+      },
+      "rights": {
+        "h": "제7조 (이용자 및 법정대리인의 권리)",
+        "data_rights": "개인정보 열람/정정/삭제/처리정지/이동권을 요청할 수 있습니다.",
+        "settings": "프로필 공개 범위, 알림/맞춤형 추천 설정을 변경할 수 있습니다.",
+        "cookies": "쿠키 설정은 브라우저에서 관리할 수 있습니다."
+      },
+      "children": {
+        "h": "제8조 (아동의 개인정보 보호)",
+        "body": "만 14세 미만 아동의 회원가입은 허용하지 않으며, 확인 시 계정을 제한할 수 있습니다."
+      },
+      "notice": {
+        "h": "제9조 (개인정보처리방침의 변경)",
+        "body": "법령/서비스 변경에 따라 본 방침을 개정할 수 있으며, 중요한 변경은 시행 7일 전(회원에게 불리한 경우 30일 전) 공지합니다."
+      },
+      "contact": {
+        "h": "제10조 (개인정보 보호책임자)",
+        "name": "성명: 홍길동",
+        "email": "이메일: privacy@ara-service.com",
+        "hours": "상담 가능 시간: 평일 10:00~18:00"
+      }
+    },
+    "marketing": {
+      "title": "마케팅 정보 수신 동의",
+      "purpose": {
+        "h": "제1조 (수신 목적)",
+        "body": "이메일/푸시/SMS 등을 통해 신규 콘텐츠, 이벤트, 할인 등 유용한 정보를 제공합니다."
+      },
+      "contents": {
+        "h": "제2조 (수신 내용)",
+        "features": "신규 기능 및 추천 피드 요약",
+        "events": "이벤트/캠페인/프로모션 안내",
+        "discounts": "할인·쿠폰·제휴 혜택",
+        "reports": "개인화 리포트(활동 요약, 트렌드)"
+      },
+      "channels": {
+        "h": "제3조 (수신 채널 및 설정)",
+        "individual": "채널(이메일/푸시/SMS)별로 개별 동의/철회가 가능합니다.",
+        "settings": "설정 > 알림/마케팅 메뉴 또는 수신 메시지 하단 링크에서 변경할 수 있습니다.",
+        "apply": "철회 시 이후 발송분부터 적용됩니다."
+      },
+      "partners": {
+        "h": "제4조 (제3자 마케팅 및 위탁)",
+        "body": "일부 발송 업무는 전문 대행사에 위탁될 수 있으며, 제휴 마케팅의 경우 별도 동의를 받아 진행합니다."
+      },
+      "note": {
+        "h": "제5조 (필수 공지)",
+        "body": "서비스 운영상 필수 공지(약관/보안 등)는 수신 동의 여부와 관계없이 발송될 수 있습니다."
+      }
+    }
+  },
+  "landing": {
+    "badge": "K-콘텐츠 기반 한국어 학습 플랫폼",
+    "title_1": "콘텐츠로 언어를 배우고",
+    "title_2": "문화로 연결되는 경험",
+    "description": "드라마, 예능, 영화 장면으로 배우는 살아있는 표현들. 전 세계 친구들과 함께 쓰고, 고치고, 나누는 한국어 학습 공간 ARA",
+    "point_1": "실제 드라마·예능 장면",
+    "point_2": "다국어 번역",
+    "point_3": "글로벌 학습 커뮤니티",
+    "cta_start": "바로 시작하기",
+    "cta_explore": "콘텐츠 둘러보기",
+    "scroll_hint": "Scroll to explore"
+  },
+  "footer": {
+    "brand": {
+      "slogan_main": "Connect Culture, Expand World.",
+      "slogan_sub": "언어의 장벽을 넘어 진정한 소통을 경험하세요."
+    },
+    "social": {
+      "youtube": "YouTube",
+      "instagram": "Instagram",
+      "threads": "Threads",
+      "x": "X",
+      "facebook": "Facebook"
+    },
+    "columns": {
+      "product": {
+        "title": "제품",
+        "features": "기능",
+        "enterprise": "엔터프라이즈",
+        "security": "보안",
+        "pricing": "가격"
+      },
+      "resources": {
+        "title": "리소스",
+        "documentation": "문서",
+        "api": "API 레퍼런스",
+        "community": "커뮤니티",
+        "help_center": "도움말 센터"
+      },
+      "company": {
+        "title": "회사",
+        "about": "회사 소개",
+        "careers": "채용",
+        "blog": "블로그",
+        "contact": "문의하기"
+      }
+    },
+    "newsletter": {
+      "title": "최신 소식 받기",
+      "desc": "최신 기능과 업데이트 소식을 받아보세요.",
+      "placeholder": "이메일 주소"
+    },
+    "bottom": {
+      "rights": "© {{year}} Ara Inc.",
+      "terms": "이용약관",
+      "privacy": "개인정보처리방침",
+      "cookies": "쿠키"
+    }
+  }
+}

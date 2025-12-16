@@ -10,18 +10,21 @@ interface ThemeSelectProps {
   onCancel?: () => void; // 취소
 }
 
+import { useTranslation } from 'react-i18next';
+
 function ThemeSelect({ value, onChange, onClose, onSave, onCancel }: ThemeSelectProps) {
+  const { t } = useTranslation();
   const options = [
-    { key: 'light', label: '라이트', icon: <Sun className="w-4 h-4" /> },
-    { key: 'dark', label: '다크', icon: <Moon className="w-4 h-4" /> },
-    { key: 'system', label: '시스템', icon: <Monitor className="w-4 h-4" /> },
+    { key: 'light', label: t('settings.theme_light'), icon: <Sun className="w-4 h-4" /> },
+    { key: 'dark', label: t('settings.theme_dark'), icon: <Moon className="w-4 h-4" /> },
+    { key: 'system', label: t('settings.theme_system'), icon: <Monitor className="w-4 h-4" /> },
   ] as const;
 
   return (
     <div className="flex flex-col min-h-[420px]">
       {/* 상단 영역 */}
       <div className="space-y-4">
-        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">표시 테마</p>
+        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings.themeSelect')}</p>
         <div
           className="flex-col items-center gap-2 rounded-lg p-1.5"
           role="radiogroup"
@@ -54,10 +57,10 @@ function ThemeSelect({ value, onChange, onClose, onSave, onCancel }: ThemeSelect
       {/* 하단 버튼 */}
       <div className="-mx-6 mt-auto dark:border-gray-800 bg-white dark:bg-secondary px-6 py-4 flex justify-end gap-2 transition-colors">
         <Button type="button" variant="ghost" size="md" onClick={onCancel ?? onClose}>
-          취소
+          {t('common.cancel')}
         </Button>
         <Button type="submit" variant="primary" size="md" onSave={onSave}>
-          저장
+          {t('common.save')}
         </Button>
       </div>
     </div>

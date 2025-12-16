@@ -3,6 +3,10 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import CountrySelect from '@/components/auth/CountrySelect';
+import { useTranslation } from 'react-i18next';
+import { useNicknameValidator } from '@/hooks/useNicknameValidator';
+import NicknameInputField from '@/components/common/NicknameInputField';
+import TextAreaField from '@/components/auth/TextAreaField';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -15,8 +19,11 @@ interface EditProfileModalProps {
     avatar: string;
     bio: string;
     banner?: string | null;
-    country?: string | null; // 화면에 보이는 "국가 이름" (예: 대한민국)
-    countryFlagUrl?: string | null; // 현재 국기 URL
+    country?: string | null;
+    countryFlagUrl?: string | null;
+    // New tracking columns
+    nickname_updated_at?: string | null;
+    country_updated_at?: string | null;
   };
   onSave: (updatedProfile: any) => void;
 }
@@ -35,6 +42,11 @@ export default function EditProfileModal({
   userProfile,
   onSave,
 }: EditProfileModalProps) {
+  const { t } = useTranslation();
+  
+  // Nickname Validator Hook
+  const nickValidator = useNicknameValidator();
+
   const [formData, setFormData] = useState({
     name: userProfile.name,
     bio: userProfile.bio ?? '',
@@ -49,7 +61,6 @@ export default function EditProfileModal({
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [previewAvatar, setPreviewAvatar] = useState(userProfile.avatar);
   const [previewBanner, setPreviewBanner] = useState(userProfile.banner ?? null);
-  const [charCount, setCharCount] = useState(userProfile.bio?.length || 0);
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
@@ -67,8 +78,10 @@ export default function EditProfileModal({
       setBannerFile(null);
       setPreviewAvatar(userProfile.avatar);
       setPreviewBanner(userProfile.banner ?? null);
-      setCharCount(userProfile.bio?.length || 0);
       setSaving(false);
+      
+      // Initialize validator with current nickname to show language hint immediately
+      nickValidator.validateInput(userProfile.name);
 
       const fetchCountries = async () => {
         try {
@@ -96,7 +109,7 @@ export default function EditProfileModal({
           }
         } catch (err) {
           console.error('국가 목록 불러오기 실패:', err);
-          toast.error('국가 목록을 불러오는 중 오류가 발생했습니다.');
+          toast.error(t('common.error_loading_countries', 'Failed to load country list.'));
         } finally {
           setCountriesLoading(false);
         }
@@ -110,7 +123,6 @@ export default function EditProfileModal({
 
   const handleInputChange = (field: 'name' | 'bio' | 'country', value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    if (field === 'bio') setCharCount(value.length);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'banner') => {
@@ -136,32 +148,79 @@ export default function EditProfileModal({
     return data.publicUrl;
   };
 
+  // 🔹 One-Time Change Logic
+  const isNickDisabled = !!userProfile.nickname_updated_at;
+  const isCountryDisabled = !!userProfile.country_updated_at;
+
   const handleSave = async () => {
     if (saving) return;
+    
+    const isNickChanged = formData.name !== userProfile.name;
+    const isCountryChanged = formData.country !== (userProfile.country ? String(countries.find(c => c.name === userProfile.country)?.id) : '');
+    // Note: comparison above is tricky because userProfile.country is NAME, while formData.country is ID string.
+    // Better: Check if `formData.country` matches the ID of the country with name `userProfile.country`.
+    // Actually, simpler:
+    // We already compute `selectedCountry` later.
+    
+    // Security / Validation
+    if (isNickDisabled && isNickChanged) {
+        toast.error(t('profile.nickname_change_forbidden', 'Nickname cannot be changed again.'));
+        return;
+    }
+    if (isCountryDisabled && formData.country !== (countries.find(c => c.name === userProfile.country)?.id?.toString() ?? '')) {
+         // Double check if it actually changed
+         // If userProfile.country is null and formData is '', it's same.
+         const originalCountryId = userProfile.country ? countries.find(c => c.name === userProfile.country)?.id?.toString() : '';
+         if (formData.country !== originalCountryId) {
+             toast.error(t('profile.country_change_forbidden', 'Country cannot be changed again.'));
+             return;
+         }
+    }
+
+    // Nickname Validation Check
+    if (isNickChanged) {
+        if (nickValidator.checkResult !== 'available' || nickValidator.lastCheckedNick !== formData.name) {
+            const available = await nickValidator.checkAvailability(formData.name);
+            if (!available) return;
+        }
+    } else {
+       const { error } = nickValidator.validateFormat(formData.name);
+       if (error) {
+           nickValidator.setError(error);
+           return;
+       }
+    }
+    
     setSaving(true);
 
     try {
       let avatarUrl = userProfile.avatar;
       let bannerUrl = userProfile.banner ?? null;
 
-      // 아바타 및 배너 업로드
       if (avatarFile) avatarUrl = await uploadImage(avatarFile, 'avatars');
       if (bannerFile) bannerUrl = await uploadImage(bannerFile, 'banners');
 
-      // formData.country = countries.id (문자열)
       const selectedCountry = countries.find(c => String(c.id) === formData.country) || null;
-
-      // Supabase 프로필 업데이트
-      const { error } = await supabase
-        .from('profiles')
-        .update({
+      
+      const updates: any = {
           nickname: formData.name,
           bio: formData.bio,
-          // DB에는 id 저장 (profiles.country = countries.id)
           country: formData.country || null,
           avatar_url: avatarUrl,
           banner_url: bannerUrl,
-        })
+      };
+
+      // Set timestamp if changed
+      if (isNickChanged) updates.nickname_updated_at = new Date().toISOString();
+      // Logic for country change detection again to be safe
+      const originalCountryId = userProfile.country ? countries.find(c => c.name === userProfile.country)?.id?.toString() : '';
+      if (formData.country !== originalCountryId) {
+          updates.country_updated_at = new Date().toISOString();
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
         .eq('id', userProfile.id);
 
       if (error) throw error;
@@ -171,24 +230,28 @@ export default function EditProfileModal({
         ...userProfile,
         name: formData.name,
         bio: formData.bio,
-        country: selectedCountry?.name ?? userProfile.country ?? null, // 화면용 "국가 이름"
+        country: selectedCountry?.name ?? userProfile.country ?? null,
         countryFlagUrl: selectedCountry?.flag_url ?? userProfile.countryFlagUrl ?? null,
         avatar: avatarUrl,
         banner: bannerUrl,
+        // Update local timestamps if they were updated
+        nickname_updated_at: updates.nickname_updated_at ?? userProfile.nickname_updated_at,
+        country_updated_at: updates.country_updated_at ?? userProfile.country_updated_at,
       };
       onSave(updated);
 
-      // 닉네임 변경 후 URL도 새 닉네임으로 이동
-      navigate(`/profile/${encodeURIComponent(formData.name)}`);
+      if (isNickChanged) {
+         navigate(`/profile/${encodeURIComponent(formData.name)}`);
+      }
 
-      toast.success('프로필이 성공적으로 업데이트되었습니다.');
+      toast.success(t('profile.save_success_message', 'Profile updated successfully.'));
 
       setTimeout(() => {
         onClose();
       }, 300);
     } catch (err: any) {
       console.error('프로필 업데이트 실패:', err?.message || err);
-      toast.error('프로필 저장 중 오류가 발생했습니다.');
+      toast.error(t('profile.save_error_message', 'Error saving profile.'));
     } finally {
       setSaving(false);
     }
@@ -218,14 +281,14 @@ export default function EditProfileModal({
             >
               <i className="ri-close-line text-xl text-gray-700 dark:text-gray-200"></i>
             </button>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">프로필 편집</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('profile.edit_profile')}</h2>
           </div>
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || (nickValidator.checking)}
             className="px-4 py-2 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition disabled:opacity-60"
           >
-            {saving ? '저장 중...' : '저장'}
+            {saving ? t('common.saving') : t('common.save')}
           </button>
         </div>
 
@@ -274,48 +337,74 @@ export default function EditProfileModal({
           </div>
 
           {/* Form */}
-          <div className="mt-12 space-y-4">
+          <div className="pt-10 space-y-6">
             {/* 닉네임 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                닉네임
-              </label>
-              <input
-                type="text"
+              <NicknameInputField
                 value={formData.name}
-                onChange={e => handleInputChange('name', e.target.value)}
-                maxLength={50}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:text-gray-300 rounded-lg bg-white dark:bg-background focus:ring-2 focus:ring-primary focus:outline-none"
+                onChange={v => {
+                  if (isNickDisabled) return;
+                  handleInputChange('name', v);
+                  nickValidator.validateInput(v);
+                }}
+                onCheck={() => nickValidator.checkAvailability(formData.name)}
+                isChecking={nickValidator.checking}
+                checkResult={nickValidator.checkResult}
+                error={nickValidator.error}
+                detectedLang={nickValidator.detectedLang}
+                minLen={nickValidator.detectedLang ? nickValidator.minLen(nickValidator.detectedLang) : 0}
+                maxLen={nickValidator.detectedLang ? nickValidator.maxLen(nickValidator.detectedLang) : 0}
+                disabled={isNickDisabled}
               />
-              <p className="text-right text-xs text-gray-500">{formData.name.length}/50</p>
+              {/* Warning / Reason Message */}
+              {isNickDisabled ? (
+                <p className="text-[11px] text-gray-400 mt-1 ml-3">
+                  {t('profile.nickname_disabled_reason', 'Nickname can only be changed once.')}
+                </p>
+              ) : (
+                <p className="text-[11px] text-orange-500 mt-1 ml-3">
+                  {t('profile.nickname_change_warning', '⚠️ You can only change your nickname once.')}
+                </p>
+              )}
             </div>
 
-            {/* 소개글 */}
+            {/* 소개글 - Floating Label Pattern applied via TextAreaField */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                소개글
-              </label>
-              <textarea
+              <TextAreaField
+                id="bio"
+                label={t('profile.bio')}
                 value={formData.bio}
-                onChange={e => handleInputChange('bio', e.target.value)}
+                onChange={v => handleInputChange('bio', v)}
                 maxLength={160}
                 rows={3}
-                placeholder="자기소개를 작성해보세요."
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:text-gray-300 rounded-lg bg-white dark:bg-background focus:ring-2 focus:ring-primary focus:outline-none resize-none"
               />
-              <p className="text-right text-xs text-gray-500 ">{charCount}/160</p>
             </div>
 
             {/* 국가 선택 (CountrySelect 사용) */}
             <div>
               <CountrySelect
-                value={formData.country} // countries.id (문자열)
-                onChange={value => handleInputChange('country', value)}
+                value={formData.country}
+                onChange={value => {
+                    if (isCountryDisabled) return;
+                    handleInputChange('country', value);
+                }}
                 error={false}
+                isDisabled={isCountryDisabled}
               />
-              {/* 필요하면 로딩 표시 추가 가능 */}
+              {/* Warning / Reason Message */}
+                {isCountryDisabled ? (
+                <p className="text-[11px] text-gray-400 mt-1 ml-3">
+                  {t('profile.country_disabled_reason', 'Country can only be changed once.')}
+                </p>
+              ) : (
+                 !isCountryDisabled && formData.country !== '' && ( // Show warning only if value is selected or general? Just show general
+                    <p className="text-[11px] text-orange-500 mt-1 ml-3">
+                    {t('profile.country_change_warning', '⚠️ You can only change your country once.')}
+                    </p>
+                 )
+              )}
               {countriesLoading && (
-                <p className="text-xs text-gray-400 mt-1">국가 목록 불러오는 중...</p>
+                <p className="text-xs text-gray-400 mt-1">{t('common.loading_countries', 'Loading countries...')}</p>
               )}
             </div>
           </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import StudyCultureNote from './StudyCultureNote';
 import StudyVoca from './StudyVoca';
 import type { Subtitle } from '../../types/study';
@@ -10,6 +11,7 @@ interface StudyCardProps {
 }
 
 const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'words' | 'culture'>('words');
 
   return (
@@ -17,7 +19,7 @@ const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) =>
       {/* 상단 정보 카드 */}
       <div className="p-4 sm:p-5 rounded-xl space-y-1 mb-4 border bg-white/50 shadow-sm dark:bg-secondary">
         <h3 className="text-base sm:text-lg ml-1 sm:ml-2 font-semibold dark:text-gray-100">
-          학습 카드
+          {t('study.study_card_title')}
         </h3>
 
         {/* 탭 */}
@@ -31,7 +33,7 @@ const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) =>
                   : 'bg-white dark:bg-secondary text-gray-700 border dark:text-gray-300'
               }`}
             >
-              단어 설명
+              {t('study.vocab_explanation')}
             </button>
             <button
               onClick={() => setActiveTab('culture')}
@@ -41,7 +43,7 @@ const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) =>
                   : 'bg-white dark:bg-secondary text-gray-700 border dark:text-gray-300'
               }`}
             >
-              문화 노트
+              {t('study.culture_note')}
             </button>
           </div>
 

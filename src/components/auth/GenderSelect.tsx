@@ -1,6 +1,7 @@
 import Select, { components, type SingleValue } from 'react-select';
 import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 type OptionType = { value: string; label: string };
 
@@ -21,13 +22,17 @@ const CustomDropdownIndicator = (props: any) => {
 };
 
 export default function GenderSelect({ value, onChange, error = false }: GenderSelectProps) {
+  const { t } = useTranslation();
   const [options, setOptions] = useState<OptionType[]>([]);
   const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
-    const genders = ['Male', 'Female'];
-    setOptions(genders.map(g => ({ value: g, label: g })));
-  }, []);
+    const genders = [
+      { value: 'Male', label: t('signup.gender_male') },
+      { value: 'Female', label: t('signup.gender_female') }
+    ];
+    setOptions(genders);
+  }, [t]);
 
   const selectedOption = options.find(o => o.value === value) || null;
 
@@ -161,9 +166,9 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
     }
   `}
       >
-        성별
+        {t('signup.label_gender')}
       </label>
-      {error && <p className="text-red-500 text-sm mt-1">성별을 선택해주세요.</p>}
+      {error && <p className="text-red-500 text-sm mt-1">{t('signup.error_gender_required')}</p>}
     </div>
   );
 }

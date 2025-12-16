@@ -62,7 +62,9 @@ export default function ImageSlider({
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
             draggable={false}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
             custom={direction}
             variants={{
               enter: d => ({ x: d > 0 ? 60 : -60, opacity: 0 }),

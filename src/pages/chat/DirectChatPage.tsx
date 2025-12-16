@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import DirectChatList from '../../components/chat/direct/DirectChatList';
 import DirectChatRoom from '../../components/chat/direct/DirectChatRoom';
+import ChatWelcomeSearch from '../../components/chat/direct/ChatWelcomeSearch';
 import { useNewChatNotification } from '../../contexts/NewChatNotificationContext';
 import styles from '../../components/chat/chat.module.css';
 import { useDirectChat } from '@/contexts/DirectChatContext';
 import { useAuth } from '@/contexts/AuthContext';
 
 function DirectChatPage() {
+  const { t } = useTranslation();
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [highlightMessageId, setHighlightMessageId] = useState<string | undefined>(undefined);
   const { markChatAsRead } = useNewChatNotification();
 
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
@@ -41,14 +45,16 @@ function DirectChatPage() {
     return () => document.removeEventListener('visibilitychange', restore);
   }, [isMobile]);
 
-  const handleChatSelect = (chatId: string) => {
+  const handleChatSelect = (chatId: string, messageId?: string) => {
     setSelectedChatId(chatId);
+    setHighlightMessageId(messageId);
     markChatAsRead();
     if (isMobile) setShowListOnMobile(false);
   };
 
   const handleBackToList = () => {
     setSelectedChatId(null);
+    setHighlightMessageId(undefined);
     resetCurrentChat();
     if (isMobile) setShowListOnMobile(true);
   };
@@ -72,6 +78,7 @@ function DirectChatPage() {
     if (!user?.id) return;
 
     setSelectedChatId(null);
+    setHighlightMessageId(undefined);
     resetCurrentChat();
 
     if (isMobile) setShowListOnMobile(true);
@@ -101,21 +108,13 @@ function DirectChatPage() {
                       chatId={selectedChatId}
                       isMobile={isMobile}
                       onBackToList={handleBackToList}
+                      highlightMessageId={highlightMessageId}
                     />
                   ) : (
                     !isMobile && (
-                      <div className="chat-welcome">
-                        <div className="welcome-content">
-                          <h2>1:1 채팅</h2>
-                          <p>좌측에서 채팅방을 선택하거나</p>
-                          <p>새 채팅 버튼을 눌러 대화를 시작하세요.</p>
-                          <div className="feature-info">
-                            <p>💬 실시간 1:1 메시지</p>
-                            <p>👥 사용자 검색 및 초대</p>
-                            <p>📱 반응형 디자인</p>
-                          </div>
-                        </div>
-                      </div>
+                    !isMobile && (
+                      <ChatWelcomeSearch onChatSelect={handleChatSelect} />
+                    )
                     )
                   )}
                 </div>

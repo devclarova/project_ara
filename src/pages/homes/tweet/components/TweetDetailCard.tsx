@@ -10,44 +10,32 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import TranslateButton from '@/components/common/TranslateButton';
+import { useTranslation } from 'react-i18next';
+import { SnsStore } from '@/lib/snsState';
 import ReportButton from '@/components/common/ReportButton';
 import BlockButton from '@/components/common/BlockButton';
 
-interface User {
-  name: string;
-  username: string;
-  avatar: string;
-}
-
-interface Stats {
-  replies?: number;
-  retweets?: number;
-  likes?: number;
-  views?: number;
-  comments?: number;
-  bookmarks?: number;
-}
-
-interface Tweet {
-  id: string;
-  user: User;
-  content: string;
-  image?: string | string[];
-  timestamp: string;
-  stats: Stats;
-}
+import type { UIPost } from '@/types/sns';
 
 interface TweetDetailCardProps {
-  tweet: Tweet;
+  tweet: UIPost;
   replyCount: number; // 상세 페이지에서 내려주는 실시간 댓글 수
+  onDeleted?: () => void;
+  onReplyClick?: () => void;
 }
 
-export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardProps) {
+export default function TweetDetailCard({ tweet, replyCount, onDeleted, onReplyClick,
+}: TweetDetailCardProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
 
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(tweet.stats.likes || 0);
+
+  useEffect(() => {
+    setLikeCount(tweet.stats.likes || 0);
+  }, [tweet.stats.likes]);
   const [contentImages, setContentImages] = useState<string[]>([]);
   const [direction, setDirection] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
@@ -63,7 +51,10 @@ export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardPr
   const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
   const handleBackClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    navigate(-1);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('sns-last-tweet-id', tweet.id);
+    }
+    navigate('/sns');
   };
 
   const handleAvatarClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -76,7 +67,7 @@ export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardPr
     replies:
       typeof replyCount === 'number'
         ? replyCount
-        : tweet.stats.replies || tweet.stats.comments || 0,
+        : tweet.stats.replies || 0,
     retweets: tweet.stats.retweets || 0,
     likes: tweet.stats.likes || 0,
     views: tweet.stats.views || 0,
@@ -206,12 +197,12 @@ export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardPr
 
   const toggleTweetLike = async () => {
     if (!authUser) {
-      toast.error('로그인이 필요합니다.');
+      toast.error(t('auth.login_needed'));
       return;
     }
 
     if (!profileId) {
-      toast.error('프로필 정보를 불러오지 못했습니다.');
+      toast.error(t('common.error_profile_load'));
       return;
     }
 
@@ -249,9 +240,71 @@ export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardPr
 
       setLiked(true);
       setLikeCount(prev => prev + 1);
+
+      // SnsStore 동기화
+      SnsStore.updateStats(tweet.id, {
+        likes: (tweet.stats.likes || 0) + 1
+      });
     } catch (err: any) {
       console.error('트윗 좋아요 처리 실패:', err.message);
-      toast.error('좋아요 처리 중 오류가 발생했습니다.');
+      toast.error(t('common.error_like'));
+    }
+  };
+
+  // 이미지 모달 열릴 때 바깥 스크롤 완전 차단
+  useEffect(() => {
+    if (!showImageModal) return;
+
+    const body = document.body;
+    const originalOverflow = body.style.overflow;
+    const originalTouchAction = (body.style as any).touchAction;
+
+    const preventScroll = (e: Event) => {
+      e.preventDefault();
+    };
+
+    body.style.overflow = 'hidden';
+    (body.style as any).touchAction = 'none';
+
+    document.addEventListener('touchmove', preventScroll, { passive: false });
+    document.addEventListener('wheel', preventScroll, { passive: false });
+    document.addEventListener('mousewheel', preventScroll, { passive: false });
+
+    return () => {
+      body.style.overflow = originalOverflow || '';
+      (body.style as any).touchAction = originalTouchAction || '';
+      document.removeEventListener('touchmove', preventScroll);
+      document.removeEventListener('wheel', preventScroll);
+      document.removeEventListener('mousewheel', preventScroll);
+    };
+  }, [showImageModal]);
+
+  const handleDelete = async () => {
+    if (!profileId) return;
+
+    const confirmed = window.confirm(t('tweet.delete_confirm'));
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase.from('tweets').delete().eq('id', tweet.id).eq('author_id', profileId);
+
+      if (error) throw error;
+
+      toast.success(t('tweet.delete_success'));
+      onDeleted?.();
+      
+      // SnsStore에서 해당 트윗 제거
+      import('@/lib/snsState').then(({ SnsStore }) => {
+        const currentFeed = SnsStore.getFeed();
+        if (currentFeed) {
+          SnsStore.setFeed(currentFeed.filter(t => t.id !== tweet.id));
+        }
+      });
+
+      navigate('/sns');
+    } catch (error: any) {
+      console.error('Error deleting tweet:', error.message);
+      toast.error(t('tweet.delete_failed'));
     }
   };
 
@@ -295,12 +348,12 @@ export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardPr
             </span>
 
             {authorCountryFlagUrl && (
-              <Badge variant="secondary" className="flex items-center px-1 py-0.5">
+              <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 h-5">
                 <img
                   src={authorCountryFlagUrl}
                   alt={authorCountryName ?? '국가'}
                   title={authorCountryName ?? ''}
-                  className="w-4 h-4 rounded-sm object-cover"
+                  className="w-5 h-3.5 rounded-[2px] object-cover"
                 />
               </Badge>
             )}
@@ -416,7 +469,10 @@ export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardPr
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-start gap-8 text-sm text-gray-500 dark:text-gray-400">
           {/* 댓글 수: 항상 replyCount 기반 */}
-          <button className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400 transition-colors group">
+          <button 
+            className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400 transition-colors group"
+            onClick={onReplyClick}
+          >
             <div className="p-2 rounded-full group-hover:bg-primary/10 dark:group-hover:bg-primary/15 transition-colors">
               <i className="ri-chat-3-line text-lg" />
             </div>

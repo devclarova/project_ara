@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import ProfileHeader from './components/ProfileHeader';
 import ProfileTabs, { type ProfileTabKey } from './components/ProfileTabs';
 import ProfileTweets from './components/ProfileTweets';
 import EditProfileModal from './components/EditProfileModal';
+import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 
 interface UserProfile {
   id: string;
@@ -21,9 +23,12 @@ interface UserProfile {
   website?: string | null;
   country?: string | null;
   countryFlagUrl?: string | null;
+  nickname_updated_at?: string | null;
+  country_updated_at?: string | null;
 }
 
 export default function ProfileAsap() {
+  const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState<ProfileTabKey>('posts');
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -51,7 +56,9 @@ export default function ProfileAsap() {
         country,
         followers_count,
         following_count,
-        created_at
+        created_at,
+        nickname_updated_at,
+        country_updated_at
       `,
         );
 
@@ -96,10 +103,10 @@ export default function ProfileAsap() {
           name: profile.nickname ?? 'Unknown',
           username: profile.user_id,
           avatar: profile.avatar_url ?? '/default-avatar.svg',
-          bio: profile.bio ?? '자기소개가 아직 없습니다.',
+          bio: profile.bio ?? t('profile.no_bio_placeholder', 'No bio yet.'),
           country: countryName, // 화면에 보여줄 국가명
           countryFlagUrl: countryFlagUrl, // 국기 URL
-          joinDate: new Date(profile.created_at).toLocaleDateString('ko-KR', {
+          joinDate: new Date(profile.created_at).toLocaleDateString(i18n.language, {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
@@ -107,6 +114,8 @@ export default function ProfileAsap() {
           following: profile.following_count ?? 0,
           followers: profile.followers_count ?? 0,
           banner: profile.banner_url ?? null,
+          nickname_updated_at: profile.nickname_updated_at,
+          country_updated_at: profile.country_updated_at,
         });
       } catch (err) {
         console.error('프로필 불러오기 실패:', err);
@@ -115,7 +124,7 @@ export default function ProfileAsap() {
     };
 
     fetchProfile();
-  }, [decodedUsername, user]);
+  }, [decodedUsername, user, i18n.language]);
 
   // 프로필 저장 후 상태 갱신
   const handleSaveProfile = (updatedProfile: Partial<UserProfile>) => {
@@ -131,7 +140,7 @@ export default function ProfileAsap() {
             <div className="flex items-center justify-center py-20">
               <div className="text-center text-gray-500 dark:text-gray-400">
                 <i className="ri-user-line text-6xl text-gray-300 dark:text-gray-600 mb-4" />
-                <p>프로필을 불러올 수 없습니다.</p>
+                <p>{t('common.error_loading_profile', 'Unable to load profile.')}</p>
               </div>
             </div>
           </div>
@@ -143,6 +152,7 @@ export default function ProfileAsap() {
   return (
     // 홈 피드처럼: 전체 배경 + 가운데 정렬 + 가운데 컬럼만 border-x
     <div className="min-h-screen bg-white dark:bg-background">
+      <ScrollToTopButton className="bottom-10 right-6 lg:right-16 xl:right-[calc(50vw-500px)]" />
       <div className="flex justify-center">
         {/* 가운데 프로필 컬럼 */}
         <div className="w-full max-w-2xl lg:max-w-3xl border-x border-gray-200 dark:border-gray-700 dark:bg-background">

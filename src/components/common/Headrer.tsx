@@ -5,17 +5,24 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/lib/supabase';
 import { User, Settings, BookOpen, Users, MessageCircle, Bell } from 'lucide-react';
 import { useDirectChat } from '@/contexts/DirectChatContext';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '@/components/common/LanguageSwitcher';
+import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 
 function Header() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
 
   const [isOpen, setIsOpen] = useState(false); // 모바일 햄버거 메뉴
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); // 데스크탑 프로필 드롭다운
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false); // 모바일 언어 드롭다운 상태
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false); // 데스크탑 언어 드롭다운
 
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const langRef = useRef<HTMLDivElement>(null); // 언어 선택 영역 ref
 
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const profileButtonRef = useRef<HTMLButtonElement>(null);
@@ -36,31 +43,31 @@ function Header() {
   const homePath = user ? '/studyList' : '/';
 
   const menuItems = [
-    { name: '학습', path: '/studyList', matchPaths: ['/studyList', '/study'] },
-    { name: '커뮤니티', path: '/sns', matchPaths: ['/sns'] },
-    { name: '채팅', path: '/chat', matchPaths: ['/chat'] },
-    { name: '알림', path: '/hnotifications', matchPaths: ['/hnotifications'] },
-    { name: '설정', path: '/settings', matchPaths: ['/settings'] },
+    { key: 'study', label: t('nav.study'), path: '/studyList', matchPaths: ['/studyList', '/study'] },
+    { key: 'community', label: t('nav.community'), path: '/sns', matchPaths: ['/sns'] },
+    { key: 'chat', label: t('nav.chat'), path: '/chat', matchPaths: ['/chat'] },
+    { key: 'notifications', label: t('nav.notifications'), path: '/hnotifications', matchPaths: ['/hnotifications'] },
+    { key: 'settings', label: t('nav.settings'), path: '/settings', matchPaths: ['/settings'] },
   ];
 
   const isRouteActive = (item: (typeof menuItems)[number]) => {
     const path = location.pathname;
-    if (item.name === 'Home') return path === '/' || path === '/home';
+    if (item.key === 'home') return path === '/' || path === '/home';
     return item.matchPaths.some(p => path.startsWith(p));
   };
 
   // 메뉴 이름별 아이콘 매핑 (모바일용)
-  const getMenuIcon = (name: string) => {
-    switch (name) {
-      case '학습':
+  const getMenuIcon = (key: string) => {
+    switch (key) {
+      case 'study':
         return <BookOpen className="w-4 h-4" />;
-      case '커뮤니티':
+      case 'community':
         return <Users className="w-4 h-4" />;
-      case '채팅':
+      case 'chat':
         return <MessageCircle className="w-4 h-4" />;
-      case '알림':
+      case 'notifications':
         return <Bell className="w-4 h-4" />;
-      case '설정':
+      case 'settings':
         return <Settings className="w-4 h-4" />;
       default:
         return null;
@@ -85,7 +92,7 @@ function Header() {
       : undefined;
 
   const fallbackNickname =
-    rawNickname ?? (user?.email ? user.email.split('@')[0] : '로그인 해주세요');
+    rawNickname ?? (user?.email ? user.email.split('@')[0] : t('auth.please_login'));
 
   // Supabase profiles에서 id, nickname, avatar_url 가져오기
   useEffect(() => {
@@ -207,7 +214,7 @@ function Header() {
   }, [isOpen, isProfileMenuOpen]);
 
   const targetOf = (item: (typeof menuItems)[number]) =>
-    item.name === 'Home' ? homePath : item.path;
+    item.key === 'home' ? homePath : item.path;
 
   const handleSignout = async () => {
     await signOut();
@@ -235,32 +242,32 @@ function Header() {
         />
 
         {/* 데스크탑 메뉴 (설정은 제거: 프로필 드롭다운에서만 접근) */}
-        <div className="hidden md:flex gap-4 lg:gap-6">
+        <div className="hidden md:flex gap-2 md:gap-3 lg:gap-6">
           {menuItems
-            .filter(item => item.name !== '설정')
+            .filter(item => item.key !== 'settings')
             .map(item => {
               const active = isRouteActive(item);
               const target = targetOf(item);
 
-              const isChat = item.name === '채팅';
-              const isNotification = item.name === '알림';
+              const isChat = item.key === 'chat';
+              const isNotification = item.key === 'notifications';
 
               const showChatBadge = isChat && unreadChatCount > 0;
               const showNotificationBadge = isNotification && unreadNotificationCount > 0;
 
               return (
                 <button
-                  key={item.name}
+                  key={item.key}
                   type="button"
                   onClick={() => navigate(target)}
                   aria-current={active ? 'page' : undefined}
-                  className={`relative inline-flex items-center text-base lg:text-lg font-bold p-0 ${
+                  className={`relative inline-flex items-center text-sm lg:text-base xl:text-lg font-bold p-0 ${
                     active
                       ? 'text-primary hover:opacity-60'
                       : 'text-gray-500 hover:text-primary/60 dark:text-gray-300'
                   }`}
                 >
-                  <span>{item.name}</span>
+                  <span>{item.label}</span>
 
                   {/* 채팅 뱃지 - 아주 살짝 오른쪽으로 이동 (-right-3) */}
                   {showChatBadge && (
@@ -292,6 +299,21 @@ function Header() {
       <div className="flex items-center">
         {/* 데스크탑 프로필 영역 */}
         <div className="hidden md:flex items-center gap-3 sm:gap-4">
+          {/* 언어 선택 드롭다운 */}
+          <div>
+            <LanguageSwitcher 
+              open={isLangMenuOpen}
+              onOpenChange={(open) => {
+                setIsLangMenuOpen(open);
+                if (open) setIsProfileMenuOpen(false);
+              }}
+            />
+          </div>
+
+          <div className="hidden sm:block">
+            <ThemeSwitcher />
+          </div>
+
           {user ? (
             <>
               {/* 프로필 버튼 + 드롭다운 (가운데 정렬) */}
@@ -299,7 +321,10 @@ function Header() {
                 <button
                   ref={profileButtonRef}
                   type="button"
-                  onClick={() => setIsProfileMenuOpen(prev => !prev)}
+                  onClick={() => {
+                    setIsLangMenuOpen(false);
+                    setIsProfileMenuOpen(prev => !prev);
+                  }}
                   className="flex items-center gap-2 sm:gap-3 group"
                   title="내 프로필"
                   aria-expanded={isProfileMenuOpen}
@@ -312,7 +337,7 @@ function Header() {
                     <span className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 group-hover:opacity-80">
                       {displayNickname}
                     </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">프로필 / 설정</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{t('common.settings_desc')}</span>
                   </div>
                 </button>
 
@@ -324,15 +349,7 @@ function Header() {
                                shadow-lg shadow-black/5 backdrop-blur-sm z-50
                                dark:bg-secondary/95 dark:border-gray-700/70 overflow-hidden"
                   >
-                    {/* 상단 헤더 영역 */}
-                    <div className="px-4 py-3 border-b border-gray-100/80 dark:border-gray-700/70">
-                      <p className="text-xs font-medium text-gray-400 dark:text-gray-500">
-                        내 계정
-                      </p>
-                      <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-gray-50 truncate">
-                        {displayNickname}
-                      </p>
-                    </div>
+
 
                     {/* 메뉴 리스트 */}
                     <div className="py-1">
@@ -354,9 +371,9 @@ function Header() {
                           <User className="w-4 h-4" />
                         </span>
                         <div className="flex flex-col items-start">
-                          <span className="font-medium">프로필</span>
+                          <span className="font-medium">{t('nav.profile')}</span>
                           <span className="text-xs text-gray-400 dark:text-gray-500">
-                            내 프로필 보기
+                            {t('common.view_profile')}
                           </span>
                         </div>
                       </button>
@@ -380,25 +397,28 @@ function Header() {
                           <Settings className="w-4 h-4" />
                         </span>
                         <div className="flex flex-col items-start">
-                          <span className="font-medium">설정</span>
+                          <span className="font-medium">{t('nav.settings')}</span>
                           <span className="text-xs text-gray-400 dark:text-gray-500">
-                            계정·알림·환경 설정
+                            {t('common.settings_desc')}
                           </span>
                         </div>
                       </button>
+                      
+                      {/* 로그아웃 버튼 - 드롭다운 하단에 작은 텍스트로 */}
+                      <div className="px-4 pt-2 pb-3 border-t border-gray-100/80 dark:border-gray-700/70 mt-1">
+                        <button
+                          type="button"
+                          onClick={handleSignout}
+                          className="w-full text-center text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors py-1.5"
+                        >
+                          {t('auth.logout')}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
 
-              <button
-                onClick={handleSignout}
-                className="text-sm sm:text-base px-3 sm:px-4 py-1.5 sm:py-2 rounded
-                           border border-gray-300 hover:bg-primary/10
-                           dark:border-gray-700 dark:text-gray-100 dark:hover:bg-primary/20"
-              >
-                로그아웃
-              </button>
             </>
           ) : (
             <>
@@ -406,7 +426,7 @@ function Header() {
                 onClick={() => navigate('/signin')}
                 className="bg-primary text-white text-sm sm:text-base px-3 sm:px-4 py-1.5 sm:py-2 rounded hover:opacity-80 transition-colors"
               >
-                로그인
+                {t('auth.login')}
               </button>
               <button
                 onClick={() => navigate('/signup')}
@@ -414,32 +434,69 @@ function Header() {
                            border border-gray-300 hover:bg-gray-50
                            dark:border-gray-700 dark:text-gray-100 dark:hover:bg-primary/20"
               >
-                회원가입
+                {t('auth.signup')}
               </button>
             </>
           )}
         </div>
 
-        {/* 모바일 햄버거 버튼 */}
+        <div 
+          ref={langRef}
+          className="md:hidden" 
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <LanguageSwitcher 
+            open={langDropdownOpen} 
+            onOpenChange={(open) => {
+              setLangDropdownOpen(open);
+              if (open) {
+                // 언어가 열리면 햄버거 닫기
+                setIsOpen(false);
+              }
+            }}
+          />
+        </div>
+
         <button
           ref={buttonRef}
-          className="md:hidden text-2xl font-bold px-2 text-gray-900 dark:text-gray-100"
-          onClick={() => setIsOpen(prev => !prev)}
+          className="md:hidden relative text-2xl font-bold px-2 text-gray-900 dark:text-gray-100"
+          onClick={(e) => {
+            e.stopPropagation();
+            // 언어 드롭다운 닫기
+            setLangDropdownOpen(false);
+            // 햄버거 토글
+            setIsOpen(prev => !prev);
+          }}
           aria-expanded={isOpen}
-          aria-label="메뉴 열기"
+          aria-label={t('common.more')} // '메뉴 열기' 대체
         >
           ☰
+          {(unreadChatCount + unreadNotificationCount) > 0 && (
+            <span
+              className="absolute top-0 right-0 min-w-[16px] h-[16px] text-[10px] px-[3px]
+                         rounded-full bg-primary text-white flex items-center justify-center
+                         whitespace-nowrap leading-none border border-white dark:border-gray-800"
+            >
+              {(unreadChatCount + unreadNotificationCount) > 99 ? '99+' : (unreadChatCount + unreadNotificationCount)}
+            </span>
+          )}
         </button>
       </div>
 
       {/* 모바일 메뉴 */}
-      {isOpen && (
-        <div
-          ref={menuRef}
-          className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg
-                     flex flex-col p-2 md:hidden z-50
-                     dark:bg-secondary dark:border-gray-700"
-        >
+      <div
+        ref={menuRef}
+        className={`absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg
+                   flex flex-col p-2 md:hidden z-50
+                   dark:bg-secondary dark:border-gray-700
+                   transition-all duration-300 ease-in-out
+                   ${isOpen 
+                     ? 'opacity-100 scale-100 pointer-events-auto' 
+                     : 'opacity-0 scale-95 pointer-events-none'
+                   }`}
+      >
           {/* 맨 위 프로필 블록 */}
           <div
             className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-primary/20 cursor-pointer"
@@ -458,10 +515,10 @@ function Header() {
             </Avatar>
             <div className="flex-1">
               <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                {user ? displayNickname : '로그인 해주세요'}
+                {user ? displayNickname : t('auth.please_login')}
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400">
-                {user ? '내 프로필 보기' : '눌러서 로그인'}
+                {user ? t('common.view_profile') : t('auth.click_to_login')}
               </div>
             </div>
           </div>
@@ -471,21 +528,21 @@ function Header() {
           {/* 메뉴 리스트: 아이콘 포함 */}
           <div className="flex flex-col">
             {menuItems
-              .filter(item => item.name !== '설정' || !!user)
+              .filter(item => item.key !== 'settings' || !!user)
               .map(item => {
                 const active = isRouteActive(item);
                 const target = targetOf(item);
-                const icon = getMenuIcon(item.name);
+                const icon = getMenuIcon(item.key);
 
-                const isChat = item.name === '채팅';
-                const isNotification = item.name === '알림';
+                const isChat = item.key === 'chat';
+                const isNotification = item.key === 'notifications';
 
                 const showChatBadge = isChat && unreadChatCount > 0;
                 const showNotificationBadge = isNotification && unreadNotificationCount > 0;
 
                 return (
                   <button
-                    key={item.name}
+                    key={item.key}
                     type="button"
                     onClick={() => {
                       navigate(target);
@@ -532,7 +589,7 @@ function Header() {
                         )}
                       </span>
                     )}
-                    <span>{item.name}</span>
+                    <span>{item.label}</span>
                   </button>
                 );
               })}
@@ -549,7 +606,7 @@ function Header() {
                            bg-gray-100 hover:bg-gray-200
                            dark:bg-primary/60 dark:hover:bg-primary/80 dark:text-gray-100 text-sm"
               >
-                로그아웃
+                {t('auth.logout')}
               </button>
             ) : (
               <>
@@ -562,7 +619,7 @@ function Header() {
                   className="flex-1 px-3 py-2 rounded-lg
                              bg-primary text-white hover:opacity-90 text-sm"
                 >
-                  로그인
+                  {t('auth.login')}
                 </button>
                 <button
                   type="button"
@@ -574,13 +631,14 @@ function Header() {
                              border border-gray-300 hover:bg-gray-50
                              dark:border-gray-700 dark:text-gray-100 dark:hover:bg-primary/20 text-sm"
                 >
-                  회원가입
+                  {t('auth.signup')}
                 </button>
               </>
             )}
           </div>
-        </div>
-      )}
+      </div>
+
+
     </div>
   );
 }

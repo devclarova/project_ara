@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Film, Languages, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '@/contexts/AuthContext';
 import RightHeroSlider from './RightHeroSlider';
@@ -12,6 +13,7 @@ export type HeroProps = {
 export default function HeroSection({ onSignup }: HeroProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   const handleClick = () => {
     if (onSignup) {
@@ -68,38 +70,36 @@ export default function HeroSection({ onSignup }: HeroProps) {
             aria-label="플랫폼 간단 소개"
           >
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            K-콘텐츠 기반 한국어 학습 플랫폼
+            {t('landing.badge')}
           </motion.div>
 
           <h1 className="max-w-xl mx-auto lg:mx-0 text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-slate-900 dark:text-gray-100 break-keep">
             <span className="bg-gradient-to-r from-primary to-sky-500 bg-clip-text text-transparent">
-              콘텐츠로 언어를 배우고
+              {t('landing.title_1')}
             </span>
             <br className="hidden sm:block" />
             <span className="bg-gradient-to-r from-primary to-sky-500 bg-clip-text text-transparent">
-              문화로 연결되는 경험
+              {t('landing.title_2')}
             </span>
           </h1>
 
           <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base md:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0 break-keep">
-            드라마, 예능, 영화 장면으로 배우는 살아있는 표현들.
-            <br className="hidden md:block" />전 세계 친구들과 함께 쓰고, 고치고, 나누는 한국어 학습
-            공간 ARA
+            {t('landing.description')}
           </p>
 
           {/* 핵심 포인트 3개 */}
           <div className="flex flex-wrap justify-center lg:justify-start gap-2 sm:gap-3 text-[11px] sm:text-sm text-gray-700 dark:text-gray-200">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-secondary/80 px-3 py-1 shadow-sm border border-gray-100/60 dark:border-slate-700">
               <Film className="w-4 h-4 text-primary" />
-              실제 드라마·예능 장면
+              {t('landing.point_1')}
             </span>
             <span className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-secondary/80 px-3 py-1 shadow-sm border border-gray-100/60 dark:border-slate-700">
               <Languages className="w-4 h-4 text-primary" />
-              다국어 번역
+              {t('landing.point_2')}
             </span>
             <span className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-secondary/80 px-3 py-1 shadow-sm border border-gray-100/60 dark:border-slate-700">
               <Users className="w-4 h-4 text-primary" />
-              글로벌 학습 커뮤니티
+              {t('landing.point_3')}
             </span>
           </div>
 
@@ -110,7 +110,7 @@ export default function HeroSection({ onSignup }: HeroProps) {
               aria-label="바로 시작하기"
               className="inline-flex items-center justify-center rounded-[10px] bg-primary px-7 py-3 text-sm sm:text-base font-semibold text-white shadow-md shadow-primary/30 transition hover:-translate-y-[1px] hover:bg-primary/90"
             >
-              바로 시작하기
+              {t('landing.cta_start')}
             </button>
             <button
               type="button"
@@ -118,7 +118,7 @@ export default function HeroSection({ onSignup }: HeroProps) {
               aria-label="콘텐츠 둘러보기"
               className="inline-flex items-center justify-center rounded-[10px] border border-primary/20 bg-white/80 dark:bg-secondary/80 px-6 py-3 text-xs sm:text-sm font-medium text-primary shadow-sm backdrop-blur transition hover:bg-primary/5 dark:hover:bg-primary/10"
             >
-              콘텐츠 둘러보기
+              {t('landing.cta_explore')}
             </button>
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function HeroSection({ onSignup }: HeroProps) {
 
       {/* 스크롤 유도 */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center text-[11px] text-gray-400 dark:text-gray-400">
-        <span>Scroll to explore</span>
+        <span>{t('landing.scroll_hint')}</span>
         <span className="mt-1 animate-bounce text-lg">⌄</span>
       </div>
     </motion.section>

@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { forwardRef, useImperativeHandle, useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
+import imageCompression from 'browser-image-compression';
 
 type EditorMode = 'tweet' | 'reply';
 
@@ -29,19 +31,32 @@ export type EditorCreatedTweet = {
 type TweetModeProps = {
   mode: 'tweet';
   onTweetCreated?: (tweet: EditorCreatedTweet) => void;
+  onFocus?: () => void;
+  onInput?: () => void;
+  onChange?: () => void;
+  onCompositionEnd?: () => void;
 };
 
 type ReplyModeProps = {
   mode: 'reply';
   tweetId: string;
   onReplyCreated?: (replyId: string) => void;
+  onFocus?: () => void;
+  onInput?: () => void;
+  onChange?: () => void;
+  onCompositionEnd?: () => void;
 };
 
 type SnsInlineEditorProps = (TweetModeProps | ReplyModeProps) & {
   className?: string;
 };
 
-export default function SnsInlineEditor(props: SnsInlineEditorProps) {
+export interface SnsInlineEditorHandle {
+  focus: () => void;
+}
+
+const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>((props, ref) => {
+  const { t } = useTranslation();
   const { mode } = props;
   const { user } = useAuth();
 
@@ -54,6 +69,16 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    },
+  }));
 
   // 🔹 미리보기용 URL
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
@@ -117,7 +142,22 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
     const imgTags: string[] = [];
 
     for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+      let file = files[i];
+      
+      // 🟢 클라이언트 압축 적용
+      try {
+        const options = {
+          maxSizeMB: 1, // 최대 1MB
+          maxWidthOrHeight: 1920, // 최대 해상도 FHD
+          useWebWorker: true,
+        };
+        const compressedFile = await imageCompression(file, options);
+        // 압축 성공 시 교체 (실패하면 원본 사용)
+        file = compressedFile;
+      } catch (err) {
+        console.error('이미지 압축 실패(원본 업로드 진행):', err);
+      }
+
       const timestamp = Date.now() + i;
       const fileName = `${user.id}_${timestamp}_${safeFileName(file.name)}`;
 
@@ -150,13 +190,14 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
 
   const handleSubmit = async () => {
     if (!user) {
-      toast.error('로그인이 필요합니다.');
+      toast.error(t('tweets.error_login'));
       return;
     }
     if (!value.trim() && files.length === 0) return;
     if (isSubmitting) return;
     if (!profileId) {
-      toast.error('프로필 정보를 불러오지 못했습니다.');
+      // toast.error('프로필 정보를 불러오지 못했습니다.');
+      toast.error(t('tweets.error_profile'));
       return;
     }
 
@@ -174,7 +215,7 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
       }
 
       if (!finalContent.trim()) {
-        toast.error('내용이 비어 있습니다.');
+        toast.error(t('tweets.error_empty'));
         setIsSubmitting(false);
         return;
       }
@@ -195,7 +236,7 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
 
         if (insertError || !inserted) {
           console.error('❌ 댓글 저장 실패:', insertError?.message);
-          toast.error('댓글 저장 중 오류가 발생했습니다.');
+          toast.error(t('tweets.error_reply_save'));
           setIsSubmitting(false);
           return;
         }
@@ -204,7 +245,7 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
           onReplyCreated(inserted.id);
         }
 
-        toast.success('댓글이 등록되었습니다.');
+        toast.success(t('tweets.success_reply'));
       }
 
       // ================= 트윗 모드 =================
@@ -233,7 +274,7 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
 
         if (insertError || !inserted) {
           console.error('❌ 트윗 저장 실패:', insertError?.message);
-          toast.error('게시 중 오류가 발생했습니다.');
+          toast.error(t('tweets.error_tweet_save'));
           setIsSubmitting(false);
           return;
         }
@@ -247,12 +288,7 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
           },
           content: finalContent,
           image: undefined,
-          timestamp: new Date(inserted.created_at).toLocaleString('ko-KR', {
-            hour: '2-digit',
-            minute: '2-digit',
-            month: 'short',
-            day: 'numeric',
-          }),
+          timestamp: inserted.created_at,
           stats: {
             replies: inserted.reply_count ?? 0,
             retweets: inserted.repost_count ?? 0,
@@ -266,7 +302,7 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
           onTweetCreated(uiTweet);
         }
 
-        toast.success('게시되었습니다.');
+        toast.success(t('tweets.success_tweet'));
       }
 
       // ✅ 공통 초기화
@@ -277,7 +313,7 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
       }
     } catch (err) {
       console.error('❌ 에디터 처리 오류:', err);
-      toast.error('처리 중 문제가 발생했습니다.');
+      toast.error(t('tweets.error_general'));
     } finally {
       setIsSubmitting(false);
     }
@@ -302,15 +338,15 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
   // 비로그인일 때는 이 컴포넌트는 렌더 안 하게 (상위에서 CTA 따로 처리)
   if (!user) return null;
 
-  const placeholder = mode === 'reply' ? '댓글을 입력하세요...' : '지금 어떤 생각을 하고 계신가요?';
+  const placeholder = mode === 'reply' ? t('tweets.placeholder_reply') : t('tweets.placeholder_tweet');
   const buttonLabel =
     mode === 'reply'
       ? isSubmitting
-        ? '등록 중...'
-        : '댓글 달기'
+        ? t('tweets.btn_replying')
+        : t('tweets.btn_reply')
       : isSubmitting
-        ? '게시 중...'
-        : '게시하기';
+        ? t('tweets.btn_posting')
+        : t('tweets.btn_post');
 
   return (
     <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-4 bg-white dark:bg-background">
@@ -324,11 +360,20 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
         {/* 입력 영역 */}
         <div className="flex-1">
           <textarea
+            ref={textareaRef}
             value={value}
-            onChange={e => setValue(e.target.value)}
+            onChange={e => {
+              setValue(e.target.value);
+              props.onChange?.();
+            }}
             onKeyDown={handleKeyDown}
             onCompositionStart={() => setIsComposing(true)}
-            onCompositionEnd={() => setIsComposing(false)}
+            onCompositionEnd={(e) => {
+              setIsComposing(false);
+              props.onCompositionEnd?.();
+            }}
+            onFocus={props.onFocus}
+            onInput={props.onInput}
             rows={3}
             placeholder={placeholder}
             className="
@@ -348,7 +393,7 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
                 className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 hover:underline"
               >
                 <i className="ri-image-add-line" />
-                <span>사진 추가</span>
+                <span>{t('tweets.add_photo')}</span>
               </button>
               <input
                 ref={fileInputRef}
@@ -360,7 +405,7 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
               />
               {files.length > 0 && (
                 <span className="text-xs text-gray-500 dark:text-gray-400">
-                  이미지 {files.length}개 선택됨
+                  {t('tweets.images_selected', { count: files.length })}
                 </span>
               )}
             </div>
@@ -392,7 +437,7 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
                 >
                   <img
                     src={url}
-                    alt={`미리보기 ${idx + 1}`}
+                    alt={t('tweets.preview_alt', { index: idx + 1 })}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -403,4 +448,6 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
       </div>
     </div>
   );
-}
+});
+
+export default SnsInlineEditor;
