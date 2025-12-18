@@ -19,10 +19,12 @@
     "comment_feed": "прокомментировал ваш пост.",
     "like_comment": "понравился ваш комментарий.",
     "follow_msg": "подписался на вас.",
-    "repost_msg": "репостнул вашу запись.",
-    "mention_msg": "упомянул вас.",
+    "repost_msg": "сделал(а) репост вашего поста.",
+    "mention_msg": "упомянул(а) вас.",
+    "success_clear_all": "Все уведомления удалены",
+    "error_clear_all": "Произошла ошибка при удалении уведомлений",
     "clear_all": "Очистить",
-    "action_comment": "Вы оставили комментарий в вашей ленте.",
+    "action_comment": "Оставил комментарий к вашей ленте.",
     "action_like_comment": "Мы любим ваши комментарии.",
     "action_like_feed": "Мне нравится ваш фид.",
     "no_notifications": "Пока нет новых уведомлений.",
@@ -192,11 +194,18 @@
     "error_profile_not_load": "Unable to load profile information",
     "error_like": "An error occurred while processing like",
     "error_delete": "An error occurred during deletion",
-    "success_delete": "Deleted successfully",
-    "success_report": "Report has been submitted",
-    "success_block": "User has been blocked",
+    "success_delete": "Успешно удалено",
+    "success_report": "Жалоба отправлена.",
+    "success_block": "Пользователь заблокирован.",
+    "block_success": "Пользователь {{name}} заблокирован.",
+    "unblock_success": "Пользователь {{name}} разблокирован.",
     "error_no_profile": "Profile does not exist",
-    "error_empty_content": "Content is empty"
+    "error_empty_content": "Content is empty",
+    "block": "Заблокировать",
+    "unblock": "Разблокировать",
+    "report": "Пожаловаться",
+    "delete": "Удалить",
+    "edit": "Редактировать"
   },
   "settings": {
     "languageSelect": "Язык",
@@ -326,7 +335,8 @@
     "be_first": "Будьте первым!",
     "cannot_delete": "Невозможно удалить",
     "deleted_reply": "Этот ответ был удален",
-    "deleted_or_not_exist": "Этот пост был удален или не существует"
+    "deleted_or_not_exist": "Этот пост был удален или не существует",
+    "deleted_while_viewing": "Этот пост был удален."
   },
   "trending": {
     "title": "Тренды",

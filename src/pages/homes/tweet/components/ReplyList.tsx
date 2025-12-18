@@ -1,7 +1,9 @@
+
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useTranslation } from 'react-i18next';
 import { ReplyCard } from './ReplyCard';
 import type { UIReply } from '@/types/sns';
+
 interface ReplyListProps {
   replies: UIReply[];
   onDeleted?: (id: string) => void;
@@ -9,6 +11,7 @@ interface ReplyListProps {
   fetchMore: () => void;
   onCommentClick?: (id: string) => void;
 }
+
 export default function ReplyList({ 
   replies, 
   onDeleted, 
@@ -17,6 +20,7 @@ export default function ReplyList({
   onCommentClick 
 }: ReplyListProps) {
   const { t } = useTranslation();
+
   if (!replies.length) {
     return (
       <div className="border-b border-gray-200 dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
@@ -26,6 +30,7 @@ export default function ReplyList({
       </div>
     );
   }
+
   return (
     <InfiniteScroll
       dataLength={replies.length}

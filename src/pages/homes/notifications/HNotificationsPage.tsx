@@ -198,6 +198,7 @@ export default function HNotificationsPage() {
       const { error } = await supabase.from('notifications').delete().eq('id', deleteId);
       if (error) throw error;
       
+      toast.success(t('common.success_delete'));
     } catch (err: any) {
       console.error('알림 삭제 실패:', err.message);
       toast.error(t('common.error_delete'));

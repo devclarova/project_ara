@@ -21,6 +21,8 @@
     "follow_msg": "te siguió.",
     "repost_msg": "republicó tu post.",
     "mention_msg": "te mencionó.",
+    "success_clear_all": "Todas las notificaciones borradas",
+    "error_clear_all": "Ocurrió un error al borrar las notificaciones",
     "clear_all": "Vaciar",
     "action_comment": "He dejado un comentario en tu feed.",
     "action_like_comment": "Nos gusta tu comentario.",
@@ -156,11 +158,18 @@
     "error_profile_not_load": "Unable to load profile information",
     "error_like": "An error occurred while processing like",
     "error_delete": "An error occurred during deletion",
-    "success_delete": "Deleted successfully",
-    "success_report": "Report has been submitted",
-    "success_block": "User has been blocked",
+    "success_delete": "Eliminado correctamente",
+    "success_report": "El informe ha sido enviado.",
+    "success_block": "El usuario ha sido bloqueado.",
+    "block_success": "Se ha bloqueado a {{name}}.",
+    "unblock_success": "Se ha desbloqueado a {{name}}.",
     "error_no_profile": "Profile does not exist",
-    "error_empty_content": "Content is empty"
+    "error_empty_content": "Content is empty",
+    "block": "Bloquear",
+    "unblock": "Desbloquear",
+    "report": "Reportar",
+    "delete": "Eliminar",
+    "edit": "Editar"
   },
   "settings": {
     "languageSelect": "Idioma",
@@ -290,7 +299,8 @@
     "be_first": "¡Sé el primero!",
     "cannot_delete": "No se puede eliminar",
     "deleted_reply": "Esta respuesta ha sido eliminada",
-    "deleted_or_not_exist": "Esta publicación ha sido eliminada o no existe"
+    "deleted_or_not_exist": "Esta publicación ha sido eliminada o no existe",
+    "deleted_while_viewing": "Esta publicación ha sido eliminada."
   },
   "trending": {
     "title": "Tendencias",

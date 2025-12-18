@@ -66,6 +66,9 @@ export interface BaseFeedItem {
   stats: TweetStats;
   liked?: boolean;
   liked_at?: string; // For 'likes' tab sorting
+  // 10-zzeon compatibility
+  parent_reply_id?: string | null;
+  root_reply_id?: string | null;
 }
 
 export interface UIPost extends BaseFeedItem {

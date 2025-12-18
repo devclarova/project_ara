@@ -1,4 +1,5 @@
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface BlockButtonProps {
   isBlocked: boolean;
@@ -8,15 +9,16 @@ interface BlockButtonProps {
 }
 
 export default function BlockButton({ isBlocked, username, onToggle, onClose }: BlockButtonProps) {
+  const { t } = useTranslation();
   return (
     <button
       onClick={e => {
         e.stopPropagation();
 
         if (!isBlocked) {
-          toast.success(`${username}님을 차단했습니다.`);
+          toast.success(t('common.block_success', { name: username }));
         } else {
-          toast.success(`${username}님 차단을 해제했습니다.`);
+          toast.success(t('common.unblock_success', { name: username }));
         }
 
         onToggle(); // 상태 변경
@@ -26,7 +28,7 @@ export default function BlockButton({ isBlocked, username, onToggle, onClose }: 
         dark:hover:bg-white/10 flex items-center gap-2 text-gray-800 dark:text-gray-200"
     >
       <i className="ri-forbid-line" />
-      {isBlocked ? '차단해제' : '차단하기'}
+      {isBlocked ? t('common.unblock') : t('common.block')}
     </button>
   );
 }

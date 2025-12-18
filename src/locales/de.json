@@ -21,6 +21,8 @@
     "follow_msg": "folgt dir jetzt.",
     "repost_msg": "hat deinen Beitrag geteilt.",
     "mention_msg": "hat dich erwähnt.",
+    "success_clear_all": "Alle Benachrichtigungen gelöscht",
+    "error_clear_all": "Fehler beim Löschen der Benachrichtigungen",
     "clear_all": "Leeren",
     "action_comment": "Es wurde ein Kommentar zu Ihrem Feed hinterlassen.",
     "action_like_comment": "Wir mögen Ihren Kommentar.",
@@ -156,11 +158,20 @@
     "error_profile_not_load": "Unable to load profile information",
     "error_like": "An error occurred while processing like",
     "error_delete": "An error occurred during deletion",
-    "success_delete": "Deleted successfully",
-    "success_report": "Report has been submitted",
-    "success_block": "User has been blocked",
+    "success_delete": "Erfolgreich gelöscht",
+    "success_report": "Bericht wurde gesendet.",
+    "success_block": "Benutzer wurde blockiert.",
+
     "error_no_profile": "Profile does not exist",
-    "error_empty_content": "Content is empty"
+    "error_empty_content": "Content is empty",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "block": "Blockieren",
+    "unblock": "Entblocken",
+    "report": "Melden",
+    "edit_mode": "Wechseln in den Bearbeitungsmodus.",
+    "block_success": "{{name}} blockiert.",
+    "unblock_success": "{{name}} entblockt."
   },
   "settings": {
     "languageSelect": "Sprache wählen",
@@ -290,7 +301,8 @@
     "be_first": "Sei der Erste!",
     "cannot_delete": "Kann nicht gelöscht werden",
     "deleted_reply": "Diese Antwort wurde gelöscht",
-    "deleted_or_not_exist": "Dieser Beitrag wurde gelöscht oder existiert nicht"
+    "deleted_or_not_exist": "Dieser Beitrag wurde gelöscht oder existiert nicht",
+    "deleted_while_viewing": "Dieser Beitrag wurde gelöscht."
   },
   "trending": {
     "title": "Trends für dich",

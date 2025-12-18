@@ -21,6 +21,8 @@
     "follow_msg": "关注了你。",
     "repost_msg": "转发了你的动态。",
     "mention_msg": "提到了你。",
+    "success_clear_all": "已清空所有通知",
+    "error_clear_all": "清空通知时发生错误",
     "clear_all": "清空",
     "action_comment": "您在您的动态中留下了评论。",
     "action_like_comment": "我们喜欢您的评论。",
@@ -202,11 +204,19 @@
     "error_profile_not_load": "Unable to load profile information",
     "error_like": "An error occurred while processing like",
     "error_delete": "An error occurred during deletion",
-    "success_delete": "Deleted successfully",
-    "success_report": "Report has been submitted",
-    "success_block": "User has been blocked",
+    "success_delete": "删除成功",
+    "success_report": "举报已提交。",
+    "success_block": "用户已被屏蔽。",
     "error_no_profile": "Profile does not exist",
-    "error_empty_content": "Content is empty"
+    "error_empty_content": "Content is empty",
+    "block": "屏蔽",
+    "unblock": "解除屏蔽",
+    "report": "举报",
+    "delete": "删除",
+    "edit": "编辑",
+    "edit_mode": "正在切换到编辑模式。",
+    "block_success": "已屏蔽 {{name}}。",
+    "unblock_success": "已解除对 {{name}} 的屏蔽。"
   },
   "settings": {
     "languageSelect": "语言选择",
@@ -335,8 +345,9 @@
     "no_replies": "暂无回复",
     "be_first": "抢占沙发！",
     "cannot_delete": "Cannot delete",
-    "deleted_reply": "This reply has been deleted",
-    "deleted_or_not_exist": "This post has been deleted or does not exist"
+    "deleted_reply": "该回复已被删除",
+    "deleted_or_not_exist": "该帖子已被删除或不存在",
+    "deleted_while_viewing": "该帖子已被删除。"
   },
   "trending": {
     "title": "趋势",

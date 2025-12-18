@@ -203,6 +203,10 @@ export default function TweetCard({
   useEffect(() => {
     setLikeCount(stats.likes ?? 0);
   }, [stats.likes]);
+
+  useEffect(() => {
+    setViewCount(stats.views ?? 0);
+  }, [stats.views]);
   // 댓글 삭제 실시간 반영
   useEffect(() => {
     const channel = supabase
@@ -515,7 +519,7 @@ export default function TweetCard({
               <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
             </button>
             {showMenu && (
-              <div className="absolute right-0 top-8 w-36 bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
+              <div className="absolute right-0 top-8 min-w-[9rem] whitespace-nowrap bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
                 {isMyTweet ? (
                   <>
                     <EditButton onClose={() => setShowMenu(false)} />

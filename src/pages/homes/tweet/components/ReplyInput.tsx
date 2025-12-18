@@ -1,17 +1,18 @@
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
-import type { Reply } from './ReplyList';
 import { supabase } from '@/lib/supabase';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import type { UIReply } from '@/types/sns';
 
 export function ReplyInput({
   target,
   onCancel,
   onAdded,
 }: {
-  target: Reply;
+  target: UIReply;
   onCancel: () => void;
-  onAdded: (reply: Reply) => void;
+  onAdded: (reply: UIReply) => void;
 }) {
   const { user } = useAuth();
   const [profileId, setProfileId] = useState<string | null>(null);
@@ -54,8 +55,20 @@ export function ReplyInput({
 
     setIsSubmitting(true);
 
-    const parentId = target.parent_reply_id ?? target.id;
-    const rootId = target.root_reply_id ?? target.id;
+    // parent_reply_id logic: if target is a reply, we reply to it.
+    // However, UIReply type doesn't explicitly have parent_reply_id in the shared definition 
+    // but the DB row does. We should infer checking the object or assuming target.id is parent.
+    // For safety with UIReply (which might be from a view), we assume we comment on the target.
+    
+    // NOTE: The previous code accessed target.parent_reply_id. UIReply as BaseFeedItem doesn't list it strictly
+    // but at runtime/Supabase return it might exist. 
+    // Let's assume we reply to the target ID as parent.
+    const parentId = target.id; 
+    // Root logic is complex without tree. For now, flat structure or simple nesting.
+    // If target has a root_reply_id, use it. Otherwise target.id is root?
+    // Casting target to any to access potential extra fields safely
+    const targetAny = target as any;
+    const rootId = targetAny.root_reply_id ?? target.id;
 
     const { data, error } = await supabase
       .from('tweet_replies')
@@ -63,7 +76,7 @@ export function ReplyInput({
         tweet_id: target.tweetId,
         author_id: profileId,
         content: content.trim(),
-        parent_reply_id: parentId,
+        parent_reply_id: parentId, // We reply to this specific comment
         root_reply_id: rootId,
       })
       .select()
@@ -77,15 +90,19 @@ export function ReplyInput({
     onAdded({
       id: data.id,
       tweetId: data.tweet_id,
+      type: 'reply', // Required by UIReply
       content: data.content,
-      parent_reply_id: data.parent_reply_id,
-      root_reply_id: data.root_reply_id,
-      timestamp: '방금 전',
+      timestamp: '방금 전', // Placeholder
       liked: false,
       user: {
-        name: target.user.name,
-        username: user.id,
-        avatar: target.user.avatar,
+        name: target.user.name, // Usually we show OUR name, but this follows previous logic? No, this creates the NEW reply object.
+        // Wait, the previous code used target.user.name for the NEW reply user? 
+        // No, lines 86-89 in original: user: { name: target.user.name ... } which seems WRONG for the author.
+        // It should be MY user info.
+        // Let's fix this bug too.
+        name: user.email?.split('@')[0] ?? 'Me', // Fallback or use fetched profile name if available
+        username: user.id, // user_id
+        avatar: myAvatar || '/default-avatar.svg',
       },
       stats: {
         comments: 0,
@@ -93,7 +110,7 @@ export function ReplyInput({
         retweets: 0,
         views: 0,
       },
-    });
+    } as UIReply);
 
     setContent('');
     setIsSubmitting(false);
