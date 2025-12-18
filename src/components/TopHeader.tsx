@@ -5,6 +5,10 @@ import { useAuth } from '../contexts/AuthContext';
 import SignInPage from '../pages/SignInPage';
 import Modal from './Modal';
 import SignUpPage from '../pages/SignUpPage';
+import LanguageSelect from '@/pages/settings/LanguageSelect';
+import { useTranslation } from 'react-i18next';
+import type { Lang } from '@/types/settings';
+import { Globe } from 'lucide-react'; // Import Globe icon
 
 const TopHeader = () => {
   const linkActive = 'text-primary font-medium';
@@ -14,7 +18,15 @@ const TopHeader = () => {
 
   const [authOpen, setAuthOpen] = useState(false); // 로그인 모달용 (기존 setIsOpen 대체)
   const [mobileOpen, setMobileOpen] = useState(false); // 모바일 드로어 상태
+  const [langOpen, setLangOpen] = useState(false); // 언어 선택 모달
   const location = useLocation();
+
+  const { t, i18n } = useTranslation();
+  
+  const handleLanguageChange = (lang: Lang) => {
+    i18n.changeLanguage(lang);
+    setLangOpen(false);
+  };
 
   const handleLogout = async () => {
     try {
@@ -76,7 +88,7 @@ const TopHeader = () => {
                   `${isActive ? linkActive : linkBase} text-sm md:text-base`
                 }
               >
-                홈
+                {t('nav.home')}
               </NavLink>
               <NavLink
                 to="/studyList"
@@ -84,7 +96,7 @@ const TopHeader = () => {
                   `${isActive ? linkActive : linkBase} text-sm md:text-base`
                 }
               >
-                학습
+                {t('nav.study')}
               </NavLink>
               <NavLink
                 to="/voca"
@@ -92,7 +104,8 @@ const TopHeader = () => {
                   `${isActive ? linkActive : linkBase} text-sm md:text-base`
                 }
               >
-                단어장
+                {/* 단어장 -> Vocabulary? nav.voca 키 필요 */}
+                {t('nav.study')} 
               </NavLink>
               <NavLink
                 to="/communitylist"
@@ -100,7 +113,7 @@ const TopHeader = () => {
                   `${isActive ? linkActive : linkBase} text-sm md:text-base`
                 }
               >
-                커뮤니티
+                {t('nav.community')}
               </NavLink>
               <NavLink
                 to="/profile"
@@ -108,13 +121,21 @@ const TopHeader = () => {
                   `${isActive ? linkActive : linkBase} text-sm md:text-base`
                 }
               >
-                프로필
+                {t('nav.profile')}
               </NavLink>
             </div>
           </div>
 
           {/* 우측: 버튼들 + 모바일 햄버거 */}
           <div className="flex items-center gap-2 sm:gap-4">
+            <button
+              className="w-10 h-10 hidden sm:flex items-center justify-center rounded-full hover:bg-gray-50"
+              aria-label="언어 변경"
+              onClick={() => setLangOpen(true)}
+            >
+              <Globe className="w-5 h-5 text-gray-600" />
+            </button>
+            
             <button
               className="w-10 h-10 hidden sm:flex items-center justify-center rounded-full hover:bg-gray-50"
               aria-label="알림"
@@ -140,7 +161,7 @@ const TopHeader = () => {
                   }}
                 >
                   <div style={{ fontSize: '12px', color: 'var(--gray-500)', fontWeight: 'bold' }}>
-                    김샛별
+                    {user.user_metadata?.username || 'User'}
                   </div>
                 </NavLink>
 
@@ -148,7 +169,7 @@ const TopHeader = () => {
                   onClick={handleLogout}
                   className="hidden sm:inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-button text-gray-700 hover:bg-gray-50"
                 >
-                  로그아웃
+                  {t('auth.logout')}
                 </button>
               </>
             ) : (
@@ -158,14 +179,25 @@ const TopHeader = () => {
                   onClick={e => navigate('/signin')}
                   className="hidden sm:inline-flex items-center justify-center border border-transparent text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-[32px] px-[22px] h-[42px]"
                 >
-                  로그인
+                  {t('auth.login')}
                 </button>
-                <Modal title="🔑 로그인" isOpen={authOpen} onClose={() => setAuthOpen(false)}>
+                <Modal title={t('auth.login')} isOpen={authOpen} onClose={() => setAuthOpen(false)}>
                   <SignInPage />
                   <SignUpPage />
                 </Modal>
               </>
             )}
+
+            {/* 언어 선택 모달 */}
+            <Modal title={t('settings.languageSelect')} isOpen={langOpen} onClose={() => setLangOpen(false)}>
+              <LanguageSelect
+                value={(i18n.language as Lang) || 'ko'}
+                onChange={handleLanguageChange}
+                onClose={() => setLangOpen(false)}
+                onSave={() => setLangOpen(false)} 
+                onCancel={() => setLangOpen(false)}
+              />
+            </Modal>
 
             {/* 모바일 햄버거 */}
             <button
@@ -199,7 +231,7 @@ const TopHeader = () => {
             className="absolute right-0 top-0 h-full w-72 max-w-[80%] bg-white shadow-xl transform transition-transform duration-200 translate-x-0"
           >
             <div className="flex items-center justify-between px-4 h-16 border-b">
-              <span className="font-gungsuh text-xl text-primary">아라</span>
+              <span className="font-gungsuh text-xl text-primary">Ara</span>
               <button
                 className="w-10 h-10 inline-flex items-center justify-center rounded-full hover:bg-gray-50"
                 aria-label="메뉴 닫기"
@@ -219,7 +251,7 @@ const TopHeader = () => {
                 }
               >
                 <Home className="w-5 h-5" />
-                <span>홈</span>
+                <span>{t('nav.home')}</span>
               </NavLink>
 
               <NavLink
@@ -229,7 +261,7 @@ const TopHeader = () => {
                 }
               >
                 <BookOpen className="w-5 h-5" />
-                <span>학습</span>
+                <span>{t('nav.study')}</span>
               </NavLink>
 
               <NavLink
@@ -239,7 +271,7 @@ const TopHeader = () => {
                 }
               >
                 <BookMarked className="w-5 h-5" />
-                <span>단어장</span>
+                <span>{t('nav.study')}</span> 
               </NavLink>
 
               <NavLink
@@ -249,7 +281,7 @@ const TopHeader = () => {
                 }
               >
                 <Users className="w-5 h-5" />
-                <span>커뮤니티</span>
+                <span>{t('nav.community')}</span>
               </NavLink>
 
               <NavLink
@@ -259,7 +291,7 @@ const TopHeader = () => {
                 }
               >
                 <UserCircle className="w-5 h-5" />
-                <span>프로필</span>
+                <span>{t('nav.profile')}</span>
               </NavLink>
 
               <div className="h-px bg-gray-200 my-3" />

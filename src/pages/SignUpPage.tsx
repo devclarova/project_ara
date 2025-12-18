@@ -16,8 +16,10 @@ import { slideVariants } from '@/utils/motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 
 export default function SignUpPage() {
+  const { t } = useTranslation();
   const { step, setStep, prevStepRef, direction, guardedSetStep } = useSignupStepper(1);
 
   const [consents, setConsents] = useState<ConsentResult | null>(null);
@@ -92,7 +94,7 @@ export default function SignUpPage() {
   // 레이아웃 마진/패딩
   const wrapperPad = 'pt-6 sm:pt-8 pb-6';
 
-  const title = signupKind === 'social' ? '소셜 회원가입' : '회원가입';
+  const title = signupKind === 'social' ? t('signup.title_social') : t('signup.title_email');
 
   return (
     <div
@@ -120,9 +122,9 @@ export default function SignUpPage() {
                    shadow-sm hover:shadow transition-all duration-200
                    hover:bg-primary/50 hover:dark:bg-primary/80 hover:from-sky-400/10 hover:to-indigo-500/10
                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-0"
-                aria-label="다음에 하기"
+                 aria-label="다음에 하기"
               >
-                다음에 하기
+                {t('signup.later')}
               </button>
             ) : (
               <button
@@ -137,7 +139,7 @@ export default function SignUpPage() {
                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-0"
                 aria-label="홈으로"
               >
-                홈으로
+                {t('signup.go_home')}
               </button>
             )}
           </div>

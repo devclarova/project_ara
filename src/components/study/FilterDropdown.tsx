@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import CheckboxSquare from '../common/CheckboxSquare';
 
 export type TDifficulty = '' | '초급' | '중급' | '고급';
@@ -6,11 +7,13 @@ export type TDifficulty = '' | '초급' | '중급' | '고급';
 interface FilterDropdownProps {
   value: TDifficulty; // 현재 적용된(부모가 들고있는) 난이도
   onApply: (next: TDifficulty) => void; // 적용하기 눌렀을 때 부모로 반영
+  labelMap?: Record<string, string>; // 번역된 라벨 맵
 }
 
 const DIFFS: Exclude<TDifficulty, ''>[] = ['초급', '중급', '고급'];
 
-const FilterDropdown = ({ value, onApply }: FilterDropdownProps) => {
+const FilterDropdown = ({ value, onApply, labelMap }: FilterDropdownProps) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -43,7 +46,7 @@ const FilterDropdown = ({ value, onApply }: FilterDropdownProps) => {
             : 'text-gray-600 dark:text-gray-300 hover:text-black',
         ].join(' ')}
       >
-        {value && <span className="text-sm">{value}</span>}
+        {value && <span className="text-sm">{labelMap ? labelMap[value] : value}</span>}
         <i className="ri-filter-line text-2xl" />
       </button>
 
@@ -53,12 +56,14 @@ const FilterDropdown = ({ value, onApply }: FilterDropdownProps) => {
             {/* 난이도 */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-100">난이도</h3>
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-100">{t('study.level.title')}</h3>
               </div>
               <div className="space-y-2">
                 <label className="flex items-center">
                   <CheckboxSquare checked={draft === ''} onChange={() => setDraft('')} />
-                  <span className="ml-2 text-sm text-gray-600 dark:text-gray-100">전체</span>
+                  <span className="ml-2 text-sm text-gray-600 dark:text-gray-100">
+                    {labelMap ? labelMap[''] || '전체' : '전체'}
+                  </span>
                 </label>
                 {DIFFS.map(label => (
                   <label key={label} className="flex items-center">
@@ -67,7 +72,9 @@ const FilterDropdown = ({ value, onApply }: FilterDropdownProps) => {
                       checked={draft === label}
                       onChange={() => setDraft(label)}
                     />
-                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-100">{label}</span>
+                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-100">
+                      {labelMap ? labelMap[label] : label}
+                    </span>
                   </label>
                 ))}
               </div>
@@ -111,20 +118,18 @@ const FilterDropdown = ({ value, onApply }: FilterDropdownProps) => {
             <div className="flex justify-end pt-2 gap-2">
               <button
                 onClick={() => setOpen(false)} // ← 취소용이라면 OK, 하지만 적용은 아래 버튼에서!
-                className="px-3 py-2 text-sm text-gray-700 bg-gray-100 dark:bg-gray-400 dark:hover:bg-gray-500 rounded-button"
                 type="button"
               >
-                취소
+                {t('common.cancel')}
               </button>
               <button
                 onClick={() => {
                   onApply(draft);
                   setOpen(false);
                 }} // ✅ 적용하기: onApply 호출 + 닫기
-                className="px-4 py-2 text-sm text-white bg-primary rounded-button whitespace-nowrap dark:hover:opacity-90"
                 type="button"
               >
-                적용하기
+                {t('common.apply')}
               </button>
             </div>
           </div>

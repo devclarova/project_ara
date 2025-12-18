@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -8,8 +8,9 @@ interface ModalProps {
   children: React.ReactNode;
   closeOnBackdrop?: boolean;
   closeOnEsc?: boolean;
+  className?: string; // ✅ 모달 컨테이너(카드) 스타일 커스텀
+  contentClassName?: string; // ✅ 내부 컨텐츠 영역 스타일 커스텀
 }
-
 export default function Modal({
   isOpen,
   onClose,
@@ -17,8 +18,17 @@ export default function Modal({
   children,
   closeOnBackdrop = true,
   closeOnEsc = true,
+  className,
+  contentClassName,
 }: ModalProps) {
-  // 훅은 항상 실행
+  const modalContentRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  // Hook으로 스크롤 잠금 처리 (Scroll Jump 방지). Main 브랜치의 수동 로직 대신 Hook 사용.
+  useBodyScrollLock(isOpen);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  // ESC 키로 닫기
   useEffect(() => {
     if (!isOpen || !closeOnEsc) return;
     const onKey = (e: KeyboardEvent) => {
@@ -27,51 +37,45 @@ export default function Modal({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, closeOnEsc, onClose]);
-
-  const modalRoot =
-    typeof document !== 'undefined'
-      ? (document.getElementById('modal-root') ?? document.body)
-      : null;
-
-  if (!isOpen || !modalRoot) return null;
-
+  // Portal target setting
+  const modalRoot = typeof document !== 'undefined' ? document.body : null;
+  if (!mounted || !isOpen || !modalRoot) return null;
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-10 md:pt-16 
-                 bg-black/40 dark:bg-black/60 min-h-screen transition-colors"
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm transition-opacity"
       onClick={closeOnBackdrop ? onClose : undefined}
       role="dialog"
       aria-modal="true"
       aria-label={title}
     >
-      <div
-        className="relative w-full max-w-4xl mx-4 md:mx-6 
-                   rounded-2xl shadow-2xl overflow-hidden 
-                   bg-white dark:bg-secondary 
-                   border border-gray-200 dark:border-gray-700
-                   text-gray-900 dark:text-gray-100
-                   flex flex-col min-h-[60vh] md:min-h-[68vh] max-h-[80vh]"
-        onClick={e => e.stopPropagation()} // 내부 클릭 시 닫힘 방지
+      <div 
+        ref={modalContentRef}
+        className={`relative w-full bg-white dark:bg-secondary rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-200 ${className || 'max-w-3xl h-[80vh]'}`}
+        style={{
+             maxHeight: '90vh'
+        }}
+        onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 md:px-5 md:py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800 shrink-0 bg-white/50 dark:bg-secondary/50 backdrop-blur-sm">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            {title}
+          </h3>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-            aria-label="뒤로가기"
+            className="p-1 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors"
           >
-            <img
-              src="/images/back.svg"
-              alt="뒤로가기"
-              className="w-6 h-6 invert-0 dark:invert transition"
-            />
+            <i className="ri-close-line text-xl" />
           </button>
-          <h2 className="text-base md:text-lg font-bold truncate">{title}</h2>
-          <div className="w-6" /> {/* 우측 정렬용 공간 */}
         </div>
-
-        {/* Body: children 쪽에서 스크롤/여백 관리 */}
-        <div className="flex-1 min-h-0">{children}</div>
+        
+        {/* Content Wrapper */}
+        <div 
+          className={`flex-1 overflow-y-auto block relative overscroll-contain ${contentClassName || 'px-6 py-4'}`}
+          data-scroll-lock-scrollable=""
+        >
+          {children}
+        </div>
       </div>
     </div>,
     modalRoot,

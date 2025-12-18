@@ -13,9 +13,14 @@ interface PrivacySettingsProps {
   onBackToMenu?: () => void;
 }
 
-const CONFIRM_PHRASE = '탈퇴하겠습니다.';
+import { useTranslation } from 'react-i18next';
+
+// const CONFIRM_PHRASE = '탈퇴하겠습니다.'; // Moved inside component
 
 export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) {
+  const { t } = useTranslation();
+  const CONFIRM_PHRASE = t('settings.withdraw_phrase');
+
   const [active, setActive] = useState<ActiveSetting>(null);
   const open = (key: ActiveSetting) => setActive(key);
   const { user, signOut } = useAuth();
@@ -38,7 +43,8 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
 
     // 1) 확인 문구 검사
     if (confirmText.trim() !== CONFIRM_PHRASE) {
-      setWithdrawError(`확인 문장 "${CONFIRM_PHRASE}"을 정확히 입력해주세요.`);
+      setWithdrawError(t('settings.withdraw_verify_placeholder', { phrase: CONFIRM_PHRASE }));
+      // setWithdrawError(`확인 문장 "${CONFIRM_PHRASE}"을 정확히 입력해주세요.`);
       return;
     }
 
@@ -112,16 +118,16 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
             type="button"
             onClick={onBackToMenu}
             className="inline-flex md:hidden items-center justify-center w-9 h-9 rounded-full border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="뒤로가기"
+            aria-label={t('common.back')}
           >
             <i className="ri-arrow-left-line text-lg" />
           </button>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">개인정보 설정</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('settings.privacy')}</h3>
         </div>
 
         <div className="space-y-2">
-          <Row label="비밀번호 변경" onClick={() => open('password')} />
-          <Row label="SNS 계정 연결" onClick={() => open('sns')} />
+          <Row label={t('settings.change_password')} onClick={() => open('password')} />
+          <Row label={t('settings.connect_sns')} onClick={() => open('sns')} />
         </div>
 
         {/* 하단 탈퇴 버튼 */}
@@ -131,16 +137,16 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
             onClick={() => open('withdraw')}
             className="text-[11px] text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition"
           >
-            탈퇴하기
+            {t('settings.withdraw')}
           </button>
         </div>
 
         {/* 하단 여백 */}
-        <div className="h-24" />
+
       </div>
 
       {/* 모달: active 가 있을 때만 렌더링 */}
-      <Modal isOpen={!!active} onClose={close} title={getSettingsTitle(active)}>
+      <Modal isOpen={!!active} onClose={close} title={t(getSettingsTitle(active))}>
         {active === 'password' && <PasswordChange onDone={close} onClose={close} />}
 
         {active === 'sns' && <SNSConnect onClose={close} />}
@@ -149,43 +155,43 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
         {active === 'withdraw' && (
           <div className="space-y-5">
             <div className="rounded-md bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900 px-3 py-2 text-[11px] text-red-700 dark:text-red-300">
-              <p className="font-semibold mb-1">탈퇴 전 꼭 확인해주세요.</p>
+              <p className="font-semibold mb-1">{t('settings.withdraw_modal_title')}</p>
               <ul className="list-disc list-inside space-y-0.5">
-                <li>계정 정보와 프로필이 더 이상 서비스에서 사용되지 않습니다.</li>
-                <li>작성하신 게시물, 댓글 등 활동 내역도 함께 삭제됩니다.</li>
-                <li>삭제된 데이터는 되돌릴 수 없습니다.</li>
-                <li>동일 이메일로 재가입 시, 새로운 계정으로 취급될 수 있습니다.</li>
+                <li>{t('settings.withdraw_warning_1')}</li>
+                <li>{t('settings.withdraw_warning_2')}</li>
+                <li>{t('settings.withdraw_warning_3')}</li>
+                <li>{t('settings.withdraw_warning_4')}</li>
               </ul>
             </div>
 
             {/* 비밀번호 확인 */}
             <div className="space-y-1">
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
-                비밀번호 확인
+                {t('settings.confirm_password')}
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                placeholder="현재 비밀번호를 입력해주세요."
+                placeholder={t('settings.confirm_password_placeholder')}
               />
               <p className="text-[11px] text-gray-400 dark:text-gray-500">
-                이메일로 가입하신 경우, 본인 확인을 위해 비밀번호를 다시 입력해주세요.
+                {t('settings.confirm_password_desc')}
               </p>
             </div>
 
             {/* 확인 문구 */}
             <div className="space-y-1">
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
-                탈퇴 확인 문구
+                {t('settings.withdraw_verify_label')}
               </label>
               <input
                 type="text"
                 value={confirmText}
                 onChange={e => setConfirmText(e.target.value)}
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                placeholder={`${CONFIRM_PHRASE} 를 정확히 입력해주세요.`}
+                placeholder={t('settings.withdraw_verify_placeholder', { phrase: CONFIRM_PHRASE })}
               />
             </div>
 
@@ -198,7 +204,7 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
                 className="px-3 py-1.5 text-xs rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                 disabled={withdrawing}
               >
-                취소
+                {t('settings.withdraw_btn_cancel')}
               </button>
               <button
                 type="button"
@@ -206,7 +212,7 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
                 disabled={withdrawing}
                 className="px-3 py-1.5 text-xs rounded-md bg-red-500 text-white hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {withdrawing ? '탈퇴 처리 중…' : '정말 탈퇴하기'}
+                {withdrawing ? t('settings.withdraw_btn_processing') : t('settings.withdraw_btn_confirm')}
               </button>
             </div>
           </div>

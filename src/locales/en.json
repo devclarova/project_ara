@@ -1,0 +1,633 @@
+{
+  "nav": {
+    "home": "Home",
+    "study": "Study",
+    "community": "Community",
+    "chat": "Chat",
+    "notifications": "Notifications",
+    "more": "More",
+    "settings": "Settings",
+    "profile": "Profile",
+    "post": "Post"
+  },
+  "notification": {
+    "like_feed": "liked your post.",
+    "user_action": "{{name}}",
+    "new": "New",
+    "deleted_post": "Post deleted.",
+    "deleted_comment": "Comment deleted.",
+    "comment_feed": "commented on your post.",
+    "like_comment": "liked your comment.",
+    "follow_msg": "followed you.",
+    "repost_msg": "reposted your post.",
+    "mention_msg": "mentioned you.",
+    "success_clear_all": "All notifications cleared",
+    "error_clear_all": "Error occurred while clearing notifications",
+    "new_arrived": "New notification arrived",
+    "clear_all": "Empty",
+    "action_comment": "A comment has been left on your feed.",
+    "action_like_comment": "We like your comment.",
+    "action_like_feed": "I like your feed.",
+    "no_notifications": "There are no new notifications yet.",
+    "delete_confirm_title": "Delete Notification",
+    "delete_confirm_desc": "Would you like to delete this notification?"
+  },
+  "study": {
+    "search_placeholder": "Search...",
+    "no_content": "No content found.",
+    "category": {
+      "all": "All",
+      "drama": "Drama",
+      "movie": "Movie",
+      "entertainment": "Entertainment",
+      "music": "Music"
+    },
+    "level": {
+      "title": "Difficulty",
+      "all": "All",
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "guide": {
+      "prev": "Prev",
+      "next": "Next",
+      "start": "Start",
+      "close": "Close",
+      "never_show": "Don't show again"
+    },
+    "formats": {
+      "episode": "Ep {{val}}",
+      "scene": "Scene {{val}}"
+    },
+    "no_title": "No Title",
+    "no_episode": "No Episode",
+    "share_text_prefix": "Learn with K-Content: ",
+    "meta_desc_default": "Learn Korean with ARA",
+    "study_card_title": "Study Card",
+    "vocab_explanation": "Vocabulary",
+    "culture_note": "Culture Note",
+    "login_required": "Login Required",
+    "preview": "Preview"
+  },
+  "auth": {
+    "login": "Log in",
+    "signup": "Sign up",
+    "logout": "Log out",
+    "login_needed": "Login needed",
+    "please_login": "Please log in",
+    "click_to_login": "Click to log in",
+    "welcome": "Welcome",
+    "email": "Email",
+    "password": "Password",
+    "logging_in": "Logging in...",
+    "auto_login": "Auto login",
+    "find_email": "Find Email",
+    "find_password": "Find Password",
+    "resend_verification": "Resend",
+    "first_time": "First time?",
+    "login_with_google": "Log in with Google",
+    "login_with_kakao": "Log in with Kakao",
+    "verification_sent": "Verification sent",
+    "email_verification_failed": "Verification failed",
+    "verify_before_login": "Please verify your email",
+    "invalid_credentials": "Invalid credentials",
+    "session_expired": "Session expired",
+    "avatar_upload_failed": "Profile image upload failed",
+    "profile_save_failed": "Profile save failed",
+    "network_error": "A network error occurred",
+    "previous": "Previous",
+    "signing_up": "Signing up...",
+    "signup_complete": "Complete Signup",
+    "signup_complete_message": "Signup completed successfully!",
+    "service_ready": "You can now use the service.",
+    "start_now": "Start Now",
+    "go_home": "Go Home",
+    "signup_error": "An error occurred during signup"
+  },
+  "common": {
+    "save": "Save",
+    "saving": "Saving...",
+    "apply": "Apply",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "my_profile": "My Profile",
+    "my_account": "My Account",
+    "view_profile": "View Profile",
+    "settings_desc": "Profile/Settings",
+    "search": "Search",
+    "back": "Back",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "error_profile_load": "Failed to load profile information",
+    "error_profile_missing": "Profile information is missing. Please log in again",
+    "error_profile_loading": "Loading profile information. Please try again later",
+    "error_navigate_profile": "An error occurred while navigating to profile",
+    "error_profile_not_load": "Unable to load profile information",
+    "error_like": "An error occurred while processing like",
+    "error_delete": "An error occurred during deletion",
+    "success_delete": "Deleted successfully",
+    "success_report": "Report has been submitted",
+    "success_block": "User has been blocked",
+    "error_no_profile": "Profile does not exist",
+    "error_empty_content": "Content is empty",
+    "close": "Close",
+    "share": "Share",
+    "link_copied": "Link copied"
+  },
+  "settings": {
+    "languageSelect": "Select Language",
+    "themeSelect": "Select Theme",
+    "theme_options": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "theme": "Theme",
+    "system": "System",
+    "language": "Language",
+    "theme_system": "System",
+    "title_language": "Change Language",
+    "title_theme": "Change Theme",
+    "title_password_change": "Change Password",
+    "title_sns_connect": "Connect SNS Account",
+    "title_withdraw": "Delete Account",
+    "title_terms": "Terms of Service",
+    "title_privacy": "Privacy Policy",
+    "title_marketing": "Marketing Consent",
+    "title_support": "Help Center",
+    "security_title": "Security Settings",
+    "session_management": "Session Management",
+    "notifications": "Notifications",
+    "alarm_comment": "Comments",
+    "alarm_comment_desc": "Receive notifications when someone comments on your post.",
+    "alarm_like": "Likes",
+    "alarm_like_desc": "Receive notifications when someone likes your post.",
+    "alarm_follow": "Follows",
+    "alarm_follow_desc": "Receive notifications when someone follows you.",
+    "privacy": "Privacy",
+    "change_password": "Change Password",
+    "connect_sns": "Connect SNS",
+    "withdraw": "Delete Account",
+    "withdraw_phrase": "Delete my account",
+    "withdraw_verify_placeholder": "Please type \"{{phrase}}\" to confirm",
+    "withdraw_modal_title": "Are you sure you want to delete your account?",
+    "withdraw_warning_1": "Your account information cannot be recovered.",
+    "withdraw_warning_2": "All posts and comments will be deleted.",
+    "withdraw_warning_3": "Follow/Following information will be lost.",
+    "withdraw_warning_4": "This action cannot be undone.",
+    "confirm_password": "Confirm Password",
+    "confirm_password_placeholder": "Enter your password",
+    "confirm_password_desc": "Please enter your password to confirm your identity.",
+    "withdraw_verify_label": "Type the phrase below",
+    "withdraw_btn_cancel": "Cancel",
+    "withdraw_btn_processing": "Processing...",
+    "withdraw_btn_confirm": "Delete",
+    "pw_change_guide": "We recommend using at least 8 characters with a mix of letters, numbers, and symbols.",
+    "current_pw": "Current Password",
+    "current_pw_placeholder": "Enter current password",
+    "new_pw": "New Password",
+    "new_pw_placeholder": "Enter new password",
+    "confirm_new_pw": "Confirm New Password",
+    "confirm_new_pw_placeholder": "Enter new password again",
+    "pw_mismatch": "New passwords do not match.",
+    "pw_check_req": "Please check your password (min 8 chars & match).",
+    "hide": "Hide",
+    "show": "Show",
+    "sns_connect_desc": "Connect your account with social login for easier access and recovery.",
+    "connect_google": "Connect Google Account",
+    "connect_kakao": "Connect Kakao Account",
+    "sns_connect_note": "You can disconnect linked accounts in Settings > Privacy at any time. (Coming Soon)",
+    "account_settings": "Settings",
+    "support_policy": "Support & Policy",
+    "help_center": "Help Center",
+    "terms": "Terms of Service",
+    "privacy_policy": "Privacy Policy",
+    "marketing_consent": "Marketing Consent"
+  },
+  "profile": {
+    "edit_profile": "Edit Profile",
+    "following": "Following",
+    "followers": "Followers",
+    "joined": "Joined {{date}}",
+    "tabs": {
+      "posts": "Posts",
+      "replies": "Replies",
+      "media": "Media",
+      "likes": "Likes"
+    },
+    "no_posts": "No posts yet",
+    "no_replies": "No replies yet",
+    "profile_optional": "Profile Setup (Optional)",
+    "profile_image": "Profile Image",
+    "select_image": "Select Image",
+    "bio": "Bio",
+    "bio_placeholder": "Tell us about yourself",
+    "tab_posts": "Post",
+    "tab_replies": "Comments",
+    "tab_likes": "Likes",
+    "nickname_change_warning": "⚠️ You can only change your nickname once.",
+    "nickname_disabled_reason": "Nickname has already been changed once.",
+    "nickname_change_forbidden": "Nickname cannot be changed again.",
+    "country_change_warning": "⚠️ You can only change your country once.",
+    "country_disabled_reason": "Country has already been changed once.",
+    "country_change_forbidden": "Country cannot be changed again."
+  },
+  "tweets": {
+    "placeholder_tweet": "What are you thinking about?",
+    "placeholder_reply": "Post your reply",
+    "btn_post": "Post",
+    "btn_posting": "Posting...",
+    "btn_reply": "Reply",
+    "btn_replying": "Replying...",
+    "error_profile": "Loading profile information. Please try again later.",
+    "error_general": "An error occurred.",
+    "add_photo": "Add Photo",
+    "images_selected": "{{count}} images selected",
+    "preview_alt": "Preview {{index}}",
+    "success_tweet": "Post created successfully!",
+    "success_reply": "Reply posted successfully!",
+    "success_reply_posted": "Reply has been posted",
+    "error_reply_save": "Error occurred while saving reply",
+    "error_tweet_save": "Error occurred while saving post",
+    "error_reply_upload": "Problem occurred while uploading reply",
+    "error_tweet_upload": "Problem occurred while uploading post",
+    "error_login": "Login required",
+    "error_empty": "Content is empty"
+  },
+  "tweet": {
+    "delete_msg_title": "Delete post?",
+    "delete_msg_desc": "This can't be undone.",
+    "delete_success": "Deleted.",
+    "delete_failed": "Failed to delete.",
+    "no_replies": "No replies yet",
+    "be_first": "Be the first to reply!",
+    "cannot_delete": "Cannot delete",
+    "deleted_reply": "This reply has been deleted",
+    "deleted_or_not_exist": "This post has been deleted or does not exist"
+  },
+  "trending": {
+    "title": "Real-time Popular Feeds",
+    "no_trending": "No trends available"
+  },
+  "chat": {
+    "direct_chat": "Chat",
+    "select_or_start": "Select a chat room from the left or click the + button to start a conversation.",
+    "start_conversation": "Click the + button to start",
+    "feature_realtime": "💬 Real-time 1:1 messaging",
+    "feature_search": "👥 User search and invite",
+    "feature_responsive": "📱 Responsive design",
+    "room_title": "Chat Room",
+    "loading": "Loading...",
+    "me": "Me",
+    "unknown": "Unknown",
+    "today": "Today",
+    "exit": "Exit",
+    "search_placeholder": "Search chats",
+    "search_btn": "Search",
+    "search_hint": "Search message content.",
+    "no_result": "No results found.",
+    "no_messages": "No messages yet.",
+    "send_first_message": "Send your first message!",
+    "system_leave": " left the chat",
+    "confirm_exit": "Do you want to leave this chat?",
+    "exit_fail": "Failed to leave chat.",
+    "exit_error": "An error occurred while leaving.",
+    "result_count": "{{index}} of {{count}} results",
+    "prev": "Previous",
+    "next": "Next",
+    "new_chat": "New Chat",
+    "new_message": "New Message",
+    "user_search_placeholder": "Search users...",
+    "user_search_loading": "Searching for users...",
+    "no_chats": "No chats yet.",
+    "new_badge": "NEW",
+    "loading_messages": "Loading messages...",
+    "input_placeholder": "Please enter your message... (Press Enter to send, Shift+Enter for a new line)",
+    "notice_profanity": "⚠️ Profanity, hate speech, and discriminatory remarks will be automatically detected, masked, or blocked. Repeated offenses may result in penalties.",
+    "notice_blocked": "🚫 Your message has been blocked due to inappropriate content.",
+    "notice_masked": "🔒 Some words have been masked in accordance with policy.",
+    "title_direct_chat": "Chat",
+    "action_exit": "Exit",
+    "btn_leave": "Leave",
+    "btn_new_chat": "New Chat",
+    "title_chat_room": "Chat Room",
+    "search_placeholder_history": "Search for chat rooms or conversation content...",
+    "search_result_rooms": "Chat Room",
+    "search_result_messages": "Conversation content",
+    "last_message_label": "Last conversation",
+    "searching": "Searching...",
+    "no_search_result_desc": "No conversation history found for '{{query}}'."
+  },
+  "policy": {
+    "close": "Close",
+    "help_center": {
+      "intro": "If you have any difficulties while using the service, please feel free to contact us through the channels below.",
+      "email_title": "Email Support",
+      "email_address": "koreara25@gmail.com",
+      "email_hours": "Weekdays 10:00 ~ 18:00 (Closed on weekends and holidays)",
+      "app_report_title": "In-app Report/Inquiry (Coming Soon)",
+      "app_report_post": "You can report directly from the top right menu of posts and comments.",
+      "app_report_dm": "You can also report from DM list > User profile > Report/Block menu.",
+      "faq_title": "Frequently Asked Questions (FAQ)",
+      "faq_account": "Account/password, login issues",
+      "faq_report": "Report/block and community guidelines",
+      "faq_privacy": "Data/privacy related inquiries",
+      "faq_note": "An FAQ page will be added upon official launch."
+    },
+    "terms": {
+      "title": "Terms of Service",
+      "purpose": {
+        "h": "Article 1 (Purpose)",
+        "body": "These Terms aim to define the rights, obligations, responsibilities, and other necessary matters between the Company and Members regarding the use of the SNS/community-based service (including mobile/web, hereinafter \"Service\") provided by \"ARA\" (hereinafter \"Company\")."
+      },
+      "definition": {
+        "h": "Article 2 (Definitions)",
+        "member": "\"Member\" refers to a person who agrees to the Company's terms and creates an account to use the Service.",
+        "content": "\"Content\" means all materials including text, images, audio, video, links, and other data that Members upload, transmit, or post on the Service.",
+        "paid_service": "\"Paid Service\" refers to services that require payment, such as digital items, subscriptions, ad removal, and additional storage."
+      },
+      "contract": {
+        "h": "Article 3 (Establishment and Qualification of Use Agreement)",
+        "agreement": "The use agreement is established when a Member agrees to the terms and privacy policy and completes the registration process.",
+        "verification": "Identity verification procedures, including social login, may be required.",
+        "age_limit": "Persons under 14 years of age cannot register. The Company may request submission of age verification documents when necessary."
+      },
+      "community": {
+        "h": "Article 4 (Community Management and Prohibited Acts)",
+        "guidelines": "You must comply with laws, regulations, terms, and community guidelines.",
+        "prohibited_content": "It is prohibited to post, transmit, or promote content that infringes on the rights of others or is illegal, harmful, discriminatory, hateful, obscene, or violent.",
+        "prohibited_actions": "It is prohibited to collect or post personal information (yours or others') without authorization, spam, advertising, phishing, lending/transferring accounts, or accessing/collecting/scraping using automated means.",
+        "violations": "The Company may delete posts, restrict exposure, temporarily suspend, or permanently ban accounts in case of guideline violations."
+      },
+      "member_duty": {
+        "h": "Article 5 (Member's Obligations)",
+        "password": "Members are responsible for managing their account passwords.",
+        "identity": "You must not misappropriate another person's identity or payment method, or register false information.",
+        "ai_output": "You must not use AI function outputs within the Service in a manner that infringes on third-party rights."
+      },
+      "license": {
+        "h": "Article 6 (Content Rights and License)",
+        "copyright": "The copyright of content posted by Members belongs to the Member in principle.",
+        "grant": "Members grant the Company a non-exclusive, free, worldwide license to store, reproduce, post, display, transmit, and edit (limited to format changes) such content for the purpose of providing, operating, improving, and promoting the Service. Members may revoke this license after deleting the post or account (excluding retention for backup/legal compliance purposes).",
+        "responsibility": "Members are solely responsible for all legal consequences if they post content that infringes on others' rights."
+      },
+      "ai": {
+        "h": "Article 7 (AI Function Notice)",
+        "usage": "The Service may use AI/algorithm functions such as post recommendation, content generation/summarization, and report review assistance.",
+        "disclaimer": "AI results may contain errors and are provided for reference purposes. Members should review and utilize the results themselves."
+      },
+      "payment": {
+        "h": "Article 8 (Paid Services and Payment)",
+        "pricing": "The price, payment terms, and refund policy for paid services are separately notified on the screen.",
+        "policy": "App market/payment agency policies may apply first."
+      },
+      "service_change": {
+        "h": "Article 9 (Service Changes/Suspension)",
+        "body": "The Company may change or suspend all or part of the Service when operationally or technically necessary or when laws/policies change, and important changes will be announced in advance."
+      },
+      "termination": {
+        "h": "Article 10 (Contract Termination and Usage Restrictions)",
+        "withdrawal": "Members may withdraw from the settings at any time.",
+        "restriction": "If there are reasons such as violation of terms/guidelines, multiple infringement reports, or security threats, the Company may delete posts, restrict exposure, or suspend/terminate accounts after prior notice (post-notice in emergencies)."
+      },
+      "ip_report": {
+        "h": "Article 11 (Infringement Reports and Counter-Notice)",
+        "takedown": "If a rights holder demonstrates infringement, the Company may temporarily block or delete the relevant content.",
+        "counter": "Posters may request reinstatement by submitting counter-evidence."
+      },
+      "disclaimer": {
+        "h": "Article 12 (Disclaimer and Limitation of Liability)",
+        "force_majeure": "The Company is not liable for damages caused by force majeure such as natural disasters or communication failures.",
+        "disputes": "Disputes between Members or between Members and third parties are the responsibility of the parties, and the Company is not liable unless there is willful misconduct or gross negligence."
+      },
+      "law": {
+        "h": "Article 13 (Governing Law and Jurisdiction)",
+        "body": "These Terms are governed by the laws of the Republic of Korea, and in case of disputes, the court having jurisdiction over the Company's principal office shall have exclusive jurisdiction."
+      },
+      "notice": {
+        "h": "Article 14 (Amendment and Notice of Terms)",
+        "body": "The Company may amend the terms within the scope of compliance with relevant laws, and will announce the amended content and effective date at least 7 days in advance (30 days for changes disadvantageous to Members)."
+      }
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "collect": {
+        "h": "Article 1 (Items of Personal Information Collected)",
+        "required_title": "Required",
+        "required_items": "Email, password (hashed), nickname, service identifier (UID)",
+        "optional_title": "Optional",
+        "optional_items": "Date of birth, gender, profile picture, country/language, self-introduction",
+        "auto_title": "Automatically Collected",
+        "auto_items": "Access/usage logs, IP/device information, cookies/similar technologies, error/crash logs, notification tokens, advertising identifiers (when opted in)",
+        "social_title": "Social Login",
+        "social_items": "Information within the provider's policy scope, such as profile nickname/email and platform identifiers"
+      },
+      "purpose": {
+        "h": "Article 2 (Purpose of Using Personal Information)",
+        "account": "Member registration/identity verification/account management",
+        "sns_features": "Providing core SNS features such as friend recommendations and feed exposure",
+        "support": "Customer inquiry response and announcements, service stabilization and quality improvement",
+        "analytics": "Statistics/analysis and personalized content recommendations (within consent scope)",
+        "security": "Security, fraud prevention, report handling",
+        "payment": "Paid service payment/refund/receipt issuance"
+      },
+      "share": {
+        "h": "Article 3 (Third-Party Provision and Processing of Personal Information)",
+        "principle": "The Company does not provide personal information to third parties without the Member's consent in principle.",
+        "outsourcing": "For service operation, tasks such as cloud/data hosting, log analysis, and message delivery may be outsourced to specialized vendors. The names, tasks, and retention periods of trustees are disclosed on the 'Trustees' disclosure page within the service.",
+        "legal": "Information may be provided exceptionally when requested by law."
+      },
+      "xborder": {
+        "h": "Article 4 (Cross-Border Transfer)",
+        "body": "The server location or trustee's facilities may be located abroad. The country of transfer, transfer date and method, retention period, and protective measures are disclosed within the service."
+      },
+      "store": {
+        "h": "Article 5 (Retention and Usage Period)",
+        "withdrawal": "Personal information is destroyed without delay upon member withdrawal, but may be retained for a certain period according to relevant laws.",
+        "legal_retention": "E-commerce/payment and telecommunications fact confirmation data follow legal retention periods.",
+        "backup": "If immediate deletion is difficult due to technical limitations of the backup system, it will be stored separately and periodically destroyed."
+      },
+      "security": {
+        "h": "Article 6 (Security Measures)",
+        "encryption": "Encrypted storage of passwords and sensitive information",
+        "access_control": "Minimization of access rights and regular inspections",
+        "logs": "Access record retention and prevention of forgery/alteration",
+        "backup_recovery": "Operating backup/disaster recovery systems in preparation for security incidents"
+      },
+      "rights": {
+        "h": "Article 7 (Rights of Users and Legal Representatives)",
+        "data_rights": "You may request access, correction, deletion, suspension of processing, and data portability of personal information.",
+        "settings": "You can change profile publicity scope and notification/personalized recommendation settings.",
+        "cookies": "Cookie settings can be managed in your browser."
+      },
+      "children": {
+        "h": "Article 8 (Protection of Children's Personal Information)",
+        "body": "Registration of children under 14 years of age is not permitted, and accounts may be restricted upon confirmation."
+      },
+      "notice": {
+        "h": "Article 9 (Changes to Privacy Policy)",
+        "body": "This policy may be amended in accordance with changes in laws/services, and important changes will be announced 7 days in advance (30 days for changes disadvantageous to Members)."
+      },
+      "contact": {
+        "h": "Article 10 (Privacy Officer)",
+        "name": "Name: Hong Gildong",
+        "email": "Email: privacy@ara-service.com",
+        "hours": "Consultation hours: Weekdays 10:00~18:00"
+      }
+    },
+    "marketing": {
+      "title": "Marketing Information Consent",
+      "purpose": {
+        "h": "Article 1 (Purpose of Reception)",
+        "body": "We provide useful information such as new content, events, and discounts through email, push, SMS, etc."
+      },
+      "contents": {
+        "h": "Article 2 (Content Received)",
+        "features": "New features and recommended feed summaries",
+        "events": "Event/campaign/promotion announcements",
+        "discounts": "Discounts, coupons, partnership benefits",
+        "reports": "Personalized reports (activity summary, trends)"
+      },
+      "channels": {
+        "h": "Article 3 (Reception Channels and Settings)",
+        "individual": "You can individually consent to or withdraw from each channel (email/push/SMS).",
+        "settings": "You can change this in Settings > Notifications/Marketing menu or the link at the bottom of received messages.",
+        "apply": "Withdrawal will be applied from subsequent mailings."
+      },
+      "partners": {
+        "h": "Article 4 (Third-Party Marketing and Outsourcing)",
+        "body": "Some mailing tasks may be outsourced to professional agencies, and partner marketing will be conducted with separate consent."
+      },
+      "note": {
+        "h": "Article 5 (Essential Notices)",
+        "body": "Essential service operation notices (terms/security, etc.) may be sent regardless of reception consent."
+      }
+    }
+  },
+  "landing": {
+    "badge": "K-Content Based Korean Learning Platform",
+    "title_1": "Learn Language Through Content",
+    "title_2": "Connect Through Culture",
+    "description": "Learn authentic expressions from drama, variety shows, and movie scenes. Learn Korean together with friends worldwide in ARA",
+    "point_1": "Real Drama & Variety Scenes",
+    "point_2": "Multi-language Translation",
+    "point_3": "Global Learning Community",
+    "cta_start": "Get Started",
+    "cta_explore": "Explore Content",
+    "scroll_hint": "Scroll to explore"
+  },
+  "signup": {
+    "title_social": "Social Sign Up",
+    "title_email": "Sign Up",
+    "later": "Do it later",
+    "go_home": "Go Home",
+    "step1_title": "Sign Up Agreement",
+    "step1_desc": "Please agree to the terms to use the service.",
+    "agree_all": "Agree to All",
+    "agree_terms": "Agree to Terms of Service",
+    "agree_privacy": "Agree to Privacy Policy",
+    "agree_age": "I am 14 years or older",
+    "agree_marketing": "Agree to receive marketing information (Optional)",
+    "next_step": "Next Step",
+    "step2_title": "Enter Your Information",
+    "label_email": "Email",
+    "label_password": "Password",
+    "label_password_confirm": "Confirm Password",
+    "label_nickname": "Nickname",
+    "error_email_taken": "This email is already in use.",
+    "error_nickname_taken": "This nickname is already in use.",
+    "error_email_check_retry": "Please try the email duplicate check again.",
+    "error_nickname_check_retry": "Please try the nickname duplicate check again.",
+    "nickname_detected_lang": "Detected language:",
+    "nickname_lang_unknown": "Unknown",
+    "nickname_hint": "Length {{min}}~{{max}} characters, max 2 underscores",
+    "image_size_hint": "Max 2MB · JPG/PNG/GIF",
+    "step_agreement": "Agreement",
+    "step_info": "Information",
+    "step_profile": "Profile",
+    "stepper_aria": "Sign Up Steps",
+    "detail_view": "View Details",
+    "required_mark": "(Required)",
+    "checking": "Checking...",
+    "check_duplicate": "Check",
+    "available": "Available.",
+    "already_in_use": "Already in use.",
+    "gender_male": "Male",
+    "gender_female": "Female",
+    "label_gender": "Gender",
+    "error_gender_required": "Please select gender.",
+    "label_birth": "Date of Birth",
+    "error_birth_required": "Please enter date of birth.",
+    "calendar_alt": "Calendar",
+    "label_country": "Country",
+    "error_country_required": "Please select country.",
+    "lang_korean": "Korean",
+    "lang_english": "English",
+    "lang_japanese": "Japanese",
+    "lang_chinese": "Chinese",
+    "lang_russian": "Russian",
+    "lang_vietnamese": "Vietnamese",
+    "lang_bengali": "Bengali",
+    "lang_arabic": "Arabic",
+    "lang_hindi": "Hindi",
+    "lang_thai": "Thai",
+    "lang_spanish": "Spanish",
+    "lang_french": "French",
+    "lang_portuguese": "Portuguese",
+    "lang_portuguese_brazil": "Brazilian Portuguese",
+    "lang_german": "German",
+    "lang_finnish": "Finnish",
+    "btn_previous": "Previous",
+    "btn_next_step": "Next Step",
+    "agree_and_close": "Agree and Close"
+  },
+  "footer": {
+    "brand": {
+      "slogan_main": "Connect Culture, Expand World.",
+      "slogan_sub": "Experience true communication beyond language barriers."
+    },
+    "social": {
+      "youtube": "YouTube",
+      "instagram": "Instagram",
+      "threads": "Threads",
+      "x": "X",
+      "facebook": "Facebook"
+    },
+    "columns": {
+      "product": {
+        "title": "Product",
+        "features": "Features",
+        "enterprise": "Enterprise",
+        "security": "Security",
+        "pricing": "Pricing"
+      },
+      "resources": {
+        "title": "Resources",
+        "documentation": "Documentation",
+        "api": "API Reference",
+        "community": "Community",
+        "help_center": "Help Center"
+      },
+      "company": {
+        "title": "Company",
+        "about": "About Us",
+        "careers": "Careers",
+        "blog": "Blog",
+        "contact": "Contact"
+      }
+    },
+    "newsletter": {
+      "title": "Stay up to date",
+      "desc": "Get the latest features and updates.",
+      "placeholder": "Email address"
+    },
+    "bottom": {
+      "rights": "© {{year}} Ara Inc.",
+      "terms": "Terms",
+      "privacy": "Privacy",
+      "cookies": "Cookies"
+    }
+  }
+}

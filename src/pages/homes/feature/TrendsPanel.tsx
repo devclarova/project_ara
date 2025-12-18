@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface TrendingTweet {
@@ -27,7 +28,9 @@ export default function TrendsPanel({
   onSearchChange,
   hideSearchBar = false,
 }: Props) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [trendingTweets, setTrendingTweets] = useState<TrendingTweet[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -96,7 +99,7 @@ export default function TrendsPanel({
             </div>
             <input
               type="text"
-              placeholder="Search"
+              placeholder={t('common.search')}
               value={searchQuery}
               onChange={e => onSearchChange(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-gray-100 dark:text-gray-300 dark:bg-secondary rounded-full border-none focus:outline-none focus:ring-2 focus:ring-primary focus:bg-white transition-all text-sm"
@@ -109,7 +112,7 @@ export default function TrendsPanel({
       <div className="space-y-4">
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 dark:bg-secondary">
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex justify-center items-center gap-2">
-            실시간 인기 피드
+            {t('trending.title')}
           </h2>
 
           {loading ? (
@@ -125,14 +128,22 @@ export default function TrendsPanel({
               {trendingTweets.map(tweet => (
                 <div
                   key={tweet.id}
-                  onClick={() => navigate(`/sns/${tweet.id}`)}
+                  onClick={() => {
+                    const target = `/sns/${tweet.id}`;
+                    if (location.pathname !== target) {
+                      navigate(target);
+                    }
+                  }}
                   className="group flex items-start gap-3 p-2 rounded-xl hover:bg-primary/5 dark:hover:bg-primary/10 transition-all cursor-pointer"
                 >
                   <div
                     onClick={e => {
                       e.stopPropagation();
                       if (tweet.profiles?.nickname) {
-                        navigate(`/profile/${encodeURIComponent(tweet.profiles.nickname)}`);
+                        const target = `/profile/${encodeURIComponent(tweet.profiles.nickname)}`;
+                        if (location.pathname !== target) {
+                          navigate(target);
+                        }
                       }
                     }}
                   >

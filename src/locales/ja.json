@@ -1,0 +1,625 @@
+{
+  "nav": {
+    "home": "ホーム",
+    "study": "がくしゅう",
+    "community": "コミュニティ",
+    "chat": "チャット",
+    "notifications": "おしらせ",
+    "more": "もっと見る",
+    "settings": "せってい",
+    "profile": "プロフィール",
+    "post": "とうこう"
+  },
+  "notification": {
+    "like_feed": "あなたのフィードに「いいね」をしましたよ。",
+    "user_action": "{{name}}さん",
+    "new": "あたらしい",
+    "deleted_post": "投稿が削除されました。",
+    "deleted_comment": "コメントが削除されました。",
+    "comment_feed": "あなたの投稿にコメントがありました。",
+    "like_comment": "あなたのコメントに「いいね」をしましたよ。",
+    "follow_msg": "あなたをフォローしました！",
+    "repost_msg": "あなたの投稿をシェアしました。",
+    "mention_msg": "あなたがメンションされました。",
+    "success_clear_all": "すべてのおしらせをクリアしました！",
+    "error_clear_all": "おしらせをクリア中にエラーが発生しました。",
+    "new_arrived": "あたらしいおしらせが届きました！",
+    "clear_all": "すべてクリア",
+    "action_comment": "あなたのフィードにコメントを残しましたよ。",
+    "action_like_comment": "あなたのコメントが好きです！",
+    "action_like_feed": "あなたのフィードが好きです！",
+    "no_notifications": "まだ新しいおしらせはありません。",
+    "delete_confirm_title": "通知を削除",
+    "delete_confirm_desc": "この通知を削除しますか？"
+  },
+  "study": {
+    "search_placeholder": "けんさく...",
+    "no_content": "コンテンツが見つかりませんでした。",
+    "category": {
+      "all": "すべて",
+      "drama": "ドラマ",
+      "movie": "映画",
+      "entertainment": "バラエティ",
+      "music": "音楽"
+    },
+    "level": {
+      "title": "なんいど",
+      "all": "すべて",
+      "beginner": "はじめて",
+      "intermediate": "ちゅうきゅう",
+      "advanced": "じょうきゅう"
+    },
+    "guide": {
+      "prev": "まえへ",
+      "next": "つぎへ",
+      "start": "はじめる",
+      "close": "閉じる",
+      "never_show": "今後表示しない",
+      "cta_start": "今すぐはじめる",
+      "cta_explore": "コンテンツをみる",
+      "scroll_hint": "スクロールしてさがしてね"
+    },
+    "formats": {
+      "episode": "第{{val}}話",
+      "scene": "シーン {{val}}"
+    },
+    "no_title": "タイトルがありません",
+    "no_episode": "エピソードがありません",
+    "share_text_prefix": "K-コンテンツで学ぼう: ",
+    "meta_desc_default": "ARAで楽しく韓国語を学びましょう！",
+    "study_card_title": "がくしゅうカード",
+    "vocab_explanation": "たんごのせつめい",
+    "culture_note": "ぶんかノート",
+    "has_content": "コンテンツがあります",
+    "login_required": "ログインが必要です",
+    "preview": "プレビュー"
+  },
+  "auth": {
+    "login": "ログイン",
+    "signup": "会員登録",
+    "logout": "ログアウト",
+    "login_needed": "ログインが必要です！",
+    "please_login": "ログインしてくださいね",
+    "click_to_login": "ここをクリックしてログイン",
+    "welcome": "ようこそ！",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "logging_in": "ログイン中です...",
+    "auto_login": "じど��ログイン",
+    "find_email": "メールをさがす",
+    "find_password": "パスワードをさがす",
+    "resend_verification": "認証メールを再送します",
+    "first_time": "はじめてですか？",
+    "login_with_google": "Googleでログイン",
+    "login_with_kakao": "Kakaoでログイン",
+    "verification_sent": "認証メールをお送りしました！",
+    "email_verification_failed": "メール認証に失敗しました。",
+    "verify_before_login": "ログイン前にメール認証をおこなってください。",
+    "invalid_credentials": "メールまたはパスワードがちがいます。",
+    "check_verification_email": "メールで送信された認証リンクを確認してくださいね。",
+    "session_expired": "セッションがきれてしまいました。",
+    "avatar_upload_failed": "プロフィール画像のアップロードに失敗しました。",
+    "profile_save_failed": "プロフィールの保存に失敗しました。",
+    "network_error": "ネットワークエラーが発生しました。",
+    "previous": "まえへ",
+    "signing_up": "登録中です...",
+    "signup_complete": "登録が完了しました！",
+    "signup_complete_message": "会員登録が完了��ました！",
+    "service_ready": "サービスをお楽しみください。",
+    "start_now": "今すぐはじめる",
+    "go_home": "ホームへ戻る",
+    "signup_error": "登録中にエラーが発生しました。"
+  },
+  "signup": {
+    "title_social": "ソーシャル会員登録",
+    "title_email": "会員登録",
+    "later": "後でやる",
+    "go_home": "ホームへ戻る",
+    "step1_title": "会員登録の同意",
+    "step1_desc": "サービスを利用するには利用規約に同意が必要です。",
+    "agree_all": "すべてに同意します",
+    "agree_terms": "利用規約に同意します",
+    "agree_privacy": "プライバシーポリシーに同意します",
+    "agree_age": "14歳以上です",
+    "agree_marketing": "マーケティング情報の受信に同意します（任意）",
+    "next_step": "次のステップへ",
+    "step2_title": "会員情報の入力",
+    "label_email": "メールアドレス",
+    "label_password": "パスワード",
+    "label_password_confirm": "パスワード確認",
+    "label_nickname": "ニックネーム",
+    "error_email_taken": "このメールアドレスはすでに使われています。",
+    "error_nickname_taken": "このニックネームはすでに使われています。",
+    "error_email_check_retry": "メールアドレスの重複確認を再試行してください。",
+    "error_nickname_check_retry": "ニックネームの重複確認を再試行してください。",
+    "nickname_detected_lang": "検出言語:",
+    "nickname_lang_unknown": "不明",
+    "nickname_hint": "長さ{{min}}〜{{max}}文字、アンダースコア最大2個",
+    "image_size_hint": "最大2MB · JPG/PNG/GIF",
+    "step_agreement": "同意",
+    "step_info": "情報入力",
+    "step_profile": "プロフィール",
+    "stepper_aria": "会員登録ステップ",
+    "detail_view": "詳細を見る",
+    "required_mark": "(必須)",
+    "checking": "確認中...",
+    "check_duplicate": "重複確認中...",
+    "available": "利用可能です！",
+    "already_in_use": "すでに使われています。",
+    "gender_male": "男性",
+    "gender_female": "女性",
+    "label_gender": "性別",
+    "error_gender_required": "性別を選択してください。",
+    "label_birth": "生年月日",
+    "error_birth_required": "生年月日を入力してください。",
+    "calendar_alt": "カレンダー",
+    "label_country": "国籍",
+    "error_country_required": "国籍を選択してください。",
+    "lang_korean": "韓国語",
+    "lang_english": "英語",
+    "lang_japanese": "日本語",
+    "lang_chinese": "中国語",
+    "lang_russian": "ロシア語",
+    "lang_vietnamese": "ベトナム語",
+    "lang_bengali": "ベンガル語",
+    "lang_arabic": "アラビア語",
+    "lang_hindi": "ヒンディー語",
+    "lang_thai": "タイ語",
+    "lang_spanish": "スペイン語",
+    "lang_french": "フランス語",
+    "lang_portuguese": "ポルトガル語",
+    "lang_portuguese_brazil": "ブラジルポルトガル語",
+    "lang_german": "ドイツ語",
+    "lang_finnish": "フィンランド語",
+    "btn_previous": "まえへ",
+    "btn_next_step": "次のステップへ",
+    "agree_and_close": "同意して閉じる"
+  },
+  "footer": {
+    "brand": {
+      "slogan_main": "Connect Culture, Expand World.",
+      "slogan_sub": "言葉の壁を越えて、真のコミュニケーションを体験してください。"
+    },
+    "social": {
+      "youtube": "YouTube",
+      "instagram": "Instagram",
+      "threads": "Threads",
+      "x": "X",
+      "facebook": "Facebook"
+    },
+    "columns": {
+      "product": {
+        "title": "プロダクト",
+        "features": "機能",
+        "enterprise": "エンタープライズ",
+        "security": "セキュリティ",
+        "pricing": "料金"
+      },
+      "resources": {
+        "title": "リソース",
+        "documentation": "ドキュメント",
+        "api": "APIリファレンス",
+        "community": "コミュニティ",
+        "help_center": "ヘルプセンター"
+      },
+      "company": {
+        "title": "会社情報",
+        "about": "会社概要",
+        "careers": "採用情報",
+        "blog": "ブログ",
+        "contact": "お問い合わせ"
+      }
+    },
+    "newsletter": {
+      "title": "最新情報を受け取る",
+      "desc": "最新の機能やアップデート情報をお届けします。",
+      "placeholder": "メールアドレス"
+    },
+    "bottom": {
+      "rights": "© {{year}} Ara Inc.",
+      "terms": "利用規約",
+      "privacy": "プライバシーポリシー",
+      "cookies": "クッキー"
+    }
+  },
+  "common": {
+    "save": "保存する",
+    "saving": "保存中...",
+    "apply": "適用する",
+    "cancel": "キャンセル",
+    "delete": "削除する",
+    "edit": "編集する",
+    "my_profile": "マイプロフィール",
+    "my_account": "マイアカウント",
+    "view_profile": "プロフィールを見る",
+    "settings_desc": "プロフィール/せってい",
+    "search": "けんさく",
+    "back": "戻る",
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました。",
+    "close": "閉じる",
+    "share": "共有する",
+    "link_copied": "リンクをコピーしました！",
+    "error_profile_load": "Failed to load profile information",
+    "error_profile_missing": "Profile information is missing. Please log in again",
+    "error_profile_loading": "Loading profile information. Please try again later",
+    "error_navigate_profile": "An error occurred while navigating to profile",
+    "error_profile_not_load": "Unable to load profile information",
+    "error_like": "An error occurred while processing like",
+    "error_delete": "An error occurred during deletion",
+    "success_delete": "Deleted successfully",
+    "success_report": "Report has been submitted",
+    "success_block": "User has been blocked",
+    "error_no_profile": "Profile does not exist",
+    "error_empty_content": "Content is empty"
+  },
+  "settings": {
+    "languageSelect": "げんごせんたく",
+    "themeSelect": "テーマ選択",
+    "theme_options": {
+      "light": "ライト",
+      "dark": "ダーク",
+      "system": "システム"
+    },
+    "system": "システム設定",
+    "language": "言語",
+    "theme": "テーマ",
+    "title_language": "言語変更",
+    "title_theme": "テーマ変更",
+    "title_password_change": "パスワード変更",
+    "title_sns_connect": "SNSアカウント連携",
+    "title_withdraw": "アカウント削除",
+    "title_terms": "利用規約",
+    "title_privacy": "プライバシーポリシー",
+    "title_marketing": "マーケティング同意",
+    "title_support": "ヘルプセンター",
+    "security_title": "セキュリティ設定",
+    "session_management": "セッション管理",
+    "notifications": "おしらせ設定",
+    "alarm_comment": "コメントのおしらせ",
+    "alarm_comment_desc": "だれかがあなたの投稿にコメントしたらおしらせが届きます。",
+    "alarm_like": "いいねのおしらせ",
+    "alarm_like_desc": "だれかがあなたの投稿に「いいね」をしたらおしらせが届きます。",
+    "alarm_follow": "フォローのおしらせ",
+    "alarm_follow_desc": "だれかがあなたをフォローしたらおしらせが届きます。",
+    "privacy": "プライバシー設定",
+    "change_password": "パスワード変更",
+    "connect_sns": "SNSアカウント連携",
+    "withdraw": "アカウント削除",
+    "withdraw_phrase": "アカウントを削除しますか？",
+    "withdraw_verify_placeholder": "確認のために「{{phrase}}」と入力してください。",
+    "withdraw_modal_title": "本当にアカウントを削除しますか？",
+    "withdraw_warning_1": "アカウント情報は復元できません。",
+    "withdraw_warning_2": "すべての投稿とコメントが削除されます。",
+    "withdraw_warning_3": "フォロー・フォロワー情報が失われます。",
+    "withdraw_warning_4": "この操作は元に戻せません。",
+    "confirm_password": "パスワード確認",
+    "confirm_password_placeholder": "パスワードを入力してください。",
+    "confirm_password_desc": "本人確認のためにパスワードを入力してください。",
+    "withdraw_verify_label": "下のフレーズを入力してください",
+    "withdraw_btn_cancel": "キャンセル",
+    "withdraw_btn_processing": "処理中...",
+    "withdraw_btn_confirm": "削除する",
+    "pw_change_guide": "8文字以上の英数字と記号を混ぜて使うことをおすすめします。",
+    "current_pw": "現在のパスワード",
+    "current_pw_placeholder": "現在のパスワードを入力してください。",
+    "new_pw": "新しいパスワード",
+    "new_pw_placeholder": "新しいパスワードを入力してください。",
+    "confirm_new_pw": "新しいパスワード確認",
+    "confirm_new_pw_placeholder": "新しいパスワードを再度入力してください。",
+    "pw_mismatch": "新しいパスワードが一致しません。",
+    "pw_check_req": "パスワードを確認してください（最小8文字＆一致）。",
+    "hide": "隠す",
+    "show": "表示する",
+    "sns_connect_desc": "SNSログインでアカウントをつなげると、アクセスが簡単になります。",
+    "connect_google": "Googleアカウントをつなげる",
+    "connect_kakao": "Kakaoアカウントをつなげる",
+    "sns_connect_note": "設定 > プライバシーでいつでも連携を解除できます。（近日公開）",
+    "account_settings": "設定",
+    "support_policy": "サポート＆ポリシー",
+    "help_center": "ヘルプセンター",
+    "terms": "利用規約",
+    "privacy_policy": "プライバシーポリシー",
+    "marketing_consent": "マーケティング同意"
+  },
+  "profile": {
+    "edit_profile": "プロフィール編集",
+    "following": "フォロー中",
+    "followers": "フォロワー",
+    "joined": "{{date}}に参加しました",
+    "tabs": {
+      "posts": "投稿",
+      "replies": "返信",
+      "media": "メディア",
+      "likes": "いいね"
+    },
+    "no_posts": "投稿がありません。",
+    "no_replies": "返信がありません。",
+    "profile_optional": "プロフィール設定（任意）",
+    "profile_image": "プロフィール画像",
+    "select_image": "画像を選んでください",
+    "bio": "自己紹介",
+    "bio_placeholder": "自分について紹介してくださいね",
+    "tab_posts": "投稿",
+    "tab_replies": "コメント",
+    "tab_likes": "いいね",
+    "nickname_change_warning": "⚠️ ニックネームの変更は1回のみ可能です。",
+    "nickname_disabled_reason": "ニックネームは既に1回変更されています。",
+    "nickname_change_forbidden": "ニックネームは再度変更できません。",
+    "country_change_warning": "⚠️ 国籍の変更は1回のみ可能です。",
+    "country_disabled_reason": "国籍は既に1回変更されています。",
+    "country_change_forbidden": "国籍は再度変更できません。"
+  },
+  "tweets": {
+    "placeholder_tweet": "何を考えていますか？",
+    "placeholder_reply": "コメントする...",
+    "btn_post": "投稿する",
+    "btn_posting": "投稿中...",
+    "btn_reply": "返信する",
+    "btn_replying": "返信中...",
+    "error_profile": "プロフィール情報を読み込んでいます。しばらくしてからお試しください。",
+    "error_general": "エラーが発生しました。",
+    "add_photo": "画像を追加する",
+    "images_selected": "{{count}}枚の画像が選択されました",
+    "preview_alt": "プレビュー {{index}}",
+    "success_tweet": "投稿が正常に登録されました。",
+    "success_reply": "返信が完了しました！",
+    "success_reply_posted": "返信が投稿されました",
+    "error_reply_save": "返信の保存中にエラーが発生しました",
+    "error_tweet_save": "投稿の保存中にエラーが発生しました",
+    "error_reply_upload": "返信のアップロード中に問題が発生しました",
+    "error_tweet_upload": "投稿のアップロード中に問題が発生しました",
+    "error_login": "ログインが必要です",
+    "error_empty": "内容が空です"
+  },
+  "tweet": {
+    "delete_msg_title": "削除しますか？",
+    "delete_msg_desc": "削除すると元に戻せませんよ。",
+    "delete_success": "削除しました！",
+    "delete_failed": "削除に失敗しました。",
+    "no_replies": "返信がありません��",
+    "be_first": "最初のコメントを投稿しましょう！",
+    "cannot_delete": "削除できません",
+    "deleted_reply": "This reply has been deleted",
+    "deleted_or_not_exist": "This post has been deleted or does not exist"
+  },
+  "trending": {
+    "title": "トレンド",
+    "no_trending": "トレンドがありません。"
+  },
+  "chat": {
+    "direct_chat": "ダイレクトメッセージ",
+    "select_or_start": "左側のリストからチャットを選択するか、+ボタンを押して会話を始めましょう。",
+    "start_conversation": "+ボタンを押して会話を始めましょう",
+    "feature_realtime": "💬 リアルタイム1:1チャット",
+    "feature_search": "👥 ユーザー検索と招待",
+    "feature_responsive": "📱 レスポンシブデザイン",
+    "room_title": "ダイレクトチャット",
+    "loading": "読み込み中...",
+    "me": "自分",
+    "unknown": "不明",
+    "today": "今日",
+    "exit": "退出",
+    "search_placeholder": "メッセージをけんさく",
+    "search_btn": "けんさく",
+    "search_hint": "メッセージ内容をけんさくします。",
+    "no_result": "結果が見つかりませんでした。",
+    "no_messages": "まだメッセージはありません。",
+    "send_first_message": "最初のメッセージを送りましょう！",
+    "system_leave": "チャットを退出しました",
+    "confirm_exit": "このチャットを退出しますか？",
+    "exit_fail": "チャットを退出できませんでした。",
+    "exit_error": "退出中にエラーが発生しました。",
+    "result_count": "{{index}} / {{count}} 件の結果",
+    "prev": "まえへ",
+    "next": "つぎへ",
+    "new_chat": "新しいチャット",
+    "new_message": "新しいメッセージ",
+    "user_search_placeholder": "ユーザーをけんさく...",
+    "user_search_loading": "ユーザーをけんさく中...",
+    "no_chats": "まだチャットはありません。",
+    "new_badge": "NEW",
+    "loading_messages": "メッセージを読み込んでいます...",
+    "input_placeholder": "メッセージを入力してください... (Enterで送信、Shift+Enterで改行)",
+    "notice_profanity": "⚠️ 罵倒語・嫌悪表現・差別的発言は自動的に検出・マスキング/ブロックされます。繰り返すと制裁される可能性があります。",
+    "notice_blocked": "🚫 不適切な表現が含まれているため、送信がブロックされました。",
+    "notice_masked": "🔒 一部の単語はポリシーに従ってマスキングされています。",
+    "title_direct_chat": "チャット",
+    "btn_leave": "たいしゅつ",
+    "btn_new_chat": "新しいチャットを始める",
+    "title_chat_room": "チャットルーム",
+    "action_exit": "退出",
+    "search_placeholder_history": "チャットルームまたは会話内容を検索しています...",
+    "search_result_rooms": "チャットルーム",
+    "search_result_messages": "会話内容",
+    "last_message_label": "最後の会話",
+    "searching": "検索中...",
+    "no_search_result_desc": "'{{query}}'に関する会話履歴は見つかりませんでした。"
+  },
+  "policy": {
+    "close": "閉じる",
+    "help_center": {
+      "intro": "サービス利用中にお困りのことがございましたら、以下のチャネルからお気軽にお問い合わせください。",
+      "email_title": "メールでのお問い合わせ",
+      "email_address": "koreara25@gmail.com",
+      "email_hours": "平日 10:00 ~ 18:00（土日祝日休業）",
+      "app_report_title": "アプリ内通報・問い合わせ（予定）",
+      "app_report_post": "投稿・コメントの右上メニューから直接通報できます。",
+      "app_report_dm": "DMリスト > ユーザープロフィール > 通報・ブロックメニューからも通報可能です。",
+      "faq_title": "よくある質問（FAQ）",
+      "faq_account": "アカウント・パスワード、ログイン問題",
+      "faq_report": "通報・ブロックおよびコミュニティガイドライン",
+      "faq_privacy": "データ・個人情報に関するお問い合わせ",
+      "faq_note": "正式ローンチ時にFAQページが追加される予定です。"
+    },
+    "terms": {
+      "title": "利用規約",
+      "purpose": {
+        "h": "第1条（目的）",
+        "body": "本規約は、「ARA」（以下「当社」）が提供するSNS・コミュニティベースのサービス（モバイル・ウェブを含む、以下「サービス」）の利用に関して、当社と会員間の権利・義務および責任事項、その他必要な事項を定めることを目的とします。"
+      },
+      "definition": {
+        "h": "第2条（定義）",
+        "member": "「会員」とは、当社の規約に同意してアカウントを作成し、サービスを利用する者をいいます。",
+        "content": "「コンテンツ」とは、会員がサービスにアップロード・送信・投稿するテキスト、画像、音声、映像、リンクその他の資料一切を意味します。",
+        "paid_service": "「有料サービス」とは、デジタルアイテム、サブスクリプション、広告削除、追加ストレージなど対価を支払って利用するサービスをいいます。"
+      },
+      "contract": {
+        "h": "第3条（利用契約の成立および資格）",
+        "agreement": "会員が規約およびプライバシーポリシーに同意し、登録手続きを完了することで利用契約が成立します。",
+        "verification": "ソーシャルログインを含む本人確認手続きが必要な場合があります。",
+        "age_limit": "満14歳未満は登録できません。当社は必要に応じて年齢確認資料の提出を求めることができます。"
+      },
+      "community": {
+        "h": "第4条（コミュニティ運営および禁止行為）",
+        "guidelines": "法令・規約・コミュニティガイドラインを遵守する必要があります。",
+        "prohibited_content": "他人の権利を侵害したり、違法・有害・差別・憎悪・わいせつ・暴力的な内容を投稿・送信・宣伝する行為を禁止します。",
+        "prohibited_actions": "個人情報（本人・他人）の無断収集・投稿、スパム・広告・フィッシング、アカウントの貸与・譲渡、自動化手段を利用したアクセス・収集・スクレイピングを禁止します。",
+        "violations": "当社は、ガイドライン違反時に投稿削除、露出制限、アカウント一時停止または永久停止を行うことができます。"
+      },
+      "member_duty": {
+        "h": "第5条（会員の義務）",
+        "password": "アカウントのパスワード管理責任は会員にあります。",
+        "identity": "他人の名義・決済手段を盗用したり、虚偽情報を登録してはなりません。",
+        "ai_output": "サービス内のAI機能の出力物を第三者の権利を侵害する方法で使用してはなりません。"
+      },
+      "license": {
+        "h": "第6条（コンテンツの権利および使用許諾）",
+        "copyright": "会員が投稿したコンテンツの著作権は原則として会員に帰属します。",
+        "grant": "会員は、サービスの提供・運営・改善・プロモーションのため、当該コンテンツを保存、複製、投稿、展示、送信、編集（形式変更に限る）できる非独占的・無償・全世界的ライセンスを当社に付与します。会員は投稿削除またはアカウント削除時点以降、上記ライセンスを取り消すことができます（バックアップ・法令遵守目的の保管を除く）。",
+        "responsibility": "他人の権利を侵害するコンテンツを投稿した場合、すべての法的責任は会員にあります。"
+      },
+      "ai": {
+        "h": "第7条（AI機能の告知）",
+        "usage": "サービスは、投稿推薦、コンテンツ生成・要約、通報審査補助などのAI・アルゴリ���ム機能を使用する場合があります。",
+        "disclaimer": "AI結果には誤りが含まれる可能性があり、参考用として提供されます。会員は結果を自己確認の上活用する必要があります。"
+      },
+      "payment": {
+        "h": "第8条（有料サービスおよび決済）",
+        "pricing": "有料サービスの価格、決済条件、返金ポリシーは画面に別途告知します。",
+        "policy": "アプリマーケット・決済代行会社のポリシーが優先適用される場合があります。"
+      },
+      "service_change": {
+        "h": "第9条（サービス変更・中断）",
+        "body": "当社は、運営上・技術上の必要または法令・ポリシー変更時に、サービスの全部または一部を変更・中断することができ、重要な変更は事前に告知します。"
+      },
+      "termination": {
+        "h": "第10条（契約解除および利用制限）",
+        "withdrawal": "会員はいつでも設定から退会できます。",
+        "restriction": "規約・ガイドライン違反、権利侵害通報多数、セキュリティ脅威などの事由発生時、当社は事前通知後、投稿削除・露出制限・アカウント停止・解除を行うことができます（緊急時は事後通知）。"
+      },
+      "ip_report": {
+        "h": "第11条（権利侵害通報および再投稿）",
+        "takedown": "権利者が侵害を疎明すれば、当社は該当コンテンツを一時ブロックまたは削除することができます。",
+        "counter": "投稿者は反論資料提出を通じて再投稿を要請できます。"
+      },
+      "disclaimer": {
+        "h": "第12条（免責および責任制限）",
+        "force_majeure": "天災地変、通信障害などの不可抗力事由による損害について、当社は責任を負いません。",
+        "disputes": "会員相互間または会員と第三者間の紛争は当事者の責任で処理し、当社は故意・重過失がない限り責任を負いません。"
+      },
+      "law": {
+        "h": "第13条（準拠法および管轄）",
+        "body": "本規約は大韓民国法令を準拠法とし、紛争が発生した場合、当社の本店所在地を管轄する裁判所を専属管轄とします。"
+      },
+      "notice": {
+        "h": "第14条（規約の改定および告知）",
+        "body": "当社は関連法令を遵守する範囲内で規約を改定することができ、改定内容およ���施行日を最低7日前（会員に不利な場合30日前）にサービス内で告知します。"
+      }
+    },
+    "privacy": {
+      "title": "プライバシーポリシー",
+      "collect": {
+        "h": "第1条（収集する個人情報の項目）",
+        "required_title": "必須",
+        "required_items": "メール、パスワード（ハッシュ）、ニックネーム、サービス識別子（UID）",
+        "optional_title": "選択",
+        "optional_items": "生年月日、性別、プロフィール写真、国・言語、自己紹介",
+        "auto_title": "自動収集",
+        "auto_items": "アクセス・利用ログ、IP・デバイス情報、Cookie・類似技術、エラー・クラッシュログ、通知トークン、広告識別子（オプトイン時）",
+        "social_title": "ソーシャルログイン",
+        "social_items": "プロフィールニックネーム・メール、プラットフォーム識別子など、プロバイダーポリシー範囲内の情報"
+      },
+      "purpose": {
+        "h": "第2条（個人情報の利用目的）",
+        "account": "会員登録・本人確認・アカウント管理",
+        "sns_features": "友達推薦・フィード露出などSNS核心機能の提供",
+        "support": "お客様お問い合わせ対応および告知、サービス安定化・品質改善",
+        "analytics": "統計・分析およびカスタマイズコンテンツ推薦（同意範囲内）",
+        "security": "セキュリティ、不正利用防止、通報処理",
+        "payment": "有料サービス決済・返金・領収書発行"
+      },
+      "share": {
+        "h": "第3条（個人情報の第三者提供および処理委託）",
+        "principle": "当社は原則として会員の同意なく第三者に提供しません。",
+        "outsourcing": "サービス運営のため、クラウド・データホスティング、ログ分析、メッセージ送信などの業務を専門業者に委託する場合があり、受託会社名称・業務・保有期間はサービス内「委託先」公開ページに告知します。",
+        "legal": "法令による要請がある場合、例外的に提供される場合があります。"
+      },
+      "xborder": {
+        "h": "第4条（国外移転）",
+        "body": "サーバー位置または受託会社の設備が国外に所在する場合があります。移転国家、移転日時および方法、保有・利用期間、保護措置などはサービス内で告知します。"
+      },
+      "store": {
+        "h": "第5条（保有および利用期間）",
+        "withdrawal": "会員退会時、遅滞なく破棄しますが、関連法令により一定期間保管する場合があります。",
+        "legal_retention": "電子商取引・決済、通信事実確認資料などは法定保管期間に従います。",
+        "backup": "バックアップシステムの技術的限界により即時削除が困難な場合、分離保管後定期的に破棄します。"
+      },
+      "security": {
+        "h": "第6条（安全性確保措置）",
+        "encryption": "パスワードおよび機密情報の暗号化保存",
+        "access_control": "アクセス権限の最小化および定期点検",
+        "logs": "アクセス記録の保管および偽造・変造防止",
+        "backup_recovery": "侵害事故対策バックアップ・災害復旧体制の運営"
+      },
+      "rights": {
+        "h": "第7条（利用者および法定代理人の権利）",
+        "data_rights": "個人情報の閲覧・訂正・削除・処理停止・移動権を要請できます。",
+        "settings": "プロフィール公開範囲、通知・カスタマイズ推薦設定を変更できます。",
+        "cookies": "Cookie設定はブラウザで管理できます。"
+      },
+      "children": {
+        "h": "第8条（児童の個人情報保護）",
+        "body": "満14歳未満の児童の会員登録は許可されておらず、確認時にアカウントを制限する場合があります。"
+      },
+      "notice": {
+        "h": "第9条（プライバシーポリシーの変更）",
+        "body": "法令・サービス変更により本ポリシーを改定する場合があり、重要な変更は施行7日前（会員に不利な場合30日前）に告知します。"
+      },
+      "contact": {
+        "h": "第10条（個人情報保護責任者）",
+        "name": "氏名：洪吉童",
+        "email": "メール：privacy@ara-service.com",
+        "hours": "相談可能時間：平日10:00~18:00"
+      }
+    },
+    "marketing": {
+      "title": "マーケティング情報受信同意",
+      "purpose": {
+        "h": "第1条（受信目的）",
+        "body": "メール・プッシュ・SMSなどを通じて新しいコンテンツ、イベント、割引などの有益な情報をお届けします。"
+      },
+      "contents": {
+        "h": "第2条（受信内容）",
+        "features": "新機能およびおすすめフィードのまとめ",
+        "events": "イベント・キャンペーン・プロモーションのご案内",
+        "discounts": "割引・クーポン・提携特典",
+        "reports": "パーソナライズレポート（活動のまとめ、トレンド）"
+      },
+      "channels": {
+        "h": "第3条（受信チャネルおよび設定）",
+        "individual": "チャネル（メール・プッシュ・SMS）ごとに個別に同意・撤回が可能です。",
+        "settings": "設定 > 通知・マーケティングメニューまたは受信メッセージ下部のリンクから変更できます。",
+        "apply": "撤回時、以降の送信分から適用されます。"
+      },
+      "partners": {
+        "h": "第4条（第三者マーケティングおよび委託）",
+        "body": "一部の送信業務は専門の代行会社に委託される場合があり、提携マーケティングの場合は別途同意を得て進行します。"
+      },
+      "note": {
+        "h": "第5条（必須告知）",
+        "body": "サービス運営上必須の告知（規約・セキュリティなど）は受信同意の有無にかかわらず送信される場合があります。"
+      }
+    }
+  }
+}

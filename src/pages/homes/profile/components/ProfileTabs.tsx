@@ -1,4 +1,4 @@
-// src/pages/homes/profile/components/ProfileTabs.tsx (예시 경로)
+import { useTranslation } from 'react-i18next';
 
 export type ProfileTabKey = 'posts' | 'replies' | 'likes';
 
@@ -7,13 +7,17 @@ interface ProfileTabsProps {
   onTabChange: (tab: ProfileTabKey) => void;
 }
 
-const tabs: { id: ProfileTabKey; label: string }[] = [
-  { id: 'posts', label: '게시글' },
-  { id: 'replies', label: '댓글' },
-  { id: 'likes', label: '좋아요' },
-];
+
 
 export default function ProfileTabs({ activeTab, onTabChange }: ProfileTabsProps) {
+  const { t } = useTranslation();
+
+  const tabs: { id: ProfileTabKey; label: string }[] = [
+    { id: 'posts', label: t('profile.tab_posts') },
+    { id: 'replies', label: t('profile.tab_replies') },
+    { id: 'likes', label: t('profile.tab_likes') },
+  ];
+
   return (
     <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-background">
       <nav className="flex">

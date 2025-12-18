@@ -180,8 +180,23 @@ export default function AuthCallback() {
         return;
       }
 
-      // 소셜: 프로필 셸 생성 → /signup/social
+      // 소셜: 프로필 셸 생성 전/후 온보딩 여부 체크
+      // 1. 이미 프로필이 있는지 확인
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('is_onboarded')
+        .eq('user_id', u.id)
+        .maybeSingle();
+
+      if (existingProfile?.is_onboarded) {
+        // 이미 온보딩 완료된 유저 → 메인으로 직행 (깜빡임 방지)
+        navigate('/sns', { replace: true });
+        return;
+      }
+
+      // 2. 프로필 없거나 온보딩 미완료 → 셸 생성 시도 후 위자드로
       try {
+        // 이미 존재하면 내부에서 skip하므로 안전
         await createProfileShellIfMissing(u.id);
       } catch (e) {
         console.warn('[AuthCallback] createProfileShellIfMissing error', e);

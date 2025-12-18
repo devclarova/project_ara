@@ -1,4 +1,5 @@
 import CheckboxSquare from '@/components/common/CheckboxSquare';
+import { useTranslation } from 'react-i18next';
 
 export default function AgreeRow({
   required = false,
@@ -13,6 +14,7 @@ export default function AgreeRow({
   onChange: (v: boolean) => void;
   onDetail?: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <>
       <div className="py-2">
@@ -25,7 +27,7 @@ export default function AgreeRow({
             onClick={onDetail}
             className="text-[var(--ara-primary)] hover:underline font-semibold whitespace-nowrap"
           >
-            상세보기
+            {t('signup.detail_view')}
           </button>
         ) : (
           <span className="inline-block w-[72px]" />

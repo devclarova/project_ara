@@ -4,6 +4,7 @@ export type SidebarItem = {
   id: MenuId;
   label: string;
   icon?: React.ReactNode;
+  keywords?: string[]; // 검색용 키워드 추가
 };
 
 export type SettingsLayoutProps = {
@@ -21,4 +22,20 @@ export type ActiveKey = 'terms' | 'privacy' | 'marketing' | 'support' | null;
 export type ActiveSystem = 'language' | 'theme' | null;
 
 export type Mode = 'light' | 'dark' | 'system';
-export type Lang = 'ko' | 'en' | 'ja';
+export type Lang =
+  | 'ko'
+  | 'en'
+  | 'ja'
+  | 'zh'
+  | 'ru'
+  | 'vi'
+  | 'bn'
+  | 'ar'
+  | 'hi'
+  | 'th'
+  | 'es'
+  | 'fr'
+  | 'pt'
+  | 'pt-br'
+  | 'de'
+  | 'fi';

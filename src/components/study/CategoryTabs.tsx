@@ -7,18 +7,22 @@ type CategoryTabsProps = {
   active: TCategory;
   onChange: (value: TCategory) => void;
   className?: string;
+  categories?: { value: TCategory; label: string }[];
 };
 
-const CategoryTabs = ({ active, onChange, className = '' }: CategoryTabsProps) => {
+const DEFAULT_CATEGORIES: { value: TCategory; label: string }[] = CATEGORIES.map(c => ({ value: c, label: c }));
+
+const CategoryTabs = ({ active, onChange, className = '', categories = DEFAULT_CATEGORIES }: CategoryTabsProps) => {
   const handleKey = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
-      const idx = CATEGORIES.indexOf(active);
+      const items = categories.map(c => c.value);
+      const idx = items.indexOf(active);
       if (idx < 0) return;
       if (e.key === 'ArrowRight') {
-        const next = CATEGORIES[(idx + 1) % CATEGORIES.length];
+        const next = items[(idx + 1) % items.length];
         onChange(next);
       } else if (e.key === 'ArrowLeft') {
-        const prev = CATEGORIES[(idx - 1 + CATEGORIES.length) % CATEGORIES.length];
+        const prev = items[(idx - 1 + items.length) % items.length];
         onChange(prev);
       }
     },
@@ -34,7 +38,9 @@ const CategoryTabs = ({ active, onChange, className = '' }: CategoryTabsProps) =
         onKeyDown={handleKey}
         className="flex gap-0 xs:gap-2 sm:gap-3 px-1 sm:px-0 min-w-max overflow-x-auto scrollbar-none"
       >
-        {CATEGORIES.map(c => {
+        {categories.map((item) => {
+          const c = item.value;
+          const label = item.label;
           const isActive = active === c;
           return (
             <button
@@ -53,7 +59,7 @@ const CategoryTabs = ({ active, onChange, className = '' }: CategoryTabsProps) =
                   : 'text-gray-600 hover:text-black dark:text-gray-300 dark:hover:text-gray-400',
               ].join(' ')}
             >
-              <span className="inline-block">{c}</span>
+              <span className="inline-block">{label}</span>
               {/* 밑줄: 높이 고정, bottom:-2px로 살짝 내려 깔끔 */}
               <span
                 className={[

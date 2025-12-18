@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 type ModalImageSliderProps = {
   allImages: string[];
@@ -18,6 +19,9 @@ export default function ModalImageSlider({
   const [direction, setDirection] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [blockClick, setBlockClick] = useState(false);
+
+  // 스크롤 잠금 Hook
+  useBodyScrollLock(true); // 항상 열려있으므로 true
 
   // ESC 로 모달 닫기
   useEffect(() => {
@@ -54,13 +58,17 @@ export default function ModalImageSlider({
             e.stopPropagation();
             onClose();
           }}
-          className="absolute top-4 right-1 text-white text-3xl bg-black/50 hover:bg-black/70 w-10 h-10 rounded-full z-[50]"
+          className="absolute top-4 right-4 text-white text-3xl bg-black/50 hover:bg-black/70 w-10 h-10 rounded-full z-[10001] flex items-center justify-center transition-colors border border-white/20"
         >
-          ✕
+          <i className="ri-close-line" />
         </button>
 
         {/* 이미지 wrapper */}
-        <div className="relative w-full h-full flex items-center justify-center">
+        <div
+        className="relative w-full h-full max-w-6xl flex flex-col items-center justify-center p-4 z-[10000] overscroll-contain"
+        onClick={e => e.stopPropagation()}
+        data-scroll-lock-scrollable=""
+      >
           {/* 이미지 안 카운터 */}
           {allImages.length > 1 && (
             <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full z-40">

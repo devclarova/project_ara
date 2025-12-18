@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import NotificationCard from '../feature/NotificationCard';
@@ -20,10 +21,15 @@ interface Notification {
 }
 
 export default function HNotificationsPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [profileId, setProfileId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // 삭제 모달 상태
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // 내 profile id 로드
   useEffect(() => {
@@ -38,6 +44,10 @@ export default function HNotificationsPage() {
     };
     loadProfile();
   }, [user]);
+
+  // ... (기존 useEffect들 생략 가능하지만 안전하게 전체 구조 잡기 위해 유지하거나, 위쪽은 건드리지 않고 중간부터 수정)
+  // 여기서는 replace 범위가 전체가 아니므로 로직 삽입 위치를 잘 잡아야 함.
+  // 30라인부터 다시 씀.
 
   // 초기 알림 불러오기
   useEffect(() => {
@@ -71,7 +81,7 @@ export default function HNotificationsPage() {
           sender: n.sender
             ? {
                 name: n.sender.nickname,
-                username: n.sender.user_id,
+                username: n.sender.nickname, 
                 avatar: n.sender.avatar_url,
               }
             : null,
@@ -111,18 +121,18 @@ export default function HNotificationsPage() {
             is_read: newItem.is_read,
             created_at: newItem.created_at,
             tweet_id: newItem.tweet_id,
-            comment_id: newItem.comment_id, // null 가능
+            comment_id: newItem.comment_id,
             sender: sender
               ? {
                   name: sender.nickname,
-                  username: sender.user_id,
+                  username: sender.nickname,
                   avatar: sender.avatar_url,
                 }
               : null,
           };
 
           setNotifications(prev => [uiItem, ...prev]);
-          toast.info('새 알림이 도착했습니다.');
+          // GlobalNotificationListener에서 처리하므로 여기서 토스트 중복 방지 제거
         },
       )
       .subscribe();
@@ -147,17 +157,52 @@ export default function HNotificationsPage() {
 
       if (error) {
         console.error('알림 비우기 실패:', error.message);
-        toast.error('알림을 비우는 중 오류가 발생했습니다.');
+        toast.error(t('notification.error_clear_all'));
         return;
       }
 
       setNotifications([]);
       window.dispatchEvent(new Event('notifications:cleared'));
 
-      toast.success('알림을 모두 비웠습니다.');
+      toast.success(t('notification.success_clear_all'));
     } catch (err: any) {
       console.error('알림 비우기 예외:', err.message);
-      toast.error('알림을 비우는 중 오류가 발생했습니다.');
+      toast.error(t('notification.error_clear_all'));
+    }
+  };
+
+  // 삭제 요청 핸들러 (모달 열기)
+  const handleRequestDelete = (id: string) => {
+    setDeleteId(id);
+    setShowDeleteModal(true);
+  };
+
+  // 삭제 확정 핸들러
+  const handleConfirmDelete = async () => {
+    if (!deleteId) return;
+
+    try {
+      // 삭제 대상 알림 정보 찾기 (읽지 않은 알림인지 확인용)
+      const targetNotification = notifications.find(n => n.id === deleteId);
+      
+      // UI에서 선제거
+      setNotifications(prev => prev.filter(n => n.id !== deleteId));
+      setShowDeleteModal(false);
+
+      // 읽지 않은 알림을 삭제한 경우 → 헤더 뱃지 즉시 차감 이벤트 발송
+      if (targetNotification && !targetNotification.is_read) {
+        window.dispatchEvent(new Event('notification:deleted-one'));
+      }
+      
+      // DB 삭제
+      const { error } = await supabase.from('notifications').delete().eq('id', deleteId);
+      if (error) throw error;
+      
+    } catch (err: any) {
+      console.error('알림 삭제 실패:', err.message);
+      toast.error(t('common.error_delete'));
+    } finally {
+      setDeleteId(null);
     }
   };
 
@@ -206,9 +251,9 @@ export default function HNotificationsPage() {
             flex items-center justify-between
           "
         >
-          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">알림</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('nav.notifications')}</h1>
 
-          {notifications.length > 0 && (
+            {notifications.length > 0 && (
             <button
               type="button"
               onClick={handleClearAll}
@@ -217,7 +262,7 @@ export default function HNotificationsPage() {
                          dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800
                          transition-colors"
             >
-              비우기
+              {t('notification.clear_all')}
             </button>
           )}
         </div>
@@ -239,31 +284,20 @@ export default function HNotificationsPage() {
                     },
                     action:
                       n.type === 'comment'
-                        ? '당신의 피드에 댓글을 남겼습니다.'
+                        ? t('notification.action_comment')
                         : n.type === 'like'
                           ? n.comment_id
-                            ? '당신의 댓글을 좋아합니다.'
-                            : '당신의 피드를 좋아합니다.'
+                            ? t('notification.action_like_comment')
+                            : t('notification.action_like_feed')
                           : n.content,
                     content: n.content,
-                    timestamp: new Date(n.created_at).toLocaleString('ko-KR', {
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    }),
+                    timestamp: n.created_at,
                     isRead: n.is_read,
                     tweetId: n.tweet_id,
                     replyId: n.comment_id, // null 가능
                   }}
                   onMarkAsRead={markAsRead}
-                  onDelete={async id => {
-                    // UI에서 제거
-                    setNotifications(prev => prev.filter(n => n.id !== id));
-
-                    // DB에서도 제거
-                    await supabase.from('notifications').delete().eq('id', id);
-                  }}
+                  onDelete={handleRequestDelete}
                 />
               ))}
 
@@ -272,11 +306,42 @@ export default function HNotificationsPage() {
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
               <i className="ri-notification-3-line text-3xl mb-2" />
-              아직 새로운 알림이 없습니다
+              {t('notification.no_notifications')}
             </div>
           )}
         </div>
       </div>
+
+      {/* 삭제 확인 모달 */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4" onClick={() => setShowDeleteModal(false)}>
+          <div 
+            className="bg-white dark:bg-secondary w-full max-w-sm rounded-xl p-6 shadow-xl relative animate-in fade-in zoom-in duration-200"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
+              {t('notification.delete_confirm_title')}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              {t('notification.delete_confirm_desc')}
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+              >
+                {t('common.delete')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { Search } from 'lucide-react'; // lucide 아이콘
+import { useTranslation } from 'react-i18next';
 
 interface SearchBarProps {
   placeholder?: string;
@@ -16,6 +17,7 @@ export default function SearchBar({
   onSubmit,
   autoFocus,
 }: SearchBarProps) {
+  const { t } = useTranslation();
   const handleSubmit = () => {
     if (value.trim() === '') return;
     onSubmit?.(value);
@@ -41,7 +43,7 @@ export default function SearchBar({
             value={value}
             onChange={onChange}
             onKeyDown={handleKeyDown}
-            placeholder={placeholder ?? '검색어를 입력하세요'}
+            placeholder={placeholder ?? t('common.search')}
             autoFocus={autoFocus}
             className="flex-1 h-full px-2 sm:px-3 bg-transparent outline-none text-xs sm:text-sm md:text-base placeholder-muted-foreground border-none focus:outline-none focus:ring-0 focus:border-transparent"
           />
@@ -55,7 +57,7 @@ export default function SearchBar({
               className="flex items-center justify-center px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground rounded-full hover:bg-accent transition-colors whitespace-nowrap"
               aria-label="검색"
             >
-              검색
+              {t('common.search')}
             </button>
           </div>
         </div>

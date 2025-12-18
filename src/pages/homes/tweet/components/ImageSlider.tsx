@@ -32,10 +32,12 @@ export default function ImageSlider({
     // 움직임이 있으면 → 드래그
     if (diff > 5) {
       setDragged(true);
-      return;
     }
+  };
 
-    // 움직임 거의 없음 → 클릭
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // 움직임이 없었고(클릭), 좌클릭인 경우만 (onClick은 기본적으로 좌클릭에만 반응하지만 안전장치)
     if (!dragged) {
       onOpen?.(currentImage);
     }
@@ -44,7 +46,7 @@ export default function ImageSlider({
   return (
     <div
       className="mt-3 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 relative"
-      onClick={e => e.stopPropagation()}
+      onClick={e => e.stopPropagation()} 
     >
       <div className="relative w-full h-[450px] bg-black/5 dark:bg-black/20 flex items-center justify-center">
         {/* 페이지 표시 */}
@@ -61,8 +63,11 @@ export default function ImageSlider({
             // 드래그 vs 클릭 판단
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
+            onClick={handleClick}
             draggable={false}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
             custom={direction}
             variants={{
               enter: d => ({ x: d > 0 ? 60 : -60, opacity: 0 }),

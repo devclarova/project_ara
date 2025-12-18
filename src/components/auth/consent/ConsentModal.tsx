@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { CONTENT, type ConsentKey } from './consentContent';
+import { getContent, type ConsentKey } from './consentContent';
+import { useTranslation } from 'react-i18next';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 type Props = {
   open: ConsentKey | null;
@@ -8,8 +10,14 @@ type Props = {
 };
 
 export default function ConsentModal({ open, onClose, onAccept }: Props) {
+  const { t } = useTranslation();
+  const CONTENT = getContent(t); // t 함수를 전달하여 번역된 콘텐츠 가져오기
   const toc = open ? CONTENT[open] : null;
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+  const modalContentRef = useRef<HTMLDivElement | null>(null);
+
+  // 스크롤 잠금 Hook
+  useBodyScrollLock(!!open);
 
   // 접근성: 열린 직후 닫기 버튼 포커스
   useEffect(() => {
@@ -39,6 +47,7 @@ export default function ConsentModal({ open, onClose, onAccept }: Props) {
     >
       {/* 모달 카드 */}
       <div
+        ref={modalContentRef}
         className="w-full max-w-4xl max-h-[80vh]
                    flex flex-col rounded-2xl shadow-2xl 
                    bg-white dark:bg-secondary 
@@ -65,9 +74,12 @@ export default function ConsentModal({ open, onClose, onAccept }: Props) {
         </div>
 
         {/* 본문 */}
-        <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[220px,minmax(0,1fr)]">
+        <div className="flex-1 min-h-0 flex overflow-hidden">
           {/* 좌측 목차: 데스크톱에서만 */}
-          <nav className="hidden md:block border-r px-4 py-4 flex-none border-gray-200 dark:border-gray-700 dark:bg-secondary">
+          <nav 
+            className="hidden md:block w-1/3 min-w-[240px] max-w-[300px] shrink-0 border-r px-4 py-4 border-gray-200 dark:border-gray-700 dark:bg-secondary overflow-y-auto break-words overscroll-contain"
+            data-scroll-lock-scrollable=""
+          >
             <ul className="space-y-2 text-sm">
               {toc.sections.map(s => (
                 <li key={s.id}>
@@ -90,7 +102,8 @@ export default function ConsentModal({ open, onClose, onAccept }: Props) {
           {/* 우측 내용 (모바일에서는 전체 폭) */}
           <div
             id="modal-content-scroll"
-            className="px-4 md:px-6 py-4 md:py-5 overflow-auto min-h-0 bg-white dark:bg-secondary"
+            className="flex-1 px-4 md:px-6 py-4 md:py-5 overflow-y-auto bg-white dark:bg-secondary overscroll-contain"
+            data-scroll-lock-scrollable=""
           >
             <div className="max-w-3xl mx-auto space-y-6 text-sm md:text-[15px] leading-relaxed text-gray-800 dark:text-gray-100 pr-1 md:pr-2">
               {toc.sections.map(s => (
@@ -112,13 +125,13 @@ export default function ConsentModal({ open, onClose, onAccept }: Props) {
             className="px-3 md:px-4 py-2 rounded-lg border border-gray-300 text-xs md:text-sm text-gray-700 hover:bg-gray-50
                        dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
           >
-            닫기
+            {t('common.close')}
           </button>
           <button
             onClick={onAccept}
             className="px-4 md:px-5 py-2 rounded-lg bg-[var(--ara-primary)] text-xs md:text-sm text-white font-semibold hover:opacity-90 dark:hover:opacity-95"
           >
-            동의하고 닫기
+            {t('signup.agree_and_close')}
           </button>
         </div>
       </div>

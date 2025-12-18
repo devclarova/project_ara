@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useParams } from 'react-router-dom';
 import type { Subtitle } from '../../types/study';
+import SubtitleItem from './SubtitleItem';
 
 interface SubtitleListProps {
   onSelectDialogue: (subtitle: Subtitle) => void;
@@ -137,39 +138,12 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
         <>
           <ul className="space-y-1.5 sm:space-y-2">
             {currentDialogues.map(d => (
-              <li
+              <SubtitleItem
                 key={d.id}
-                className="p-2.5 sm:p-3 bg-white dark:bg-secondary rounded-lg shadow cursor-pointer hover:bg-gray-50 hover:border-l-4 hover:border-primary dark:hover:border-gray-600"
-              >
-                {d.korean_subtitle && (
-                  <button
-                    className="block w/full text-base sm:text-lg text-gray-600 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400 text-left"
-                    onClick={() => {
-                      onSelectDialogue(d);
-                      const start = d.subtitle_start_time ?? 0;
-                      onSeek?.(start);
-                    }}
-                  >
-                    {d.korean_subtitle}
-                  </button>
-                )}
-                {d.pronunciation && (
-                  <button
-                    className="block w-full text-base sm:text-lg text-gray-500 dark:text-gray-100 text-left"
-                    onClick={() => onSelectDialogue(d)}
-                  >
-                    [{d.pronunciation}]
-                  </button>
-                )}
-                {d.english_subtitle && (
-                  <button
-                    className="block w-full text-base sm:text-lg text-gray-700 dark:text-gray-100 text-left"
-                    onClick={() => onSelectDialogue(d)}
-                  >
-                    {d.english_subtitle}
-                  </button>
-                )}
-              </li>
+                subtitle={d}
+                onSelect={onSelectDialogue}
+                onSeek={onSeek}
+              />
             ))}
           </ul>
 

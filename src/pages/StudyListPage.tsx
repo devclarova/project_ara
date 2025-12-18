@@ -5,6 +5,7 @@ import ContentCard from '@/components/study/ContentCard';
 import FilterDropdown, { type TDifficulty } from '@/components/study/FilterDropdown';
 import SearchBar from '@/components/ui/SearchBar';
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import type { Study } from '../types/study';
@@ -45,6 +46,7 @@ const LEANING_GUIDE_SLIDES = [
 ];
 
 const StudyListPage = () => {
+  const { t } = useTranslation();
   const [clips, setClips] = useState<Study[]>([]); // 콘텐츠 목록
   const [keyword, setKeyword] = useState(''); // 검색
   const [page, setPage] = useState(1); // 현재 페이지
@@ -68,7 +70,8 @@ const StudyListPage = () => {
   // 쿼리에서 초기 category 읽기 (유효하지 않으면 '전체')
   const displayCategory: TCategory = useMemo(() => {
     const q = searchParams.get('category') ?? '전체';
-    return (ALL_CATEGORIES.includes(q as TCategory) ? q : '전체') as TCategory;
+    const valid = ALL_CATEGORIES.includes(q as TCategory) ? q : '전체';
+    return valid as TCategory;
   }, [searchParams.get('category')]); // 의존성 최소화
 
   const contentFilter = searchParams.get('content')?.trim() ?? '';
@@ -252,7 +255,18 @@ const StudyListPage = () => {
             <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 bg-white dark:bg-background sticky top-0 z-20 pb-2 pl-6 pt-8 pr-6">
               {/* 왼쪽: 카테고리 + 모바일용 검색 아이콘 */}
               <div className="flex items-center justify-between w-full md:w-auto search-row">
-                <CategoryTabs active={displayCategory} onChange={handleCategoryChange} />
+                <CategoryTabs 
+                  active={displayCategory} 
+                  onChange={handleCategoryChange} 
+                  categories={ALL_CATEGORIES.map(c => ({
+                    value: c,
+                    label: c === '전체' ? t('study.category.all') :
+                           c === '드라마' ? t('study.category.drama') :
+                           c === '영화' ? t('study.category.movie') :
+                           c === '예능' ? t('study.category.entertainment') :
+                           c === '음악' ? t('study.category.music') : c
+                  }))}
+                />
 
                 {/* 모바일 전용 검색 버튼 (카테고리 옆에 위치) */}
                 <button
@@ -267,11 +281,20 @@ const StudyListPage = () => {
               {/* 오른쪽: 필터 + 검색 그룹 (데스크톱 전용) */}
               <div className="hidden md:flex desktop-search-only items-center gap-2 mt-3 md:mt-0 flex-nowrap">
                 <div className="flex items-center h-11">
-                  <FilterDropdown value={levelFilter} onApply={applyLevel} />
+                  <FilterDropdown 
+                    value={levelFilter} 
+                    onApply={applyLevel} 
+                    labelMap={{
+                      '': t('study.level.all'),
+                      '초급': t('study.level.beginner'),
+                      '중급': t('study.level.intermediate'),
+                      '고급': t('study.level.advanced')
+                    }}
+                  />
                 </div>
                 <div className="flex items-center h-11">
                   <SearchBar
-                    placeholder="검색어를 입력해주세요"
+                    placeholder={t('study.search_placeholder')}
                     value={keyword}
                     onChange={handleKeywordChange}
                     onSubmit={q => console.log('검색어:', q)}
@@ -286,7 +309,7 @@ const StudyListPage = () => {
                     {/* 헤더 */}
                     <div className="flex justify-between items-center">
                       <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100">
-                        검색
+                        {t('common.search')}
                       </h2>
                       <button
                         onClick={() => setShowSearch(false)}
@@ -301,7 +324,7 @@ const StudyListPage = () => {
                     <div className="mt-2">
                       <SearchBar
                         autoFocus
-                        placeholder="검색어를 입력해주세요"
+                        placeholder={t('study.search_placeholder')}
                         value={keyword}
                         onChange={handleKeywordChange}
                         onSubmit={q => {
@@ -344,7 +367,7 @@ const StudyListPage = () => {
                 ) : (
                   // 빈 결과 문구
                   <div className="col-span-full text-center py-16 text-gray-500 dark:text-gray-400 text-sm sm:text-base">
-                    해당 조건에 맞는 학습 콘텐츠가 없습니다.
+                    {t('study.no_content')}
                   </div>
                 )}
                 <SignInModal isOpen={showSignIn} onClose={() => setShowSignIn(false)} />

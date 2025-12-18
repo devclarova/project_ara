@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import TrendsPanel from '../homes/feature/TrendsPanel';
+import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 
 interface SnsLayoutProps {
   children: ReactNode;
@@ -16,6 +17,9 @@ export default function SnsLayout({
 }: SnsLayoutProps) {
   return (
     <div className="bg-white dark:bg-background overflow-x-hidden">
+      <ScrollToTopButton 
+        className="bottom-10 right-6 lg:right-16 xl:right-[calc((100vw-1280px)/2+245px)]"
+      />
       {/* 가운데 + 오른쪽 2컬럼 레이아웃 (오른쪽은 공간만 잡아줌) */}
       <div className="mx-auto max-w-7xl px-4 sm:px-5 lg:px-6">
         <div className="grid w-full gap-4 lg:gap-6 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -24,19 +28,16 @@ export default function SnsLayout({
             <div className="w-full md:max-w-3xl xl:max-w-4xl">{children}</div>
           </div>
 
-          {/* 오른쪽 컬럼: 화면에서 자리만 차지 (실제 패널은 fixed로 따로 띄움) */}
-          <div className="hidden xl:block" />
-        </div>
-      </div>
-
-      {/* 🔥 화면에 떠 있는(항상 따라다니는) 실시간 인기 피드 */}
-      <div className="hidden xl:block">
-        <div className="fixed top-[100px] right-[calc((100vw-1280px)/2)]">
-          <TrendsPanel
-            searchQuery={searchQuery ?? ''}
-            onSearchChange={onSearchChange ?? (() => {})}
-            hideSearchBar={hideSearchBar}
-          />
+          {/* 오른쪽 컬럼: Side Panel (Sticky) */}
+          <aside className="hidden xl:block w-[320px]">
+            <div className="sticky top-[100px]">
+              <TrendsPanel
+                searchQuery={searchQuery ?? ''}
+                onSearchChange={onSearchChange ?? (() => {})}
+                hideSearchBar={hideSearchBar}
+              />
+            </div>
+          </aside>
         </div>
       </div>
     </div>

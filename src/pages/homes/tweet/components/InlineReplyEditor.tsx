@@ -1,10 +1,13 @@
 // src/pages/homes/feature/InlineReplyEditor.tsx
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Image } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface InlineReplyEditorProps {
   tweetId: string;
@@ -13,6 +16,7 @@ interface InlineReplyEditorProps {
 }
 
 export default function InlineReplyEditor({ tweetId, onReplyCreated }: InlineReplyEditorProps) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [value, setValue] = useState('');
@@ -59,7 +63,7 @@ export default function InlineReplyEditor({ tweetId, onReplyCreated }: InlineRep
 
   const handleSubmit = async () => {
     if (!user) {
-      toast.error('로그인이 필요합니다.');
+      toast.error(t('auth.login_needed'));
       return;
     }
     if (!value.trim() && files.length === 0) return;
@@ -75,7 +79,7 @@ export default function InlineReplyEditor({ tweetId, onReplyCreated }: InlineRep
         .maybeSingle();
 
       if (profileError || !profile) {
-        toast.error('프로필 정보를 불러오지 못했습니다.');
+        toast.error(t('common.error_profile_load'));
         setIsSubmitting(false);
         return;
       }
@@ -125,7 +129,7 @@ export default function InlineReplyEditor({ tweetId, onReplyCreated }: InlineRep
       }
 
       if (!finalContent.trim()) {
-        toast.error('내용이 비어 있습니다.');
+        toast.error(t('common.error_empty_content'));
         setIsSubmitting(false);
         return;
       }
@@ -143,7 +147,7 @@ export default function InlineReplyEditor({ tweetId, onReplyCreated }: InlineRep
 
       if (insertError || !inserted) {
         console.error('댓글 저장 실패:', insertError?.message);
-        toast.error('댓글 저장 중 오류가 발생했습니다.');
+        toast.error(t('tweets.error_reply_save'));
         setIsSubmitting(false);
         return;
       }
@@ -159,10 +163,10 @@ export default function InlineReplyEditor({ tweetId, onReplyCreated }: InlineRep
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-      toast.success('댓글이 등록되었습니다.');
+      toast.success(t('tweets.success_reply_posted'));
     } catch (err) {
       console.error('댓글 등록 오류:', err);
-      toast.error('댓글 등록 중 문제가 발생했습니다.');
+      toast.error(t('tweets.error_reply_upload'));
     } finally {
       setIsSubmitting(false);
     }

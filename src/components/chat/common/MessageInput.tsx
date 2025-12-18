@@ -4,6 +4,7 @@
  * - 불필요한 리렌더링 제거
  */
 import { useEffect, useRef, useState, useCallback, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDirectChat } from '../../../contexts/DirectChatContext';
 import { checkMessage, initProfanity } from '@/utils/safety';
 
@@ -12,6 +13,7 @@ interface MessageInputProps {
 }
 
 const MessageInput = memo(({ chatId }: MessageInputProps) => {
+  const { t } = useTranslation();
   const { sendMessage } = useDirectChat();
 
   const [message, setMessage] = useState('');
@@ -27,8 +29,7 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
     initProfanity();
   }, []);
 
-  const PROFANITY_NOTICE =
-    '⚠️ 비속어·혐오표현·차별적 발언은 자동 감지·마스킹/차단됩니다. 반복 시 제재될 수 있습니다.';
+  const PROFANITY_NOTICE = t('chat.notice_profanity');
 
   useEffect(() => {
     return () => {
@@ -37,6 +38,16 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
       }
     };
   }, []);
+
+  // chatId 변경 시 자동 포커스
+  useEffect(() => {
+    if (!chatId) return;
+    // 약간의 지연을 주어 모션 등이 끝난 후 포커스
+    const timer = setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [chatId]);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent | KeyboardEvent) => {
@@ -53,7 +64,7 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
 
       const verdict = checkMessage(text);
       if (verdict.action === 'block') {
-        setPolicyHint('🚫 부적절한 표현이 포함되어 전송이 차단되었습니다.');
+        setPolicyHint(t('chat.notice_blocked'));
         if (hintTimeoutRef.current) window.clearTimeout(hintTimeoutRef.current);
         hintTimeoutRef.current = window.setTimeout(() => setPolicyHint(''), 3000);
         return;
@@ -61,7 +72,7 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
 
       const payload = verdict.action === 'mask' ? verdict.cleanText : text;
       if (verdict.action === 'mask') {
-        setPolicyHint('🔒 일부 단어가 정책에 따라 마스킹되었습니다.');
+        setPolicyHint(t('chat.notice_masked'));
         if (hintTimeoutRef.current) window.clearTimeout(hintTimeoutRef.current);
         hintTimeoutRef.current = window.setTimeout(() => setPolicyHint(''), 2500);
       }
@@ -114,7 +125,7 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
             onCompositionEnd={() => setIsComposing(false)}
             className="message-textarea"
             rows={1}
-            placeholder="메시지를 입력하세요... (Enter 전송, Shift+Enter 줄바꿈)"
+            placeholder={t('chat.input_placeholder')}
             disabled={sending}
             maxLength={2000}
           />

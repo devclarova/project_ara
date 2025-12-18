@@ -2,335 +2,246 @@ import React from 'react';
 
 export type ConsentKey = 'terms' | 'privacy' | 'marketing';
 
-export const CONTENT: Record<
-  ConsentKey,
-  { title: string; sections: Array<{ id: string; h: string; body: React.ReactNode }> }
-> = {
+export const getContent = (
+  t: (key: string) => string
+): Record<ConsentKey, { title: string; sections: Array<{ id: string; h: string; body: React.ReactNode }> }> => ({
   terms: {
-    title: '이용약관',
+    title: t('policy.terms.title'),
     sections: [
       {
         id: 'purpose',
-        h: '제1조 (목적)',
-        body: (
-          <p>
-            본 약관은 “ARA”(이하 “회사”)가 제공하는 SNS/커뮤니티 기반 서비스(모바일/웹 포함, 이하
-            “서비스”)의 이용과 관련하여 회사와 회원 간 권리·의무 및 책임 사항, 기타 필요한 사항을
-            규정함을 목적으로 합니다.
-          </p>
-        ),
+        h: t('policy.terms.purpose.h'),
+        body: <p>{t('policy.terms.purpose.body')}</p>,
       },
       {
         id: 'definition',
-        h: '제2조 (정의)',
+        h: t('policy.terms.definition.h'),
         body: (
           <ul className="list-disc pl-5 space-y-1">
-            <li>
-              “회원”이란 회사의 약관에 동의하고 계정을 생성하여 서비스를 이용하는 자를 말합니다.
-            </li>
-            <li>
-              “콘텐츠”란 회원이 서비스에 업로드/전송/게시하는 텍스트, 이미지, 음성, 영상, 링크 기타
-              자료 일체를 의미합니다.
-            </li>
-            <li>
-              “유료서비스”란 디지털 아이템, 구독, 광고제거, 추가 저장공간 등 대가를 지급하고
-              이용하는 서비스를 말합니다.
-            </li>
+            <li>{t('policy.terms.definition.member')}</li>
+            <li>{t('policy.terms.definition.content')}</li>
+            <li>{t('policy.terms.definition.paid_service')}</li>
           </ul>
         ),
       },
       {
         id: 'contract',
-        h: '제3조 (이용계약의 성립 및 자격)',
+        h: t('policy.terms.contract.h'),
         body: (
           <ul className="list-disc pl-5 space-y-1">
-            <li>
-              회원이 약관 및 개인정보처리방침에 동의하고 가입절차를 완료함으로써 이용계약이
-              성립합니다.
-            </li>
-            <li>소셜 로그인을 포함한 본인 확인 절차가 필요할 수 있습니다.</li>
-            <li>
-              만 14세 미만은 가입할 수 없습니다. 회사는 필요 시 연령 확인 자료 제출을 요구할 수
-              있습니다.
-            </li>
+            <li>{t('policy.terms.contract.agreement')}</li>
+            <li>{t('policy.terms.contract.verification')}</li>
+            <li>{t('policy.terms.contract.age_limit')}</li>
           </ul>
         ),
       },
       {
         id: 'community',
-        h: '제4조 (커뮤니티 운영 및 금지행위)',
+        h: t('policy.terms.community.h'),
         body: (
           <ul className="list-disc pl-5 space-y-1">
-            <li>법령·약관·커뮤니티 가이드라인을 준수해야 합니다.</li>
-            <li>
-              타인의 권리를 침해하거나 위법·유해·차별·혐오·음란·폭력적 내용을 게시/전송/홍보하는
-              행위를 금지합니다.
-            </li>
-            <li>
-              개인정보(본인·타인) 무단 수집/게시, 스팸·광고·피싱, 계정 대여/양도, 자동화 수단을
-              이용한 접근/수집/스크래핑을 금지합니다.
-            </li>
-            <li>
-              회사는 가이드라인 위반 시 게시물 삭제, 노출 제한, 계정 일시정지 또는 영구정지를 할 수
-              있습니다.
-            </li>
+            <li>{t('policy.terms.community.guidelines')}</li>
+            <li>{t('policy.terms.community.prohibited_content')}</li>
+            <li>{t('policy.terms.community.prohibited_actions')}</li>
+            <li>{t('policy.terms.community.violations')}</li>
           </ul>
         ),
       },
       {
         id: 'member_duty',
-        h: '제5조 (회원의 의무)',
+        h: t('policy.terms.member_duty.h'),
         body: (
           <ul className="list-disc pl-5 space-y-1">
-            <li>계정의 비밀번호 관리 책임은 회원에게 있습니다.</li>
-            <li>타인의 명의/결제수단을 도용하거나 허위 정보를 등록해서는 안 됩니다.</li>
-            <li>
-              서비스 내 AI 기능의 출력물을 제3자 권리를 침해하는 방식으로 사용해서는 안 됩니다.
-            </li>
+            <li>{t('policy.terms.member_duty.password')}</li>
+            <li>{t('policy.terms.member_duty.identity')}</li>
+            <li>{t('policy.terms.member_duty.ai_output')}</li>
           </ul>
         ),
       },
       {
         id: 'license',
-        h: '제6조 (콘텐츠 권리 및 사용허락)',
+        h: t('policy.terms.license.h'),
         body: (
           <ul className="list-disc pl-5 space-y-1">
-            <li>회원이 게시한 콘텐츠의 저작권은 원칙적으로 회원에게 귀속됩니다.</li>
-            <li>
-              회원은 서비스 제공/운영/개선/프로모션을 위해 해당 콘텐츠를 저장, 복제, 게시, 전시,
-              전송, 편집(형식 변경에 한함)할 수 있는 비독점적·무상·전 세계적 라이선스를 회사에
-              부여합니다. 회원은 게시물 삭제 또는 계정 삭제 시점 이후부터 위 라이선스를 철회할 수
-              있습니다(백업/법령 준수 목적 보관 제외).
-            </li>
-            <li>타인의 권리를 침해하는 콘텐츠를 게시할 경우 모든 법적 책임은 회원에게 있습니다.</li>
+            <li>{t('policy.terms.license.copyright')}</li>
+            <li>{t('policy.terms.license.grant')}</li>
+            <li>{t('policy.terms.license.responsibility')}</li>
           </ul>
         ),
       },
       {
         id: 'ai',
-        h: '제7조 (AI 기능 고지)',
+        h: t('policy.terms.ai.h'),
         body: (
           <ul className="list-disc pl-5 space-y-1">
-            <li>
-              서비스는 게시물 추천, 콘텐츠 생성·요약, 신고 검토 보조 등 AI/알고리즘 기능을 사용할 수
-              있습니다.
-            </li>
-            <li>
-              AI 결과는 오류가 포함될 수 있으며, 참고 용도로 제공됩니다. 회원은 결과를 자체 검토 후
-              활용해야 합니다.
-            </li>
+            <li>{t('policy.terms.ai.usage')}</li>
+            <li>{t('policy.terms.ai.disclaimer')}</li>
           </ul>
         ),
       },
       {
         id: 'payment',
-        h: '제8조 (유료서비스 및 결제)',
+        h: t('policy.terms.payment.h'),
         body: (
           <ul className="list-disc pl-5 space-y-1">
-            <li>유료서비스의 가격, 결제 조건, 환불 정책은 화면에 별도 고지합니다.</li>
-            <li>앱마켓/결제대행사 정책이 우선 적용될 수 있습니다.</li>
+            <li>{t('policy.terms.payment.pricing')}</li>
+            <li>{t('policy.terms.payment.policy')}</li>
           </ul>
         ),
       },
       {
         id: 'service_change',
-        h: '제9조 (서비스 변경/중단)',
-        body: (
-          <p>
-            회사는 운영상·기술상 필요 또는 법령/정책 변경 시 서비스의 전부 또는 일부를 변경·중단할
-            수 있으며, 중요한 변경은 사전에 공지합니다.
-          </p>
-        ),
+        h: t('policy.terms.service_change.h'),
+        body: <p>{t('policy.terms.service_change.body')}</p>,
       },
       {
         id: 'termination',
-        h: '제10조 (계약 해지 및 이용제한)',
+        h: t('policy.terms.termination.h'),
         body: (
           <ul className="list-disc pl-5 space-y-1">
-            <li>회원은 언제든지 설정에서 탈퇴할 수 있습니다.</li>
-            <li>
-              약관/가이드라인 위반, 권리침해 신고 다수, 보안 위해 등 사유 발생 시 회사는 사전 통지
-              후 게시물 삭제/노출 제한/계정 정지·해지를 할 수 있습니다(긴급 시 사후 통지).
-            </li>
+            <li>{t('policy.terms.termination.withdrawal')}</li>
+            <li>{t('policy.terms.termination.restriction')}</li>
           </ul>
         ),
       },
       {
         id: 'ip_report',
-        h: '제11조 (권리침해 신고 및 재게시)',
+        h: t('policy.terms.ip_report.h'),
         body: (
           <ul className="list-disc pl-5 space-y-1">
-            <li>
-              권리자가 침해를 소명하면 회사는 해당 콘텐츠를 임시 차단하거나 삭제할 수 있습니다.
-            </li>
-            <li>게시자는 반박 자료 제출을 통해 재게시를 요청할 수 있습니다.</li>
+            <li>{t('policy.terms.ip_report.takedown')}</li>
+            <li>{t('policy.terms.ip_report.counter')}</li>
           </ul>
         ),
       },
       {
         id: 'disclaimer',
-        h: '제12조 (면책 및 책임제한)',
+        h: t('policy.terms.disclaimer.h'),
         body: (
           <ul className="list-disc pl-5 space-y-1">
-            <li>
-              천재지변, 통신 장애 등 불가항력 사유로 인한 손해에 대하여 회사는 책임을 지지 않습니다.
-            </li>
-            <li>
-              회원 상호 간 또는 회원과 제3자 간 분쟁은 당사자 책임으로 처리하며, 회사는
-              고의·중과실이 없는 한 책임을 지지 않습니다.
-            </li>
+            <li>{t('policy.terms.disclaimer.force_majeure')}</li>
+            <li>{t('policy.terms.disclaimer.disputes')}</li>
           </ul>
         ),
       },
       {
         id: 'law',
-        h: '제13조 (준거법 및 관할)',
-        body: (
-          <p>
-            본 약관은 대한민국 법령을 준거법으로 하며, 분쟁이 발생할 경우 회사의 본점 소재지를
-            관할하는 법원을 전속 관할로 합니다.
-          </p>
-        ),
+        h: t('policy.terms.law.h'),
+        body: <p>{t('policy.terms.law.body')}</p>,
       },
       {
         id: 'notice',
-        h: '제14조 (약관의 개정 및 고지)',
-        body: (
-          <p>
-            회사는 관련 법령을 준수하는 범위 내에서 약관을 개정할 수 있으며, 개정 내용 및 시행일을
-            최소 7일(회원에게 불리한 경우 30일) 전에 서비스 내 공지합니다.
-          </p>
-        ),
+        h: t('policy.terms.notice.h'),
+        body: <p>{t('policy.terms.notice.body')}</p>,
       },
     ],
   },
 
   privacy: {
-    title: '개인정보처리방침',
+    title: t('policy.privacy.title'),
     sections: [
       {
         id: 'collect',
-        h: '제1조 (수집하는 개인정보의 항목)',
+        h: t('policy.privacy.collect.h'),
         body: (
           <ul className="list-disc pl-5 space-y-1">
             <li>
-              <strong>필수</strong>: 이메일, 비밀번호(해시), 닉네임, 서비스 식별자(UID)
+              <strong>{t('policy.privacy.collect.required_title')}</strong>: {t('policy.privacy.collect.required_items')}
             </li>
             <li>
-              <strong>선택</strong>: 생년월일, 성별, 프로필 사진, 국가/언어, 자기소개
+              <strong>{t('policy.privacy.collect.optional_title')}</strong>: {t('policy.privacy.collect.optional_items')}
             </li>
             <li>
-              <strong>자동 수집</strong>: 접속/이용 로그, IP/기기 정보, 쿠키/유사 기술, 오류/충돌
-              로그, 알림 토큰, 광고 식별자(옵트인 시)
+              <strong>{t('policy.privacy.collect.auto_title')}</strong>: {t('policy.privacy.collect.auto_items')}
             </li>
             <li>
-              <strong>소셜 로그인</strong>: 프로필 닉네임/이메일, 플랫폼 식별자 등 제공자 정책 범위
-              내 정보
+              <strong>{t('policy.privacy.collect.social_title')}</strong>: {t('policy.privacy.collect.social_items')}
             </li>
           </ul>
         ),
       },
       {
         id: 'purpose',
-        h: '제2조 (개인정보의 이용 목적)',
+        h: t('policy.privacy.purpose.h'),
         body: (
           <ul className="list-disc pl-5 space-y-1">
-            <li>회원 가입/본인확인/계정 관리</li>
-            <li>친구 추천·피드 노출 등 SNS 핵심 기능 제공</li>
-            <li>고객 문의 응대 및 공지, 서비스 안정화·품질 개선</li>
-            <li>통계/분석 및 맞춤형 콘텐츠 추천(동의 범위 내)</li>
-            <li>보안, 부정 이용 방지, 신고 처리</li>
-            <li>유료서비스 결제/환불/영수증 발행</li>
+            <li>{t('policy.privacy.purpose.account')}</li>
+            <li>{t('policy.privacy.purpose.sns_features')}</li>
+            <li>{t('policy.privacy.purpose.support')}</li>
+            <li>{t('policy.privacy.purpose.analytics')}</li>
+            <li>{t('policy.privacy.purpose.security')}</li>
+            <li>{t('policy.privacy.purpose.payment')}</li>
           </ul>
         ),
       },
       {
         id: 'share',
-        h: '제3조 (개인정보의 제3자 제공 및 처리위탁)',
+        h: t('policy.privacy.share.h'),
         body: (
           <ul className="list-disc pl-5 space-y-1">
-            <li>회사는 원칙적으로 회원의 동의 없이 제3자에게 제공하지 않습니다.</li>
-            <li>
-              서비스 운영을 위해 클라우드/데이터 호스팅, 로그 분석, 메시지 발송 등 업무를 전문
-              업체에 위탁할 수 있으며, 수탁사 명칭·업무·보유기간은 서비스 내 ‘위탁처’ 공개 페이지에
-              고지합니다.
-            </li>
-            <li>법령에 따른 요청이 있는 경우 예외적으로 제공될 수 있습니다.</li>
+            <li>{t('policy.privacy.share.principle')}</li>
+            <li>{t('policy.privacy.share.outsourcing')}</li>
+            <li>{t('policy.privacy.share.legal')}</li>
           </ul>
         ),
       },
       {
         id: 'xborder',
-        h: '제4조 (국외 이전)',
-        body: (
-          <p>
-            서버 위치 또는 수탁사의 설비가 국외에 소재할 수 있습니다. 이전 국가, 이전 일시 및 방법,
-            보유·이용 기간, 보호조치 등은 서비스 내 고지합니다.
-          </p>
-        ),
+        h: t('policy.privacy.xborder.h'),
+        body: <p>{t('policy.privacy.xborder.body')}</p>,
       },
       {
         id: 'store',
-        h: '제5조 (보유 및 이용기간)',
+        h: t('policy.privacy.store.h'),
         body: (
           <ul className="list-disc pl-5 space-y-1">
-            <li>회원 탈퇴 시 지체 없이 파기하되, 관련 법령에 따라 일정 기간 보관할 수 있습니다.</li>
-            <li>전자상거래/결제, 통신사실확인자료 등은 법정 보관기간을 따릅니다.</li>
-            <li>
-              백업 시스템의 기술적 한계로 즉시 삭제가 어려운 경우, 분리 보관 후 주기적으로
-              파기합니다.
-            </li>
+            <li>{t('policy.privacy.store.withdrawal')}</li>
+            <li>{t('policy.privacy.store.legal_retention')}</li>
+            <li>{t('policy.privacy.store.backup')}</li>
           </ul>
         ),
       },
       {
         id: 'security',
-        h: '제6조 (안전성 확보조치)',
+        h: t('policy.privacy.security.h'),
         body: (
           <ul className="list-disc pl-5 space-y-1">
-            <li>비밀번호 및 민감 정보 암호화 저장</li>
-            <li>접근 권한 최소화 및 정기 점검</li>
-            <li>접속 기록 보관 및 위·변조 방지</li>
-            <li>침해사고 대비 백업/재해복구 체계 운영</li>
+            <li>{t('policy.privacy.security.encryption')}</li>
+            <li>{t('policy.privacy.security.access_control')}</li>
+            <li>{t('policy.privacy.security.logs')}</li>
+            <li>{t('policy.privacy.security.backup_recovery')}</li>
           </ul>
         ),
       },
       {
         id: 'rights',
-        h: '제7조 (이용자 및 법정대리인의 권리)',
+        h: t('policy.privacy.rights.h'),
         body: (
           <ul className="list-disc pl-5 space-y-1">
-            <li>개인정보 열람/정정/삭제/처리정지/이동권을 요청할 수 있습니다.</li>
-            <li>프로필 공개 범위, 알림/맞춤형 추천 설정을 변경할 수 있습니다.</li>
-            <li>쿠키 설정은 브라우저에서 관리할 수 있습니다.</li>
+            <li>{t('policy.privacy.rights.data_rights')}</li>
+            <li>{t('policy.privacy.rights.settings')}</li>
+            <li>{t('policy.privacy.rights.cookies')}</li>
           </ul>
         ),
       },
       {
         id: 'children',
-        h: '제8조 (아동의 개인정보 보호)',
-        body: (
-          <p>만 14세 미만 아동의 회원가입은 허용하지 않으며, 확인 시 계정을 제한할 수 있습니다.</p>
-        ),
+        h: t('policy.privacy.children.h'),
+        body: <p>{t('policy.privacy.children.body')}</p>,
       },
       {
         id: 'notice',
-        h: '제9조 (개인정보처리방침의 변경)',
-        body: (
-          <p>
-            법령/서비스 변경에 따라 본 방침을 개정할 수 있으며, 중요한 변경은 시행 7일 전(회원에게
-            불리한 경우 30일 전) 공지합니다.
-          </p>
-        ),
+        h: t('policy.privacy.notice.h'),
+        body: <p>{t('policy.privacy.notice.body')}</p>,
       },
       {
         id: 'contact',
-        h: '제10조 (개인정보 보호책임자)',
+        h: t('policy.privacy.contact.h'),
         body: (
           <ul className="list-disc pl-5">
-            <li>성명: 홍길동</li>
-            <li>이메일: privacy@ara-service.com</li>
-            <li>상담 가능 시간: 평일 10:00~18:00</li>
+            <li>{t('policy.privacy.contact.name')}</li>
+            <li>{t('policy.privacy.contact.email')}</li>
+            <li>{t('policy.privacy.contact.hours')}</li>
           </ul>
         ),
       },
@@ -338,57 +249,49 @@ export const CONTENT: Record<
   },
 
   marketing: {
-    title: '마케팅 정보 수신 동의',
+    title: t('policy.marketing.title'),
     sections: [
       {
         id: 'purpose',
-        h: '제1조 (수신 목적)',
-        body: (
-          <p>이메일/푸시/SMS 등을 통해 신규 콘텐츠, 이벤트, 할인 등 유용한 정보를 제공합니다.</p>
-        ),
+        h: t('policy.marketing.purpose.h'),
+        body: <p>{t('policy.marketing.purpose.body')}</p>,
       },
       {
         id: 'contents',
-        h: '제2조 (수신 내용)',
+        h: t('policy.marketing.contents.h'),
         body: (
           <ul className="list-disc pl-5 space-y-1">
-            <li>신규 기능 및 추천 피드 요약</li>
-            <li>이벤트/캠페인/프로모션 안내</li>
-            <li>할인·쿠폰·제휴 혜택</li>
-            <li>개인화 리포트(활동 요약, 트렌드)</li>
+            <li>{t('policy.marketing.contents.features')}</li>
+            <li>{t('policy.marketing.contents.events')}</li>
+            <li>{t('policy.marketing.contents.discounts')}</li>
+            <li>{t('policy.marketing.contents.reports')}</li>
           </ul>
         ),
       },
       {
         id: 'channels',
-        h: '제3조 (수신 채널 및 설정)',
+        h: t('policy.marketing.channels.h'),
         body: (
           <ul className="list-disc pl-5 space-y-1">
-            <li>채널(이메일/푸시/SMS)별로 개별 동의/철회가 가능합니다.</li>
-            <li>설정 &gt; 알림/마케팅 메뉴 또는 수신 메시지 하단 링크에서 변경할 수 있습니다.</li>
-            <li>철회 시 이후 발송분부터 적용됩니다.</li>
+            <li>{t('policy.marketing.channels.individual')}</li>
+            <li>{t('policy.marketing.channels.settings')}</li>
+            <li>{t('policy.marketing.channels.apply')}</li>
           </ul>
         ),
       },
       {
         id: 'partners',
-        h: '제4조 (제3자 마케팅 및 위탁)',
-        body: (
-          <p>
-            일부 발송 업무는 전문 대행사에 위탁될 수 있으며, 제휴 마케팅의 경우 별도 동의를 받아
-            진행합니다.
-          </p>
-        ),
+        h: t('policy.marketing.partners.h'),
+        body: <p>{t('policy.marketing.partners.body')}</p>,
       },
       {
         id: 'note',
-        h: '제5조 (필수 공지)',
-        body: (
-          <p>
-            서비스 운영상 필수 공지(약관/보안 등)는 수신 동의 여부와 관계없이 발송될 수 있습니다.
-          </p>
-        ),
+        h: t('policy.marketing.note.h'),
+        body: <p>{t('policy.marketing.note.body')}</p>,
       },
     ],
   },
-};
+});
+
+// 기존 호환성을 위한 CONTENT 유지
+export const CONTENT = getContent((key: string) => key);

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import StudyVocaItem from './StudyVocaItem';
 
 type WordRow = {
   id: number;
@@ -12,6 +13,7 @@ type WordRow = {
 };
 
 export type WordItem = {
+  id?: number;
   term: string;
   meaning: string;
   example?: string;
@@ -60,6 +62,7 @@ const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: Stu
   const mapRow = (row: WordRow): WordItem | null => {
     if (!row.words || !row.means) return null;
     return {
+      id: row.id,
       term: row.words,
       meaning: row.means,
       example: row.example ?? undefined,
@@ -166,22 +169,7 @@ const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: Stu
     <div>
       <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${className ?? ''}`}>
         {currentData.map((w, i) => (
-          <div
-            key={i}
-            className="p-3 border dark:border-gray-600  rounded-lg bg-white dark:bg-secondary shadow-sm hover:bg-gray-50 dark:hover:bg-primary/5 transition-colors w-full
-      h-[140px]"
-          >
-            <h4 className="font-semibold dark:text-gray-300">{w.term}</h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400">{w.meaning}</p>
-
-            {(w.pos || w.pron) && (
-              <p className="text-[11px] text-gray-400 mt-1">
-                {w.pos ? `(${w.pos})` : ''} {w.pron ? `· ${w.pron}` : ''}
-              </p>
-            )}
-
-            {w.example && <p className="text-xs text-gray-400 mt-1">예: {w.example}</p>}
-          </div>
+          <StudyVocaItem key={i} item={w} id={w.id ?? i} />
         ))}
       </div>
 

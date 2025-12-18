@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { AnimatePresence, motion, type PanInfo } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -39,29 +39,67 @@ const slideVariants = {
   }),
 };
 
+import { useTranslation } from 'react-i18next';
+
 export default function GuideModal({
   isOpen,
   onClose,
   slides,
   storageKey = DEFAULT_STORAGE_KEY,
-  prevLabel = '이전',
-  nextLabel = '다음',
-  completeLabel = '완료',
-  closeLabel = '닫기',
-  neverShowLabel = '다시 안 보기',
+  prevLabel,
+  nextLabel,
+  completeLabel,
+  closeLabel,
+  neverShowLabel,
 }: GuideModalProps) {
+  const { t } = useTranslation();
+  
+  const finalPrevLabel = prevLabel ?? t('study.guide.prev');
+  const finalNextLabel = nextLabel ?? t('study.guide.next');
+  const finalCompleteLabel = completeLabel ?? t('study.guide.start');
+  const finalCloseLabel = closeLabel ?? t('study.guide.close');
+  const finalNeverShowLabel = neverShowLabel ?? t('study.guide.never_show');
+
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(0); // ✅ 이동 방향: -1(이전), 1(다음)
+  const modalContentRef = useRef<HTMLDivElement>(null);
 
   const total = slides.length;
   const isFirst = index === 0;
   const isLast = index === total - 1;
-  const primaryLabel = isLast ? completeLabel : nextLabel;
+  const primaryLabel = isLast ? finalCompleteLabel : finalNextLabel;
 
   useEffect(() => {
     if (isOpen) {
       setIndex(0);
       setDirection(0); // 처음 열릴 때는 방향 0
+
+      // 바깥 스크롤 차단
+      const body = document.body;
+      const originalOverflow = body.style.overflow;
+      const originalTouchAction = (body.style as any).touchAction;
+
+      const preventScroll = (e: Event) => {
+        // 모달 내부 요소에서 발생한 이벤트는 허용
+        if (modalContentRef.current && modalContentRef.current.contains(e.target as Node)) {
+          return;
+        }
+        e.preventDefault();
+      };
+
+      body.style.overflow = 'hidden';
+      (body.style as any).touchAction = 'none';
+      document.addEventListener('touchmove', preventScroll, { passive: false });
+      document.addEventListener('wheel', preventScroll, { passive: false });
+      document.addEventListener('mousewheel', preventScroll, { passive: false });
+
+      return () => {
+        body.style.overflow = originalOverflow || '';
+        (body.style as any).touchAction = originalTouchAction || '';
+        document.removeEventListener('touchmove', preventScroll);
+        document.removeEventListener('wheel', preventScroll);
+        document.removeEventListener('mousewheel', preventScroll);
+      };
     }
   }, [isOpen]);
 
@@ -122,6 +160,7 @@ export default function GuideModal({
           role="dialog"
         >
           <motion.div
+            ref={modalContentRef}
             className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/20 dark:border-white/10 bg-white dark:bg-neutral-900 inline-flex flex-col"
             style={{
               width: 'min(90vw, 640px)',
@@ -193,7 +232,7 @@ export default function GuideModal({
                   className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 
                     inline-flex items-center justify-center h-8 w-8 sm:h-9 sm:w-9 
                     rounded-full bg-black/40 text-white hover:bg-black/60 transition"
-                  aria-label={prevLabel}
+                  aria-label={finalPrevLabel}
                 >
                   <ChevronLeft size={18} />
                 </button>
@@ -245,7 +284,7 @@ export default function GuideModal({
                     'transition',
                   ].join(' ')}
                 >
-                  {neverShowLabel}
+                  {finalNeverShowLabel}
                 </button>
                 <button
                   type="button"
@@ -260,7 +299,7 @@ export default function GuideModal({
                     'transition',
                   ].join(' ')}
                 >
-                  {closeLabel}
+                  {finalCloseLabel}
                 </button>
               </div>
             </div>
