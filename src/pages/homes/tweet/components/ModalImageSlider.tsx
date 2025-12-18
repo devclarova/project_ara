@@ -76,7 +76,7 @@ export default function ModalImageSlider({
             </div>
           )}
 
-          {/* ✔ 메인 이미지 */}
+          {/* 메인 이미지 */}
           <AnimatePresence mode="wait" initial={false} custom={direction}>
             <motion.img
               key={allImages[modalIndex]}
@@ -157,9 +157,15 @@ export default function ModalImageSlider({
                 key={i}
                 onClick={e => {
                   e.stopPropagation();
+
+                  if (i === modalIndex) return;
+
+                  setDirection(i > modalIndex ? 1 : -1);
                   setModalIndex(i);
                 }}
-                className={`w-2.5 h-2.5 rounded-full transition-all ${i === modalIndex ? 'bg-white scale-125' : 'bg-white/40'}`}
+                className={`w-2.5 h-2.5 rounded-full transition-all ${
+                  i === modalIndex ? 'bg-white scale-125' : 'bg-white/40'
+                }`}
               />
             ))}
           </div>

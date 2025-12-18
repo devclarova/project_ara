@@ -4,25 +4,22 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRef, useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import ReplyList from './components/ReplyList';
+import ReplyList, { type Reply } from './components/ReplyList';
 import TweetDetailCard from './components/TweetDetailCard';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { SnsStore } from '@/lib/snsState';
 import type { UIPost, UIReply } from '@/types/sns';
 import { tweetService } from '@/services/tweetService';
-
 export default function TweetDetail() {
   const { t } = useTranslation();
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
   const [tweet, setTweet] = useState<UIPost | null>(null);
   const [replies, setReplies] = useState<UIReply[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
   // 알림에서 넘어올 때 state로 받은 값들
   const locationState = location.state as {
     highlightCommentId?: string;
@@ -33,26 +30,20 @@ export default function TweetDetail() {
   const deletedCommentFromNotification = locationState?.deletedComment ?? false;
   // 스크롤 타겟 id (내가 이동시키고 싶은 순간에만 변경)
   const [scrollTargetId, setScrollTargetId] = useState<string | null>(null);
-
   const editorRef = useRef<SnsInlineEditorHandle>(null); // Create ref for editor
-
   const handleReplyClick = () => {
     if (editorRef.current) {
       editorRef.current.focus();
     }
   };
-
   const scrollKeyRef = useRef<number>(0);
-
   // scrollKey 변화 감지해 항상 스크롤 실행.
   useEffect(() => {
     if (!locationState?.highlightCommentId) return;
-
     // 이미 해당 키로 스크롤을 시도했다면 중복 실행 방지 (history pollution 해결)
     if (locationState.scrollKey && scrollKeyRef.current === locationState.scrollKey) {
       return;
     }
-
     // 스크롤 타겟 설정
     setScrollTargetId(locationState.highlightCommentId);
     
@@ -61,16 +52,12 @@ export default function TweetDetail() {
         scrollKeyRef.current = locationState.scrollKey;
     }
   }, [locationState?.highlightCommentId, locationState?.scrollKey]);
-
-
-
   // 삭제된 댓글 플래그가 있을 때 토스트 표시
   useEffect(() => {
     if (deletedCommentFromNotification) {
       toast.info(t('tweet.deleted_reply'));
     }
   }, [deletedCommentFromNotification]);
-
   // 트윗 + 댓글 불러오기
   useEffect(() => {
     if (!id) return;
@@ -80,15 +67,12 @@ export default function TweetDetail() {
     setHasMore(true);
     fetchReplies(id, 0); // 초기 페이지 0
   }, [id]);
-
   // 실시간 댓글 추가 채널 (추가만 반영, 스크롤은 건드리지 않음)
   useEffect(() => {
     if (!id) return;
-
     if (window._replyInsertChannel) {
       supabase.removeChannel(window._replyInsertChannel);
     }
-
     const channel = supabase
       .channel(`tweet-${id}-replies-insert`)
       .on(
@@ -101,17 +85,17 @@ export default function TweetDetail() {
         },
         async payload => {
           const newReply = payload.new as Database['public']['Tables']['tweet_replies']['Row'];
-
           const { data: profile } = await supabase
             .from('profiles')
             .select('nickname, user_id, avatar_url')
             .eq('id', newReply.author_id)
             .maybeSingle();
-
           const formattedReply = {
             type: 'reply',
             id: newReply.id,
             tweetId: newReply.tweet_id,
+            parent_reply_id: newReply.parent_reply_id ?? null,
+            root_reply_id: newReply.root_reply_id ?? null,
             user: {
               name: profile?.nickname ?? 'Unknown',
               username: profile?.user_id ?? 'anonymous',
@@ -131,8 +115,8 @@ export default function TweetDetail() {
               likes: newReply.like_count ?? 0,
               views: 0,
             },
+            liked: false,
           } as UIReply;
-
           // 새 댓글은 맨 아래에 추가 후 정렬
           setReplies(prev => {
             const combined = [...prev, formattedReply];
@@ -142,38 +126,26 @@ export default function TweetDetail() {
         },
       )
       .subscribe();
-
     window._replyInsertChannel = channel;
-
     return () => {
       supabase.removeChannel(channel);
       window._replyInsertChannel = null;
     };
   }, [id]);
-
   // 댓글 수가 변하면(실시간 추가/삭제 등) SnsStore에도 반영
-  // 단, 여기서는 replies.length 변화를 감지해서 한꺼번에 처리하는게 안전함.
-  // 하지만 replies는 초기 로드 시 0 -> N으로 변하므로, 초기 로딩 직후에는 반영하면 안 될 수도 있음.
-  // 가장 확실한 건 '이벤트'가 발생했을 때(handleReplyCreated, onDeleted 등) 명시적으로 호출하는 것.
-  // 위쪽 실시간 구독(INSERT/DELETE)에서도 setReplies 할 때 SnsStore 업데이트를 추가해야 함.
-
   useEffect(() => {
     if (!tweet) return;
     // replies 변경될 때마다 캐시에 동기화
-    // (단, 초기 로딩 시점과 겹칠 수 있으니 주의. 하지만 여기서 강제 동기화해두면 리스트로 돌아갔을 때 정확함)
     SnsStore.updateStats(tweet.id, {
       replies: replies.length
     });
   }, [replies.length, tweet?.id]);
-
   // 댓글 삭제 실시간 반영
   useEffect(() => {
     if (!id) return;
-
     if (window._replyDeleteChannel) {
       supabase.removeChannel(window._replyDeleteChannel);
     }
-
     const deleteChannel = supabase
       .channel(`tweet-${id}-replies-delete`)
       .on(
@@ -182,6 +154,7 @@ export default function TweetDetail() {
           event: 'DELETE',
           schema: 'public',
           table: 'tweet_replies',
+          filter: `tweet_id=eq.${id}`, // Main missed this filter, but it is safer to include it if feasible.
         },
         payload => {
           const oldRecord = payload.old as { id: string };
@@ -190,19 +163,15 @@ export default function TweetDetail() {
         },
       )
       .subscribe();
-
     window._replyDeleteChannel = deleteChannel;
-
     return () => {
       supabase.removeChannel(deleteChannel);
       window._replyDeleteChannel = null;
     };
   }, [id]);
-
   // 트윗 정보(좋아요, 조회수 등) 실시간 업데이트
   useEffect(() => {
     if (!id) return;
-
     const channel = supabase
       .channel(`tweet-${id}-updates`)
       .on(
@@ -223,7 +192,7 @@ export default function TweetDetail() {
                 ...prev.stats,
                 likes: newTweet.like_count ?? 0,
                 views: newTweet.view_count ?? 0,
-                replies: newTweet.reply_count ?? 0, // 댓글 수도 동기화 (단, 실시간 리스트와 오차 있을 수 있음)
+                replies: newTweet.reply_count ?? 0,
               },
             };
           });
@@ -237,43 +206,34 @@ export default function TweetDetail() {
         }
       )
       .subscribe();
-
     return () => {
       supabase.removeChannel(channel);
     };
   }, [id]);
-
   // 조회수 증가 (로그인 유저에게만)
   useEffect(() => {
     if (!id || !user) return;
     handleViewCount(id);
   }, [id, user]);
-
   const handleViewCount = async (tweetId: string) => {
     try {
       if (!user) return;
-
       const viewedTweets = JSON.parse(localStorage.getItem('viewedTweets') || '{}');
       const now = Date.now();
-
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
-
       if (profileError || !profile) {
         console.error('프로필 조회 실패:', profileError?.message);
         return;
       }
-
       const { error } = await supabase.rpc('increment_tweet_view', {
         tweet_id_input: tweetId,
         viewer_id_input: profile.id,
       });
-
       if (error) console.error('조회수 RPC 실패:', error.message);
-
       viewedTweets[tweetId] = now;
       localStorage.setItem('viewedTweets', JSON.stringify(viewedTweets));
       
@@ -285,23 +245,19 @@ export default function TweetDetail() {
       console.error('조회수 처리 실패:', err);
     }
   };
-
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const PAGE_SIZE = 10;
-
   // 트윗 데이터 불러오기
   const fetchTweetById = async (tweetId: string) => {
     setIsLoading(true);
     try {
       const data = await tweetService.getTweetById(tweetId);
-
       if (!data) {
         toast.info(t('tweet.deleted_or_not_exist'));
         navigate(-1);
         return;
       }
-
       setTweet(data);
     } catch (error: any) {
       console.error('트윗 불러오기 실패:', error.message);
@@ -311,18 +267,13 @@ export default function TweetDetail() {
       setIsLoading(false);
     }
   };
-
   // 댓글 목록 불러오기 (페이지네이션)
   const fetchReplies = async (tweetId: string, pageParam = 0) => {
     // 알림으로 들어와서 특정 댓글을 하이라이트해야 하는 경우, 전체 로드 (무한스크롤 일시 중지)
     // 단, pageParam > 0 이면 무한스크롤 로드 중이므로 range 적용
     const shouldLoadAll = !!highlightFromNotification && pageParam === 0;
-
     try {
       const mapped = await tweetService.getRepliesByTweetId(tweetId, pageParam, shouldLoadAll);
-
-      const startIdx = pageParam * PAGE_SIZE; // 디버깅용
-
       if (shouldLoadAll) {
         // 전체 로드 시에는 기존 것 덮어쓰고 더보기 없음 처리
         setReplies(mapped);
@@ -334,7 +285,6 @@ export default function TweetDetail() {
         } else {
           setHasMore(true);
         }
-
         setReplies(prev => {
           // 중복 제거 및 created_at 순 정렬
           const merged = pageParam === 0 ? mapped : [...prev, ...mapped];
@@ -350,7 +300,6 @@ export default function TweetDetail() {
       console.error('댓글 불러오기 실패:', error.message);
     }
   };
-
   // 새 댓글 작성 후 콜백: 새로 작성된 댓글로 스크롤 + 하이라이트
   const handleReplyCreated = (replyId: string) => {
     // 실시간 채널이 댓글을 추가할 시간을 기다린 후 스크롤
@@ -364,31 +313,24 @@ export default function TweetDetail() {
       });
     }, 300);
   };
-
   // replies가 로드된 뒤 scrollTargetId를 다시 트리거하여 스크롤이 실행되도록 함
   useEffect(() => {
     if (!scrollTargetId) return; // 스크롤할 타겟이 없으면 X
     if (replies.length === 0) return; // 아직 댓글이 로드 안 됨
-
     // DOM 렌더가 완료되도록 약간의 텀을 줌
     const t = setTimeout(() => {
       setScrollTargetId(id => id); // 같은 값으로 다시 트리거 → scrollEffect 발동
     }, 50);
-
     return () => clearTimeout(t);
   }, [replies]);
-
   // 스크롤 이펙트: scrollTargetId 가 바뀔 때만 한 번 실행
   useEffect(() => {
     if (!scrollTargetId) return;
-
     let cancelled = false;
     let attempts = 0;
     const maxAttempts = 8; // 최대 8번 재시도
-
     const tryScroll = () => {
       if (cancelled) return;
-
       const el = document.getElementById(`reply-${scrollTargetId}`) || document.getElementById(scrollTargetId!);
       if (el) {
         // comment-editor인 경우 화면 중앙에 오도록 처리
@@ -399,7 +341,6 @@ export default function TweetDetail() {
           const headerOffset = 120;
           const rect = el.getBoundingClientRect();
           const absoluteY = window.scrollY + rect.top;
-
           window.scrollTo({
             top: absoluteY - headerOffset,
             behavior: 'smooth',
@@ -407,20 +348,16 @@ export default function TweetDetail() {
         }
         return;
       }
-
       if (attempts < maxAttempts) {
         attempts += 1;
         setTimeout(tryScroll, 200);
       }
     };
-
     tryScroll();
-
     return () => {
       cancelled = true;
     };
   }, [scrollTargetId]);
-
   // 로딩 상태
   if (isLoading) {
     return (
@@ -431,12 +368,10 @@ export default function TweetDetail() {
       </div>
     );
   }
-
   if (!tweet) {
     navigate('/sns', { replace: true });
     return null;
   }
-
   return (
     <div className="border-x border-gray-200 dark:border-gray-700 dark:bg-background">
       {/* 댓글 수는 항상 replies.length 기준으로 표시 */}
@@ -445,15 +380,14 @@ export default function TweetDetail() {
         replyCount={replies.length} 
         onReplyClick={handleReplyClick} 
       />
-
       {!user && (
         <div className="border-y border-gray-200 dark:border-gray-700 px-4 py-7 bg-gray-50/80 dark:bg-muted/40 flex items-center justify-between gap-3">
           <div className="flex flex-col">
             <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-              댓글은 로그인 후 작성하실 수 있어요.
+              {t('tweet.login_to_reply', '댓글은 로그인 후 작성하실 수 있어요.')}
             </span>
             <span className="text-xs text-gray-500 dark:text-gray-400">
-              커뮤니티에 참여하려면 로그인 또는 회원가입을 진행해주세요.
+              {t('tweet.join_community_desc', '커뮤니티에 참여하려면 로그인 또는 회원가입을 진행해주세요.')}
             </span>
           </div>
           <div className="flex gap-2">
@@ -462,19 +396,18 @@ export default function TweetDetail() {
               onClick={() => navigate('/signin')}
               className="px-3 py-1.5 text-xs sm:text-sm rounded-full bg-primary text-white hover:opacity-90"
             >
-              로그인
+              {t('auth.signin')}
             </button>
             <button
               type="button"
               onClick={() => navigate('/signup')}
               className="px-3 py-1.5 text-xs sm:text-sm rounded-full border border-primary text-primary hover:bg-primary/5"
             >
-              회원가입
+              {t('auth.signup')}
             </button>
           </div>
         </div>
       )}
-
       {user && (
         <div id="comment-editor">
           <SnsInlineEditor
@@ -500,21 +433,19 @@ export default function TweetDetail() {
           />
         </div>
       )}
-
       <ReplyList
         replies={replies}
-        scrollTargetId={scrollTargetId}
         onDeleted={id => {
           setReplies(prev => prev.filter(r => r.id !== id));
           
           // 댓글 삭제 시 목록 페이지 캐시(SnsStore)의 댓글 수도 -1
-          import('@/lib/snsState').then(({ SnsStore }) => {
+          // import('@/lib/snsState').then(({ SnsStore }) => {
             if (tweet) {
               SnsStore.updateStats(tweet.id, {
                 replies: Math.max(0, replies.length - 1)
               });
             }
-          });
+          // });
         }}
         hasMore={hasMore}
         fetchMore={() => {

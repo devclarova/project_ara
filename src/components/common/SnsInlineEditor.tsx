@@ -5,10 +5,8 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import imageCompression from 'browser-image-compression';
-
 type EditorMode = 'tweet' | 'reply';
-
-// ✅ 홈 피드에서 사용하는 콜백에 넘겨줄 트윗 형태 (Home의 UITweet과 구조만 맞추면 됨)
+// 홈 피드에서 사용하는 콜백에 넘겨줄 트윗 형태 (Home의 UITweet과 구조만 맞추면 됨)
 export type EditorCreatedTweet = {
   id: string;
   user: {
@@ -27,7 +25,6 @@ export type EditorCreatedTweet = {
     views: number;
   };
 };
-
 type TweetModeProps = {
   mode: 'tweet';
   onTweetCreated?: (tweet: EditorCreatedTweet) => void;
@@ -36,7 +33,6 @@ type TweetModeProps = {
   onChange?: () => void;
   onCompositionEnd?: () => void;
 };
-
 type ReplyModeProps = {
   mode: 'reply';
   tweetId: string;
@@ -46,31 +42,25 @@ type ReplyModeProps = {
   onChange?: () => void;
   onCompositionEnd?: () => void;
 };
-
 type SnsInlineEditorProps = (TweetModeProps | ReplyModeProps) & {
   className?: string;
 };
-
 export interface SnsInlineEditorHandle {
   focus: () => void;
 }
-
 const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>((props, ref) => {
   const { t } = useTranslation();
   const { mode } = props;
   const { user } = useAuth();
-
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [profileNickname, setProfileNickname] = useState<string>('');
   const [profileUserId, setProfileUserId] = useState<string>('');
-
   const [value, setValue] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-
   useImperativeHandle(ref, () => ({
     focus: () => {
       if (textareaRef.current) {
@@ -79,14 +69,11 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
       }
     },
   }));
-
-  // 🔹 미리보기용 URL
+  // 미리보기용 URL
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-
-  // 🔹 한글 IME 조합 상태
+  // 한글 IME 조합 상태
   const [isComposing, setIsComposing] = useState(false);
-
-  // 🔹 내 프로필 정보 불러오기
+  // 내 프로필 정보 불러오기
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
@@ -95,7 +82,6 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
         .select('id, avatar_url, nickname, user_id')
         .eq('user_id', user.id)
         .maybeSingle();
-
       if (!error && data) {
         setProfileAvatar(data.avatar_url);
         setProfileId(data.id);
@@ -105,42 +91,33 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
     };
     loadProfile();
   }, [user]);
-
-  // 🔹 파일이 바뀔 때마다 브라우저 Object URL 생성 / 정리
+  // 파일이 바뀔 때마다 브라우저 Object URL 생성 / 정리
   useEffect(() => {
     const urls = files.map(file => URL.createObjectURL(file));
     setPreviewUrls(urls);
-
     return () => {
       urls.forEach(url => URL.revokeObjectURL(url));
     };
   }, [files]);
-
   const safeFileName = (name: string) => {
     const parts = name.split('.');
     const ext = parts.length > 1 ? parts.pop() || 'jpg' : 'jpg';
     const base = parts.join('.');
-
     const cleanedBase = base
       .replace(/\s+/g, '_')
       .replace(/[^\w\-_.]/g, '_')
       .replace(/_+/g, '_');
-
     return `${cleanedBase.slice(0, 50)}.${ext}`;
   };
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const selected = Array.from(e.target.files);
     setFiles(selected);
   };
-
   // 이미지 업로드 + <img> 태그 문자열 생성
   const uploadImagesAndBuildTags = async () => {
     if (!user || files.length === 0) return '';
-
     const imgTags: string[] = [];
-
     for (let i = 0; i < files.length; i++) {
       let file = files[i];
       
@@ -157,37 +134,29 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
       } catch (err) {
         console.error('이미지 압축 실패(원본 업로드 진행):', err);
       }
-
       const timestamp = Date.now() + i;
       const fileName = `${user.id}_${timestamp}_${safeFileName(file.name)}`;
-
       const folder = mode === 'reply' ? 'reply_images' : 'tweet_images';
       const filePath = `${folder}/${user.id}/${fileName}`;
-
       const { error: uploadError } = await supabase.storage
         .from('tweet_media')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false,
         });
-
       if (uploadError) {
-        console.error('❌ 이미지 업로드 실패:', uploadError.message);
+        console.error('이미지 업로드 실패:', uploadError.message);
         continue;
       }
-
       const { data: urlData } = await supabase.storage.from('tweet_media').getPublicUrl(filePath);
-
       const publicUrl = urlData.publicUrl;
       imgTags.push(
         `<img src="${publicUrl}" alt="${mode === 'reply' ? 'reply' : 'tweet'} image" />`,
       );
     }
-
     if (imgTags.length === 0) return '';
     return imgTags.join('<br />');
   };
-
   const handleSubmit = async () => {
     if (!user) {
       toast.error(t('tweets.error_login'));
@@ -200,11 +169,9 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
       toast.error(t('tweets.error_profile'));
       return;
     }
-
     setIsSubmitting(true);
     try {
       let finalContent = value.trim();
-
       const imgTags = await uploadImagesAndBuildTags();
       if (imgTags) {
         if (finalContent) {
@@ -213,17 +180,14 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
           finalContent = imgTags;
         }
       }
-
       if (!finalContent.trim()) {
         toast.error(t('tweets.error_empty'));
         setIsSubmitting(false);
         return;
       }
-
       // ================= 댓글 모드 =================
       if (mode === 'reply') {
         const { tweetId, onReplyCreated } = props as ReplyModeProps;
-
         const { data: inserted, error: insertError } = await supabase
           .from('tweet_replies')
           .insert({
@@ -233,25 +197,20 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
           })
           .select('id')
           .single();
-
         if (insertError || !inserted) {
           console.error('❌ 댓글 저장 실패:', insertError?.message);
           toast.error(t('tweets.error_reply_save'));
           setIsSubmitting(false);
           return;
         }
-
         if (onReplyCreated && inserted.id) {
           onReplyCreated(inserted.id);
         }
-
         toast.success(t('tweets.success_reply'));
       }
-
       // ================= 트윗 모드 =================
       if (mode === 'tweet') {
         const { onTweetCreated } = props as TweetModeProps;
-
         const { data: inserted, error: insertError } = await supabase
           .from('tweets')
           .insert({
@@ -271,14 +230,12 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
           `,
           )
           .single();
-
         if (insertError || !inserted) {
           console.error('❌ 트윗 저장 실패:', insertError?.message);
           toast.error(t('tweets.error_tweet_save'));
           setIsSubmitting(false);
           return;
         }
-
         const uiTweet: EditorCreatedTweet = {
           id: inserted.id,
           user: {
@@ -297,15 +254,12 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
             views: inserted.view_count ?? 0,
           },
         };
-
         if (onTweetCreated) {
           onTweetCreated(uiTweet);
         }
-
         toast.success(t('tweets.success_tweet'));
       }
-
-      // ✅ 공통 초기화
+      // 공통 초기화
       setValue('');
       setFiles([]);
       if (fileInputRef.current) {
@@ -318,13 +272,10 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
       setIsSubmitting(false);
     }
   };
-
   const disabled = (!value.trim() && files.length === 0) || isSubmitting;
-
-  // 🔥 Enter / Shift+Enter 처리
+  // Enter / Shift+Enter 처리
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (isComposing) return; // 한글 조합 중일 땐 무시
-
     if (e.key === 'Enter' && !e.shiftKey) {
       // Enter 단독 → 게시
       e.preventDefault();
@@ -334,10 +285,8 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
     }
     // Shift+Enter는 기본 동작(줄바꿈) 그대로 두면 됨
   };
-
   // 비로그인일 때는 이 컴포넌트는 렌더 안 하게 (상위에서 CTA 따로 처리)
   if (!user) return null;
-
   const placeholder = mode === 'reply' ? t('tweets.placeholder_reply') : t('tweets.placeholder_tweet');
   const buttonLabel =
     mode === 'reply'
@@ -347,7 +296,6 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
       : isSubmitting
         ? t('tweets.btn_posting')
         : t('tweets.btn_post');
-
   return (
     <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-4 bg-white dark:bg-background">
       <div className="flex items-start gap-3">
@@ -356,7 +304,6 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
           <AvatarImage src={profileAvatar || '/default-avatar.svg'} alt="me" />
           <AvatarFallback>ME</AvatarFallback>
         </Avatar>
-
         {/* 입력 영역 */}
         <div className="flex-1">
           <textarea
@@ -383,7 +330,6 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
               focus:outline-none focus:ring-2 focus:ring-primary/60 focus:border-transparent
             "
           />
-
           {/* 파일 선택 + 선택한 이미지 표시 */}
           <div className="mt-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -409,7 +355,6 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
                 </span>
               )}
             </div>
-
             <button
               type="button"
               onClick={handleSubmit}
@@ -426,8 +371,7 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
               {buttonLabel}
             </button>
           </div>
-
-          {/* 🔥 이미지 미리보기 영역 */}
+          {/* 이미지 미리보기 영역 */}
           {previewUrls.length > 0 && (
             <div className="mt-3 grid grid-cols-3 gap-2">
               {previewUrls.map((url, idx) => (
@@ -449,5 +393,4 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
     </div>
   );
 });
-
 export default SnsInlineEditor;

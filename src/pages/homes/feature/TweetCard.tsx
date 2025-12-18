@@ -14,6 +14,7 @@ import { type UITweet, type TweetStats, type TweetUser } from '@/types/sns';
 import { SnsStore } from '@/lib/snsState';
 import ReportButton from '@/components/common/ReportButton';
 import BlockButton from '@/components/common/BlockButton';
+import EditButton from '@/components/common/EditButton';
 const SNS_LAST_TWEET_ID_KEY = 'sns-last-tweet-id';
 interface TweetCardProps {
   id: string; // 댓글ID 또는 트윗ID
@@ -75,8 +76,6 @@ export default function TweetCard({
   // 최종 슬라이드에 사용할 이미지 목록 (prop 우선, 없으면 content에서 추출한 것)
   const allImages = propImages.length > 0 ? propImages : contentImages;
   const [isDraggingText, setIsDraggingText] = useState(false);
-  const textDragStartX = useRef(0);
-  const textDragStartY = useRef(0);
   const dragInfo = useRef({
     startX: 0,
     startY: 0,
@@ -518,21 +517,25 @@ export default function TweetCard({
             {showMenu && (
               <div className="absolute right-0 top-8 w-36 bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
                 {isMyTweet ? (
-                  <button
-                    onClick={e => {
-                      e.stopPropagation();
-                      setShowDialog(true);
-                    }}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
-                  >
-                    <i className="ri-delete-bin-line" />
-                    <span>{t('common.delete')}</span>
-                  </button>
+                  <>
+                    <EditButton onClose={() => setShowMenu(false)} />
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setShowDialog(true);
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
+                    >
+                      <i className="ri-delete-bin-line" />
+                      <span>{t('common.delete')}</span>
+                    </button>
+                  </>
                 ) : (
                   <>
                     
                     <ReportButton onClose={() => setShowMenu(false)} />
                     <BlockButton
+                      username={user.name}
                       isBlocked={isBlocked}
                       onToggle={() => setIsBlocked(prev => !prev)}
                       onClose={() => setShowMenu(false)}

@@ -58,7 +58,8 @@ const StudyListPage = () => {
 
   const [showGuide, setShowGuide] = useState(false);
 
-  const limit = 9; // 한 페이지당 9개 (3x3 그리드)
+  const [pageSize, setPageSize] = useState(9);
+  const limit = pageSize;
 
   useEffect(() => {
     if (!isGuideModalDismissed(LEANING_GUIDE_KEY)) {
@@ -101,7 +102,6 @@ const StudyListPage = () => {
       const needsContent = !!contentFilter;
       const needsEpisode = !!episodeFilter;
       const needsLevel = !!levelFilter;
-      const needsJoin = needsCategory || needsContent || needsEpisode || needsLevel;
 
       if (needsCategory || needsContent || needsEpisode || needsLevel) {
         query = supabase
@@ -121,7 +121,7 @@ const StudyListPage = () => {
 
       const { data, count, error } = await query.range(from, to);
       if (error) {
-        console.error('❌ 데이터 불러오기 오류:', error.message);
+        console.error('데이터 불러오기 오류:', error.message);
         return;
       }
       setClips((data ?? []) as Study[]);
@@ -129,7 +129,7 @@ const StudyListPage = () => {
     };
 
     fetchData();
-  }, [page, activeCategory, levelFilter, keyword, contentFilter, episodeFilter]); // 의존성 최소화
+  }, [page, limit, activeCategory, levelFilter, keyword, contentFilter, episodeFilter]); // 의존성 최소화
 
   const finalList = clips;
 
@@ -143,6 +143,32 @@ const StudyListPage = () => {
     setLevelFilter(displayLevel);
     setPage(1);
   }, [displayLevel]);
+
+  // 화면 크기에 따라 콘텐츠 수 설정
+  useEffect(() => {
+    const updatePageSize = () => {
+      const width = window.innerWidth;
+
+      if (width < 640) {
+        // 모바일 (1열)
+        setPageSize(6); // ← 여기서 모바일 개수 조절
+      } else if (width >= 640 && width < 1024) {
+        // 태블릿 (2열)
+        setPageSize(8);
+      } else {
+        // 데스크톱 (3열 이상)
+        setPageSize(9);
+      }
+    };
+
+    updatePageSize();
+    window.addEventListener('resize', updatePageSize);
+    return () => window.removeEventListener('resize', updatePageSize);
+  }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [pageSize]);
 
   const totalPages = Math.ceil(total / limit);
 
@@ -348,13 +374,15 @@ const StudyListPage = () => {
               </div>
 
               {/* 페이지네이션 */}
-              <PaginationComponent
-                totalPages={totalPages}
-                page={page}
-                onPageChange={setPage}
-                windowSize={3} // 3개씩 보이기
-                autoScrollTop={true} // 숫자 클릭 시 상단으로
-              />
+              {totalPages > 1 && (
+                <PaginationComponent
+                  totalPages={totalPages}
+                  page={page}
+                  onPageChange={setPage}
+                  windowSize={5} // 5개씩 보이기
+                  autoScrollTop={true} // 숫자 클릭 시 상단으로
+                />
+              )}
             </div>
           </main>
         </div>
