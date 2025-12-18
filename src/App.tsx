@@ -32,6 +32,12 @@ import { DirectChatProvider } from './contexts/DirectChatContext';
 import Header from './components/common/Header';
 import SnsPage from './pages/sns/SnsPage';
 import SnsDetailPage from './pages/sns/SnsDetailPage';
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminHome from './pages/admin/AdminHome';
+import AdminStudyUpload from './pages/admin/AdminStudyUpload';
+import AdminReports from './pages/admin/AdminReports';
+import AdminContentModeration from './pages/admin/AdminContentModeration';
+import AdminAnalytics from './pages/admin/AdminAnalytics'; // To be created next
 import { Toaster } from 'sonner'; // 토스트 컴포넌트 추가
 import Footer from './components/common/Footer';
 import { ThemeProvider } from './components/theme-provider';
@@ -62,7 +68,7 @@ function AppInner() {
   const location = useLocation();
 
   // 헤더를 숨길 경로들
-  const HIDE_HEADER_PATHS = ['/signin', '/signup', '/auth/callback', '/signup/social'];
+  const HIDE_HEADER_PATHS = ['/signin', '/signup', '/auth/callback', '/signup/social', '/admin'];
   const hideHeader = HIDE_HEADER_PATHS.some(path => location.pathname.startsWith(path));
 
   // 푸터를 숨길 경로들 (채팅방, 로그인 등)
@@ -99,6 +105,14 @@ function AppInner() {
             <Route path="/studyList" element={<StudyListPage />} />
             <Route path="/sns" element={<SnsPage />} />
             <Route path="/sns/:id" element={<SnsDetailPage />} />
+
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminHome />} />
+            <Route path="/admin/study/upload" element={<AdminStudyUpload />} />
+            <Route path="/admin/reports" element={<AdminReports />} />
+            <Route path="/admin/content" element={<AdminContentModeration />} />
+            <Route path="/admin/analytics" element={<AdminAnalytics />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
 
             <Route element={<RequireGuest />}>
               <Route path="/signup" element={<SignUpPage />} />
