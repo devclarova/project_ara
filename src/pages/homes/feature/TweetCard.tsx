@@ -11,6 +11,7 @@ import ModalImageSlider from '../tweet/components/ModalImageSlider';
 import TranslateButton from '@/components/common/TranslateButton';
 import ReportButton from '@/components/common/ReportButton';
 import BlockButton from '@/components/common/BlockButton';
+import EditButton from '@/components/common/EditButton';
 
 const SNS_LAST_TWEET_ID_KEY = 'sns-last-tweet-id';
 
@@ -89,8 +90,6 @@ export default function TweetCard({
   const allImages = propImages.length > 0 ? propImages : contentImages;
 
   const [isDraggingText, setIsDraggingText] = useState(false);
-  const textDragStartX = useRef(0);
-  const textDragStartY = useRef(0);
   const dragInfo = useRef({
     startX: 0,
     startY: 0,
@@ -463,20 +462,24 @@ export default function TweetCard({
             {showMenu && (
               <div className="absolute right-0 top-8 w-36 bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
                 {isMyTweet ? (
-                  <button
-                    onClick={e => {
-                      e.stopPropagation();
-                      setShowDialog(true);
-                    }}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
-                  >
-                    <i className="ri-delete-bin-line" />
-                    <span>삭제</span>
-                  </button>
+                  <>
+                    <EditButton onClose={() => setShowMenu(false)} />
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setShowDialog(true);
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
+                    >
+                      <i className="ri-delete-bin-line" />
+                      <span>삭제</span>
+                    </button>
+                  </>
                 ) : (
                   <>
                     <ReportButton onClose={() => setShowMenu(false)} />
                     <BlockButton
+                      username={user.name}
                       isBlocked={isBlocked}
                       onToggle={() => setIsBlocked(prev => !prev)}
                       onClose={() => setShowMenu(false)}
@@ -670,7 +673,7 @@ export default function TweetCard({
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setShowDialog(false)}
-                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg:white/10"
+                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-400 dark:hover:bg:white/10"
               >
                 취소
               </button>

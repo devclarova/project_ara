@@ -58,6 +58,7 @@ export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardPr
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
   const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
@@ -267,6 +268,34 @@ export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardPr
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // 트윗 삭제
+  const handleDeleteTweet = async () => {
+    if (!profileId) {
+      toast.error('로그인이 필요합니다.');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('tweets')
+        .delete()
+        .eq('id', tweet.id)
+        .eq('author_id', profileId);
+
+      if (error) throw error;
+
+      toast.success('피드가 삭제되었습니다.');
+      setShowDeleteDialog(false);
+      setShowMenu(false);
+
+      // 상세 페이지이므로 뒤로 이동
+      navigate(-1);
+    } catch (err: any) {
+      console.error('트윗 삭제 실패:', err.message);
+      toast.error('삭제 중 오류가 발생했습니다.');
+    }
+  };
+
   return (
     <div className="relative border-b border-gray-200 dark:border-gray-700 px-4 py-6 bg-white dark:bg-background">
       <div className="flex items-start space-x-3">
@@ -335,7 +364,7 @@ export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardPr
                 <button
                   onClick={e => {
                     e.stopPropagation();
-                    setShowMenu(prev => !prev);
+                    setShowDeleteDialog(true);
                   }}
                   className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
                 >
@@ -346,6 +375,7 @@ export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardPr
                 <>
                   <ReportButton onClose={() => setShowMenu(false)} />
                   <BlockButton
+                    username={tweet.user.name}
                     isBlocked={isBlocked}
                     onToggle={() => setIsBlocked(prev => !prev)}
                     onClose={() => setShowMenu(false)}
@@ -356,6 +386,37 @@ export default function TweetDetailCard({ tweet, replyCount }: TweetDetailCardPr
           )}
         </div>
       </div>
+
+      {showDeleteDialog && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[1000]">
+          <div
+            className="bg-white dark:bg-secondary rounded-2xl p-6 w-[90%] max-w-sm"
+            onClick={e => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
+              이 게시글을 삭제하시겠어요?
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+              삭제한 게시글은 되돌릴 수 없습니다. 정말 삭제하시겠습니까?
+            </p>
+
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowDeleteDialog(false)}
+                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-400 dark:hover:bg:white/10"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleDeleteTweet}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+              >
+                삭제하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mt-4">
         {hasText && (

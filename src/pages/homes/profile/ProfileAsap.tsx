@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,8 +6,10 @@ import ProfileHeader from './components/ProfileHeader';
 import ProfileTabs, { type ProfileTabKey } from './components/ProfileTabs';
 import ProfileTweets from './components/ProfileTweets';
 import EditProfileModal from './components/EditProfileModal';
+import ReportButton from '@/components/common/ReportButton';
+import BlockButton from '@/components/common/BlockButton';
 
-interface UserProfile {
+export interface UserProfile {
   id: string;
   user_id: string;
   name: string;
@@ -18,6 +20,7 @@ interface UserProfile {
   followers: number;
   following: number;
   banner?: string | null;
+  bannerPositionY?: number;
   website?: string | null;
   country?: string | null;
   countryFlagUrl?: string | null;
@@ -27,12 +30,17 @@ export default function ProfileAsap() {
   const [activeTab, setActiveTab] = useState<ProfileTabKey>('posts');
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
   // URL에서 username 추출 + 디코딩
   const { username } = useParams<{ username: string }>();
   const decodedUsername = username ? decodeURIComponent(username) : '';
+
+  const isOwnProfile = user && userProfile ? user.id === userProfile.user_id : false;
 
   useEffect(() => {
     if (!decodedUsername && !user) return;
@@ -47,6 +55,7 @@ export default function ProfileAsap() {
         nickname,
         avatar_url,
         banner_url,
+        banner_position_y,
         bio,
         country,
         followers_count,
@@ -73,7 +82,7 @@ export default function ProfileAsap() {
           const { data: countryRow, error: countryError } = await supabase
             .from('countries')
             .select('id, name, flag_url')
-            .eq('id', profile.country) // 🔥 여기: iso_code가 아니라 id로 조회
+            .eq('id', profile.country) // 여기: iso_code가 아니라 id로 조회
             .maybeSingle();
 
           if (!countryError && countryRow) {
@@ -107,6 +116,7 @@ export default function ProfileAsap() {
           following: profile.following_count ?? 0,
           followers: profile.followers_count ?? 0,
           banner: profile.banner_url ?? null,
+          bannerPositionY: profile.banner_position_y ?? 50,
         });
       } catch (err) {
         console.error('프로필 불러오기 실패:', err);
@@ -116,6 +126,17 @@ export default function ProfileAsap() {
 
     fetchProfile();
   }, [decodedUsername, user]);
+
+  // 외부 클릭 시 메뉴 닫기
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // 프로필 저장 후 상태 갱신
   const handleSaveProfile = (updatedProfile: Partial<UserProfile>) => {
@@ -148,23 +169,55 @@ export default function ProfileAsap() {
         <div className="w-full max-w-2xl lg:max-w-3xl border-x border-gray-200 dark:border-gray-700 dark:bg-background">
           {/* 상단 스티키 헤더 (뒤로가기 + 이름) */}
           <div className="sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 z-20">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center">
+              {/* 뒤로가기 */}
               <button
                 onClick={() => navigate(-1)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition-colors cursor-pointer"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition-colors"
               >
                 <i className="ri-arrow-left-line text-xl text-gray-700 dark:text-gray-100" />
               </button>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                  {userProfile.name}
-                </h1>
-              </div>
+
+              {/* 이름 */}
+              <h1 className="ml-3 text-xl font-bold text-gray-900 dark:text-gray-100">
+                {userProfile.name}
+              </h1>
+
+              {/* 오른쪽 영역 */}
+              {!isOwnProfile && (
+                <div className="ml-auto relative" ref={menuRef}>
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      setShowMenu(prev => !prev);
+                    }}
+                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition"
+                  >
+                    <i className="ri-more-fill text-gray-500 dark:text-gray-400 text-lg" />
+                  </button>
+
+                  {showMenu && (
+                    <div className="absolute right-0 top-10 w-36 bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg py-2 z-50">
+                      <ReportButton onClose={() => setShowMenu(false)} />
+                      <BlockButton
+                        username={userProfile.name}
+                        isBlocked={isBlocked}
+                        onToggle={() => setIsBlocked(prev => !prev)}
+                        onClose={() => setShowMenu(false)}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
           {/* 프로필 헤더 (배너, 아바타, 팔로워 수 등) */}
-          <ProfileHeader userProfile={userProfile} onEditClick={() => setIsEditModalOpen(true)} />
+          <ProfileHeader
+            userProfile={userProfile}
+            onProfileUpdated={updated => setUserProfile(updated)}
+            onEditClick={() => setIsEditModalOpen(true)}
+          />
 
           {/* 탭 (게시물 / 답글 / 좋아요) */}
           <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />

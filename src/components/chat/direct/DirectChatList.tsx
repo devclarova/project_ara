@@ -7,6 +7,8 @@
 import { useEffect, useRef, useState, useCallback, memo } from 'react';
 import { useDirectChat } from '../../../contexts/DirectChatContext';
 import type { ChatUser } from '../../../types/ChatType';
+import ReportButton from '@/components/common/ReportButton';
+import BlockButton from '@/components/common/BlockButton';
 
 interface DirectChatListProps {
   onChatSelect: (chatId: string) => void;
@@ -39,6 +41,26 @@ const ChatItem = memo(
       }
       return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
     }, []);
+    const [showMenu, setShowMenu] = useState(false);
+    const [isBlocked, setIsBlocked] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    // 버튼 클릭 감지
+    useEffect(() => {
+      const handleClickOutside = (e: MouseEvent) => {
+        if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+          setShowMenu(false);
+        }
+      };
+
+      if (showMenu) {
+        document.addEventListener('mousedown', handleClickOutside);
+      }
+
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, [showMenu]);
 
     return (
       <div
@@ -59,8 +81,32 @@ const ChatItem = memo(
               <div className="chat-name">{chat.other_user.nickname}</div>
               {chat.is_new_chat && <span className="chat-new-badge">NEW</span>}
             </div>
-            <div className="chat-time">
-              {chat.last_message ? formatTime(chat.last_message.created_at) : ''}
+            <div className="flex items-center gap-1">
+              <div className="chat-time">
+                {chat.last_message ? formatTime(chat.last_message.created_at) : ''}
+              </div>
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    setShowMenu(prev => !prev);
+                  }}
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition"
+                >
+                  <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg leading-none block" />
+                </button>
+                {showMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-36 bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg py-2 z-50">
+                    <ReportButton onClose={() => setShowMenu(false)} />
+                    <BlockButton
+                      username={chat.other_user.nickname}
+                      isBlocked={isBlocked}
+                      onToggle={() => setIsBlocked(prev => !prev)}
+                      onClose={() => setShowMenu(false)}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <div className="chat-preview">

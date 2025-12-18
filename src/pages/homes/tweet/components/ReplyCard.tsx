@@ -1,42 +1,99 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import DOMPurify from 'dompurify';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
-import type { Reply } from './ReplyList';
-import TranslateButton from '@/components/common/TranslateButton';
 import BlockButton from '@/components/common/BlockButton';
 import ReportButton from '@/components/common/ReportButton';
+import TranslateButton from '@/components/common/TranslateButton';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
+import DOMPurify from 'dompurify';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import ModalImageSlider from './ModalImageSlider';
+import type { Reply } from './ReplyList';
+
+function stripImagesAndEmptyLines(html: string) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+
+  // img 제거
+  doc.querySelectorAll('img').forEach(img => img.remove());
+
+  // 빈 <br> 정리
+  doc.querySelectorAll('br').forEach(br => {
+    const next = br.nextSibling;
+    if (!next || next.nodeName === 'BR') {
+      br.remove();
+    }
+  });
+
+  return doc.body.innerHTML.trim();
+}
 
 export function ReplyCard({
   reply,
   onDeleted,
-  onUnlike,
+  // onUnlike,
+  onLike,
+  onReply,
   highlight = false,
 }: {
   reply: Reply;
   onDeleted?: (id: string) => void;
-  onUnlike?: (id: string) => void;
+  // onUnlike?: (id: string) => void;
+  onLike?: (replyId: string, delta: number) => void;
+  onReply?: (reply: Reply) => void;
   highlight?: boolean;
 }) {
+  if (reply.is_deleted) {
+    return null;
+  }
+
+  const safeStats = reply.stats ?? {
+    comments: 0,
+    retweets: 0,
+    likes: 0,
+    views: 0,
+  };
+
+  const safeUser = {
+    name: reply.user?.name || '알 수 없는 사용자',
+    username: reply.user?.username || '',
+    avatar: reply.user?.avatar || '/default-avatar.svg',
+  };
+
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
 
   const [liked, setLiked] = useState(reply.liked ?? false);
-  const [likeCount, setLikeCount] = useState(reply.stats.likes);
+  // const [likeCount, setLikeCount] = useState(safeStats.likes);
   const [showMenu, setShowMenu] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [profileId, setProfileId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const [translated, setTranslated] = useState<string>('');
+  const [modalIndex, setModalIndex] = useState(0);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [contentImages, setContentImages] = useState<string[]>([]);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // const [commentCount, setCommentCount] = useState(reply.stats.comments);
 
   // 하이라이트 상태 (잠깐 색 들어왔다 빠지는 용도)
   const [isHighlighted, setIsHighlighted] = useState(false);
 
   const [isBlocked, setIsBlocked] = useState(false);
+
+  const rawContent = reply.content ?? '';
+
+  const safeContent = DOMPurify.sanitize(rawContent, {
+    ADD_TAGS: ['iframe', 'video', 'source', 'img'],
+    ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
+  });
+
+  const visibleCount = 3;
+  const [startIndex, setStartIndex] = useState(0);
+
+  const visibleImages = contentImages.slice(startIndex, startIndex + visibleCount);
 
   // highlight prop이 true일 때 잠깐 하이라이트
   useEffect(() => {
@@ -116,6 +173,63 @@ export function ReplyCard({
     };
   }, [showDialog]);
 
+  useEffect(() => {
+    if (!showMenu) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMenu]);
+
+  // 이미지 추출
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(rawContent, 'text/html');
+
+    const imgs = Array.from(doc.querySelectorAll('img'))
+      .map(img => img.src)
+      .filter(Boolean);
+
+    setContentImages(imgs);
+  }, [rawContent]);
+
+  // 이미지 클릭 이벤트
+  useEffect(() => {
+    if (!contentRef.current || contentImages.length === 0) return;
+
+    const imgs = Array.from(contentRef.current.querySelectorAll('img'));
+    const cleanups: Array<() => void> = [];
+
+    imgs.forEach((img, index) => {
+      img.style.cursor = 'pointer';
+
+      const handleClick = (e: Event) => {
+        e.stopPropagation();
+        setModalIndex(index);
+        setShowImageModal(true);
+      };
+
+      img.addEventListener('click', handleClick);
+      cleanups.push(() => img.removeEventListener('click', handleClick));
+    });
+
+    return () => {
+      cleanups.forEach(fn => fn());
+    };
+  }, [contentImages]);
+
+  // reply가 바뀌면 동기화
+  // useEffect(() => {
+  //   setCommentCount(reply.stats.comments);
+  // }, [reply.stats.comments]);
+
   // 댓글 삭제
   const handleDelete = async () => {
     if (!profileId) {
@@ -123,119 +237,90 @@ export function ReplyCard({
       return;
     }
 
-    try {
-      const { error } = await supabase
-        .from('tweet_replies')
-        .delete()
-        .eq('id', reply.id)
-        .eq('author_id', profileId);
+    const { error } = await supabase
+      .from('tweet_replies')
+      .delete()
+      .eq('id', reply.id)
+      .eq('author_id', profileId);
 
-      if (error) throw error;
-
-      toast.success('댓글이 삭제되었습니다.');
-      setShowDialog(false);
-      setShowMenu(false);
-      onDeleted?.(reply.id);
-    } catch (err: any) {
-      console.error('댓글 삭제 실패:', err.message);
-      toast.error('삭제 중 오류가 발생했습니다.');
+    if (error) {
+      console.error('댓글 삭제 실패:', error);
+      toast.error('댓글 삭제에 실패했습니다.');
+      return;
     }
+
+    toast.success('댓글이 삭제되었습니다.');
+    onDeleted?.(reply.id);
   };
 
-  // 댓글 좋아요 토글 (user_id = profileId 기준으로 수정)
+  // 댓글 좋아요 토글
   const toggleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!profileId) return;
 
-    if (!authUser) {
-      toast.error('로그인이 필요합니다.');
+    const { data: existing, error: selectError } = await supabase
+      .from('tweet_replies_likes')
+      .select('id')
+      .eq('reply_id', reply.id)
+      .eq('user_id', profileId)
+      .maybeSingle();
+
+    if (selectError) {
+      console.error('LIKE SELECT ERROR:', selectError);
+      toast.error(selectError.message);
       return;
     }
-    if (!profileId) {
-      toast.error('프로필 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
-      return;
-    }
 
-    try {
-      // 이미 좋아요 했는지 확인
-      const { data: existing, error: existingError } = await supabase
+    if (existing) {
+      // 좋아요 취소
+      const { error: deleteError } = await supabase
         .from('tweet_replies_likes')
-        .select('id')
+        .delete()
         .eq('reply_id', reply.id)
         .eq('user_id', profileId)
-        .maybeSingle();
+        .select();
 
-      if (existingError) {
-        console.error('좋아요 조회 실패:', existingError.message);
-      }
-
-      if (existing) {
-        // 좋아요 취소
-        const { error: deleteError } = await supabase
-          .from('tweet_replies_likes')
-          .delete()
-          .eq('id', existing.id);
-
-        if (deleteError) throw deleteError;
-
-        setLiked(false);
-        setLikeCount(prev => Math.max(0, prev - 1));
-
-        // 좋아요 탭에서 좋아요 취소하면 즉시 목록에서 제거
-        onUnlike?.(reply.id);
-
+      if (deleteError) {
+        console.error('LIKE DELETE ERROR:', deleteError);
+        toast.error(deleteError.message);
         return;
       }
 
-      // 새 좋아요 추가
-      const { error: insertError } = await supabase.from('tweet_replies_likes').insert({
+      setLiked(false);
+      onLike?.(reply.id, -1);
+      return;
+    }
+
+    // 좋아요 추가
+    const { error: insertError } = await supabase
+      .from('tweet_replies_likes')
+      .insert({
         reply_id: reply.id,
         user_id: profileId,
-      });
+      })
+      .select();
 
-      if (insertError) throw insertError;
-
-      setLiked(true);
-      setLikeCount(prev => prev + 1);
-
-      // 알림 생성 (본인 댓글이 아닐 때만)
-      // if (reply.user.username !== authUser.id) {
-      //   // 댓글 작성자 프로필 찾기
-      //   const { data: receiverProfile, error: receiverError } = await supabase
-      //     .from('profiles')
-      //     .select('id')
-      //     .eq('user_id', reply.user.username)
-      //     .maybeSingle();
-
-      //   if (!receiverError && receiverProfile && receiverProfile.id !== profileId) {
-      //     await supabase.from('notifications').insert({
-      //       receiver_id: receiverProfile.id, // 댓글 주인 (profiles.id)
-      //       sender_id: profileId, // 좋아요 누른 사람 (profiles.id)
-      //       type: 'like', // 기존 enum 유지
-      //       content: reply.content, // 댓글 내용
-      //       tweet_id: reply.tweetId, // 어떤 피드인지
-      //       comment_id: reply.id, // 어떤 댓글인지 → 알림에서 스크롤/하이라이트에 사용
-      //     });
-      //   }
-      // }
-    } catch (err: any) {
-      console.error('좋아요 처리 실패:', err.message);
-      toast.error('좋아요 처리 중 오류가 발생했습니다.');
+    if (insertError) {
+      console.error('LIKE INSERT ERROR:', insertError);
+      toast.error(insertError.message);
+      return;
     }
-  };
 
-  const safeContent = DOMPurify.sanitize(reply.content, {
-    ADD_TAGS: ['iframe', 'video', 'source', 'img'],
-    ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
-  });
+    setLiked(true);
+    onLike?.(reply.id, +1);
+  };
 
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     // URL에는 닉네임(name)을 넣고, ProfileAsap에서 nickname 기준으로 조회
-    navigate(`/profile/${encodeURIComponent(reply.user.name)}`);
+    navigate(`/profile/${encodeURIComponent(safeUser.name)}`);
   };
 
   // 본인 댓글 여부 (profiles.id 비교 불가하므로 user_id 비교)
-  const isMyReply = authUser?.id === reply.user.username;
+  const isMyReply = authUser?.id === safeUser.username;
+
+  // 대댓글 여부
+  const isChildReply = Boolean(reply.parent_reply_id);
 
   // 배경 빼고 공통 카드 스타일만
   const baseCardClasses =
@@ -258,10 +343,16 @@ export function ReplyCard({
     return tmp.textContent || tmp.innerText || '';
   })();
 
+  // 이미지 제거용
+  const safeContentWithoutImages = DOMPurify.sanitize(stripImagesAndEmptyLines(rawContent), {
+    ADD_TAGS: ['iframe', 'video', 'source'],
+    ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
+  });
+
   return (
     <div
       id={`reply-${reply.id}`}
-      className={containerClasses + ' cursor-pointer'}
+      className={`${containerClasses} ${isChildReply ? 'ml-10 border-l-2 border-gray-200 dark:border-gray-700 pl-4' : ''} cursor-pointer`}
       onClick={e => {
         e.stopPropagation();
         navigate(`/sns/${reply.tweetId}`, {
@@ -275,8 +366,8 @@ export function ReplyCard({
       <div className="flex space-x-3">
         <div onClick={handleAvatarClick} className="cursor-pointer">
           <Avatar>
-            <AvatarImage src={reply.user.avatar || '/default-avatar.svg'} alt={reply.user.name} />
-            <AvatarFallback>{reply.user.name.charAt(0)}</AvatarFallback>
+            <AvatarImage src={safeUser.avatar || '/default-avatar.svg'} alt={safeUser.name} />
+            <AvatarFallback>{safeUser.name.charAt(0)}</AvatarFallback>
           </Avatar>
         </div>
 
@@ -288,7 +379,7 @@ export function ReplyCard({
                 className="font-bold text-gray-900 dark:text-gray-100 hover:underline cursor-pointer truncate"
                 onClick={handleAvatarClick}
               >
-                {reply.user.name}
+                {safeUser.name}
               </span>
               <span className="text-gray-500 dark:text-gray-400">·</span>
               <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
@@ -325,6 +416,7 @@ export function ReplyCard({
                   <>
                     <ReportButton onClose={() => setShowMenu(false)} />
                     <BlockButton
+                      username={safeUser.name}
                       isBlocked={isBlocked}
                       onToggle={() => setIsBlocked(prev => !prev)}
                       onClose={() => setShowMenu(false)}
@@ -337,8 +429,8 @@ export function ReplyCard({
 
           {/* 본문 */}
           <div
-            className="mt-1 text-gray-900 dark:text-gray-100 whitespace-pre-wrap break-words leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: safeContent }}
+            className="mt-1 text-gray-900 dark:text-gray-100 whitespace-normal break-words leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: safeContentWithoutImages }}
           />
 
           {/* 번역 버튼 */}
@@ -359,27 +451,96 @@ export function ReplyCard({
             </div>
           )}
 
+          {contentImages.length > 0 && (
+            <div className="relative group">
+              <div className="grid grid-cols-3 gap-2">
+                {visibleImages.map((src, idx) => (
+                  <button
+                    key={src}
+                    onClick={e => {
+                      e.stopPropagation();
+                      setModalIndex(startIndex + idx);
+                      setShowImageModal(true);
+                    }}
+                    className="relative aspect-square overflow-hidden rounded-lg bg-gray-100"
+                  >
+                    <img
+                      src={src}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      draggable={false}
+                    />
+                  </button>
+                ))}
+              </div>
+
+              {/* 왼쪽 버튼 */}
+              {startIndex > 0 && (
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    setStartIndex(i => Math.max(i - 3, 0));
+                  }}
+                  className="absolute left-1 top-1/2 -translate-y-1/2 bg-black/40 text-white text-xl rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity z-10"
+                >
+                  ‹
+                </button>
+              )}
+
+              {/* 오른쪽 버튼 */}
+              {startIndex + 3 < contentImages.length && (
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    setStartIndex(i => i + 3);
+                  }}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 bg-black/40 text-white text-xl rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity z-10"
+                >
+                  ›
+                </button>
+              )}
+            </div>
+          )}
+
+          {showImageModal && contentImages.length > 0 && (
+            <div
+              className="fixed inset-0 bg-black/80 z-[2000] flex items-center justify-center"
+              onClick={e => e.stopPropagation()}
+            >
+              <ModalImageSlider
+                allImages={contentImages}
+                modalIndex={modalIndex}
+                setModalIndex={setModalIndex}
+                onClose={() => setShowImageModal(false)}
+              />
+            </div>
+          )}
+
           {/* 액션 버튼 */}
           <div className="flex items-center justify-start gap-7 max-w-md mt-3 text-gray-500 dark:text-gray-400">
             {/* Reply */}
-            <button className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400 transition-colors group">
+            <button
+              className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400 transition-colors group"
+              onClick={e => {
+                e.stopPropagation();
+                onReply?.(reply); // 부모로 “이 댓글에 답글” 전달
+              }}
+            >
               <div className="p-2 rounded-full group-hover:bg-blue-50 dark:group-hover:bg-primary/10 transition-colors">
                 <i className="ri-chat-3-line text-lg" />
               </div>
-              <span className="text-sm">{reply.stats.comments}</span>
+              <span className="text-sm">{safeStats.comments}</span>
             </button>
 
             {/* Like */}
             <button
-              className={`flex items-center space-x-2 transition-colors group ${
-                liked ? 'text-red-500' : 'hover:text-red-500'
-              }`}
+              className={`flex items-center space-x-2 transition-colors group ${liked ? 'text-red-500' : 'hover:text-red-500'}`}
               onClick={toggleLike}
             >
               <div className="p-2 rounded-full group-hover:bg-red-50 dark:group-hover:bg-primary/10 transition-colors">
                 <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg`} />
               </div>
-              <span className="text-sm">{likeCount}</span>
+              <span className="text-sm">{safeStats.likes}</span>
             </button>
 
             {/* Views */}

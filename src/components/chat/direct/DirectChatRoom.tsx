@@ -10,6 +10,9 @@ import type { DirectMessage } from '../../../types/ChatType';
 import MessageInput from '../common/MessageInput';
 import TranslateButton from '@/components/common/TranslateButton';
 import { useAuth } from '@/contexts/AuthContext';
+import ReportButton from '@/components/common/ReportButton';
+import BlockButton from '@/components/common/BlockButton';
+import { toast } from 'sonner';
 
 interface MessageGroup {
   [date: string]: DirectMessage[];
@@ -230,9 +233,12 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
   const [currentResultIndex, setCurrentResultIndex] = useState(0);
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
 
   const { user } = useAuth();
   const currentUserId = user?.id ?? '';
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback((force = false) => {
     requestAnimationFrame(() => {
@@ -285,6 +291,23 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
     loadData();
   }, [chatId, loadMessages]);
 
+  // 버튼 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMenu]);
+
   const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -303,15 +326,49 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
     return groups;
   }, [messages]);
 
-  const handleExitChat = useCallback(async () => {
-    if (!window.confirm('채팅방을 나가시겠습니까?')) return;
-    try {
-      const success = await exitDirectChat(chatId);
-      if (success) onBackToList?.();
-      else alert('채팅방 나가기에 실패했습니다.');
-    } catch {
-      alert('채팅방 나가기 중 오류가 발생했습니다.');
-    }
+  const handleExitChat = useCallback(() => {
+    toast.custom(t => (
+      <div className="flex items-center justify-between gap-3 px-3 py-2 w-96">
+        {/* 텍스트 영역 */}
+        <div className="flex-1">
+          <p className="text-base font-medium text-gray-800 dark:text-gray-100">
+            채팅방을 나가시겠습니까?
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            나가면 대화 목록으로 돌아갑니다.
+          </p>
+        </div>
+
+        {/* 버튼 영역 */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-sm px-2 py-1 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10"
+          >
+            취소
+          </button>
+          <button
+            onClick={async () => {
+              toast.dismiss(t);
+              try {
+                const success = await exitDirectChat(chatId);
+                if (success) {
+                  toast.success('채팅방에서 나갔습니다.');
+                  onBackToList?.();
+                } else {
+                  toast.error('채팅방 나가기에 실패했습니다.');
+                }
+              } catch {
+                toast.error('채팅방 나가기 중 오류가 발생했습니다.');
+              }
+            }}
+            className="text-sm px-2 py-1 rounded-md bg-red-500 text-white hover:bg-red-600"
+          >
+            나가기
+          </button>
+        </div>
+      </div>
+    ));
   }, [chatId, exitDirectChat, onBackToList]);
 
   const scrollToMessage = useCallback((messageId: string) => {
@@ -395,6 +452,28 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList }: DirectChatRoomProps)
           >
             나가기
           </button>
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={e => {
+                e.stopPropagation();
+                setShowMenu(prev => !prev);
+              }}
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition"
+            >
+              <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-12 w-36 bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg py-2 z-50">
+                <ReportButton onClose={() => setShowMenu(false)} />
+                <BlockButton
+                  username={currentChat?.other_user?.nickname || '이 사용자'}
+                  isBlocked={isBlocked}
+                  onToggle={() => setIsBlocked(prev => !prev)}
+                  onClose={() => setShowMenu(false)}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

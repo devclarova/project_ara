@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 type EditorMode = 'tweet' | 'reply';
 
-// ✅ 홈 피드에서 사용하는 콜백에 넘겨줄 트윗 형태 (Home의 UITweet과 구조만 맞추면 됨)
+// 홈 피드에서 사용하는 콜백에 넘겨줄 트윗 형태 (Home의 UITweet과 구조만 맞추면 됨)
 export type EditorCreatedTweet = {
   id: string;
   user: {
@@ -55,13 +55,13 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // 🔹 미리보기용 URL
+  // 미리보기용 URL
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
-  // 🔹 한글 IME 조합 상태
+  // 한글 IME 조합 상태
   const [isComposing, setIsComposing] = useState(false);
 
-  // 🔹 내 프로필 정보 불러오기
+  // 내 프로필 정보 불러오기
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
@@ -81,7 +81,7 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
     loadProfile();
   }, [user]);
 
-  // 🔹 파일이 바뀔 때마다 브라우저 Object URL 생성 / 정리
+  // 파일이 바뀔 때마다 브라우저 Object URL 생성 / 정리
   useEffect(() => {
     const urls = files.map(file => URL.createObjectURL(file));
     setPreviewUrls(urls);
@@ -132,7 +132,7 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
         });
 
       if (uploadError) {
-        console.error('❌ 이미지 업로드 실패:', uploadError.message);
+        console.error('이미지 업로드 실패:', uploadError.message);
         continue;
       }
 
@@ -194,7 +194,7 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
           .single();
 
         if (insertError || !inserted) {
-          console.error('❌ 댓글 저장 실패:', insertError?.message);
+          console.error('댓글 저장 실패:', insertError?.message);
           toast.error('댓글 저장 중 오류가 발생했습니다.');
           setIsSubmitting(false);
           return;
@@ -232,7 +232,7 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
           .single();
 
         if (insertError || !inserted) {
-          console.error('❌ 트윗 저장 실패:', insertError?.message);
+          console.error('트윗 저장 실패:', insertError?.message);
           toast.error('게시 중 오류가 발생했습니다.');
           setIsSubmitting(false);
           return;
@@ -269,14 +269,14 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
         toast.success('게시되었습니다.');
       }
 
-      // ✅ 공통 초기화
+      // 공통 초기화
       setValue('');
       setFiles([]);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     } catch (err) {
-      console.error('❌ 에디터 처리 오류:', err);
+      console.error('에디터 처리 오류:', err);
       toast.error('처리 중 문제가 발생했습니다.');
     } finally {
       setIsSubmitting(false);
@@ -285,7 +285,7 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
 
   const disabled = (!value.trim() && files.length === 0) || isSubmitting;
 
-  // 🔥 Enter / Shift+Enter 처리
+  // Enter / Shift+Enter 처리
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (isComposing) return; // 한글 조합 중일 땐 무시
 
@@ -382,7 +382,7 @@ export default function SnsInlineEditor(props: SnsInlineEditorProps) {
             </button>
           </div>
 
-          {/* 🔥 이미지 미리보기 영역 */}
+          {/* 이미지 미리보기 영역 */}
           {previewUrls.length > 0 && (
             <div className="mt-3 grid grid-cols-3 gap-2">
               {previewUrls.map((url, idx) => (

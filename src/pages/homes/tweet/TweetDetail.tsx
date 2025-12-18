@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import ReplyList from './components/ReplyList';
+import ReplyList, { type Reply } from './components/ReplyList';
 import TweetDetailCard from './components/TweetDetailCard';
 import { toast } from 'sonner';
 
@@ -14,7 +14,7 @@ export default function TweetDetail() {
   const location = useLocation();
 
   const [tweet, setTweet] = useState<any | null>(null);
-  const [replies, setReplies] = useState<any[]>([]);
+  const [replies, setReplies] = useState<Reply[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // 알림에서 넘어올 때 state로 받은 값들
@@ -105,6 +105,8 @@ export default function TweetDetail() {
           const formattedReply = {
             id: newReply.id,
             tweetId: newReply.tweet_id,
+            parent_reply_id: newReply.parent_reply_id ?? null,
+            root_reply_id: newReply.root_reply_id ?? null,
             user: {
               name: profile?.nickname ?? 'Unknown',
               username: profile?.user_id ?? 'anonymous',
@@ -118,16 +120,43 @@ export default function TweetDetail() {
               day: 'numeric',
             }),
             stats: {
-              comments: 0,
+              comments: newReply.comment_count ?? 0,
               retweets: 0,
               likes: newReply.like_count ?? 0,
               views: 0,
             },
+            liked: false,
           };
 
           // 새 댓글은 맨 아래에 추가
-          setReplies(prev => [...prev, formattedReply]);
-          // 여기서는 scrollTargetId 를 변경하지 않음 (다른 사람 댓글 때문에 내 화면이 움직이면 안 됨)
+          setReplies(prev => {
+            // 루트 댓글이면 그냥 맨 아래
+            if (!formattedReply.parent_reply_id) {
+              return [...prev, formattedReply];
+            }
+
+            const parentId = formattedReply.parent_reply_id;
+
+            // 부모 위치
+            const parentIndex = prev.findIndex(r => r.id === parentId);
+            if (parentIndex === -1) {
+              return [...prev, formattedReply];
+            }
+
+            // 같은 부모를 가진 기존 대댓글들의 마지막 위치 찾기
+            let insertIndex = parentIndex + 1;
+
+            for (let i = parentIndex + 1; i < prev.length; i++) {
+              if (prev[i].parent_reply_id === parentId) {
+                insertIndex = i + 1;
+                continue;
+              }
+              // 다른 루트 댓글 나오면 중단
+              if (!prev[i].parent_reply_id) break;
+            }
+
+            return [...prev.slice(0, insertIndex), formattedReply, ...prev.slice(insertIndex)];
+          });
         },
       )
       .subscribe();
@@ -141,37 +170,37 @@ export default function TweetDetail() {
   }, [id]);
 
   // 댓글 삭제 실시간 반영
-  useEffect(() => {
-    if (!id) return;
+  // useEffect(() => {
+  //   if (!id) return;
 
-    if ((window as any)._replyDeleteChannel) {
-      supabase.removeChannel((window as any)._replyDeleteChannel);
-    }
+  //   if ((window as any)._replyDeleteChannel) {
+  //     supabase.removeChannel((window as any)._replyDeleteChannel);
+  //   }
 
-    const deleteChannel = supabase
-      .channel(`tweet-${id}-replies-delete`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'tweet_replies',
-          filter: `tweet_id=eq.${id}`,
-        },
-        payload => {
-          const deletedId = payload.old.id;
-          setReplies(prev => prev.filter(r => r.id !== deletedId));
-        },
-      )
-      .subscribe();
+  //   const deleteChannel = supabase
+  //     .channel(`tweet-${id}-replies-delete`)
+  //     .on(
+  //       'postgres_changes',
+  //       {
+  //         event: 'DELETE',
+  //         schema: 'public',
+  //         table: 'tweet_replies',
+  //         filter: `tweet_id=eq.${id}`,
+  //       },
+  //       payload => {
+  //         const deletedId = payload.old.id;
+  //         setReplies(prev => prev.filter(r => r.id !== deletedId));
+  //       },
+  //     )
+  //     .subscribe();
 
-    (window as any)._replyDeleteChannel = deleteChannel;
+  //   (window as any)._replyDeleteChannel = deleteChannel;
 
-    return () => {
-      supabase.removeChannel(deleteChannel);
-      (window as any)._replyDeleteChannel = null;
-    };
-  }, [id]);
+  //   return () => {
+  //     supabase.removeChannel(deleteChannel);
+  //     (window as any)._replyDeleteChannel = null;
+  //   };
+  // }, [id]);
 
   // 조회수 증가 (로그인 유저에게만)
   useEffect(() => {
@@ -265,7 +294,17 @@ export default function TweetDetail() {
     const { data, error } = await supabase
       .from('tweet_replies')
       .select(
-        `id, content, created_at, profiles:author_id (nickname, user_id, avatar_url), tweet_replies_likes (count)`,
+        `id,
+        content,
+        is_deleted,
+        deleted_at,
+        stats,
+        created_at,
+        parent_reply_id,
+        root_reply_id,
+        comment_count,
+        profiles:author_id (nickname, user_id, avatar_url),
+        tweet_replies_likes (count)`,
       )
       .eq('tweet_id', tweetId)
       .order('created_at', { ascending: true });
@@ -278,12 +317,15 @@ export default function TweetDetail() {
     const mapped = (data ?? []).map(r => ({
       id: r.id,
       tweetId,
+      parent_reply_id: r.parent_reply_id ?? null,
+      root_reply_id: r.root_reply_id ?? null,
+      is_deleted: r.is_deleted === true,
+      content: r.content,
       user: {
         name: r.profiles?.nickname ?? 'Unknown',
         username: r.profiles?.user_id ?? 'anonymous',
         avatar: r.profiles?.avatar_url ?? '/default-avatar.svg',
       },
-      content: r.content,
       timestamp: new Date(r.created_at).toLocaleString('ko-KR', {
         hour: '2-digit',
         minute: '2-digit',
@@ -291,7 +333,7 @@ export default function TweetDetail() {
         day: 'numeric',
       }),
       stats: {
-        comments: 0,
+        comments: r.comment_count ?? 0,
         retweets: 0,
         likes: Array.isArray(r.tweet_replies_likes) ? (r.tweet_replies_likes[0]?.count ?? 0) : 0,
         views: 0,
@@ -412,9 +454,8 @@ export default function TweetDetail() {
 
       <ReplyList
         replies={replies}
-        scrollTargetId={scrollTargetId}
         onDeleted={id => {
-          setReplies(prev => prev.filter(r => r.id !== id));
+          setReplies(prev => prev.map(r => (r.id === id ? { ...r, is_deleted: true } : r)));
         }}
       />
     </div>
