@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { getContent, type ConsentKey } from './consentContent';
 import { useTranslation } from 'react-i18next';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 type Props = {
   open: ConsentKey | null;
@@ -14,6 +15,9 @@ export default function ConsentModal({ open, onClose, onAccept }: Props) {
   const toc = open ? CONTENT[open] : null;
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
   const modalContentRef = useRef<HTMLDivElement | null>(null);
+
+  // 스크롤 잠금 Hook
+  useBodyScrollLock(!!open);
 
   // 접근성: 열린 직후 닫기 버튼 포커스
   useEffect(() => {
@@ -29,37 +33,6 @@ export default function ConsentModal({ open, onClose, onAccept }: Props) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
-
-  // 바깥 스크롤 차단 및 위치 고정 (Scroll Jump 방지)
-  useEffect(() => {
-    if (!open) return;
-
-    const scrollY = window.scrollY;
-    const body = document.body;
-    // 기존 스타일 저장
-    const originalStyle = {
-      overflow: body.style.overflow,
-      position: body.style.position,
-      top: body.style.top,
-      width: body.style.width,
-    };
-
-    // 스크롤 잠금
-    body.style.overflow = 'hidden';
-    body.style.position = 'fixed';
-    body.style.top = `-${scrollY}px`;
-    body.style.width = '100%';
-
-    return () => {
-      // 스타일 복원
-      body.style.overflow = originalStyle.overflow;
-      body.style.position = originalStyle.position;
-      body.style.top = originalStyle.top;
-      body.style.width = originalStyle.width;
-      // 스크롤 위치 복원
-      window.scrollTo(0, scrollY);
-    };
-  }, [open]);
 
   if (!open || !toc) return null;
 
@@ -103,7 +76,10 @@ export default function ConsentModal({ open, onClose, onAccept }: Props) {
         {/* 본문 */}
         <div className="flex-1 min-h-0 flex overflow-hidden">
           {/* 좌측 목차: 데스크톱에서만 */}
-          <nav className="hidden md:block w-1/3 min-w-[240px] max-w-[300px] shrink-0 border-r px-4 py-4 border-gray-200 dark:border-gray-700 dark:bg-secondary overflow-y-auto break-words">
+          <nav 
+            className="hidden md:block w-1/3 min-w-[240px] max-w-[300px] shrink-0 border-r px-4 py-4 border-gray-200 dark:border-gray-700 dark:bg-secondary overflow-y-auto break-words overscroll-contain"
+            data-scroll-lock-scrollable=""
+          >
             <ul className="space-y-2 text-sm">
               {toc.sections.map(s => (
                 <li key={s.id}>
@@ -126,7 +102,8 @@ export default function ConsentModal({ open, onClose, onAccept }: Props) {
           {/* 우측 내용 (모바일에서는 전체 폭) */}
           <div
             id="modal-content-scroll"
-            className="flex-1 px-4 md:px-6 py-4 md:py-5 overflow-y-auto bg-white dark:bg-secondary"
+            className="flex-1 px-4 md:px-6 py-4 md:py-5 overflow-y-auto bg-white dark:bg-secondary overscroll-contain"
+            data-scroll-lock-scrollable=""
           >
             <div className="max-w-3xl mx-auto space-y-6 text-sm md:text-[15px] leading-relaxed text-gray-800 dark:text-gray-100 pr-1 md:pr-2">
               {toc.sections.map(s => (

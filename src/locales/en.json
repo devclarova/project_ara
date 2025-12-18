@@ -28,7 +28,9 @@
     "action_comment": "A comment has been left on your feed.",
     "action_like_comment": "We like your comment.",
     "action_like_feed": "I like your feed.",
-    "no_notifications": "There are no new notifications yet."
+    "no_notifications": "There are no new notifications yet.",
+    "delete_confirm_title": "Delete Notification",
+    "delete_confirm_desc": "Would you like to delete this notification?"
   },
   "study": {
     "search_placeholder": "Search...",
@@ -244,13 +246,13 @@
     "add_photo": "Add Photo",
     "images_selected": "{{count}} images selected",
     "preview_alt": "Preview {{index}}",
-    "success_tweet": "Tweet posted successfully!",
+    "success_tweet": "Post created successfully!",
     "success_reply": "Reply posted successfully!",
     "success_reply_posted": "Reply has been posted",
     "error_reply_save": "Error occurred while saving reply",
-    "error_tweet_save": "Error occurred while saving tweet",
+    "error_tweet_save": "Error occurred while saving post",
     "error_reply_upload": "Problem occurred while uploading reply",
-    "error_tweet_upload": "Problem occurred while uploading tweet",
+    "error_tweet_upload": "Problem occurred while uploading post",
     "error_login": "Login required",
     "error_empty": "Content is empty"
   },
@@ -296,6 +298,7 @@
     "prev": "Previous",
     "next": "Next",
     "new_chat": "New Chat",
+    "new_message": "New Message",
     "user_search_placeholder": "Search users...",
     "user_search_loading": "Searching for users...",
     "no_chats": "No chats yet.",

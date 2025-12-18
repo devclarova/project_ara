@@ -25,7 +25,9 @@
     "action_comment": "คุณได้แสดงความคิดเห็นในฟีดของคุณแล้ว",
     "action_like_comment": "เราชอบความคิดเห็นของคุณ",
     "action_like_feed": "ฉันชอบฟีดของคุณ",
-    "no_notifications": "ยังไม่มีการแจ้งเตือนใหม่"
+    "no_notifications": "ยังไม่มีการแจ้งเตือนใหม่",
+    "delete_confirm_title": "ลบการแจ้งเตือน",
+    "delete_confirm_desc": "คุณต้องการลบการแจ้งเตือนนี้หรือไม่?"
   },
   "study": {
     "search_placeholder": "ค้นหา...",
@@ -182,7 +184,19 @@
     "error": "ข้อผิดพลาด",
     "close": "ปิด",
     "share": "แชร์",
-    "link_copied": "คัดลอกลิงก์แล้ว"
+    "link_copied": "คัดลอกลิงก์แล้ว",
+    "error_profile_load": "Failed to load profile information",
+    "error_profile_missing": "Profile information is missing. Please log in again",
+    "error_profile_loading": "Loading profile information. Please try again later",
+    "error_navigate_profile": "An error occurred while navigating to profile",
+    "error_profile_not_load": "Unable to load profile information",
+    "error_like": "An error occurred while processing like",
+    "error_delete": "An error occurred during deletion",
+    "success_delete": "Deleted successfully",
+    "success_report": "Report has been submitted",
+    "success_block": "User has been blocked",
+    "error_no_profile": "Profile does not exist",
+    "error_empty_content": "Content is empty"
   },
   "settings": {
     "languageSelect": "เลือกภาษา",
@@ -241,7 +255,6 @@
     "terms": "ข้อกำหนดการบริการ",
     "privacy_policy": "นโยบายความเป็นส่วนตัว",
     "marketing_consent": "การยินยอมการตลาด",
-
     "title_language": "เปลี่ยนภาษา",
     "title_theme": "เปลี่ยนธีม",
     "title_password_change": "เปลี่ยนรหัสผ่าน",
@@ -253,7 +266,6 @@
     "title_support": "ศูนย์ช่วยเหลือ",
     "security_title": "การตั้งค่าความปลอดภัย",
     "session_management": "การจัดการเซสชัน"
-
   },
   "profile": {
     "edit_profile": "แก้ไขโปรไฟล์",
@@ -287,23 +299,34 @@
     "placeholder_tweet": "เกิดอะไรขึ้นบ้าง?",
     "placeholder_reply": "โพสต์คำตอบ...",
     "btn_post": "โพสต์",
-    "btn_posting": "Posting...",
+    "btn_posting": "กำลังโพสต์...",
     "btn_reply": "ตอบกลับ",
-    "btn_replying": "Replying...",
-    "error_profile": "Loading profile information. Please try again later.",
-    "error_general": "An error occurred.",
+    "btn_replying": "กำลังตอบกลับ...",
+    "error_profile": "กำลังโหลดข้อมูลโปรไฟล์ โปรดลองอีกครั้งในภายหลัง",
+    "error_general": "เกิดข้อผิดพลาด",
     "add_photo": "เพิ่มรูปภาพ",
-    "images_selected": "{{count}} images selected",
-    "preview_alt": "Preview {{index}}"
+    "images_selected": "เลือก {{count}} รูปภาพ",
+    "preview_alt": "ดูตัวอย่าง {{index}}",
+    "success_tweet": "โพสต์เรียบร้อยแล้ว!",
+    "success_reply": "โพสต์คำตอบเรียบร้อยแล้ว!",
+    "success_reply_posted": "คำตอบถูกโพสต์แล้ว",
+    "error_reply_save": "เกิดข้อผิดพลาดขณะบันทึกคำตอบ",
+    "error_tweet_save": "เกิดข้อผิดพลาดขณะบันทึกโพสต์",
+    "error_reply_upload": "เกิดปัญหาขณะอัปโหลดคำตอบ",
+    "error_tweet_upload": "เกิดปัญหาขณะอัปโหลดโพสต์",
+    "error_login": "ต้องเข้าสู่ระบบ",
+    "error_empty": "เนื้อหาว่างเปล่า"
   },
   "tweet": {
     "delete_msg_title": "ลบโพสต์?",
     "delete_msg_desc": "การกระทำนี้ไม่สามารถยกเลิกได้",
     "delete_success": "ลบแล้ว",
-    "delete_failed": "Failed to delete.",
+    "delete_failed": "ลบไม่สำเร็จ",
     "no_replies": "ยังไม่มีการตอบกลับ",
     "be_first": "เป็นคนแรกที่ตอบกลับ!",
-    "cannot_delete": "Cannot delete"
+    "cannot_delete": "ไม่สามารถลบได้",
+    "deleted_reply": "คำตอบนี้ถูกลบแล้ว",
+    "deleted_or_not_exist": "โพสต์นี้ถูกลบหรือไม่มีอยู่"
   },
   "trending": {
     "title": "เทรนด์สำหรับคุณ",
@@ -336,6 +359,7 @@
     "prev": "ก่อนหน้า",
     "next": "ถัดไป",
     "new_chat": "New Chat",
+    "new_message": "ข้อความใหม่",
     "user_search_placeholder": "ค้นหาผู้ใช้...",
     "user_search_loading": "กำลังค้นหาผู้ใช้...",
     "no_chats": "ยังไม่มีการสนทนา",

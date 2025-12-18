@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useNicknameValidator } from '@/hooks/useNicknameValidator';
 import NicknameInputField from '@/components/common/NicknameInputField';
 import TextAreaField from '@/components/auth/TextAreaField';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -293,7 +294,10 @@ export default function EditProfileModal({
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+        <div 
+          className="p-4 space-y-6 overflow-y-auto max-h-[calc(90vh-80px)] overscroll-contain"
+          data-scroll-lock-scrollable=""
+        >
           {/* Cover */}
           <div className="relative">
             <div className="h-32 sm:h-40 bg-gray-200 rounded-xl overflow-hidden relative">

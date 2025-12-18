@@ -8,42 +8,33 @@ import { useDirectChat } from '@/contexts/DirectChatContext';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
-
 function Header() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
-
   const [isOpen, setIsOpen] = useState(false); // 모바일 햄버거 메뉴
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); // 데스크탑 프로필 드롭다운
   const [langDropdownOpen, setLangDropdownOpen] = useState(false); // 모바일 언어 드롭다운 상태
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false); // 데스크탑 언어 드롭다운
-
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false); // 테마 드롭다운 상태
-
+  const [mobileThemeOpen, setMobileThemeOpen] = useState(false); // 모바일 테마 드롭다운 상태
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const langRef = useRef<HTMLDivElement>(null); // 언어 선택 영역 ref
-
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const profileButtonRef = useRef<HTMLButtonElement>(null);
-
   // profiles 테이블 기반 프로필 정보
   const [profileNickname, setProfileNickname] = useState<string | null>(null);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
-
   // 알림 미읽음 개수
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
-
   // 채팅 미읽음 개수
   const { chats } = useDirectChat();
   const unreadChatCount = chats.reduce((sum, chat) => sum + (chat.unread_count || 0), 0);
-
   // 로그인 여부에 따라 홈 목적지
   const homePath = user ? '/studyList' : '/';
-
   const menuItems = [
     { key: 'study', label: t('nav.study'), path: '/studyList', matchPaths: ['/studyList', '/study'] },
     { key: 'community', label: t('nav.community'), path: '/sns', matchPaths: ['/sns'] },
@@ -51,13 +42,11 @@ function Header() {
     { key: 'notifications', label: t('nav.notifications'), path: '/hnotifications', matchPaths: ['/hnotifications'] },
     { key: 'settings', label: t('nav.settings'), path: '/settings', matchPaths: ['/settings'] },
   ];
-
   const isRouteActive = (item: (typeof menuItems)[number]) => {
     const path = location.pathname;
     if (item.key === 'home') return path === '/' || path === '/home';
     return item.matchPaths.some(p => path.startsWith(p));
   };
-
   // 메뉴 이름별 아이콘 매핑 (모바일용)
   const getMenuIcon = (key: string) => {
     switch (key) {
@@ -75,27 +64,22 @@ function Header() {
         return null;
     }
   };
-
   // 로고 클릭: 홈이 아니면 홈으로 이동, 이미 홈이면 아무 동작 없음
   const handleLogoClick = () => {
     const isOnHome = location.pathname === homePath;
-
     if (!isOnHome) {
       navigate(homePath);
     }
     // 홈일 때는 스크롤/새로고침 동작 제거
   };
-
   // 1차 기본 닉네임: user_metadata → 이메일 → 기본문구
   const rawNickname =
     (user?.user_metadata as Record<string, unknown> | undefined)?.nickname &&
     typeof (user?.user_metadata as any).nickname === 'string'
       ? ((user!.user_metadata as any).nickname as string)
       : undefined;
-
   const fallbackNickname =
     rawNickname ?? (user?.email ? user.email.split('@')[0] : t('auth.please_login'));
-
   // Supabase profiles에서 id, nickname, avatar_url 가져오기
   useEffect(() => {
     const loadProfile = async () => {
@@ -105,52 +89,42 @@ function Header() {
         setProfileId(null);
         return;
       }
-
       const { data, error } = await supabase
         .from('profiles')
         .select('id, nickname, avatar_url')
         .eq('user_id', user.id)
         .maybeSingle();
-
       if (error) {
         console.error('헤더 프로필 로드 실패:', error.message);
         return;
       }
-
       if (data) {
         setProfileNickname(data.nickname ?? null);
         setProfileAvatar(data.avatar_url ?? null);
         setProfileId(data.id ?? null);
       }
     };
-
     loadProfile();
   }, [user]);
-
   // 알림 미읽음 개수 계산 (receiver_id + is_read = false)
   useEffect(() => {
     if (!profileId) {
       setUnreadNotificationCount(0);
       return;
     }
-
     const fetchUnreadCount = async () => {
       const { error, count } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('receiver_id', profileId)
         .eq('is_read', false);
-
       if (error) {
         console.error('알림 개수 불러오기 실패:', error.message);
         return;
       }
-
       setUnreadNotificationCount(count ?? 0);
     };
-
     fetchUnreadCount();
-
     // 실시간 업데이트 구독 (알림 INSERT/UPDATE 시 다시 카운트)
     const channel = supabase
       .channel(`header-notifications-${profileId}`)
@@ -167,27 +141,30 @@ function Header() {
         },
       )
       .subscribe();
-
     return () => {
       supabase.removeChannel(channel);
     };
   }, [profileId]);
-
   // 알림 전체 비우기 이벤트 감지 → 뱃지 0으로
   useEffect(() => {
     const handleCleared = () => {
       setUnreadNotificationCount(0);
     };
-
+    // 단일 삭제 시 뱃지 1 감소
+    const handleDeletedOne = () => {
+      setUnreadNotificationCount(prev => Math.max(0, prev - 1));
+    };
     window.addEventListener('notifications:cleared', handleCleared);
-    return () => window.removeEventListener('notifications:cleared', handleCleared);
+    window.addEventListener('notification:deleted-one', handleDeletedOne);
+    return () => {
+      window.removeEventListener('notifications:cleared', handleCleared);
+      window.removeEventListener('notification:deleted-one', handleDeletedOne);
+    };
   }, []);
-
   // 외부 클릭 시 드롭다운 / 햄버거 닫기
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
-
       // 모바일 햄버거 메뉴 닫기
       if (
         isOpen &&
@@ -198,7 +175,6 @@ function Header() {
       ) {
         setIsOpen(false);
       }
-
       // 데스크톱 프로필 드롭다운 닫기
       if (
         isProfileMenuOpen &&
@@ -210,28 +186,25 @@ function Header() {
         setIsProfileMenuOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, isProfileMenuOpen]);
-
   const targetOf = (item: (typeof menuItems)[number]) =>
     item.key === 'home' ? homePath : item.path;
-
   const handleSignout = async () => {
     await signOut();
     setIsOpen(false);
     setIsProfileMenuOpen(false);
-    navigate('/');
+    if (location.pathname !== '/') {
+      navigate('/', { replace: true });
+    }
   };
-
   // 실제 보여줄 값
   const displayNickname = profileNickname ?? fallbackNickname;
   const headerAvatar = profileAvatar ?? '/default-avatar.svg';
-
   return (
     <div
-      className="fixed inset-x-0 top-0 z-50 flex justify-between items-center px-4 sm:px-8 lg:px-36 py-2
+      className="fixed inset-x-0 top-0 z-[100] flex justify-between items-center px-4 sm:px-8 lg:px-36 py-2
                  border-b border-gray-200 bg-white
                  dark:border-gray-800 dark:bg-secondary"
     >
@@ -242,7 +215,6 @@ function Header() {
           alt="Logo"
           className="w-14 sm:w-16 lg:w-20 cursor-pointer"
         />
-
         {/* 데스크탑 메뉴 (설정은 제거: 프로필 드롭다운에서만 접근) */}
         <div className="hidden md:flex gap-2 md:gap-3 lg:gap-6">
           {menuItems
@@ -250,22 +222,25 @@ function Header() {
             .map(item => {
               const active = isRouteActive(item);
               const target = targetOf(item);
-
               const isChat = item.key === 'chat';
               const isNotification = item.key === 'notifications';
-
               const showChatBadge = isChat && unreadChatCount > 0;
               const showNotificationBadge = isNotification && unreadNotificationCount > 0;
-
               return (
                 <button
                   key={item.key}
                   type="button"
                   onClick={() => {
+                    // 충돌 해결: sns 이동 시 스토리지 정리 + 같은 경로 0,0 스크롤
                     if (target === '/sns') {
                       sessionStorage.removeItem('sns-last-tweet-id');
                     }
-                    navigate(target);
+                    
+                    if (location.pathname === target) {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                      navigate(target);
+                    }
                   }}
                   aria-current={active ? 'page' : undefined}
                   className={`relative inline-flex items-center text-sm lg:text-base xl:text-lg font-bold p-0 ${
@@ -275,7 +250,6 @@ function Header() {
                   }`}
                 >
                   <span>{item.label}</span>
-
                   {/* 채팅 뱃지 - 아주 살짝 오른쪽으로 이동 (-right-3) */}
                   {showChatBadge && (
                     <span
@@ -286,7 +260,6 @@ function Header() {
                       {unreadChatCount > 99 ? '99+' : unreadChatCount}
                     </span>
                   )}
-
                   {/* 알림 뱃지 */}
                   {showNotificationBadge && (
                     <span
@@ -302,10 +275,21 @@ function Header() {
             })}
         </div>
       </div>
-
       <div className="flex items-center">
         {/* 데스크탑 프로필 영역 */}
         <div className="hidden md:flex items-center gap-3 sm:gap-4">
+          <div className="hidden sm:block">
+            <ThemeSwitcher 
+              open={isThemeMenuOpen}
+              onOpenChange={(open) => {
+                setIsThemeMenuOpen(open);
+                if (open) {
+                  setIsProfileMenuOpen(false);
+                  setIsLangMenuOpen(false);
+                }
+              }}
+            />
+          </div>
           {/* 언어 선택 드롭다운 */}
           <div>
             <LanguageSwitcher 
@@ -319,20 +303,6 @@ function Header() {
               }}
             />
           </div>
-
-          <div className="hidden sm:block">
-            <ThemeSwitcher 
-              open={isThemeMenuOpen}
-              onOpenChange={(open) => {
-                setIsThemeMenuOpen(open);
-                if (open) {
-                  setIsProfileMenuOpen(false);
-                  setIsLangMenuOpen(false);
-                }
-              }}
-            />
-          </div>
-
           {user ? (
             <>
               {/* 프로필 버튼 + 드롭다운 (가운데 정렬) */}
@@ -360,7 +330,6 @@ function Header() {
                     <span className="text-xs text-gray-500 dark:text-gray-400">{t('common.settings_desc')}</span>
                   </div>
                 </button>
-
                 {isProfileMenuOpen && (
                   <div
                     ref={profileMenuRef}
@@ -369,14 +338,14 @@ function Header() {
                                shadow-lg shadow-black/5 backdrop-blur-sm z-50
                                dark:bg-secondary/95 dark:border-gray-700/70 overflow-hidden"
                   >
-
-
                     {/* 메뉴 리스트 */}
                     <div className="py-1">
                       <button
                         type="button"
                         onClick={() => {
-                          navigate('/profile');
+                          if (location.pathname !== '/profile') {
+                            navigate('/profile');
+                          }
                           setIsProfileMenuOpen(false);
                         }}
                         className="w-full flex items-center gap-2 px-4 py-2.5 text-sm
@@ -397,11 +366,12 @@ function Header() {
                           </span>
                         </div>
                       </button>
-
                       <button
                         type="button"
                         onClick={() => {
-                          navigate('/settings');
+                          if (location.pathname !== '/settings') {
+                            navigate('/settings');
+                          }
                           setIsProfileMenuOpen(false);
                         }}
                         className="w-full flex items-center gap-2 px-4 py-2.5 text-sm
@@ -438,18 +408,25 @@ function Header() {
                   </div>
                 )}
               </div>
-
             </>
           ) : (
             <>
               <button
-                onClick={() => navigate('/signin')}
+                onClick={() => {
+                  if (location.pathname !== '/signin') {
+                    navigate('/signin');
+                  }
+                }}
                 className="bg-primary text-white text-sm sm:text-base px-3 sm:px-4 py-1.5 sm:py-2 rounded hover:opacity-80 transition-colors"
               >
                 {t('auth.login')}
               </button>
               <button
-                onClick={() => navigate('/signup')}
+                onClick={() => {
+                  if (location.pathname !== '/signup') {
+                    navigate('/signup');
+                  }
+                }}
                 className="text-sm sm:text-base px-3 sm:px-4 py-1.5 sm:py-2 rounded
                            border border-gray-300 hover:bg-gray-50
                            dark:border-gray-700 dark:text-gray-100 dark:hover:bg-primary/20"
@@ -459,52 +436,62 @@ function Header() {
             </>
           )}
         </div>
-
         <div 
-          ref={langRef}
-          className="md:hidden" 
+          className="md:hidden flex items-center gap-0" // 간격을 동일하게 하기 위해 gap-0 또는 gap-1 사용
           onClick={(e) => {
             e.stopPropagation();
           }}
         >
-          <LanguageSwitcher 
-            open={langDropdownOpen} 
-            onOpenChange={(open) => {
-              setLangDropdownOpen(open);
-              if (open) {
-                // 언어가 열리면 햄버거 닫기
-                setIsOpen(false);
-              }
+          <div ref={langRef} className="flex items-center gap-0">
+             <ThemeSwitcher 
+               open={mobileThemeOpen}
+               onOpenChange={(open) => {
+                  setMobileThemeOpen(open);
+                  if (open) {
+                    setLangDropdownOpen(false);
+                    setIsOpen(false);
+                  }
+               }}
+             />
+             <LanguageSwitcher 
+               open={langDropdownOpen} 
+               onOpenChange={(open) => {
+                 setLangDropdownOpen(open);
+                 if (open) {
+                   // 언어가 열리면 햄버거 닫기
+                   setIsOpen(false);
+                   setMobileThemeOpen(false);
+                 }
+               }}
+             />
+          </div>
+          <button
+            ref={buttonRef}
+            className="relative flex items-center justify-center w-10 h-10 text-2xl font-bold text-gray-900 dark:text-gray-100 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              // 언어/테마 드롭다운 닫기
+              setLangDropdownOpen(false);
+              setMobileThemeOpen(false);
+              // 햄버거 토글
+              setIsOpen(prev => !prev);
             }}
-          />
+            aria-expanded={isOpen}
+            aria-label={t('common.more')}
+          >
+            ☰
+            {(unreadChatCount + unreadNotificationCount) > 0 && (
+              <span
+                className="absolute top-0 right-0 min-w-[16px] h-[16px] text-[10px] px-[3px]
+                           rounded-full bg-primary text-white flex items-center justify-center
+                           whitespace-nowrap leading-none border border-white dark:border-gray-800"
+              >
+                {(unreadChatCount + unreadNotificationCount) > 99 ? '99+' : (unreadChatCount + unreadNotificationCount)}
+              </span>
+            )}
+          </button>
         </div>
-
-        <button
-          ref={buttonRef}
-          className="md:hidden relative text-2xl font-bold px-2 text-gray-900 dark:text-gray-100"
-          onClick={(e) => {
-            e.stopPropagation();
-            // 언어 드롭다운 닫기
-            setLangDropdownOpen(false);
-            // 햄버거 토글
-            setIsOpen(prev => !prev);
-          }}
-          aria-expanded={isOpen}
-          aria-label={t('common.more')} // '메뉴 열기' 대체
-        >
-          ☰
-          {(unreadChatCount + unreadNotificationCount) > 0 && (
-            <span
-              className="absolute top-0 right-0 min-w-[16px] h-[16px] text-[10px] px-[3px]
-                         rounded-full bg-primary text-white flex items-center justify-center
-                         whitespace-nowrap leading-none border border-white dark:border-gray-800"
-            >
-              {(unreadChatCount + unreadNotificationCount) > 99 ? '99+' : (unreadChatCount + unreadNotificationCount)}
-            </span>
-          )}
-        </button>
       </div>
-
       {/* 모바일 메뉴 */}
       <div
         ref={menuRef}
@@ -522,9 +509,13 @@ function Header() {
             className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-primary/20 cursor-pointer"
             onClick={() => {
               if (user) {
-                navigate('/profile');
+                if (location.pathname !== '/profile') {
+                  navigate('/profile');
+                }
               } else {
-                navigate('/signin');
+                if (location.pathname !== '/signin') {
+                  navigate('/signin');
+                }
               }
               setIsOpen(false);
             }}
@@ -542,9 +533,7 @@ function Header() {
               </div>
             </div>
           </div>
-
           <div className="h-px bg-gray-100 dark:bg-primary/20 my-2" />
-
           {/* 메뉴 리스트: 아이콘 포함 */}
           <div className="flex flex-col">
             {menuItems
@@ -553,22 +542,24 @@ function Header() {
                 const active = isRouteActive(item);
                 const target = targetOf(item);
                 const icon = getMenuIcon(item.key);
-
                 const isChat = item.key === 'chat';
                 const isNotification = item.key === 'notifications';
-
                 const showChatBadge = isChat && unreadChatCount > 0;
                 const showNotificationBadge = isNotification && unreadNotificationCount > 0;
-
                 return (
                   <button
                     key={item.key}
                     type="button"
                     onClick={() => {
+                      // 충돌 해결: sns 이동 시 스토리지 정리 + 같은 경로 0,0 스크롤
                       if (target === '/sns') {
                         sessionStorage.removeItem('sns-last-tweet-id');
                       }
-                      navigate(target);
+                      if (location.pathname === target) {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } else {
+                        navigate(target);
+                      }
                       setIsOpen(false);
                     }}
                     aria-current={active ? 'page' : undefined}
@@ -588,7 +579,6 @@ function Header() {
                         }`}
                       >
                         {icon}
-
                         {/* 채팅 뱃지 - 살짝 더 오른쪽으로 이동 (-right-2) */}
                         {showChatBadge && (
                           <span
@@ -599,7 +589,6 @@ function Header() {
                             {unreadChatCount > 99 ? '99+' : unreadChatCount}
                           </span>
                         )}
-
                         {/* 알림 뱃지 - 살짝 더 오른쪽으로 이동 (-right-2) */}
                         {showNotificationBadge && (
                           <span
@@ -617,9 +606,7 @@ function Header() {
                 );
               })}
           </div>
-
           <div className="h-px bg-gray-100 dark:bg-primary/20 my-2" />
-
           <div className="flex gap-2">
             {user ? (
               <button
@@ -636,7 +623,9 @@ function Header() {
                 <button
                   type="button"
                   onClick={() => {
-                    navigate('/signin');
+                    if (location.pathname !== '/signin') {
+                      navigate('/signin');
+                    }
                     setIsOpen(false);
                   }}
                   className="flex-1 px-3 py-2 rounded-lg
@@ -647,7 +636,9 @@ function Header() {
                 <button
                   type="button"
                   onClick={() => {
-                    navigate('/signup');
+                    if (location.pathname !== '/signup') {
+                      navigate('/signup');
+                    }
                     setIsOpen(false);
                   }}
                   className="flex-1 px-3 py-2 rounded-lg
@@ -660,10 +651,7 @@ function Header() {
             )}
           </div>
       </div>
-
-
     </div>
   );
 }
-
 export default Header;

@@ -204,25 +204,25 @@ export function ReplyCard({
       setLikeCount(prev => prev + 1);
 
       // 알림 생성 (본인 댓글이 아닐 때만)
-      // if (reply.user.username !== authUser.id) {
-      //   // 댓글 작성자 프로필 찾기
-      //   const { data: receiverProfile, error: receiverError } = await supabase
-      //     .from('profiles')
-      //     .select('id')
-      //     .eq('user_id', reply.user.username)
-      //     .maybeSingle();
+      if (reply.user.username !== authUser.id) {
+        // 댓글 작성자 프로필 찾기
+        const { data: receiverProfile, error: receiverError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', reply.user.username)
+          .maybeSingle();
 
-      //   if (!receiverError && receiverProfile && receiverProfile.id !== profileId) {
-      //     await supabase.from('notifications').insert({
-      //       receiver_id: receiverProfile.id, // 댓글 주인 (profiles.id)
-      //       sender_id: profileId, // 좋아요 누른 사람 (profiles.id)
-      //       type: 'like', // 기존 enum 유지
-      //       content: reply.content, // 댓글 내용
-      //       tweet_id: reply.tweetId, // 어떤 피드인지
-      //       comment_id: reply.id, // 어떤 댓글인지 → 알림에서 스크롤/하이라이트에 사용
-      //     });
-      //   }
-      // }
+        if (!receiverError && receiverProfile && receiverProfile.id !== profileId) {
+          await supabase.from('notifications').insert({
+            receiver_id: receiverProfile.id, // 댓글 주인 (profiles.id)
+            sender_id: profileId, // 좋아요 누른 사람 (profiles.id)
+            type: 'like', 
+            content: '당신의 댓글을 좋아합니다.', // 내용 문구 수정
+            tweet_id: reply.tweetId, 
+            comment_id: reply.id, 
+          });
+        }
+      }
     } catch (err: any) {
       console.error('좋아요 처리 실패:', err.message);
       toast.error(t('common.error_like'));

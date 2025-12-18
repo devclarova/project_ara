@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface TrendingTweet {
@@ -30,6 +30,7 @@ export default function TrendsPanel({
 }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [trendingTweets, setTrendingTweets] = useState<TrendingTweet[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -127,14 +128,22 @@ export default function TrendsPanel({
               {trendingTweets.map(tweet => (
                 <div
                   key={tweet.id}
-                  onClick={() => navigate(`/sns/${tweet.id}`)}
+                  onClick={() => {
+                    const target = `/sns/${tweet.id}`;
+                    if (location.pathname !== target) {
+                      navigate(target);
+                    }
+                  }}
                   className="group flex items-start gap-3 p-2 rounded-xl hover:bg-primary/5 dark:hover:bg-primary/10 transition-all cursor-pointer"
                 >
                   <div
                     onClick={e => {
                       e.stopPropagation();
                       if (tweet.profiles?.nickname) {
-                        navigate(`/profile/${encodeURIComponent(tweet.profiles.nickname)}`);
+                        const target = `/profile/${encodeURIComponent(tweet.profiles.nickname)}`;
+                        if (location.pathname !== target) {
+                          navigate(target);
+                        }
                       }
                     }}
                   >

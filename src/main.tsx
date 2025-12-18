@@ -8,6 +8,9 @@ import './guards/profanity/profanity-guard.ts';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+if (typeof window !== 'undefined') {
+  window.history.scrollRestoration = 'manual';
+}
 
 createRoot(document.getElementById('root')!).render(
   <HelmetProvider>

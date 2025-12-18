@@ -1,8 +1,9 @@
 // src/components/auth/SignInModal.tsx
-import React, { useEffect } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import SignInCard from './SignInCard';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 interface SignInModalProps {
   isOpen: boolean;
@@ -10,29 +11,8 @@ interface SignInModalProps {
 }
 
 export function SignInModal({ isOpen, onClose }: SignInModalProps) {
-  // 모달 열릴 때 body 스크롤 잠금 (PC + 모바일)
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const body = document.body;
-    const originalOverflow = body.style.overflow;
-    const originalTouchAction = (body.style as any).touchAction;
-
-    const preventScroll = (e: TouchEvent) => {
-      e.preventDefault();
-    };
-
-    body.style.overflow = 'hidden';
-    (body.style as any).touchAction = 'none';
-
-    document.addEventListener('touchmove', preventScroll, { passive: false });
-
-    return () => {
-      body.style.overflow = originalOverflow || '';
-      (body.style as any).touchAction = originalTouchAction || '';
-      document.removeEventListener('touchmove', preventScroll);
-    };
-  }, [isOpen]);
+  // 스크롤 잠금 Hook (PC + 모바일 완벽 대응)
+  useBodyScrollLock(isOpen);
 
   if (typeof document === 'undefined') return null;
 
@@ -54,11 +34,12 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
 
           {/* 실제 모달 카드 (여기만 클릭 가능) */}
           <motion.div
-            className="relative max-w-full"
+            className="relative max-w-full overscroll-contain"
             initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 8 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
+            data-scroll-lock-scrollable=""
           >
             {/* 닫기 버튼: 누르면 onClose → SnsPage에서 navigate('/') */}
             <button

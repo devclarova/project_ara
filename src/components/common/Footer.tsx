@@ -1,4 +1,3 @@
-
 import { Facebook, Instagram, Youtube, ArrowRight, Globe, ChevronDown, AtSign, Moon, Sun, Laptop } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/components/theme-provider';
@@ -16,7 +15,6 @@ import TermsView from '@/components/settings/TermsView';
 import PrivacyPolicyView from '@/components/settings/PrivacyPolicyView';
 import CustomerCenterView from '@/components/settings/CustomerCenterView';
 import { type ConsentKey } from '@/components/auth/consent/consentContent';
-
 /**
  * Polished Aesthetic Footer
  * - SNS 순서 변경: YouTube -> Instagram -> Threads -> X -> Facebook
@@ -32,18 +30,14 @@ export default function Footer() {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [mounted, setMounted] = useState(false);
-
   // States for modals
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
   const [policyModalOpen, setPolicyModalOpen] = useState<ConsentKey | 'support' | null>(null);
-
   const currentLang = LANGUAGES.find(l => l.code === i18n.language)?.label || 'English (US)';
-
   // Hydration mismatch 방지
   useEffect(() => {
     setMounted(true);
   }, []);
-
   const handleLinkClick = (e: React.MouseEvent, type: 'impl' | 'unimpl' | 'policy', value?: string) => {
     e.preventDefault();
     if (type === 'unimpl') {
@@ -51,13 +45,17 @@ export default function Footer() {
     } else if (type === 'policy' && value) {
       setPolicyModalOpen(value as ConsentKey);
     } else if (type === 'impl' && value) {
+      // 충돌 해결: 메인 브랜치의 스토리지 초기화 로직과 현재 브랜치의 중복 이동 방지 로직 통합
       if (value === '/sns') {
         sessionStorage.removeItem('sns-last-tweet-id');
+        // SNS 탭은 같은 페이지여도 스크롤 초기화를 위해 이동 허용
+        navigate(value); 
+      } else if (location.pathname !== value) {
+        // 그 외 페이지는 페이지가 다를 때만 이동(중복 이동 방지)
+        navigate(value);
       }
-      navigate(value);
     }
   };
-
   return (
     <>
       <footer className="w-full bg-white dark:bg-zinc-950 border-t border-slate-100 dark:border-zinc-800 mt-auto">
@@ -82,14 +80,13 @@ export default function Footer() {
               </p>
               
               <div className="flex gap-2 mt-1">
-                 <SocialIcon href="https://youtube.com" icon={<Youtube className="w-4 h-4" />} label={t('footer.social.youtube')} />
+                 <SocialIcon href="https://www.youtube.com/@korean_ara-f5r" icon={<Youtube className="w-4 h-4" />} label={t('footer.social.youtube')} />
                  <SocialIcon href="https://instagram.com" icon={<Instagram className="w-4 h-4" />} label={t('footer.social.instagram')} />
                  <SocialIcon href="https://www.threads.net" icon={<AtSign className="w-4 h-4" />} label={t('footer.social.threads')} />
                  <SocialIcon href="https://twitter.com" icon={<XIcon />} label={t('footer.social.x')} />
                  <SocialIcon href="https://facebook.com" icon={<Facebook className="w-4 h-4" />} label={t('footer.social.facebook')} />
               </div>
             </div>
-
             {/* Links Columns */}
             <div className="flex flex-col gap-3">
               <h3 className="font-bold text-sm text-foreground">{t('footer.columns.product.title')}</h3>
@@ -100,7 +97,6 @@ export default function Footer() {
                 <FooterLink onClick={(e) => handleLinkClick(e, 'unimpl')}>{t('footer.columns.product.pricing')}</FooterLink>
               </div>
             </div>
-
             <div className="flex flex-col gap-3">
               <h3 className="font-bold text-sm text-foreground">{t('footer.columns.resources.title')}</h3>
               <div className="flex flex-col gap-2">
@@ -110,7 +106,6 @@ export default function Footer() {
                 <FooterLink onClick={(e) => handleLinkClick(e, 'policy', 'support')}>{t('footer.columns.resources.help_center')}</FooterLink>
               </div>
             </div>
-
             <div className="flex flex-col gap-3">
               <h3 className="font-bold text-sm text-foreground">{t('footer.columns.company.title')}</h3>
               <div className="flex flex-col gap-2">
@@ -120,7 +115,6 @@ export default function Footer() {
                 <FooterLink onClick={(e) => handleLinkClick(e, 'unimpl')}>{t('footer.columns.company.contact')}</FooterLink>
               </div>
             </div>
-
             <div className="col-span-2 md:col-span-4 lg:col-span-1 flex flex-col gap-3 min-w-[220px]">
                <h3 className="font-bold text-sm text-foreground">{t('footer.newsletter.title')}</h3>
                <p className="text-xs text-muted-foreground leading-snug">
@@ -143,7 +137,6 @@ export default function Footer() {
                </div>
             </div>
           </div>
-
           {/* Bottom Bar */}
           <div className="border-t border-slate-100 dark:border-zinc-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
@@ -158,28 +151,6 @@ export default function Footer() {
             </div>
             
             <div className="flex items-center gap-3">
-              {/* Language Selector */}
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                  <button type="button" className="group flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-zinc-800 hover:border-primary/30 bg-white dark:bg-zinc-900 transition-all text-xs font-medium text-muted-foreground hover:text-foreground shadow-sm animate-in fade-in zoom-in duration-300 outline-none">
-                    <Globe className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-                    <span>{currentLang}</span>
-                    <ChevronDown className="w-3 h-3 ml-0.5 opacity-50" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" side="top" className="max-h-[300px] overflow-y-auto custom-scrollbar w-40 bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800">
-                  {LANGUAGES.map(lang => (
-                    <DropdownMenuItem 
-                      key={lang.code}
-                      onClick={() => i18n.changeLanguage(lang.code)}
-                      className={`cursor-pointer text-xs py-2 ${i18n.language === lang.code ? 'font-bold text-primary bg-primary/5' : ''}`}
-                    >
-                      {lang.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
               {/* Theme Selector */}
               {mounted && (
                 <div className="flex items-center p-1 rounded-full border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm animate-in fade-in zoom-in duration-300 delay-75">
@@ -209,11 +180,31 @@ export default function Footer() {
                   </button>
                 </div>
               )}
+              {/* Language Selector */}
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger asChild>
+                  <button type="button" className="group flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-zinc-800 hover:border-primary/30 bg-white dark:bg-zinc-900 transition-all text-xs font-medium text-muted-foreground hover:text-foreground shadow-sm animate-in fade-in zoom-in duration-300 outline-none">
+                    <Globe className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <span>{currentLang}</span>
+                    <ChevronDown className="w-3 h-3 ml-0.5 opacity-50" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" side="top" className="max-h-[300px] overflow-y-auto custom-scrollbar w-40 bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800">
+                  {LANGUAGES.map(lang => (
+                    <DropdownMenuItem 
+                      key={lang.code}
+                      onClick={() => i18n.changeLanguage(lang.code)}
+                      className={`cursor-pointer text-xs py-2 ${i18n.language === lang.code ? 'font-bold text-primary bg-primary/5' : ''}`}
+                    >
+                      {lang.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
       </footer>
-
       {/* Coming Soon Modal (Using Common Modal) */}
       <Modal
         isOpen={comingSoonOpen}
@@ -243,7 +234,6 @@ export default function Footer() {
           </button>
         </div>
       </Modal>
-
       {/* Policy Modal (Settings Version using Common Modal) */}
       <Modal
         isOpen={!!policyModalOpen}
@@ -271,7 +261,6 @@ export default function Footer() {
     </>
   );
 }
-
 function FooterLink({ onClick, children }: { onClick?: (e: React.MouseEvent) => void; children: React.ReactNode }) {
   return (
     <button 
@@ -283,7 +272,6 @@ function FooterLink({ onClick, children }: { onClick?: (e: React.MouseEvent) => 
     </button>
   );
 }
-
 function SocialIcon({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
   return (
     <a
@@ -297,7 +285,6 @@ function SocialIcon({ href, icon, label }: { href: string; icon: React.ReactNode
     </a>
   );
 }
-
 function XIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="w-4 h-4 fill-current">

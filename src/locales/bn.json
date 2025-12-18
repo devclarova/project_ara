@@ -25,7 +25,9 @@
     "action_comment": "আপনার ফিডে একটি মন্তব্য করা হয়েছে।",
     "action_like_comment": "আমরা আপনার মন্তব্য পছন্দ করি।",
     "action_like_feed": "আপনার ফিডটি খুব ভালো লাগছে।",
-    "no_notifications": "এখনো নতুন বিজ্ঞপ্তি নেই।"
+    "no_notifications": "এখনো নতুন বিজ্ঞপ্তি নেই।",
+    "delete_confirm_title": "অ্যালার্ট মুছুন",
+    "delete_confirm_desc": "আপনি কি এই বিজ্ঞপ্তিটি মুছে ফেলতে চান?"
   },
   "study": {
     "search_placeholder": "অনুসন্ধান...",
@@ -182,7 +184,19 @@
     "error": "ত্রুটি",
     "close": "বন্ধ",
     "share": "শেয়ার",
-    "link_copied": "লিঙ্ক কপি করা হয়েছে"
+    "link_copied": "লিঙ্ক কপি করা হয়েছে",
+    "error_profile_load": "Failed to load profile information",
+    "error_profile_missing": "Profile information is missing. Please log in again",
+    "error_profile_loading": "Loading profile information. Please try again later",
+    "error_navigate_profile": "An error occurred while navigating to profile",
+    "error_profile_not_load": "Unable to load profile information",
+    "error_like": "An error occurred while processing like",
+    "error_delete": "An error occurred during deletion",
+    "success_delete": "Deleted successfully",
+    "success_report": "Report has been submitted",
+    "success_block": "User has been blocked",
+    "error_no_profile": "Profile does not exist",
+    "error_empty_content": "Content is empty"
   },
   "settings": {
     "languageSelect": "ভাষা নির্বাচন",
@@ -241,7 +255,6 @@
     "terms": "সেবার শর্তাবলী",
     "privacy_policy": "গোপনীয়তা নীতি",
     "marketing_consent": "মার্কেটিং সম্মতি",
-
     "title_language": "ভাষা পরিবর্তন",
     "title_theme": "থিম পরিবর্তন",
     "title_password_change": "পাসওয়ার্ড পরিবর্তন",
@@ -253,7 +266,6 @@
     "title_support": "সহায়তা কেন্দ্র",
     "security_title": "নিরাপত্তা সেটিংস",
     "session_management": "সেশন ব্যবস্থাপনা"
-
   },
   "profile": {
     "edit_profile": "প্রোফাইল সম্পাদনা",
@@ -284,26 +296,37 @@
     "country_change_forbidden": "দেশ আবার পরিবর্তন করা যাবে না।"
   },
   "tweets": {
-    "placeholder_tweet": "কী হচ্ছে?",
+    "placeholder_tweet": "কি হচ্ছে?",
     "placeholder_reply": "আপনার উত্তর পোস্ট করুন",
     "btn_post": "পোস্ট",
-    "btn_posting": "Posting...",
+    "btn_posting": "পোস্ট করা হচ্ছে...",
     "btn_reply": "উত্তর",
-    "btn_replying": "Replying...",
-    "error_profile": "Loading profile information. Please try again later.",
-    "error_general": "An error occurred.",
+    "btn_replying": "উত্তর দেওয়া হচ্ছে...",
+    "error_profile": "প্রোফাইল তথ্য লোড করা হচ্ছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।",
+    "error_general": "একটি ত্রুটি ঘটেছে।",
     "add_photo": "ছবি যোগ করুন",
-    "images_selected": "{{count}} images selected",
-    "preview_alt": "Preview {{index}}"
+    "images_selected": "{{count}} টি ছবি নির্বাচিত হয়েছে",
+    "preview_alt": "পূর্বরূপ {{index}}",
+    "success_tweet": "পোস্ট সফলভাবে প্রকাশিত হয়েছে!",
+    "success_reply": "উত্তর সফলভাবে পোস্ট করা হয়েছে!",
+    "success_reply_posted": "উত্তর পোস্ট করা হয়েছে",
+    "error_reply_save": "উত্তর সংরক্ষণ করার সময় ত্রুটি ঘটেছে",
+    "error_tweet_save": "পোস্ট সংরক্ষণ করার সময় ত্রুটি ঘটেছে",
+    "error_reply_upload": "উত্তর আপলোড করার সময় সমস্যা হয়েছে",
+    "error_tweet_upload": "পোস্ট আপলোড করার সময় সমস্যা হয়েছে",
+    "error_login": "লগইন প্রয়োজন",
+    "error_empty": "বিষয়বস্তু খালি"
   },
   "tweet": {
     "delete_msg_title": "পোস্ট মুছবেন?",
     "delete_msg_desc": "এটি পূর্বাবস্থায় ফেরানো যাবে না।",
     "delete_success": "মুছে ফেলা হয়েছে।",
-    "delete_failed": "Failed to delete.",
+    "delete_failed": "মুছতে ব্যর্থ হয়েছে।",
     "no_replies": "এখনও কোনও উত্তর নেই",
     "be_first": "প্রথমে উত্তর দিন!",
-    "cannot_delete": "Cannot delete"
+    "cannot_delete": "মুছে ফেলা যাবে না",
+    "deleted_reply": "এই উত্তরটি মুছে ফেলা হয়েছে",
+    "deleted_or_not_exist": "এই পোস্টটি মুছে ফেলা হয়েছে বা বিদ্যমান নেই"
   },
   "trending": {
     "title": "আপনার জন্য ট্রেন্ডিং",
@@ -336,6 +359,7 @@
     "prev": "পূর্ববর্তী",
     "next": "পরবর্তী",
     "new_chat": "New Chat",
+    "new_message": "নতুন বার্তা",
     "user_search_placeholder": "ব্যবহারকারীদের অনুসন্ধান করুন...",
     "user_search_loading": "ব্যবহারকারীদের সন্ধান করা হচ্ছে...",
     "no_chats": "এখনো কোনো চ্যাট নেই।",

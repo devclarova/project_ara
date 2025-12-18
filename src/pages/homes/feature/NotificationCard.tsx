@@ -111,51 +111,61 @@ export default function NotificationCard({
       onMarkAsRead(notification.id);
     }
 
+    const targetProfile = `/profile/${encodeURIComponent(notification.user.username)}`;
+    const targetSns = `/sns/${notification.tweetId}`;
+
     // 팔로우 알림 → 프로필로 이동
     if (notification.type === 'follow') {
-      navigate(`/profile/${encodeURIComponent(notification.user.username)}`);
+      if (location.pathname !== targetProfile) {
+        navigate(targetProfile);
+      }
       return;
     }
 
-    // 게시글 자체가 삭제된 경우: 이동하지 않고 여기서 토스트
+    // 게시글 자체가 삭제된 경우
     if (!notification.tweetId) {
       toast.info(t('notification.deleted_post'));
       onDelete?.(notification.id);
       return;
     }
 
-    // "삭제된 댓글"로 판단되는 알림이면:
-    //    → 게시글 상세로 이동 + 디테일 페이지에서 '삭제된 댓글입니다.' 토스트
+    // "삭제된 댓글"로 판단되는 알림
     if (isDeletedCommentNotification) {
       toast.info(t('notification.deleted_comment'));
       onDelete?.(notification.id);
 
-      // 댓글은 삭제됐지만 게시글은 존재 → 게시글로 이동해야 함
-      navigate(`/sns/${notification.tweetId}`);
-
+      if (location.pathname !== targetSns) {
+        navigate(targetSns);
+      }
       return;
     }
 
-    // 댓글/댓글 좋아요 알림: tweetId + replyId 둘 다 있을 때 → 해당 댓글로 스크롤
+    // 댓글/댓글 좋아요 알림: tweetId + replyId 둘 다 있을 때
     if (notification.tweetId && notification.replyId) {
-      navigate(`/sns/${notification.tweetId}`, {
+      navigate(targetSns, {
+        replace: location.pathname === targetSns,
         state: {
           highlightCommentId: notification.replyId,
-          scrollKey: Date.now(), // 클릭 시점의 타임스탬프 전달 (새로고침 구분용)
+          scrollKey: Date.now(),
         },
       });
       return;
     }
 
-    // 그 외(피드 좋아요, 멘션 등)는 피드 디테일로만 이동
+    // 그 외는 피드 디테일로만 이동
     if (notification.tweetId) {
-      navigate(`/sns/${notification.tweetId}`);
+      if (location.pathname !== targetSns) {
+        navigate(targetSns);
+      }
     }
   };
 
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/profile/${encodeURIComponent(notification.user.username)}`);
+    const targetProfile = `/profile/${encodeURIComponent(notification.user.username)}`;
+    if (location.pathname !== targetProfile) {
+      navigate(targetProfile);
+    }
   };
 
   return (

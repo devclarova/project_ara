@@ -132,7 +132,7 @@ export default function HNotificationsPage() {
           };
 
           setNotifications(prev => [uiItem, ...prev]);
-          toast.info(t('notification.new_arrived'));
+          // GlobalNotificationListener에서 처리하므로 여기서 토스트 중복 방지 제거
         },
       )
       .subscribe();
@@ -182,9 +182,17 @@ export default function HNotificationsPage() {
     if (!deleteId) return;
 
     try {
+      // 삭제 대상 알림 정보 찾기 (읽지 않은 알림인지 확인용)
+      const targetNotification = notifications.find(n => n.id === deleteId);
+      
       // UI에서 선제거
       setNotifications(prev => prev.filter(n => n.id !== deleteId));
       setShowDeleteModal(false);
+
+      // 읽지 않은 알림을 삭제한 경우 → 헤더 뱃지 즉시 차감 이벤트 발송
+      if (targetNotification && !targetNotification.is_read) {
+        window.dispatchEvent(new Event('notification:deleted-one'));
+      }
       
       // DB 삭제
       const { error } = await supabase.from('notifications').delete().eq('id', deleteId);

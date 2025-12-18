@@ -28,7 +28,9 @@
     "action_comment": "あなたのフィードにコメントを残しましたよ。",
     "action_like_comment": "あなたのコメントが好きです！",
     "action_like_feed": "あなたのフィードが好きです！",
-    "no_notifications": "まだ新しいおしらせはありません。"
+    "no_notifications": "まだ新しいおしらせはありません。",
+    "delete_confirm_title": "通知を削除",
+    "delete_confirm_desc": "この通知を削除しますか？"
   },
   "study": {
     "search_placeholder": "けんさく...",
@@ -237,7 +239,19 @@
     "error": "エラーが発生しました。",
     "close": "閉じる",
     "share": "共有する",
-    "link_copied": "リンクをコピーしました！"
+    "link_copied": "リンクをコピーしました！",
+    "error_profile_load": "Failed to load profile information",
+    "error_profile_missing": "Profile information is missing. Please log in again",
+    "error_profile_loading": "Loading profile information. Please try again later",
+    "error_navigate_profile": "An error occurred while navigating to profile",
+    "error_profile_not_load": "Unable to load profile information",
+    "error_like": "An error occurred while processing like",
+    "error_delete": "An error occurred during deletion",
+    "success_delete": "Deleted successfully",
+    "success_report": "Report has been submitted",
+    "success_block": "User has been blocked",
+    "error_no_profile": "Profile does not exist",
+    "error_empty_content": "Content is empty"
   },
   "settings": {
     "languageSelect": "げんごせんたく",
@@ -250,7 +264,6 @@
     "system": "システム設定",
     "language": "言語",
     "theme": "テーマ",
-
     "title_language": "言語変更",
     "title_theme": "テーマ変更",
     "title_password_change": "パスワード変更",
@@ -348,7 +361,16 @@
     "error_general": "エラーが発生しました。",
     "add_photo": "画像を追加する",
     "images_selected": "{{count}}枚の画像が選択されました",
-    "preview_alt": "プレビュー {{index}}"
+    "preview_alt": "プレビュー {{index}}",
+    "success_tweet": "投稿が正常に登録されました。",
+    "success_reply": "返信が完了しました！",
+    "success_reply_posted": "返信が投稿されました",
+    "error_reply_save": "返信の保存中にエラーが発生しました",
+    "error_tweet_save": "投稿の保存中にエラーが発生しました",
+    "error_reply_upload": "返信のアップロード中に問題が発生しました",
+    "error_tweet_upload": "投稿のアップロード中に問題が発生しました",
+    "error_login": "ログインが必要です",
+    "error_empty": "内容が空です"
   },
   "tweet": {
     "delete_msg_title": "削除しますか？",
@@ -357,7 +379,9 @@
     "delete_failed": "削除に失敗しました。",
     "no_replies": "返信がありません��",
     "be_first": "最初のコメントを投稿しましょう！",
-    "cannot_delete": "削除できません"
+    "cannot_delete": "削除できません",
+    "deleted_reply": "This reply has been deleted",
+    "deleted_or_not_exist": "This post has been deleted or does not exist"
   },
   "trending": {
     "title": "トレンド",
@@ -390,6 +414,7 @@
     "prev": "まえへ",
     "next": "つぎへ",
     "new_chat": "新しいチャット",
+    "new_message": "新しいメッセージ",
     "user_search_placeholder": "ユーザーをけんさく...",
     "user_search_loading": "ユーザーをけんさく中...",
     "no_chats": "まだチャットはありません。",

@@ -5,6 +5,7 @@ let feedCache: UITweet[] | null = null;
 let hasMoreCache = true;
 let pageCache = 0;
 let lastTweetIdCache: string | null = null;
+let scrollYCache = 0;
 
 export const SnsStore = {
   getFeed: () => feedCache,
@@ -44,6 +45,9 @@ export const SnsStore = {
   getPage: () => pageCache,
   setPage: (val: number) => { pageCache = val; },
 
+  getScrollY: () => scrollYCache,
+  setScrollY: (val: number) => { scrollYCache = val; },
+
   getLastTweetId: () => lastTweetIdCache,
   setLastTweetId: (id: string | null) => { lastTweetIdCache = id; },
   
@@ -52,5 +56,6 @@ export const SnsStore = {
     hasMoreCache = true;
     pageCache = 0;
     lastTweetIdCache = null;
+    scrollYCache = 0;
   }
 };

@@ -25,7 +25,9 @@
     "action_comment": "您在您的动态中留下了评论。",
     "action_like_comment": "我们喜欢您的评论。",
     "action_like_feed": "我喜欢您的动态。",
-    "no_notifications": "尚无新的通知。"
+    "no_notifications": "尚无新的通知。",
+    "delete_confirm_title": "删除通知",
+    "delete_confirm_desc": "您要删除此通知吗？"
   },
   "study": {
     "search_placeholder": "搜索...",
@@ -192,7 +194,19 @@
     "error": "发生错误",
     "close": "关闭",
     "share": "分享",
-    "link_copied": "链接已复制"
+    "link_copied": "链接已复制",
+    "error_profile_load": "Failed to load profile information",
+    "error_profile_missing": "Profile information is missing. Please log in again",
+    "error_profile_loading": "Loading profile information. Please try again later",
+    "error_navigate_profile": "An error occurred while navigating to profile",
+    "error_profile_not_load": "Unable to load profile information",
+    "error_like": "An error occurred while processing like",
+    "error_delete": "An error occurred during deletion",
+    "success_delete": "Deleted successfully",
+    "success_report": "Report has been submitted",
+    "success_block": "User has been blocked",
+    "error_no_profile": "Profile does not exist",
+    "error_empty_content": "Content is empty"
   },
   "settings": {
     "languageSelect": "语言选择",
@@ -251,7 +265,6 @@
     "terms": "服务条款",
     "privacy_policy": "隐私政策",
     "marketing_consent": "营销同意",
-
     "title_language": "更改语言",
     "title_theme": "更改主题",
     "title_password_change": "修改密码",
@@ -303,7 +316,16 @@
     "error_general": "An error occurred.",
     "add_photo": "添加图片",
     "images_selected": "{{count}} images selected",
-    "preview_alt": "Preview {{index}}"
+    "preview_alt": "Preview {{index}}",
+    "success_tweet": "帖子已正常发布。",
+    "success_reply": "回复发布成功！",
+    "success_reply_posted": "回复已发布",
+    "error_reply_save": "保存回复时发生错误",
+    "error_tweet_save": "保存帖子时发生错误",
+    "error_reply_upload": "上传回复时出现问题",
+    "error_tweet_upload": "上传帖子时出现问题",
+    "error_login": "需要登录",
+    "error_empty": "内容为空"
   },
   "tweet": {
     "delete_msg_title": "确定删除吗？",
@@ -312,7 +334,9 @@
     "delete_failed": "Failed to delete.",
     "no_replies": "暂无回复",
     "be_first": "抢占沙发！",
-    "cannot_delete": "Cannot delete"
+    "cannot_delete": "Cannot delete",
+    "deleted_reply": "This reply has been deleted",
+    "deleted_or_not_exist": "This post has been deleted or does not exist"
   },
   "trending": {
     "title": "趋势",
@@ -345,6 +369,7 @@
     "prev": "上一个",
     "next": "下一个",
     "new_chat": "新聊天",
+    "new_message": "新消息",
     "user_search_placeholder": "搜索用户...",
     "user_search_loading": "正在搜索用户...",
     "no_chats": "暂无聊天。",

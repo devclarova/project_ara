@@ -25,7 +25,9 @@
     "action_comment": "आपकी फ़ीड पर एक टिप्पणी छोड़ी गई है।",
     "action_like_comment": "आपकी टिप्पणी पसंद है।",
     "action_like_feed": "आपकी फ़ीड पसंद है।",
-    "no_notifications": "अभी कोई नई सूचना नहीं है।"
+    "no_notifications": "अभी कोई नई सूचना नहीं है।",
+    "delete_confirm_title": "सूचना हटाएँ",
+    "delete_confirm_desc": "क्या आप इस अधिसूचना को हटाना चाहते हैं?"
   },
   "study": {
     "search_placeholder": "खोजें...",
@@ -182,7 +184,19 @@
     "error": "त्रुटि",
     "close": "बंद करें",
     "share": "शेयर",
-    "link_copied": "लिंक कॉपी किया गया"
+    "link_copied": "लिंक कॉपी किया गया",
+    "error_profile_load": "Failed to load profile information",
+    "error_profile_missing": "Profile information is missing. Please log in again",
+    "error_profile_loading": "Loading profile information. Please try again later",
+    "error_navigate_profile": "An error occurred while navigating to profile",
+    "error_profile_not_load": "Unable to load profile information",
+    "error_like": "An error occurred while processing like",
+    "error_delete": "An error occurred during deletion",
+    "success_delete": "Deleted successfully",
+    "success_report": "Report has been submitted",
+    "success_block": "User has been blocked",
+    "error_no_profile": "Profile does not exist",
+    "error_empty_content": "Content is empty"
   },
   "settings": {
     "languageSelect": "भाषा चुनें",
@@ -241,7 +255,6 @@
     "terms": "सेवा की शर्तें",
     "privacy_policy": "गोपनीयता नीति",
     "marketing_consent": "मार्केटिंग सहमति",
-
     "title_language": "भाषा बदलें",
     "title_theme": "थीम बदलें",
     "title_password_change": "पासवर्ड बदलें",
@@ -253,7 +266,6 @@
     "title_support": "सहायता केंद्र",
     "security_title": "सुरक्षा सेटिंग्स",
     "session_management": "सत्र प्रबंधन"
-
   },
   "profile": {
     "edit_profile": "प्रोफाइल संपादित करें",
@@ -287,23 +299,34 @@
     "placeholder_tweet": "क्या हो रहा है?",
     "placeholder_reply": "अपना उत्तर पोस्ट करें",
     "btn_post": "पोस्ट",
-    "btn_posting": "Posting...",
+    "btn_posting": "पोस्ट हो रहा है...",
     "btn_reply": "उत्तर",
-    "btn_replying": "Replying...",
-    "error_profile": "Loading profile information. Please try again later.",
-    "error_general": "An error occurred.",
+    "btn_replying": "उत्तर दे रहा है...",
+    "error_profile": "प्रोफ़ाइल जानकारी लोड हो रही है। कृपया बाद में पुनः प्रयास करें।",
+    "error_general": "एक त्रुटि हुई।",
     "add_photo": "फोटो जोड़ें",
-    "images_selected": "{{count}} images selected",
-    "preview_alt": "Preview {{index}}"
+    "images_selected": "{{count}} चित्र चुने गए",
+    "preview_alt": "पूर्वावलोकन {{index}}",
+    "success_tweet": "पोस्ट सफलतापूर्वक प्रकाशित की गई!",
+    "success_reply": "जवाब सफलतापूर्वक पोस्ट किया गया!",
+    "success_reply_posted": "जवाब पोस्ट किया गया है",
+    "error_reply_save": "जवाब सहेजते समय त्रुटि हुई",
+    "error_tweet_save": "पोस्ट सहेजते समय त्रुटि हुई",
+    "error_reply_upload": "जवाब अपलोड करते समय समस्या हुई",
+    "error_tweet_upload": "पोस्ट अपलोड करते समय समस्या हुई",
+    "error_login": "लॉगिन आवश्यक",
+    "error_empty": "सामग्री खाली है"
   },
   "tweet": {
     "delete_msg_title": "पोस्ट हटाएं?",
     "delete_msg_desc": "इसे पूर्ववत नहीं किया जा सकता।",
     "delete_success": "हटा दिया गया।",
-    "delete_failed": "Failed to delete.",
+    "delete_failed": "हटाने में विफल।",
     "no_replies": "कोई उत्तर नहीं",
     "be_first": "उत्तर देने वाले पहले व्यक्ति बनें!",
-    "cannot_delete": "Cannot delete"
+    "cannot_delete": "हटाया नहीं जा सकता",
+    "deleted_reply": "यह जवाब हटा दिया गया है",
+    "deleted_or_not_exist": "यह पोस्ट हटा दी गई है या मौजूद नहीं है"
   },
   "trending": {
     "title": "आपके लिए ट्रेंडिंग",
@@ -336,6 +359,7 @@
     "prev": "पिछला",
     "next": "अगला",
     "new_chat": "New Chat",
+    "new_message": "नया संदेश",
     "user_search_placeholder": "ユーザーを検索中...",
     "user_search_loading": "ユーザーを検索中...",
     "no_chats": "अभी तक कोई चैट नहीं है।",

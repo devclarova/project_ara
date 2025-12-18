@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -11,7 +11,6 @@ interface ModalProps {
   className?: string; // ✅ 모달 컨테이너(카드) 스타일 커스텀
   contentClassName?: string; // ✅ 내부 컨텐츠 영역 스타일 커스텀
 }
-
 export default function Modal({
   isOpen,
   onClose,
@@ -24,44 +23,11 @@ export default function Modal({
 }: ModalProps) {
   const modalContentRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
-
+  // Hook으로 스크롤 잠금 처리 (Scroll Jump 방지). Main 브랜치의 수동 로직 대신 Hook 사용.
+  useBodyScrollLock(isOpen);
   useEffect(() => {
     setMounted(true);
   }, []);
-  
-  // 모달 열릴 때 body 스크롤 잠금 & 현재 위치 고정 (시각적 점프 방지)
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const scrollY = window.scrollY;
-    const body = document.body;
-    
-    // 기존 스타일 저장
-    const originalStyle = {
-      position: body.style.position,
-      top: body.style.top,
-      width: body.style.width,
-      overflow: body.style.overflow
-    };
-
-    // 스크롤 위치만큼 올려서 고정 (맨 위로 튀는 현상 방지)
-    body.style.position = 'fixed';
-    body.style.top = `-${scrollY}px`;
-    body.style.width = '100%';
-    body.style.overflow = 'hidden';
-
-    return () => {
-      // 스타일 복구
-      body.style.position = originalStyle.position;
-      body.style.top = originalStyle.top;
-      body.style.width = originalStyle.width;
-      body.style.overflow = originalStyle.overflow;
-      
-      // 스크롤 위치 복구
-      window.scrollTo(0, scrollY);
-    };
-  }, [isOpen]);
-
   // ESC 키로 닫기
   useEffect(() => {
     if (!isOpen || !closeOnEsc) return;
@@ -71,12 +37,9 @@ export default function Modal({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, closeOnEsc, onClose]);
-
   // Portal target setting
   const modalRoot = typeof document !== 'undefined' ? document.body : null;
-
   if (!mounted || !isOpen || !modalRoot) return null;
-
   return createPortal(
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm transition-opacity"
@@ -107,7 +70,10 @@ export default function Modal({
         </div>
         
         {/* Content Wrapper */}
-        <div className={`flex-1 overflow-y-auto block relative ${contentClassName || 'px-6 py-4'}`}>
+        <div 
+          className={`flex-1 overflow-y-auto block relative overscroll-contain ${contentClassName || 'px-6 py-4'}`}
+          data-scroll-lock-scrollable=""
+        >
           {children}
         </div>
       </div>
@@ -115,4 +81,3 @@ export default function Modal({
     modalRoot,
   );
 }
-
