@@ -79,6 +79,8 @@ export interface UIReply extends BaseFeedItem {
   type: 'reply';
   tweetId: string;
   parentTweet?: string;
+  parent_reply_id?: string | null;
+  root_reply_id?: string | null;
 }
 
 export type FeedItem = UIPost | UIReply;

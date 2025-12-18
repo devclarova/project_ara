@@ -121,7 +121,7 @@ export default function Home({ searchQuery }: HomeProps) {
         },
         content: t.content,
         image: t.image_url || undefined,
-        timestamp: t.created_at,
+        timestamp: t.created_at || new Date().toISOString(),
         stats: {
           replies: t.reply_count ?? 0,
           retweets: t.repost_count ?? 0,

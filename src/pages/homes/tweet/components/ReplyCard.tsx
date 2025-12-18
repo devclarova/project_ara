@@ -12,7 +12,6 @@ import { useTranslation } from 'react-i18next';
 import BlockButton from '@/components/common/BlockButton';
 import ReportButton from '@/components/common/ReportButton';
 import ModalImageSlider from './ModalImageSlider';
-
 function stripImagesAndEmptyLines(html: string) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
 
@@ -33,7 +32,7 @@ function stripImagesAndEmptyLines(html: string) {
 interface ReplyCardProps {
   reply: UIReply;
   onDeleted?: (replyId: string) => void;
-  // onUnlike?: (id: string) => void; 
+  onUnlike?: (id: string) => void; 
   onLike?: (replyId: string, delta: number) => void;
   onReply?: (reply: UIReply) => void;
   highlight?: boolean;

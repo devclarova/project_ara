@@ -1,6 +1,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
+
 import { supabase } from '@/lib/supabase';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import type { UIReply } from '@/types/sns';
@@ -95,17 +96,12 @@ export function ReplyInput({
       timestamp: '방금 전', // Placeholder
       liked: false,
       user: {
-        name: target.user.name, // Usually we show OUR name, but this follows previous logic? No, this creates the NEW reply object.
-        // Wait, the previous code used target.user.name for the NEW reply user? 
-        // No, lines 86-89 in original: user: { name: target.user.name ... } which seems WRONG for the author.
-        // It should be MY user info.
-        // Let's fix this bug too.
-        name: user.email?.split('@')[0] ?? 'Me', // Fallback or use fetched profile name if available
-        username: user.id, // user_id
+        name: user.email?.split('@')[0] ?? 'Me',
+        username: user.id,
         avatar: myAvatar || '/default-avatar.svg',
       },
       stats: {
-        comments: 0,
+        replies: 0,
         likes: 0,
         retweets: 0,
         views: 0,

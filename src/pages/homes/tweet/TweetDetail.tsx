@@ -84,7 +84,71 @@ export default function TweetDetail() {
     setHasMore(true);
     fetchReplies(id, 0); // 초기 페이지 0
   }, [id]);
-
+  // 실시간 댓글 추가 채널 (추가만 반영, 스크롤은 건드리지 않음)
+  useEffect(() => {
+    if (!id) return;
+    if (window._replyInsertChannel) {
+      supabase.removeChannel(window._replyInsertChannel);
+    }
+    const channel = supabase
+      .channel(`tweet-${id}-replies-insert`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'tweet_replies',
+          filter: `tweet_id=eq.${id}`,
+        },
+        async payload => {
+          const newReply = payload.new as Database['public']['Tables']['tweet_replies']['Row'];
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('nickname, user_id, avatar_url')
+            .eq('id', newReply.author_id)
+            .maybeSingle();
+          const formattedReply = {
+            type: 'reply',
+            id: newReply.id,
+            tweetId: newReply.tweet_id,
+            parent_reply_id: newReply.parent_reply_id ?? null,
+            root_reply_id: newReply.root_reply_id ?? null,
+            user: {
+              name: profile?.nickname ?? 'Unknown',
+              username: profile?.user_id ?? 'anonymous',
+              avatar: profile?.avatar_url ?? '/default-avatar.svg',
+            },
+            content: newReply.content,
+            timestamp: new Date(newReply.created_at ?? Date.now()).toLocaleString('ko-KR', {
+              hour: '2-digit',
+              minute: '2-digit',
+              month: 'short',
+              day: 'numeric',
+            }),
+            createdAt: newReply.created_at ?? new Date().toISOString(), // 정렬용
+            stats: {
+              replies: 0,
+              retweets: 0,
+              likes: 0,
+              views: 0,
+            },
+            liked: false,
+          } as UIReply;
+          // 새 댓글은 맨 아래에 추가 후 정렬
+          setReplies(prev => {
+            const combined = [...prev, formattedReply];
+            return combined.sort((a,b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+          });
+          // 여기서는 scrollTargetId 를 변경하지 않음 (다른 사람 댓글 때문에 내 화면이 움직이면 안 됨)
+        },
+      )
+      .subscribe();
+    window._replyInsertChannel = channel;
+    return () => {
+      supabase.removeChannel(channel);
+      window._replyInsertChannel = null;
+    };
+  }, [id]);
   // 댓글 수가 변하면(실시간 추가/삭제 등) SnsStore에도 반영
   useEffect(() => {
     if (!tweet) return;
