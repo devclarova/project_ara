@@ -60,8 +60,7 @@ export const GlobalNotificationListener: React.FC = () => {
                 />
               ), {
                 id: `notif-${newNotif.id}`,
-                duration: 4000,
-                position: 'bottom-right'
+                duration: 4000
               });
             }
           )
@@ -100,8 +99,7 @@ export const GlobalNotificationListener: React.FC = () => {
               />
             ), {
               id: `chat-${newMessage.id}`,
-              duration: 4000,
-              position: 'bottom-right'
+              duration: 4000
             });
           }
         )

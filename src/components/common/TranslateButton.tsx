@@ -95,6 +95,8 @@ export default function TranslateButton({ text, contentId, setTranslated }: Tran
 
       if (existing) {
         setTranslated(existing.translated_text);
+        // 이미 번역된 내용이 있으면 로딩 끝
+        setIsLoading(false); 
         return;
       }
 

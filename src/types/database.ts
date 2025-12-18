@@ -1057,51 +1057,7 @@ export type Database = {
           },
         ];
       };
-      tweet_replies: {
-        Row: {
-          author_id: string;
-          content: string;
-          created_at: string | null;
-          id: string;
-          like_count: number | null;
-          repost_count: number | null;
-          tweet_id: string;
-        };
-        Insert: {
-          author_id: string;
-          content: string;
-          created_at?: string | null;
-          id?: string;
-          like_count?: number | null;
-          repost_count?: number | null;
-          tweet_id: string;
-        };
-        Update: {
-          author_id?: string;
-          content?: string;
-          created_at?: string | null;
-          id?: string;
-          like_count?: number | null;
-          repost_count?: number | null;
-          tweet_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'tweet_replies_author_id_fkey';
-            columns: ['author_id'];
-            isOneToOne: false;
-            referencedRelation: 'profiles';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'tweet_replies_tweet_id_fkey';
-            columns: ['tweet_id'];
-            isOneToOne: false;
-            referencedRelation: 'tweets';
-            referencedColumns: ['id'];
-          },
-        ];
-      };
+
       tweets: {
         Row: {
           author_id: string;
@@ -1424,6 +1380,71 @@ export type Database = {
             columns: ['study_id'];
             isOneToOne: false;
             referencedRelation: 'study';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      tweet_replies: {
+        Row: {
+          author_id: string;
+          content: string;
+          created_at: string;
+          id: string;
+          like_count: number | null;
+          parent_reply_id: string | null;
+          root_reply_id: string | null;
+          tweet_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          author_id: string;
+          content: string;
+          created_at?: string;
+          id?: string;
+          like_count?: number | null;
+          parent_reply_id?: string | null;
+          root_reply_id?: string | null;
+          tweet_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          author_id?: string;
+          content?: string;
+          created_at?: string;
+          id?: string;
+          like_count?: number | null;
+          parent_reply_id?: string | null;
+          root_reply_id?: string | null;
+          tweet_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tweet_replies_author_id_fkey';
+            columns: ['author_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tweet_replies_parent_reply_id_fkey';
+            columns: ['parent_reply_id'];
+            isOneToOne: false;
+            referencedRelation: 'tweet_replies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tweet_replies_root_reply_id_fkey';
+            columns: ['root_reply_id'];
+            isOneToOne: false;
+            referencedRelation: 'tweet_replies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tweet_replies_tweet_id_fkey';
+            columns: ['tweet_id'];
+            isOneToOne: false;
+            referencedRelation: 'tweets';
             referencedColumns: ['id'];
           },
         ];

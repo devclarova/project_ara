@@ -200,7 +200,13 @@
     "error_empty_content": "내용이 비어 있습니다",
     "close": "닫기",
     "share": "공유",
-    "link_copied": "링크가 복사되었습니다"
+    "link_copied": "링크가 복사되었습니다",
+    "block": "차단하기",
+    "unblock": "차단해제",
+    "report": "신고하기",
+    "edit_mode": "수정 모드로 전환됩니다.",
+    "block_success": "{{name}}님을 차단했습니다.",
+    "unblock_success": "{{name}}님 차단을 해제했습니다."
   },
   "settings": {
     "themeSelect": "테마 선택",
@@ -333,7 +339,8 @@
     "be_first": "가장 먼저 답글을 남겨보세요!",
     "cannot_delete": "본인이 작성한 게시글만 삭제할 수 있습니다.",
     "deleted_reply": "삭제된 댓글입니다",
-    "deleted_or_not_exist": "삭제된 게시글이거나 존재하지 않는 게시글입니다"
+    "deleted_or_not_exist": "삭제된 게시글이거나 존재하지 않는 게시글입니다",
+    "deleted_while_viewing": "게시글이 삭제되었습니다."
   },
   "trending": {
     "title": "실시간 인기 피드",

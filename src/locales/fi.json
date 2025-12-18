@@ -19,8 +19,10 @@
     "comment_feed": "kommentoi julkaisuasi.",
     "like_comment": "tykkäsi kommentistasi.",
     "follow_msg": "alkoi seurata sinua.",
-    "repost_msg": "jakoi julkaisusi.",
+    "repost_msg": "jakoi julkaisusi uudelleen.",
     "mention_msg": "mainitsi sinut.",
+    "success_clear_all": "Kaikki ilmoitukset tyhjennetty",
+    "error_clear_all": "Virhe ilmoitusten tyhjentämisessä",
     "clear_all": "Tyhjennä",
     "action_comment": "Olet jättänyt kommentin syötteeseesi.",
     "action_like_comment": "Pidämme kommentistasi.",
@@ -192,11 +194,18 @@
     "error_profile_not_load": "Unable to load profile information",
     "error_like": "An error occurred while processing like",
     "error_delete": "An error occurred during deletion",
-    "success_delete": "Deleted successfully",
-    "success_report": "Report has been submitted",
-    "success_block": "User has been blocked",
+    "success_delete": "Poistettu onnistuneesti",
+    "success_report": "Raportti on lähetetty.",
+    "success_block": "Käyttäjä on estetty.",
+    "block_success": "{{name}} estetty.",
+    "unblock_success": "{{name}}:n esto poistettu.",
     "error_no_profile": "Profile does not exist",
-    "error_empty_content": "Content is empty"
+    "error_empty_content": "Content is empty",
+    "block": "Estä",
+    "unblock": "Poista esto",
+    "report": "Ilmianna",
+    "delete": "Poista",
+    "edit": "Muokkaa"
   },
   "settings": {
     "languageSelect": "Valitse kieli",
@@ -326,7 +335,8 @@
     "be_first": "Ole ensimmäinen!",
     "cannot_delete": "Ei voi poistaa",
     "deleted_reply": "Tämä vastaus on poistettu",
-    "deleted_or_not_exist": "Tämä viesti on poistettu tai sitä ei ole olemassa"
+    "deleted_or_not_exist": "Tämä viesti on poistettu tai sitä ei ole olemassa",
+    "deleted_while_viewing": "Tämä viesti on poistettu."
   },
   "trending": {
     "title": "Trendaavat",

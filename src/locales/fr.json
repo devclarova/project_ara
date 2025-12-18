@@ -21,6 +21,8 @@
     "follow_msg": "vous a suivi.",
     "repost_msg": "a reposté.",
     "mention_msg": "vous a mentionné.",
+    "success_clear_all": "Toutes les notifications ont été effacées",
+    "error_clear_all": "Une erreur s'est produite lors de l'effacement des notifications",
     "clear_all": "Vider",
     "action_comment": "Un commentaire a été laissé sur votre fil.",
     "action_like_comment": "Nous aimons votre commentaire.",
@@ -156,11 +158,20 @@
     "error_profile_not_load": "Unable to load profile information",
     "error_like": "An error occurred while processing like",
     "error_delete": "An error occurred during deletion",
-    "success_delete": "Deleted successfully",
-    "success_report": "Report has been submitted",
-    "success_block": "User has been blocked",
+    "success_delete": "Supprimé avec succès",
+    "success_report": "Le signalement a été envoyé.",
+    "success_block": "L'utilisateur a été bloqué.",
+
     "error_no_profile": "Profile does not exist",
-    "error_empty_content": "Content is empty"
+    "error_empty_content": "Content is empty",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "block": "Bloquer",
+    "unblock": "Débloquer",
+    "report": "Signaler",
+    "edit_mode": "Passage en mode édition.",
+    "block_success": "{{name}} a été bloqué(e).",
+    "unblock_success": "{{name}} a été débloqué(e)."
   },
   "settings": {
     "languageSelect": "Langue",
@@ -290,7 +301,8 @@
     "be_first": "Soyez le premier !",
     "cannot_delete": "Ne peut pas être supprimé",
     "deleted_reply": "Cette réponse a été supprimée",
-    "deleted_or_not_exist": "Ce message a été supprimé ou n'existe pas"
+    "deleted_or_not_exist": "Ce message a été supprimé ou n'existe pas",
+    "deleted_while_viewing": "Ce message a été supprimé."
   },
   "trending": {
     "title": "Tendances",

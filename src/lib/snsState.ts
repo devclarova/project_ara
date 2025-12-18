@@ -39,6 +39,11 @@ export const SnsStore = {
     });
   },
 
+  removeTweet: (tweetId: string) => {
+    if (!feedCache) return;
+    feedCache = feedCache.filter(t => t.id !== tweetId);
+  },
+
   getHasMore: () => hasMoreCache,
   setHasMore: (val: boolean) => { hasMoreCache = val; },
 

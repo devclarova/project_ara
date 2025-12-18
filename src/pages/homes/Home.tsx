@@ -61,6 +61,17 @@ export default function Home({ searchQuery }: HomeProps) {
     };
   }, [user]);
   // 2. 통합 데이터 패칭 함수
+  type TweetWithProfile = Database['public']['Tables']['tweets']['Row'] & {
+    nickname?: string; // from RPC
+    user_id?: string; // from RPC
+    avatar_url?: string; // from RPC
+    profiles?: {
+      nickname: string | null;
+      user_id: string | null;
+      avatar_url: string | null;
+    } | null;
+  };
+
   const fetchTweets = useCallback(async (reset = false) => {
     if (loadingRef.current && !reset) return;
     if (!hasMore && !reset) return;
@@ -70,7 +81,7 @@ export default function Home({ searchQuery }: HomeProps) {
         pageRef.current = 0;
     }
     try {
-      let data: any[] = [];
+      let data: TweetWithProfile[] = [];
       const currentPage = reset ? 0 : pageRef.current;
       if (isSearching) {
         // 검색 모드: RPC 호출
@@ -78,7 +89,7 @@ export default function Home({ searchQuery }: HomeProps) {
           keyword: mergedSearchQuery,
         });
         if (rpcError) throw rpcError;
-        data = rpcData ?? [];
+        data = (rpcData as unknown as TweetWithProfile[]) ?? [];
         setHasMore(false); // 검색은 일단 한번에 다 가져온다고 가정
       } else {
         // 일반 피드 모드
@@ -94,13 +105,14 @@ export default function Home({ searchQuery }: HomeProps) {
           .order('created_at', { ascending: false })
           .range(from, to);
         if (error) throw error;
-        data = feedData ?? [];
+        // Supabase QueryResponse need casting or generic support, usually returns correct shape but here we enforce it
+        data = (feedData as unknown as TweetWithProfile[]) ?? [];
         
         // 다음 페이지 검사
         if (data.length < PAGE_SIZE) setHasMore(false);
         else setHasMore(true);
       }
-      const mapped: UITweet[] = data.map((t: any) => ({
+      const mapped: UITweet[] = data.map((t) => ({
         id: t.id,
         user: {
           name: t.nickname ?? t.profiles?.nickname ?? 'Unknown',
@@ -243,6 +255,44 @@ export default function Home({ searchQuery }: HomeProps) {
   // 8. 실시간 업데이트
   useEffect(() => {
       const channel = supabase.channel('home-feed-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tweets' }, async payload => {
+          const newTweet = payload.new as Database['public']['Tables']['tweets']['Row'];
+          
+          // 이미 리스트에 있는지 확인 (낙관적 업데이트 등으로)
+          // setTweets 안에서 확인해야 최신 state 반영 가능하지만, 
+          // async fetch가 필요하므로 여기서 1차 필터링은 어려움.
+          // 일단 fetch 진행.
+
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('nickname, user_id, avatar_url')
+            .eq('id', newTweet.author_id)
+            .maybeSingle();
+
+          const formattedTweet: UITweet = {
+              id: newTweet.id,
+              user: {
+                  name: profile?.nickname || 'Unknown',
+                  username: profile?.user_id || 'anonymous',
+                  avatar: profile?.avatar_url || '/default-avatar.svg',
+              },
+              content: newTweet.content,
+              image: newTweet.image_url || undefined,
+              timestamp: newTweet.created_at || new Date().toISOString(),
+              stats: {
+                  replies: newTweet.reply_count ?? 0,
+                  retweets: newTweet.repost_count ?? 0,
+                  likes: newTweet.like_count ?? 0,
+                  bookmarks: newTweet.bookmark_count ?? 0,
+                  views: newTweet.view_count ?? 0,
+              },
+          };
+
+          setTweets(prev => {
+              if (prev.some(t => t.id === formattedTweet.id)) return prev;
+              return [formattedTweet, ...prev];
+          });
+      })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tweets' }, payload => {
           const updated = payload.new as Database['public']['Tables']['tweets']['Row'];
           setTweets(prev => prev.map(t => 

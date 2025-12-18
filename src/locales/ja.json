@@ -247,11 +247,17 @@
     "error_profile_not_load": "Unable to load profile information",
     "error_like": "An error occurred while processing like",
     "error_delete": "An error occurred during deletion",
-    "success_delete": "Deleted successfully",
-    "success_report": "Report has been submitted",
-    "success_block": "User has been blocked",
+    "success_delete": "削除しました",
+    "success_report": "通報が送信されました。",
+    "success_block": "ユーザーをブロックしました。",
     "error_no_profile": "Profile does not exist",
-    "error_empty_content": "Content is empty"
+    "error_empty_content": "Content is empty",
+    "block": "ブロック",
+    "unblock": "ブロック解除",
+    "report": "通報",
+    "edit_mode": "編集モードに切り替えます。",
+    "block_success": "{{name}}さんをブロックしました。",
+    "unblock_success": "{{name}}さんのブロックを解除しました。"
   },
   "settings": {
     "languageSelect": "げんごせんたく",
@@ -380,8 +386,9 @@
     "no_replies": "返信がありません��",
     "be_first": "最初のコメントを投稿しましょう！",
     "cannot_delete": "削除できません",
-    "deleted_reply": "This reply has been deleted",
-    "deleted_or_not_exist": "This post has been deleted or does not exist"
+    "deleted_reply": "削除された返信です",
+    "deleted_or_not_exist": "削除されたか存在しない投稿です",
+    "deleted_while_viewing": "この投稿は削除されました。"
   },
   "trending": {
     "title": "トレンド",

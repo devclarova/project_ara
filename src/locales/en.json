@@ -134,7 +134,13 @@
     "error_empty_content": "Content is empty",
     "close": "Close",
     "share": "Share",
-    "link_copied": "Link copied"
+    "link_copied": "Link copied",
+    "block": "Block",
+    "unblock": "Unblock",
+    "report": "Report",
+    "edit_mode": "Switching to edit mode.",
+    "block_success": "Blocked {{name}}.",
+    "unblock_success": "Unblocked {{name}}."
   },
   "settings": {
     "languageSelect": "Select Language",
@@ -265,7 +271,8 @@
     "be_first": "Be the first to reply!",
     "cannot_delete": "Cannot delete",
     "deleted_reply": "This reply has been deleted",
-    "deleted_or_not_exist": "This post has been deleted or does not exist"
+    "deleted_or_not_exist": "This post has been deleted or does not exist",
+    "deleted_while_viewing": "This post has been deleted."
   },
   "trending": {
     "title": "Real-time Popular Feeds",

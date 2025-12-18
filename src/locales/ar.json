@@ -21,6 +21,8 @@
     "follow_msg": "بدأ بمتابعتك.",
     "repost_msg": "أعاد نشر منشورك.",
     "mention_msg": "أشار إليك.",
+    "success_clear_all": "تم مسح جميع الإشعارات",
+    "error_clear_all": "حدث خطأ أثناء مسح الإشعارات",
     "clear_all": "إفراغ",
     "action_comment": "لقد تركت تعليقًا على خلاصتك.",
     "action_like_comment": "نحن نحب تعليقك.",
@@ -192,11 +194,18 @@
     "error_profile_not_load": "Unable to load profile information",
     "error_like": "An error occurred while processing like",
     "error_delete": "An error occurred during deletion",
-    "success_delete": "Deleted successfully",
-    "success_report": "Report has been submitted",
-    "success_block": "User has been blocked",
+    "success_delete": "تم الحذف بنجاح",
+    "success_report": "تم تقديم التقرير.",
+    "success_block": "تم حظر المستخدم.",
+    "block_success": "تم حظر {{name}}.",
+    "unblock_success": "تم إلغاء حظر {{name}}.",
     "error_no_profile": "Profile does not exist",
-    "error_empty_content": "Content is empty"
+    "error_empty_content": "Content is empty",
+    "block": "حظر",
+    "unblock": "إلغاء الحظر",
+    "report": "إبلاغ",
+    "delete": "حذف",
+    "edit": "تعديل"
   },
   "settings": {
     "languageSelect": "اختيار اللغة",
@@ -326,7 +335,8 @@
     "be_first": "كن أول من يرد!",
     "cannot_delete": "لا يمكن الحذف",
     "deleted_reply": "تم حذف هذا الرد",
-    "deleted_or_not_exist": "تم حذف هذا المنشور أو أنه غير موجود"
+    "deleted_or_not_exist": "تم حذف هذا المنشور أو أنه غير موجود",
+    "deleted_while_viewing": "تم حذف هذا المنشور."
   },
   "trending": {
     "title": "المتداول لك",
