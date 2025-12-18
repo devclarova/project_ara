@@ -155,6 +155,7 @@ export default function ProfileSettings() {
                     activeId={activeId}
                     onChange={handleChange}
                     searchQuery={searchQuery}
+                    className="flex-1" // 1:1 비율을 위해 flex-1 적용 (기존 고정폭 md:w-96 제거됨)
                   />
                 }
                 right={rightPanel}

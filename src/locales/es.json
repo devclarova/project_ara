@@ -25,7 +25,9 @@
     "action_comment": "He dejado un comentario en tu feed.",
     "action_like_comment": "Nos gusta tu comentario.",
     "action_like_feed": "Me gusta tu feed.",
-    "no_notifications": "No hay nuevas notificaciones todavía."
+    "no_notifications": "No hay nuevas notificaciones todavía.",
+    "delete_confirm_title": "Eliminar notificación",
+    "delete_confirm_desc": "¿Desea eliminar esta notificación?"
   },
   "study": {
     "search_placeholder": "Buscar...",
@@ -146,7 +148,19 @@
     "error": "Error",
     "close": "Cerrar",
     "share": "Compartir",
-    "link_copied": "Enlace copiado"
+    "link_copied": "Enlace copiado",
+    "error_profile_load": "Failed to load profile information",
+    "error_profile_missing": "Profile information is missing. Please log in again",
+    "error_profile_loading": "Loading profile information. Please try again later",
+    "error_navigate_profile": "An error occurred while navigating to profile",
+    "error_profile_not_load": "Unable to load profile information",
+    "error_like": "An error occurred while processing like",
+    "error_delete": "An error occurred during deletion",
+    "success_delete": "Deleted successfully",
+    "success_report": "Report has been submitted",
+    "success_block": "User has been blocked",
+    "error_no_profile": "Profile does not exist",
+    "error_empty_content": "Content is empty"
   },
   "settings": {
     "languageSelect": "Idioma",
@@ -205,7 +219,6 @@
     "terms": "Términos de servicio",
     "privacy_policy": "Política de privacidad",
     "marketing_consent": "Consentimiento de marketing",
-
     "title_language": "Cambiar idioma",
     "title_theme": "Cambiar tema",
     "title_password_change": "Cambiar contraseña",
@@ -250,23 +263,34 @@
     "placeholder_tweet": "¿En qué estás pensando?",
     "placeholder_reply": "Postear respuesta...",
     "btn_post": "Postear",
-    "btn_posting": "Posting...",
+    "btn_posting": "Publicando...",
     "btn_reply": "Responder",
-    "btn_replying": "Replying...",
-    "error_profile": "Loading profile information. Please try again later.",
-    "error_general": "An error occurred.",
+    "btn_replying": "Respondiendo...",
+    "error_profile": "Cargando información del perfil. Por favor, inténtalo de nuevo más tarde.",
+    "error_general": "Ocurrió un error.",
     "add_photo": "Añadir foto",
-    "images_selected": "{{count}} images selected",
-    "preview_alt": "Preview {{index}}"
+    "images_selected": "{{count}} imágenes seleccionadas",
+    "preview_alt": "Vista previa {{index}}",
+    "success_tweet": "¡Publicación creada con éxito!",
+    "success_reply": "¡Respuesta publicada con éxito!",
+    "success_reply_posted": "La respuesta ha sido publicada",
+    "error_reply_save": "Ocurrió un error al guardar la respuesta",
+    "error_tweet_save": "Ocurrió un error al guardar la publicación",
+    "error_reply_upload": "Ocurrió un problema al subir la respuesta",
+    "error_tweet_upload": "Ocurrió un problema al subir la publicación",
+    "error_login": "Inicio de sesión requerido",
+    "error_empty": "El contenido está vacío"
   },
   "tweet": {
     "delete_msg_title": "¿Eliminar?",
     "delete_msg_desc": "No se puede deshacer.",
     "delete_success": "Eliminado.",
-    "delete_failed": "Failed to delete.",
+    "delete_failed": "No se pudo eliminar.",
     "no_replies": "Sin respuestas",
     "be_first": "¡Sé el primero!",
-    "cannot_delete": "Cannot delete"
+    "cannot_delete": "No se puede eliminar",
+    "deleted_reply": "Esta respuesta ha sido eliminada",
+    "deleted_or_not_exist": "Esta publicación ha sido eliminada o no existe"
   },
   "trending": {
     "title": "Tendencias",
@@ -299,6 +323,7 @@
     "prev": "Ant",
     "next": "Sig",
     "new_chat": "Nuevo Chat",
+    "new_message": "Nuevo Mensaje",
     "user_search_placeholder": "Buscar usuarios...",
     "user_search_loading": "Buscando usuarios...",
     "no_chats": "No hay chats todavía.",

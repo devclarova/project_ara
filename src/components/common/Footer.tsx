@@ -51,7 +51,9 @@ export default function Footer() {
     } else if (type === 'policy' && value) {
       setPolicyModalOpen(value as ConsentKey);
     } else if (type === 'impl' && value) {
-      navigate(value);
+      if (location.pathname !== value) {
+        navigate(value);
+      }
     }
   };
 
@@ -79,7 +81,7 @@ export default function Footer() {
               </p>
               
               <div className="flex gap-2 mt-1">
-                 <SocialIcon href="https://youtube.com" icon={<Youtube className="w-4 h-4" />} label={t('footer.social.youtube')} />
+                 <SocialIcon href="https://www.youtube.com/@korean_ara-f5r" icon={<Youtube className="w-4 h-4" />} label={t('footer.social.youtube')} />
                  <SocialIcon href="https://instagram.com" icon={<Instagram className="w-4 h-4" />} label={t('footer.social.instagram')} />
                  <SocialIcon href="https://www.threads.net" icon={<AtSign className="w-4 h-4" />} label={t('footer.social.threads')} />
                  <SocialIcon href="https://twitter.com" icon={<XIcon />} label={t('footer.social.x')} />
@@ -155,28 +157,6 @@ export default function Footer() {
             </div>
             
             <div className="flex items-center gap-3">
-              {/* Language Selector */}
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                  <button type="button" className="group flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-zinc-800 hover:border-primary/30 bg-white dark:bg-zinc-900 transition-all text-xs font-medium text-muted-foreground hover:text-foreground shadow-sm animate-in fade-in zoom-in duration-300 outline-none">
-                    <Globe className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-                    <span>{currentLang}</span>
-                    <ChevronDown className="w-3 h-3 ml-0.5 opacity-50" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" side="top" className="max-h-[300px] overflow-y-auto custom-scrollbar w-40 bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800">
-                  {LANGUAGES.map(lang => (
-                    <DropdownMenuItem 
-                      key={lang.code}
-                      onClick={() => i18n.changeLanguage(lang.code)}
-                      className={`cursor-pointer text-xs py-2 ${i18n.language === lang.code ? 'font-bold text-primary bg-primary/5' : ''}`}
-                    >
-                      {lang.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
               {/* Theme Selector */}
               {mounted && (
                 <div className="flex items-center p-1 rounded-full border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm animate-in fade-in zoom-in duration-300 delay-75">
@@ -206,6 +186,28 @@ export default function Footer() {
                   </button>
                 </div>
               )}
+
+              {/* Language Selector */}
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger asChild>
+                  <button type="button" className="group flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-zinc-800 hover:border-primary/30 bg-white dark:bg-zinc-900 transition-all text-xs font-medium text-muted-foreground hover:text-foreground shadow-sm animate-in fade-in zoom-in duration-300 outline-none">
+                    <Globe className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <span>{currentLang}</span>
+                    <ChevronDown className="w-3 h-3 ml-0.5 opacity-50" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" side="top" className="max-h-[300px] overflow-y-auto custom-scrollbar w-40 bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800">
+                  {LANGUAGES.map(lang => (
+                    <DropdownMenuItem 
+                      key={lang.code}
+                      onClick={() => i18n.changeLanguage(lang.code)}
+                      className={`cursor-pointer text-xs py-2 ${i18n.language === lang.code ? 'font-bold text-primary bg-primary/5' : ''}`}
+                    >
+                      {lang.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>

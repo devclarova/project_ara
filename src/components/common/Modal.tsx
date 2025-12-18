@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 interface ModalProps {
   isOpen: boolean;
@@ -25,24 +26,12 @@ export default function Modal({
   const modalContentRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
 
+  // Hook으로 스크롤 잠금 처리 (Scroll Jump 방지)
+  useBodyScrollLock(isOpen);
+
   useEffect(() => {
     setMounted(true);
   }, []);
-  
-  // 모달 열릴 때 body 스크롤 잠금
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const body = document.body;
-    const originalOverflow = body.style.overflow;
-    
-    // 단순 overflow hidden으로 변경
-    body.style.overflow = 'hidden';
-
-    return () => {
-      body.style.overflow = originalOverflow;
-    };
-  }, [isOpen]);
 
   // ESC 키로 닫기
   useEffect(() => {
@@ -89,7 +78,10 @@ export default function Modal({
         </div>
         
         {/* Content Wrapper */}
-        <div className={`flex-1 overflow-y-auto block relative ${contentClassName || 'px-6 py-4'}`}>
+        <div 
+          className={`flex-1 overflow-y-auto block relative overscroll-contain ${contentClassName || 'px-6 py-4'}`}
+          data-scroll-lock-scrollable=""
+        >
           {children}
         </div>
       </div>

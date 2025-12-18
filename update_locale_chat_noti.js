@@ -13,28 +13,9 @@ const ENV_PATH = path.join(__dirname, '.env');
 // 추가할 키와 한국어 원문
 // 이미 반영된 키는 제외하고 프로필만 남김 (재번역을 위해)
 const NEW_KEYS = {
-  chat: {
-    user_search_placeholder: "Search users...",
-    user_search_loading: "Searching users...",
-    no_chats: "No chats yet.",
-    no_messages: "No messages yet.",
-    search_placeholder: "Search message content",
-    search_btn: "Search",
-    search_hint: "Search message content.",
-    no_result: "No results found.",
-    result_count: "{{index}} of {{count}} results",
-    prev: "Prev",
-    next: "Next",
-    loading: "Loading...",
-    loading_messages: "Loading messages...",
-    select_or_start: "Select a chat from the left list or click the + button to start a conversation.",
-    start_conversation: "Click the + button to start a conversation.",
-    search_placeholder_history: "Search chat room or conversion content...",
-    search_result_rooms: "Chat Rooms",
-    search_result_messages: "Messages",
-    last_message_label: "Last message",
-    searching: "Searching...",
-    no_search_result_desc: "No conversation history found for '{{query}}'."
+  notification: {
+    delete_confirm_title: "알림 삭제",
+    delete_confirm_desc: "이 알림을 삭제하시겠습니까?"
   }
 };
 

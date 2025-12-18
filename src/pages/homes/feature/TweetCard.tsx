@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import DOMPurify from 'dompurify';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import ImageSlider from '../tweet/components/ImageSlider';
 import ModalImageSlider from '../tweet/components/ModalImageSlider';
@@ -47,6 +47,7 @@ export default function TweetCard({
   liked: initialLiked,
 }: TweetCardProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user: authUser } = useAuth();
   const { t, i18n } = useTranslation();
 
@@ -284,33 +285,7 @@ export default function TweetCard({
     }
   }, [safeContent]);
 
-  // 이미지 모달 열릴 때 바깥 스크롤 완전 차단
-  useEffect(() => {
-    if (!showImageModal) return;
 
-    const body = document.body;
-    const originalOverflow = body.style.overflow;
-    const originalTouchAction = (body.style as any).touchAction;
-
-    const preventScroll = (e: Event) => {
-      e.preventDefault();
-    };
-
-    body.style.overflow = 'hidden';
-    (body.style as any).touchAction = 'none';
-
-    document.addEventListener('touchmove', preventScroll, { passive: false });
-    document.addEventListener('wheel', preventScroll, { passive: false });
-    document.addEventListener('mousewheel', preventScroll, { passive: false });
-
-    return () => {
-      body.style.overflow = originalOverflow || '';
-      (body.style as any).touchAction = originalTouchAction || '';
-      document.removeEventListener('touchmove', preventScroll);
-      document.removeEventListener('wheel', preventScroll);
-      document.removeEventListener('mousewheel', preventScroll);
-    };
-  }, [showImageModal]);
 
   /** 좋아요 토글 (user_id = profiles.id 사용 + 알림 생성) */
   const handleLikeToggle = async (e: React.MouseEvent) => {
@@ -397,8 +372,8 @@ export default function TweetCard({
   const handleDelete = async () => {
     if (!profileId) return;
     
-    const confirmed = window.confirm(t('tweet.delete_confirm'));
-    if (!confirmed) return;
+    // 모달에서 이미 확인했으므로 window.confirm 제거
+
 
     try {
       const table = type === 'reply' ? 'replies' : 'tweets';
@@ -417,14 +392,12 @@ export default function TweetCard({
 
   const handleCardClick = () => {
     if (typeof window !== 'undefined') {
-      const y = window.scrollY || window.pageYOffset || 0;
       sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, type === 'reply' ? tweetId! : id);
     }
 
-    if (type === 'reply') {
-      navigate(`/sns/${tweetId}?highlight=${id}`);
-    } else {
-      navigate(`/sns/${id}`);
+    const target = type === 'reply' ? `/sns/${tweetId}?highlight=${id}` : `/sns/${id}`;
+    if (location.pathname + location.search !== target) {
+      navigate(target);
     }
   };
 
@@ -435,7 +408,10 @@ export default function TweetCard({
       sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, id);
     }
 
-    navigate(`/profile/${encodeURIComponent(user.name)}`);
+    const target = `/profile/${encodeURIComponent(user.name)}`;
+    if (location.pathname !== target) {
+      navigate(target);
+    }
   };
 
   const isMyTweet = authUser?.id === user.username;
@@ -486,7 +462,16 @@ export default function TweetCard({
 
         {/* 본문 */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between relative" ref={menuRef}>
+          <div 
+            className="flex items-center justify-between relative cursor-pointer" 
+            ref={menuRef}
+            onClick={(e) => {
+              // 프로필/더보기가 아닌 빈 공간 클릭 시 이동
+              if (e.target === e.currentTarget) {
+                 handleCardClick();
+              }
+            }}
+          >
             <div className="flex items-center flex-wrap">
               <span className={nameClass} onClick={handleAvatarClick}>
                 {user.name}
@@ -606,24 +591,30 @@ export default function TweetCard({
             }}
             // 드래그 중 감지
             onMouseMove={e => {
+              // 이미 움직임으로 판명났으면 계산 불필요
+              if (dragInfo.current.moved) return;
+
               const dx = Math.abs(e.clientX - dragInfo.current.startX);
               const dy = Math.abs(e.clientY - dragInfo.current.startY);
 
-              // 5px 이상 움직이면 드래그로 판단
+              // 5px 이상 움직이면 드래그(텍스트 선택)로 판단
               if (dx > 5 || dy > 5) {
+                dragInfo.current.moved = true;
                 setIsDraggingText(true);
               }
             }}
-            // 드래그 종료 시 (클릭으로 취급되지 않게 해야 함)
+            // 드래그 종료 시
             onMouseUp={() => {
-              // 드래그 후 mouseup이 발생해 click 이벤트로 이어지지 않도록 50ms block
+              // 드래그가 끝났으면 잠시 후 상태 해제 (Click 이벤트가 돌고 나서 false가 되도록)
               if (isDraggingText) {
                 setTimeout(() => setIsDraggingText(false), 50);
               }
             }}
             onClick={e => {
+              // 텍스트 선택(드래그)이 아니었을 때만 카드 클릭 처리
               if (!dragInfo.current.moved) {
-                handleCardClick(); // 클릭일 때만 이동
+                e.stopPropagation(); // 👈 부모로 버블링 방지 (부모도 navigate를 호출하므로 중복 방지)
+                handleCardClick(); 
               }
             }}
           />
@@ -659,7 +650,16 @@ export default function TweetCard({
 
           {/* 번역 버튼 */}
           {plainTextContent.trim().length > 0 && (
-            <div className="mt-2">
+            <div 
+              className="mt-2"
+              onClick={(e) => {
+                 // 번역 버튼 빈 영역 클릭 시 이동
+                 if (e.target === e.currentTarget) {
+                    e.stopPropagation();
+                    handleCardClick();
+                 }
+              }}
+            >
               <TranslateButton
                 text={plainTextContent}
                 contentId={`tweet_${id}`}
@@ -668,10 +668,10 @@ export default function TweetCard({
             </div>
           )}
 
-          {/* 번역 결과 */}
+            {/* 번역 결과 */}
           {translated && (
             <div
-              className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 rounded-lg text-sm whitespace-pre-line break-words" // 드래그 시작
+              className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 rounded-lg text-sm whitespace-pre-line break-words"
               // 드래그 시작
               onMouseDown={e => {
                 dragInfo.current.startX = e.clientX;
@@ -680,24 +680,25 @@ export default function TweetCard({
               }}
               // 드래그 중 감지
               onMouseMove={e => {
+                if (dragInfo.current.moved) return;
                 const dx = Math.abs(e.clientX - dragInfo.current.startX);
                 const dy = Math.abs(e.clientY - dragInfo.current.startY);
 
-                // 5px 이상 움직이면 드래그로 판단
                 if (dx > 5 || dy > 5) {
+                  dragInfo.current.moved = true;
                   setIsDraggingText(true);
                 }
               }}
-              // 드래그 종료 시 (클릭으로 취급되지 않게 해야 함)
+              // 드래그 종료 시
               onMouseUp={() => {
-                // 드래그 후 mouseup이 발생해 click 이벤트로 이어지지 않도록 50ms block
                 if (isDraggingText) {
                   setTimeout(() => setIsDraggingText(false), 50);
                 }
               }}
               onClick={e => {
                 if (!dragInfo.current.moved) {
-                  handleCardClick(); // 클릭일 때만 이동
+                  e.stopPropagation();
+                  handleCardClick(); 
                 }
               }}
             >
@@ -721,52 +722,64 @@ export default function TweetCard({
           )}
 
           {showImageModal && (
-            <div
-              className="fixed inset-0 bg-black/80 flex items-center justify-center z-[2000]"
-              onClick={e => e.stopPropagation()}
-            >
-              <ModalImageSlider
-                allImages={allImages}
-                modalIndex={modalIndex}
-                setModalIndex={setModalIndex}
-                onClose={() => setShowImageModal(false)}
-              />
-            </div>
+            <ModalImageSlider
+              allImages={allImages}
+              modalIndex={modalIndex}
+              setModalIndex={setModalIndex}
+              onClose={() => setShowImageModal(false)}
+            />
           )}
 
-          <div className="flex items-center justify-between max-w-md mt-3 text-gray-500 dark:text-gray-400">
-            {/* 댓글 버튼 */}
-            <button
-              className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400"
-              onClick={e => {
-                e.stopPropagation();
-                if (typeof window !== 'undefined') {
-                  const y = window.scrollY || window.pageYOffset || 0;
-                  sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, id);
-                }
-                navigate(`/sns/${id}`);
+            <div 
+              className="flex items-center justify-between max-w-md mt-3 text-gray-500 dark:text-gray-400 cursor-pointer"
+              onClick={(e) => {
+                 // 버튼 사이 빈 공간 클릭 시 이동
+                 if (e.target === e.currentTarget) {
+                    handleCardClick();
+                 }
               }}
             >
-              <div className="p-2 rounded-full transition-colors">
-                <i className="ri-chat-3-line text-lg" />
+            {/* 댓글 버튼 (클릭 시 상세 이동) */}
+            <button
+              className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400 group p-2 -ml-2 rounded-full transition-colors"
+              onClick={e => {
+                // 부모 div의 클릭과 겹치지 않게 하기 위해 stopPropagation 할 수도 있지만, 
+                // 어차피 상세 이동이므로 버블링되어도 상관없음.
+                // 하지만 명시적으로 여기서 이동 처리.
+                e.stopPropagation();
+                handleCardClick();
+              }}
+            >
+              <div className="group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 p-2 rounded-full transition-colors relative">
+                  <i className="ri-chat-3-line text-lg" />
               </div>
               <span className="text-sm">{replyCount}</span>
             </button>
 
             {/* 좋아요 버튼 */}
             <button
-              className={`flex items-center space-x-2 ${
+              className={`flex items-center space-x-2 group p-2 rounded-full transition-colors ${
                 liked ? 'text-red-500' : 'hover:text-red-500'
-              } transition-colors`}
+              }`}
               onClick={handleLikeToggle}
             >
-              <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg`} />
+              <div className="group-hover:bg-red-50 dark:group-hover:bg-red-900/20 p-2 rounded-full transition-colors">
+                 <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg`} />
+              </div>
               <span className="text-sm">{likeCount}</span>
             </button>
 
-            {/* 조회수 버튼 */}
-            <button className="flex items-center space-x-2 hover:text-green-500 dark:hover:text-green-400">
-              <i className="ri-eye-line text-lg" />
+            {/* 조회수 (클릭 시 상세 이동) */}
+            <button 
+                className="flex items-center space-x-2 hover:text-green-500 dark:hover:text-green-400 group p-2 rounded-full transition-colors"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    handleCardClick();
+                }}
+            >
+              <div className="group-hover:bg-green-50 dark:group-hover:bg-green-900/20 p-2 rounded-full transition-colors">
+                  <i className="ri-eye-line text-lg" />
+              </div>
               <span className="text-sm">{viewCount}</span>
             </button>
           </div>
@@ -781,16 +794,16 @@ export default function TweetCard({
             onClick={e => e.stopPropagation()}
           >
             <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
-              {t('tweet.delete_confirm')}
+              {t('tweet.delete_msg_title')}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-              {t('tweet.delete_confirm')}
+              {t('tweet.delete_msg_desc')}
             </p>
 
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setShowDialog(false)}
-                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg:white/10"
+                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10"
               >
                 {t('common.cancel')}
               </button>
@@ -798,7 +811,7 @@ export default function TweetCard({
                 onClick={handleDelete}
                 className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
               >
-                {t('tweet.delete')}
+                {t('common.delete')}
               </button>
             </div>
           </div>

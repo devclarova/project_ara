@@ -25,7 +25,9 @@
     "action_comment": "Olet jättänyt kommentin syötteeseesi.",
     "action_like_comment": "Pidämme kommentistasi.",
     "action_like_feed": "Pidän syötteestäsi.",
-    "no_notifications": "Ei uusia ilmoituksia ole vielä."
+    "no_notifications": "Ei uusia ilmoituksia ole vielä.",
+    "delete_confirm_title": "Poista ilmoitus",
+    "delete_confirm_desc": "Haluatko poistaa tämän ilmoituksen?"
   },
   "study": {
     "search_placeholder": "Hae...",
@@ -182,7 +184,19 @@
     "error": "Virhe",
     "close": "Sulje",
     "share": "Jaa",
-    "link_copied": "Linkki kopioitu"
+    "link_copied": "Linkki kopioitu",
+    "error_profile_load": "Failed to load profile information",
+    "error_profile_missing": "Profile information is missing. Please log in again",
+    "error_profile_loading": "Loading profile information. Please try again later",
+    "error_navigate_profile": "An error occurred while navigating to profile",
+    "error_profile_not_load": "Unable to load profile information",
+    "error_like": "An error occurred while processing like",
+    "error_delete": "An error occurred during deletion",
+    "success_delete": "Deleted successfully",
+    "success_report": "Report has been submitted",
+    "success_block": "User has been blocked",
+    "error_no_profile": "Profile does not exist",
+    "error_empty_content": "Content is empty"
   },
   "settings": {
     "languageSelect": "Valitse kieli",
@@ -241,7 +255,6 @@
     "terms": "Käyttöehdot",
     "privacy_policy": "Tietosuojakäytäntö",
     "marketing_consent": "Markkinointi",
-
     "title_language": "Vaihda kieltä",
     "title_theme": "Vaihda teemaa",
     "title_password_change": "Vaihda salasana",
@@ -286,23 +299,34 @@
     "placeholder_tweet": "Mitä kuuluu?",
     "placeholder_reply": "Lähetä vastaus",
     "btn_post": "Julkaise",
-    "btn_posting": "Posting...",
+    "btn_posting": "Julkaistaan...",
     "btn_reply": "Vastaa",
-    "btn_replying": "Replying...",
-    "error_profile": "Loading profile information. Please try again later.",
-    "error_general": "An error occurred.",
+    "btn_replying": "Vastataan...",
+    "error_profile": "Ladataan profiilitietoja. Yritä myöhemmin uudelleen.",
+    "error_general": "Tapahtui virhe.",
     "add_photo": "Lisää kuva",
-    "images_selected": "{{count}} images selected",
-    "preview_alt": "Preview {{index}}"
+    "images_selected": "{{count}} kuvaa valittu",
+    "preview_alt": "Esikatselu {{index}}",
+    "success_tweet": "Julkaisu julkaistu onnistuneesti!",
+    "success_reply": "Vastaus julkaistu onnistuneesti!",
+    "success_reply_posted": "Vastaus on julkaistu",
+    "error_reply_save": "Virhe tallennettaessa vastausta",
+    "error_tweet_save": "Virhe tallennettaessa julkaisua",
+    "error_reply_upload": "Ongelma vastauksen lataamisessa",
+    "error_tweet_upload": "Ongelma julkaisun lataamisessa",
+    "error_login": "Kirjautuminen vaaditaan",
+    "error_empty": "Sisältö on tyhjä"
   },
   "tweet": {
     "delete_msg_title": "Poista julkaisu?",
     "delete_msg_desc": "Toimintoa ei voi kumota.",
     "delete_success": "Poistettu.",
-    "delete_failed": "Failed to delete.",
+    "delete_failed": "Poistaminen epäonnistui.",
     "no_replies": "Ei vastauksia",
     "be_first": "Ole ensimmäinen!",
-    "cannot_delete": "Cannot delete"
+    "cannot_delete": "Ei voi poistaa",
+    "deleted_reply": "Tämä vastaus on poistettu",
+    "deleted_or_not_exist": "Tämä viesti on poistettu tai sitä ei ole olemassa"
   },
   "trending": {
     "title": "Trendaavat",
@@ -335,6 +359,7 @@
     "prev": "Edellinen",
     "next": "Seuraava",
     "new_chat": "New Chat",
+    "new_message": "Uusi viesti",
     "user_search_placeholder": "Etsi käyttäjiä...",
     "user_search_loading": "Etsitään käyttäjiä...",
     "no_chats": "Ei vielä keskusteluja.",

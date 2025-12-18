@@ -1,4 +1,5 @@
-import SnsInlineEditor, { type SnsInlineEditorHandle } from '@/components/common/SnsInlineEditor'; // Import handle type
+import SnsInlineEditor, { type SnsInlineEditorHandle } from '@/components/common/SnsInlineEditor';
+import type { Database } from '@/types/database';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useRef, useEffect, useState } from 'react';
@@ -41,17 +42,24 @@ export default function TweetDetail() {
     }
   };
 
+  const scrollKeyRef = useRef<number>(0);
+
   // scrollKey 변화 감지해 항상 스크롤 실행.
-  // 알림 클릭으로 들어온 경우(state 있음), 한 번 스크롤 후 history state를 비워서 새로고침 시 다시 스크롤되지 않도록 함.
   useEffect(() => {
     if (!locationState?.highlightCommentId) return;
 
-    // 1. 스크롤 타겟 설정
-    setScrollTargetId(locationState.highlightCommentId);
+    // 이미 해당 키로 스크롤을 시도했다면 중복 실행 방지 (history pollution 해결)
+    if (locationState.scrollKey && scrollKeyRef.current === locationState.scrollKey) {
+      return;
+    }
 
-    // 2. history state 비우기 (새로고침 방지)
-    // 약간의 지연을 두어 렌더링 사이클이 꼬이지 않게 함 (선택적)
-    navigate(location.pathname, { replace: true, state: {} });
+    // 스크롤 타겟 설정
+    setScrollTargetId(locationState.highlightCommentId);
+    
+    // 현재 키 저장
+    if (locationState.scrollKey) {
+        scrollKeyRef.current = locationState.scrollKey;
+    }
   }, [locationState?.highlightCommentId, locationState?.scrollKey]);
 
 
@@ -92,7 +100,7 @@ export default function TweetDetail() {
           filter: `tweet_id=eq.${id}`,
         },
         async payload => {
-          const newReply = payload.new as any; // Keeping payload.new cast as it is dynamic
+          const newReply = payload.new as Database['public']['Tables']['tweet_replies']['Row'];
 
           const { data: profile } = await supabase
             .from('profiles')
@@ -110,13 +118,13 @@ export default function TweetDetail() {
               avatar: profile?.avatar_url ?? '/default-avatar.svg',
             },
             content: newReply.content,
-            timestamp: new Date(newReply.created_at).toLocaleString('ko-KR', {
+            timestamp: new Date(newReply.created_at ?? Date.now()).toLocaleString('ko-KR', {
               hour: '2-digit',
               minute: '2-digit',
               month: 'short',
               day: 'numeric',
             }),
-            createdAt: newReply.created_at, // 정렬용
+            createdAt: newReply.created_at ?? new Date().toISOString(), // 정렬용
             stats: {
               replies: 0,
               retweets: 0,
@@ -174,10 +182,10 @@ export default function TweetDetail() {
           event: 'DELETE',
           schema: 'public',
           table: 'tweet_replies',
-          filter: `tweet_id=eq.${id}`,
         },
         payload => {
-          const deletedId = payload.old.id; // payload.old is typed but might need checking
+          const oldRecord = payload.old as { id: string };
+          const deletedId = oldRecord.id;
           setReplies(prev => prev.filter(r => r.id !== deletedId));
         },
       )
@@ -188,6 +196,50 @@ export default function TweetDetail() {
     return () => {
       supabase.removeChannel(deleteChannel);
       window._replyDeleteChannel = null;
+    };
+  }, [id]);
+
+  // 트윗 정보(좋아요, 조회수 등) 실시간 업데이트
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = supabase
+      .channel(`tweet-${id}-updates`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'tweets',
+          filter: `id=eq.${id}`,
+        },
+        payload => {
+          const newTweet = payload.new as Database['public']['Tables']['tweets']['Row'];
+          setTweet(prev => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              stats: {
+                ...prev.stats,
+                likes: newTweet.like_count ?? 0,
+                views: newTweet.view_count ?? 0,
+                replies: newTweet.reply_count ?? 0, // 댓글 수도 동기화 (단, 실시간 리스트와 오차 있을 수 있음)
+              },
+            };
+          });
+          
+          // SnsStore 동기화
+          SnsStore.updateStats(id, {
+            likes: newTweet.like_count ?? 0,
+            views: newTweet.view_count ?? 0,
+            replies: newTweet.reply_count ?? 0
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
     };
   }, [id]);
 
@@ -381,7 +433,7 @@ export default function TweetDetail() {
   }
 
   if (!tweet) {
-    navigate('/sns');
+    navigate('/sns', { replace: true });
     return null;
   }
 

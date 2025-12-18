@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import DOMPurify from 'dompurify';
 import { supabase } from '@/lib/supabase';
@@ -35,6 +35,7 @@ function ReplyCard({
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user: authUser } = useAuth();
 
   const [liked, setLiked] = useState(reply.liked ?? false);
@@ -212,7 +213,10 @@ function ReplyCard({
 
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/profile/${encodeURIComponent(reply.user.name)}`);
+    const target = `/profile/${encodeURIComponent(reply.user.name)}`;
+    if (location.pathname !== target) {
+      navigate(target);
+    }
   };
 
   // 본인 댓글 여부 (profiles.id 비교 불가하므로 user_id 비교)

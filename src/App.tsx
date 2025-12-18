@@ -35,6 +35,7 @@ import SnsDetailPage from './pages/sns/SnsDetailPage';
 import { Toaster } from 'sonner'; // 토스트 컴포넌트 추가
 import Footer from './components/common/Footer';
 import { ThemeProvider } from './components/theme-provider';
+import { GlobalNotificationListener } from './components/common/GlobalNotificationListener';
 
 // ---------- 인증 가드 ----------
 function RequireAuth() {
@@ -141,35 +142,31 @@ const App = () => {
       <ThemeProvider defaultTheme="system" storageKey="theme-mode">
         <NewChatNotificationProvider>
           <DirectChatProvider>
-            <Router>
-              <AppInner />
-            </Router>
             <Toaster
-              position="top-center"
+              position="bottom-right"
+              expand={true}
+              richColors
               toastOptions={{
-                duration: 2500,
+                duration: 4000,
                 style: {
-                  background: 'hsl(var(--primary) / 0.35)', // 은은한 primary 반투명
-                  border: '1px solid hsl(var(--primary) / 0.25)',
-                  backdropFilter: 'blur(10px)', // 더 부드러운 유리 효과
-                  WebkitBackdropFilter: 'blur(10px)',
-
+                  background: 'rgba(0, 191, 165, 0.05)', /* Light primary tint background */
+                  backdropFilter: 'blur(16px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+                  border: '1px solid rgba(0, 191, 165, 0.2)',
                   color: 'hsl(var(--foreground))',
-                  borderRadius: '14px',
-
-                  // 사이즈 업! (기존보다 1.4배 정도 커짐)
-                  padding: '14px 18px',
-                  fontSize: '15px',
-
-                  // 토스트 기본 폭을 넓게 → 더 브랜드스럽고 안정감 있는 느낌
-                  minWidth: '340px',
-                  maxWidth: '440px',
-
-                  boxShadow: '0 6px 28px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1)',
+                  borderRadius: '16px',
+                  padding: '10px 14px',
+                  maxWidth: '280px',
+                  boxShadow: '0 8px 32px 0 rgba(0, 191, 165, 0.12), 0 1px 2px 0 rgba(0, 0, 0, 0.02)',
+                  marginBottom: '8px',
                 },
-                className: 'font-medium',
+                className: 'font-sans',
               }}
             />
+            <Router>
+              <GlobalNotificationListener />
+              <AppInner />
+            </Router>
           </DirectChatProvider>
         </NewChatNotificationProvider>
       </ThemeProvider>

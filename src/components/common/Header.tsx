@@ -21,6 +21,7 @@ function Header() {
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false); // 데스크탑 언어 드롭다운
 
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false); // 테마 드롭다운 상태
+  const [mobileThemeOpen, setMobileThemeOpen] = useState(false); // 모바일 테마 드롭다운 상태
 
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -179,8 +180,17 @@ function Header() {
       setUnreadNotificationCount(0);
     };
 
+    // 단일 삭제 시 뱃지 1 감소
+    const handleDeletedOne = () => {
+      setUnreadNotificationCount(prev => Math.max(0, prev - 1));
+    };
+
     window.addEventListener('notifications:cleared', handleCleared);
-    return () => window.removeEventListener('notifications:cleared', handleCleared);
+    window.addEventListener('notification:deleted-one', handleDeletedOne);
+    return () => {
+      window.removeEventListener('notifications:cleared', handleCleared);
+      window.removeEventListener('notification:deleted-one', handleDeletedOne);
+    };
   }, []);
 
   // 외부 클릭 시 드롭다운 / 햄버거 닫기
@@ -222,7 +232,9 @@ function Header() {
     await signOut();
     setIsOpen(false);
     setIsProfileMenuOpen(false);
-    navigate('/');
+    if (location.pathname !== '/') {
+      navigate('/', { replace: true });
+    }
   };
 
   // 실제 보여줄 값
@@ -231,7 +243,7 @@ function Header() {
 
   return (
     <div
-      className="fixed inset-x-0 top-0 z-50 flex justify-between items-center px-4 sm:px-8 lg:px-36 py-2
+      className="fixed inset-x-0 top-0 z-[100] flex justify-between items-center px-4 sm:px-8 lg:px-36 py-2
                  border-b border-gray-200 bg-white
                  dark:border-gray-800 dark:bg-secondary"
     >
@@ -261,7 +273,13 @@ function Header() {
                 <button
                   key={item.key}
                   type="button"
-                  onClick={() => navigate(target)}
+                  onClick={() => {
+                    if (location.pathname === target) {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                      navigate(target);
+                    }
+                  }}
                   aria-current={active ? 'page' : undefined}
                   className={`relative inline-flex items-center text-sm lg:text-base xl:text-lg font-bold p-0 ${
                     active
@@ -301,6 +319,19 @@ function Header() {
       <div className="flex items-center">
         {/* 데스크탑 프로필 영역 */}
         <div className="hidden md:flex items-center gap-3 sm:gap-4">
+          <div className="hidden sm:block">
+            <ThemeSwitcher 
+              open={isThemeMenuOpen}
+              onOpenChange={(open) => {
+                setIsThemeMenuOpen(open);
+                if (open) {
+                  setIsProfileMenuOpen(false);
+                  setIsLangMenuOpen(false);
+                }
+              }}
+            />
+          </div>
+
           {/* 언어 선택 드롭다운 */}
           <div>
             <LanguageSwitcher 
@@ -310,19 +341,6 @@ function Header() {
                 if (open) {
                   setIsProfileMenuOpen(false);
                   setIsThemeMenuOpen(false);
-                }
-              }}
-            />
-          </div>
-
-          <div className="hidden sm:block">
-            <ThemeSwitcher 
-              open={isThemeMenuOpen}
-              onOpenChange={(open) => {
-                setIsThemeMenuOpen(open);
-                if (open) {
-                  setIsProfileMenuOpen(false);
-                  setIsLangMenuOpen(false);
                 }
               }}
             />
@@ -371,7 +389,9 @@ function Header() {
                       <button
                         type="button"
                         onClick={() => {
-                          navigate('/profile');
+                          if (location.pathname !== '/profile') {
+                            navigate('/profile');
+                          }
                           setIsProfileMenuOpen(false);
                         }}
                         className="w-full flex items-center gap-2 px-4 py-2.5 text-sm
@@ -396,7 +416,9 @@ function Header() {
                       <button
                         type="button"
                         onClick={() => {
-                          navigate('/settings');
+                          if (location.pathname !== '/settings') {
+                            navigate('/settings');
+                          }
                           setIsProfileMenuOpen(false);
                         }}
                         className="w-full flex items-center gap-2 px-4 py-2.5 text-sm
@@ -438,13 +460,21 @@ function Header() {
           ) : (
             <>
               <button
-                onClick={() => navigate('/signin')}
+                onClick={() => {
+                  if (location.pathname !== '/signin') {
+                    navigate('/signin');
+                  }
+                }}
                 className="bg-primary text-white text-sm sm:text-base px-3 sm:px-4 py-1.5 sm:py-2 rounded hover:opacity-80 transition-colors"
               >
                 {t('auth.login')}
               </button>
               <button
-                onClick={() => navigate('/signup')}
+                onClick={() => {
+                  if (location.pathname !== '/signup') {
+                    navigate('/signup');
+                  }
+                }}
                 className="text-sm sm:text-base px-3 sm:px-4 py-1.5 sm:py-2 rounded
                            border border-gray-300 hover:bg-gray-50
                            dark:border-gray-700 dark:text-gray-100 dark:hover:bg-primary/20"
@@ -456,48 +486,61 @@ function Header() {
         </div>
 
         <div 
-          ref={langRef}
-          className="md:hidden" 
+          className="md:hidden flex items-center gap-0" // 간격을 동일하게 하기 위해 gap-0 또는 gap-1 사용
           onClick={(e) => {
             e.stopPropagation();
           }}
         >
-          <LanguageSwitcher 
-            open={langDropdownOpen} 
-            onOpenChange={(open) => {
-              setLangDropdownOpen(open);
-              if (open) {
-                // 언어가 열리면 햄버거 닫기
-                setIsOpen(false);
-              }
-            }}
-          />
-        </div>
+          <div ref={langRef} className="flex items-center gap-0">
+             <ThemeSwitcher 
+               open={mobileThemeOpen}
+               onOpenChange={(open) => {
+                  setMobileThemeOpen(open);
+                  if (open) {
+                    setLangDropdownOpen(false);
+                    setIsOpen(false);
+                  }
+               }}
+             />
+             <LanguageSwitcher 
+               open={langDropdownOpen} 
+               onOpenChange={(open) => {
+                 setLangDropdownOpen(open);
+                 if (open) {
+                   // 언어가 열리면 햄버거 닫기
+                   setIsOpen(false);
+                   setMobileThemeOpen(false);
+                 }
+               }}
+             />
+          </div>
 
-        <button
-          ref={buttonRef}
-          className="md:hidden relative text-2xl font-bold px-2 text-gray-900 dark:text-gray-100"
-          onClick={(e) => {
-            e.stopPropagation();
-            // 언어 드롭다운 닫기
-            setLangDropdownOpen(false);
-            // 햄버거 토글
-            setIsOpen(prev => !prev);
-          }}
-          aria-expanded={isOpen}
-          aria-label={t('common.more')} // '메뉴 열기' 대체
-        >
-          ☰
-          {(unreadChatCount + unreadNotificationCount) > 0 && (
-            <span
-              className="absolute top-0 right-0 min-w-[16px] h-[16px] text-[10px] px-[3px]
-                         rounded-full bg-primary text-white flex items-center justify-center
-                         whitespace-nowrap leading-none border border-white dark:border-gray-800"
-            >
-              {(unreadChatCount + unreadNotificationCount) > 99 ? '99+' : (unreadChatCount + unreadNotificationCount)}
-            </span>
-          )}
-        </button>
+          <button
+            ref={buttonRef}
+            className="relative flex items-center justify-center w-10 h-10 text-2xl font-bold text-gray-900 dark:text-gray-100 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              // 언어/테마 드롭다운 닫기
+              setLangDropdownOpen(false);
+              setMobileThemeOpen(false);
+              // 햄버거 토글
+              setIsOpen(prev => !prev);
+            }}
+            aria-expanded={isOpen}
+            aria-label={t('common.more')}
+          >
+            ☰
+            {(unreadChatCount + unreadNotificationCount) > 0 && (
+              <span
+                className="absolute top-0 right-0 min-w-[16px] h-[16px] text-[10px] px-[3px]
+                           rounded-full bg-primary text-white flex items-center justify-center
+                           whitespace-nowrap leading-none border border-white dark:border-gray-800"
+              >
+                {(unreadChatCount + unreadNotificationCount) > 99 ? '99+' : (unreadChatCount + unreadNotificationCount)}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* 모바일 메뉴 */}
@@ -517,9 +560,13 @@ function Header() {
             className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-primary/20 cursor-pointer"
             onClick={() => {
               if (user) {
-                navigate('/profile');
+                if (location.pathname !== '/profile') {
+                  navigate('/profile');
+                }
               } else {
-                navigate('/signin');
+                if (location.pathname !== '/signin') {
+                  navigate('/signin');
+                }
               }
               setIsOpen(false);
             }}
@@ -560,7 +607,11 @@ function Header() {
                     key={item.key}
                     type="button"
                     onClick={() => {
-                      navigate(target);
+                      if (location.pathname === target) {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } else {
+                        navigate(target);
+                      }
                       setIsOpen(false);
                     }}
                     aria-current={active ? 'page' : undefined}
@@ -628,7 +679,9 @@ function Header() {
                 <button
                   type="button"
                   onClick={() => {
-                    navigate('/signin');
+                    if (location.pathname !== '/signin') {
+                      navigate('/signin');
+                    }
                     setIsOpen(false);
                   }}
                   className="flex-1 px-3 py-2 rounded-lg
@@ -639,7 +692,9 @@ function Header() {
                 <button
                   type="button"
                   onClick={() => {
-                    navigate('/signup');
+                    if (location.pathname !== '/signup') {
+                      navigate('/signup');
+                    }
                     setIsOpen(false);
                   }}
                   className="flex-1 px-3 py-2 rounded-lg

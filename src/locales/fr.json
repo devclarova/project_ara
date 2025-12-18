@@ -25,7 +25,9 @@
     "action_comment": "Un commentaire a été laissé sur votre fil.",
     "action_like_comment": "Nous aimons votre commentaire.",
     "action_like_feed": "J'aime votre fil.",
-    "no_notifications": "Aucune nouvelle notification pour le moment."
+    "no_notifications": "Aucune nouvelle notification pour le moment.",
+    "delete_confirm_title": "Supprimer la notification",
+    "delete_confirm_desc": "Voulez-vous supprimer cette notification ?"
   },
   "study": {
     "search_placeholder": "Rechercher...",
@@ -146,7 +148,19 @@
     "error": "Erreur",
     "close": "Fermer",
     "share": "Partager",
-    "link_copied": "Lien copié"
+    "link_copied": "Lien copié",
+    "error_profile_load": "Failed to load profile information",
+    "error_profile_missing": "Profile information is missing. Please log in again",
+    "error_profile_loading": "Loading profile information. Please try again later",
+    "error_navigate_profile": "An error occurred while navigating to profile",
+    "error_profile_not_load": "Unable to load profile information",
+    "error_like": "An error occurred while processing like",
+    "error_delete": "An error occurred during deletion",
+    "success_delete": "Deleted successfully",
+    "success_report": "Report has been submitted",
+    "success_block": "User has been blocked",
+    "error_no_profile": "Profile does not exist",
+    "error_empty_content": "Content is empty"
   },
   "settings": {
     "languageSelect": "Langue",
@@ -205,7 +219,6 @@
     "terms": "Conditions d'utilisation",
     "privacy_policy": "Politique de confidentialité",
     "marketing_consent": "Consentement marketing",
-
     "title_language": "Changer de langue",
     "title_theme": "Changer de thème",
     "title_password_change": "Changer le mot de passe",
@@ -250,23 +263,34 @@
     "placeholder_tweet": "À quoi pensez-vous ?",
     "placeholder_reply": "Votre réponse...",
     "btn_post": "Publier",
-    "btn_posting": "Posting...",
+    "btn_posting": "Publication...",
     "btn_reply": "Répondre",
-    "btn_replying": "Replying...",
-    "error_profile": "Loading profile information. Please try again later.",
-    "error_general": "An error occurred.",
+    "btn_replying": "Envoi...",
+    "error_profile": "Chargement des informations du profil. Veuillez réessayer plus tard.",
+    "error_general": "Une erreur s'est produite.",
     "add_photo": "Ajouter photo",
-    "images_selected": "{{count}} images selected",
-    "preview_alt": "Preview {{index}}"
+    "images_selected": "{{count}} images sélectionnées",
+    "preview_alt": "Aperçu {{index}}",
+    "success_tweet": "Post publié avec succès !",
+    "success_reply": "Réponse publiée avec succès !",
+    "success_reply_posted": "La réponse a été publiée",
+    "error_reply_save": "Une erreur s'est produite lors de l'enregistrement de la réponse",
+    "error_tweet_save": "Une erreur s'est produite lors de l'enregistrement du post",
+    "error_reply_upload": "Un problème est survenu lors du téléchargement de la réponse",
+    "error_tweet_upload": "Un problème est survenu lors du téléchargement du post",
+    "error_login": "Connexion requise",
+    "error_empty": "Le contenu est vide"
   },
   "tweet": {
     "delete_msg_title": "Supprimer ?",
     "delete_msg_desc": "Irréversible.",
     "delete_success": "Supprimé.",
-    "delete_failed": "Failed to delete.",
+    "delete_failed": "Échec de la suppression.",
     "no_replies": "Aucune réponse",
     "be_first": "Soyez le premier !",
-    "cannot_delete": "Cannot delete"
+    "cannot_delete": "Ne peut pas être supprimé",
+    "deleted_reply": "Cette réponse a été supprimée",
+    "deleted_or_not_exist": "Ce message a été supprimé ou n'existe pas"
   },
   "trending": {
     "title": "Tendances",
@@ -299,6 +323,7 @@
     "prev": "Préc",
     "next": "Suiv",
     "new_chat": "Nouveau Chat",
+    "new_message": "Nouveau Message",
     "user_search_placeholder": "Rechercher des utilisateurs...",
     "user_search_loading": "Recherche d'utilisateurs...",
     "no_chats": "Pas encore de discussions.",

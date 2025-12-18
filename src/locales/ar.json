@@ -25,7 +25,9 @@
     "action_comment": "لقد تركت تعليقًا على خلاصتك.",
     "action_like_comment": "نحن نحب تعليقك.",
     "action_like_feed": "أحب تغذيتك.",
-    "no_notifications": "لا توجد إشعارات جديدة بعد"
+    "no_notifications": "لا توجد إشعارات جديدة بعد",
+    "delete_confirm_title": "حذف الإشعار",
+    "delete_confirm_desc": "هل ترغب في حذف هذا الإشعار؟"
   },
   "study": {
     "search_placeholder": "بحث...",
@@ -182,7 +184,19 @@
     "error": "خطأ",
     "close": "إغلاق",
     "share": "مشاركة",
-    "link_copied": "تم نسخ الرابط"
+    "link_copied": "تم نسخ الرابط",
+    "error_profile_load": "Failed to load profile information",
+    "error_profile_missing": "Profile information is missing. Please log in again",
+    "error_profile_loading": "Loading profile information. Please try again later",
+    "error_navigate_profile": "An error occurred while navigating to profile",
+    "error_profile_not_load": "Unable to load profile information",
+    "error_like": "An error occurred while processing like",
+    "error_delete": "An error occurred during deletion",
+    "success_delete": "Deleted successfully",
+    "success_report": "Report has been submitted",
+    "success_block": "User has been blocked",
+    "error_no_profile": "Profile does not exist",
+    "error_empty_content": "Content is empty"
   },
   "settings": {
     "languageSelect": "اختيار اللغة",
@@ -241,7 +255,6 @@
     "terms": "شروط الخدمة",
     "privacy_policy": "سياسة الخصوصية",
     "marketing_consent": "موافقة التسويق",
-
     "title_language": "تغيير اللغة",
     "title_theme": "تغيير النسق",
     "title_password_change": "تغيير كلمة المرور",
@@ -253,7 +266,6 @@
     "title_support": "مركز المساعدة",
     "security_title": "إعدادات الأمان",
     "session_management": "إدارة الجلسات"
-
   },
   "profile": {
     "edit_profile": "تعديل الملف الشخصي",
@@ -287,23 +299,34 @@
     "placeholder_tweet": "ماذا يحدث؟",
     "placeholder_reply": "انشر ردك",
     "btn_post": "نشر",
-    "btn_posting": "Posting...",
+    "btn_posting": "جاري النشر...",
     "btn_reply": "رد",
-    "btn_replying": "Replying...",
-    "error_profile": "Loading profile information. Please try again later.",
-    "error_general": "An error occurred.",
+    "btn_replying": "جاري الرد...",
+    "error_profile": "جاري تحميل معلومات الملف الشخصي. يرجى المحاولة مرة أخرى لاحقًا.",
+    "error_general": "حدث خطأ.",
     "add_photo": "إضافة صورة",
-    "images_selected": "{{count}} images selected",
-    "preview_alt": "Preview {{index}}"
+    "images_selected": "تم تحديد {{count}} صور",
+    "preview_alt": "معاينة {{index}}",
+    "success_tweet": "تم نشر المنشور بنجاح!",
+    "success_reply": "تم نشر الرد بنجاح!",
+    "success_reply_posted": "تم نشر الرد",
+    "error_reply_save": "حدث خطأ أثناء حفظ الرد",
+    "error_tweet_save": "حدث خطأ أثناء حفظ المنشور",
+    "error_reply_upload": "حدثت مشكلة أثناء تحميل الرد",
+    "error_tweet_upload": "حدثت مشكلة أثناء تحميل المنشور",
+    "error_login": "تسجيل الدخول مطلوب",
+    "error_empty": "المحتوى فارغ"
   },
   "tweet": {
     "delete_msg_title": "حذف المنشور؟",
     "delete_msg_desc": "لا يمكن التراجع عن هذا.",
     "delete_success": "تم الحذف.",
-    "delete_failed": "Failed to delete.",
+    "delete_failed": "فشل الحذف.",
     "no_replies": "لا توجد ردود حتى الآن",
     "be_first": "كن أول من يرد!",
-    "cannot_delete": "Cannot delete"
+    "cannot_delete": "لا يمكن الحذف",
+    "deleted_reply": "تم حذف هذا الرد",
+    "deleted_or_not_exist": "تم حذف هذا المنشور أو أنه غير موجود"
   },
   "trending": {
     "title": "المتداول لك",
@@ -336,6 +359,7 @@
     "prev": "السابق",
     "next": "التالي",
     "new_chat": "New Chat",
+    "new_message": "رسالة جديدة",
     "user_search_placeholder": "بحث عن المستخدمين...",
     "user_search_loading": "جارٍ البحث عن المستخدمين...",
     "no_chats": "لا توجد محادثات بعد.",

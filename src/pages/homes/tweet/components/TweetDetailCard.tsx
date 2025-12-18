@@ -46,6 +46,7 @@ export default function TweetDetailCard({ tweet, replyCount, onDeleted, onReplyC
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [authorProfileId, setAuthorProfileId] = useState<string | null>(null);
 
   const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
   const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
@@ -54,7 +55,12 @@ export default function TweetDetailCard({ tweet, replyCount, onDeleted, onReplyC
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('sns-last-tweet-id', tweet.id);
     }
-    navigate('/sns');
+    // 단순히 /sns로 가는 것이 아니라 히스토리 상에서 뒤로 이동하여 스택을 깨끗하게 유지
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/sns', { replace: true });
+    }
   };
 
   const handleAvatarClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -94,13 +100,17 @@ export default function TweetDetailCard({ tweet, replyCount, onDeleted, onReplyC
       try {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('country')
+          .select('id, country')
           .eq('user_id', tweet.user.username)
           .maybeSingle();
 
         if (profileError) {
           console.error('작성자 프로필(country) 로드 실패:', profileError.message);
           return;
+        }
+
+        if (profile) {
+          setAuthorProfileId(profile.id);
         }
 
         if (!profile || !profile.country) {
@@ -241,6 +251,19 @@ export default function TweetDetailCard({ tweet, replyCount, onDeleted, onReplyC
       setLiked(true);
       setLikeCount(prev => prev + 1);
 
+      // 알림 생성 (본인 게시글이 아닐 때만)
+      if (authorProfileId && authorProfileId !== profileId) {
+        await supabase.from('notifications').insert({
+          type: 'like',
+          content: '당신의 피드를 좋아합니다.',
+          is_read: false,
+          tweet_id: tweet.id,
+          comment_id: null,
+          sender_id: profileId,
+          receiver_id: authorProfileId,
+        });
+      }
+
       // SnsStore 동기화
       SnsStore.updateStats(tweet.id, {
         likes: (tweet.stats.likes || 0) + 1
@@ -251,33 +274,7 @@ export default function TweetDetailCard({ tweet, replyCount, onDeleted, onReplyC
     }
   };
 
-  // 이미지 모달 열릴 때 바깥 스크롤 완전 차단
-  useEffect(() => {
-    if (!showImageModal) return;
 
-    const body = document.body;
-    const originalOverflow = body.style.overflow;
-    const originalTouchAction = (body.style as any).touchAction;
-
-    const preventScroll = (e: Event) => {
-      e.preventDefault();
-    };
-
-    body.style.overflow = 'hidden';
-    (body.style as any).touchAction = 'none';
-
-    document.addEventListener('touchmove', preventScroll, { passive: false });
-    document.addEventListener('wheel', preventScroll, { passive: false });
-    document.addEventListener('mousewheel', preventScroll, { passive: false });
-
-    return () => {
-      body.style.overflow = originalOverflow || '';
-      (body.style as any).touchAction = originalTouchAction || '';
-      document.removeEventListener('touchmove', preventScroll);
-      document.removeEventListener('wheel', preventScroll);
-      document.removeEventListener('mousewheel', preventScroll);
-    };
-  }, [showImageModal]);
 
   const handleDelete = async () => {
     if (!profileId) return;
@@ -452,17 +449,12 @@ export default function TweetDetailCard({ tweet, replyCount, onDeleted, onReplyC
         )}
 
         {showImageModal && (
-          <div
-            className="fixed inset-0 bg-black/80 z-[2000] flex items-center justify-center"
-            onClick={e => e.stopPropagation()}
-          >
-            <ModalImageSlider
-              allImages={allImages}
-              modalIndex={modalIndex}
-              setModalIndex={setModalIndex}
-              onClose={() => setShowImageModal(false)}
-            />
-          </div>
+          <ModalImageSlider
+            allImages={allImages}
+            modalIndex={modalIndex}
+            setModalIndex={setModalIndex}
+            onClose={() => setShowImageModal(false)}
+          />
         )}
       </div>
 

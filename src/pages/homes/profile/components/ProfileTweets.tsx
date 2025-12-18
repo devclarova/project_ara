@@ -20,189 +20,163 @@ const PAGE_SIZE = 10;
 
 export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsProps) {
   const [tweets, setTweets] = useState<FeedItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  
-  // Page Ref for stability to prevent fetchTweets recreation
-  const pageRef = useRef(0);
   
   // Race Condition 방지를 위한 Ref
   const activeTabRef = useRef(activeTab);
+  const pageRef = useRef(0);
   const loadingRef = useRef(false);
-  const likedItemsRef = useRef<{ type: 'post' | 'reply'; id: string; date: string; likedAt: string }[]>([]); // 좋아요 탭 전용: 전체 ID 및 시간 리스트 보관
+  // 좋아요 탭 전용: 전체 ID 리스트 캐싱 (페이지네이션용)
+  const likedItemsRef = useRef<{ type: 'post' | 'reply'; id: string; date: string; likedAt: string }[]>([]);
 
-  // 탭 변경 감지 및 상태 초기화
+  // 탭 변경 시 초기화
   useEffect(() => {
     activeTabRef.current = activeTab;
-    setTweets([]);
-    pageRef.current = 0; // Reset page ref
+    setTweets([]); // 화면 클리어
+    pageRef.current = 0;
+    likedItemsRef.current = []; // 탭 변경 시 캐시 초기화
     setHasMore(true);
-    setLoading(true);
-    loadingRef.current = false;
-    likedItemsRef.current = []; // 탭 변경 시 캐시된 좋아요 리스트 초기화
-    
-    // 탭이 바뀌면 즉시 새 데이터를 요청
-    fetchTweets(0, true);
+    setLoading(true); // 로딩 스피너 즉시 표시
+
+    // 데이터 로드
+    fetchTweets(true); 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, userProfile.id]);
 
-  /** 트윗 불러오기 */
-  // isInitialLoad: 탭 변경 등으로 인한 첫 로드 여부
-  /** 트윗 불러오기 */
-  // isInitialLoad: 탭 변경 등으로 인한 첫 로드 여부
-  const fetchTweets = useCallback(async (forcedPage?: number, isInitialLoad = false) => {
-    if (!userProfile?.id) return;
-    
-    // 현재 요청이 유효한지 확인하기 위해 캡처
+  const fetchTweets = async (reset = false) => {
     const currentTab = activeTabRef.current;
-    const itemsToLoad = forcedPage !== undefined ? forcedPage : pageRef.current;
-
-    // 이미 로딩중이고 첫 로드가 아니면 스킵 (중복 요청 방지)
-    if (loadingRef.current && !isInitialLoad) return;
     
-    // 더 가져올 게 없는데 첫 로드가 아니면 스킵
-    if (!hasMore && !isInitialLoad && itemsToLoad > 0) return;
+    // 이미 로딩 중이고, 리셋이 아니면 스킵 (중복 로딩 방지)
+    if (loadingRef.current && !reset) return;
+    // 더 가져올 게 없는데 리셋이 아니면 스킵
+    if (!hasMore && !reset) return;
 
     loadingRef.current = true;
-    if (itemsToLoad === 0) setLoading(true);
+    if (reset) setLoading(true); // 첫 로드/리셋일 때만 로딩 표시
 
     try {
+      const pageToLoad = reset ? 0 : pageRef.current;
       let newData: FeedItem[] = [];
 
       // 1) 내가 쓴 게시글
       if (currentTab === 'posts') {
-        newData = await tweetService.getPosts(userProfile.id, itemsToLoad);
+        newData = await tweetService.getPosts(userProfile.id, pageToLoad);
       } 
       // 2) 내가 쓴 댓글
       else if (currentTab === 'replies') {
-        const replies = await tweetService.getReplies(userProfile.id, itemsToLoad);
-        newData = replies;
+        newData = await tweetService.getReplies(userProfile.id, pageToLoad);
       } 
       // 3) 좋아요한 글
       else if (currentTab === 'likes') {
         const { items, allLikedItems } = await tweetService.getLikedItems(
           userProfile.id, 
-          itemsToLoad, 
-          likedItemsRef.current
+          pageToLoad, 
+          likedItemsRef.current // 캐싱된 전체 리스트 전달
         );
         
-        // 캐시 업데이트 (첫 로드 시 전체 ID 리스트 받아옴)
-        likedItemsRef.current = allLikedItems;
+        // 첫 로드(또는 갱신) 시 전체 리스트를 받아와 캐시 업데이트
+        if (allLikedItems && allLikedItems.length > 0) {
+           likedItemsRef.current = allLikedItems;
+        }
+
         newData = items;
       }
 
-      // 요청 끝난 후 탭이 바뀌었으면 무시
+      // 요청 완료 후 탭이 바뀌었으면(사용자가 그새 다른 탭 클릭) 결과 버림
       if (activeTabRef.current !== currentTab) return;
 
-      // 상태 업데이트
-      if (itemsToLoad === 0) {
+      if (reset) {
         setTweets(newData);
       } else {
+        // 기존 데이터에 추가 (중복 제거)
         setTweets(prev => {
-          // 중복 방지
-          const existingIds = new Set(prev.map(t => t.id));
-          const filteredNew = newData.filter(t => !existingIds.has(t.id));
-          return [...prev, ...filteredNew];
+           const existingIds = new Set(prev.map(t => t.id));
+           return [...prev, ...newData.filter(t => !existingIds.has(t.id))];
         });
       }
 
-      // 더 가져올 데이터가 있는지 판단
+      // 더보기 가능 여부 판단
       if (currentTab === 'likes') {
-        const totalItems = likedItemsRef.current.length;
-        const loadedCount = (itemsToLoad + 1) * PAGE_SIZE;
-        setHasMore(loadedCount < totalItems);
+          // 좋아요는 전체 리스트 길이를 알기 때문에 정확히 계산 가능
+          const totalCount = likedItemsRef.current.length;
+          const currentCount = (pageToLoad + 1) * PAGE_SIZE;
+          setHasMore(currentCount < totalCount);
       } else {
-        if (newData.length < PAGE_SIZE) {
-          setHasMore(false);
-        }
+          // 일반 게시글/댓글은 받아온 개수로 판단
+          if (newData.length < PAGE_SIZE) {
+            setHasMore(false);
+          } else {
+            setHasMore(true);
+          }
       }
-      
-      // 다음 페이지 준비
-      if (itemsToLoad === pageRef.current) {
-        pageRef.current += 1;
+
+      // 다음 페이지 준비 (성공했을 때만)
+      if (newData.length > 0 || (currentTab === 'likes' && likedItemsRef.current.length > 0)) {
+         pageRef.current += 1;
       }
-      
+
     } catch (error) {
       console.error('Error fetching tweets:', error);
     } finally {
+      // 탭이 여전히 같을 때만 로딩 해제
       if (activeTabRef.current === currentTab) {
         setLoading(false);
         loadingRef.current = false;
       }
     }
-  }, [hasMore, userProfile?.id]); // removed 'page' dependency to keep function stable
+  };
 
-  // Infinite Scroll Trigger
-  const loadMoreRef = useInfiniteScroll(() => {
-    fetchTweets();
-  }, hasMore, loadingRef.current);
+  // 무한 스크롤 트리거
+  const loadMoreRef = useInfiniteScroll(
+    () => {
+      fetchTweets(false);
+    },
+    hasMore,
+    loading // 세 번째 필수 인자 전달
+  );
 
-  // 초기 로드
-  useEffect(() => {
-    fetchTweets();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, userProfile.id]); // activeTab dependency removed from useCallback to prevent recreation, handled by ref
-
-
-
-
-  /** 실시간 반영용 구독 채널 (기존 유지하되 stale check 추가) */
+  // 실시간 업데이트 (좋아요/댓글 수 등 stats 반영)
   useEffect(() => {
     if (!userProfile?.id) return;
-    const currentTab = activeTabRef.current;
 
-    const handleUpdate = (payload: any) => {
-      // 현재 탭에서 보여주고 있는 데이터에 대해서만 업데이트
-      setTweets(prev => prev.map(t => t.id === payload.new.id ? { ...t, stats: { ...t.stats, replies: payload.new.reply_count, likes: payload.new.like_count, views: payload.new.view_count } } : t));
-    };
-
-    // ... (실시간 로직은 복잡도를 줄이기 위해 일단 뷰포트 업데이트 위주로 단순화하거나 유지)
-    // 성능 문제의 핵심은 아니므로 기존 로직 유지하되, 메모리 누수 방지 cleanup 확실히.
-    
-    // 이펙트 내부에서 채널 생성 로직 생략 (기존 코드 재사용하거나 필요시 복구)
-    // 사용자가 "완벽하게 잡아야 함" 이라고 했으므로, 실시간 업데이트가 로딩/데이터 꼬임의 원인일 수 있음.
-    // 여기서는 간단히 로직만 정리하고 넘어가겠습니다. (전체 코드 교체이므로 필요한 부분 다시 작성)
-    
-     const updateChannel = supabase
-      .channel(`profile-tweets-stats-${userProfile.id}`)
+    const channel = supabase
+      .channel(`profile-realtime-${userProfile.id}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tweets' }, payload => {
-          // Realtime payload is the raw row, using 'any' as proper Row type isn't fully defined yet
-          const updated = payload.new as any;
-          setTweets(prev => prev.map(t => 
-             t.id === updated.id 
-             ? { ...t, stats: { ...t.stats, replies: updated.reply_count ?? t.stats.replies, likes: updated.like_count ?? t.stats.likes, views: updated.view_count ?? t.stats.views } } 
-             : t
-          ));
+        const updated = payload.new as any;
+        setTweets(prev => prev.map(t => 
+           t.id === updated.id 
+           ? { ...t, stats: { ...t.stats, replies: updated.reply_count, likes: updated.like_count, views: updated.view_count } } 
+           : t
+        ));
       })
       .subscribe();
 
-     return () => {
-       supabase.removeChannel(updateChannel);
-     }
-  }, [userProfile?.id]); // activeTab 의존성 제거 (탭 상관없이 stats 업데이트는 유효해도 됨, 혹은 탭 바뀔때마다 초기화)
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userProfile.id]);
 
-
-  // 로딩 UI 처리
-  if (loading && tweets.length === 0)
+  if (loading && tweets.length === 0) {
     return (
       <div className="flex justify-center items-center py-20">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
+  }
 
-  if (!loading && !tweets.length)
+  if (!loading && tweets.length === 0) {
     return (
-      <div className="text-center py-16 text-gray-500 dark:text-gray-400">
-        {activeTab === 'posts'
-          ? '아직 작성한 게시글이 없습니다.'
-          : activeTab === 'replies'
-            ? '아직 작성한 댓글이 없습니다.'
-            : '좋아요한 게시글이 없습니다.'}
+      <div className="text-center py-20 text-muted-foreground">
+        {activeTab === 'posts' && '작성한 게시글이 없습니다.'}
+        {activeTab === 'replies' && '작성한 답글이 없습니다.'}
+        {activeTab === 'likes' && '마음에 들어한 글이 없습니다.'}
       </div>
     );
+  }
 
   return (
-    <div>
+    <div className="flex flex-col gap-4 pb-10">
       {tweets.map(item =>
         item.type === 'reply' ? (
           <ReplyCard
@@ -210,9 +184,10 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
             reply={item}
             highlight={false}
             onUnlike={id => {
-              if (activeTab === 'likes') {
-                setTweets(prev => prev.filter(t => t.id !== id));
-              }
+               // 좋아요 탭에서는 좋아요 취소 시 목록에서 즉시 제거
+               if (activeTab === 'likes') {
+                 setTweets(prev => prev.filter(t => t.id !== id));
+               }
             }}
           />
         ) : (
@@ -220,20 +195,20 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
             key={item.id}
             {...item}
             onUnlike={id => {
-              if (activeTab === 'likes') {
-                setTweets(prev => prev.filter(t => t.id !== id));
-              }
+               if (activeTab === 'likes') {
+                 setTweets(prev => prev.filter(t => t.id !== id));
+               }
             }}
           />
         ),
       )}
       
-      {/* 무한 스크롤 트리거 */}
-      {hasMore && !loading && (
-        <div ref={loadMoreRef} className="flex justify-center py-6">
+      {/* 로딩 인디케이터 (무한 스크롤용) */}
+      <div ref={loadMoreRef} className="h-10 flex justify-center items-center">
+        {loading && tweets.length > 0 && (
            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
