@@ -14,9 +14,7 @@ import { type UITweet, type TweetStats, type TweetUser } from '@/types/sns';
 import { SnsStore } from '@/lib/snsState';
 import ReportButton from '@/components/common/ReportButton';
 import BlockButton from '@/components/common/BlockButton';
-
 const SNS_LAST_TWEET_ID_KEY = 'sns-last-tweet-id';
-
 interface TweetCardProps {
   id: string; // 댓글ID 또는 트윗ID
   tweetId?: string; // reply일 때 원본 트윗ID
@@ -32,7 +30,6 @@ interface TweetCardProps {
   onUnlike?: (id: string) => void;
   liked?: boolean;
 }
-
 export default function TweetCard({
   id,
   tweetId,
@@ -50,7 +47,6 @@ export default function TweetCard({
   const location = useLocation();
   const { user: authUser } = useAuth();
   const { t, i18n } = useTranslation();
-
   const [liked, setLiked] = useState(initialLiked ?? false);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [showMenu, setShowMenu] = useState(false);
@@ -67,23 +63,17 @@ export default function TweetCard({
   const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
   const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
   const [authorProfileId, setAuthorProfileId] = useState<string | null>(null);
-
   const [replyCount, setReplyCount] = useState(stats.replies ?? 0);
   const [likeCount, setLikeCount] = useState(stats.likes ?? 0);
   const [viewCount, setViewCount] = useState(stats.views ?? 0);
-
   // 글 줄수 제한 기능
   const [expanded, setExpanded] = useState(false);
   const [isLong, setIsLong] = useState(false);
-
   const contentRef = useRef<HTMLDivElement>(null);
-
   // prop 으로 온 image(string | string[]) → 배열로 정규화
   const propImages = Array.isArray(image) ? image : image ? [image] : [];
-
   // 최종 슬라이드에 사용할 이미지 목록 (prop 우선, 없으면 content에서 추출한 것)
   const allImages = propImages.length > 0 ? propImages : contentImages;
-
   const [isDraggingText, setIsDraggingText] = useState(false);
   const textDragStartX = useRef(0);
   const textDragStartY = useRef(0);
@@ -92,14 +82,11 @@ export default function TweetCard({
     startY: 0,
     moved: false,
   });
-
   const [isBlocked, setIsBlocked] = useState(false);
-
   // 본문에서는 img 태그는 제거 (슬라이드에서만 보여줌)
   const safeContent = DOMPurify.sanitize(content, {
     FORBID_TAGS: ['img'],
   });
-
   /** 로그인한 프로필 ID 로드 (트윗 삭제/좋아요용) */
   useEffect(() => {
     const loadProfile = async () => {
@@ -109,7 +96,6 @@ export default function TweetCard({
         .select('id')
         .eq('user_id', authUser.id)
         .maybeSingle();
-
       if (error) {
         console.error('프로필 로드 실패:', error.message);
       } else if (data) {
@@ -118,12 +104,10 @@ export default function TweetCard({
     };
     loadProfile();
   }, [authUser]);
-
   /** 내가 이미 좋아요한 트윗인지 확인 (user_id = profiles.id 기준) */
   useEffect(() => {
     if (!profileId || hasChecked.current) return;
     hasChecked.current = true;
-
     (async () => {
       const { data, error } = await supabase
         .from('tweet_likes')
@@ -131,7 +115,6 @@ export default function TweetCard({
         .eq('tweet_id', id)
         .eq('user_id', profileId)
         .maybeSingle();
-
       if (error) {
         console.error('좋아요 상태 확인 실패:', error.message);
         return;
@@ -139,7 +122,6 @@ export default function TweetCard({
       if (data) setLiked(true);
     })();
   }, [profileId, id]);
-
   /** 외부 클릭 시 메뉴 닫기 */
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -150,7 +132,6 @@ export default function TweetCard({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
   /** 외부 클릭 시 다이얼로그 닫기 */
   useEffect(() => {
     const handleOutside = (e: MouseEvent) => {
@@ -161,18 +142,14 @@ export default function TweetCard({
     if (showDialog) document.addEventListener('mousedown', handleOutside);
     return () => document.removeEventListener('mousedown', handleOutside);
   }, [showDialog]);
-
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
     const parser = new DOMParser();
     const doc = parser.parseFromString(content, 'text/html');
     const imgs = Array.from(doc.querySelectorAll('img')).map(img => img.src);
-
     setContentImages(imgs);
     setCurrentImage(0);
   }, [content]);
-
   /** 트윗 작성자 국적 / 국기 + 작성자 profileId 로드 */
   useEffect(() => {
     const fetchAuthorCountry = async () => {
@@ -182,63 +159,51 @@ export default function TweetCard({
           .select('id, country')
           .eq('user_id', user.username)
           .maybeSingle();
-
         if (profileError) {
           console.error('작성자 프로필(country) 로드 실패:', profileError.message);
           return;
         }
-
         if (!profile) {
           setAuthorCountryFlagUrl(null);
           setAuthorCountryName(null);
           setAuthorProfileId(null);
           return;
         }
-
         setAuthorProfileId(profile.id);
-
         if (!profile.country) {
           setAuthorCountryFlagUrl(null);
           setAuthorCountryName(null);
           return;
         }
-
         const { data: country, error: countryError } = await supabase
           .from('countries')
           .select('name, flag_url')
           .eq('id', profile.country)
           .maybeSingle();
-
         if (countryError) {
           console.error('작성자 국가 정보 로드 실패:', countryError.message);
           return;
         }
-
         if (!country) {
           setAuthorCountryFlagUrl(null);
           setAuthorCountryName(null);
           return;
         }
-
         setAuthorCountryFlagUrl(country.flag_url ?? null);
         setAuthorCountryName(country.name ?? null);
       } catch (err) {
         console.error('작성자 국기 정보 로드 중 예외:', err);
       }
     };
-
     fetchAuthorCountry();
   }, [user.username]);
-
   // props가 바뀔 때 동기화
   useEffect(() => {
     setReplyCount(stats.replies ?? 0);
   }, [stats.replies]);
-
   useEffect(() => {
     setLikeCount(stats.likes ?? 0);
   }, [stats.likes]);
-
   // 댓글 삭제 실시간 반영
   useEffect(() => {
     const channel = supabase
@@ -268,25 +233,58 @@ export default function TweetCard({
         },
       )
       .subscribe();
-
     return () => {
       supabase.removeChannel(channel);
     };
   }, [id]);
-
   // 글 줄수 검사
   useEffect(() => {
     if (!contentRef.current) return;
     const lineHeight = 20; // 15px 폰트 기준 line-height 20px
     const maxHeight = lineHeight * 3; // 3줄 높이
-
     if (contentRef.current.scrollHeight > maxHeight) {
       setIsLong(true);
     }
   }, [safeContent]);
-
-
-
+  // 이미지 모달 열릴 때 바깥 스크롤 완전 차단 & 스크롤 위치 고정 (Main 브랜치 Fix 적용)
+  useEffect(() => {
+    if (!showImageModal) return;
+    const scrollY = window.scrollY;
+    const body = document.body;
+    
+    // 기존 스타일 저장
+    const originalStyle = {
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      overflow: body.style.overflow,
+      touchAction: (body.style as any).touchAction
+    };
+    const preventScroll = (e: Event) => e.preventDefault();
+    // 스크롤 위치만큼 올려서 고정
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.width = '100%';
+    body.style.overflow = 'hidden';
+    (body.style as any).touchAction = 'none';
+    document.addEventListener('touchmove', preventScroll, { passive: false });
+    document.addEventListener('wheel', preventScroll, { passive: false });
+    document.addEventListener('mousewheel', preventScroll, { passive: false });
+    return () => {
+      // 스타일 복구
+      body.style.position = originalStyle.position;
+      body.style.top = originalStyle.top;
+      body.style.width = originalStyle.width;
+      body.style.overflow = originalStyle.overflow;
+      (body.style as any).touchAction = originalStyle.touchAction;
+      document.removeEventListener('touchmove', preventScroll);
+      document.removeEventListener('wheel', preventScroll);
+      document.removeEventListener('mousewheel', preventScroll);
+      
+      // 스크롤 위치 복구
+      window.scrollTo(0, scrollY);
+    };
+  }, [showImageModal]);
   /** 좋아요 토글 (user_id = profiles.id 사용 + 알림 생성) */
   const handleLikeToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -298,28 +296,22 @@ export default function TweetCard({
       toast.error(t('common.error_profile_missing'));
       return;
     }
-
     const likeUserId = profileId;
-
     const optimisticLiked = !liked;
     setLiked(optimisticLiked);
-
     // 숫자도 낙관적 업데이트
     setLikeCount(prev => {
       const next = optimisticLiked ? prev + 1 : prev - 1;
       return next < 0 ? 0 : next;
     });
-
     try {
       if (optimisticLiked) {
         // 1) 좋아요 레코드 추가
         const { error: likeError } = await supabase
           .from('tweet_likes')
           .insert([{ tweet_id: id, user_id: likeUserId }]);
-
         // 이미 눌렀던 경우(UNIQUE 충돌)만 조용히 무시
         if (likeError && likeError.code !== '23505') throw likeError;
-
         // 2) 알림 추가 (자기 글 좋아요면 알림 안 보냄, 작성자 프로필 없으면 스킵)
         if (authorProfileId && authorProfileId !== likeUserId) {
           const { error: notiError } = await supabase.from('notifications').insert([
@@ -333,7 +325,6 @@ export default function TweetCard({
               receiver_id: authorProfileId,
             },
           ]);
-
           if (notiError) {
             console.error('좋아요 알림 생성 실패:', notiError.message);
           }
@@ -345,14 +336,12 @@ export default function TweetCard({
           .delete()
           .eq('tweet_id', id)
           .eq('user_id', likeUserId);
-
         if (error) throw error;
         // 알림은 취소해도 남겨두는 정책이므로 건드리지 않음
       }
     } catch (err: any) {
       console.error('좋아요 토글 실패:', err.message);
       toast.error(t('common.error_like'));
-
       // 실패 시 원상복구
       setLiked(!optimisticLiked);
       setLikeCount(prev => {
@@ -360,27 +349,21 @@ export default function TweetCard({
         return next < 0 ? 0 : next;
       });
     }
-
     // SnsStore 동기화 (리스트 페이지 캐시 업데이트)
     // SnsStore가 없거나 로드되지 않았을 수도 있으니 안전하게 호출
     SnsStore.updateStats(id, {
       likes: optimisticLiked ? likeCount + 1 : Math.max(0, likeCount - 1)
     });
   };
-
   /** 트윗 삭제 */
   const handleDelete = async () => {
     if (!profileId) return;
     
     // 모달에서 이미 확인했으므로 window.confirm 제거
-
-
     try {
       const table = type === 'reply' ? 'replies' : 'tweets';
       const { error } = await supabase.from(table).delete().eq('id', id);
-
       if (error) throw error;
-
       toast.success(t('tweet.delete_success'));
       onDeleted?.(id);
       setShowMenu(false);
@@ -389,62 +372,53 @@ export default function TweetCard({
       toast.error(t('tweet.delete_failed'));
     }
   };
-
   const handleCardClick = () => {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, type === 'reply' ? tweetId! : id);
     }
-
     const target = type === 'reply' ? `/sns/${tweetId}?highlight=${id}` : `/sns/${id}`;
     if (location.pathname + location.search !== target) {
       navigate(target);
     }
   };
-
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, id);
     }
-
     const target = `/profile/${encodeURIComponent(user.name)}`;
     if (location.pathname !== target) {
       navigate(target);
     }
   };
-
   const isMyTweet = authUser?.id === user.username;
-
   const nameClass = `
     font-bold cursor-pointer hover:underline
     ${dimmed ? 'text-gray-800 dark:text-gray-200' : 'text-gray-900 dark:text-gray-100'}
   `;
-
   const metaClass = `
     text-gray-500 dark:text-gray-400
     ${dimmed ? 'opacity-80' : ''}
   `;
-
   const contentClass = `
     mt-1 text-[15px] leading-snug whitespace-pre-line break-words
     ${dimmed ? 'text-gray-800 dark:text-gray-200 opacity-90' : 'text-gray-900 dark:text-gray-100'}
   `;
-
   const handleCardClickSafe = () => {
-    // 텍스트 드래그 중이면 이동 막기
-    if (isDraggingText) return;
+    // 텍스트 선택 확인은 content onClick에서 처리, 여기는 카드 배경 클릭
     if (showImageModal) return;
+    
+    // 혹시라도 배경에서 선택이 일어나고 있었을 수 있으니 체크
+    const selection = window.getSelection();
+    if (selection && selection.toString().length > 0) return;
     handleCardClick();
   };
-
   // 택스트만 번역
   const plainTextContent = (() => {
     const tmp = document.createElement('div');
     tmp.innerHTML = safeContent;
     return tmp.textContent || tmp.innerText || '';
   })();
-
   return (
     <div
       data-tweet-id={id}
@@ -459,7 +433,6 @@ export default function TweetCard({
             <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
         </div>
-
         {/* 본문 */}
         <div className="flex-1 min-w-0">
           <div 
@@ -488,7 +461,6 @@ export default function TweetCard({
                   />
                 </Badge>
               )}
-
               {!authorCountryFlagUrl && authorCountryName && (
                 <Badge
                   variant="secondary"
@@ -498,8 +470,6 @@ export default function TweetCard({
                   <span className="text-xs">🌐</span>
                 </Badge>
               )}
-
-
               <span className={`${metaClass} mx-1`}>·</span>
               <span className={`${metaClass} flex-shrink-0`}>
                 {(() => {
@@ -507,7 +477,6 @@ export default function TweetCard({
                   try {
                     const date = new Date(timestamp);
                     if (isNaN(date.getTime())) return timestamp; // 원본 반환 (ISO string 등)
-
                     const now = new Date();
                     const diff = now.getTime() - date.getTime();
                     
@@ -537,7 +506,6 @@ export default function TweetCard({
                 })()}
               </span>
             </div>
-
             <button
               onClick={e => {
                 e.stopPropagation();
@@ -547,7 +515,6 @@ export default function TweetCard({
             >
               <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
             </button>
-
             {showMenu && (
               <div className="absolute right-0 top-8 w-36 bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
                 {isMyTweet ? (
@@ -575,7 +542,6 @@ export default function TweetCard({
               </div>
             )}
           </div>
-
           <div
             ref={contentRef}
             className={`${contentClass} transition-all ${
@@ -593,10 +559,8 @@ export default function TweetCard({
             onMouseMove={e => {
               // 이미 움직임으로 판명났으면 계산 불필요
               if (dragInfo.current.moved) return;
-
               const dx = Math.abs(e.clientX - dragInfo.current.startX);
               const dy = Math.abs(e.clientY - dragInfo.current.startY);
-
               // 5px 이상 움직이면 드래그(텍스트 선택)로 판단
               if (dx > 5 || dy > 5) {
                 dragInfo.current.moved = true;
@@ -618,7 +582,6 @@ export default function TweetCard({
               }
             }}
           />
-
           {/* 더보기 버튼 */}
           {isLong && (
             <button
@@ -647,7 +610,6 @@ export default function TweetCard({
               {expanded ? '접기' : '더보기'}
             </button>
           )}
-
           {/* 번역 버튼 */}
           {plainTextContent.trim().length > 0 && (
             <div 
@@ -667,7 +629,6 @@ export default function TweetCard({
               />
             </div>
           )}
-
             {/* 번역 결과 */}
           {translated && (
             <div
@@ -683,7 +644,6 @@ export default function TweetCard({
                 if (dragInfo.current.moved) return;
                 const dx = Math.abs(e.clientX - dragInfo.current.startX);
                 const dy = Math.abs(e.clientY - dragInfo.current.startY);
-
                 if (dx > 5 || dy > 5) {
                   dragInfo.current.moved = true;
                   setIsDraggingText(true);
@@ -705,7 +665,6 @@ export default function TweetCard({
               {translated}
             </div>
           )}
-
           {/* 이미지 슬라이드 */}
           {allImages.length > 0 && (
             <ImageSlider
@@ -720,7 +679,6 @@ export default function TweetCard({
               }}
             />
           )}
-
           {showImageModal && (
             <ModalImageSlider
               allImages={allImages}
@@ -729,7 +687,6 @@ export default function TweetCard({
               onClose={() => setShowImageModal(false)}
             />
           )}
-
             <div 
               className="flex items-center justify-between max-w-md mt-3 text-gray-500 dark:text-gray-400 cursor-pointer"
               onClick={(e) => {
@@ -755,7 +712,6 @@ export default function TweetCard({
               </div>
               <span className="text-sm">{replyCount}</span>
             </button>
-
             {/* 좋아요 버튼 */}
             <button
               className={`flex items-center space-x-2 group p-2 rounded-full transition-colors ${
@@ -768,7 +724,6 @@ export default function TweetCard({
               </div>
               <span className="text-sm">{likeCount}</span>
             </button>
-
             {/* 조회수 (클릭 시 상세 이동) */}
             <button 
                 className="flex items-center space-x-2 hover:text-green-500 dark:hover:text-green-400 group p-2 rounded-full transition-colors"
@@ -785,7 +740,6 @@ export default function TweetCard({
           </div>
         </div>
       </div>
-
       {showDialog && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[1000]">
           <div
@@ -799,7 +753,6 @@ export default function TweetCard({
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
               {t('tweet.delete_msg_desc')}
             </p>
-
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setShowDialog(false)}

@@ -1,4 +1,3 @@
-
 import { Facebook, Instagram, Youtube, ArrowRight, Globe, ChevronDown, AtSign, Moon, Sun, Laptop } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/components/theme-provider';
@@ -16,7 +15,6 @@ import TermsView from '@/components/settings/TermsView';
 import PrivacyPolicyView from '@/components/settings/PrivacyPolicyView';
 import CustomerCenterView from '@/components/settings/CustomerCenterView';
 import { type ConsentKey } from '@/components/auth/consent/consentContent';
-
 /**
  * Polished Aesthetic Footer
  * - SNS 순서 변경: YouTube -> Instagram -> Threads -> X -> Facebook
@@ -32,18 +30,14 @@ export default function Footer() {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [mounted, setMounted] = useState(false);
-
   // States for modals
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
   const [policyModalOpen, setPolicyModalOpen] = useState<ConsentKey | 'support' | null>(null);
-
   const currentLang = LANGUAGES.find(l => l.code === i18n.language)?.label || 'English (US)';
-
   // Hydration mismatch 방지
   useEffect(() => {
     setMounted(true);
   }, []);
-
   const handleLinkClick = (e: React.MouseEvent, type: 'impl' | 'unimpl' | 'policy', value?: string) => {
     e.preventDefault();
     if (type === 'unimpl') {
@@ -51,12 +45,17 @@ export default function Footer() {
     } else if (type === 'policy' && value) {
       setPolicyModalOpen(value as ConsentKey);
     } else if (type === 'impl' && value) {
-      if (location.pathname !== value) {
+      // 충돌 해결: 메인 브랜치의 스토리지 초기화 로직과 현재 브랜치의 중복 이동 방지 로직 통합
+      if (value === '/sns') {
+        sessionStorage.removeItem('sns-last-tweet-id');
+        // SNS 탭은 같은 페이지여도 스크롤 초기화를 위해 이동 허용
+        navigate(value); 
+      } else if (location.pathname !== value) {
+        // 그 외 페이지는 페이지가 다를 때만 이동(중복 이동 방지)
         navigate(value);
       }
     }
   };
-
   return (
     <>
       <footer className="w-full bg-white dark:bg-zinc-950 border-t border-slate-100 dark:border-zinc-800 mt-auto">
@@ -88,7 +87,6 @@ export default function Footer() {
                  <SocialIcon href="https://facebook.com" icon={<Facebook className="w-4 h-4" />} label={t('footer.social.facebook')} />
               </div>
             </div>
-
             {/* Links Columns */}
             <div className="flex flex-col gap-3">
               <h3 className="font-bold text-sm text-foreground">{t('footer.columns.product.title')}</h3>
@@ -99,7 +97,6 @@ export default function Footer() {
                 <FooterLink onClick={(e) => handleLinkClick(e, 'unimpl')}>{t('footer.columns.product.pricing')}</FooterLink>
               </div>
             </div>
-
             <div className="flex flex-col gap-3">
               <h3 className="font-bold text-sm text-foreground">{t('footer.columns.resources.title')}</h3>
               <div className="flex flex-col gap-2">
@@ -109,7 +106,6 @@ export default function Footer() {
                 <FooterLink onClick={(e) => handleLinkClick(e, 'policy', 'support')}>{t('footer.columns.resources.help_center')}</FooterLink>
               </div>
             </div>
-
             <div className="flex flex-col gap-3">
               <h3 className="font-bold text-sm text-foreground">{t('footer.columns.company.title')}</h3>
               <div className="flex flex-col gap-2">
@@ -119,7 +115,6 @@ export default function Footer() {
                 <FooterLink onClick={(e) => handleLinkClick(e, 'unimpl')}>{t('footer.columns.company.contact')}</FooterLink>
               </div>
             </div>
-
             <div className="col-span-2 md:col-span-4 lg:col-span-1 flex flex-col gap-3 min-w-[220px]">
                <h3 className="font-bold text-sm text-foreground">{t('footer.newsletter.title')}</h3>
                <p className="text-xs text-muted-foreground leading-snug">
@@ -142,7 +137,6 @@ export default function Footer() {
                </div>
             </div>
           </div>
-
           {/* Bottom Bar */}
           <div className="border-t border-slate-100 dark:border-zinc-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
@@ -186,7 +180,6 @@ export default function Footer() {
                   </button>
                 </div>
               )}
-
               {/* Language Selector */}
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
@@ -212,7 +205,6 @@ export default function Footer() {
           </div>
         </div>
       </footer>
-
       {/* Coming Soon Modal (Using Common Modal) */}
       <Modal
         isOpen={comingSoonOpen}
@@ -242,7 +234,6 @@ export default function Footer() {
           </button>
         </div>
       </Modal>
-
       {/* Policy Modal (Settings Version using Common Modal) */}
       <Modal
         isOpen={!!policyModalOpen}
@@ -270,7 +261,6 @@ export default function Footer() {
     </>
   );
 }
-
 function FooterLink({ onClick, children }: { onClick?: (e: React.MouseEvent) => void; children: React.ReactNode }) {
   return (
     <button 
@@ -282,7 +272,6 @@ function FooterLink({ onClick, children }: { onClick?: (e: React.MouseEvent) => 
     </button>
   );
 }
-
 function SocialIcon({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
   return (
     <a
@@ -296,7 +285,6 @@ function SocialIcon({ href, icon, label }: { href: string; icon: React.ReactNode
     </a>
   );
 }
-
 function XIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="w-4 h-4 fill-current">

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
-
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -12,7 +11,6 @@ interface ModalProps {
   className?: string; // ✅ 모달 컨테이너(카드) 스타일 커스텀
   contentClassName?: string; // ✅ 내부 컨텐츠 영역 스타일 커스텀
 }
-
 export default function Modal({
   isOpen,
   onClose,
@@ -25,14 +23,11 @@ export default function Modal({
 }: ModalProps) {
   const modalContentRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
-
-  // Hook으로 스크롤 잠금 처리 (Scroll Jump 방지)
+  // Hook으로 스크롤 잠금 처리 (Scroll Jump 방지). Main 브랜치의 수동 로직 대신 Hook 사용.
   useBodyScrollLock(isOpen);
-
   useEffect(() => {
     setMounted(true);
   }, []);
-
   // ESC 키로 닫기
   useEffect(() => {
     if (!isOpen || !closeOnEsc) return;
@@ -42,12 +37,9 @@ export default function Modal({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, closeOnEsc, onClose]);
-
   // Portal target setting
   const modalRoot = typeof document !== 'undefined' ? document.body : null;
-
   if (!mounted || !isOpen || !modalRoot) return null;
-
   return createPortal(
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm transition-opacity"
@@ -89,4 +81,3 @@ export default function Modal({
     modalRoot,
   );
 }
-

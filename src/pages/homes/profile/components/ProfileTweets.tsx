@@ -5,7 +5,6 @@ import { ReplyCard } from '../../tweet/components/ReplyCard';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { FeedItem, UIPost, UIReply } from '@/types/sns';
 import { tweetService } from '@/services/tweetService';
-
 interface ProfileTweetsProps {
   activeTab: string;
   userProfile: {
@@ -15,9 +14,7 @@ interface ProfileTweetsProps {
     avatar: string;
   };
 }
-
 const PAGE_SIZE = 10;
-
 export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsProps) {
   const [tweets, setTweets] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -29,7 +26,6 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
   const loadingRef = useRef(false);
   // 좋아요 탭 전용: 전체 ID 리스트 캐싱 (페이지네이션용)
   const likedItemsRef = useRef<{ type: 'post' | 'reply'; id: string; date: string; likedAt: string }[]>([]);
-
   // 탭 변경 시 초기화
   useEffect(() => {
     activeTabRef.current = activeTab;
@@ -38,12 +34,10 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
     likedItemsRef.current = []; // 탭 변경 시 캐시 초기화
     setHasMore(true);
     setLoading(true); // 로딩 스피너 즉시 표시
-
     // 데이터 로드
     fetchTweets(true); 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, userProfile.id]);
-
   const fetchTweets = async (reset = false) => {
     const currentTab = activeTabRef.current;
     
@@ -51,14 +45,11 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
     if (loadingRef.current && !reset) return;
     // 더 가져올 게 없는데 리셋이 아니면 스킵
     if (!hasMore && !reset) return;
-
     loadingRef.current = true;
     if (reset) setLoading(true); // 첫 로드/리셋일 때만 로딩 표시
-
     try {
       const pageToLoad = reset ? 0 : pageRef.current;
       let newData: FeedItem[] = [];
-
       // 1) 내가 쓴 게시글
       if (currentTab === 'posts') {
         newData = await tweetService.getPosts(userProfile.id, pageToLoad);
@@ -79,13 +70,10 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
         if (allLikedItems && allLikedItems.length > 0) {
            likedItemsRef.current = allLikedItems;
         }
-
         newData = items;
       }
-
       // 요청 완료 후 탭이 바뀌었으면(사용자가 그새 다른 탭 클릭) 결과 버림
       if (activeTabRef.current !== currentTab) return;
-
       if (reset) {
         setTweets(newData);
       } else {
@@ -95,7 +83,6 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
            return [...prev, ...newData.filter(t => !existingIds.has(t.id))];
         });
       }
-
       // 더보기 가능 여부 판단
       if (currentTab === 'likes') {
           // 좋아요는 전체 리스트 길이를 알기 때문에 정확히 계산 가능
@@ -110,12 +97,10 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
             setHasMore(true);
           }
       }
-
       // 다음 페이지 준비 (성공했을 때만)
       if (newData.length > 0 || (currentTab === 'likes' && likedItemsRef.current.length > 0)) {
          pageRef.current += 1;
       }
-
     } catch (error) {
       console.error('Error fetching tweets:', error);
     } finally {
@@ -126,7 +111,6 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
       }
     }
   };
-
   // 무한 스크롤 트리거
   const loadMoreRef = useInfiniteScroll(
     () => {
@@ -135,11 +119,10 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
     hasMore,
     loading // 세 번째 필수 인자 전달
   );
-
   // 실시간 업데이트 (좋아요/댓글 수 등 stats 반영)
   useEffect(() => {
     if (!userProfile?.id) return;
-
+    // channel 변수명을 일관되게 유지 (cleanup 함수와의 호환성)
     const channel = supabase
       .channel(`profile-realtime-${userProfile.id}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tweets' }, payload => {
@@ -151,12 +134,10 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
         ));
       })
       .subscribe();
-
     return () => {
       supabase.removeChannel(channel);
     };
   }, [userProfile.id]);
-
   if (loading && tweets.length === 0) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -164,7 +145,6 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
       </div>
     );
   }
-
   if (!loading && tweets.length === 0) {
     return (
       <div className="text-center py-20 text-muted-foreground">
@@ -174,7 +154,6 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
       </div>
     );
   }
-
   return (
     <div className="flex flex-col gap-4 pb-10">
       {tweets.map(item =>
