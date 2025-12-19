@@ -77,7 +77,7 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
 
     // 3) 유저가 작성한 게시물, 댓글 등 삭제
     try {
-      // 🔻 여기를 네 실제 테이블명에 맞게 채워야 해
+      // 여기를 네 실제 테이블명에 맞게 채워야 해
       // 예시:
       // await supabase.from('community_comments').delete().eq('user_id', user.id);
       // await supabase.from('community_posts').delete().eq('user_id', user.id);
@@ -122,7 +122,9 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
           >
             <i className="ri-arrow-left-line text-lg" />
           </button>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('settings.privacy')}</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            {t('settings.privacy')}
+          </h3>
         </div>
 
         <div className="space-y-2">
@@ -142,7 +144,6 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
         </div>
 
         {/* 하단 여백 */}
-
       </div>
 
       {/* 모달: active 가 있을 때만 렌더링 */}
@@ -212,7 +213,9 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
                 disabled={withdrawing}
                 className="px-3 py-1.5 text-xs rounded-md bg-red-500 text-white hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {withdrawing ? t('settings.withdraw_btn_processing') : t('settings.withdraw_btn_confirm')}
+                {withdrawing
+                  ? t('settings.withdraw_btn_processing')
+                  : t('settings.withdraw_btn_confirm')}
               </button>
             </div>
           </div>

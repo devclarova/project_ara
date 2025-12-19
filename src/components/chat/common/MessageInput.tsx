@@ -12,6 +12,11 @@ interface MessageInputProps {
   chatId: string;
 }
 
+type Attachment = {
+  id: string;
+  file: File;
+};
+
 const MessageInput = memo(({ chatId }: MessageInputProps) => {
   const { t } = useTranslation();
   const { sendMessage } = useDirectChat();
@@ -24,6 +29,10 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lastSentRef = useRef<number>(0);
   const hintTimeoutRef = useRef<number | null>(null);
+
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const hasAttachments = attachments.length > 0;
 
   useEffect(() => {
     initProfanity();
@@ -56,7 +65,7 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
       if (isComposing || sending) return;
       const raw = message;
       const text = raw.trim();
-      if (!text) return;
+      if (!text && attachments.length === 0) return;
 
       const now = Date.now();
       if (now - lastSentRef.current < 600) return;
@@ -70,7 +79,7 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
         return;
       }
 
-      const payload = verdict.action === 'mask' ? verdict.cleanText : text;
+      const payload = verdict.action === 'mask' ? verdict.cleanText : text || null;
       if (verdict.action === 'mask') {
         setPolicyHint(t('chat.notice_masked'));
         if (hintTimeoutRef.current) window.clearTimeout(hintTimeoutRef.current);
@@ -79,9 +88,14 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
 
       setSending(true);
       try {
-        const success = await sendMessage({ chat_id: chatId, content: payload });
+        const success = await sendMessage({
+          chat_id: chatId,
+          content: payload,
+          attachments: attachments.map(a => a.file),
+        });
         if (success) {
           setMessage('');
+          setAttachments([]);
           if (textareaRef.current) textareaRef.current.style.height = 'auto';
         }
       } catch (error) {
@@ -112,10 +126,74 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
     ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
   }, []);
 
+  const handleFilesSelected = useCallback((files: FileList) => {
+    const next = Array.from(files).map(file => ({
+      id: crypto.randomUUID(),
+      file,
+    }));
+
+    setAttachments(prev => [...prev, ...next]);
+  }, []);
+
+  const removeAttachment = useCallback((id: string) => {
+    setAttachments(prev => prev.filter(a => a.id !== id));
+  }, []);
+
   return (
     <div className="message-input">
       <form onSubmit={handleSubmit} className="message-form">
+        {/* 첨부파일 미리보기 */}
+        {attachments.length > 0 && (
+          <div className="flex flex-wrap gap-2 px-2 pb-1">
+            {attachments.map(att => (
+              <div
+                key={att.id}
+                className="flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-800 text-xs"
+              >
+                <i className="ri-attachment-2 text-sm" />
+                <span className="max-w-[120px] truncate">{att.file.name}</span>
+                <button
+                  type="button"
+                  onClick={() => removeAttachment(att.id)}
+                  className="text-gray-400 hover:text-red-500"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="input-container">
+          <label className="attach-button">
+            <i className="ri-add-line text-xl" />
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              multiple
+              accept=" image/*, 
+                        video/*, 
+                        audio/*, 
+                        application/pdf, 
+                        application/msword, 
+                        application/vnd.openxmlformats-officedocument.wordprocessingml.document, 
+                        application/vnd.ms-excel, 
+                        application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, 
+                        application/vnd.ms-powerpoint, 
+                        application/vnd.openxmlformats-officedocument.presentationml.presentation, 
+                        application/x-hwp, 
+                        .hwp, 
+                        .txt, 
+                        .csv"
+              onChange={e => {
+                if (e.target.files) {
+                  handleFilesSelected(e.target.files);
+                  e.target.value = '';
+                }
+              }}
+            />
+          </label>
+
           <textarea
             ref={textareaRef}
             value={message}
@@ -132,7 +210,7 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
           <button
             type="submit"
             className="send-button"
-            disabled={!message.trim() || sending}
+            disabled={(!message.trim() && !hasAttachments) || sending}
             aria-label="메시지 전송"
           >
             {sending ? (

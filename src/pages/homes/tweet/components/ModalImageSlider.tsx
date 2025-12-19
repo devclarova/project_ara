@@ -65,10 +65,10 @@ export default function ModalImageSlider({
 
         {/* 이미지 wrapper */}
         <div
-        className="relative w-full h-full max-w-6xl flex flex-col items-center justify-center p-4 z-[10000] overscroll-contain"
-        onClick={e => e.stopPropagation()}
-        data-scroll-lock-scrollable=""
-      >
+          className="relative w-full h-full max-w-6xl flex flex-col items-center justify-center p-4 z-[10000] overscroll-contain"
+          onClick={e => e.stopPropagation()}
+          data-scroll-lock-scrollable=""
+        >
           {/* 이미지 안 카운터 */}
           {allImages.length > 1 && (
             <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full z-40">

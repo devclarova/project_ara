@@ -37,11 +37,11 @@ function Modal({ title, isOpen, onClose, children }: ModalProps) {
   if (!modalRoot) return null;
 
   return createPortal(
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-start justify-center pt-10 md:pt-16 bg-black/40 dark:bg-black/60 min-h-screen transition-colors"
       onClick={onClose}
     >
-      <div 
+      <div
         ref={modalContentRef}
         className="relative w-full max-w-4xl mx-4 md:mx-6 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 flex flex-col max-h-[80vh] transition-colors duration-200"
         onClick={e => e.stopPropagation()}
@@ -55,7 +55,12 @@ function Modal({ title, isOpen, onClose, children }: ModalProps) {
             aria-label="닫기"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>

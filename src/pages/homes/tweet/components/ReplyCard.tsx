@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -32,7 +31,7 @@ function stripImagesAndEmptyLines(html: string) {
 interface ReplyCardProps {
   reply: UIReply;
   onDeleted?: (replyId: string) => void;
-  onUnlike?: (id: string) => void; 
+  onUnlike?: (id: string) => void;
   onLike?: (replyId: string, delta: number) => void;
   onReply?: (reply: UIReply) => void;
   highlight?: boolean;
@@ -62,7 +61,7 @@ export function ReplyCard({
   const [showImageModal, setShowImageModal] = useState(false);
   const [contentImages, setContentImages] = useState<string[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
-  
+
   // 하이라이트 상태 (잠깐 색 들어왔다 빠지는 용도)
   const [isHighlighted, setIsHighlighted] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
@@ -216,12 +215,10 @@ export function ReplyCard({
         if (deleteError) throw deleteError;
       } else {
         // 좋아요 추가
-        const { error: insertError } = await supabase
-          .from('tweet_replies_likes')
-          .insert({
-            reply_id: reply.id,
-            user_id: profileId,
-          });
+        const { error: insertError } = await supabase.from('tweet_replies_likes').insert({
+          reply_id: reply.id,
+          user_id: profileId,
+        });
 
         if (insertError) throw insertError;
 
@@ -235,12 +232,12 @@ export function ReplyCard({
 
           if (!receiverError && receiverProfile && receiverProfile.id !== profileId) {
             await supabase.from('notifications').insert({
-              receiver_id: receiverProfile.id, 
-              sender_id: profileId, 
-              type: 'like', 
+              receiver_id: receiverProfile.id,
+              sender_id: profileId,
+              type: 'like',
               content: '당신의 댓글을 좋아합니다.',
-              tweet_id: reply.tweetId, 
-              comment_id: reply.id, 
+              tweet_id: reply.tweetId,
+              comment_id: reply.id,
             });
           }
         }
@@ -287,11 +284,11 @@ export function ReplyCard({
         // useParams로 가져온 id(문자열)와 reply.tweetId(문자열 or 숫자) 비교
         const currentTweetId = params.id;
         const targetTweetId = String(reply.tweetId);
-        
+
         // 현재 보고 있는 트윗 내에서의 이동(대댓글 등)이면 History 쌓지 않음
         const isSamePage = currentTweetId === targetTweetId;
         const targetPath = `/sns/${targetTweetId}`;
-        
+
         navigate(targetPath, {
           state: {
             highlightCommentId: reply.id,
@@ -332,18 +329,18 @@ export function ReplyCard({
                     const currentLang = i18n.language || 'ko';
 
                     if (diff < 24 * 60 * 60 * 1000) {
-                      return new Intl.DateTimeFormat(currentLang, { 
-                        hour: 'numeric', 
-                        minute: 'numeric', 
-                        hour12: true 
+                      return new Intl.DateTimeFormat(currentLang, {
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        hour12: true,
                       }).format(date);
                     }
-                    return new Intl.DateTimeFormat(currentLang, { 
-                      month: 'short', 
+                    return new Intl.DateTimeFormat(currentLang, {
+                      month: 'short',
                       day: 'numeric',
                       hour: '2-digit',
                       minute: '2-digit',
-                      hour12: true
+                      hour12: true,
                     }).format(date);
                   } catch {
                     return reply.timestamp;

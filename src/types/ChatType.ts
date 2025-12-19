@@ -26,6 +26,14 @@ export interface DirectChat {
   last_message?: DirectMessage; // 마지막 메시지 정보
 }
 
+export interface MessageAttachment {
+  id: string;
+  type: 'image';
+  url: string;
+  width?: number;
+  height?: number;
+}
+
 // 1:1 메시지 타입
 export interface DirectMessage {
   id: string; // 메시지 고유 식별자
@@ -37,6 +45,13 @@ export interface DirectMessage {
   created_at: string; // 전송 시간
   is_system_message?: boolean; // 시스템 메시지 여부
   sender?: ChatUser; // 발신자 정보
+  attachments?: {
+    id: string;
+    type: 'image';
+    url: string;
+    width?: number;
+    height?: number;
+  }[];
 }
 
 // 메시지의 상세 추가 확장 정보
@@ -67,7 +82,8 @@ export interface CreateChatData {
 // 메세지 전송용
 export interface CreateMessageData {
   chat_id: string; // 채팅방 ID
-  content: string; // 메시지 내용
+  content: string | null; // 메시지 내용
+  attachments?: File[];
 }
 
 // 메세지 읽음 상태 업데이트용
@@ -96,4 +112,18 @@ export interface ChatListState {
   chats: ChatListItem[]; // 채팅방 목록
   loading: boolean; // 로딩 상태
   error?: string; // 에러 메시지
+}
+
+// UI → Context (업로드 전)
+export interface CreateMessageData {
+  chat_id: string;
+  content: string | null;
+  attachments?: File[];
+}
+
+// Context → Server (업로드 후)
+export interface SendMessagePayload {
+  chat_id: string;
+  content: string | null;
+  attachments?: File[];
 }
