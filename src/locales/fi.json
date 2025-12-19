@@ -8,7 +8,10 @@
     "more": "Lisää",
     "settings": "Asetukset",
     "profile": "Profiili",
-    "post": "Julkaise"
+    "post": "Julkaise",
+    "admin": "Ylläpitotila",
+    "admin_dashboard": "Ylläpidon hallintapaneli",
+    "goods": "Kauppa"
   },
   "notification": {
     "like_feed": "tykkäsi julkaisustasi.",
@@ -25,7 +28,7 @@
     "error_clear_all": "Virhe ilmoitusten tyhjentämisessä",
     "clear_all": "Tyhjennä",
     "action_comment": "Olet jättänyt kommentin syötteeseesi.",
-    "action_like_comment": "Pidämme kommentistasi.",
+    "action_like_comment": "tykkäsi kommentistasi.",
     "action_like_feed": "Pidän syötteestäsi.",
     "no_notifications": "Ei uusia ilmoituksia ole vielä.",
     "delete_confirm_title": "Poista ilmoitus",
@@ -102,7 +105,15 @@
     "service_ready": "Voit nyt käyttää palvelua.",
     "start_now": "Aloita Nyt",
     "go_home": "Etusivulle",
-    "signup_error": "Rekisteröinnissä tapahtui virhe"
+    "signup_error": "Rekisteröinnissä tapahtui virhe",
+    "account_restore_expired": "Tiliä ei voi palauttaa, koska poistopyynnöstä on kulunut 7 päivää.",
+    "restore_error": "Virhe tilin palauttamisessa.",
+    "cancel_logout": "Peruuta (Kirjaudu ulos)",
+    "restore_title": "Tilin palautus",
+    "restore_desc_1": "Tämä tili on tällä hetkellä poiston armonaika.",
+    "restore_desc_2": "Haluatko palauttaa tilisi?",
+    "restore_remaining": "{{days}} päivää jäljellä pysyvään poistoon.",
+    "restore_confirm": "Palauta tili"
   },
   "signup": {
     "title_social": "Sosiaalinen Rekisteröinti",
@@ -181,6 +192,7 @@
     "view_profile": "Katso profiili",
     "settings_desc": "Profiili/Asetukset",
     "search": "Hae",
+    "search_placeholder": "Hae...",
     "back": "Takaisin",
     "loading": "Ladataan...",
     "error": "Virhe",
@@ -203,9 +215,7 @@
     "error_empty_content": "Content is empty",
     "block": "Estä",
     "unblock": "Poista esto",
-    "report": "Ilmianna",
-    "delete": "Poista",
-    "edit": "Muokkaa"
+    "report": "Ilmianna"
   },
   "settings": {
     "languageSelect": "Valitse kieli",
@@ -230,18 +240,23 @@
     "connect_sns": "Yhdistä sometili",
     "withdraw": "Poista tili",
     "withdraw_phrase": "Poista tilini",
-    "withdraw_verify_placeholder": "Please type \"{{phrase}}\" to confirm",
-    "withdraw_modal_title": "Are you sure you want to delete your account?",
-    "withdraw_warning_1": "Your account information cannot be recovered.",
-    "withdraw_warning_2": "All posts and comments will be deleted.",
-    "withdraw_warning_3": "Follow/Following information will be lost.",
-    "withdraw_warning_4": "This action cannot be undone.",
+    "withdraw_grace_period_1": "Poistopyyntöön sovelletaan 7 päivän armonaikaa.",
+    "withdraw_grace_period_2": "Voit palauttaa tilisi heti kirjautumalla sisään 7 päivän kuluessa.",
+    "withdraw_grace_period_3": "7 päivän jälkeen palauttaminen on mahdotonta, ja tiedot poistetaan pysyvästi 30 päivän kuluttua.",
+    "withdraw_verify_placeholder": "Kirjoita \"{{phrase}}\" vahvistaaksesi",
+    "withdraw_modal_title": "Oletko varma että haluat poistaa tilisi?",
+    "withdraw_warning_1": "Tilitietojasi ei voi palauttaa.",
+    "withdraw_warning_2": "Kaikki julkaisut ja kommentit poistetaan.",
+    "withdraw_warning_3": "Seuraaja/Seurattava -tiedot katoavat.",
+    "withdraw_warning_4": "Tätä toimintoa ei voi kumota.",
     "confirm_password": "Vahvista salasana",
-    "confirm_password_placeholder": "Enter your password",
-    "confirm_password_desc": "Please enter your password to confirm your identity.",
-    "withdraw_verify_label": "Type the phrase below",
-    "withdraw_btn_cancel": "Cancel",
-    "withdraw_btn_processing": "Processing...",
+    "confirm_password_placeholder": "Syötä salasana",
+    "confirm_password_desc": "Syötä salasanasi vahvistaaksesi henkilöllisyytesi.",
+    "confirm_email": "Vahvista sähköposti",
+    "confirm_email_desc": "Syötä sähköpostiosoitteesi vahvistaaksesi henkilöllisyytesi.",
+    "withdraw_verify_label": "Vahvistus",
+    "withdraw_btn_cancel": "Peruuta",
+    "withdraw_btn_processing": "Käsitellään...",
     "withdraw_btn_confirm": "Poista",
     "pw_change_guide": "Suosittelemme vähintään 8 merkkiä, joissa on kirjaimia, numeroita ja symboleja.",
     "current_pw": "Nykyinen salasana",
@@ -258,7 +273,7 @@
     "connect_google": "Yhdistä Google-tili",
     "connect_kakao": "Yhdistä Kakao-tili",
     "sns_connect_note": "Voit katkaista linkitetyt tilit asetuksista > Yksityisyys milloin tahansa. (Tulossa pian)",
-    "account_settings": "Settings",
+    "account_settings": "Asetukset",
     "support_policy": "Tuki ja käytännöt",
     "help_center": "Ohje",
     "terms": "Käyttöehdot",
@@ -274,7 +289,15 @@
     "title_marketing": "Markkinointisuostumus",
     "title_support": "Ohjekeskus",
     "security_title": "Turvallisuusasetukset",
-    "session_management": "Istunnon hallinta"
+    "session_management": "Istunnon hallinta",
+    "withdraw_reason_label": "Poistumisen syy",
+    "withdraw_reason_placeholder": "Valitse syy",
+    "withdraw_detail_placeholder": "Anna lisätietoja",
+    "reason_low_usage": "En käytä usein",
+    "reason_rejoin": "Liittyäkseni uudelleen",
+    "reason_privacy": "Yksityisyyshuolet",
+    "reason_feature": "Tyytymätön ominaisuuksiin",
+    "reason_other": "Muu"
   },
   "profile": {
     "edit_profile": "Muokkaa profiilia",
@@ -437,5 +460,55 @@
       "privacy": "Yksityisyys",
       "cookies": "Evästeet"
     }
+  },
+  "goods": {
+    "items": {
+      "hoodie": {
+        "title": "Signature Huppari",
+        "desc": "Premium-puuvillainen huppari signature-logolla. Mukava istuvuus päivittäiseen käyttöön."
+      },
+      "tote_bag": {
+        "title": "Ekologinen Kangaskassi",
+        "desc": "Ympäristöystävällinen kangaskassi. Kestävä ja tilava tärkeimmille tavaroillesi."
+      },
+      "note_set": {
+        "title": "Premium Muistivihkosetti",
+        "desc": "Laadukas muistivihkosetti. Täydellinen opiskeluun ja päiväkirjan pitoon."
+      },
+      "planner": {
+        "title": "Digitaalinen Kalenteri 2026",
+        "desc": "Kaikki yhdessä digitaalinen kalenteri iPadille/tabletille. Järjestä vuosi 2026 tehokkaasti."
+      },
+      "cap": {
+        "title": "Logo lippis",
+        "desc": "Tyylikäs lippalakki brodeerattulla logolla. Säädettävä hihna mukautettua istuvuutta varten."
+      },
+      "tumbler": {
+        "title": "Minimalistinen termosmuki",
+        "desc": "Ruostumattomasta teräksestä valmistettu termosmuki. Pitää juomat kuumana/kylmänä 12 tuntia."
+      }
+    },
+    "hero_title": "Kauppa",
+    "category_all": "Kaikki",
+    "price_unit": "$",
+    "category_clothing": "Vaatteet",
+    "category_accessories": "Asusteet",
+    "category_digital": "Digitaalinen",
+    "category_stationery": "Paperitarvikkeet",
+    "new_arrival": "Uusi",
+    "best_seller": "Bestseller",
+    "sold_out": "Loppuunmyyty",
+    "product_not_found": "Tuotetta ei löytynyt",
+    "reviews_count": "{{count}} arvostelua",
+    "free_shipping": "Ilmainen toimitus yli $50 tilauksille",
+    "authentic_guarantee": "Aitoustoakuu",
+    "option_color": "Väri",
+    "option_size": "Koko",
+    "add_to_cart": "Lisää ostoskoriin",
+    "product_details": "Tuotetiedot",
+    "related_items": "Saatat pitää myös näistä",
+    "buy_now": "Osta nyt",
+    "quantity": "Määrä",
+    "back_to_list": "Takaisin luetteloon"
   }
 }

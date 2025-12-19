@@ -2,12 +2,13 @@ import { useState } from 'react';
 import Switch from './Switch';
 
 interface PrivacySettingsProps {
-  onBackToMenu?: () => void; // ← 부모에서 전달받는 콜백 (선택)
+  onBackToMenu?: () => void;
+  searchQuery?: string;
 }
 
 import { useTranslation } from 'react-i18next';
 
-export default function AlarmSettings({ onBackToMenu }: PrivacySettingsProps) {
+export default function AlarmSettings({ onBackToMenu, searchQuery }: PrivacySettingsProps) {
   const { t } = useTranslation();
   const [commentPush, setCommentPush] = useState(true);
   const [likePush, setLikePush] = useState(true);
@@ -34,18 +35,21 @@ export default function AlarmSettings({ onBackToMenu }: PrivacySettingsProps) {
           onChange={setCommentPush}
           label={t('settings.alarm_comment')}
           description={t('settings.alarm_comment_desc')}
+          searchQuery={searchQuery}
         />
         <Switch
           checked={likePush}
           onChange={setLikePush}
           label={t('settings.alarm_like')}
           description={t('settings.alarm_like_desc')}
+          searchQuery={searchQuery}
         />
         <Switch
           checked={followPush}
           onChange={setFollowPush}
           label={t('settings.alarm_follow')}
           description={t('settings.alarm_follow_desc')}
+          searchQuery={searchQuery}
         />
       </div>
     </div>

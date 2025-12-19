@@ -59,6 +59,7 @@ const InputField: React.FC<InputFieldProps> = ({
               ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 border-gray-200 cursor-default' 
               : 'bg-white dark:bg-secondary'
             }
+            placeholder-transparent focus:placeholder-gray-400 dark:focus:placeholder-gray-500
           `}
           {...inputProps}
         />

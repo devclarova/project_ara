@@ -8,7 +8,10 @@
     "more": "المزيد",
     "settings": "إعدادات",
     "profile": "ملف الشخصي",
-    "post": "نشر"
+    "post": "نشر",
+    "admin": "وضع المسؤول",
+    "admin_dashboard": "لوحة تحكم المسؤول",
+    "goods": "المتجر"
   },
   "notification": {
     "like_feed": "أعجب بمنشورك.",
@@ -25,7 +28,7 @@
     "error_clear_all": "حدث خطأ أثناء مسح الإشعارات",
     "clear_all": "إفراغ",
     "action_comment": "لقد تركت تعليقًا على خلاصتك.",
-    "action_like_comment": "نحن نحب تعليقك.",
+    "action_like_comment": "أعجب بتعليقك.",
     "action_like_feed": "أحب تغذيتك.",
     "no_notifications": "لا توجد إشعارات جديدة بعد",
     "delete_confirm_title": "حذف الإشعار",
@@ -102,7 +105,15 @@
     "service_ready": "يمكنك استخدام الخدمة الآن.",
     "start_now": "ابدأ الآن",
     "go_home": "العودة للرئيسية",
-    "signup_error": "حدث خطأ أثناء التسجيل"
+    "signup_error": "حدث خطأ أثناء التسجيل",
+    "account_restore_expired": "لا يمكن استعادة الحساب لأنه مر 7 أيام على طلب الحذف.",
+    "restore_error": "حدث خطأ أثناء استعادة الحساب.",
+    "cancel_logout": "إلغاء (تسجيل الخروج)",
+    "restore_title": "استعادة الحساب",
+    "restore_desc_1": "هذا الحساب حاليًا في فترة سماح الحذف.",
+    "restore_desc_2": "هل ترغب في استعادة حسابك؟",
+    "restore_remaining": "يتبقى {{days}} أيام حتى الحذف النهائي.",
+    "restore_confirm": "استعادة الحساب"
   },
   "signup": {
     "title_social": "التسجيل عبر وسائل التواصل",
@@ -181,6 +192,7 @@
     "view_profile": "عرض الملف",
     "settings_desc": "ملف/إعدادات",
     "search": "بحث",
+    "search_placeholder": "بحث...",
     "back": "عودة",
     "loading": "تحميل...",
     "error": "خطأ",
@@ -203,9 +215,7 @@
     "error_empty_content": "Content is empty",
     "block": "حظر",
     "unblock": "إلغاء الحظر",
-    "report": "إبلاغ",
-    "delete": "حذف",
-    "edit": "تعديل"
+    "report": "إبلاغ"
   },
   "settings": {
     "languageSelect": "اختيار اللغة",
@@ -230,18 +240,23 @@
     "connect_sns": "ربط حساب SNS",
     "withdraw": "حذف الحساب",
     "withdraw_phrase": "حذف حسابي",
-    "withdraw_verify_placeholder": "Please type \"{{phrase}}\" to confirm",
-    "withdraw_modal_title": "Are you sure you want to delete your account?",
-    "withdraw_warning_1": "Your account information cannot be recovered.",
-    "withdraw_warning_2": "All posts and comments will be deleted.",
-    "withdraw_warning_3": "Follow/Following information will be lost.",
-    "withdraw_warning_4": "This action cannot be undone.",
+    "withdraw_grace_period_1": "تسري فترة سماح مدتها 7 أيام عند طلب الحذف.",
+    "withdraw_grace_period_2": "يمكنك استعادة حسابك فورًا عن طريق تسجيل الدخول خلال 7 أيام.",
+    "withdraw_grace_period_3": "بعد 7 أيام، تصبح الاستعادة مستحيلة، ويتم حذف البيانات نهائيًا بعد 30 يومًا.",
+    "withdraw_verify_placeholder": "الرجاء كتابة \"{{phrase}}\" للتأكيد",
+    "withdraw_modal_title": "هل أنت متأكد أنك تريد حذف حسابك؟",
+    "withdraw_warning_1": "لا يمكن استرداد معلومات حسابك.",
+    "withdraw_warning_2": "سيتم حذف جميع المنشورات والتعليقات.",
+    "withdraw_warning_3": "سيتم فقدان معلومات المتابعة/المتابعين.",
+    "withdraw_warning_4": "لا يمكن التراجع عن هذا الإجراء.",
     "confirm_password": "تأكيد كلمة المرور",
-    "confirm_password_placeholder": "Enter your password",
-    "confirm_password_desc": "Please enter your password to confirm your identity.",
-    "withdraw_verify_label": "Type the phrase below",
-    "withdraw_btn_cancel": "Cancel",
-    "withdraw_btn_processing": "Processing...",
+    "confirm_password_placeholder": "أدخل كلمة المرور",
+    "confirm_password_desc": "الرجاء إدخال كلمة المرور لتأكيد هويتك.",
+    "confirm_email": "تأكيد البريد الإلكتروني",
+    "confirm_email_desc": "الرجاء إدخال عنوان البريد الإلكتروني لتأكيد هويتك.",
+    "withdraw_verify_label": "التحقق",
+    "withdraw_btn_cancel": "إلغاء",
+    "withdraw_btn_processing": "جاري المعالجة...",
     "withdraw_btn_confirm": "حذف",
     "pw_change_guide": "نوصي باستخدام 8 أحرف على الأقل مع مزيج من الحروف والأرقام والرموز.",
     "current_pw": "كلمة المرور الحالية",
@@ -258,7 +273,7 @@
     "connect_google": "ربط حساب Google",
     "connect_kakao": "ربط حساب Kakao",
     "sns_connect_note": "يمكنك إلغاء ربط الحسابات في الإعدادات > الخصوصية في أي وقت. (قريباً)",
-    "account_settings": "Settings",
+    "account_settings": "الإعدادات",
     "support_policy": "الدعم والسياسة",
     "help_center": "مركز المساعدة",
     "terms": "شروط الخدمة",
@@ -274,7 +289,15 @@
     "title_marketing": "موافقة التسويق",
     "title_support": "مركز المساعدة",
     "security_title": "إعدادات الأمان",
-    "session_management": "إدارة الجلسات"
+    "session_management": "إدارة الجلسات",
+    "withdraw_reason_label": "سبب الانسحاب",
+    "withdraw_reason_placeholder": "اختر سببا",
+    "withdraw_detail_placeholder": "يرجى تقديم التفاصيل",
+    "reason_low_usage": "لا أستخدمه كثيرًا",
+    "reason_rejoin": "لإعادة الانضمام",
+    "reason_privacy": "مخاوف الخصوصية",
+    "reason_feature": "غير راض عن الميزات",
+    "reason_other": "آخر"
   },
   "profile": {
     "edit_profile": "تعديل الملف الشخصي",
@@ -340,7 +363,8 @@
   },
   "trending": {
     "title": "المتداول لك",
-    "no_trending": "لا توجد اتجاهات متاحة"
+    "no_trending": "لا توجد اتجاهات متاحة",
+    "shared_photo": "مشاركة صورة."
   },
   "chat": {
     "direct_chat": "الرسائل",
@@ -437,5 +461,55 @@
       "privacy": "الخصوصية",
       "cookies": "ملفات تعريف الارتباط (Cookies)"
     }
+  },
+  "goods": {
+    "hero_title": "المتجر",
+    "category_all": "الكل",
+    "items": {
+      "hoodie": {
+        "title": "هودي التوقيع",
+        "desc": "هودي قطني فاخر مع شعار مميز. مريح للارتداء اليومي."
+      },
+      "tote_bag": {
+        "title": "حقيبة صديقة للبيئة",
+        "desc": "حقيبة حمل قماشية صديقة للبيئة. متينة وواسعة لأساسياتك."
+      },
+      "note_set": {
+        "title": "مجموعة مذكرات مميزة",
+        "desc": "مجموعة دفاتر ورقية عالية الجودة. مثالية للدراسة وتدوين اليوميات."
+      },
+      "planner": {
+        "title": "المخطط الرقمي 2026",
+        "desc": "مخطط رقمي شامل للآيباد/الكمبيوتر اللوحي. نظم عام 2026 بكفاءة."
+      },
+      "cap": {
+        "title": "قبعة مع شعار",
+        "desc": "قبعة أنيقة مع شعار مطرز. حزام قابل للتعديل لملاءمة مخصصة."
+      },
+      "tumbler": {
+        "title": "كوب بسيط",
+        "desc": "كوب من الفولاذ المقاوم للصدأ. يحفظ المشروبات ساخنة/باردة لمدة 12 ساعة."
+      }
+    },
+    "price_unit": "$",
+    "category_clothing": "ملابس",
+    "category_accessories": "اكسسوارات",
+    "category_digital": "رقمي",
+    "category_stationery": "قرطاسية",
+    "new_arrival": "جديد",
+    "best_seller": "الأكثر مبيعاً",
+    "sold_out": "نفذت الكمية",
+    "product_not_found": "المنتج غير موجود",
+    "reviews_count": "{{count}} تقييم",
+    "free_shipping": "شحن مجاني للطلبات فوق 50 دولار",
+    "authentic_guarantee": "ضمان الأصالة",
+    "option_color": "لون",
+    "option_size": "مقاس",
+    "add_to_cart": "أضف إلى السلة",
+    "product_details": "تفاصيل المنتج",
+    "related_items": "قد يعجبك أيضًا",
+    "buy_now": "شراء الآن",
+    "quantity": "الكمية",
+    "back_to_list": "العودة للقائمة"
   }
 }

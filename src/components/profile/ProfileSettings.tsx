@@ -13,6 +13,9 @@ import SettingsSidebar from './SettingsSidebar';
 export default function ProfileSettings() {
   const { t } = useTranslation();
   
+  // Ensure title is translated
+  const settingsTitle = t('settings.account_settings', 'Settings');
+  
   const items: SidebarItem[] = [
     { 
       id: 'alarm', 
@@ -112,21 +115,27 @@ export default function ProfileSettings() {
   };
 
   const rightPanel =
-    activeId === 'alarm' ? (
+    filteredItems.length === 0 ? (
       <SettingsContent>
-        <AlarmSettings onBackToMenu={() => setShowMenuOnMobile(true)} />
+        <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-gray-500 dark:text-gray-400">
+           <p className="text-sm">{t('chat.no_result')}</p>
+        </div>
+      </SettingsContent>
+    ) : activeId === 'alarm' ? (
+      <SettingsContent>
+        <AlarmSettings onBackToMenu={() => setShowMenuOnMobile(true)} searchQuery={searchQuery} />
       </SettingsContent>
     ) : activeId === 'privacy' ? (
       <SettingsContent>
-        <PrivacySettings onBackToMenu={() => setShowMenuOnMobile(true)} />
+        <PrivacySettings onBackToMenu={() => setShowMenuOnMobile(true)} searchQuery={searchQuery} />
       </SettingsContent>
     ) : activeId === 'system' ? (
       <SettingsContent>
-        <SystemSettings onBackToMenu={() => setShowMenuOnMobile(true)} />
+        <SystemSettings onBackToMenu={() => setShowMenuOnMobile(true)} searchQuery={searchQuery} />
       </SettingsContent>
     ) : (
       <SettingsContent>
-        <SupportPolicy onBackToMenu={() => setShowMenuOnMobile(true)} />
+        <SupportPolicy onBackToMenu={() => setShowMenuOnMobile(true)} searchQuery={searchQuery} />
       </SettingsContent>
     );
 
@@ -150,11 +159,12 @@ export default function ProfileSettings() {
               <SettingsLayout
                 left={
                   <SettingsSidebar
-                    title={t('settings.account_settings')}
+                    title={settingsTitle}
                     items={filteredItems}
                     activeId={activeId}
                     onChange={handleChange}
                     searchQuery={searchQuery}
+                    onSearch={setSearchQuery}
                     className="flex-1" // 1:1 비율을 위해 flex-1 적용 (기존 고정폭 md:w-96 제거됨)
                   />
                 }

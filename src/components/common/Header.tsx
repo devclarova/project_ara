@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/lib/supabase';
-import { User, Settings, BookOpen, Users, MessageCircle, Bell } from 'lucide-react';
+import { User, Settings, BookOpen, Users, MessageCircle, Bell, ShieldCheck, ShoppingBag } from 'lucide-react';
 import { useDirectChat } from '@/contexts/DirectChatContext';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
@@ -43,6 +43,7 @@ function Header() {
       matchPaths: ['/studyList', '/study'],
     },
     { key: 'community', label: t('nav.community'), path: '/sns', matchPaths: ['/sns'] },
+    { key: 'goods', label: t('nav.goods'), path: '/goods', matchPaths: ['/goods'] },
     { key: 'chat', label: t('nav.chat'), path: '/chat', matchPaths: ['/chat'] },
     {
       key: 'notifications',
@@ -68,6 +69,8 @@ function Header() {
         return <MessageCircle className="w-4 h-4" />;
       case 'notifications':
         return <Bell className="w-4 h-4" />;
+      case 'goods':
+        return <ShoppingBag className="w-4 h-4" />;
       case 'settings':
         return <Settings className="w-4 h-4" />;
       default:
@@ -164,11 +167,21 @@ function Header() {
     const handleDeletedOne = () => {
       setUnreadNotificationCount(prev => Math.max(0, prev - 1));
     };
+    // 프로필 업데이트 이벤트 감지
+    const handleProfileUpdated = (event: CustomEvent<any>) => {
+      const { nickname, avatar_url } = event.detail;
+      if (nickname) setProfileNickname(nickname);
+      if (avatar_url) setProfileAvatar(avatar_url);
+    };
+
     window.addEventListener('notifications:cleared', handleCleared);
     window.addEventListener('notification:deleted-one', handleDeletedOne);
+    window.addEventListener('profile:updated', handleProfileUpdated as EventListener);
+
     return () => {
       window.removeEventListener('notifications:cleared', handleCleared);
       window.removeEventListener('notification:deleted-one', handleDeletedOne);
+      window.removeEventListener('profile:updated', handleProfileUpdated as EventListener);
     };
   }, []);
   // 외부 클릭 시 드롭다운 / 햄버거 닫기
@@ -345,9 +358,9 @@ function Header() {
                 {isProfileMenuOpen && (
                   <div
                     ref={profileMenuRef}
-                    className="absolute top-12 left-1/2 mt-2 w-64 -translate-x-1/2
+                    className="absolute top-full left-1/2 mt-2 w-64 -translate-x-1/2
                                rounded-xl border border-gray-100/80 bg-white/95
-                               shadow-lg shadow-black/5 backdrop-blur-sm z-50
+                               shadow-lg shadow-black/5 backdrop-blur-sm z-[200]
                                dark:bg-secondary/95 dark:border-gray-700/70 overflow-hidden"
                   >
                     {/* 메뉴 리스트 */}
@@ -406,6 +419,33 @@ function Header() {
                         </div>
                       </button>
 
+                      {/* Admin Mode - Only helpful if we want quick access */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigate('/admin');
+                          setIsProfileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm
+                                   text-gray-700 dark:text-gray-100
+                                   hover:bg-primary/5 dark:hover:bg-primary/20
+                                   transition-colors"
+                      >
+                        <span
+                          className="inline-flex items-center justify-center rounded-md p-1.5
+                                     bg-red-50 text-red-600
+                                     dark:bg-red-900/20 dark:text-red-400"
+                        >
+                          <ShieldCheck className="w-4 h-4" />
+                        </span>
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">{t('nav.admin')}</span>
+                          <span className="text-xs text-gray-400 dark:text-gray-500">
+                            {t('nav.admin_dashboard')}
+                          </span>
+                        </div>
+                      </button>
+                      
                       {/* 로그아웃 버튼 - 드롭다운 하단에 작은 텍스트로 */}
                       <div className="px-4 pt-2 pb-3 border-t border-gray-100/80 dark:border-gray-700/70 mt-1">
                         <button
@@ -509,8 +549,8 @@ function Header() {
       {/* 모바일 메뉴 */}
       <div
         ref={menuRef}
-        className={`absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg
-                   flex flex-col p-2 md:hidden z-50
+        className={`absolute top-full right-0 -mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg
+                   flex flex-col p-2 md:hidden z-[150]
                    dark:bg-secondary dark:border-gray-700
                    transition-all duration-300 ease-in-out
                    ${

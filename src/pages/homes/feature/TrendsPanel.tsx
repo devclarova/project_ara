@@ -125,62 +125,92 @@ export default function TrendsPanel({
             <p className="text-gray-500 dark:text-gray-400 text-sm">No trending tweets yet</p>
           ) : (
             <div className="space-y-2">
-              {trendingTweets.map(tweet => (
-                <div
-                  key={tweet.id}
-                  onClick={() => {
-                    const target = `/sns/${tweet.id}`;
-                    if (location.pathname !== target) {
-                      navigate(target);
-                    }
-                  }}
-                  className="group flex items-start gap-3 p-2 rounded-xl hover:bg-primary/5 dark:hover:bg-primary/10 transition-all cursor-pointer"
-                >
+              {trendingTweets.map(tweet => {
+                // HTML 파싱하여 텍스트와 이미지 추출
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(tweet.content, 'text/html');
+                const firstImg = doc.querySelector('img')?.src;
+                const textContent = (doc.body.textContent || '').trim();
+                const hasImageOnly = !textContent && !!firstImg;
+
+                return (
                   <div
-                    onClick={e => {
-                      e.stopPropagation();
-                      if (tweet.profiles?.nickname) {
-                        const target = `/profile/${encodeURIComponent(tweet.profiles.nickname)}`;
-                        if (location.pathname !== target) {
-                          navigate(target);
-                        }
+                    key={tweet.id}
+                    onClick={() => {
+                      const target = `/sns/${tweet.id}`;
+                      if (location.pathname !== target) {
+                        navigate(target);
                       }
                     }}
+                    className="group flex items-start gap-3 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-white/5 transition-all cursor-pointer border border-transparent hover:border-gray-100 dark:hover:border-white/10"
                   >
-                    <Avatar className="w-9 h-9">
-                      <AvatarImage
-                        src={tweet.profiles?.avatar_url || '/default-avatar.svg'}
-                        alt={tweet.profiles?.nickname || 'User'}
-                      />
-                      <AvatarFallback>
-                        {tweet.profiles?.nickname
-                          ? tweet.profiles.nickname.charAt(0).toUpperCase()
-                          : 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
+                    <div
+                      onClick={e => {
+                        e.stopPropagation();
+                        if (tweet.profiles?.nickname) {
+                          const target = `/profile/${encodeURIComponent(tweet.profiles.nickname)}`;
+                          if (location.pathname !== target) {
+                            navigate(target);
+                          }
+                        }
+                      }}
+                      className="flex-shrink-0 pt-0.5"
+                    >
+                      <Avatar className="w-9 h-9 border border-black/5 dark:border-white/10">
+                        <AvatarImage
+                          src={tweet.profiles?.avatar_url || '/default-avatar.svg'}
+                          alt={tweet.profiles?.nickname || 'User'}
+                        />
+                        <AvatarFallback>
+                          {tweet.profiles?.nickname
+                            ? tweet.profiles.nickname.charAt(0).toUpperCase()
+                            : 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
 
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900 dark:text-gray-100 line-clamp-3 leading-snug">
-                      {tweet.content.replace(/<[^>]*>?/gm, '')}
-                    </p>
-                    <div className="flex gap-3 mt-2 text-xs text-gray-500">
-                      <span className="flex items-center gap-1" title="Replies">
-                        <i className="ri-chat-3-line text-blue-500" />
-                        {tweet.reply_count}
-                      </span>
-                      <span className="flex items-center gap-1" title="Likes">
-                        <i className="ri-heart-line text-red-500" />
-                        {tweet.like_count}
-                      </span>
-                      <span className="flex items-center gap-1" title="Views">
-                        <i className="ri-eye-line text-emerald-500" />
-                        {tweet.view_count}
-                      </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-3">
+                        <p 
+                          className={`text-[13px] leading-[1.4] break-keep ${
+                            hasImageOnly 
+                              ? 'text-gray-500 dark:text-gray-400 font-normal' 
+                              : 'text-gray-800 dark:text-gray-200 font-medium line-clamp-2'
+                          }`}
+                        >
+                          {hasImageOnly ? t('trending.shared_photo', '사진을 공유했습니다.') : textContent}
+                        </p>
+                        
+                        {firstImg && (
+                          <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 border border-black/5 dark:border-white/10 shadow-sm group-hover:shadow transition-all group-hover:scale-105">
+                            <img 
+                              src={firstImg} 
+                              alt="thumbnail" 
+                              className="w-full h-full object-cover" 
+                              loading="lazy"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-3 mt-2 text-xs text-gray-400 dark:text-gray-500 font-medium">
+                        <span className="flex items-center gap-1 group-hover:text-blue-500 transition-colors" title="Replies">
+                          <i className="ri-chat-3-line" />
+                          {tweet.reply_count}
+                        </span>
+                        <span className="flex items-center gap-1 group-hover:text-red-500 transition-colors" title="Likes">
+                          <i className="ri-heart-line" />
+                          {tweet.like_count}
+                        </span>
+                        <span className="flex items-center gap-1 group-hover:text-emerald-500 transition-colors" title="Views">
+                          <i className="ri-eye-line" />
+                          {tweet.view_count}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

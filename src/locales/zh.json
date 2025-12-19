@@ -8,7 +8,10 @@
     "more": "更多",
     "settings": "设置",
     "profile": "个人资料",
-    "post": "发布"
+    "post": "发布",
+    "admin": "管理员模式",
+    "admin_dashboard": "管理员仪表板",
+    "goods": "周边"
   },
   "notification": {
     "like_feed": "赞了你的动态。",
@@ -25,7 +28,7 @@
     "error_clear_all": "清空通知时发生错误",
     "clear_all": "清空",
     "action_comment": "您在您的动态中留下了评论。",
-    "action_like_comment": "我们喜欢您的评论。",
+    "action_like_comment": "赞了你的评论。",
     "action_like_feed": "我喜欢您的动态。",
     "no_notifications": "尚无新的通知。",
     "delete_confirm_title": "删除通知",
@@ -102,7 +105,15 @@
     "service_ready": "现在可以使用服务了。",
     "start_now": "立即开始",
     "go_home": "返回首页",
-    "signup_error": "注册时发生错误"
+    "signup_error": "注册时发生错误",
+    "account_restore_expired": "由于删除申请已超过7天，无法恢复帐户。",
+    "restore_error": "恢复帐户时发生错误。",
+    "cancel_logout": "取消 (注销)",
+    "restore_title": "账户恢复提示",
+    "restore_desc_1": "此账户目前处于注销宽限期。",
+    "restore_desc_2": "您想恢复账户并继续使用吗？",
+    "restore_remaining": "距离永久删除还有{{days}}天。",
+    "restore_confirm": "恢复账户"
   },
   "signup": {
     "title_social": "社交账号注册",
@@ -191,6 +202,7 @@
     "view_profile": "查看资料",
     "settings_desc": "个人资料/设置",
     "search": "搜索",
+    "search_placeholder": "搜索...",
     "back": "返回",
     "loading": "加载中...",
     "error": "发生错误",
@@ -212,8 +224,6 @@
     "block": "屏蔽",
     "unblock": "解除屏蔽",
     "report": "举报",
-    "delete": "删除",
-    "edit": "编辑",
     "edit_mode": "正在切换到编辑模式。",
     "block_success": "已屏蔽 {{name}}。",
     "unblock_success": "已解除对 {{name}} 的屏蔽。"
@@ -241,18 +251,23 @@
     "connect_sns": "关联SNS账号",
     "withdraw": "注销账号",
     "withdraw_phrase": "我要注销账号",
-    "withdraw_verify_placeholder": "Please type \"{{phrase}}\" to confirm",
-    "withdraw_modal_title": "Are you sure you want to delete your account?",
-    "withdraw_warning_1": "Your account information cannot be recovered.",
-    "withdraw_warning_2": "All posts and comments will be deleted.",
-    "withdraw_warning_3": "Follow/Following information will be lost.",
-    "withdraw_warning_4": "This action cannot be undone.",
-    "confirm_password": "确认密码",
-    "confirm_password_placeholder": "Enter your password",
-    "confirm_password_desc": "Please enter your password to confirm your identity.",
-    "withdraw_verify_label": "Type the phrase below",
-    "withdraw_btn_cancel": "Cancel",
-    "withdraw_btn_processing": "Processing...",
+    "withdraw_grace_period_1": "申请注销时适用7天的宽限期。",
+    "withdraw_grace_period_2": "7天内登录可立即恢复帐户。",
+    "withdraw_grace_period_3": "7天后无法恢复，30天后数据将被永久删除。",
+    "withdraw_verify_placeholder": "请输入 “{{phrase}}” 以确认",
+    "withdraw_modal_title": "您确定要注销账号吗？",
+    "withdraw_warning_1": "您的帐户信息无法恢复。",
+    "withdraw_warning_2": "所有帖子和评论都将被删除。",
+    "withdraw_warning_3": "关注/粉丝信息将丢失。",
+    "withdraw_warning_4": "此操作无法撤销。",
+    "confirm_password": "密码",
+    "confirm_password_placeholder": "请输入密码",
+    "confirm_password_desc": "请输入您的密码以确认您的身份。",
+    "confirm_email": "电子邮箱",
+    "confirm_email_desc": "请输入您的电子邮件地址以确认您的身份。",
+    "withdraw_verify_label": "验证",
+    "withdraw_btn_cancel": "取消",
+    "withdraw_btn_processing": "处理中...",
     "withdraw_btn_confirm": "注销",
     "pw_change_guide": "我们建议使用至少8个字符，包含字母、数字和符号的组合。",
     "current_pw": "当前密码",
@@ -269,12 +284,16 @@
     "connect_google": "关联Google账号",
     "connect_kakao": "关联Kakao账号",
     "sns_connect_note": "您可以随时在设置 > 隐私中取消关联账号。（即将推出）",
-    "account_settings": "Settings",
+    "account_settings": "设置",
     "support_policy": "支持与政策",
     "help_center": "帮助中心",
     "terms": "服务条款",
     "privacy_policy": "隐私政策",
     "marketing_consent": "营销同意",
+    "email_info_missing": "找不到电子邮件信息。请联系客户支持。",
+    "password_incorrect": "密码不正确。",
+    "email_mismatch_error": "输入的电子邮件地址不正确。",
+    "withdraw_error": "处理删除时发生错误。请稍后再试。",
     "title_language": "更改语言",
     "title_theme": "更改主题",
     "title_password_change": "修改密码",
@@ -285,7 +304,15 @@
     "title_marketing": "营销同意",
     "title_support": "帮助中心",
     "security_title": "安全设置",
-    "session_management": "会话管理"
+    "session_management": "会话管理",
+    "withdraw_reason_label": "注销原因",
+    "withdraw_reason_placeholder": "请选择原因",
+    "withdraw_detail_placeholder": "请填写具体原因",
+    "reason_low_usage": "使用频率低",
+    "reason_rejoin": "为了重新注册",
+    "reason_privacy": "隐私/安全担忧",
+    "reason_feature": "功能不满意",
+    "reason_other": "其他"
   },
   "profile": {
     "edit_profile": "编辑资料",
@@ -351,7 +378,8 @@
   },
   "trending": {
     "title": "趋势",
-    "no_trending": "暂无趋势"
+    "no_trending": "暂无趋势",
+    "shared_photo": "分享了一张照片。"
   },
   "chat": {
     "direct_chat": "私信",
@@ -587,5 +615,56 @@
         "body": "服务运营必要通知（条款/安全等）可能不论接收同意与否均会发送。"
       }
     }
+  },
+  "goods": {
+    "hero_title": "官方商店",
+    "hero_desc": "发现支持您学习之旅的特别商品。",
+    "category_all": "全部",
+    "category_clothing": "服装",
+    "category_accessories": "配饰",
+    "category_digital": "数码",
+    "new_arrival": "新品",
+    "best_seller": "热销",
+    "sold_out": "售罄",
+    "price_unit": "$",
+    "items": {
+      "hoodie": {
+        "title": "签名款连帽衫",
+        "desc": "印有标志性Logo的优质棉质连帽衫。舒适版型，适合日常穿着。"
+      },
+      "tote_bag": {
+        "title": "环保托特包",
+        "desc": "环保帆布托特包。耐用且空间宽敞，适合装载您的必需品。"
+      },
+      "note_set": {
+        "title": "高级笔记本套装",
+        "desc": "高品质纸张笔记本套装。非常适合学习和写日记。"
+      },
+      "planner": {
+        "title": "2026 数字计划表",
+        "desc": "适用于iPad/平板电脑的二合一数字计划表。高效规划您的2026年。"
+      },
+      "cap": {
+        "title": "Logo 棒球帽",
+        "desc": "绣有Logo的时尚棒球帽。可调节带子，贴合头型。"
+      },
+      "tumbler": {
+        "title": "极简随行杯",
+        "desc": "不锈钢随行杯。保温保冷可达12小时。"
+      }
+    },
+    "category_stationery": "文具",
+    "product_not_found": "未找到商品",
+    "reviews_count": "{{count}} 条评价",
+    "free_shipping": "满 $50 免运费",
+    "authentic_guarantee": "正品保证",
+    "option_color": "颜色",
+    "option_size": "尺码",
+    "add_to_cart": "加入购物车",
+    "product_details": "商品详情",
+    "related_items": "猜你喜欢",
+    "buy_now": "立即购买",
+    "quantity": "数量",
+    "back_to_list": "返回列表"
   }
 }

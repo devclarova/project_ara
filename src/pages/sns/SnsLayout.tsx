@@ -16,9 +16,9 @@ export default function SnsLayout({
   hideSearchBar,
 }: SnsLayoutProps) {
   return (
-    <div className="bg-white dark:bg-background overflow-x-hidden">
+    <div className="bg-white dark:bg-background">
       <ScrollToTopButton 
-        className="bottom-10 right-6 lg:right-16 xl:right-[calc((100vw-1280px)/2+245px)]"
+        className="bottom-10 right-6 lg:right-16 xl:right-[calc((100vw-1280px)/2+265px)]"
       />
       {/* 가운데 + 오른쪽 2컬럼 레이아웃 (오른쪽은 공간만 잡아줌) */}
       <div className="mx-auto max-w-7xl px-4 sm:px-5 lg:px-6">
@@ -30,7 +30,7 @@ export default function SnsLayout({
 
           {/* 오른쪽 컬럼: Side Panel (Sticky) */}
           <aside className="hidden xl:block w-[320px]">
-            <div className="sticky top-[100px]">
+            <div className="sticky top-24">
               <TrendsPanel
                 searchQuery={searchQuery ?? ''}
                 onSearchChange={onSearchChange ?? (() => {})}
