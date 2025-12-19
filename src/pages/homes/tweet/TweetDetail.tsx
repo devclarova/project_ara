@@ -381,7 +381,6 @@ export default function TweetDetail() {
               stats: {
                 ...r.stats,
                 likes: newReply.like_count ?? r.stats.likes,
-                replies: newReply.reply_count ?? r.stats.replies,
               }
             } : r)
           );
