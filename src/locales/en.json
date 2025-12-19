@@ -8,7 +8,10 @@
     "more": "More",
     "settings": "Settings",
     "profile": "Profile",
-    "post": "Post"
+    "post": "Post",
+    "admin": "Admin Mode",
+    "admin_dashboard": "Admin Dashboard",
+    "goods": "Goods Shop"
   },
   "notification": {
     "like_feed": "liked your post.",
@@ -26,8 +29,8 @@
     "new_arrived": "New notification arrived",
     "clear_all": "Empty",
     "action_comment": "A comment has been left on your feed.",
-    "action_like_comment": "We like your comment.",
-    "action_like_feed": "I like your feed.",
+    "action_like_comment": "liked your comment.",
+    "action_like_feed": "liked your post.",
     "no_notifications": "There are no new notifications yet.",
     "delete_confirm_title": "Delete Notification",
     "delete_confirm_desc": "Would you like to delete this notification?"
@@ -103,7 +106,15 @@
     "service_ready": "You can now use the service.",
     "start_now": "Start Now",
     "go_home": "Go Home",
-    "signup_error": "An error occurred during signup"
+    "signup_error": "An error occurred during signup",
+    "account_restore_expired": "Account cannot be restored as 7 days have passed since deletion request.",
+    "restore_error": "An error occurred while restoring the account.",
+    "cancel_logout": "Cancel (Log out)",
+    "restore_title": "Account Restoration",
+    "restore_desc_1": "This account is currently in the graceful deletion period.",
+    "restore_desc_2": "Do you want to restore your account?",
+    "restore_remaining": "{{days}} days remaining until permanent deletion.",
+    "restore_confirm": "Restore Account"
   },
   "common": {
     "save": "Save",
@@ -117,6 +128,7 @@
     "view_profile": "View Profile",
     "settings_desc": "Profile/Settings",
     "search": "Search",
+    "search_placeholder": "Search...",
     "back": "Back",
     "loading": "Loading...",
     "error": "An error occurred",
@@ -177,16 +189,21 @@
     "connect_sns": "Connect SNS",
     "withdraw": "Delete Account",
     "withdraw_phrase": "Delete my account",
+    "withdraw_grace_period_1": "A 7-day grace period applies upon deletion request.",
+    "withdraw_grace_period_2": "You can restore your account immediately by logging in within 7 days.",
+    "withdraw_grace_period_3": "After 7 days, restoration is impossible, and data is permanently deleted after 30 days.",
     "withdraw_verify_placeholder": "Please type \"{{phrase}}\" to confirm",
     "withdraw_modal_title": "Are you sure you want to delete your account?",
     "withdraw_warning_1": "Your account information cannot be recovered.",
     "withdraw_warning_2": "All posts and comments will be deleted.",
     "withdraw_warning_3": "Follow/Following information will be lost.",
     "withdraw_warning_4": "This action cannot be undone.",
-    "confirm_password": "Confirm Password",
+    "confirm_password": "Password",
     "confirm_password_placeholder": "Enter your password",
-    "confirm_password_desc": "Please enter your password to confirm your identity.",
-    "withdraw_verify_label": "Type the phrase below",
+    "confirm_password_desc": "Please enter your password to confirm.",
+    "confirm_email": "Email",
+    "confirm_email_desc": "Please enter your email address accurately.",
+    "withdraw_verify_label": "Verification",
     "withdraw_btn_cancel": "Cancel",
     "withdraw_btn_processing": "Processing...",
     "withdraw_btn_confirm": "Delete",
@@ -210,7 +227,19 @@
     "help_center": "Help Center",
     "terms": "Terms of Service",
     "privacy_policy": "Privacy Policy",
-    "marketing_consent": "Marketing Consent"
+    "marketing_consent": "Marketing Consent",
+    "email_info_missing": "Email information not found. Please contact support.",
+    "password_incorrect": "Incorrect password.",
+    "email_mismatch_error": "The email address you entered is incorrect.",
+    "withdraw_error": "An error occurred during deletion. Please try again later.",
+    "withdraw_reason_label": "Reason for withdrawal",
+    "withdraw_reason_placeholder": "Select a reason",
+    "withdraw_detail_placeholder": "Please provide details",
+    "reason_low_usage": "I don't use it often",
+    "reason_rejoin": "To rejoin with a new account",
+    "reason_privacy": "Privacy/Security concerns",
+    "reason_feature": "Unsatisfied with features",
+    "reason_other": "Other"
   },
   "profile": {
     "edit_profile": "Edit Profile",
@@ -276,7 +305,8 @@
   },
   "trending": {
     "title": "Real-time Popular Feeds",
-    "no_trending": "No trends available"
+    "no_trending": "No trends available",
+    "shared_photo": "Shared a photo."
   },
   "chat": {
     "direct_chat": "Chat",
@@ -636,5 +666,56 @@
       "privacy": "Privacy",
       "cookies": "Cookies"
     }
+  },
+  "goods": {
+    "hero_title": "Official Store",
+    "hero_desc": "Support your learning.",
+    "category_all": "All",
+    "category_clothing": "Clothing",
+    "category_accessories": "Accessories",
+    "category_digital": "Digital",
+    "category_stationery": "Stationery",
+    "new_arrival": "New",
+    "best_seller": "Best",
+    "sold_out": "Sold Out",
+    "price_unit": "$",
+    "add_to_cart": "Add to Cart",
+    "buy_now": "Buy Now",
+    "option_color": "Color",
+    "option_size": "Size",
+    "quantity": "Quantity",
+    "related_items": "You Might Also Like",
+    "back_to_list": "Back to List",
+    "items": {
+      "hoodie": {
+        "title": "Signature Hoodie",
+        "desc": "Premium cotton hoodie with signature logo. Comfortable fit for daily wear."
+      },
+      "tote_bag": {
+        "title": "Eco Tote Bag",
+        "desc": "Eco-friendly canvas tote bag. Durable and spacious for your essentials."
+      },
+      "note_set": {
+        "title": "Premium Note Set",
+        "desc": "High-quality paper notebook set. Perfect for studying and journaling."
+      },
+      "planner": {
+        "title": "Digital Planner 2026",
+        "desc": "All-in-one digital planner for iPad/Tablet. Organize your 2026 efficiently."
+      },
+      "cap": {
+        "title": "Logo Cap",
+        "desc": "Stylish ball cap with embroidered logo. Adjustable strap for custom fit."
+      },
+      "tumbler": {
+        "title": "Minimalist Tumbler",
+        "desc": "Stainless steel tumbler. Keeps drinks hot/cold for 12 hours."
+      }
+    },
+    "product_not_found": "Product not found",
+    "reviews_count": "{{count}} reviews",
+    "free_shipping": "Free Shipping over $50",
+    "authentic_guarantee": "Authentic Guarantee",
+    "product_details": "Product Details"
   }
 }

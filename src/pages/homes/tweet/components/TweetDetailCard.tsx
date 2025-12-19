@@ -73,8 +73,11 @@ export default function TweetDetailCard({
     }
   };
 
+  const isDeleted = tweet.user.username === 'anonymous';
+
   const handleAvatarClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
+    if (isDeleted) return;
     navigate(`/profile/${encodeURIComponent(tweet.user.name)}`);
   };
 
@@ -107,6 +110,12 @@ export default function TweetDetailCard({
 
   // Load Author's Country & Profile ID (from Main)
   useEffect(() => {
+    if (isDeleted) {
+       setAuthorProfileId(null);
+       setAuthorCountryFlagUrl(null);
+       setAuthorCountryName(null);
+       return;
+    }
     const fetchAuthorCountry = async () => {
       try {
         const { data: profile, error: profileError } = await supabase
@@ -155,7 +164,7 @@ export default function TweetDetailCard({
     };
 
     fetchAuthorCountry();
-  }, [tweet.user.username]);
+  }, [tweet.user.username, isDeleted]);
 
   // content에서 <img> 태그 src 추출
   useEffect(() => {
@@ -262,8 +271,8 @@ export default function TweetDetailCard({
       setLiked(true);
       setLikeCount(prev => prev + 1);
 
-      // 알림 생성 (본인 게시글이 아닐 때만)
-      if (authorProfileId && authorProfileId !== profileId) {
+      // 알림 생성 (본인 게시글이 아닐 때만, 작성자 없으면 스킵)
+      if (authorProfileId && !isDeleted && authorProfileId !== profileId) {
         await supabase.from('notifications').insert({
           type: 'like',
           content: '당신의 피드를 좋아합니다.',
@@ -350,23 +359,23 @@ export default function TweetDetailCard({
           <i className="ri-arrow-left-line text-lg text-gray-700 dark:text-gray-100" />
         </button>
 
-        <div onClick={handleAvatarClick} className="cursor-pointer flex-shrink-0">
+        <div onClick={handleAvatarClick} className={`cursor-pointer flex-shrink-0 ${isDeleted ? 'cursor-default' : ''}`}>
           <Avatar>
-            <AvatarImage src={tweet.user.avatar || '/default-avatar.svg'} alt={tweet.user.name} />
-            <AvatarFallback>{tweet.user.name.charAt(0)}</AvatarFallback>
+            <AvatarImage src={tweet.user.avatar || '/default-avatar.svg'} alt={isDeleted ? t('deleted_user') : tweet.user.name} />
+            <AvatarFallback>{isDeleted ? '?' : tweet.user.name.charAt(0)}</AvatarFallback>
           </Avatar>
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center flex-wrap gap-x-2">
             <span
-              className="font-bold text-gray-900 dark:text-gray-100 hover:underline cursor-pointer truncate"
+              className={`font-bold text-gray-900 dark:text-gray-100 truncate ${isDeleted ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
               onClick={handleAvatarClick}
             >
-              {tweet.user.name}
+              {isDeleted ? t('deleted_user') : tweet.user.name}
             </span>
 
-            {authorCountryFlagUrl && (
+            {authorCountryFlagUrl && !isDeleted && (
               <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 h-5">
                 <img
                   src={authorCountryFlagUrl}

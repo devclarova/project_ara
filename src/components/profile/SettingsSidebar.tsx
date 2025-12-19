@@ -6,6 +6,8 @@ type Props = {
   activeId: MenuId;
   onChange: (id: MenuId) => void;
   className?: string;
+  searchQuery?: string;
+  onSearch?: (query: string) => void;
 };
 
 import { useTranslation } from 'react-i18next';
@@ -13,13 +15,14 @@ import { useTranslation } from 'react-i18next';
 import HighlightText from '../common/HighlightText';
 
 export default function SettingsSidebar({
-  title, // default prop 제거
+  title,
   items,
   activeId,
   onChange,
   className = 'md:w-96',
   searchQuery,
-}: Props & { searchQuery?: string }) { // searchQuery prop 추가
+  onSearch,
+}: Props) {
   const { t } = useTranslation();
   const displayTitle = title || t('settings.account_settings'); // fallback 처리
 
@@ -28,6 +31,11 @@ export default function SettingsSidebar({
       className={`bg-white dark:bg-secondary rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)] w-full ${className}`}
     >
       <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{displayTitle}</h2>
+      {items.length === 0 ? (
+        <div className="flex flex-col items-center justify-center min-h-[300px] text-gray-500 dark:text-gray-400">
+            <p className="text-sm">{t('chat.no_result')}</p>
+        </div>
+      ) : (
       <ul className="space-y-1">
         {items.map(it => {
           const active = activeId === it.id;
@@ -65,6 +73,7 @@ export default function SettingsSidebar({
           );
         })}
       </ul>
+      )}
     </aside>
   );
 }

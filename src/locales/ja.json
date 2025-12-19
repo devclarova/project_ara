@@ -8,7 +8,10 @@
     "more": "もっと見る",
     "settings": "せってい",
     "profile": "プロフィール",
-    "post": "とうこう"
+    "post": "とうこう",
+    "admin": "管理者モード",
+    "admin_dashboard": "管理者ダッシュボード",
+    "goods": "グッズ"
   },
   "notification": {
     "like_feed": "あなたのフィードに「いいね」をしましたよ。",
@@ -26,7 +29,7 @@
     "new_arrived": "あたらしいおしらせが届きました！",
     "clear_all": "すべてクリア",
     "action_comment": "あなたのフィードにコメントを残しましたよ。",
-    "action_like_comment": "あなたのコメントが好きです！",
+    "action_like_comment": "あなたのコメントに「いいね」しました。",
     "action_like_feed": "あなたのフィードが好きです！",
     "no_notifications": "まだ新しいおしらせはありません。",
     "delete_confirm_title": "通知を削除",
@@ -108,7 +111,15 @@
     "service_ready": "サービスをお楽しみください。",
     "start_now": "今すぐはじめる",
     "go_home": "ホームへ戻る",
-    "signup_error": "登録中にエラーが発生しました。"
+    "signup_error": "登録中にエラーが発生しました。",
+    "account_restore_expired": "退会申請から7日が経過したため、アカウントを復元できません。",
+    "restore_error": "アカウント復元中にエラーが発生しました。",
+    "cancel_logout": "キャンセル（ログアウト）",
+    "restore_title": "アカウント復元案内",
+    "restore_desc_1": "このアカウントは現在、退会猶予期間中です。",
+    "restore_desc_2": "アカウントを復元して再利用しますか？",
+    "restore_remaining": "完全削除まであと{{days}}日です。",
+    "restore_confirm": "アカウントを復元する"
   },
   "signup": {
     "title_social": "ソーシャル会員登録",
@@ -234,6 +245,7 @@
     "view_profile": "プロフィールを見る",
     "settings_desc": "プロフィール/せってい",
     "search": "けんさく",
+    "search_placeholder": "検索...",
     "back": "戻る",
     "loading": "読み込み中...",
     "error": "エラーが発生しました。",
@@ -295,14 +307,19 @@
     "withdraw_phrase": "アカウントを削除しますか？",
     "withdraw_verify_placeholder": "確認のために「{{phrase}}」と入力してください。",
     "withdraw_modal_title": "本当にアカウントを削除しますか？",
+    "withdraw_grace_period_1": "退会申請時には7日間の猶予期間が適用されます。",
+    "withdraw_grace_period_2": "7日以内にログインすると、アカウントを即座に復元できます。",
+    "withdraw_grace_period_3": "7日が経過すると復元は不可能になり、30日後にデータが完全に削除されます。",
     "withdraw_warning_1": "アカウント情報は復元できません。",
     "withdraw_warning_2": "すべての投稿とコメントが削除されます。",
     "withdraw_warning_3": "フォロー・フォロワー情報が失われます。",
     "withdraw_warning_4": "この操作は元に戻せません。",
-    "confirm_password": "パスワード確認",
+    "confirm_password": "パスワード",
     "confirm_password_placeholder": "パスワードを入力してください。",
     "confirm_password_desc": "本人確認のためにパスワードを入力してください。",
-    "withdraw_verify_label": "下のフレーズを入力してください",
+    "confirm_email": "メールアドレス",
+    "confirm_email_desc": "本人確認のためにメールアドレスを正確に入力してください。",
+    "withdraw_verify_label": "確認",
     "withdraw_btn_cancel": "キャンセル",
     "withdraw_btn_processing": "処理中...",
     "withdraw_btn_confirm": "削除する",
@@ -326,7 +343,19 @@
     "help_center": "ヘルプセンター",
     "terms": "利用規約",
     "privacy_policy": "プライバシーポリシー",
-    "marketing_consent": "マーケティング同意"
+    "marketing_consent": "マーケティング同意",
+    "email_info_missing": "メールアドレス情報が見つかりません。カスタマーサポートにお問い合わせください。",
+    "password_incorrect": "パスワードが正しくありません。",
+    "email_mismatch_error": "入力されたメールアドレスが正しくありません。",
+    "withdraw_error": "退会処理中にエラーが発生しました。しばらくしてから再度お試しください。",
+    "withdraw_reason_label": "退会理由",
+    "withdraw_reason_placeholder": "理由を選択してください",
+    "withdraw_detail_placeholder": "詳細を入力してください",
+    "reason_low_usage": "あまり使用していない",
+    "reason_rejoin": "再加入のため",
+    "reason_privacy": "個人情報/セキュリティの懸念",
+    "reason_feature": "機能に不満がある",
+    "reason_other": "その他"
   },
   "profile": {
     "edit_profile": "プロフィール編集",
@@ -392,7 +421,8 @@
   },
   "trending": {
     "title": "トレンド",
-    "no_trending": "トレンドがありません。"
+    "no_trending": "トレンドがありません。",
+    "shared_photo": "写真を共有しました。"
   },
   "chat": {
     "direct_chat": "ダイレクトメッセージ",
@@ -628,5 +658,56 @@
         "body": "サービス運営上必須の告知（規約・セキュリティなど）は受信同意の有無にかかわらず送信される場合があります。"
       }
     }
+  },
+  "goods": {
+    "hero_title": "公式ストア",
+    "hero_desc": "あなたの学習を応援する特別なアイテムを見つけましょう。",
+    "category_all": "すべて",
+    "category_clothing": "衣類",
+    "category_accessories": "アクセサリー",
+    "category_digital": "デジタル",
+    "new_arrival": "新着",
+    "best_seller": "人気",
+    "sold_out": "完売",
+    "price_unit": "$",
+    "items": {
+      "hoodie": {
+        "title": "シグネチャーパーカー",
+        "desc": "シグネチャーロゴ入りのプレミアムコットンパーカー。日常使いに最適な快適なフィット感です。"
+      },
+      "tote_bag": {
+        "title": "エコトートバッグ",
+        "desc": "環境に優しいキャンバストートバッグ。丈夫で必需品をたっぷり収納できます。"
+      },
+      "note_set": {
+        "title": "プレミアムノートセット",
+        "desc": "高品質な紙で作られたノートセット。勉強や日記に最適です。"
+      },
+      "planner": {
+        "title": "2026 デジタルプランナー",
+        "desc": "iPad/タブレット用オールインワンデジタルプランナー。2026年を効率的に計画しましょう。"
+      },
+      "cap": {
+        "title": "ロゴキャップ",
+        "desc": "刺繍ロゴ入りのスタイリッシュなボールキャップ。調節可能なストラップでフィット感を調整できます。"
+      },
+      "tumbler": {
+        "title": "ミニマリストタンブラー",
+        "desc": "ステンレス製タンブラー。12時間保温・保冷が可能です。"
+      }
+    },
+    "category_stationery": "文房具",
+    "product_not_found": "商品が見つかりません",
+    "reviews_count": "レビュー {{count}}件",
+    "free_shipping": "$50以上で送料無料",
+    "authentic_guarantee": "正規品保証",
+    "option_color": "カラー",
+    "option_size": "サイズ",
+    "add_to_cart": "カートに入れる",
+    "product_details": "商品詳細",
+    "related_items": "こちらもおすすめ",
+    "buy_now": "今すぐ購入",
+    "quantity": "数量",
+    "back_to_list": "一覧に戻る"
   }
 }

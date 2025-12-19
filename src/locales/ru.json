@@ -8,7 +8,10 @@
     "more": "Ещё",
     "settings": "Настройки",
     "profile": "Профиль",
-    "post": "Пост"
+    "post": "Пост",
+    "admin": "Режим администратора",
+    "admin_dashboard": "Панель администратора",
+    "goods": "Магазин"
   },
   "notification": {
     "like_feed": "понравился ваш пост.",
@@ -25,7 +28,7 @@
     "error_clear_all": "Произошла ошибка при удалении уведомлений",
     "clear_all": "Очистить",
     "action_comment": "Оставил комментарий к вашей ленте.",
-    "action_like_comment": "Мы любим ваши комментарии.",
+    "action_like_comment": "понравился ваш комментарий.",
     "action_like_feed": "Мне нравится ваш фид.",
     "no_notifications": "Пока нет новых уведомлений.",
     "delete_confirm_title": "Удалить уведомление",
@@ -102,7 +105,15 @@
     "service_ready": "Теперь вы можете использовать сервис.",
     "start_now": "Начать Сейчас",
     "go_home": "На Главную",
-    "signup_error": "Ошибка при регистрации"
+    "signup_error": "Ошибка при регистрации",
+    "account_restore_expired": "Аккаунт не может быть восстановлен, так как прошло 7 дней с момента запроса на удаление.",
+    "restore_error": "Произошла ошибка при восстановлении аккаунта.",
+    "cancel_logout": "Отмена (Выйти)",
+    "restore_title": "Восстановление аккаунта",
+    "restore_desc_1": "Этот аккаунт находится в периоде отсрочки удаления.",
+    "restore_desc_2": "Хотите восстановить аккаунт?",
+    "restore_remaining": "Осталось {{days}} дней до окончательного удаления.",
+    "restore_confirm": "Восстановить аккаунт"
   },
   "signup": {
     "title_social": "Регистрация через соцсети",
@@ -175,12 +186,13 @@
     "apply": "Применить",
     "cancel": "Отмена",
     "delete": "Удалить",
-    "edit": "Изменить",
+    "edit": "Редактировать",
     "my_profile": "Мой профиль",
     "my_account": "Мой аккаунт",
     "view_profile": "Профиль",
     "settings_desc": "Профиль/Настройки",
     "search": "Поиск",
+    "search_placeholder": "Поиск...",
     "back": "Назад",
     "loading": "Загрузка...",
     "error": "Ошибка",
@@ -203,9 +215,7 @@
     "error_empty_content": "Content is empty",
     "block": "Заблокировать",
     "unblock": "Разблокировать",
-    "report": "Пожаловаться",
-    "delete": "Удалить",
-    "edit": "Редактировать"
+    "report": "Пожаловаться"
   },
   "settings": {
     "languageSelect": "Язык",
@@ -230,18 +240,23 @@
     "connect_sns": "Соцсети",
     "withdraw": "Удалить аккаунт",
     "withdraw_phrase": "Удалить мой аккаунт",
-    "withdraw_verify_placeholder": "Please type \"{{phrase}}\" to confirm",
-    "withdraw_modal_title": "Are you sure you want to delete your account?",
-    "withdraw_warning_1": "Your account information cannot be recovered.",
-    "withdraw_warning_2": "All posts and comments will be deleted.",
-    "withdraw_warning_3": "Follow/Following information will be lost.",
-    "withdraw_warning_4": "This action cannot be undone.",
-    "confirm_password": "Подтвердите пароль",
-    "confirm_password_placeholder": "Enter your password",
-    "confirm_password_desc": "Please enter your password to confirm your identity.",
-    "withdraw_verify_label": "Type the phrase below",
-    "withdraw_btn_cancel": "Cancel",
-    "withdraw_btn_processing": "Processing...",
+    "withdraw_verify_placeholder": "Введите \"{{phrase}}\" для подтверждения",
+    "withdraw_modal_title": "Вы уверены, что хотите удалить свой аккаунт?",
+    "withdraw_grace_period_1": "После запроса на удаление действует 7-дневный льготный период.",
+    "withdraw_grace_period_2": "Вы можете восстановить аккаунт, войдя в него в течение 7 дней.",
+    "withdraw_grace_period_3": "Через 7 дней восстановление невозможно, данные будут удалены навсегда через 30 дней.",
+    "withdraw_warning_1": "Информация о вашей учетной записи не может быть восстановлена.",
+    "withdraw_warning_2": "Все публикации и комментарии будут удалены.",
+    "withdraw_warning_3": "Информация о подписках/подписчиках будет утеряна.",
+    "withdraw_warning_4": "Это действие нельзя отменить.",
+    "confirm_password": "Пароль",
+    "confirm_password_placeholder": "Введите ваш пароль",
+    "confirm_password_desc": "Пожалуйста, введите пароль для подтверждения личности.",
+    "confirm_email": "Электронная почта",
+    "confirm_email_desc": "Пожалуйста, введите ваш email для подтверждения личности.",
+    "withdraw_verify_label": "Подтверждение",
+    "withdraw_btn_cancel": "Отмена",
+    "withdraw_btn_processing": "Обработка...",
     "withdraw_btn_confirm": "Удалить",
     "pw_change_guide": "Мы рекомендуем использовать не менее 8 символов с сочетанием букв, цифр и символов.",
     "current_pw": "Текущий пароль",
@@ -258,7 +273,7 @@
     "connect_google": "Подключить аккаунт Google",
     "connect_kakao": "Подключить аккаунт Kakao",
     "sns_connect_note": "Вы можете отключить связанные аккаунты в Настройки > Конфиденциальность в любое время. (Скоро)",
-    "account_settings": "Settings",
+    "account_settings": "Настройки",
     "support_policy": "Поддержка и политика",
     "help_center": "Центр помощи",
     "terms": "Условия использования",
@@ -274,7 +289,15 @@
     "title_marketing": "Маркетинговое согласие",
     "title_support": "Справочный центр",
     "security_title": "Настройки безопасности",
-    "session_management": "Управление сессиями"
+    "session_management": "Управление сессиями",
+    "withdraw_reason_label": "Причина удаления",
+    "withdraw_reason_placeholder": "Выберите причину",
+    "withdraw_detail_placeholder": "Укажите подробности",
+    "reason_low_usage": "Редко пользуюсь",
+    "reason_rejoin": "Хочу создать новый аккаунт",
+    "reason_privacy": "Конфиденциальность",
+    "reason_feature": "Не нравятся функции",
+    "reason_other": "Другое"
   },
   "profile": {
     "edit_profile": "Ред. профиль",
@@ -340,7 +363,8 @@
   },
   "trending": {
     "title": "Тренды",
-    "no_trending": "Нет трендов"
+    "no_trending": "Нет трендов",
+    "shared_photo": "Поделился фото."
   },
   "chat": {
     "direct_chat": "Сообщения",
@@ -437,5 +461,55 @@
       "privacy": "Конфиденциальность",
       "cookies": "Cookies"
     }
+  },
+  "goods": {
+    "hero_title": "Магазин",
+    "category_all": "Все",
+    "items": {
+      "hoodie": {
+        "title": "Фирменное Худи",
+        "desc": "Худи из премиального хлопка с фирменным логотипом. Удобная посадка для повседневной носки."
+      },
+      "tote_bag": {
+        "title": "Эко-сумка шоппер",
+        "desc": "Экологичная холщовая сумка-тоут. Прочная и вместительная для ваших вещей."
+      },
+      "note_set": {
+        "title": "Набор блокнотов премиум",
+        "desc": "Набор блокнотов из высококачественной бумаги. Идеально подходит для учебы и ведения дневника."
+      },
+      "planner": {
+        "title": "Цифровой планировщик 2026",
+        "desc": "Цифровой планировщик все-в-одном для iPad/Планшета. Эффективно организуйте свой 2026 год."
+      },
+      "cap": {
+        "title": "Кепка с логотипом",
+        "desc": "Стильная кепка с вышитым логотипом. Регулируемый ремешок для индивидуальной посадки."
+      },
+      "tumbler": {
+        "title": "Минималистичный тумблер",
+        "desc": "Термокружка из нержавеющей стали. Сохраняет напитки горячими/холодными в течение 12 часов."
+      }
+    },
+    "price_unit": "$",
+    "category_clothing": "Одежда",
+    "category_accessories": "Аксессуары",
+    "category_digital": "Цифровые",
+    "category_stationery": "Канцелярия",
+    "new_arrival": "Новинка",
+    "best_seller": "Хит",
+    "sold_out": "Продано",
+    "product_not_found": "Товар не найден",
+    "reviews_count": "{{count}} отзывов",
+    "free_shipping": "Бесплатная доставка от $50",
+    "authentic_guarantee": "Гарантия подлинности",
+    "option_color": "Цвет",
+    "option_size": "Размер",
+    "add_to_cart": "В корзину",
+    "product_details": "Информация о товаре",
+    "related_items": "Вам может также понравиться",
+    "buy_now": "Купить сейчас",
+    "quantity": "Количество",
+    "back_to_list": "Вернуться к списку"
   }
 }

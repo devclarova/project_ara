@@ -51,7 +51,7 @@ export function ReplyCard({
   const { t, i18n } = useTranslation();
 
   const [liked, setLiked] = useState(reply.liked ?? false);
-  // const [likeCount, setLikeCount] = useState(reply.stats?.likes ?? 0); // Optional: if using local state for count
+  const [likeCount, setLikeCount] = useState(reply.stats?.likes ?? 0);
   const [showMenu, setShowMenu] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [profileId, setProfileId] = useState<string | null>(null);
@@ -62,6 +62,11 @@ export function ReplyCard({
   const [showImageModal, setShowImageModal] = useState(false);
   const [contentImages, setContentImages] = useState<string[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Sync likeCount with props
+  useEffect(() => {
+    setLikeCount(reply.stats?.likes ?? 0);
+  }, [reply.stats?.likes]);
   
   // 하이라이트 상태 (잠깐 색 들어왔다 빠지는 용도)
   const [isHighlighted, setIsHighlighted] = useState(false);
@@ -201,7 +206,10 @@ export function ReplyCard({
 
     // Toggle optimistic
     const nextLiked = !liked;
+    const nextCount = nextLiked ? likeCount + 1 : Math.max(0, likeCount - 1);
+    
     setLiked(nextLiked);
+    setLikeCount(nextCount);
     onLike?.(reply.id, nextLiked ? 1 : -1);
 
     try {
@@ -225,37 +233,23 @@ export function ReplyCard({
 
         if (insertError) throw insertError;
 
-        // 알림 생성 (본인 댓글이 아닐 때만)
-        if (reply.user.username !== authUser.id) {
-          const { data: receiverProfile, error: receiverError } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('user_id', reply.user.username)
-            .maybeSingle();
-
-          if (!receiverError && receiverProfile && receiverProfile.id !== profileId) {
-            await supabase.from('notifications').insert({
-              receiver_id: receiverProfile.id, 
-              sender_id: profileId, 
-              type: 'like', 
-              content: '당신의 댓글을 좋아합니다.',
-              tweet_id: reply.tweetId, 
-              comment_id: reply.id, 
-            });
-          }
-        }
+        // 알림 생성 (수동 생성 생략 - 트리거 사용)
       }
     } catch (err: any) {
       console.error('좋아요 처리 실패:', err.message);
       toast.error(t('common.error_like'));
       // Rollback
       setLiked(!nextLiked);
+      setLikeCount(likeCount); // Revert to original
       onLike?.(reply.id, !nextLiked ? 1 : -1);
     }
   };
 
+  const isDeleted = reply.user.username === 'anonymous';
+
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isDeleted) return;
     navigate(`/profile/${encodeURIComponent(reply.user.name)}`);
   };
 
@@ -302,10 +296,10 @@ export function ReplyCard({
       }}
     >
       <div className="flex space-x-3">
-        <div onClick={handleAvatarClick} className="cursor-pointer">
+        <div onClick={handleAvatarClick} className={`cursor-pointer ${isDeleted ? 'cursor-default' : ''}`}>
           <Avatar>
-            <AvatarImage src={reply.user.avatar || '/default-avatar.svg'} alt={reply.user.name} />
-            <AvatarFallback>{reply.user.name.charAt(0)}</AvatarFallback>
+            <AvatarImage src={reply.user.avatar || '/default-avatar.svg'} alt={isDeleted ? t('deleted_user') : reply.user.name} />
+            <AvatarFallback>{isDeleted ? '?' : reply.user.name.charAt(0)}</AvatarFallback>
           </Avatar>
         </div>
 
@@ -314,10 +308,10 @@ export function ReplyCard({
           <div className="flex items-start justify-between relative" ref={menuRef}>
             <div className="flex items-center space-x-1 flex-wrap">
               <span
-                className="font-bold text-gray-900 dark:text-gray-100 hover:underline cursor-pointer truncate"
+                className={`font-bold text-gray-900 dark:text-gray-100 truncate ${isDeleted ? 'cursor-default text-gray-500' : 'hover:underline cursor-pointer'}`}
                 onClick={handleAvatarClick}
               >
-                {reply.user.name}
+                {isDeleted ? t('deleted_user') : reply.user.name}
               </span>
               <span className="text-gray-500 dark:text-gray-400">·</span>
               <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
@@ -506,7 +500,7 @@ export function ReplyCard({
               <div className="p-2 rounded-full group-hover:bg-red-50 dark:group-hover:bg-primary/10 transition-colors">
                 <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg`} />
               </div>
-              <span className="text-sm">{reply.stats.likes}</span>
+              <span className="text-sm">{likeCount}</span>
             </button>
           </div>
         </div>

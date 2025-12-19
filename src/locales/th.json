@@ -8,7 +8,10 @@
     "more": "เพิ่มเติม",
     "settings": "ตั้งค่า",
     "profile": "โปรไฟล์",
-    "post": "โพสต์"
+    "post": "โพสต์",
+    "admin": "โหมดผู้ดูแลระบบ",
+    "admin_dashboard": "แดชบอร์ดผู้ดูแลระบบ",
+    "goods": "ร้านค้า"
   },
   "notification": {
     "like_feed": "ถูกใจโพสต์ของคุณ",
@@ -25,7 +28,7 @@
     "error_clear_all": "เกิดข้อผิดพลาดขณะล้างการแจ้งเตือน",
     "clear_all": "ล้าง",
     "action_comment": "ทิ้งความคิดเห็นไว้ในฟีดของคุณแล้ว",
-    "action_like_comment": "เราชอบความคิดเห็นของคุณ",
+    "action_like_comment": "ถูกใจความคิดเห็นของคุณ",
     "action_like_feed": "ฉันชอบฟีดของคุณ",
     "no_notifications": "ยังไม่มีการแจ้งเตือนใหม่",
     "delete_confirm_title": "ลบการแจ้งเตือน",
@@ -102,7 +105,15 @@
     "service_ready": "ตอนนี้คุณสามารถใช้บริการได้แล้ว",
     "start_now": "เริ่มตอนนี้",
     "go_home": "กลับหน้าหลัก",
-    "signup_error": "เกิดข้อผิดพลาดระหว่างการลงทะเบียน"
+    "signup_error": "เกิดข้อผิดพลาดระหว่างการลงทะเบียน",
+    "account_restore_expired": "ไม่สามารถกู้คืนบัญชีได้เนื่องจากผ่านไป 7 วันแล้วนับตั้งแต่ขอให้ลบ",
+    "restore_error": "เกิดข้อผิดพลาดขณะกู้คืนบัญชี",
+    "cancel_logout": "ยกเลิก (ออกจากระบบ)",
+    "restore_title": "กู้คืนบัญชี",
+    "restore_desc_1": "บัญชีนี้อยู่ในระยะเวลาผ่อนผันการลบ",
+    "restore_desc_2": "คุณต้องการกู้คืนบัญชีของคุณหรือไม่?",
+    "restore_remaining": "เหลือเวลา {{days}} วันจนกว่าจะลบถาวร",
+    "restore_confirm": "กู้คืนบัญชี"
   },
   "signup": {
     "title_social": "ลงทะเบียนโซเชียล",
@@ -181,6 +192,7 @@
     "view_profile": "ดูโปรไฟล์",
     "settings_desc": "โปรไฟล์/การตั้งค่า",
     "search": "ค้นหา",
+    "search_placeholder": "ค้นหา...",
     "back": "กลับ",
     "loading": "กำลังโหลด...",
     "error": "ข้อผิดพลาด",
@@ -203,9 +215,7 @@
     "error_empty_content": "Content is empty",
     "block": "บล็อก",
     "unblock": "ปลดบล็อก",
-    "report": "รายงาน",
-    "delete": "ลบ",
-    "edit": "แก้ไข"
+    "report": "รายงาน"
   },
   "settings": {
     "languageSelect": "เลือกภาษา",
@@ -230,18 +240,23 @@
     "connect_sns": "เชื่อมต่อบัญชีโซเชียล",
     "withdraw": "ลบบัญชี",
     "withdraw_phrase": "ฉันต้องการลบบัญชี",
-    "withdraw_verify_placeholder": "Please type \"{{phrase}}\" to confirm",
-    "withdraw_modal_title": "Are you sure you want to delete your account?",
-    "withdraw_warning_1": "Your account information cannot be recovered.",
-    "withdraw_warning_2": "All posts and comments will be deleted.",
-    "withdraw_warning_3": "Follow/Following information will be lost.",
-    "withdraw_warning_4": "This action cannot be undone.",
+    "withdraw_grace_period_1": "มีระยะเวลาผ่อนผัน 7 วันเมื่อร้องขอการลบ",
+    "withdraw_grace_period_2": "คุณสามารถกู้คืนบัญชีของคุณได้ทันทีโดยเข้าสู่ระบบภายใน 7 วัน",
+    "withdraw_grace_period_3": "หลังจาก 7 วัน จะไม่สามารถกู้คืนได้ และข้อมูลจะถูกลบถาวรหลังจาก 30 วัน",
+    "withdraw_verify_placeholder": "โปรดพิมพ์ \"{{phrase}}\" เพื่อยืนยัน",
+    "withdraw_modal_title": "คุณแน่ใจหรือไม่ว่าต้องการลบบัญชีของคุณ?",
+    "withdraw_warning_1": "ข้อมูลบัญชีของคุณไม่สามารถกู้คืนได้",
+    "withdraw_warning_2": "โพสต์และความคิดเห็นทั้งหมดจะถูกลบ",
+    "withdraw_warning_3": "ข้อมูลการติดตามจะหายไป",
+    "withdraw_warning_4": "การกระทำนี้ไม่สามารถยกเลิกได้",
     "confirm_password": "ยืนยันรหัสผ่าน",
-    "confirm_password_placeholder": "Enter your password",
-    "confirm_password_desc": "Please enter your password to confirm your identity.",
-    "withdraw_verify_label": "Type the phrase below",
-    "withdraw_btn_cancel": "Cancel",
-    "withdraw_btn_processing": "Processing...",
+    "confirm_password_placeholder": "ป้อนรหัสผ่าน",
+    "confirm_password_desc": "โปรดป้อนรหัสผ่านเพื่อยืนยันตัวตนของคุณ",
+    "confirm_email": "ยืนยันอีเมล",
+    "confirm_email_desc": "โปรดป้อนที่อยู่อีเมลเพื่อยืนยันตัวตนของคุณ",
+    "withdraw_verify_label": "การยืนยัน",
+    "withdraw_btn_cancel": "ยกเลิก",
+    "withdraw_btn_processing": "กำลังดำเนินการ...",
     "withdraw_btn_confirm": "ลบบัญชี",
     "pw_change_guide": "เราแนะนำให้ใช้อย่างน้อย 8 ตัวอักษรที่มีการผสมผสานระหว่างตัวอักษร ตัวเลข และสัญลักษณ์",
     "current_pw": "รหัสผ่านปัจจุบัน",
@@ -258,7 +273,7 @@
     "connect_google": "เชื่อมต่อบัญชี Google",
     "connect_kakao": "เชื่อมต่อบัญชี Kakao",
     "sns_connect_note": "คุณสามารถยกเลิกการเชื่อมต่อบัญชีที่เชื่อมโยงในการตั้งค่า > ความเป็นส่วนตัวได้ตลอดเวลา (เร็วๆ นี้)",
-    "account_settings": "Settings",
+    "account_settings": "การตั้งค่า",
     "support_policy": "การสนับสนุนและนโยบาย",
     "help_center": "ศูนย์ช่วยเหลือ",
     "terms": "ข้อกำหนดการบริการ",
@@ -274,7 +289,15 @@
     "title_marketing": "ความยินยอมทางการตลาด",
     "title_support": "ศูนย์ช่วยเหลือ",
     "security_title": "การตั้งค่าความปลอดภัย",
-    "session_management": "การจัดการเซสชัน"
+    "session_management": "การจัดการเซสชัน",
+    "withdraw_reason_label": "เหตุผลการถอนตัว",
+    "withdraw_reason_placeholder": "เลือกเหตุผล",
+    "withdraw_detail_placeholder": "โปรดระบุรายละเอียด",
+    "reason_low_usage": "ไม่ได้ใช้บ่อย",
+    "reason_rejoin": "เพื่อสมัครใหม่",
+    "reason_privacy": "กังวลเรื่องความเป็นส่วนตัว",
+    "reason_feature": "ไม่พอใจในฟีเจอร์",
+    "reason_other": "อื่นๆ"
   },
   "profile": {
     "edit_profile": "แก้ไขโปรไฟล์",
@@ -340,7 +363,8 @@
   },
   "trending": {
     "title": "เทรนด์สำหรับคุณ",
-    "no_trending": "ไม่มีเทรนด์"
+    "no_trending": "ไม่มีเทรนด์",
+    "shared_photo": "แชร์รูปภาพ"
   },
   "chat": {
     "direct_chat": "ข้อความ",
@@ -437,5 +461,55 @@
       "privacy": "ความเป็นส่วนตัว",
       "cookies": "คุกกี้"
     }
+  },
+  "goods": {
+    "hero_title": "ร้านค้า",
+    "category_all": "ทั้งหมด",
+    "items": {
+      "hoodie": {
+        "title": "เสื้อฮู้ดลายเซ็น",
+        "desc": "เสื้อฮู้ดผ้าฝ้ายพรีเมียมพร้อมโลโก้ลายเซ็น สวมใส่สบายเหมาะสำหรับทุกวัน"
+      },
+      "tote_bag": {
+        "title": "ถุงผ้าลดโลกร้อน",
+        "desc": "กระเป๋าผ้าแคนวาสรักษ์โลก ทนทานและจุของได้เยอะสำหรับของใช้จำเป็น"
+      },
+      "note_set": {
+        "title": "ชุดสมุดบันทึกพรีเมียม",
+        "desc": "ชุดสมุดบันทึกกระดาษคุณภาพสูง เหมาะสำหรับการเรียนและจดบันทึก"
+      },
+      "planner": {
+        "title": "แพลนเนอร์ดิจิทัล 2026",
+        "desc": "แพลนเนอร์ดิจิทัลครบวงจรสำหรับ iPad/แท็บเล็ต จัดระเบียบปี 2026 ของคุณอย่างมีประสิทธิภาพ"
+      },
+      "cap": {
+        "title": "หมวกแก๊ปโลโก้",
+        "desc": "หมวกแก๊ปมีสไตล์พร้อมโลโก้ปัก สายรัดปรับได้เพื่อความพอดี"
+      },
+      "tumbler": {
+        "title": "แก้วเก็บความเย็นมินิมอล",
+        "desc": "แก้วน้ำสเตนเลส เก็บความร้อน/เย็นได้นาน 12 ชั่วโมง"
+      }
+    },
+    "price_unit": "$",
+    "category_clothing": "เสื้อผ้า",
+    "category_accessories": "เครื่องประดับ",
+    "category_digital": "ดิจิทัล",
+    "category_stationery": "เครื่องเขียน",
+    "new_arrival": "ใหม่",
+    "best_seller": "ขายดี",
+    "sold_out": "หมด",
+    "product_not_found": "ไม่พบสินค้า",
+    "reviews_count": "{{count}} รีวิว",
+    "free_shipping": "ส่งฟรีเมื่อซื้อครบ $50",
+    "authentic_guarantee": "รับประกันของแท้",
+    "option_color": "สี",
+    "option_size": "ขนาด",
+    "add_to_cart": "เพิ่มลงรถเข็น",
+    "product_details": "รายละเอียดสินค้า",
+    "related_items": "คุณอาจจะชอบสิ่งนี้",
+    "buy_now": "ซื้อเลย",
+    "quantity": "จำนวน",
+    "back_to_list": "กลับไปที่รายการ"
   }
 }

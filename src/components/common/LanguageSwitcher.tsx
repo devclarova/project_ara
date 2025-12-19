@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useTranslation } from 'react-i18next';
 import { Globe } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 
 // Language code to ISO code mapping
@@ -41,6 +41,15 @@ export default function LanguageSwitcher({ open, onOpenChange }: LanguageSwitche
   const { i18n, t } = useTranslation();
   const [flagMap, setFlagMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+
+  const scrollRef = useCallback((node: HTMLDivElement | null) => {
+    if (node && !node.dataset.scrolled) {
+      node.dataset.scrolled = 'true';
+      setTimeout(() => {
+        node.scrollIntoView({ block: 'center' });
+      }, 50);
+    }
+  }, []);
 
   useEffect(() => {
     async function loadFlags() {
@@ -85,12 +94,12 @@ export default function LanguageSwitcher({ open, onOpenChange }: LanguageSwitche
           <span className="sr-only">Toggle language</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent 
-        align="center" 
-        className="w-64 p-2 overflow-hidden
-                   bg-white dark:bg-secondary 
-                   border border-gray-100 dark:border-gray-800
-                   shadow-xl rounded-xl outline-none ring-0 focus:ring-0"
+        <DropdownMenuContent 
+          align="center" 
+          className="w-64 p-2 overflow-hidden
+                     bg-white dark:bg-secondary 
+                     border border-gray-100 dark:border-gray-700
+                     shadow-xl rounded-xl outline-none ring-0 focus:ring-0 z-[200]"
         sideOffset={8}
         onInteractOutside={(e) => {
           // Allow closing when clicking outside
@@ -128,6 +137,7 @@ export default function LanguageSwitcher({ open, onOpenChange }: LanguageSwitche
             return (
               <DropdownMenuItem
                 key={lang.code}
+                ref={isActive ? scrollRef : null}
                 onClick={() => {
                   i18n.changeLanguage(lang.code);
                 }}

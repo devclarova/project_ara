@@ -8,7 +8,10 @@
     "more": "Mehr",
     "settings": "Einst.",
     "profile": "Profil",
-    "post": "Posten"
+    "post": "Posten",
+    "admin": "Admin-Modus",
+    "admin_dashboard": "Admin-Dashboard",
+    "goods": "Shop"
   },
   "notification": {
     "like_feed": "hat deinen Beitrag geliked.",
@@ -25,7 +28,7 @@
     "error_clear_all": "Fehler beim Löschen der Benachrichtigungen",
     "clear_all": "Leeren",
     "action_comment": "Es wurde ein Kommentar zu Ihrem Feed hinterlassen.",
-    "action_like_comment": "Wir mögen Ihren Kommentar.",
+    "action_like_comment": "gefällt dein Kommentar.",
     "action_like_feed": "Ich mag deinen Feed.",
     "no_notifications": "Es gibt noch keine neuen Benachrichtigungen.",
     "delete_confirm_title": "Benachrichtigung löschen",
@@ -103,7 +106,15 @@
     "service_ready": "Sie können den Service jetzt nutzen.",
     "start_now": "Jetzt Starten",
     "go_home": "Zur Startseite",
-    "signup_error": "Fehler bei der Registrierung"
+    "signup_error": "Fehler bei der Registrierung",
+    "account_restore_expired": "Das Konto kann nicht wiederhergestellt werden, da seit dem Löschantrag 7 Tage vergangen sind.",
+    "restore_error": "Fehler beim Wiederherstellen des Kontos.",
+    "cancel_logout": "Abbrechen (Abmelden)",
+    "restore_title": "Kontowiederherstellung",
+    "restore_desc_1": "Dieses Konto befindet sich derzeit in der Löschfrist.",
+    "restore_desc_2": "Möchten Sie Ihr Konto wiederherstellen?",
+    "restore_remaining": "Noch {{days}} Tage bis zur endgültigen Löschung.",
+    "restore_confirm": "Konto wiederherstellen"
   },
   "signup": {
     "title_social": "Social Media Registrierung",
@@ -145,6 +156,7 @@
     "view_profile": "Profil ansehen",
     "settings_desc": "Profil/Einstellungen",
     "search": "Suchen",
+    "search_placeholder": "Suchen...",
     "back": "Zurück",
     "loading": "Laden...",
     "error": "Fehler",
@@ -161,11 +173,8 @@
     "success_delete": "Erfolgreich gelöscht",
     "success_report": "Bericht wurde gesendet.",
     "success_block": "Benutzer wurde blockiert.",
-
     "error_no_profile": "Profile does not exist",
     "error_empty_content": "Content is empty",
-    "delete": "Löschen",
-    "edit": "Bearbeiten",
     "block": "Blockieren",
     "unblock": "Entblocken",
     "report": "Melden",
@@ -196,18 +205,23 @@
     "connect_sns": "Social Media verbinden",
     "withdraw": "Konto löschen",
     "withdraw_phrase": "Mein Konto löschen",
-    "withdraw_verify_placeholder": "Please type \"{{phrase}}\" to confirm",
-    "withdraw_modal_title": "Are you sure you want to delete your account?",
-    "withdraw_warning_1": "Your account information cannot be recovered.",
-    "withdraw_warning_2": "All posts and comments will be deleted.",
-    "withdraw_warning_3": "Follow/Following information will be lost.",
-    "withdraw_warning_4": "This action cannot be undone.",
-    "confirm_password": "Passwort bestätigen",
-    "confirm_password_placeholder": "Enter your password",
-    "confirm_password_desc": "Please enter your password to confirm your identity.",
-    "withdraw_verify_label": "Type the phrase below",
-    "withdraw_btn_cancel": "Cancel",
-    "withdraw_btn_processing": "Processing...",
+    "withdraw_verify_placeholder": "Bitte geben Sie \"{{phrase}}\" zur Bestätigung ein",
+    "withdraw_modal_title": "Möchten Sie Ihr Konto wirklich löschen?",
+    "withdraw_grace_period_1": "Nach dem Löschantrag gilt eine 7-tägige Nachfrist.",
+    "withdraw_grace_period_2": "Sie können Ihr Konto sofort wiederherstellen, indem Sie sich innerhalb von 7 Tagen anmelden.",
+    "withdraw_grace_period_3": "Nach 7 Tagen ist eine Wiederherstellung unmöglich und die Daten werden nach 30 Tagen endgültig gelöscht.",
+    "withdraw_warning_1": "Ihre Kontoinformationen können nicht wiederhergestellt werden.",
+    "withdraw_warning_2": "Alle Beiträge und Kommentare werden gelöscht.",
+    "withdraw_warning_3": "Follower/Following-Informationen gehen verloren.",
+    "withdraw_warning_4": "Diese Aktion kann nicht rückgängig gemacht werden.",
+    "confirm_password": "Passwort",
+    "confirm_password_placeholder": "Geben Sie Ihr Passwort ein",
+    "confirm_password_desc": "Bitte geben Sie Ihr Passwort ein, um Ihre Identität zu bestätigen.",
+    "confirm_email": "E-Mail",
+    "confirm_email_desc": "Bitte geben Sie Ihre E-Mail-Adresse ein, um Ihre Identität zu bestätigen.",
+    "withdraw_verify_label": "Verifizierung",
+    "withdraw_btn_cancel": "Abbrechen",
+    "withdraw_btn_processing": "Verarbeitung...",
     "withdraw_btn_confirm": "Löschen",
     "pw_change_guide": "Wir empfehlen mindestens 8 Zeichen mit einer Mischung aus Buchstaben, Zahlen und Symbolen.",
     "current_pw": "Aktuelles Passwort",
@@ -224,7 +238,7 @@
     "connect_google": "Google-Konto verbinden",
     "connect_kakao": "Kakao-Konto verbinden",
     "sns_connect_note": "Sie können verknüpfte Konten jederzeit unter Einstellungen > Datenschutz trennen. (Demnächst)",
-    "account_settings": "Settings",
+    "account_settings": "Einstellungen",
     "support_policy": "Support & Richtlinien",
     "help_center": "Hilfe-Center",
     "terms": "Nutzungsbedingungen",
@@ -240,7 +254,15 @@
     "title_marketing": "Marketing-Zustimmung",
     "title_support": "Hilfezentrum",
     "security_title": "Sicherheitseinstellungen",
-    "session_management": "Sitzungsverwaltung"
+    "session_management": "Sitzungsverwaltung",
+    "withdraw_reason_label": "Grund für den Austritt",
+    "withdraw_reason_placeholder": "Wählen Sie einen Grund",
+    "withdraw_detail_placeholder": "Bitte geben Sie Details an",
+    "reason_low_usage": "Ich benutze es nicht oft",
+    "reason_rejoin": "Um wieder beizutreten",
+    "reason_privacy": "Datenschutzbedenken",
+    "reason_feature": "Unzufrieden mit Funktionen",
+    "reason_other": "Andere"
   },
   "profile": {
     "edit_profile": "Profil bearbeiten",
@@ -306,7 +328,8 @@
   },
   "trending": {
     "title": "Trends für dich",
-    "no_trending": "Keine Trends"
+    "no_trending": "Keine Trends",
+    "shared_photo": "Hat ein Foto geteilt."
   },
   "chat": {
     "direct_chat": "Nachrichten",
@@ -403,5 +426,55 @@
       "privacy": "Datenschutz",
       "cookies": "Cookies"
     }
+  },
+  "goods": {
+    "hero_title": "Shop",
+    "category_all": "Alle",
+    "items": {
+      "hoodie": {
+        "title": "Signature Hoodie",
+        "desc": "Premium-Baumwoll-Hoodie mit Signature-Logo. Bequeme Passform für den täglichen Gebrauch."
+      },
+      "tote_bag": {
+        "title": "Öko-Tragetasche",
+        "desc": "Umweltfreundliche Canvas-Tragetasche. Langlebig und geräumig für Ihre Essentials."
+      },
+      "note_set": {
+        "title": "Premium Notizbuch-Set",
+        "desc": "Hochwertiges Notizbuch-Set. Perfekt zum Lernen und Journaling."
+      },
+      "planner": {
+        "title": "Digitaler Planer 2026",
+        "desc": "All-in-One Digitaler Planer für iPad/Tablet. Organisieren Sie Ihr Jahr 2026 effizient."
+      },
+      "cap": {
+        "title": "Logo Kappe",
+        "desc": "Stylische Basecap mit gesticktem Logo. Verstellbarer Riemen für individuelle Passform."
+      },
+      "tumbler": {
+        "title": "Minimalistischer Becher",
+        "desc": "Edelstahlbecher. Hält Getränke 12 Stunden lang heiß/kalt."
+      }
+    },
+    "price_unit": "$",
+    "category_clothing": "Kleidung",
+    "category_accessories": "Accessoires",
+    "category_digital": "Digital",
+    "category_stationery": "Schreibwaren",
+    "new_arrival": "Neu",
+    "best_seller": "Bestseller",
+    "sold_out": "Ausverkauft",
+    "product_not_found": "Produkt nicht gefunden",
+    "reviews_count": "{{count}} Bewertungen",
+    "free_shipping": "Kostenloser Versand über $50",
+    "authentic_guarantee": "Echtheitsgarantie",
+    "option_color": "Farbe",
+    "option_size": "Größe",
+    "add_to_cart": "In den Warenkorb",
+    "product_details": "Produktdetails",
+    "related_items": "Das könnte Ihnen auch gefallen",
+    "buy_now": "Jetzt kaufen",
+    "quantity": "Menge",
+    "back_to_list": "Zurück zur Liste"
   }
 }

@@ -10,10 +10,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface PrivacySettingsProps {
-  onBackToMenu?: () => void; // ← 부모에서 전달받는 콜백 (선택)
+  onBackToMenu?: () => void;
+  searchQuery?: string;
 }
 
-export default function SupportPolicy({ onBackToMenu }: PrivacySettingsProps) {
+export default function SupportPolicy({ onBackToMenu, searchQuery }: PrivacySettingsProps) {
   const { t } = useTranslation();
   const [active, setActive] = useState<ActiveKey>(null);
   const open = (key: ActiveKey) => setActive(key);
@@ -37,10 +38,10 @@ export default function SupportPolicy({ onBackToMenu }: PrivacySettingsProps) {
         </div>
 
         <div className="space-y-2">
-          <Row label={t('settings.terms')} onClick={() => open('terms')} />
-          <Row label={t('settings.privacy_policy')} onClick={() => open('privacy')} />
-          <Row label={t('settings.marketing_consent')} onClick={() => open('marketing')} />
-          <Row label={t('settings.help_center')} onClick={() => open('support')} />
+          <Row label={t('settings.terms')} onClick={() => open('terms')} searchQuery={searchQuery} />
+          <Row label={t('settings.privacy_policy')} onClick={() => open('privacy')} searchQuery={searchQuery} />
+          <Row label={t('settings.marketing_consent')} onClick={() => open('marketing')} searchQuery={searchQuery} />
+          <Row label={t('settings.help_center')} onClick={() => open('support')} searchQuery={searchQuery} />
         </div>
 
         {/* 하단 여백 */}

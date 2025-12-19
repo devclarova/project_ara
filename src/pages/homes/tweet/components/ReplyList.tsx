@@ -10,6 +10,7 @@ interface ReplyListProps {
   hasMore: boolean;
   fetchMore: () => void;
   onCommentClick?: (id: string) => void;
+  highlightId?: string | null;
 }
 
 export default function ReplyList({ 
@@ -17,7 +18,8 @@ export default function ReplyList({
   onDeleted, 
   hasMore, 
   fetchMore, 
-  onCommentClick 
+  onCommentClick,
+  highlightId
 }: ReplyListProps) {
   const { t } = useTranslation();
 
@@ -57,9 +59,7 @@ export default function ReplyList({
                 // Future: wiring for inline replies if needed
                 onCommentClick?.(reply.id);
             }}
-            // highlight logic handles via shared state if passed, 
-            // but currently TweetDetail handles scrolling. 
-            // If highlight prop is needed, TweetDetail must pass scrollTargetId
+            highlight={reply.id === highlightId}
           />
         ))}
       </div>

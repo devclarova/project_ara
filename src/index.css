@@ -1218,3 +1218,14 @@ hr {
     color: inherit !important;
   }
 }
+
+/* Desktop: Align Toaster with the layout content (max-w-7xl) */
+@media (min-width: 1280px) {
+  [data-sonner-toaster] {
+    /* (100vw - 1280px) / 2 gives the margin size. 
+       Add 245px to move it further left (matching ScrollToTopButton alignment). */
+    right: calc((100vw - 1280px) / 2 + 40px) !important;
+    /* Ensure it doesn't stick to the very bottom */
+    bottom: 24px !important; 
+  }
+}

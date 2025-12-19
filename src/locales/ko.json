@@ -8,7 +8,10 @@
     "more": "더보기",
     "settings": "설정",
     "profile": "프로필",
-    "post": "게시하기"
+    "post": "게시하기",
+    "admin": "관리자 모드",
+    "admin_dashboard": "관리자 대시보드",
+    "goods": "굿즈샵"
   },
   "notification": {
     "like_feed": "님이 회원님의 게시물을 좋아합니다.",
@@ -25,12 +28,13 @@
     "error_clear_all": "알림을 비우는 중 오류가 발생했습니다",
     "new_arrived": "새 알림이 도착했습니다",
     "clear_all": "비우기",
-    "action_comment": "당신의 피드에 댓글을 남겼습니다.",
-    "action_like_comment": "당신의 댓글을 좋아합니다.",
-    "action_like_feed": "당신의 피드를 좋아합니다.",
+    "action_comment": "당신의 게시글에 댓글을 남겼습니다.",
+    "action_like_comment": "회원님의 댓글을 좋아합니다.",
+    "action_like_feed": "당신의 게시글을 좋아합니다.",
     "no_notifications": "아직 새로운 알림이 없습니다",
     "delete_confirm_title": "알림 삭제",
-    "delete_confirm_desc": "이 알림을 삭제하시겠습니까?"
+    "delete_confirm_desc": "이 알림을 삭제하시겠습니까?",
+    "photo_content": "[사진]"
   },
   "study": {
     "search_placeholder": "검색...",
@@ -104,7 +108,15 @@
     "service_ready": "이제 서비스를 이용하실 수 있습니다.",
     "start_now": "시작하기",
     "go_home": "홈으로",
-    "signup_error": "회원가입 중 오류가 발생했습니다"
+    "signup_error": "회원가입 중 오류가 발생했습니다",
+    "account_restore_expired": "탈퇴 신청 후 7일이 경과하여 계정을 복구할 수 없습니다.",
+    "restore_error": "계정 복구 중 오류가 발생했습니다.",
+    "cancel_logout": "취소 (로그아웃)",
+    "restore_title": "계정 복구 안내",
+    "restore_desc_1": "이 계정은 현재 탈퇴 유예 기간 중입니다.",
+    "restore_desc_2": "계정을 복구하고 다시 사용하시겠습니까?",
+    "restore_remaining": "영구 삭제까지 {{days}}일 남았습니다.",
+    "restore_confirm": "계정 복구하기"
   },
   "signup": {
     "title_social": "소셜 회원가입",
@@ -182,7 +194,9 @@
     "my_account": "내 계정",
     "view_profile": "내 프로필 보기",
     "settings_desc": "프로필/설정",
+    "deleted_user": "탈퇴한 사용자",
     "search": "검색",
+    "search_placeholder": "검색...",
     "back": "뒤로가기",
     "loading": "로딩 중...",
     "error": "오류가 발생했습니다",
@@ -209,6 +223,7 @@
     "unblock_success": "{{name}}님 차단을 해제했습니다."
   },
   "settings": {
+    "languageSelect": "언어 선택",
     "themeSelect": "테마 선택",
     "theme_options": {
       "light": "라이트",
@@ -235,6 +250,10 @@
     "notifications": "알림 설정",
     "alarm_comment": "댓글 알림",
     "alarm_comment_desc": "누군가가 게시물에 댓글을 남기면 알림을 받습니다.",
+    "withdraw_grace_period_1": "탈퇴 신청 시 7일간 유예 기간이 적용됩니다.",
+    "withdraw_grace_period_2": "7일 이내 로그인 시 계정을 즉시 복구할 수 있습니다.",
+    "withdraw_grace_period_3": "7일이 지나면 계정 복구가 불가능하며, 30일 후 데이터가 완전히 삭제됩니다.",
+    "alarm_push": "푸시 알림",
     "alarm_like": "좋아요 알림",
     "alarm_like_desc": "누군가가 게시물을 좋아하면 알림을 받습니다.",
     "alarm_follow": "팔로우 알림",
@@ -250,10 +269,12 @@
     "withdraw_warning_2": "모든 게시물과 댓글이 삭제됩니다.",
     "withdraw_warning_3": "팔로우/팔로잉 정보가 사라집니다.",
     "withdraw_warning_4": "이 작업은 취소할 수 없습니다.",
-    "confirm_password": "비밀번호 확인",
+    "confirm_password": "비밀번호",
     "confirm_password_placeholder": "비밀번호를 입력하세요",
     "confirm_password_desc": "본인 확인을 위해 비밀번호를 입력해주세요.",
-    "withdraw_verify_label": "아래 문구를 입력하세요",
+    "confirm_email": "이메일",
+    "confirm_email_desc": "본인 확인을 위해 이메일 주소를 정확히 입력해주세요.",
+    "withdraw_verify_label": "탈퇴 확인",
     "withdraw_btn_cancel": "취소",
     "withdraw_btn_processing": "처리 중...",
     "withdraw_btn_confirm": "삭제하기",
@@ -277,7 +298,19 @@
     "help_center": "도움말 센터",
     "terms": "이용약관",
     "privacy_policy": "개인정보 처리방침",
-    "marketing_consent": "마케팅 동의"
+    "marketing_consent": "마케팅 동의",
+    "email_info_missing": "이메일 정보를 찾을 수 없습니다. 고객센터로 문의해주세요.",
+    "password_incorrect": "비밀번호가 올바르지 않습니다.",
+    "email_mismatch_error": "입력하신 이메일 주소가 올바르지 않습니다.",
+    "withdraw_error": "탈퇴 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+    "withdraw_reason_label": "탈퇴 사유",
+    "withdraw_reason_placeholder": "사유를 선택해주세요",
+    "withdraw_detail_placeholder": "구체적인 사유를 입력해주세요",
+    "reason_low_usage": "자주 사용하지 않음",
+    "reason_rejoin": "재가입 목적",
+    "reason_privacy": "개인정보/보안 우려",
+    "reason_feature": "기능 불만족",
+    "reason_other": "기타"
   },
   "profile": {
     "edit_profile": "프로필 편집",
@@ -343,8 +376,9 @@
     "deleted_while_viewing": "게시글이 삭제되었습니다."
   },
   "trending": {
-    "title": "실시간 인기 피드",
-    "no_trending": "트렌드가 없습니다"
+    "title": "실시간 인기 게시글",
+    "no_trending": "트렌드가 없습니다",
+    "shared_photo": "사진을 공유했습니다."
   },
   "chat": {
     "direct_chat": "채팅",
@@ -357,9 +391,11 @@
     "loading": "로딩 중...",
     "me": "나",
     "unknown": "알 수 없음",
-    "today": "오늘",
-    "exit": "나가기",
-    "search_placeholder": "채팅 검색",
+    "common": {
+      "back": "뒤로",
+      "cancel": "취소 (로그아웃)",
+      "search_placeholder": "Search..."
+    },
     "search_btn": "검색",
     "search_hint": "메시지 내용을 검색하세요.",
     "no_result": "결과가 없습니다.",
@@ -639,5 +675,56 @@
       "privacy": "개인정보처리방침",
       "cookies": "쿠키"
     }
+  },
+  "goods": {
+    "hero_title": "공식 스토어",
+    "hero_desc": "학습을 응원합니다.",
+    "category_all": "전체",
+    "category_clothing": "의류",
+    "category_accessories": "액세서리",
+    "category_digital": "디지털",
+    "category_stationery": "문구",
+    "new_arrival": "신상품",
+    "best_seller": "베스트",
+    "sold_out": "품절",
+    "price_unit": "$",
+    "add_to_cart": "장바구니 담기",
+    "buy_now": "바로 구매",
+    "option_color": "색상",
+    "option_size": "사이즈",
+    "quantity": "수량",
+    "related_items": "함께 보면 좋은 상품",
+    "back_to_list": "목록으로 돌아가기",
+    "items": {
+      "hoodie": {
+        "title": "시그니처 후드티",
+        "desc": "시그니처 로고가 새겨진 프리미엄 코튼 후드티입니다. 데일리로 입기 좋은 편안한 핏입니다."
+      },
+      "tote_bag": {
+        "title": "에코 토트백",
+        "desc": "환경을 생각한 캔버스 토트백입니다. 튼튼하고 수납공간이 넉넉합니다."
+      },
+      "note_set": {
+        "title": "프리미엄 노트 세트",
+        "desc": "고품질 종이로 제작된 노트 세트입니다. 공부와 저널링에 완벽합니다."
+      },
+      "planner": {
+        "title": "2026 디지털 플래너",
+        "desc": "iPad/태블릿용 올인원 디지털 플래너. 2026년을 효율적으로 계획하세요."
+      },
+      "cap": {
+        "title": "로고 볼캡",
+        "desc": "자수 로고가 들어간 스타일리시한 볼캡입니다. 조절 가능한 스트랩으로 핏을 맞추세요."
+      },
+      "tumbler": {
+        "title": "미니멀리스트 텀블러",
+        "desc": "스테인리스 스틸 텀블러입니다. 12시간 동안 보온/보냉이 유지됩니다."
+      }
+    },
+    "product_not_found": "상품을 찾을 수 없습니다",
+    "reviews_count": "리뷰 {{count}}개",
+    "free_shipping": "$50 이상 무료 배송",
+    "authentic_guarantee": "정품 보증",
+    "product_details": "상품 상세 정보"
   }
 }

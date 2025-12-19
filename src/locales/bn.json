@@ -8,7 +8,10 @@
     "more": "আরও",
     "settings": "সেটিংস",
     "profile": "প্রোফাইল",
-    "post": "পোস্ট"
+    "post": "পোস্ট",
+    "admin": "অ্যাডমিন মোড",
+    "admin_dashboard": "অ্যাডমিন ড্যাশবোর্ড",
+    "goods": "দোকান"
   },
   "notification": {
     "like_feed": "আপনার পোস্ট পছন্দ করেছেন।",
@@ -25,7 +28,7 @@
     "error_clear_all": "বিজ্ঞপ্তি মুছে ফেলার সময় ত্রুটি ঘটেছে",
     "clear_all": "মুছে ফেলুন",
     "action_comment": "আপনার ফিডে একটি মন্তব্য করেছেন।",
-    "action_like_comment": "আমরা আপনার মন্তব্য পছন্দ করি।",
+    "action_like_comment": "আপনার মন্তব্য পছন্দ করেছেন।",
     "action_like_feed": "আপনার ফিডটি খুব ভালো লাগছে।",
     "no_notifications": "এখনো নতুন বিজ্ঞপ্তি নেই।",
     "delete_confirm_title": "অ্যালার্ট মুছুন",
@@ -102,7 +105,15 @@
     "service_ready": "এখন আপনি সেবা ব্যবহার করতে পারেন।",
     "start_now": "এখন শুরু করুন",
     "go_home": "হোমে যান",
-    "signup_error": "নিবন্ধনের সময় ত্রুটি"
+    "signup_error": "নিবন্ধনের সময় ত্রুটি",
+    "account_restore_expired": "অ্যাকাউন্ট পুনরুদ্ধার করা যাবে না কারণ এটি মুছে ফেলার অনুরোধের পর ৭ দিন অতিবাহিত হয়েছে।",
+    "restore_error": "অ্যাকাউন্ট পুনরুদ্ধারের সময় একটি ত্রুটি ঘটেছে।",
+    "cancel_logout": "বাতিল (লগআউট)",
+    "restore_title": "অ্যাকাউন্ট পুনরুদ্ধার",
+    "restore_desc_1": "এই অ্যাকাউন্টটি বর্তমানে মুছে ফেলার গ্রেস পিরিয়ডে রয়েছে।",
+    "restore_desc_2": "আপনি কি আপনার অ্যাকাউন্ট পুনরুদ্ধার করতে চান?",
+    "restore_remaining": "স্থায়ীভাবে মুছে ফেলা পর্যন্ত {{days}} দিন বাকি আছে।",
+    "restore_confirm": "অ্যাকাউন্ট পুনরুদ্ধার করুন"
   },
   "signup": {
     "title_social": "সোশ্যাল সাইন আপ",
@@ -181,6 +192,7 @@
     "view_profile": "প্রোফাইল দেখুন",
     "settings_desc": "প্রোফাইল/সেটিংস",
     "search": "অনুসন্ধান",
+    "search_placeholder": "অনুসন্ধান...",
     "back": "ফিরে যান",
     "loading": "লোড হচ্ছে...",
     "error": "ত্রুটি",
@@ -203,9 +215,7 @@
     "error_empty_content": "Content is empty",
     "block": "ব্লক",
     "unblock": "আনব্লক",
-    "report": "রিপোর্ট",
-    "delete": "মুছুন",
-    "edit": "সম্পাদনা"
+    "report": "রিপোর্ট"
   },
   "settings": {
     "languageSelect": "ভাষা নির্বাচন",
@@ -230,18 +240,23 @@
     "connect_sns": "SNS অ্যাকাউন্ট সংযুক্ত করুন",
     "withdraw": "অ্যাকাউন্ট মুছুন",
     "withdraw_phrase": "আমার অ্যাকাউন্ট মুছুন",
-    "withdraw_verify_placeholder": "Please type \"{{phrase}}\" to confirm",
-    "withdraw_modal_title": "Are you sure you want to delete your account?",
-    "withdraw_warning_1": "Your account information cannot be recovered.",
-    "withdraw_warning_2": "All posts and comments will be deleted.",
-    "withdraw_warning_3": "Follow/Following information will be lost.",
-    "withdraw_warning_4": "This action cannot be undone.",
+    "withdraw_grace_period_1": "মুছে ফেলার অনুরোধে 7 দিনের গ্রেস পিরিয়ড প্রযোজ্য।",
+    "withdraw_grace_period_2": "আপনি 7 দিনের মধ্যে লগ ইন করে অবিলম্বে আপনার অ্যাকাউন্ট পুনরুদ্ধার করতে পারেন।",
+    "withdraw_grace_period_3": "7 দিন পর, পুনরুদ্ধার অসম্ভব, এবং 30 দিন পর ডেটা স্থায়ীভাবে মুছে ফেলা হয়।",
+    "withdraw_verify_placeholder": "নিশ্চিত করতে অনুগ্রহ করে \"{{phrase}}\" টাইপ করুন",
+    "withdraw_modal_title": "আপনি কি নিশ্চিত যে আপনি আপনার অ্যাকাউন্ট মুছে ফেলতে চান?",
+    "withdraw_warning_1": "আপনার অ্যাকাউন্টের তথ্য পুনরুদ্ধার করা যাবে না।",
+    "withdraw_warning_2": "সমস্ত পোস্ট এবং মন্তব্য মুছে ফেলা হবে।",
+    "withdraw_warning_3": "অনুসরণ/অনুসরণকারী তথ্য হারিয়ে যাবে।",
+    "withdraw_warning_4": "এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।",
     "confirm_password": "পাসওয়ার্ড নিশ্চিত করুন",
-    "confirm_password_placeholder": "Enter your password",
-    "confirm_password_desc": "Please enter your password to confirm your identity.",
-    "withdraw_verify_label": "Type the phrase below",
-    "withdraw_btn_cancel": "Cancel",
-    "withdraw_btn_processing": "Processing...",
+    "confirm_password_placeholder": "আপনার পাসওয়ার্ড লিখুন",
+    "confirm_password_desc": "আপনার পরিচয় নিশ্চিত করতে অনুগ্রহ করে পাসওয়ার্ড লিখুন।",
+    "confirm_email": "ইমেল নিশ্চিত করুন",
+    "confirm_email_desc": "আপনার পরিচয় নিশ্চিত করতে অনুগ্রহ করে ইমেল ঠিকানা লিখুন।",
+    "withdraw_verify_label": "যাচাইকরণ",
+    "withdraw_btn_cancel": "বাতিল",
+    "withdraw_btn_processing": "প্রক্রিয়াকরণ...",
     "withdraw_btn_confirm": "মুছুন",
     "pw_change_guide": "আমরা অক্ষর, সংখ্যা এবং চিহ্নের মিশ্রণ সহ কমপক্ষে ৮টি অক্ষর ব্যবহার করার পরামর্শ দিই।",
     "current_pw": "বর্তমান পাসওয়ার্ড",
@@ -258,7 +273,7 @@
     "connect_google": "Google অ্যাকাউন্ট সংযুক্ত করুন",
     "connect_kakao": "Kakao অ্যাকাউন্ট সংযুক্ত করুন",
     "sns_connect_note": "আপনি যে কোনো সময় সেটিংস > গোপনীয়তা থেকে লিংক করা অ্যাকাউন্ট সংযোগ বিচ্ছিন্ন করতে পারেন। (শীঘ্রই আসছে)",
-    "account_settings": "Settings",
+    "account_settings": "সেটিংস",
     "support_policy": "সাপোর্ট এবং নীতি",
     "help_center": "সাহায্য কেন্দ্র",
     "terms": "সেবার শর্তাবলী",
@@ -274,7 +289,15 @@
     "title_marketing": "বিপণন সম্মতি",
     "title_support": "সহায়তা কেন্দ্র",
     "security_title": "নিরাপত্তা সেটিংস",
-    "session_management": "সেশন ব্যবস্থাপনা"
+    "session_management": "সেশন ব্যবস্থাপনা",
+    "withdraw_reason_label": "প্রত্যাহারের কারণ",
+    "withdraw_reason_placeholder": "একটি কারণ নির্বাচন করুন",
+    "withdraw_detail_placeholder": "বিস্তারিত প্রদান করুন",
+    "reason_low_usage": "বেশি ব্যবহার করি না",
+    "reason_rejoin": "পুনরায় যোগ দেওয়ার জন্য",
+    "reason_privacy": "গোপনীয়তা উদ্বেগ",
+    "reason_feature": "বৈশিষ্ট্য নিয়ে অসন্তুষ্ট",
+    "reason_other": "অন্যান্য"
   },
   "profile": {
     "edit_profile": "প্রোফাইল সম্পাদনা",
@@ -340,7 +363,8 @@
   },
   "trending": {
     "title": "আপনার জন্য ট্রেন্ডিং",
-    "no_trending": "কোন ট্রেন্ড নেই"
+    "no_trending": "কোন ট্রেন্ড নেই",
+    "shared_photo": "একটি ছবি শেয়ার করেছেন।"
   },
   "chat": {
     "direct_chat": "বার্তা",
@@ -437,5 +461,55 @@
       "privacy": "গোপনীয়তা",
       "cookies": "কুকিজ"
     }
+  },
+  "goods": {
+    "hero_title": "দোকান",
+    "category_all": "সব",
+    "items": {
+      "hoodie": {
+        "title": "সিগনেচার হুডি",
+        "desc": "সিগনেচার লোগো সহ প্রিমিয়াম সুতির হুডি। প্রতিদিন পরার জন্য আরামদায়ক ফিট।"
+      },
+      "tote_bag": {
+        "title": "ইকো টোট ব্যাগ",
+        "desc": "পরিবেশ-বান্ধব ক্যানভাস টোট ব্যাগ। টেকসই এবং আপনার প্রয়োজনীয় জিনিসের জন্য প্রশস্ত।"
+      },
+      "note_set": {
+        "title": "প্রিমিয়াম নোট সেট",
+        "desc": "উচ্চ মানের কাগজের নোটবুক সেট। পড়াশোনা এবং জার্নালিংয়ের জন্য নিখুঁত।"
+      },
+      "planner": {
+        "title": "ডিজিটাল প্ল্যানার 2026",
+        "desc": "আইপ্যাড/ট্যাবলেটের জন্য অল-ইন-ওয়ান ডিজিটাল প্ল্যানার। আপনার ২০২৬ সালকে দক্ষতার সাথে গুছিয়ে নিন।"
+      },
+      "cap": {
+        "title": "লোগো ক্যাপ",
+        "desc": "এমব্রয়ডারি করা লোগো সহ স্টাইলিশ বল ক্যাপ। কাস্টম ফিটের জন্য সামঞ্জস্যযোগ্য স্ট্র্যাপ।"
+      },
+      "tumbler": {
+        "title": "মিনিমালিস্ট ্টাম্বলার",
+        "desc": "স্টেইনলেস স্টিলের টাম্বলার। ১২ ঘণ্টা পর্যন্ত পানীয় গরম/ঠান্ডা রাখে।"
+      }
+    },
+    "price_unit": "$",
+    "category_clothing": "পোশাক",
+    "category_accessories": "আনুষাঙ্গিক",
+    "category_digital": "ডিজিটাল",
+    "category_stationery": "স্টেশনারি",
+    "new_arrival": "নতুন",
+    "best_seller": "সেরা বিক্রেতা",
+    "sold_out": "বিক্রি শেষ",
+    "product_not_found": "পণ্য পাওয়া যায়নি",
+    "reviews_count": "{{count}} টি পর্যালোচনা",
+    "free_shipping": "$50 এর উপরে বিনামূল্যে শিপিং",
+    "authentic_guarantee": "খাঁটি হওয়ার গ্যারান্টি",
+    "option_color": "রঙ",
+    "option_size": "আকার",
+    "add_to_cart": "কার্টে যোগ করুন",
+    "product_details": "পণ্যের বিবরণ",
+    "related_items": "আপনি সম্ভবত পছন্দ করবেন",
+    "buy_now": "এখন কিনুন",
+    "quantity": "পরিমাণ",
+    "back_to_list": "তালিকায় ফিরে যান"
   }
 }
