@@ -84,71 +84,7 @@ export default function TweetDetail() {
     setHasMore(true);
     fetchReplies(id, 0); // 초기 페이지 0
   }, [id]);
-  // 실시간 댓글 추가 채널 (추가만 반영, 스크롤은 건드리지 않음)
-  useEffect(() => {
-    if (!id) return;
-    if (window._replyInsertChannel) {
-      supabase.removeChannel(window._replyInsertChannel);
-    }
-    const channel = supabase
-      .channel(`tweet-${id}-replies-insert`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'tweet_replies',
-          filter: `tweet_id=eq.${id}`,
-        },
-        async payload => {
-          const newReply = payload.new as Database['public']['Tables']['tweet_replies']['Row'];
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('nickname, user_id, avatar_url')
-            .eq('id', newReply.author_id)
-            .maybeSingle();
-          const formattedReply = {
-            type: 'reply',
-            id: newReply.id,
-            tweetId: newReply.tweet_id,
-            parent_reply_id: newReply.parent_reply_id ?? null,
-            root_reply_id: newReply.root_reply_id ?? null,
-            user: {
-              name: profile?.nickname ?? 'Unknown',
-              username: profile?.user_id ?? 'anonymous',
-              avatar: profile?.avatar_url ?? '/default-avatar.svg',
-            },
-            content: newReply.content,
-            timestamp: new Date(newReply.created_at ?? Date.now()).toLocaleString('ko-KR', {
-              hour: '2-digit',
-              minute: '2-digit',
-              month: 'short',
-              day: 'numeric',
-            }),
-            createdAt: newReply.created_at ?? new Date().toISOString(), // 정렬용
-            stats: {
-              replies: 0,
-              retweets: 0,
-              likes: 0,
-              views: 0,
-            },
-            liked: false,
-          } as UIReply;
-          // 새 댓글은 맨 아래에 추가 후 정렬
-          setReplies(prev => {
-            const combined = [...prev, formattedReply];
-            return combined.sort((a,b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
-          });
-          // 여기서는 scrollTargetId 를 변경하지 않음 (다른 사람 댓글 때문에 내 화면이 움직이면 안 됨)
-        },
-      )
-      .subscribe();
-    window._replyInsertChannel = channel;
-    return () => {
-      supabase.removeChannel(channel);
-      window._replyInsertChannel = null;
-    };
-  }, [id]);
+
   // 댓글 수가 변하면(실시간 추가/삭제 등) SnsStore에도 반영
   useEffect(() => {
     if (!tweet) return;
@@ -245,9 +181,28 @@ export default function TweetDetail() {
 
   // 조회수 증가 (로그인 유저에게만, 트윗 로드 된 후 1회만)
   const isViewedRef = useRef(false);
+  
   useEffect(() => {
-    if (!id || !user || !tweet || isViewedRef.current) return;
+    // 1. 기본 조건 체크
+    if (!id || !user || !tweet) return;
     
+    // 2. 이미 이 컴포넌트 생명주기에서 조회수 처리를 했는지 확인
+    if (isViewedRef.current) return;
+
+    // 3. 새로고침 확인 (Navigation Timing API Level 2)
+    // SPA에서는 'reload'가 앱 초기 진입 방식을 의미하므로, 
+    // 현재 컴포넌트가 '앱 실행 직후(2초 이내)'에 마운트된 경우만 진짜 새로고침으로 간주
+    const navEntries = performance.getEntriesByType('navigation');
+    const isReload = navEntries.length > 0 
+      ? (navEntries[0] as PerformanceNavigationTiming).type === 'reload'
+      : performance.navigation.type === 1; // Fallback
+
+    if (isReload && performance.now() < 2000) {
+      isViewedRef.current = true;
+      return;
+    }
+
+    // 4. 조회수 증가 요청
     handleViewCount(id);
     isViewedRef.current = true;
   }, [id, user, tweet]);
@@ -256,15 +211,15 @@ export default function TweetDetail() {
     try {
       if (!user) return;
 
-      // 1. Optimistic Update (화면상 즉시 반영)
+      // 1. 화면 즉시 반영 (Optimistic Update)
+      //    (주의: RPC 성공 여부와 관계없이 사용자 경험을 위해 증가)
       setTweet(prev => {
         if (!prev) return null;
+        // 이미 방금 증가시킨 상태라면 또 올리지 않도록 (혹시 모를 중복 방지)
+        // 하지만 여기선 단순 증가시킴. 상위 useEffect에서 가드하므로 괜찮음.
         const newViews = (prev.stats.views || 0) + 1;
         
-        // SnsStore에도 즉시 반영 (뒤로가기 시 반영되도록)
-        SnsStore.updateStats(tweetId, {
-          views: newViews
-        });
+        SnsStore.updateStats(tweetId, { views: newViews });
 
         return {
           ...prev,
@@ -275,32 +230,22 @@ export default function TweetDetail() {
         };
       });
 
-      // 2. LocalStorage 체크 (중복 호출 방지용)
-      const viewedTweets = JSON.parse(localStorage.getItem('viewedTweets') || '{}');
-      const now = Date.now();
-      
-      const { data: profile, error: profileError } = await supabase
+      // 2. RPC 호출 (LocalStorage 체크 제거 -> 매 방문마다 카운트)
+      const { data: profile } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (profileError || !profile) {
-        console.error('프로필 조회 실패:', profileError?.message);
-        return;
-      }
+      if (!profile) return;
 
-      // 3. RPC 호출
       const { error } = await supabase.rpc('increment_tweet_view', {
         tweet_id_input: tweetId,
-        viewer_id_input: profile.id,
+        viewer_id_input: profile.id, // viewer_id is used for history logging if needed, or just bypass uniqueness check/log logic in DB
       });
 
       if (error) {
         console.error('조회수 RPC 실패:', error.message);
-      } else {
-        viewedTweets[tweetId] = now;
-        localStorage.setItem('viewedTweets', JSON.stringify(viewedTweets));
       }
       
     } catch (err) {
@@ -372,7 +317,7 @@ export default function TweetDetail() {
     if (!id) return;
 
     const channel = supabase
-      .channel(`tweet-${id}-replies-insert`)
+      .channel(`tweet-${id}-replies-changes`)
       .on(
         'postgres_changes',
         {
@@ -382,20 +327,18 @@ export default function TweetDetail() {
           filter: `tweet_id=eq.${id}`,
         },
         async payload => {
+          // ... (INSERT logic remains same)
           const newReply = payload.new as Database['public']['Tables']['tweet_replies']['Row'];
-
           // 이미 리스트에 있는 댓글이면 무시
           setReplies(prev => {
             if (prev.some(r => r.id === newReply.id)) return prev;
             return prev;
           });
-
           const { data: profile } = await supabase
             .from('profiles')
             .select('nickname, user_id, avatar_url')
             .eq('id', newReply.author_id)
             .maybeSingle();
-
           const formattedReply = {
             type: 'reply',
             id: newReply.id,
@@ -409,28 +352,39 @@ export default function TweetDetail() {
             },
             content: newReply.content,
             timestamp: new Date(newReply.created_at ?? Date.now()).toLocaleString('ko-KR', {
-              hour: '2-digit',
-              minute: '2-digit',
-              month: 'short',
-              day: 'numeric',
+              hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric',
             }),
-            createdAt: newReply.created_at ?? new Date().toISOString(), // 정렬용
-            stats: {
-              replies: 0,
-              retweets: 0,
-              likes: newReply.like_count ?? 0,
-              views: 0,
-            },
+            createdAt: newReply.created_at ?? new Date().toISOString(),
+            stats: { replies: 0, retweets: 0, likes: newReply.like_count ?? 0, views: 0 },
             liked: false,
           } as UIReply;
-
-          // 새 댓글은 맨 아래에 추가 후 정렬 (중복 제거 포함)
           setReplies(prev => {
             if (prev.some(r => r.id === formattedReply.id)) return prev;
             const combined = [...prev, formattedReply];
             return combined.sort((a,b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
           });
         },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'tweet_replies',
+          filter: `tweet_id=eq.${id}`,
+        },
+        payload => {
+          const newReply = payload.new as Database['public']['Tables']['tweet_replies']['Row'];
+          setReplies(prev => 
+            prev.map(r => r.id === newReply.id ? {
+              ...r,
+              stats: {
+                ...r.stats,
+                likes: newReply.like_count ?? r.stats.likes,
+              }
+            } : r)
+          );
+        }
       )
       .subscribe();
 
@@ -619,6 +573,7 @@ export default function TweetDetail() {
         onCommentClick={(commentId) => {
             setScrollTargetId(commentId);
         }}
+        highlightId={scrollTargetId}
       />
     </div>
   );

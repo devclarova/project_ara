@@ -58,7 +58,8 @@ export default function HNotificationsPage() {
         .select(
           `
           id, type, content, is_read, created_at, tweet_id, comment_id,
-          sender:sender_id (nickname, user_id, avatar_url)
+          sender:sender_id (nickname, user_id, avatar_url),
+          tweet:tweets (content)
         `,
         )
         .eq('receiver_id', profileId)
@@ -70,22 +71,30 @@ export default function HNotificationsPage() {
       }
 
       setNotifications(
-        (data ?? []).map((n: any) => ({
-          id: n.id,
-          type: n.type,
-          content: n.content,
-          is_read: n.is_read,
-          created_at: n.created_at,
-          tweet_id: n.tweet_id,
-          comment_id: n.comment_id,
-          sender: n.sender
-            ? {
-                name: n.sender.nickname,
-                username: n.sender.nickname, 
-                avatar: n.sender.avatar_url,
-              }
-            : null,
-        })),
+        (data ?? []).map((n: any) => {
+          // 피드 좋아요인 경우, 알림 자체 content가 비어있으면 원본 트윗 내용을 보여줌
+          let contentToUse = n.content;
+          if (n.type === 'like' && !n.comment_id && n.tweet?.content) {
+             contentToUse = n.tweet.content;
+          }
+
+          return {
+            id: n.id,
+            type: n.type,
+            content: contentToUse,
+            is_read: n.is_read,
+            created_at: n.created_at,
+            tweet_id: n.tweet_id,
+            comment_id: n.comment_id,
+            sender: n.sender
+                ? {
+                    name: n.sender.nickname,
+                    username: n.sender.nickname, 
+                    avatar: n.sender.avatar_url,
+                }
+                : null,
+          };
+        }),
       );
       setLoading(false);
     };
@@ -114,10 +123,23 @@ export default function HNotificationsPage() {
             .eq('id', newItem.sender_id)
             .maybeSingle();
 
+          // 피드 좋아요인 경우 트윗 내용 추가 fetch
+          let contentToUse = newItem.content;
+          if (newItem.type === 'like' && newItem.tweet_id && !newItem.comment_id) {
+             const { data: tweetData } = await supabase
+               .from('tweets')
+               .select('content')
+               .eq('id', newItem.tweet_id)
+               .maybeSingle();
+             if (tweetData?.content) {
+               contentToUse = tweetData.content;
+             }
+          }
+
           const uiItem: Notification = {
             id: newItem.id,
             type: newItem.type,
-            content: newItem.content,
+            content: contentToUse,
             is_read: newItem.is_read,
             created_at: newItem.created_at,
             tweet_id: newItem.tweet_id,
@@ -132,7 +154,6 @@ export default function HNotificationsPage() {
           };
 
           setNotifications(prev => [uiItem, ...prev]);
-          // GlobalNotificationListener에서 처리하므로 여기서 토스트 중복 방지 제거
         },
       )
       .subscribe();
@@ -245,7 +266,7 @@ export default function HNotificationsPage() {
           className="
             shrink-0 
             sticky top-0 
-            bg-white/90 dark:bg-background/90 
+            bg-white/80 dark:bg-background/80 
             backdrop-blur-md 
             border-b border-gray-200 dark:border-gray-700 
             px-4 py-3 z-10
@@ -299,6 +320,24 @@ export default function HNotificationsPage() {
                   }}
                   onMarkAsRead={markAsRead}
                   onDelete={handleRequestDelete}
+                  onSilentDelete={async (id) => {
+                    // 직접 삭제 (모달 없이) - 삭제된 컨텐츠 클릭 시 사용
+                    try {
+                      // UI 선반영
+                      const target = notifications.find(n => n.id === id);
+                      setNotifications(prev => prev.filter(n => n.id !== id));
+                      
+                      // 뱃지 업데이트
+                      if (target && !target.is_read) {
+                        window.dispatchEvent(new Event('notification:deleted-one'));
+                      }
+
+                      // DB 삭제
+                      await supabase.from('notifications').delete().eq('id', id);
+                    } catch (err) {
+                      console.error('알림 자동 삭제 실패:', err);
+                    }
+                  }}
                 />
               ))}
 

@@ -1,5 +1,6 @@
 import { Search } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface SearchBarProps {
   placeholder?: string;
@@ -9,6 +10,7 @@ interface SearchBarProps {
 }
 
 export default function Input({ placeholder, onSubmit, onChange, onClose }: SearchBarProps) {
+  const { t } = useTranslation();
   const [q, setQ] = useState('');
   const [isHovered, setIsHovered] = useState(false);
 
@@ -47,7 +49,7 @@ export default function Input({ placeholder, onSubmit, onChange, onClose }: Sear
           value={q}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder ?? '검색어를 입력하세요'}
+          placeholder={placeholder ?? t('common.search_placeholder', '검색어를 입력하세요')}
           className="flex-1 h-full px-3 bg-transparent outline-none text-sm placeholder-muted-foreground border-none focus:outline-none focus:ring-0 focus:border-transparent"
         />
 
@@ -62,9 +64,9 @@ export default function Input({ placeholder, onSubmit, onChange, onClose }: Sear
           text-muted-foreground hover:text-foreground
           rounded-full hover:bg-accent transition-colors
         "
-            aria-label="검색"
+            aria-label={t('common.search', '검색')}
           >
-            검색
+            {t('common.search', '검색')}
           </button>
         </div>
       </div>

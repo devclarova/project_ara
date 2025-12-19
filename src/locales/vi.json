@@ -8,7 +8,10 @@
     "more": "Thêm",
     "settings": "Cài đặt",
     "profile": "Hồ sơ",
-    "post": "Đăng"
+    "post": "Đăng",
+    "admin": "Chế độ quản trị",
+    "admin_dashboard": "Bảng điều khiển quản trị",
+    "goods": "Cửa hàng"
   },
   "notification": {
     "like_feed": "đã thích bài viết của bạn.",
@@ -25,7 +28,7 @@
     "error_clear_all": "Có lỗi xảy ra khi xóa thông báo",
     "clear_all": "Xóa",
     "action_comment": "Để lại bình luận trên feed của bạn.",
-    "action_like_comment": "Chúng tôi thích bình luận của bạn.",
+    "action_like_comment": "đã thích bình luận của bạn.",
     "action_like_feed": "Tôi thích nguồn cấp dữ liệu của bạn.",
     "no_notifications": "Chưa có thông báo mới nào.",
     "delete_confirm_title": "Xóa thông báo",
@@ -102,7 +105,15 @@
     "service_ready": "Bây giờ bạn có thể sử dụng dịch vụ.",
     "start_now": "Bắt Đầu Ngay",
     "go_home": "Về Trang Chủ",
-    "signup_error": "Lỗi khi đăng ký"
+    "signup_error": "Lỗi khi đăng ký",
+    "account_restore_expired": "Không thể khôi phục tài khoản vì đã quá 7 ngày kể từ khi yêu cầu xóa.",
+    "restore_error": "Đã xảy ra lỗi khi khôi phục tài khoản.",
+    "cancel_logout": "Hủy (Đăng xuất)",
+    "restore_title": "Khôi phục tài khoản",
+    "restore_desc_1": "Tài khoản này đang trong thời gian ân hạn xóa.",
+    "restore_desc_2": "Bạn có muốn khôi phục tài khoản không?",
+    "restore_remaining": "Còn {{days}} ngày cho đến khi xóa vĩnh viễn.",
+    "restore_confirm": "Khôi phục tài khoản"
   },
   "signup": {
     "title_social": "Đăng Ký Mạng Xã Hội",
@@ -181,6 +192,7 @@
     "view_profile": "Xem hồ sơ",
     "settings_desc": "Hồ sơ/Cài đặt",
     "search": "Tìm kiếm",
+    "search_placeholder": "Tìm kiếm...",
     "back": "Quay lại",
     "loading": "Đang tải...",
     "error": "Lỗi",
@@ -228,18 +240,23 @@
     "connect_sns": "Liên kết SNS",
     "withdraw": "Xóa tài khoản",
     "withdraw_phrase": "Xóa tài khoản của tôi",
-    "withdraw_verify_placeholder": "Please type \"{{phrase}}\" to confirm",
-    "withdraw_modal_title": "Are you sure you want to delete your account?",
-    "withdraw_warning_1": "Your account information cannot be recovered.",
-    "withdraw_warning_2": "All posts and comments will be deleted.",
-    "withdraw_warning_3": "Follow/Following information will be lost.",
-    "withdraw_warning_4": "This action cannot be undone.",
+    "withdraw_grace_period_1": "Áp dụng thời gian ân hạn 7 ngày khi yêu cầu xóa.",
+    "withdraw_grace_period_2": "Bạn có thể khôi phục tài khoản ngay lập tức bằng cách đăng nhập trong vòng 7 ngày.",
+    "withdraw_grace_period_3": "Sau 7 ngày, không thể khôi phục và dữ liệu sẽ bị xóa vĩnh viễn sau 30 ngày.",
+    "withdraw_verify_placeholder": "Vui lòng nhập \"{{phrase}}\" để xác nhận",
+    "withdraw_modal_title": "Bạn có chắc chắn muốn xóa tài khoản không?",
+    "withdraw_warning_1": "Thông tin tài khoản của bạn không thể khôi phục.",
+    "withdraw_warning_2": "Tất cả bài viết và bình luận sẽ bị xóa.",
+    "withdraw_warning_3": "Thông tin theo dõi sẽ bị mất.",
+    "withdraw_warning_4": "Hành động này không thể hoàn tác.",
     "confirm_password": "Xác nhận mật khẩu",
-    "confirm_password_placeholder": "Enter your password",
-    "confirm_password_desc": "Please enter your password to confirm your identity.",
-    "withdraw_verify_label": "Type the phrase below",
-    "withdraw_btn_cancel": "Cancel",
-    "withdraw_btn_processing": "Processing...",
+    "confirm_password_placeholder": "Nhập mật khẩu",
+    "confirm_password_desc": "Vui lòng nhập mật khẩu để xác nhận danh tính.",
+    "confirm_email": "Xác nhận Email",
+    "confirm_email_desc": "Vui lòng nhập địa chỉ email để xác nhận danh tính.",
+    "withdraw_verify_label": "Xác thực",
+    "withdraw_btn_cancel": "Hủy",
+    "withdraw_btn_processing": "Đang xử lý...",
     "withdraw_btn_confirm": "Xóa",
     "pw_change_guide": "Chúng tôi khuyên bạn nên sử dụng ít nhất 8 ký tự bao gồm chữ cái, số và ký hiệu.",
     "current_pw": "Mật khẩu hiện tại",
@@ -256,7 +273,7 @@
     "connect_google": "Kết nối tài khoản Google",
     "connect_kakao": "Kết nối tài khoản Kakao",
     "sns_connect_note": "Bạn có thể ngắt kết nối các tài khoản liên kết trong Cài đặt > Quyền riêng tư bất cứ lúc nào. (Sắp ra mắt)",
-    "account_settings": "Settings",
+    "account_settings": "Cài đặt",
     "support_policy": "Hỗ trợ & Chính sách",
     "help_center": "Trung tâm trợ giúp",
     "terms": "Điều khoản dịch vụ",
@@ -272,7 +289,15 @@
     "title_marketing": "Đồng ý tiếp thị",
     "title_support": "Trung tâm trợ giúp",
     "security_title": "Cài đặt bảo mật",
-    "session_management": "Quản lý phiên"
+    "session_management": "Quản lý phiên",
+    "withdraw_reason_label": "Lý do hủy",
+    "withdraw_reason_placeholder": "Chọn lý do",
+    "withdraw_detail_placeholder": "Vui lòng cung cấp chi tiết",
+    "reason_low_usage": "Ít sử dụng",
+    "reason_rejoin": "Để tham gia lại",
+    "reason_privacy": "Lo ngại về quyền riêng tư",
+    "reason_feature": "Không hài lòng với tính năng",
+    "reason_other": "Khác"
   },
   "profile": {
     "edit_profile": "Sửa hồ sơ",
@@ -338,7 +363,8 @@
   },
   "trending": {
     "title": "Xu hướng",
-    "no_trending": "Không có xu hướng"
+    "no_trending": "Không có xu hướng",
+    "shared_photo": "Đã chia sẻ một bức ảnh."
   },
   "chat": {
     "direct_chat": "Tin nhắn",
@@ -435,5 +461,55 @@
       "privacy": "Quyền riêng tư",
       "cookies": "Cookies"
     }
+  },
+  "goods": {
+    "hero_title": "Cửa hàng",
+    "category_all": "Tất cả",
+    "items": {
+      "hoodie": {
+        "title": "Áo Hoodie Chữ Ký",
+        "desc": "Áo hoodie cotton cao cấp với logo đặc trưng. Form dáng thoải mái, thích hợp mặc hàng ngày."
+      },
+      "tote_bag": {
+        "title": "Túi Tote Eco",
+        "desc": "Túi tote vải canvas thân thiện môi trường. Bền bỉ và rộng rãi cho các vật dụng cần thiết."
+      },
+      "note_set": {
+        "title": "Bộ Sổ Tay Cao Cấp",
+        "desc": "Bộ sổ tay giấy chất lượng cao. Hoàn hảo cho việc học tập và viết nhật ký."
+      },
+      "planner": {
+        "title": "Sổ Kế Hoạch Kỹ Thuật Số 2026",
+        "desc": "Sổ kế hoạch kỹ thuật số tất cả trong một cho iPad/Máy tính bảng. Sắp xếp năm 2026 của bạn một cách hiệu quả."
+      },
+      "cap": {
+        "title": "Mũ Lưỡi Trai Logo",
+        "desc": "Mũ lưỡi trai sành điệu với logo thêu. Dây đai điều chỉnh cho vừa vặn."
+      },
+      "tumbler": {
+        "title": "Bình Giữ Nhiệt Tối Giản",
+        "desc": "Ly giữ nhiệt thép không gỉ. Giữ nóng/lạnh trong 12 giờ."
+      }
+    },
+    "price_unit": "$",
+    "category_clothing": "Quần áo",
+    "category_accessories": "Phụ kiện",
+    "category_digital": "Kỹ thuật số",
+    "category_stationery": "Văn phòng phẩm",
+    "new_arrival": "Mới",
+    "best_seller": "Bán chạy",
+    "sold_out": "Hết hàng",
+    "product_not_found": "Không tìm thấy sản phẩm",
+    "reviews_count": "{{count}} đánh giá",
+    "free_shipping": "Miễn phí vận chuyển cho đơn hàng trên $50",
+    "authentic_guarantee": "Cam kết chính hãng",
+    "option_color": "Màu sắc",
+    "option_size": "Kích thước",
+    "add_to_cart": "Thêm vào giỏ hàng",
+    "product_details": "Chi tiết sản phẩm",
+    "related_items": "Có thể bạn cũng thích",
+    "buy_now": "Mua ngay",
+    "quantity": "Số lượng",
+    "back_to_list": "Quay lại danh sách"
   }
 }

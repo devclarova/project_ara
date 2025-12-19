@@ -1,4 +1,5 @@
 import Modal from '@/components/common/Modal';
+import InputField from '@/components/auth/InputField';
 import type { ActiveSetting } from '@/types/settings';
 import { getSettingsTitle } from '@/utils/getTitle';
 import { useState } from 'react';
@@ -11,13 +12,28 @@ import { supabase } from '@/lib/supabase';
 
 interface PrivacySettingsProps {
   onBackToMenu?: () => void;
+  searchQuery?: string;
 }
+
+import Select, { components, type SingleValue, type StylesConfig } from 'react-select';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+
+// --- React Select Custom Components & Styles ---
+const CustomDropdownIndicator = (props: any) => {
+  const { selectProps } = props;
+  const isOpen = selectProps.menuIsOpen;
+  return (
+    <components.DropdownIndicator {...props}>
+      {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+    </components.DropdownIndicator>
+  );
+};
 
 import { useTranslation } from 'react-i18next';
 
 // const CONFIRM_PHRASE = '탈퇴하겠습니다.'; // Moved inside component
 
-export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) {
+export default function PrivacySettings({ onBackToMenu, searchQuery }: PrivacySettingsProps) {
   const { t } = useTranslation();
   const CONFIRM_PHRASE = t('settings.withdraw_phrase');
 
@@ -30,12 +46,105 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
   const [password, setPassword] = useState('');
   const [confirmText, setConfirmText] = useState('');
+  const [reason, setReason] = useState('');
+  const [detail, setDetail] = useState('');
+  // Floating Label State for Select
+  const [isReasonFocused, setIsReasonFocused] = useState(false);
+
+  // Options for Withdrawal Reason
+  const reasonOptions = [
+    { value: 'low_usage', label: t('settings.reason_low_usage') },
+    { value: 'rejoin', label: t('settings.reason_rejoin') },
+    { value: 'privacy', label: t('settings.reason_privacy') },
+    { value: 'feature', label: t('settings.reason_feature') },
+    { value: 'other', label: t('settings.reason_other') },
+  ];
+
+  const selectedReasonOption = reasonOptions.find(o => o.value === reason) || null;
+
+  // Dark Mode Check & React Select Styles
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+
+  const customSelectStyles: StylesConfig<any, false> = {
+    control: (provided, state) => {
+        // Match InputField border logic: always gray-300 (#D1D5DB) unless focused/error
+        const baseBorder = state.isFocused
+          ? 'var(--ara-primary)'
+          : isDark
+            ? '#D1D5DB' // Force light gray border in dark mode to match InputField
+            : '#D1D5DB';
+
+        return {
+        ...provided,
+        minHeight: 48,
+        height: 48,
+        paddingLeft: 6, 
+        borderRadius: 14,
+        border: `1px solid ${baseBorder}`,
+        borderColor: baseBorder,
+        boxShadow: state.isFocused ? '0 0 0 3px var(--ara-ring)' : 'none',
+        backgroundColor: isDark ? 'hsl(var(--secondary))' : '#FFFFFF',
+        color: isDark ? 'hsl(var(--secondary-foreground))' : '#111827',
+        outline: 'none',
+        '&:hover': {
+            borderColor: state.isFocused ? 'var(--ara-primary)' : '#D1D5DB'
+        }
+      };
+    },
+    valueContainer: provided => ({
+      ...provided,
+      height: 48,
+      padding: '0 8px',
+      display: 'flex',
+      alignItems: 'center',
+    }),
+    input: provided => ({
+      ...provided,
+      margin: 0,
+      padding: 0,
+      color: isDark ? '#9CA3AF' : '#111827',
+    }),
+    singleValue: provided => ({
+      ...provided,
+      color: isDark ? '#F3F4F6' : '#111827',
+    }),
+    menu: provided => ({
+      ...provided,
+      backgroundColor: isDark ? 'hsl(var(--secondary))' : '#FFFFFF',
+      border: `1px solid ${isDark ? '#D1D5DB' : '#E5E7EB'}`,
+      borderRadius: 12,
+      overflow: 'hidden',
+      zIndex: 50,
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? isDark
+          ? 'hsl(var(--primary) / 0.22)'
+          : 'rgba(59,130,246,0.12)'
+        : state.isFocused
+          ? isDark
+            ? 'hsl(var(--primary) / 0.12)'
+            : 'rgba(59,130,246,0.08)'
+          : 'transparent',
+      color: isDark ? 'hsl(var(--secondary-foreground))' : '#111827',
+      cursor: 'pointer',
+    }),
+    dropdownIndicator: provided => ({
+        ...provided,
+        color: isDark ? '#9CA3AF' : '#9CA3AF',
+    }),
+    indicatorSeparator: () => ({ display: 'none' }),
+  };
 
   const close = () => {
     setActive(null);
     setWithdrawError(null);
     setPassword('');
     setConfirmText('');
+    setReason('');
+    setDetail('');
+    setIsReasonFocused(false);
   };
 
   const handleWithdraw = async () => {
@@ -44,7 +153,6 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
     // 1) 확인 문구 검사
     if (confirmText.trim() !== CONFIRM_PHRASE) {
       setWithdrawError(t('settings.withdraw_verify_placeholder', { phrase: CONFIRM_PHRASE }));
-      // setWithdrawError(`확인 문장 "${CONFIRM_PHRASE}"을 정확히 입력해주세요.`);
       return;
     }
 
@@ -53,44 +161,57 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
 
     const provider = (user.app_metadata?.provider as string | undefined) ?? 'email';
 
-    // 2) 이메일 가입자는 비밀번호 재확인
+    // 2) 자격 증명 재확인
     if (provider === 'email') {
       const email = user.email;
       if (!email) {
-        setWithdrawError('이메일 정보를 찾을 수 없습니다. 고객센터로 문의해주세요.');
+        setWithdrawError(t('settings.email_info_missing', '이메일 정보를 찾을 수 없습니다. 고객센터로 문의해주세요.'));
         setWithdrawing(false);
         return;
       }
-
       const { error: pwError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-
       if (pwError) {
         console.error('withdraw reauth error:', pwError);
-        setWithdrawError('비밀번호가 올바르지 않습니다.');
+        setWithdrawError(t('settings.password_incorrect', '비밀번호가 올바르지 않습니다.'));
+        setWithdrawing(false);
+        return;
+      }
+    } else {
+      // 소셜 로그인: 입력한 이메일이 본인 이메일과 일치하는지 확인
+      if (password !== user.email) {
+        setWithdrawError(t('settings.email_mismatch_error', '입력하신 이메일 주소가 올바르지 않습니다.'));
         setWithdrawing(false);
         return;
       }
     }
 
-    // 3) 유저가 작성한 게시물, 댓글 등 삭제
+    // 3) 탈퇴 사유 저장 (관리자 전용) - New Feature
     try {
-      // 🔻 여기를 네 실제 테이블명에 맞게 채워야 해
-      // 예시:
-      // await supabase.from('community_comments').delete().eq('user_id', user.id);
-      // await supabase.from('community_posts').delete().eq('user_id', user.id);
-      // await supabase.from('tweets').delete().eq('user_id', user.id);
-      // ...
+      if (reason) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (profile) {
+            await supabase.from('withdrawal_feedbacks' as any).insert({
+              user_id: profile.id,
+              reason,
+              detail: reason === 'other' ? detail : null,
+            });
+        }
+      }
     } catch (err) {
-      console.error('delete user content error:', err);
-      setWithdrawError('작성한 콘텐츠 삭제 중 오류가 발생했습니다.');
-      setWithdrawing(false);
-      return;
+      console.error('Feedback save failed:', err);
+      // Fail silently to proceed with withdrawal
     }
 
-    // 4) profiles.deleted_at 기록 (soft delete)
+    // 4) Soft Delete 처리 (profiles.deleted_at 기록)
+    // 실제 데이터 삭제는 하지 않음 (7일 유예)
     const { error: profileErr } = await supabase
       .from('profiles')
       .update({ deleted_at: new Date().toISOString() })
@@ -98,7 +219,7 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
 
     if (profileErr) {
       console.error('withdraw profile error:', profileErr);
-      setWithdrawError('탈퇴 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      setWithdrawError(t('settings.withdraw_error', '탈퇴 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'));
       setWithdrawing(false);
       return;
     }
@@ -126,8 +247,8 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
         </div>
 
         <div className="space-y-2">
-          <Row label={t('settings.change_password')} onClick={() => open('password')} />
-          <Row label={t('settings.connect_sns')} onClick={() => open('sns')} />
+          <Row label={t('settings.change_password')} onClick={() => open('password')} searchQuery={searchQuery} />
+          <Row label={t('settings.connect_sns')} onClick={() => open('sns')} searchQuery={searchQuery} />
         </div>
 
         {/* 하단 탈퇴 버튼 */}
@@ -154,45 +275,128 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
         {/* 탈퇴 모달 */}
         {active === 'withdraw' && (
           <div className="space-y-5">
-            <div className="rounded-md bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900 px-3 py-2 text-[11px] text-red-700 dark:text-red-300">
+            <div className="rounded-md bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900 px-3 py-2 text-sm text-red-700 dark:text-red-300">
               <p className="font-semibold mb-1">{t('settings.withdraw_modal_title')}</p>
               <ul className="list-disc list-inside space-y-0.5">
-                <li>{t('settings.withdraw_warning_1')}</li>
-                <li>{t('settings.withdraw_warning_2')}</li>
-                <li>{t('settings.withdraw_warning_3')}</li>
+                <li>{t('settings.withdraw_grace_period_1', '탈퇴 신청 시 7일간 유예 기간이 적용됩니다.')}</li>
+                <li>{t('settings.withdraw_grace_period_2', '7일 이내 로그인 시 계정을 즉시 복구할 수 있습니다.')}</li>
+                <li>{t('settings.withdraw_grace_period_3', '7일이 지나면 계정 복구가 불가능하며, 30일 후 데이터가 완전히 삭제됩니다.')}</li>
                 <li>{t('settings.withdraw_warning_4')}</li>
               </ul>
             </div>
 
-            {/* 비밀번호 확인 */}
-            <div className="space-y-1">
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
-                {t('settings.confirm_password')}
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                placeholder={t('settings.confirm_password_placeholder')}
-              />
-              <p className="text-[11px] text-gray-400 dark:text-gray-500">
-                {t('settings.confirm_password_desc')}
-              </p>
+            {/* 탈퇴 사유 (New) - React Select & Styled Textarea */}
+            <div className="space-y-4 pt-2">
+                 <div className="relative">
+                   <Select
+                       value={selectedReasonOption}
+                       onChange={(opt) => {
+                           setReason(opt?.value || '');
+                           setIsReasonFocused(false);
+                       }}
+                       onFocus={() => setIsReasonFocused(true)}
+                       onBlur={() => setIsReasonFocused(false)}
+                       onMenuOpen={() => setIsReasonFocused(true)}
+                       onMenuClose={() => {
+                           setIsReasonFocused(false);
+                           // Ensure blur logic if needed, but react-select handles focus well
+                       }}
+                       options={reasonOptions}
+                       styles={customSelectStyles}
+                       components={{ DropdownIndicator: CustomDropdownIndicator }}
+                       placeholder=" "
+                       classNamePrefix="react-select"
+                       className="w-full"
+                   />
+                   <label
+                       className={`
+                           pointer-events-none absolute left-3 px-1 rounded transition-all duration-150 
+                           bg-white dark:bg-secondary
+                           ${
+                             isReasonFocused || reason
+                               ? '-top-2 text-xs text-primary'
+                               : 'top-3 text-sm text-gray-400'
+                           }
+                       `}
+                   >
+                     {t('settings.withdraw_reason_label')}
+                   </label>
+                 </div>
+
+                 {reason === 'other' && (
+                     <div className="relative">
+                         <textarea
+                             id="withdraw-detail"
+                             className="peer w-full p-4 border border-gray-300 rounded-[14px] bg-white dark:bg-secondary text-gray-900 dark:text-gray-100 text-sm ara-focus h-24 resize-none placeholder-transparent transition-all duration-120"
+                             placeholder=" "
+                             value={detail}
+                             onChange={(e) => setDetail(e.target.value)}
+                         />
+                         <label 
+                            htmlFor="withdraw-detail"
+                            className={`
+                               pointer-events-none absolute left-3 px-1 rounded transition-all duration-150 bg-white dark:bg-secondary text-gray-400
+                               peer-focus:-top-2 peer-focus:text-xs peer-focus:text-primary
+                               ${detail ? '-top-2 text-xs text-primary' : 'top-4 text-sm'}
+                            `}
+                         >
+                            {t('settings.withdraw_detail_placeholder')}
+                         </label>
+                     </div>
+                 )}
             </div>
+
+            {/* 비밀번호 확인 (이메일 가입자만) */}
+            {((user?.app_metadata?.provider as string) ?? 'email') === 'email' ? (
+              <div className="space-y-1">
+                <InputField
+                  id="confirm-password"
+                  type="password"
+                  label={t('settings.confirm_password')}
+                  value={password}
+                  onChange={setPassword}
+                  inputProps={{
+                    placeholder: ' ', // 플레이스홀더 비움 (라벨 겹침 방지 + Floating 유도)
+                  }}
+                />
+                {/* 설명 문구를 인풋 아래로 배치 */}
+                <p className="text-sm text-gray-400 dark:text-gray-500 pl-1 mt-1">
+                  {t('settings.confirm_password_desc')}
+                </p>
+              </div>
+            ) : (
+              // 소셜 로그인 사용자: 이메일 입력 확인
+              <div className="space-y-1">
+                <InputField
+                  id="confirm-email"
+                  type="text"
+                  label={t('settings.confirm_email', '이메일 주소 확인')}
+                  value={password} // 재사용 (여기서는 이메일 입력값으로 사용)
+                  onChange={setPassword}
+                  inputProps={{
+                    placeholder: ' ',
+                  }}
+                />
+                <p className="text-sm text-gray-400 dark:text-gray-500 pl-1 mt-1">
+                  {t('settings.confirm_email_desc', '본인 확인을 위해 이메일 주소를 정확히 입력해주세요.')}
+                </p>
+              </div>
+            )}
 
             {/* 확인 문구 */}
             <div className="space-y-1">
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
-                {t('settings.withdraw_verify_label')}
-              </label>
-              <input
-                type="text"
+              <InputField
+                id="withdraw-verify"
+                label={t('settings.withdraw_verify_label')}
                 value={confirmText}
-                onChange={e => setConfirmText(e.target.value)}
-                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                placeholder={t('settings.withdraw_verify_placeholder', { phrase: CONFIRM_PHRASE })}
+                onChange={setConfirmText}
+                inputProps={{
+                  placeholder: ' ',
+                }}
               />
+              <p className="text-sm text-gray-400 dark:text-gray-500 pl-1 mt-1">
+                {t('settings.withdraw_verify_placeholder', { phrase: CONFIRM_PHRASE })}
+              </p>
             </div>
 
             {withdrawError && <p className="text-xs text-red-500">{withdrawError}</p>}
@@ -201,7 +405,7 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
               <button
                 type="button"
                 onClick={close}
-                className="px-3 py-1.5 text-xs rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                 disabled={withdrawing}
               >
                 {t('settings.withdraw_btn_cancel')}
@@ -210,7 +414,7 @@ export default function PrivacySettings({ onBackToMenu }: PrivacySettingsProps) 
                 type="button"
                 onClick={handleWithdraw}
                 disabled={withdrawing}
-                className="px-3 py-1.5 text-xs rounded-md bg-red-500 text-white hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 text-sm rounded-md bg-red-500 text-white hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {withdrawing ? t('settings.withdraw_btn_processing') : t('settings.withdraw_btn_confirm')}
               </button>

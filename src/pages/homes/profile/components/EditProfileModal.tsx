@@ -252,6 +252,15 @@ export default function EditProfileModal({
         country_updated_at: updates.country_updated_at ?? userProfile.country_updated_at,
       };
       onSave(updated);
+
+      // Dispatch event for Header update
+      const event = new CustomEvent('profile:updated', { 
+        detail: { 
+          nickname: formData.name, 
+          avatar_url: avatarUrl 
+        } 
+      });
+      window.dispatchEvent(event);
       if (isNickChanged) {
          navigate(`/profile/${encodeURIComponent(formData.name)}`);
       }

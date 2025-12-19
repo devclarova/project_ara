@@ -1,7 +1,8 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import DOMPurify from 'dompurify';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 
@@ -24,15 +25,18 @@ interface NotificationCardProps {
   };
   onMarkAsRead?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onSilentDelete?: (id: string) => void;
 }
 
 export default function NotificationCard({
   notification,
   onMarkAsRead,
   onDelete,
+  onSilentDelete,
 }: NotificationCardProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const FEED_LIKE_MESSAGE = t('notification.like_feed');
 
   const getInteractionIcon = (type: string) => {
@@ -65,30 +69,41 @@ export default function NotificationCard({
     }
   };
 
-  const extractParagraphText = (html: string) => {
+  const parseContent = (html: string) => {
     const clean = DOMPurify.sanitize(html, {
-      ALLOWED_TAGS: ['p', 'strong', 'em', 'b', 'i', 'u', 'br'],
-      ALLOWED_ATTR: [],
+      ALLOWED_TAGS: ['p', 'strong', 'em', 'b', 'i', 'u', 'br', 'img'],
+      ALLOWED_ATTR: ['src', 'alt'],
     });
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(clean, 'text/html');
 
+    const img = doc.querySelector('img');
+    const imageUrl = img?.getAttribute('src');
+
     const paragraphs = Array.from(doc.querySelectorAll('p'));
+    let text = '';
 
     if (paragraphs.length > 0) {
-      return paragraphs.map(p => p.textContent?.trim() || '').join('\n');
+      text = paragraphs.map(p => p.textContent?.trim() || '').join('\n');
+    } else {
+      text = doc.body.textContent?.trim() || '';
     }
 
-    const bodyText = doc.body.textContent || '';
-    return bodyText.trim();
+    if (!text && imageUrl) {
+        text = t('notification.photo_content', '[사진]');
+    }
+
+    return { text, imageUrl };
   };
 
-  const parsedContent = notification.content ? extractParagraphText(notification.content) : '';
+  const { text: contentText, imageUrl } = notification.content 
+    ? parseContent(notification.content) 
+    : { text: '', imageUrl: null };
 
   // 어떤 타입에 대해 내용 박스를 보여줄지 결정
   const shouldShowPreview =
-    (notification.type === 'comment' || notification.type === 'like') && !!parsedContent;
+    (notification.type === 'comment' || notification.type === 'like') && (!!contentText || !!imageUrl);
 
   const unreadClasses = !notification.isRead
     ? 'relative bg-primary/10 dark:bg-primary/20 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary'
@@ -98,15 +113,16 @@ export default function NotificationCard({
   // 1) type === 'comment' 이면서 replyId 없음 → 원래 댓글 알림인데 댓글이 삭제된 케이스
   // 2) type === 'like' 이면서:
   //    - replyId 없음
-  //    - 내용(parsedContent)이 있고
+  //    - 내용(contentText)이 있고
   //    - 그 내용이 우리가 피드 좋아요에서 넣은 고정 문구가 아닐 때
   //    → 원래는 댓글 좋아요였는데 댓글이 지워진 케이스로 판단
   const isDeletedCommentNotification =
     !notification.replyId &&
     (notification.type === 'comment' ||
-      (notification.type === 'like' && !!parsedContent && parsedContent !== FEED_LIKE_MESSAGE));
+      (notification.type === 'like' && !!contentText && contentText !== FEED_LIKE_MESSAGE));
 
-  const handleClick = () => {
+  // Check logic inside handleClick
+  const handleClick = async () => {
     if (!notification.isRead && onMarkAsRead) {
       onMarkAsRead(notification.id);
     }
@@ -122,26 +138,48 @@ export default function NotificationCard({
       return;
     }
 
-    // 게시글 자체가 삭제된 경우
+    // 게시글 자체가 삭제된 경우 (tweetId가 null인 경우)
     if (!notification.tweetId) {
       toast.info(t('notification.deleted_post'));
-      onDelete?.(notification.id);
+      onSilentDelete?.(notification.id); // 게시글 삭제됨 -> 알림 삭제
       return;
     }
 
-    // "삭제된 댓글"로 판단되는 알림
+    // "삭제된 댓글"로 판단되는 알림 (이미 정보가 불완전한 경우)
     if (isDeletedCommentNotification) {
       toast.info(t('notification.deleted_comment'));
-      onDelete?.(notification.id);
-
+      
       if (location.pathname !== targetSns) {
         navigate(targetSns);
       }
+      onSilentDelete?.(notification.id);
       return;
     }
 
-    // 댓글/댓글 좋아요 알림: tweetId + replyId 둘 다 있을 때
+    // 댓글/댓글 좋아요 알림: tweetId + replyId 둘 다 있을 때 -> 실제 DB 존재 여부 확인
     if (notification.tweetId && notification.replyId) {
+      // 1. 실제로 댓글이 존재하는지 확인 (DB 체크)
+      const { data: replyExists } = await supabase
+        .from('tweet_replies')
+        .select('id')
+        .eq('id', notification.replyId)
+        .maybeSingle();
+
+      if (!replyExists) {
+        // 이미 삭제된 댓글임
+        toast.info(t('notification.deleted_comment'));
+        
+        // 그래도 게시글로 이동은 함 (사용자 경험 유지) - 먼저 이동
+        if (location.pathname !== targetSns) {
+           navigate(targetSns);
+        }
+        
+        // 이동 후 삭제 (컴포넌트 언마운트되더라도 실행됨)
+        onSilentDelete?.(notification.id); 
+        return;
+      }
+
+      // 2. 존재하면 정상 이동 + 하이라이트
       navigate(targetSns, {
         replace: location.pathname === targetSns,
         state: {
@@ -258,10 +296,17 @@ export default function NotificationCard({
 
           {/* 댓글/좋아요 알림일 때 내용 미리보기 */}
           {shouldShowPreview && (
-            <div className="mt-2 p-3 bg-gray-50 dark:bg-background rounded-lg border border-gray-200 dark:border-gray-700">
-              <p className="text-sm text-gray-700 dark:text-gray-100 line-clamp-2 whitespace-pre-wrap break-words">
-                {parsedContent}
+            <div className="mt-3 p-3 bg-gray-50/50 dark:bg-zinc-800/50 rounded-xl border border-gray-200/60 dark:border-gray-700/60 flex items-center justify-between gap-3">
+              <p className="text-sm text-gray-700 dark:text-gray-200 line-clamp-2 whitespace-pre-wrap break-words flex-1 leading-relaxed">
+                {contentText}
               </p>
+              {imageUrl && (
+                <img 
+                  src={imageUrl} 
+                  alt="preview" 
+                  className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-black/5 dark:border-white/5 bg-gray-200 dark:bg-gray-800"
+                />
+              )}
             </div>
           )}
 

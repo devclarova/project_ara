@@ -8,7 +8,10 @@
     "more": "Plus",
     "settings": "Paramètres",
     "profile": "Profil",
-    "post": "Publier"
+    "post": "Publier",
+    "admin": "Mode Administrateur",
+    "admin_dashboard": "Tableau de bord admin",
+    "goods": "Boutique"
   },
   "notification": {
     "like_feed": "a aimé votre post.",
@@ -25,7 +28,7 @@
     "error_clear_all": "Une erreur s'est produite lors de l'effacement des notifications",
     "clear_all": "Vider",
     "action_comment": "Un commentaire a été laissé sur votre fil.",
-    "action_like_comment": "Nous aimons votre commentaire.",
+    "action_like_comment": "a aimé votre commentaire.",
     "action_like_feed": "J'aime votre fil.",
     "no_notifications": "Aucune nouvelle notification pour le moment.",
     "delete_confirm_title": "Supprimer la notification",
@@ -103,7 +106,15 @@
     "service_ready": "Vous pouvez maintenant utiliser le service.",
     "start_now": "Commencer Maintenant",
     "go_home": "Retour à l'Accueil",
-    "signup_error": "Erreur lors de l'inscription"
+    "signup_error": "Erreur lors de l'inscription",
+    "account_restore_expired": "Le compte ne peut pas être restauré car 7 jours se sont écoulés depuis la demande de suppression.",
+    "restore_error": "Une erreur s'est produite lors de la restauration du compte.",
+    "cancel_logout": "Annuler (Déconnexion)",
+    "restore_title": "Restauration de compte",
+    "restore_desc_1": "Ce compte est actuellement en période de grâce de suppression.",
+    "restore_desc_2": "Voulez-vous restaurer votre compte ?",
+    "restore_remaining": "{{days}} jours restants avant la suppression définitive.",
+    "restore_confirm": "Restaurer le compte"
   },
   "signup": {
     "title_social": "Inscription avec Réseaux Sociaux",
@@ -145,6 +156,7 @@
     "view_profile": "Voir Profil",
     "settings_desc": "Profil/Paramètres",
     "search": "Rechercher",
+    "search_placeholder": "Rechercher...",
     "back": "Retour",
     "loading": "Chargement...",
     "error": "Erreur",
@@ -161,11 +173,8 @@
     "success_delete": "Supprimé avec succès",
     "success_report": "Le signalement a été envoyé.",
     "success_block": "L'utilisateur a été bloqué.",
-
     "error_no_profile": "Profile does not exist",
     "error_empty_content": "Content is empty",
-    "delete": "Supprimer",
-    "edit": "Modifier",
     "block": "Bloquer",
     "unblock": "Débloquer",
     "report": "Signaler",
@@ -196,18 +205,23 @@
     "connect_sns": "Lier réseaux",
     "withdraw": "Supprimer compte",
     "withdraw_phrase": "Supprimer mon compte",
-    "withdraw_verify_placeholder": "Please type \"{{phrase}}\" to confirm",
-    "withdraw_modal_title": "Are you sure you want to delete your account?",
-    "withdraw_warning_1": "Your account information cannot be recovered.",
-    "withdraw_warning_2": "All posts and comments will be deleted.",
-    "withdraw_warning_3": "Follow/Following information will be lost.",
-    "withdraw_warning_4": "This action cannot be undone.",
-    "confirm_password": "Confirmer mot de passe",
-    "confirm_password_placeholder": "Enter your password",
-    "confirm_password_desc": "Please enter your password to confirm your identity.",
-    "withdraw_verify_label": "Type the phrase below",
-    "withdraw_btn_cancel": "Cancel",
-    "withdraw_btn_processing": "Processing...",
+    "withdraw_grace_period_1": "Une période de grâce de 7 jours s'applique lors de la demande de suppression.",
+    "withdraw_grace_period_2": "Vous pouvez restaurer votre compte immédiatement en vous connectant dans les 7 jours.",
+    "withdraw_grace_period_3": "Après 7 jours, la restauration est impossible et les données sont définitivement supprimées après 30 jours.",
+    "withdraw_verify_placeholder": "Veuillez taper \"{{phrase}}\" pour confirmer",
+    "withdraw_modal_title": "Êtes-vous sûr de vouloir supprimer votre compte ?",
+    "withdraw_warning_1": "Les informations de votre compte ne peuvent pas être récupérées.",
+    "withdraw_warning_2": "Tous les messages et commentaires seront supprimés.",
+    "withdraw_warning_3": "Les informations d'abonnement/abonnés seront perdues.",
+    "withdraw_warning_4": "Cette action est irréversible.",
+    "confirm_password": "Mot de passe",
+    "confirm_password_placeholder": "Entrez votre mot de passe",
+    "confirm_password_desc": "Veuillez entrer votre mot de passe pour confirmer votre identité.",
+    "confirm_email": "E-mail",
+    "confirm_email_desc": "Veuillez saisir votre adresse e-mail pour confirmer votre identité.",
+    "withdraw_verify_label": "Vérification",
+    "withdraw_btn_cancel": "Annuler",
+    "withdraw_btn_processing": "Traitement...",
     "withdraw_btn_confirm": "Supprimer",
     "pw_change_guide": "Nous recommandons d'utiliser au moins 8 caractères avec un mélange de lettres, de chiffres et de symboles.",
     "current_pw": "Mot de passe actuel",
@@ -224,7 +238,7 @@
     "connect_google": "Connecter le compte Google",
     "connect_kakao": "Connecter le compte Kakao",
     "sns_connect_note": "Vous pouvez dissocier les comptes liés dans Paramètres > Confidentialité à tout moment. (Bientôt disponible)",
-    "account_settings": "Settings",
+    "account_settings": "Paramètres",
     "support_policy": "Assistance et Politique",
     "help_center": "Centre d'aide",
     "terms": "Conditions d'utilisation",
@@ -240,7 +254,15 @@
     "title_marketing": "Consentement marketing",
     "title_support": "Centre d'aide",
     "security_title": "Paramètres de sécurité",
-    "session_management": "Gestion des sessions"
+    "session_management": "Gestion des sessions",
+    "withdraw_reason_label": "Raison du retrait",
+    "withdraw_reason_placeholder": "Sélectionnez une raison",
+    "withdraw_detail_placeholder": "Veuillez fournir des détails",
+    "reason_low_usage": "Je ne l'utilise pas souvent",
+    "reason_rejoin": "Pour rejoindre à nouveau",
+    "reason_privacy": "Problèmes de confidentialité",
+    "reason_feature": "Insatisfait des fonctionnalités",
+    "reason_other": "Autre"
   },
   "profile": {
     "edit_profile": "Éditer profil",
@@ -306,7 +328,8 @@
   },
   "trending": {
     "title": "Tendances",
-    "no_trending": "Aucune tendance"
+    "no_trending": "Aucune tendance",
+    "shared_photo": "A partagé une photo."
   },
   "chat": {
     "direct_chat": "Messages",
@@ -403,5 +426,55 @@
       "privacy": "Confidentialité",
       "cookies": "Cookies"
     }
+  },
+  "goods": {
+    "hero_title": "Boutique",
+    "category_all": "Tout",
+    "items": {
+      "hoodie": {
+        "title": "Sweat à Capuche Signature",
+        "desc": "Sweat à capuche en coton premium avec logo signature. Coupe confortable pour un usage quotidien."
+      },
+      "tote_bag": {
+        "title": "Sac Tote Écologique",
+        "desc": "Sac tote en toile écologique. Durable et spacieux pour vos essentiels."
+      },
+      "note_set": {
+        "title": "Ensemble de Notes Premium",
+        "desc": "Ensemble de carnets en papier de haute qualité. Parfait pour étudier et tenir un journal."
+      },
+      "planner": {
+        "title": "Planning Numérique 2026",
+        "desc": "Planificateur numérique tout-en-un pour iPad/Tablette. Organisez votre année 2026 efficacement."
+      },
+      "cap": {
+        "title": "Casquette Logo",
+        "desc": "Casquette élégante avec logo brodé. Sangle réglable pour un ajustement personnalisé."
+      },
+      "tumbler": {
+        "title": "Gobelet Minimaliste",
+        "desc": "Gobelet en acier inoxydable. Garde les boissons chaudes/froides pendant 12 heures."
+      }
+    },
+    "price_unit": "$",
+    "category_clothing": "Vêtements",
+    "category_accessories": "Accessoires",
+    "category_digital": "Numérique",
+    "category_stationery": "Papeterie",
+    "new_arrival": "Nouveau",
+    "best_seller": "Meilleure Vente",
+    "sold_out": "Épuisé",
+    "product_not_found": "Produit non trouvé",
+    "reviews_count": "{{count}} avis",
+    "free_shipping": "Livraison gratuite dès 50$",
+    "authentic_guarantee": "Garantie d'authenticité",
+    "option_color": "Couleur",
+    "option_size": "Taille",
+    "add_to_cart": "Ajouter au panier",
+    "product_details": "Détails du produit",
+    "related_items": "Vous aimerez peut-être aussi",
+    "buy_now": "Acheter maintenant",
+    "quantity": "Quantité",
+    "back_to_list": "Retour à la liste"
   }
 }

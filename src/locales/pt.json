@@ -8,7 +8,10 @@
     "more": "Mais",
     "settings": "Definições",
     "profile": "Perfil",
-    "post": "Publicar"
+    "post": "Publicar",
+    "admin": "Modo Admnistrador",
+    "admin_dashboard": "Painel de Administração",
+    "goods": "Loja"
   },
   "notification": {
     "like_feed": "gostou da sua publicação.",
@@ -25,7 +28,7 @@
     "error_clear_all": "Ocorreu um erro ao limpar as notificações",
     "clear_all": "Esvaziar",
     "action_comment": "Deixou um comentário no seu feed.",
-    "action_like_comment": "Gostamos do seu comentário.",
+    "action_like_comment": "curtiu seu comentário.",
     "action_like_feed": "Gostamos do seu feed.",
     "no_notifications": "Ainda não há novas notificações.",
     "delete_confirm_title": "Excluir notificação",
@@ -102,7 +105,15 @@
     "service_ready": "Agora pode usar o serviço.",
     "start_now": "Começar Agora",
     "go_home": "Ir para Início",
-    "signup_error": "Erro durante o registo"
+    "signup_error": "Erro durante o registo",
+    "account_restore_expired": "A conta não pode ser restaurada, pois passaram-se 7 dias desde a solicitação de exclusão.",
+    "restore_error": "Ocorreu um erro ao restaurar a conta.",
+    "cancel_logout": "Cancelar (Sair)",
+    "restore_title": "Restauração de Conta",
+    "restore_desc_1": "Esta conta está atualmente no período de carência para exclusão.",
+    "restore_desc_2": "Deseja restaurar sua conta?",
+    "restore_remaining": "{{days}} dias restantes até a exclusão permanente.",
+    "restore_confirm": "Restaurar Conta"
   },
   "signup": {
     "title_social": "Registo com Redes Sociais",
@@ -179,8 +190,9 @@
     "my_profile": "Meu Perfil",
     "my_account": "Minha Conta",
     "view_profile": "Ver Perfil",
-    "settings_desc": "Perfil/Configurações",
+    "settings_desc": "Perfil/Definições",
     "search": "Pesquisar",
+    "search_placeholder": "Pesquisar...",
     "back": "Voltar",
     "loading": "A carregar...",
     "error": "Erro",
@@ -197,7 +209,6 @@
     "success_delete": "Excluído com sucesso",
     "success_report": "O relatório foi enviado.",
     "success_block": "O usuário foi bloqueado.",
-
     "error_no_profile": "Profile does not exist",
     "error_empty_content": "Content is empty",
     "block": "Bloquear",
@@ -230,18 +241,23 @@
     "connect_sns": "Ligar SNS",
     "withdraw": "Apagar conta",
     "withdraw_phrase": "Apagar minha conta",
-    "withdraw_verify_placeholder": "Please type \"{{phrase}}\" to confirm",
-    "withdraw_modal_title": "Are you sure you want to delete your account?",
-    "withdraw_warning_1": "Your account information cannot be recovered.",
-    "withdraw_warning_2": "All posts and comments will be deleted.",
-    "withdraw_warning_3": "Follow/Following information will be lost.",
-    "withdraw_warning_4": "This action cannot be undone.",
-    "confirm_password": "Confirmar palavra-passe",
-    "confirm_password_placeholder": "Enter your password",
-    "confirm_password_desc": "Please enter your password to confirm your identity.",
-    "withdraw_verify_label": "Type the phrase below",
-    "withdraw_btn_cancel": "Cancel",
-    "withdraw_btn_processing": "Processing...",
+    "withdraw_verify_placeholder": "Digite \"{{phrase}}\" para confirmar",
+    "withdraw_modal_title": "Tem a certeza que deseja apagar a sua conta?",
+    "withdraw_grace_period_1": "Um período de carência de 7 dias aplica-se após o pedido de eliminação.",
+    "withdraw_grace_period_2": "Pode restaurar a sua conta imediatamente iniciando sessão dentro de 7 dias.",
+    "withdraw_grace_period_3": "Após 7 dias, a restauração é impossível e os dados são eliminados permanentemente após 30 dias.",
+    "withdraw_warning_1": "As informações da sua conta não podem ser recuperadas.",
+    "withdraw_warning_2": "Todas as publicações e comentários serão excluídos.",
+    "withdraw_warning_3": "As informações de seguidores/seguindo serão perdidas.",
+    "withdraw_warning_4": "Esta ação não pode ser desfeita.",
+    "confirm_password": "Senha",
+    "confirm_password_placeholder": "Insira a sua palavra-passe",
+    "confirm_password_desc": "Por favor, insira a sua palavra-passe para confirmar a sua identidade.",
+    "confirm_email": "E-mail",
+    "confirm_email_desc": "Por favor, insira o seu endereço de e-mail para verificar a sua identidade.",
+    "withdraw_verify_label": "Verificação",
+    "withdraw_btn_cancel": "Cancelar",
+    "withdraw_btn_processing": "A processar...",
     "withdraw_btn_confirm": "Apagar",
     "pw_change_guide": "Recomendamos usar pelo menos 8 caracteres com uma mistura de letras, números e símbolos.",
     "current_pw": "Senha atual",
@@ -258,7 +274,7 @@
     "connect_google": "Conectar conta Google",
     "connect_kakao": "Conectar conta Kakao",
     "sns_connect_note": "Você pode desconectar contas vinculadas em Configurações > Privacidade a qualquer momento. (Em breve)",
-    "account_settings": "Settings",
+    "account_settings": "Definições",
     "support_policy": "Apoio e Política",
     "help_center": "Centro de ajuda",
     "terms": "Termos de serviço",
@@ -274,7 +290,15 @@
     "title_marketing": "Consentimento de marketing",
     "title_support": "Central de ajuda",
     "security_title": "Configurações de segurança",
-    "session_management": "Gerenciamento de sessão"
+    "session_management": "Gerenciamento de sessão",
+    "withdraw_reason_label": "Motivo da saída",
+    "withdraw_reason_placeholder": "Selecione um motivo",
+    "withdraw_detail_placeholder": "Forneça detalhes",
+    "reason_low_usage": "Não uso com frequência",
+    "reason_rejoin": "Para entrar novamente",
+    "reason_privacy": "Preocupações com privacidade",
+    "reason_feature": "Insatisfeito com recursos",
+    "reason_other": "Outro"
   },
   "profile": {
     "edit_profile": "Editar perfil",
@@ -340,7 +364,8 @@
   },
   "trending": {
     "title": "Tendências para ti",
-    "no_trending": "Sem tendências"
+    "no_trending": "Sem tendências",
+    "shared_photo": "Compartilhou uma foto."
   },
   "chat": {
     "direct_chat": "Mensagens",
@@ -437,5 +462,55 @@
       "privacy": "Privacidade",
       "cookies": "Cookies"
     }
+  },
+  "goods": {
+    "hero_title": "Loja",
+    "category_all": "Tudo",
+    "items": {
+      "hoodie": {
+        "title": "Moletom com Capuz Assinado",
+        "desc": "Moletom de algodão premium com logotipo exclusivo. Ajuste confortável para uso diário."
+      },
+      "tote_bag": {
+        "title": "Bolsa Ecológica",
+        "desc": "Sacola de lona ecológica. Durável e espaçosa para seus itens essenciais."
+      },
+      "note_set": {
+        "title": "Conjunto de Notas Premium",
+        "desc": "Conjunto de cadernos de papel de alta qualidade. Perfeito para estudar e fazer diário."
+      },
+      "planner": {
+        "title": "Planejador Digital 2026",
+        "desc": "Planejador digital tudo-em-um para iPad/Tablet. Organize seu 2026 com eficiência."
+      },
+      "cap": {
+        "title": "Boné com Logo",
+        "desc": "Boné elegante com logotipo bordado. Alça ajustável para ajuste personalizado."
+      },
+      "tumbler": {
+        "title": "Copo Minimalista",
+        "desc": "Copo de aço inoxidável. Mantém bebidas quentes/frias por 12 horas."
+      }
+    },
+    "price_unit": "$",
+    "category_clothing": "Roupas",
+    "category_accessories": "Acessórios",
+    "category_digital": "Digital",
+    "category_stationery": "Papelaria",
+    "new_arrival": "Novo",
+    "best_seller": "Mais Vendido",
+    "sold_out": "Esgotado",
+    "product_not_found": "Produto não encontrado",
+    "reviews_count": "{{count}} avaliações",
+    "free_shipping": "Frete grátis acima de $50",
+    "authentic_guarantee": "Garantia de autenticidade",
+    "option_color": "Cor",
+    "option_size": "Tamanho",
+    "add_to_cart": "Adicionar ao carrinho",
+    "product_details": "Detalhes do produto",
+    "related_items": "Você também pode gostar",
+    "buy_now": "Comprar agora",
+    "quantity": "Quantidade",
+    "back_to_list": "Voltar para a lista"
   }
 }

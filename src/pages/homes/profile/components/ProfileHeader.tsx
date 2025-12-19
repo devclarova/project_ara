@@ -83,9 +83,18 @@ export default function ProfileHeader({
       if (error) throw error;
       onProfileUpdated?.({
         ...userProfile,
-        avatar: type === 'avatar' ? imageUrl : userProfile.avatar,
         banner: type === 'banner' ? imageUrl : userProfile.banner,
       });
+
+      // Dispatch event for Header update if it's avatar
+      if (type === 'avatar') {
+        window.dispatchEvent(new CustomEvent('profile:updated', {
+          detail: {
+             nickname: userProfile.name, // keep existing nickname
+             avatar_url: imageUrl
+          }
+        }));
+      }
       toast.success(t('common.image_updated', '이미지가 업데이트되었습니다.'));
     } catch (err) {
       console.error(err);

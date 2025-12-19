@@ -7,6 +7,7 @@ import React, {
   type PropsWithChildren,
 } from 'react';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from 'react-i18next';
 
 type AuthContextType = {
   session: Session | null;
@@ -93,10 +94,48 @@ async function createProfileFromDraftIfMissing(u: User) {
   }
 }
 
+import RestoreAccountModal from '@/components/auth/RestoreAccountModal';
+import { differenceInDays, parseISO } from 'date-fns';
+
 export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
+  
+  // 복구 대상 유저 상태 (deleted_at이 있는 유저)
+  // { id: string, deletedAt: string } 형태
+  const [restoreUser, setRestoreUser] = useState<{ id: string; deletedAt: string } | null>(null);
+
+  // 계정 삭제 상태 확인 함수
+  const checkAccountStatus = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('deleted_at')
+      .eq('user_id', userId)
+      .single();
+
+    if (error || !data) return;
+
+    if (data.deleted_at) {
+      const deletedAt = new Date(data.deleted_at);
+      const now = new Date();
+      const diff = differenceInDays(now, deletedAt);
+
+      // console.log('Account deletion check:', { deletedAt, now, diff });
+
+      if (diff > 7) {
+         // 7일 경과 시 -> 강제 로그아웃 (복구 불가)
+         alert(t('auth.account_restore_expired', '탈퇴 신청 후 7일이 경과하여 계정을 복구할 수 없습니다.'));
+         await supabase.auth.signOut();
+         setSession(null);
+         setUser(null);
+      } else {
+         // 7일 이내 -> 복구 모달 표시
+         setRestoreUser({ id: userId, deletedAt: data.deleted_at });
+      }
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -107,6 +146,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setSession(data.session ?? null);
       setUser(data.session?.user ?? null);
       setLoading(false);
+      
+      // 초기 진입 시 삭제 여부 체크
+      if (data.session?.user) {
+        checkAccountStatus(data.session.user.id);
+      }
     });
 
     // 2) 세션 변동 구독
@@ -119,6 +163,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
         const u = newSession?.user;
         if (u) {
+          // 계정 삭제 상태 체크
+          checkAccountStatus(u.id);
+
           const provider = (u.app_metadata?.provider as string | undefined) ?? 'email';
           if (provider === 'email') {
             void Promise.allSettled([createProfileFromDraftIfMissing(u)]);
@@ -181,11 +228,45 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
   };
 
+  // 계정 복구 처리 함수
+  const handleRestore = async () => {
+    if (!restoreUser) return;
+    
+    // 복구 로직: deleted_at을 NULL로 초기화
+    const { error } = await supabase
+      .from('profiles')
+      .update({ deleted_at: null })
+      .eq('user_id', restoreUser.id);
+
+    if (error) {
+      console.error('Failed to restore account:', error);
+      alert(t('auth.restore_error', '계정 복구 중 오류가 발생했습니다.'));
+      return;
+    }
+
+    // 복구 성공 시 모달 닫기
+    setRestoreUser(null);
+    // 세션 정보를 최신으로 갱신하지 않아도 로컬 상태는 유지되지만,
+    // 필요하다면 setUser 등 업데이트 (여기선 불필요, 이미 session은 유효함)
+  };
+
+  const handleCancelRestore = async () => {
+    setRestoreUser(null);
+    await signOut();
+  };
+
   return (
     <AuthContext.Provider
       value={{ session, user, loading, signIn, signUp, signOut, signInWithGoogle, signInWithKakao }}
     >
       {children}
+      {/* 계정 복구 모달: restoreUser 상태가 있을 때만 노출 */}
+      <RestoreAccountModal
+        isOpen={!!restoreUser}
+        onRestore={handleRestore}
+        onCancel={handleCancelRestore}
+        daysRemaining={restoreUser ? 7 - differenceInDays(new Date(), parseISO(restoreUser.deletedAt)) : 0}
+      />
     </AuthContext.Provider>
   );
 }

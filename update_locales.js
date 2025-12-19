@@ -1,96 +1,206 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const localesDir = 'd:/study/jh/project_ara/src/locales';
-const sourceFile = path.join(localesDir, 'ko.json'); // ko.json이 가장 완벽하므로 이를 기준으로 함, 하지만 번역은 영어로 채워야 함. 
-// 사용자 요청은 "키값으로 출력되는거 어떻게 할래?" -> 영어라도 채워넣어야 함.
-// 앞서 en.json 복구가 우선임. en.json 복구 후 en.json의 signup을 가져다 쓰거나, 
-// 하드코딩된 영어 데이터를 사용하는게 나음.
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const signupData = {
-    "title_social": "Social Sign Up",
-    "title_email": "Sign Up",
-    "later": "Do it later",
-    "go_home": "Go Home",
-    "step1_title": "Sign Up Agreement",
-    "step1_desc": "Please agree to the terms to use the service.",
-    "agree_all": "Agree to All",
-    "agree_terms": "Agree to Terms of Service",
-    "agree_privacy": "Agree to Privacy Policy",
-    "agree_age": "I am 14 years or older",
-    "agree_marketing": "Agree to receive marketing information (Optional)",
-    "next_step": "Next Step",
-    "step2_title": "Enter Your Information",
-    "label_email": "Email",
-    "label_password": "Password",
-    "label_password_confirm": "Confirm Password",
-    "label_nickname": "Nickname",
-    "error_email_taken": "This email is already in use.",
-    "error_nickname_taken": "This nickname is already in use.",
-    "error_email_check_retry": "Please try the email duplicate check again.",
-    "error_nickname_check_retry": "Please try the nickname duplicate check again.",
-    "nickname_detected_lang": "Detected language:",
-    "nickname_lang_unknown": "Unknown",
-    "nickname_hint": "Length {min}~{max} characters, max 2 underscores",
-    "image_size_hint": "Max 2MB · JPG/PNG/GIF",
-    "step_agreement": "Agreement",
-    "step_info": "Information",
-    "step_profile": "Profile",
-    "stepper_aria": "Sign Up Steps",
-    "detail_view": "View Details",
-    "required_mark": "(Required)",
-    "checking": "Checking...",
-    "check_duplicate": "Check",
-    "available": "Available.",
-    "already_in_use": "Already in use.",
-    "gender_male": "Male",
-    "gender_female": "Female",
-    "label_gender": "Gender",
-    "error_gender_required": "Please select gender.",
-    "label_birth": "Date of Birth",
-    "error_birth_required": "Please enter date of birth.",
-    "calendar_alt": "Calendar",
-    "label_country": "Country",
-    "error_country_required": "Please select country.",
-    "lang_korean": "Korean",
-    "lang_english": "English",
-    "lang_japanese": "Japanese",
-    "lang_chinese": "Chinese",
-    "lang_russian": "Russian",
-    "lang_vietnamese": "Vietnamese",
-    "lang_bengali": "Bengali",
-    "lang_arabic": "Arabic",
-    "lang_hindi": "Hindi",
-    "lang_thai": "Thai",
-    "lang_spanish": "Spanish",
-    "lang_french": "French",
-    "lang_portuguese": "Portuguese",
-    "lang_portuguese_brazil": "Brazilian Portuguese",
-    "lang_german": "German",
-    "lang_finnish": "Finnish",
-    "btn_previous": "Previous",
-    "btn_next_step": "Next Step"
+const localesDir = path.join(__dirname, 'src/locales');
+
+const translations = {
+  ko: {
+    "settings.withdraw_reason_label": "탈퇴 사유",
+    "settings.withdraw_reason_placeholder": "사유를 선택해주세요",
+    "settings.withdraw_detail_placeholder": "구체적인 사유를 입력해주세요",
+    "settings.reason_low_usage": "자주 사용하지 않음",
+    "settings.reason_rejoin": "재가입 목적",
+    "settings.reason_privacy": "개인정보/보안 우려",
+    "settings.reason_feature": "기능 불만족",
+    "settings.reason_other": "기타"
+  },
+  en: {
+    "settings.withdraw_reason_label": "Reason for withdrawal",
+    "settings.withdraw_reason_placeholder": "Select a reason",
+    "settings.withdraw_detail_placeholder": "Please provide details",
+    "settings.reason_low_usage": "I don't use it often",
+    "settings.reason_rejoin": "To rejoin with a new account",
+    "settings.reason_privacy": "Privacy/Security concerns",
+    "settings.reason_feature": "Unsatisfied with features",
+    "settings.reason_other": "Other"
+  },
+  ja: {
+    "settings.withdraw_reason_label": "退会理由",
+    "settings.withdraw_reason_placeholder": "理由を選択してください",
+    "settings.withdraw_detail_placeholder": "詳細を入力してください",
+    "settings.reason_low_usage": "あまり使用していない",
+    "settings.reason_rejoin": "再加入のため",
+    "settings.reason_privacy": "個人情報/セキュリティの懸念",
+    "settings.reason_feature": "機能に不満がある",
+    "settings.reason_other": "その他"
+  },
+  zh: {
+    "settings.withdraw_reason_label": "注销原因",
+    "settings.withdraw_reason_placeholder": "请选择原因",
+    "settings.withdraw_detail_placeholder": "请填写具体原因",
+    "settings.reason_low_usage": "使用频率低",
+    "settings.reason_rejoin": "为了重新注册",
+    "settings.reason_privacy": "隐私/安全担忧",
+    "settings.reason_feature": "功能不满意",
+    "settings.reason_other": "其他"
+  },
+  es: {
+    "settings.withdraw_reason_label": "Motivo de retiro",
+    "settings.withdraw_reason_placeholder": "Seleccione un motivo",
+    "settings.withdraw_detail_placeholder": "Proporcione detalles",
+    "settings.reason_low_usage": "No lo uso a menudo",
+    "settings.reason_rejoin": "Para volver a unirse",
+    "settings.reason_privacy": "Preocupaciones de privacidad",
+    "settings.reason_feature": "Insatisfecho con las funciones",
+    "settings.reason_other": "Otro"
+  },
+  fr: {
+    "settings.withdraw_reason_label": "Raison du retrait",
+    "settings.withdraw_reason_placeholder": "Sélectionnez une raison",
+    "settings.withdraw_detail_placeholder": "Veuillez fournir des détails",
+    "settings.reason_low_usage": "Je ne l'utilise pas souvent",
+    "settings.reason_rejoin": "Pour rejoindre à nouveau",
+    "settings.reason_privacy": "Problèmes de confidentialité",
+    "settings.reason_feature": "Insatisfait des fonctionnalités",
+    "settings.reason_other": "Autre"
+  },
+  de: {
+    "settings.withdraw_reason_label": "Grund für den Austritt",
+    "settings.withdraw_reason_placeholder": "Wählen Sie einen Grund",
+    "settings.withdraw_detail_placeholder": "Bitte geben Sie Details an",
+    "settings.reason_low_usage": "Ich benutze es nicht oft",
+    "settings.reason_rejoin": "Um wieder beizutreten",
+    "settings.reason_privacy": "Datenschutzbedenken",
+    "settings.reason_feature": "Unzufrieden mit Funktionen",
+    "settings.reason_other": "Andere"
+  },
+  ru: {
+    "settings.withdraw_reason_label": "Причина удаления",
+    "settings.withdraw_reason_placeholder": "Выберите причину",
+    "settings.withdraw_detail_placeholder": "Укажите подробности",
+    "settings.reason_low_usage": "Редко пользуюсь",
+    "settings.reason_rejoin": "Хочу создать новый аккаунт",
+    "settings.reason_privacy": "Конфиденциальность",
+    "settings.reason_feature": "Не нравятся функции",
+    "settings.reason_other": "Другое"
+  },
+  pt: {
+    "settings.withdraw_reason_label": "Motivo da saída",
+    "settings.withdraw_reason_placeholder": "Selecione um motivo",
+    "settings.withdraw_detail_placeholder": "Forneça detalhes",
+    "settings.reason_low_usage": "Não uso com frequência",
+    "settings.reason_rejoin": "Para entrar novamente",
+    "settings.reason_privacy": "Preocupações com privacidade",
+    "settings.reason_feature": "Insatisfeito com recursos",
+    "settings.reason_other": "Outro"
+  },
+  "pt-br": {
+    "settings.withdraw_reason_label": "Motivo da saída",
+    "settings.withdraw_reason_placeholder": "Selecione um motivo",
+    "settings.withdraw_detail_placeholder": "Forneça detalhes",
+    "settings.reason_low_usage": "Não uso com frequência",
+    "settings.reason_rejoin": "Para entrar novamente",
+    "settings.reason_privacy": "Preocupações com privacidade",
+    "settings.reason_feature": "Insatisfeito com recursos",
+    "settings.reason_other": "Outro"
+  },
+  vi: {
+    "settings.withdraw_reason_label": "Lý do hủy",
+    "settings.withdraw_reason_placeholder": "Chọn lý do",
+    "settings.withdraw_detail_placeholder": "Vui lòng cung cấp chi tiết",
+    "settings.reason_low_usage": "Ít sử dụng",
+    "settings.reason_rejoin": "Để tham gia lại",
+    "settings.reason_privacy": "Lo ngại về quyền riêng tư",
+    "settings.reason_feature": "Không hài lòng với tính năng",
+    "settings.reason_other": "Khác"
+  },
+  th: {
+    "settings.withdraw_reason_label": "เหตุผลการถอนตัว",
+    "settings.withdraw_reason_placeholder": "เลือกเหตุผล",
+    "settings.withdraw_detail_placeholder": "โปรดระบุรายละเอียด",
+    "settings.reason_low_usage": "ไม่ได้ใช้บ่อย",
+    "settings.reason_rejoin": "เพื่อสมัครใหม่",
+    "settings.reason_privacy": "กังวลเรื่องความเป็นส่วนตัว",
+    "settings.reason_feature": "ไม่พอใจในฟีเจอร์",
+    "settings.reason_other": "อื่นๆ"
+  },
+  hi: {
+    "settings.withdraw_reason_label": "हटाने का कारण",
+    "settings.withdraw_reason_placeholder": "कारण चुनें",
+    "settings.withdraw_detail_placeholder": "विवरण दें",
+    "settings.reason_low_usage": "अक्सर उपयोग नहीं करते",
+    "settings.reason_rejoin": "फिर से जुड़ने के लिए",
+    "settings.reason_privacy": "गोपनीयता चिंता",
+    "settings.reason_feature": "सुविधाओं से असंतुष्ट",
+    "settings.reason_other": "अन्य"
+  },
+  ar: {
+    "settings.withdraw_reason_label": "سبب الانسحاب",
+    "settings.withdraw_reason_placeholder": "اختر سببا",
+    "settings.withdraw_detail_placeholder": "يرجى تقديم التفاصيل",
+    "settings.reason_low_usage": "لا أستخدمه كثيرًا",
+    "settings.reason_rejoin": "لإعادة الانضمام",
+    "settings.reason_privacy": "مخاوف الخصوصية",
+    "settings.reason_feature": "غير راض عن الميزات",
+    "settings.reason_other": "آخر"
+  },
+  bn: {
+    "settings.withdraw_reason_label": "প্রত্যাহারের কারণ",
+    "settings.withdraw_reason_placeholder": "একটি কারণ নির্বাচন করুন",
+    "settings.withdraw_detail_placeholder": "বিস্তারিত প্রদান করুন",
+    "settings.reason_low_usage": "বেশি ব্যবহার করি না",
+    "settings.reason_rejoin": "পুনরায় যোগ দেওয়ার জন্য",
+    "settings.reason_privacy": "গোপনীয়তা উদ্বেগ",
+    "settings.reason_feature": "বৈশিষ্ট্য নিয়ে অসন্তুষ্ট",
+    "settings.reason_other": "অন্যান্য"
+  },
+  fi: {
+    "settings.withdraw_reason_label": "Poistumisen syy",
+    "settings.withdraw_reason_placeholder": "Valitse syy",
+    "settings.withdraw_detail_placeholder": "Anna lisätietoja",
+    "settings.reason_low_usage": "En käytä usein",
+    "settings.reason_rejoin": "Liittyäkseni uudelleen",
+    "settings.reason_privacy": "Yksityisyyshuolet",
+    "settings.reason_feature": "Tyytymätön ominaisuuksiin",
+    "settings.reason_other": "Muu"
+  }
 };
 
-const targetLangs = ['zh', 'es', 'fr', 'de', 'ru', 'vi', 'bn', 'ar', 'hi', 'th', 'pt', 'pt-br', 'fi'];
+const files = fs.readdirSync(localesDir);
 
-targetLangs.forEach(lang => {
-    const filePath = path.join(localesDir, `${lang}.json`);
-    if (fs.existsSync(filePath)) {
-        try {
-            const content = fs.readFileSync(filePath, 'utf8');
-            let json = JSON.parse(content);
-            if (!json.signup) {
-                json.signup = signupData;
-                fs.writeFileSync(filePath, JSON.stringify(json, null, 2), 'utf8');
-                console.log(`Updated ${lang}.json`);
-            } else {
-                console.log(`Skipped ${lang}.json (Already has signup)`);
-            }
-        } catch (e) {
-            console.error(`Error processing ${lang}.json: ${e.message}`);
-        }
-    } else {
-        console.log(`File not found: ${lang}.json`);
+files.forEach(file => {
+  if (!file.endsWith('.json')) return;
+  const lang = file.replace('.json', '');
+  const filePath = path.join(localesDir, file);
+  
+  try {
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    
+    // Select translation map or fallback to English
+    const newKeys = translations[lang] || translations['en'];
+
+    // Merge new keys
+    let updated = false;
+    for (const [key, value] of Object.entries(newKeys)) {
+      if (!data.settings) data.settings = {}; // ensure settings namespace exists
+      
+      const parts = key.split('.');
+      if (parts.length === 2 && parts[0] === 'settings') {
+         if (!data.settings) data.settings = {};
+         data.settings[parts[1]] = value;
+         updated = true;
+      }
     }
+    
+    if (updated) {
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+        console.log(`Updated ${file}`);
+    }
+  } catch (err) {
+    console.error(`Error processing ${file}:`, err);
+  }
 });

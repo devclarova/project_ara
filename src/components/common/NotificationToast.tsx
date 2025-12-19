@@ -10,6 +10,7 @@ interface NotificationToastProps {
   };
   content: string;
   timestamp: string;
+  replyId?: string | null;
 }
 
 export const NotificationToast: React.FC<NotificationToastProps> = ({
@@ -17,6 +18,7 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
   sender,
   content,
   timestamp,
+  replyId,
 }) => {
   const { t, i18n } = useTranslation();
 
@@ -32,7 +34,9 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
       };
       case 'like': return {
         icon: '❤️',
-        label: t('notification.action_like_feed', '회원님의 게시글을 좋아합니다'),
+        label: replyId 
+          ? t('notification.action_like_comment', '회원님의 댓글을 좋아합니다')
+          : t('notification.action_like_feed', '회원님의 게시글을 좋아합니다'),
         bgColor: 'bg-rose-50 dark:bg-rose-900/20',
         iconBg: 'bg-rose-100 dark:bg-rose-800',
         textColor: 'text-rose-600 dark:text-rose-400',

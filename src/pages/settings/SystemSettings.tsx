@@ -8,10 +8,11 @@ import LanguageSelect from './LanguageSelect';
 import ThemeSelect from './ThemeSelect';
 
 interface PrivacySettingsProps {
-  onBackToMenu?: () => void; // ← 부모에서 전달받는 콜백 (선택)
+  onBackToMenu?: () => void;
+  searchQuery?: string;
 }
 
-function SystemSettings({ onBackToMenu }: PrivacySettingsProps) {
+function SystemSettings({ onBackToMenu, searchQuery }: PrivacySettingsProps) {
   const { t, i18n } = useTranslation();
   const [active, setActive] = useState<ActiveSystem>(null);
 
@@ -105,8 +106,8 @@ function SystemSettings({ onBackToMenu }: PrivacySettingsProps) {
         </div>
 
         <div className="space-y-2">
-          <Row label={t('settings.language')} onClick={() => open('language')} />
-          <Row label={t('settings.theme')} onClick={() => open('theme')} />
+          <Row label={t('settings.language')} onClick={() => open('language')} searchQuery={searchQuery} />
+          <Row label={t('settings.theme')} onClick={() => open('theme')} searchQuery={searchQuery} />
         </div>
 
 

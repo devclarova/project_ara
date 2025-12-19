@@ -375,24 +375,39 @@ export default function TweetCard({
       toast.error(t('tweet.delete_failed'));
     }
   };
+  const isNavigatingRef = useRef(false);
+
+  const safeNavigate = (path: string) => {
+    if (isNavigatingRef.current) return;
+    // 현재 경로와 동일하면 이동 안 함
+    if (location.pathname + location.search === path) return;
+
+    isNavigatingRef.current = true;
+    navigate(path);
+    
+    // 만약 이동이 일어나지 않거나(같은 페이지 등), 뒤로가기로 돌아왔을 때를 대비해 타임아웃으로 해제
+    setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 2000);
+  };
+
   const handleCardClick = () => {
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, type === 'reply' ? tweetId! : id);
     }
     const target = type === 'reply' ? `/sns/${tweetId}?highlight=${id}` : `/sns/${id}`;
-    if (location.pathname + location.search !== target) {
-      navigate(target);
-    }
+    safeNavigate(target);
   };
+  const isDeleted = user.username === 'anonymous';
+
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isDeleted) return;
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, id);
     }
     const target = `/profile/${encodeURIComponent(user.name)}`;
-    if (location.pathname !== target) {
-      navigate(target);
-    }
+    safeNavigate(target);
   };
   const isMyTweet = authUser?.id === user.username;
   const nameClass = `
@@ -428,93 +443,91 @@ export default function TweetCard({
       className="relative px-4 py-3 cursor-pointer transition-colors border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-background hover:bg-gray-50/50 dark:hover:bg-primary/10"
       onClick={handleCardClickSafe}
     >
-      <div className="flex space-x-3">
-        {/* 아바타 */}
-        <div onClick={handleAvatarClick} className="w-10 h-10 flex-shrink-0">
+      {/* Refactored Layout: Header Row (Avatar+Meta) + Full Width Content */}
+      <div className="flex items-start gap-3 mb-1">
+        {/* Avatar */}
+        <div onClick={handleAvatarClick} className={`w-10 h-10 flex-shrink-0 ${isDeleted ? 'cursor-default' : 'cursor-pointer'}`}>
           <Avatar className="w-10 h-10">
-            <AvatarImage src={user.avatar || '/default-avatar.svg'} alt={user.name} />
-            <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+            <AvatarImage src={user.avatar || '/default-avatar.svg'} alt={isDeleted ? t('deleted_user') : user.name} />
+            <AvatarFallback>{isDeleted ? '?' : user.name.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
         </div>
-        {/* 본문 */}
-        <div className="flex-1 min-w-0">
-          <div 
-            className="flex items-center justify-between relative cursor-pointer" 
-            ref={menuRef}
-            onClick={(e) => {
-              // 프로필/더보기가 아닌 빈 공간 클릭 시 이동
-              if (e.target === e.currentTarget) {
-                 handleCardClick();
-              }
-            }}
-          >
-            <div className="flex items-center flex-wrap">
-              <span className={nameClass} onClick={handleAvatarClick}>
-                {user.name}
-              </span>
-              {authorCountryFlagUrl && (
-                <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 ml-2 h-5">
-                  <img
-                    src={authorCountryFlagUrl}
-                    alt={authorCountryName ?? '국가'}
-                    title={authorCountryName ?? ''}
-                    className="w-5 h-3.5 rounded-[2px] object-cover"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </Badge>
-              )}
-              {!authorCountryFlagUrl && authorCountryName && (
-                <Badge
-                  variant="secondary"
-                  className="flex items-center px-1 py-0.5 ml-2"
-                  title={authorCountryName}
-                >
-                  <span className="text-xs">🌐</span>
-                </Badge>
-              )}
-              <span className={`${metaClass} mx-1`}>·</span>
-              <span className={`${metaClass} flex-shrink-0`}>
-                {(() => {
-                  if (!timestamp) return '';
-                  try {
-                    const date = new Date(timestamp);
-                    if (isNaN(date.getTime())) return timestamp; // 원본 반환 (ISO string 등)
-                    const now = new Date();
-                    const diff = now.getTime() - date.getTime();
+
+        {/* User Info & Menu */}
+        <div className="flex-1 min-w-0 flex items-start justify-between pt-0.5 relative">
+          <div className="flex items-center flex-wrap mr-1">
+            <span 
+              className={isDeleted ? 'font-bold text-gray-500 cursor-default' : nameClass} 
+              onClick={isDeleted ? undefined : handleAvatarClick}
+            >
+              {isDeleted ? t('deleted_user') : user.name}
+            </span>
+            {authorCountryFlagUrl && !isDeleted && (
+              <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 ml-2 h-5">
+                <img
+                  src={authorCountryFlagUrl}
+                  alt={authorCountryName ?? '국가'}
+                  title={authorCountryName ?? ''}
+                  className="w-5 h-3.5 rounded-[2px] object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </Badge>
+            )}
+            {!authorCountryFlagUrl && authorCountryName && (
+              <Badge
+                variant="secondary"
+                className="flex items-center px-1 py-0.5 ml-2"
+                title={authorCountryName}
+              >
+                <span className="text-xs">🌐</span>
+              </Badge>
+            )}
+            <span className={`${metaClass} mx-1`}>·</span>
+            <span className={`${metaClass} flex-shrink-0`}>
+              {(() => {
+                if (!timestamp) return '';
+                try {
+                  const date = new Date(timestamp);
+                  if (isNaN(date.getTime())) return timestamp; // 원본 반환 (ISO string 등)
+                  const now = new Date();
+                  const diff = now.getTime() - date.getTime();
                     
-                    // 언어 설정 확인 (i18n.language가 없으면 기본값 'ko')
-                    const currentLang = i18n.language || 'ko';
+                  // 언어 설정 확인 (i18n.language가 없으면 기본값 'ko')
+                  const currentLang = i18n.language || 'ko';
                     
-                    // 24시간 이내는 시간만 표시
-                    if (diff < 24 * 60 * 60 * 1000) {
-                      return new Intl.DateTimeFormat(currentLang, { 
-                        hour: 'numeric', 
-                        minute: 'numeric', 
-                        hour12: true 
-                      }).format(date);
-                    }
-                    // 24시간 이후는 날짜 + 시간 표시 (원복)
+                  // 24시간 이내는 시간만 표시
+                  if (diff < 24 * 60 * 60 * 1000) {
                     return new Intl.DateTimeFormat(currentLang, { 
-                      month: 'short', 
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: true
+                      hour: 'numeric', 
+                      minute: 'numeric', 
+                      hour12: true 
                     }).format(date);
-                  } catch (e) {
-                    console.error('Date formatting error:', e);
-                    return timestamp;
                   }
-                })()}
-              </span>
-            </div>
+                  // 24시간 이후는 날짜 + 시간 표시 (원복)
+                  return new Intl.DateTimeFormat(currentLang, { 
+                    month: 'short', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                  }).format(date);
+                } catch (e) {
+                  console.error('Date formatting error:', e);
+                  return timestamp;
+                }
+              })()}
+            </span>
+          </div>
+
+          {/* Menu Button */}
+          <div className="relative" ref={menuRef}>
             <button
               onClick={e => {
                 e.stopPropagation();
                 setShowMenu(prev => !prev);
               }}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition"
+              className="p-2 -mr-2 -mt-2 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition"
             >
               <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
             </button>
@@ -549,6 +562,11 @@ export default function TweetCard({
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Full Width Content & Actions */}
+      <div className="w-full">
           <div
             ref={contentRef}
             className={`${contentClass} transition-all ${
@@ -745,7 +763,6 @@ export default function TweetCard({
               <span className="text-sm">{viewCount}</span>
             </button>
           </div>
-        </div>
       </div>
       {showDialog && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[1000]">

@@ -32,15 +32,22 @@ import { DirectChatProvider } from './contexts/DirectChatContext';
 import Header from './components/common/Header';
 import SnsPage from './pages/sns/SnsPage';
 import SnsDetailPage from './pages/sns/SnsDetailPage';
+import GoodsPage from './pages/goods/GoodsPage';
+import GoodsDetailPage from './pages/goods/GoodsDetailPage';
 import AdminLogin from './pages/admin/AdminLogin';
+
 import AdminHome from './pages/admin/AdminHome';
 import AdminStudyUpload from './pages/admin/AdminStudyUpload';
 import AdminReports from './pages/admin/AdminReports';
 import AdminContentModeration from './pages/admin/AdminContentModeration';
+import AdminGoodsUpload from './pages/admin/AdminGoodsUpload'; // Added
 import AdminAnalytics from './pages/admin/AdminAnalytics'; // To be created next
 import { Toaster } from 'sonner'; // 토스트 컴포넌트 추가
 import Footer from './components/common/Footer';
-import { ThemeProvider } from './components/theme-provider';
+import { ThemeProvider, useTheme } from './components/theme-provider';
+import AdminLayout from './pages/admin/AdminLayout'; // Layout 추가
+import UserManagement from './pages/admin/UserManagement'; // UserManagement 추가
+import AdminSettings from './pages/admin/AdminSettings'; // AdminSettings 추가
 import { GlobalNotificationListener } from './components/common/GlobalNotificationListener';
 
 // ---------- 인증 가드 ----------
@@ -105,14 +112,21 @@ function AppInner() {
             <Route path="/studyList" element={<StudyListPage />} />
             <Route path="/sns" element={<SnsPage />} />
             <Route path="/sns/:id" element={<SnsDetailPage />} />
+            <Route path="/goods" element={<GoodsPage />} />
+            <Route path="/goods/:id" element={<GoodsDetailPage />} />
 
             {/* Admin Routes */}
-            <Route path="/admin" element={<AdminHome />} />
-            <Route path="/admin/study/upload" element={<AdminStudyUpload />} />
-            <Route path="/admin/reports" element={<AdminReports />} />
-            <Route path="/admin/content" element={<AdminContentModeration />} />
-            <Route path="/admin/analytics" element={<AdminAnalytics />} />
             <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminHome />} />
+              <Route path="users" element={<UserManagement />} />
+              <Route path="settings" element={<AdminSettings />} />
+              <Route path="study/upload" element={<AdminStudyUpload />} />
+              <Route path="reports" element={<AdminReports />} />
+              <Route path="content" element={<AdminContentModeration />} />
+              <Route path="analytics" element={<AdminAnalytics />} />
+              <Route path="goods/new" element={<AdminGoodsUpload />} />
+            </Route>
 
             <Route element={<RequireGuest />}>
               <Route path="/signup" element={<SignUpPage />} />
@@ -150,33 +164,46 @@ function AppInner() {
 }
 
 // ---------- 최상위 App (Provider + Router 래핑) ----------
+// 감싸야 useTheme 사용 가능
+const ThemedToaster = () => {
+  const { theme } = useTheme();
+  
+  const isDarkMode = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  return (
+    <Toaster
+      position="bottom-right"
+      expand={true}
+      richColors
+      theme={theme as 'light' | 'dark' | 'system'}
+      toastOptions={{
+        duration: 4000,
+        className: 'font-sans',
+        style: {
+          background: isDarkMode ? 'rgba(24, 24, 27, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(16px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+          border: '1px solid rgba(0, 191, 165, 0.2)', // Original Teal Border
+          color: isDarkMode ? '#fff' : 'hsl(var(--foreground))',
+          borderRadius: '16px',
+          padding: '10px 14px',
+          maxWidth: '280px',
+          boxShadow: '0 8px 32px 0 rgba(0, 191, 165, 0.12), 0 1px 2px 0 rgba(0, 0, 0, 0.02)',
+          marginBottom: '8px', 
+        }
+      }}
+    />
+  );
+};
+
+// ---------- 최상위 App (Provider + Router 래핑) ----------
 const App = () => {
   return (
     <AuthProvider>
       <ThemeProvider defaultTheme="system" storageKey="theme-mode">
         <NewChatNotificationProvider>
           <DirectChatProvider>
-            <Toaster
-              position="bottom-right"
-              expand={true}
-              richColors
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: 'rgba(0, 191, 165, 0.05)', /* Light primary tint background */
-                  backdropFilter: 'blur(16px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(16px) saturate(180%)',
-                  border: '1px solid rgba(0, 191, 165, 0.2)',
-                  color: 'hsl(var(--foreground))',
-                  borderRadius: '16px',
-                  padding: '10px 14px',
-                  maxWidth: '280px',
-                  boxShadow: '0 8px 32px 0 rgba(0, 191, 165, 0.12), 0 1px 2px 0 rgba(0, 0, 0, 0.02)',
-                  marginBottom: '8px',
-                },
-                className: 'font-sans',
-              }}
-            />
+            <ThemedToaster />
             <Router>
               <GlobalNotificationListener />
               <AppInner />

@@ -8,7 +8,10 @@
     "more": "अधिक",
     "settings": "सेटिंग्स",
     "profile": "प्रोफाइल",
-    "post": "पोस्ट"
+    "post": "पोस्ट",
+    "admin": "एडमिन मोड",
+    "admin_dashboard": "एडमिन डैशबोर्ड",
+    "goods": "दुकान"
   },
   "notification": {
     "like_feed": "ने आपकी पोस्ट पसंद की।",
@@ -25,7 +28,7 @@
     "error_clear_all": "सूचनाएं साफ़ करते समय त्रुटि हुई",
     "clear_all": "साफ़ करें",
     "action_comment": "आपकी फ़ीड पर एक टिप्पणी छोड़ी गई है।",
-    "action_like_comment": "आपकी टिप्पणी पसंद है।",
+    "action_like_comment": "आपकी टिप्पणी पसंद की।",
     "action_like_feed": "आपकी फ़ीड पसंद है।",
     "no_notifications": "अभी कोई नई सूचना नहीं है।",
     "delete_confirm_title": "सूचना हटाएँ",
@@ -102,7 +105,15 @@
     "service_ready": "अब आप सेवा का उपयोग कर सकते हैं।",
     "start_now": "अभी शुरू करें",
     "go_home": "होम पर जाएं",
-    "signup_error": "पंजीकरण के दौरान त्रुटि"
+    "signup_error": "पंजीकरण के दौरान त्रुटि",
+    "account_restore_expired": "खाता बहाल नहीं किया जा सकता क्योंकि हटाने के अनुरोध को 7 दिन बीत चुके हैं।",
+    "restore_error": "खाता बहाल करते समय एक त्रुटि हुई।",
+    "cancel_logout": "रद्द करें (लॉग आउट)",
+    "restore_title": "खाता बहाली",
+    "restore_desc_1": "यह खाता वर्तमान में विलोपन अनुग्रह अवधि में है।",
+    "restore_desc_2": "क्या आप अपना खाता बहाल करना चाहते हैं?",
+    "restore_remaining": "स्थायी विलोपन तक {{days}} दिन शेष हैं।",
+    "restore_confirm": "खाता बहाल करें"
   },
   "signup": {
     "title_social": "सोशल साइन अप",
@@ -181,6 +192,7 @@
     "view_profile": "प्रोफाइल देखें",
     "settings_desc": "प्रोफ़ाइल/सेटिंग्स",
     "search": "खोजें",
+    "search_placeholder": "खोजें...",
     "back": "वापस",
     "loading": "लोड हो रहा है...",
     "error": "त्रुटि",
@@ -203,9 +215,7 @@
     "error_empty_content": "Content is empty",
     "block": "ब्लॉक",
     "unblock": "अनब्लॉक",
-    "report": "रिपोर्ट",
-    "delete": "हटाएं",
-    "edit": "संपादित करें"
+    "report": "रिपोर्ट"
   },
   "settings": {
     "languageSelect": "भाषा चुनें",
@@ -230,7 +240,10 @@
     "connect_sns": "SNS खाता जोड़ें",
     "withdraw": "खाता हटाएं",
     "withdraw_phrase": "मेरा खाता हटाएं",
-    "withdraw_verify_placeholder": "Please type \"{{phrase}}\" to confirm",
+    "withdraw_grace_period_1": "हटाने के अनुरोध पर 7 दिनों की छूट अवधि लागू होती है।",
+    "withdraw_grace_period_2": "आप 7 दिनों के भीतर लॉग इन करके तुरंत अपना खाता पुनर्स्थापित कर सकते हैं।",
+    "withdraw_grace_period_3": "7 दिनों के बाद, पुनर्स्थापन असंभव है, और 30 दिनों के बाद डेटा स्थायी रूप से हटा दिया जाता है।",
+    "withdraw_verify_placeholder": "पुष्टि करने के लिए कृपया \"{{phrase}}\" टाइप करें",
     "withdraw_modal_title": "Are you sure you want to delete your account?",
     "withdraw_warning_1": "Your account information cannot be recovered.",
     "withdraw_warning_2": "All posts and comments will be deleted.",
@@ -258,7 +271,7 @@
     "connect_google": "Google खाता कनेक्ट करें",
     "connect_kakao": "Kakao खाता कनेक्ट करें",
     "sns_connect_note": "आप सेटिंग > गोपनीयता में किसी भी समय लिंक किए गए खातों को डिस्कनेक्ट कर सकते हैं। (जल्द आ रहा है)",
-    "account_settings": "Settings",
+    "account_settings": "सेटिंग्स",
     "support_policy": "समर्थन और नीति",
     "help_center": "सहायता केंद्र",
     "terms": "सेवा की शर्तें",
@@ -274,7 +287,15 @@
     "title_marketing": "विपणन सहमति",
     "title_support": "सहायता केंद्र",
     "security_title": "सुरक्षा सेटिंग्स",
-    "session_management": "सत्र प्रबंधन"
+    "session_management": "सत्र प्रबंधन",
+    "withdraw_reason_label": "हटाने का कारण",
+    "withdraw_reason_placeholder": "कारण चुनें",
+    "withdraw_detail_placeholder": "विवरण दें",
+    "reason_low_usage": "अक्सर उपयोग नहीं करते",
+    "reason_rejoin": "फिर से जुड़ने के लिए",
+    "reason_privacy": "गोपनीयता चिंता",
+    "reason_feature": "सुविधाओं से असंतुष्ट",
+    "reason_other": "अन्य"
   },
   "profile": {
     "edit_profile": "प्रोफाइल संपादित करें",
@@ -340,7 +361,8 @@
   },
   "trending": {
     "title": "आपके लिए ट्रेंडिंग",
-    "no_trending": "कोई ट्रेंड उपलब्ध नहीं"
+    "no_trending": "कोई ट्रेंड उपलब्ध नहीं",
+    "shared_photo": "एक फोटो साझा की।"
   },
   "chat": {
     "direct_chat": "संदेश",
@@ -370,8 +392,8 @@
     "next": "अगला",
     "new_chat": "New Chat",
     "new_message": "नया संदेश",
-    "user_search_placeholder": "ユーザーを検索中...",
-    "user_search_loading": "ユーザーを検索中...",
+    "user_search_placeholder": "उपयोगकर्ताओं को खोजें...",
+    "user_search_loading": "उपयोगकर्ताओं की खोज की जा रही है...",
     "no_chats": "अभी तक कोई चैट नहीं है।",
     "new_badge": "NEW",
     "loading_messages": "संदेश लोड हो रहा है...",
@@ -437,5 +459,55 @@
       "privacy": "गोपनीयता",
       "cookies": "कुकीज़"
     }
+  },
+  "goods": {
+    "hero_title": "दुकान",
+    "category_all": "सब",
+    "items": {
+      "hoodie": {
+        "title": "सिग्नेचर हुडी",
+        "desc": "सिग्नेचर लोगो के साथ प्रीमियम कॉटन हूडि। दैनिक पहनने के लिए आरामदायक फिट।"
+      },
+      "tote_bag": {
+        "title": "इको टोट बैग",
+        "desc": "पर्यावरण के अनुकूल कैनवास टोट बैग। आपकी आवश्यक वस्तुओं के लिए टिकाऊ और विशाल।"
+      },
+      "note_set": {
+        "title": "प्रीमियम नोट सेट",
+        "desc": "उच्च गुणवत्ता वाले कागज का नोटबुक सेट। पढ़ाई और जर्नलिंग के लिए बिल्कुल सही।"
+      },
+      "planner": {
+        "title": "डिजिटल प्लानर 2026",
+        "desc": "iPad/टै टैबलेट के लिए सब-कुछ-एक डिजिटल प्लानर। अपने 2026 को कुशलतापूर्वक व्यवस्थित करें।"
+      },
+      "cap": {
+        "title": "लोगो कैप",
+        "desc": "कढ़ाई किए गए लोगो के साथ स्टाइलिश बॉल कैप। कस्टम फिट के लिए समायोज्य पट्टा।"
+      },
+      "tumbler": {
+        "title": "मिनिमलिस्ट टम्बलर",
+        "desc": "स्टेनलेस स्टील टम्बलर। 12 घंटे तक पेय को गर्म/ठंडा रखता है।"
+      }
+    },
+    "price_unit": "$",
+    "category_clothing": "कपड़े",
+    "category_accessories": "सामान",
+    "category_digital": "डिजिटल",
+    "category_stationery": "स्टेशनरी",
+    "new_arrival": "नया",
+    "best_seller": "सबसे बिकाऊ",
+    "sold_out": "बिक गया",
+    "product_not_found": "उत्पाद नहीं मिला",
+    "reviews_count": "{{count}} समीक्षाएं",
+    "free_shipping": "$50 से अधिक पर मुफ्त शिपिंग",
+    "authentic_guarantee": "असली होने की गारंटी",
+    "option_color": "रंग",
+    "option_size": "आकार",
+    "add_to_cart": "कार्ट में जोड़ें",
+    "product_details": "उत्पाद विवरण",
+    "related_items": "आपको यह भी पसंद आ सकता है",
+    "buy_now": "अभी खरीदें",
+    "quantity": "मात्रा",
+    "back_to_list": "सूची पर वापस जाएं"
   }
 }

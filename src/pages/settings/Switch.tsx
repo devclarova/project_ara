@@ -1,18 +1,25 @@
+import HighlightText from '@/components/common/HighlightText';
+
 type SwitchProps = {
   checked: boolean;
   onChange: (checked: boolean) => void;
   label: string;
   description?: string;
+  searchQuery?: string;
 };
 
-export default function Switch({ checked, onChange, label, description }: SwitchProps) {
+export default function Switch({ checked, onChange, label, description, searchQuery }: SwitchProps) {
   return (
     <div className="flex items-center justify-between py-3">
       {/* 왼쪽 텍스트 영역 */}
       <div className="flex flex-col">
-        <span className="text-sm font-medium text-gray-900 dark:text-gray-200">{label}</span>
+        <span className="text-sm font-medium text-gray-900 dark:text-gray-200">
+            <HighlightText text={label} query={searchQuery} />
+        </span>
         {description && (
-          <span className="text-xs text-gray-500 dark:text-gray-400">{description}</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            <HighlightText text={description} query={searchQuery} />
+          </span>
         )}
       </div>
 
