@@ -5,11 +5,32 @@ interface TranslateButtonProps {
   text: string;
   contentId: string;
   setTranslated: (value: string) => void;
+  size?: 'sm' | 'md' | 'lg';
 }
 
-export default function TranslateButton({ text, contentId, setTranslated }: TranslateButtonProps) {
+export default function TranslateButton({
+  text,
+  contentId,
+  setTranslated,
+  size = 'md',
+}: TranslateButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+
+  const sizeMap = {
+    sm: {
+      button: 'w-7 h-7',
+      icon: 'text-sm',
+    },
+    md: {
+      button: 'w-9 h-9',
+      icon: 'text-lg',
+    },
+    lg: {
+      button: 'w-11 h-11',
+      icon: 'text-xl',
+    },
+  };
 
   // 사용자 타겟 언어 가져오기
   const getUserTargetLang = async () => {
@@ -96,7 +117,7 @@ export default function TranslateButton({ text, contentId, setTranslated }: Tran
       if (existing) {
         setTranslated(existing.translated_text);
         // 이미 번역된 내용이 있으면 로딩 끝
-        setIsLoading(false); 
+        setIsLoading(false);
         return;
       }
 
@@ -179,13 +200,14 @@ export default function TranslateButton({ text, contentId, setTranslated }: Tran
         handleTranslate();
       }}
       disabled={isLoading || !text.trim()}
-      className="flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors
-"
+      className={`flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors ${sizeMap[size].button}`}
     >
       {isLoading ? (
-        <i className="ri-loader-4-line text-lg animate-spin text-gray-600 dark:text-gray-300" />
+        <i
+          className={`ri-loader-4-line animate-spin text-gray-600 dark:text-gray-300 ${sizeMap[size].icon}`}
+        />
       ) : (
-        <i className="ri-translate-2 text-lg text-gray-700 dark:text-gray-200" />
+        <i className={`ri-translate-2 text-gray-700 dark:text-gray-200 ${sizeMap[size].icon}`} />
       )}
     </button>
   );

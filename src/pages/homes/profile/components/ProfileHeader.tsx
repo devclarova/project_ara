@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import type { UserProfile } from '../ProfileAsap';
 import { useTranslation } from 'react-i18next';
+import TranslateButton from '@/components/common/TranslateButton';
 interface ProfileHeaderProps {
   userProfile: UserProfile;
   onProfileUpdated?: (updated: UserProfile) => void;
@@ -28,6 +29,7 @@ export default function ProfileHeader({
   const startYRef = useRef(0);
   const startPosRef = useRef(bannerPosY);
   const bannerPosYRef = useRef(bannerPosY);
+  const [translated, setTranslated] = useState<string>('');
   // 프로필 바뀌면 동기화
   useEffect(() => {
     setBannerPosY(userProfile.bannerPositionY ?? 50);
@@ -198,11 +200,11 @@ export default function ProfileHeader({
         )}
         {/* 내 프로필일 때만 “프로필 편집” 버튼 */}
         {isOwnProfile && (
-          <div className="flex justify-end mb-4 -mt-8 relative z-10">
+          <div className="flex justify-end mb-4 -mt-8 relative z-">
             <Button
               variant="outline"
               onClick={onEditClick}
-              className="rounded-full px-6 font-medium bg-primary/10 text-[#009e89] border-[#009e89] hover:bg-[#00bfa5]/10 dark:hover:bg-primary/30 transition-colors"
+              className="rounded-full px-6 font-medium bg-primary/10 text-[#009e89] border-[#009e89] hover:bg-primary/50 hover:text-white dark:hover:bg-primary/30 transition-colors"
             >
               {t('profile.edit_profile')}
             </Button>
@@ -215,15 +217,34 @@ export default function ProfileHeader({
             {userProfile.name}
           </h1>
           {/* 자기소개 */}
-          <div className="min-h-[1.25rem]">
-            {userProfile.bio ? (
-              <p className="text-gray-800 dark:text-gray-200 whitespace-pre-line leading-snug">
-                {userProfile.bio}
-              </p>
-            ) : (
-              <p className="opacity-0 select-none">.</p>
-            )}
-          </div>
+          {userProfile.bio ? (
+            <div className="space-y-2">
+              <div className="flex items-start gap-2">
+                {!isOwnProfile && (
+                  <TranslateButton
+                    text={userProfile.bio}
+                    contentId={`profile-bio-${userProfile.user_id}`}
+                    setTranslated={setTranslated}
+                    size="sm"
+                  />
+                )}
+
+                <p className="flex-1 text-gray-800 dark:text-gray-200 whitespace-pre-line leading-snug">
+                  {userProfile.bio}
+                </p>
+              </div>
+
+              {/* 번역 결과 */}
+              {translated && (
+                <div className="p-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 rounded-lg text-sm whitespace-pre-line break-words">
+                  {translated}
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="opacity-0 select-none">.</p>
+          )}
+
           {/* 원래 location 들어가던 자리 → 국적 + 국기 */}
           <div className="flex flex-wrap gap-3 text-gray-500 dark:text-gray-400 text-sm mt-2">
             {(userProfile.country || userProfile.countryFlagUrl) && (

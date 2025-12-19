@@ -243,7 +243,9 @@ export default function PrivacySettings({ onBackToMenu, searchQuery }: PrivacySe
           >
             <i className="ri-arrow-left-line text-lg" />
           </button>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('settings.privacy')}</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            {t('settings.privacy')}
+          </h3>
         </div>
 
         <div className="space-y-2">
@@ -263,7 +265,6 @@ export default function PrivacySettings({ onBackToMenu, searchQuery }: PrivacySe
         </div>
 
         {/* 하단 여백 */}
-
       </div>
 
       {/* 모달: active 가 있을 때만 렌더링 */}
@@ -416,7 +417,9 @@ export default function PrivacySettings({ onBackToMenu, searchQuery }: PrivacySe
                 disabled={withdrawing}
                 className="px-3 py-1.5 text-sm rounded-md bg-red-500 text-white hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {withdrawing ? t('settings.withdraw_btn_processing') : t('settings.withdraw_btn_confirm')}
+                {withdrawing
+                  ? t('settings.withdraw_btn_processing')
+                  : t('settings.withdraw_btn_confirm')}
               </button>
             </div>
           </div>

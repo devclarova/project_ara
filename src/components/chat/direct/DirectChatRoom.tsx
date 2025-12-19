@@ -156,15 +156,30 @@ const MessageItem = memo(
         {isMyMessage ? (
           <>
             <div className="message-bubble">
-              <div className="message-text">
-                <HighlightText 
-                  text={message.content} 
-                  query={searchQuery} 
-                  className="bg-white/90 text-primary font-medium" // 내 말풍선(Primary) 위에서는 흰색 배경에 Primary 텍스트
+              {/* 텍스트 */}
+              {message.content && (
+                <div className="message-text whitespace-pre-wrap break-words break-all">
+                  <HighlightText
+                    text={message.content}
+                    query={searchQuery}
+                    className="bg-white/90 text-primary font-medium"
+                  />
+                </div>
+              )}
+
+              {/* 이미지 */}
+              {message.attachments?.map(att => (
+                <LazyImage
+                  key={`${message.id}-${att.url}`}
+                  src={att.url}
+                  alt="image"
+                  className="rounded-lg max-w-[240px]"
                 />
-              </div>
+              ))}
+
               <div className="message-time">{formatTime(message.created_at)}</div>
             </div>
+
             <div className="message-avatar">
               <CachedAvatar
                 url={message.sender?.avatar_url}
@@ -181,23 +196,42 @@ const MessageItem = memo(
               />
             </div>
             <div className="message-bubble relative px-3 py-2">
-              {/* 원문 */}
-              <div className="message-text whitespace-pre-line break-words">
-                <HighlightText text={message.content} query={searchQuery} />
-              </div>
-              {/* 번역 결과 (말풍선 안쪽에서 자연스럽게 아래에 붙음) */}
+              {/* 텍스트 + 번역 */}
+              {message.content && (
+                <div className="flex items-center gap-2">
+                  <div className="message-text whitespace-pre-line break-words">
+                    <HighlightText text={message.content} query={searchQuery} />
+                  </div>
+                  <TranslateButton
+                    text={message.content}
+                    contentId={`dm_${message.id}`}
+                    setTranslated={setTranslated}
+                    size="sm"
+                  />
+                </div>
+              )}
+
+              {/* 번역 결과 */}
               {translated && (
                 <div className="mt-2 p-2 rounded-lg text-sm bg-gray-100 dark:bg-gray-800 dark:text-gray-400 whitespace-pre-line break-words">
                   {translated}
                 </div>
               )}
-              {/* 번역 버튼 - 말풍선 오른쪽 상단에 고정 (예쁘게 배치됨) */}
-              <TranslateButton
-                text={message.content}
-                contentId={`dm_${message.id}`}
-                setTranslated={setTranslated}
-              />
-              {/* 시간 */}
+
+              {/* 이미지 */}
+              {message.attachments?.length ? (
+                <div className="mt-2 flex flex-col gap-2">
+                  {message.attachments.map(att => (
+                    <LazyImage
+                      key={`${message.id}-${att.url}`}
+                      src={att.url}
+                      alt="image"
+                      className="rounded-lg max-w-[240px]"
+                    />
+                  ))}
+                </div>
+              ) : null}
+
               <div className="message-time mt-1">{formatTime(message.created_at)}</div>
             </div>
           </>
@@ -217,8 +251,24 @@ const MessageItem = memo(
   },
 );
 MessageItem.displayName = 'MessageItem';
-const DirectChatRoom = ({ chatId, isMobile, onBackToList, highlightMessageId }: DirectChatRoomProps) => {
-  const { messages, error, loadMessages, currentChat, exitDirectChat, loadMoreMessages, hasMoreMessages, loadNewerMessages, hasNewerMessages, searchMessagesInChat } = useDirectChat();
+const DirectChatRoom = ({
+  chatId,
+  isMobile,
+  onBackToList,
+  highlightMessageId,
+}: DirectChatRoomProps) => {
+  const {
+    messages,
+    error,
+    loadMessages,
+    currentChat,
+    exitDirectChat,
+    loadMoreMessages,
+    hasMoreMessages,
+    loadNewerMessages,
+    hasNewerMessages,
+    searchMessagesInChat,
+  } = useDirectChat();
   if (isMobile === null) return null;
   const messageEndRef = useRef<HTMLDivElement>(null);
   const previousMessageCount = useRef<number>(0);
@@ -229,11 +279,11 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList, highlightMessageId }: 
   const [currentResultIndex, setCurrentResultIndex] = useState(0);
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
-  
+
   // 10-zzeon: 신고 취소 메뉴 State
   const [showMenu, setShowMenu] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
-  
+
   // Main: 무한 스크롤 및 UI 상태
   const [showScrollDownBtn, setShowScrollDownBtn] = useState(false);
   const prevLastMessageId = useRef<string | null>(null); // 마지막 메시지 ID 추적용
@@ -271,33 +321,33 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList, highlightMessageId }: 
     if (!messages || messages.length === 0) return;
     const lastMessage = messages[messages.length - 1];
     const isNewMessageArrived = lastMessage.id !== prevLastMessageId.current;
-    
+
     // 1. 메시지 추가 로드(무한 스크롤)로 인한 변경인 경우 -> 스크롤 위치 보정
     if (prevScrollHeightRef.current > 0 && containerRef.current) {
-        const newScrollHeight = containerRef.current.scrollHeight;
-        const diff = newScrollHeight - prevScrollHeightRef.current;
-        containerRef.current.scrollTop = diff; // 기존 보고 있던 위치 유지
-        prevScrollHeightRef.current = 0; // 초기화
-        setIsLoadingMore(false);
-    } 
+      const newScrollHeight = containerRef.current.scrollHeight;
+      const diff = newScrollHeight - prevScrollHeightRef.current;
+      containerRef.current.scrollTop = diff; // 기존 보고 있던 위치 유지
+      prevScrollHeightRef.current = 0; // 초기화
+      setIsLoadingMore(false);
+    }
     // 2. 초기 로딩인 경우 -> 맨 아래로
     else if (isInitialLoad.current) {
-        scrollToBottom(true);
-        isInitialLoad.current = false;
-    } 
+      scrollToBottom(true);
+      isInitialLoad.current = false;
+    }
     // 3. 새 메시지가 도착한 경우 (내 메시지거나 맨 아래 보고 있을 때) -> 맨 아래로
     else if (isNewMessageArrived) {
-        // 정방향 로딩(isLoadingNewerRef) 중이었다면, 스크롤을 강제하면 안 됨 (자연스럽게 이어지도록)
-        // 이 시점에서 로딩 UI 상태도 해제한다. (렌더링 직후 타이밍)
-        if (isLoadingNewerRef.current) {
-            console.log('Skipping auto-scroll due to forward loading');
-            isLoadingNewerRef.current = false;
-            setIsLoadingNewer(false);
-        } else {
-            // 간단하게 무조건 내리면 읽던 중 불편할 수 있으므로, 
-            // 내 메시지이거나(내가 씀) 스크롤이 거의 바닥일 때만 내림
-            scrollToBottom(false); 
-        }
+      // 정방향 로딩(isLoadingNewerRef) 중이었다면, 스크롤을 강제하면 안 됨 (자연스럽게 이어지도록)
+      // 이 시점에서 로딩 UI 상태도 해제한다. (렌더링 직후 타이밍)
+      if (isLoadingNewerRef.current) {
+        console.log('Skipping auto-scroll due to forward loading');
+        isLoadingNewerRef.current = false;
+        setIsLoadingNewer(false);
+      } else {
+        // 간단하게 무조건 내리면 읽던 중 불편할 수 있으므로,
+        // 내 메시지이거나(내가 씀) 스크롤이 거의 바닥일 때만 내림
+        scrollToBottom(false);
+      }
     }
     prevLastMessageId.current = lastMessage.id;
     previousMessageCount.current = messages.length;
@@ -306,64 +356,69 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList, highlightMessageId }: 
   }, [messages, scrollToBottom]);
   // 컨테이너 크기 변화 감지 (입력창 줄바꿈으로 인한 높이 변화 대응)
   useEffect(() => {
-     const container = containerRef.current;
-     if (!container) return;
-     let prevHeight = container.clientHeight;
-     const observer = new ResizeObserver(entries => {
-        for (const entry of entries) {
-           const newHeight = entry.contentRect.height;
-           // 높이가 줄어듦 (입력창이 커짐) && 기존에 바닥 근처였음
-           // -> 스크롤을 그만큼 더 내려줘야 바닥이 유지됨
-           if (newHeight < prevHeight) {
-                const { scrollTop, scrollHeight } = container;
-                const isBottom = scrollHeight - scrollTop - prevHeight < 50; 
-                
-                if (isBottom) {
-                    // 높이 차이만큼 스크롤 보정
-                    container.scrollTop += (prevHeight - newHeight);
-                }
-           }
-           prevHeight = newHeight;
+    const container = containerRef.current;
+    if (!container) return;
+    let prevHeight = container.clientHeight;
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const newHeight = entry.contentRect.height;
+        // 높이가 줄어듦 (입력창이 커짐) && 기존에 바닥 근처였음
+        // -> 스크롤을 그만큼 더 내려줘야 바닥이 유지됨
+        if (newHeight < prevHeight) {
+          const { scrollTop, scrollHeight } = container;
+          const isBottom = scrollHeight - scrollTop - prevHeight < 50;
+
+          if (isBottom) {
+            // 높이 차이만큼 스크롤 보정
+            container.scrollTop += prevHeight - newHeight;
+          }
         }
-     });
-     observer.observe(container);
-     return () => observer.disconnect();
+        prevHeight = newHeight;
+      }
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
   }, []);
   // 스크롤 이벤트 핸들러
   const handleScroll = async (e: React.UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
-    
+
     // 1. 무한 스크롤 감지
     // 맨 위 도달 (여유분 50px) & 더 불러올 메시지 있음 & 로딩 중 아님
     if (container.scrollTop < 50 && hasMoreMessages && !isLoadingMore && messages.length > 0) {
-        setIsLoadingMore(true);
-        prevScrollHeightRef.current = container.scrollHeight;
-        
-        const addedCount = await loadMoreMessages();
-        
-        // 추가된 메시지가 없으면 로딩 상태 해제 및 스크롤 높이 참조 초기화
-        if (addedCount === 0) {
-            setIsLoadingMore(false);
-            prevScrollHeightRef.current = 0;
-        }
+      setIsLoadingMore(true);
+      prevScrollHeightRef.current = container.scrollHeight;
+
+      const addedCount = await loadMoreMessages();
+
+      // 추가된 메시지가 없으면 로딩 상태 해제 및 스크롤 높이 참조 초기화
+      if (addedCount === 0) {
+        setIsLoadingMore(false);
+        prevScrollHeightRef.current = 0;
+      }
     }
     // 2. 정방향 무한 스크롤 감지 (바닥 도달)
     // scrollHeight - scrollTop - clientHeight 가 0에 가까우면 바닥
     const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-    
+
     // 바닥 여유분 50px & 더 불러올 미래 메시지 있음 & 로딩 중 아님
-    if (scrollBottom < 50 && hasNewerMessages && !isLoadingNewerRef.current && messages.length > 0) {
-        setIsLoadingNewer(true);
-        isLoadingNewerRef.current = true;
-        
-        const addedCount = await loadNewerMessages();
-        
-        // 데이터가 없으면 리렌더링이 안 될 수 있으므로 여기서 꺼줌
-        // 데이터가 있으면(addedCount > 0) useLayoutEffect에서 꺼줌 (렌더링 싱크 맞춤)
-        if (addedCount === 0) {
-            setIsLoadingNewer(false);
-            isLoadingNewerRef.current = false;
-        }
+    if (
+      scrollBottom < 50 &&
+      hasNewerMessages &&
+      !isLoadingNewerRef.current &&
+      messages.length > 0
+    ) {
+      setIsLoadingNewer(true);
+      isLoadingNewerRef.current = true;
+
+      const addedCount = await loadNewerMessages();
+
+      // 데이터가 없으면 리렌더링이 안 될 수 있으므로 여기서 꺼줌
+      // 데이터가 있으면(addedCount > 0) useLayoutEffect에서 꺼줌 (렌더링 싱크 맞춤)
+      if (addedCount === 0) {
+        setIsLoadingNewer(false);
+        isLoadingNewerRef.current = false;
+      }
     }
     // 3. 스크롤 다운 버튼 표시 여부
     const { scrollTop, scrollHeight, clientHeight } = container;
@@ -377,11 +432,11 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList, highlightMessageId }: 
     // 이미 로드된 채팅방이고, 메시지도 있으며, 딥링킹(highlightMessageId)이 없는 경우 -> 재로드 방지
     // 단, highlightMessageId가 있으면 해당 메시지 위치로 가야 하므로 무조건 로드 수행 (Context 내부에서 최적화 됨)
     if (chatId === currentChatIdRef.current && messages.length > 0 && !highlightMessageId) {
-       return; 
+      return;
     }
-    
+
     setIsLoadingMessages(true);
-    
+
     // highlightMessageId(targetId)가 있으면 딥링킹 로드 수행, 없으면 일반 로드
     // loadMessages(chatId, targetId) 형태
     loadMessages(chatId, highlightMessageId).finally(() => {
@@ -389,11 +444,11 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList, highlightMessageId }: 
       // 채팅방 진입 시 스크롤 초기화
       // 딥링킹 시에는 자동 바닥 스크롤을 막고(해당 위치로 가야 하므로), 일반 진입 시에는 바닥으로
       if (highlightMessageId) {
-          isInitialLoad.current = false; 
+        isInitialLoad.current = false;
       } else {
-          isInitialLoad.current = true;
-          // 일반 진입 시 바닥 스크롤 로직 트리거
-          // (useEffect dep에 의해 isInitialLoad가 true면 아래 스크롤 로직이 바닥으로 보냄)
+        isInitialLoad.current = true;
+        // 일반 진입 시 바닥 스크롤 로직 트리거
+        // (useEffect dep에 의해 isInitialLoad가 true면 아래 스크롤 로직이 바닥으로 보냄)
       }
     });
   }, [chatId, loadMessages, highlightMessageId]); // highlightMessageId 변경 시에도 반응해야 함
@@ -401,13 +456,13 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList, highlightMessageId }: 
   // 하이라이트 메시지 ID가 변경되면 스크롤 플래그 초기화
   const hasScrolledToHighlightRef = useRef<string | null>(null);
   useEffect(() => {
-      if (highlightMessageId !== hasScrolledToHighlightRef.current) {
-          // ID가 바뀌었으면 (혹은 null->값) 스크롤 시도 허용
-          // 단, null일 때는 굳이 리셋할 필요 없음(어차피 동작 안함)
-          if (highlightMessageId) {
-             hasScrolledToHighlightRef.current = null; // 아직 스크롤 안함
-          }
+    if (highlightMessageId !== hasScrolledToHighlightRef.current) {
+      // ID가 바뀌었으면 (혹은 null->값) 스크롤 시도 허용
+      // 단, null일 때는 굳이 리셋할 필요 없음(어차피 동작 안함)
+      if (highlightMessageId) {
+        hasScrolledToHighlightRef.current = null; // 아직 스크롤 안함
       }
+    }
   }, [highlightMessageId]);
   // 하이라이트 메시지 이동 처리 (강력한 재시도 로직 적용)
   useEffect(() => {
@@ -421,27 +476,26 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList, highlightMessageId }: 
     let retryCount = 0;
     const maxRetries = 20; // 2초 동안 시도 (100ms * 20)
     const tryScroll = () => {
-        const el = document.getElementById(targetId);
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // 시각적 강조 (깜빡임 재확인)
-            el.classList.add(styles['message-highlight-flash']);
-            setTimeout(() => el.classList.remove(styles['message-highlight-flash']), 3000);
-            
-            // 스크롤 완료 표시
-            hasScrolledToHighlightRef.current = highlightMessageId;
-        } else {
-            // 아직 렌더링되지 않음 (조용히 재시도)
-            retryCount++;
-            if (retryCount < maxRetries) {
-                setTimeout(tryScroll, 100);
-            }
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // 시각적 강조 (깜빡임 재확인)
+        el.classList.add(styles['message-highlight-flash']);
+        setTimeout(() => el.classList.remove(styles['message-highlight-flash']), 3000);
+
+        // 스크롤 완료 표시
+        hasScrolledToHighlightRef.current = highlightMessageId;
+      } else {
+        // 아직 렌더링되지 않음 (조용히 재시도)
+        retryCount++;
+        if (retryCount < maxRetries) {
+          setTimeout(tryScroll, 100);
         }
+      }
     };
     // 즉시 시도
     tryScroll();
-    
   }, [highlightMessageId, messages, isLoadingMessages]);
   const { t, i18n } = useTranslation();
   // 버튼 클릭 감지
@@ -458,20 +512,27 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList, highlightMessageId }: 
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showMenu]);
-  const formatDate = useCallback((dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      const now = new Date();
-      const lang = i18n.language || 'ko';
-      
-      if (date.toDateString() === now.toDateString()) {
-        return t('chat.today');
+  const formatDate = useCallback(
+    (dateString: string) => {
+      try {
+        const date = new Date(dateString);
+        const now = new Date();
+        const lang = i18n.language || 'ko';
+
+        if (date.toDateString() === now.toDateString()) {
+          return t('chat.today');
+        }
+        return new Intl.DateTimeFormat(lang, {
+          month: 'short',
+          day: 'numeric',
+          weekday: 'short',
+        }).format(date);
+      } catch {
+        return '';
       }
-      return new Intl.DateTimeFormat(lang, { month: 'short', day: 'numeric', weekday: 'short' }).format(date);
-    } catch {
-      return '';
-    }
-  }, [t, i18n.language]);
+    },
+    [t, i18n.language],
+  );
   // 메시지 그룹핑 최적화
   const messageGroups = useMemo(() => {
     const groups: MessageGroup = {};
@@ -539,45 +600,48 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList, highlightMessageId }: 
       setHasSearched(false);
       return;
     }
-    
+
     // 서버 사이드 검색 수행
     const foundMessages = await searchMessagesInChat(chatId, q);
     const matchedIds = foundMessages.map(m => m.id);
-    
+
     setSearchResults(matchedIds);
     setCurrentResultIndex(0);
     setHasSearched(true);
-    
+
     if (matchedIds.length > 0) {
-       // 첫 번째 결과로 이동 시도
-       goToResultRef.current(matchedIds[0]);
+      // 첫 번째 결과로 이동 시도
+      goToResultRef.current(matchedIds[0]);
     }
   }, [searchQuery, chatId, searchMessagesInChat]);
   // goToResult에서 쓸 수 있도록 별도 함수 분리 (Ref나 내부 로직 활용)
-  const jumpToMessage = useCallback((messageId: string) => {
+  const jumpToMessage = useCallback(
+    (messageId: string) => {
       const exists = messages.some(m => m.id === messageId);
       if (exists) {
-          scrollToMessage(messageId);
+        scrollToMessage(messageId);
       } else {
-          // 없으면 로드 -> Deep Link
-          setIsLoadingMessages(true);
-          loadMessages(chatId, messageId).finally(() => {
-             setIsLoadingMessages(false);
-             // 로드 후 스크롤은 loadMessages 후 useEffect 등에서 처리되거나, 
-             // 여기서 명시적으로 다시 시도해야 함.
-             // 다만 DirectChatRoom에는 highlightMessageId prop에 의존하는 useEffect가 있음.
-             // 여기서는 prop을 바꾸는 게 아니라 내부적으로 로드했으므로, 수동으로 스크롤 시도가 필요할 수 있음.
-             // 하지만 loadMessages가 state를 바꾸므로 리렌더링 됨.
-             // 확실한 이동을 위해 잠시 후 스크롤 시도
-             setTimeout(() => scrollToMessage(messageId), 500);
-          });
+        // 없으면 로드 -> Deep Link
+        setIsLoadingMessages(true);
+        loadMessages(chatId, messageId).finally(() => {
+          setIsLoadingMessages(false);
+          // 로드 후 스크롤은 loadMessages 후 useEffect 등에서 처리되거나,
+          // 여기서 명시적으로 다시 시도해야 함.
+          // 다만 DirectChatRoom에는 highlightMessageId prop에 의존하는 useEffect가 있음.
+          // 여기서는 prop을 바꾸는 게 아니라 내부적으로 로드했으므로, 수동으로 스크롤 시도가 필요할 수 있음.
+          // 하지만 loadMessages가 state를 바꾸므로 리렌더링 됨.
+          // 확실한 이동을 위해 잠시 후 스크롤 시도
+          setTimeout(() => scrollToMessage(messageId), 500);
+        });
       }
-  }, [messages, chatId, loadMessages, scrollToMessage]);
+    },
+    [messages, chatId, loadMessages, scrollToMessage],
+  );
   // goToResult가 최신 jumpToMessage를 쓰도록 Ref 패턴 사용 또는 의존성 추가
   // 여기서는 useEffect 패턴 대신 직접 호출 구조로 변경
   const goToResultRef = useRef<(id: string) => void>(() => {});
   useEffect(() => {
-      goToResultRef.current = jumpToMessage;
+    goToResultRef.current = jumpToMessage;
   }, [jumpToMessage]);
   const handleSearchKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -604,7 +668,7 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList, highlightMessageId }: 
       if (direction === 'prev')
         nextIndex = (currentResultIndex - 1 + searchResults.length) % searchResults.length;
       else nextIndex = (currentResultIndex + 1) % searchResults.length;
-      
+
       setCurrentResultIndex(nextIndex);
       const targetId = searchResults[nextIndex];
       // jumpToMessage 호출
@@ -646,7 +710,7 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList, highlightMessageId }: 
           >
             <img src="/images/searchT.svg" alt="검색" className="chat-room-search-icon" />
           </button>
-          
+
           <div className="relative" ref={menuRef}>
             <button
               onClick={e => {
@@ -660,13 +724,13 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList, highlightMessageId }: 
             {showMenu && (
               <div className="absolute right-0 top-12 w-36 bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg py-2 z-50">
                 <button
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-red-500 text-sm"
-                    onClick={() => {
-                        setShowMenu(false);
-                        handleExitChat();
-                    }}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-red-500 text-sm"
+                  onClick={() => {
+                    setShowMenu(false);
+                    handleExitChat();
+                  }}
                 >
-                    {t('chat.btn_leave')}
+                  {t('chat.btn_leave')}
                 </button>
                 <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" />
                 <ReportButton onClose={() => setShowMenu(false)} />
@@ -684,7 +748,9 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList, highlightMessageId }: 
       {showSearch && (
         <div className="chat-room-search-bar">
           <div className="chat-room-search-inner">
-            <div className={`chat-room-search-input-wrap transition-all duration-200 border border-transparent rounded-full focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary focus-within:bg-background`}>
+            <div
+              className={`chat-room-search-input-wrap transition-all duration-200 border border-transparent rounded-full focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary focus-within:bg-background`}
+            >
               <img src="/images/searchT.svg" alt="검색" className="chat-room-search-input-icon" />
               <input
                 type="text"
@@ -705,7 +771,10 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList, highlightMessageId }: 
               ) : searchResults.length > 0 ? (
                 <>
                   <span className="chat-room-search-count">
-                    {t('chat.result_count', { count: searchResults.length, index: currentResultIndex + 1 })}
+                    {t('chat.result_count', {
+                      count: searchResults.length,
+                      index: currentResultIndex + 1,
+                    })}
                   </span>
                   <div className="chat-room-search-nav">
                     <button
@@ -733,11 +802,7 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList, highlightMessageId }: 
       )}
       {/* 메시지 영역과 플로팅 버튼을 감싸는 래퍼 */}
       <div className="chat-message-wrapper">
-        <div 
-          className="chat-room-message" 
-          ref={containerRef}
-          onScroll={handleScroll}
-        >
+        <div className="chat-room-message" ref={containerRef} onScroll={handleScroll}>
           {isLoadingMessages ? (
             <div className="loading">{t('chat.loading_messages')}</div>
           ) : Object.keys(messageGroups).length === 0 ? (
@@ -775,10 +840,20 @@ const DirectChatRoom = ({ chatId, isMobile, onBackToList, highlightMessageId }: 
               </div>
             ))
           )}
-          <div ref={messageEndRef} style={{ position: 'absolute', bottom: 0, left: 0, width: 0, height: 0, visibility: 'hidden' }} />
+          <div
+            ref={messageEndRef}
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              width: 0,
+              height: 0,
+              visibility: 'hidden',
+            }}
+          />
         </div>
         {showScrollDownBtn && (
-          <button 
+          <button
             className="scroll-bottom-btn"
             onClick={() => scrollToBottom(false)}
             aria-label="맨 아래로 스크롤"

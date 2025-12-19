@@ -42,7 +42,7 @@ export default function EditProfileModal({
   onSave,
 }: EditProfileModalProps) {
   const { t } = useTranslation();
-  
+
   // Nickname Validator Hook
   const nickValidator = useNicknameValidator();
   const [formData, setFormData] = useState({
@@ -103,7 +103,7 @@ export default function EditProfileModal({
       setPreviewBanner(userProfile.banner ?? null);
       setSaving(false);
       setBannerPosY(userProfile.bannerPositionY ?? 50);
-      
+
       // Initialize validator with current nickname to show language hint immediately
       nickValidator.validateInput(userProfile.name);
       const fetchCountries = async () => {
@@ -169,42 +169,47 @@ export default function EditProfileModal({
     const { data } = supabase.storage.from('tweet_media').getPublicUrl(filePath);
     return data.publicUrl;
   };
-  // 🔹 One-Time Change Logic
+  // One-Time Change Logic
   const isNickDisabled = !!userProfile.nickname_updated_at;
   const isCountryDisabled = !!userProfile.country_updated_at;
   const handleSave = async () => {
     if (saving) return;
-    
+
     const isNickChanged = formData.name !== userProfile.name;
     // Note: comparison above is tricky because userProfile.country is NAME, while formData.country is ID string.
-    
+
     // Security / Validation
     if (isNickDisabled && isNickChanged) {
-        toast.error(t('profile.nickname_change_forbidden', 'Nickname cannot be changed again.'));
-        return;
+      toast.error(t('profile.nickname_change_forbidden', 'Nickname cannot be changed again.'));
+      return;
     }
-    
+
     // Check if country actually changed logic
-    const originalCountryId = userProfile.country ? countries.find(c => c.name === userProfile.country)?.id?.toString() : '';
+    const originalCountryId = userProfile.country
+      ? countries.find(c => c.name === userProfile.country)?.id?.toString()
+      : '';
     const isCountryChanged = formData.country !== originalCountryId;
     if (isCountryDisabled && isCountryChanged) {
-         toast.error(t('profile.country_change_forbidden', 'Country cannot be changed again.'));
-         return;
+      toast.error(t('profile.country_change_forbidden', 'Country cannot be changed again.'));
+      return;
     }
     // Nickname Validation Check
     if (isNickChanged) {
-        if (nickValidator.checkResult !== 'available' || nickValidator.lastCheckedNick !== formData.name) {
-            const available = await nickValidator.checkAvailability(formData.name);
-            if (!available) return;
-        }
+      if (
+        nickValidator.checkResult !== 'available' ||
+        nickValidator.lastCheckedNick !== formData.name
+      ) {
+        const available = await nickValidator.checkAvailability(formData.name);
+        if (!available) return;
+      }
     } else {
-       const { error } = nickValidator.validateFormat(formData.name);
-       if (error) {
-           nickValidator.setError(error);
-           return;
-       }
+      const { error } = nickValidator.validateFormat(formData.name);
+      if (error) {
+        nickValidator.setError(error);
+        return;
+      }
     }
-    
+
     setSaving(true);
     try {
       let avatarUrl = userProfile.avatar;
@@ -220,22 +225,19 @@ export default function EditProfileModal({
         bannerUrl = await uploadImage(bannerFile, 'banners');
       }
       const selectedCountry = countries.find(c => String(c.id) === formData.country) || null;
-      
+
       const updates: any = {
-          nickname: formData.name,
-          bio: formData.bio,
-          country: formData.country || null,
-          avatar_url: avatarUrl,
-          banner_url: bannerUrl,
-          banner_position_y: Math.round(bannerPosYRef.current),
+        nickname: formData.name,
+        bio: formData.bio,
+        country: formData.country || null,
+        avatar_url: avatarUrl,
+        banner_url: bannerUrl,
+        banner_position_y: Math.round(bannerPosYRef.current),
       };
       // Set timestamp if changed
       if (isNickChanged) updates.nickname_updated_at = new Date().toISOString();
       if (isCountryChanged) updates.country_updated_at = new Date().toISOString();
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', userProfile.id);
+      const { error } = await supabase.from('profiles').update(updates).eq('id', userProfile.id);
       if (error) throw error;
       // 로컬 상태 업데이트
       const updated = {
@@ -262,15 +264,15 @@ export default function EditProfileModal({
       });
       window.dispatchEvent(event);
       if (isNickChanged) {
-         navigate(`/profile/${encodeURIComponent(formData.name)}`);
+        navigate(`/profile/${encodeURIComponent(formData.name)}`);
       }
-      toast.success(t('profile.save_success_message', 'Profile updated successfully.'));
+      toast.success(t('profile.save_success_message', '프로필 업데이트를 성공하였습니다.'));
       setTimeout(() => {
         onClose();
       }, 300);
     } catch (err: any) {
       console.error('프로필 업데이트 실패:', err?.message || err);
-      toast.error(t('profile.save_error_message', 'Error saving profile.'));
+      toast.error(t('profile.save_error_message', '프로필 업데이트를 실패하였습니다.'));
     } finally {
       setSaving(false);
     }
@@ -279,31 +281,19 @@ export default function EditProfileModal({
   const currentCountry = countries.find(c => String(c.id) === formData.country) || null;
   const currentFlagUrl = currentCountry?.flag_url ?? userProfile.countryFlagUrl ?? null;
   const currentFlagEmoji = currentCountry?.flag ?? null;
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-secondary rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] p-4">
+      <div className="bg-white dark:bg-secondary rounded-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition-colors"
-            >
-              <i className="ri-close-line text-xl text-gray-700 dark:text-gray-200"></i>
-            </button>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('profile.edit_profile')}</h2>
-          </div>
-          <button
-            onClick={handleSave}
-            disabled={saving || (nickValidator.checking)}
-            className="px-4 py-2 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition disabled:opacity-60"
-          >
-            {saving ? t('common.saving') : t('common.save')}
-          </button>
+        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-bold pl-2 text-gray-900 dark:text-gray-100">
+            {t('profile.edit_profile')}
+          </h2>
         </div>
         {/* Content */}
-        <div 
-          className="p-4 space-y-6 overflow-y-auto max-h-[calc(90vh-80px)] overscroll-contain"
+        <div
+          className="flex-1 overflow-y-auto p-4 space-y-6 overscroll-contain"
           data-scroll-lock-scrollable=""
         >
           {/* Cover */}
@@ -403,8 +393,12 @@ export default function EditProfileModal({
                 checkResult={nickValidator.checkResult}
                 error={nickValidator.error}
                 detectedLang={nickValidator.detectedLang}
-                minLen={nickValidator.detectedLang ? nickValidator.minLen(nickValidator.detectedLang) : 0}
-                maxLen={nickValidator.detectedLang ? nickValidator.maxLen(nickValidator.detectedLang) : 0}
+                minLen={
+                  nickValidator.detectedLang ? nickValidator.minLen(nickValidator.detectedLang) : 0
+                }
+                maxLen={
+                  nickValidator.detectedLang ? nickValidator.maxLen(nickValidator.detectedLang) : 0
+                }
                 disabled={isNickDisabled}
               />
               {/* Warning / Reason Message */}
@@ -414,7 +408,10 @@ export default function EditProfileModal({
                 </p>
               ) : (
                 <p className="text-[11px] text-orange-500 mt-1 ml-3">
-                  {t('profile.nickname_change_warning', '⚠️ You can only change your nickname once.')}
+                  {t(
+                    'profile.nickname_change_warning',
+                    '⚠️ You can only change your nickname once.',
+                  )}
                 </p>
               )}
             </div>
@@ -434,28 +431,54 @@ export default function EditProfileModal({
               <CountrySelect
                 value={formData.country}
                 onChange={value => {
-                    if (isCountryDisabled) return;
-                    handleInputChange('country', value);
+                  if (isCountryDisabled) return;
+                  handleInputChange('country', value);
                 }}
                 error={false}
                 isDisabled={isCountryDisabled}
               />
               {/* Warning / Reason Message */}
-                {isCountryDisabled ? (
+              {isCountryDisabled ? (
                 <p className="text-[11px] text-gray-400 mt-1 ml-3">
                   {t('profile.country_disabled_reason', 'Country can only be changed once.')}
                 </p>
               ) : (
-                 !isCountryDisabled && formData.country !== '' && ( // Show warning only if value is selected or general? Just show general
-                    <p className="text-[11px] text-orange-500 mt-1 ml-3">
-                    {t('profile.country_change_warning', '⚠️ You can only change your country once.')}
-                    </p>
-                 )
+                !isCountryDisabled &&
+                formData.country !== '' && ( // Show warning only if value is selected or general? Just show general
+                  <p className="text-[11px] text-orange-500 mt-1 ml-3">
+                    {t(
+                      'profile.country_change_warning',
+                      '⚠️ You can only change your country once.',
+                    )}
+                  </p>
+                )
               )}
               {countriesLoading && (
-                <p className="text-xs text-gray-400 mt-1">{t('common.loading_countries', 'Loading countries...')}</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {t('common.loading_countries', 'Loading countries...')}
+                </p>
               )}
             </div>
+          </div>
+        </div>
+        {/* 버튼 */}
+        <div className="flex-shrink-0 flex items-center justify-between pr-4 pl-4 pb-4 pt-2 dark:border-gray-700">
+          <div className="flex items-center gap-2 ml-auto">
+            {/* 닫기 */}
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-gray-500 rounded-full hover:bg-gray-100 hover:dark:bg-gray-800 transition-colors"
+            >
+              취소
+            </button>
+            {/* 저장 */}
+            <button
+              onClick={handleSave}
+              disabled={saving || nickValidator.checking}
+              className="px-4 py-2 bg-primary text-white hover:bg-primary/80 dark:bg-gray-900 hover:dark:bg-gray-800 rounded-full font-medium transition disabled:opacity-60"
+            >
+              {saving ? t('common.saving') : t('common.save')}
+            </button>
           </div>
         </div>
       </div>
