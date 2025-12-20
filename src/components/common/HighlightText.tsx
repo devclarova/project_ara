@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface HighlightTextProps {
   text: string;
   query?: string;
@@ -15,7 +13,7 @@ export default function HighlightText({ text, query, className }: HighlightTextP
 
   // className이 제공되면 기본 색상(bg-primary/20 text-primary)을 쓰지 않고 provided className을 사용
   // 구조적 스타일(rounded-sm px-0.5)은 항상 유지
-  const styles = className 
+  const styles = className
     ? `rounded-sm px-0.5 ${className}`
     : 'bg-primary/20 text-primary rounded-sm px-0.5';
 
@@ -23,15 +21,12 @@ export default function HighlightText({ text, query, className }: HighlightTextP
     <>
       {parts.map((part, i) =>
         part.toLowerCase() === query.toLowerCase() ? (
-          <span 
-            key={i} 
-            className={styles}
-          >
+          <span key={i} className={styles}>
             {part}
           </span>
         ) : (
           part
-        )
+        ),
       )}
     </>
   );
