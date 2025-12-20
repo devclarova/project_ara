@@ -792,6 +792,7 @@ export async function getMessages(
         created_at: message.created_at,
         is_system_message: message.is_system_message || false,
         sender: senderInfo,
+        attachments: message.attachments ?? [],
       };
     });
 

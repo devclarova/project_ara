@@ -327,6 +327,20 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
 
   const sendMessage = useCallback(
     async (messageData: CreateMessageData) => {
+      console.log('SEND MESSAGE PAYLOAD', {
+        content: messageData.content,
+        attachments: messageData.attachments,
+        attachmentsLength: messageData.attachments?.length,
+      });
+
+      // 텍스트도 이미지도 없으면 보내지 않음
+      if (
+        (!messageData.content || messageData.content.trim() === '') &&
+        (!messageData.attachments || messageData.attachments.length === 0)
+      ) {
+        console.warn('SEND BLOCKED: no content, no attachments');
+        return false;
+      }
       // 1. 낙관적 업데이트 (Optimistic Update)
       // 서버 응답을 기다리지 않고 즉시 UI에 반영하여 체감 딜레이 제거
       const tempId = `temp-${Date.now()}`;
@@ -347,7 +361,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         id: tempId,
         chat_id: messageData.chat_id,
         sender_id: user?.id || '',
-        content: messageData.content || '',
+        content: messageData.content ?? null,
         created_at: now,
         is_read: false,
         sender: myProfile || {
@@ -386,7 +400,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         // 2. 실제 전송 요청
         const response = await sendMessageService({
           chat_id: messageData.chat_id,
-          content: messageData.content || '',
+          content: messageData.content ?? null,
           attachments: messageData.attachments,
         });
 
@@ -395,7 +409,19 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
 
           // 3. 성공 시: 임시 메시지를 실제 메시지로 교체 (ID 교체 등)
           if (currentChatId.current === messageData.chat_id) {
-            setMessages(prev => prev.map(msg => (msg.id === tempId ? sent : msg)));
+            setMessages(prev =>
+              prev.map(msg => {
+                if (msg.id !== tempId) return msg;
+
+                return {
+                  ...sent,
+                  attachments:
+                    sent.attachments && sent.attachments.length > 0
+                      ? sent.attachments
+                      : msg.attachments,
+                };
+              }),
+            );
           }
 
           // 채팅 목록은 이미 위에서 업데이트 했으나, 정확한 데이터(서버 시간 등)로 보정
@@ -405,7 +431,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
                 ? {
                     ...chat,
                     last_message: {
-                      content: sent.content,
+                      content: sent.content ?? (sent.attachments?.length ? '📷 사진' : ''),
                       created_at: sent.created_at,
                       sender_nickname: sent.sender?.nickname || '',
                       sender_id: sent.sender_id,
@@ -642,10 +668,36 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         };
 
         setMessages(prev => {
+          // 이미 같은 id가 있으면 무시
           if (prev.some(msg => msg.id === newMessage.id)) return prev;
-          return [...prev, msgWithSender].sort(
-            (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+
+          // temp 메시지와 sender + created_at이 같은 경우 교체
+          const tempIndex = prev.findIndex(
+            msg =>
+              msg.id.startsWith('temp-') &&
+              msg.sender_id === newMessage.sender_id &&
+              Math.abs(
+                new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime(),
+              ) < 3000,
           );
+
+          if (tempIndex !== -1) {
+            const next = [...prev];
+            next[tempIndex] = {
+              ...newMessage,
+              sender: senderProfile,
+              attachments:
+                newMessage.attachments && newMessage.attachments.length > 0
+                  ? newMessage.attachments
+                  : prev[tempIndex].attachments,
+            };
+            return next;
+          }
+
+          return [
+            ...prev,
+            { ...newMessage, sender: senderProfile, attachments: newMessage.attachments ?? [] },
+          ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
         });
 
         // 내가 보낸게 아니면 읽음 처리
@@ -668,7 +720,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           const updatedChat = { ...prevChats[existingChatIndex] };
 
           updatedChat.last_message = {
-            content: newMessage.content,
+            content: newMessage.content ?? (newMessage.attachments?.length ? '📷 사진' : ''),
             created_at: newMessage.created_at,
             sender_id: newMessage.sender_id,
             // 닉네임은 기존 chat 정보나 payload에서 유추 불가하면 비워둠(표시단에서 처리)

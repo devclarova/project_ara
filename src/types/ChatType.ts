@@ -39,7 +39,7 @@ export interface DirectMessage {
   id: string; // 메시지 고유 식별자
   chat_id: string; // 채팅방 ID
   sender_id: string; // 발신자 사용자 ID
-  content: string; // 메시지 내용
+  content: string | null; // 메시지 내용
   is_read: boolean; // 읽음 상태
   read_at?: string; // 읽은 시간
   created_at: string; // 전송 시간

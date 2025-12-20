@@ -114,7 +114,8 @@ const MessageItem = memo(
     searchQuery?: string;
   }) => {
     const isMyMessage = message.sender_id === currentUserId;
-    const isSystemMessage = message.content?.includes('님이 채팅방을 나갔습니다');
+    const isSystemMessage =
+      typeof message.content === 'string' && message.content.includes('님이 채팅방을 나갔습니다');
     const [translated, setTranslated] = useState<string>('');
     const { t, i18n } = useTranslation();
     const formatTime = useCallback(
@@ -147,6 +148,14 @@ const MessageItem = memo(
         </div>
       );
     }
+
+    const hasText = typeof message.content === 'string' && message.content.length > 0;
+    const hasImages = message.attachments && message.attachments.length > 0;
+
+    if (!hasText && !hasImages) {
+      return null;
+    }
+
     return (
       <div
         key={message.id}
@@ -156,8 +165,22 @@ const MessageItem = memo(
         {isMyMessage ? (
           <>
             <div className="message-bubble">
+              {/* 이미지 */}
+              {message.attachments?.length ? (
+                <div className="mb-2 flex flex-col gap-2">
+                  {message.attachments.map(att => (
+                    <LazyImage
+                      key={`${message.id}-${att.url}`}
+                      src={att.url}
+                      alt="image"
+                      className="rounded-lg max-w-[240px]"
+                    />
+                  ))}
+                </div>
+              ) : null}
+
               {/* 텍스트 */}
-              {message.content && (
+              {typeof message.content === 'string' && message.content.length > 0 && (
                 <div className="message-text whitespace-pre-wrap break-words break-all">
                   <HighlightText
                     text={message.content}
@@ -166,16 +189,6 @@ const MessageItem = memo(
                   />
                 </div>
               )}
-
-              {/* 이미지 */}
-              {message.attachments?.map(att => (
-                <LazyImage
-                  key={`${message.id}-${att.url}`}
-                  src={att.url}
-                  alt="image"
-                  className="rounded-lg max-w-[240px]"
-                />
-              ))}
 
               <div className="message-time">{formatTime(message.created_at)}</div>
             </div>
@@ -196,18 +209,33 @@ const MessageItem = memo(
               />
             </div>
             <div className="message-bubble relative px-3 py-2">
+              {/* 이미지 */}
+              {message.attachments?.length ? (
+                <div className="mb-2 flex flex-col gap-2">
+                  {message.attachments.map(att => (
+                    <LazyImage
+                      key={`${message.id}-${att.url}`}
+                      src={att.url}
+                      alt="image"
+                      className="rounded-lg max-w-[240px]"
+                    />
+                  ))}
+                </div>
+              ) : null}
               {/* 텍스트 + 번역 */}
-              {message.content && (
+              {typeof message.content === 'string' && message.content.length > 0 && (
                 <div className="flex items-center gap-2">
                   <div className="message-text whitespace-pre-line break-words">
                     <HighlightText text={message.content} query={searchQuery} />
                   </div>
-                  <TranslateButton
-                    text={message.content}
-                    contentId={`dm_${message.id}`}
-                    setTranslated={setTranslated}
-                    size="sm"
-                  />
+                  {typeof message.content === 'string' && (
+                    <TranslateButton
+                      text={message.content}
+                      contentId={`dm_${message.id}`}
+                      setTranslated={setTranslated}
+                      size="sm"
+                    />
+                  )}
                 </div>
               )}
 
@@ -819,7 +847,10 @@ const DirectChatRoom = ({
                 <div className="message-group-container">
                   {dateMessages.map((message: DirectMessage) => {
                     const lowerQ = searchQuery.trim().toLowerCase();
-                    const isMatched = !!lowerQ && message.content?.toLowerCase().includes(lowerQ);
+                    const isMatched =
+                      !!lowerQ &&
+                      typeof message.content === 'string' &&
+                      message.content.toLowerCase().includes(lowerQ);
                     const isCurrent =
                       isMatched &&
                       searchResults.length > 0 &&
