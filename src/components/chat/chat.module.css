@@ -1,7 +1,7 @@
 /* 루트만 모듈 클래스, 내부는 :global로 브리지 */
 /* 전역 오염 방지: 모든 규칙은 .chatPage 아래로 제한 */
 .chatPage {
-  /* 🔹 헤더 높이(예: 80px) + 위/아래 여백 10px씩 = 20px 를 뺀 값 */
+  /*  헤더 높이(예: 80px) + 위/아래 여백 10px씩 = 20px 를 뺀 값 */
   height: calc(100vh - 100px);
   max-height: calc(100vh - 100px);
 
@@ -22,8 +22,13 @@
 }
 
 @keyframes flash {
-  0%, 100% { background-color: transparent; }
-  50% { background-color: hsl(var(--primary) / 0.2); }
+  0%,
+  100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: hsl(var(--primary) / 0.2);
+  }
 }
 
 .message-highlight-flash {
@@ -34,7 +39,7 @@
 .chatContainer {
   display: flex;
   flex: 1;
-  min-height: 0; /* 🔹 내부 스크롤 영역이 부모 높이를 넘지 않도록 */
+  min-height: 0; /*  내부 스크롤 영역이 부모 높이를 넘지 않도록 */
 
   border: 1px solid hsl(var(--border));
   border-radius: 8px;
@@ -45,7 +50,7 @@
 /* 사이드/메인 */
 .chatPage :global(.chat-sidebar) {
   width: 300px;
-  flex-shrink: 0; /* 🔹 사이드바가 눌려 사라지지 않도록 고정 */
+  flex-shrink: 0; /*  사이드바가 눌려 사라지지 않도록 고정 */
   /* border-right removed */
   background-color: hsl(var(--secondary));
   display: flex;
@@ -58,7 +63,7 @@
   display: flex;
   flex-direction: column;
   background-color: hsl(var(--secondary));
-  min-width: 0; /* 🔹 내부 콘텐츠(긴 텍스트 등)가 있어도 영역 밖으로 밀려나지 않게 함 */
+  min-width: 0; /*  내부 콘텐츠(긴 텍스트 등)가 있어도 영역 밖으로 밀려나지 않게 함 */
   min-height: 0;
 }
 
@@ -515,9 +520,9 @@
   border-radius: 18px;
   font-size: 14px;
   line-height: 1.4;
-  /* 🔹 긴 단어/URL 등에 의해 레이아웃 깨짐 방지 */
+  /*  긴 단어/URL 등에 의해 레이아웃 깨짐 방지 */
   word-wrap: break-word;
-  word-break: break-word; 
+  word-break: break-word;
   overflow-wrap: anywhere;
   position: relative;
 }
@@ -555,14 +560,14 @@
   gap: 8px;
 }
 
-/* ✅ 상대 메시지 말풍선 - 라이트 모드 */
+/* 상대 메시지 말풍선 - 라이트 모드 */
 .chatPage :global(.other-message .message-text) {
   background-color: #e5e7eb; /* gray-200 */
   color: #111827; /* 거의 검정 */
   border-bottom-left-radius: 4px;
 }
 
-/* ✅ 상대 메시지 말풍선 - 다크 모드 */
+/* 상대 메시지 말풍선 - 다크 모드 */
 :global(.dark) .chatPage :global(.other-message .message-text) {
   background-color: #394a61; /* gray-800 */
   color: #f9fafb; /* 흰색에 가까운 텍스트 */
@@ -609,7 +614,7 @@
 }
 .chatPage :global(.message-textarea) {
   flex: 1;
-  min-width: 0; /* 🔹 Flex child가 콘텐츠 크기에 맞춰 무한히 늘어나는 현상 방지 */
+  min-width: 0; /*  Flex child가 콘텐츠 크기에 맞춰 무한히 늘어나는 현상 방지 */
   min-height: 40px;
   max-height: 120px;
   border: 1px solid hsl(var(--border));
@@ -1088,14 +1093,14 @@
   /* 검색 인풋 + 메타 영역이 가로로 너무 꽉 안 차게 약간 여유 */
   .chatPage :global(.chat-room-search-inner) {
     gap: 8px;
-    flex-wrap: wrap; /* ✅ 공간 부족하면 자연스럽게 밑줄로 내려감 */
+    flex-wrap: wrap; /* 공간 부족하면 자연스럽게 밑줄로 내려감 */
   }
 
   .chatPage :global(.chat-room-search-meta) {
     display: flex;
     align-items: center;
     gap: 8px;
-    flex-wrap: wrap; /* ✅ 1210~1024 구간에서 깨지지 않도록 */
+    flex-wrap: wrap; /* 1210~1024 구간에서 깨지지 않도록 */
     row-gap: 4px;
   }
 
@@ -1152,7 +1157,7 @@
   .chatPage :global(.exit-chat-btn) {
     font-size: 12px;
     padding: 5px 10px;
-    white-space: nowrap; /* ✅ 768 포함, 항상 한 줄 유지 */
+    white-space: nowrap; /* 768 포함, 항상 한 줄 유지 */
   }
 
   /* 검색 바 좌우 여백 줄이기 */
@@ -1191,7 +1196,7 @@
 }
 
 /* ============================
-   ✅ 1200px 이하 레이아웃 오버라이드
+   1200px 이하 레이아웃 오버라이드
    - 1200~1024 구간 깨지는 것 방지
    - 검색바는 무조건 위/아래로 쌓이게
    ============================ */
@@ -1277,23 +1282,36 @@
   overflow-y: auto;
 }
 
-/* 🔧 반응형: 화면이 좁을 때(모바일) 닉네임과 날짜 줄바꿈 */
+/* 반응형: 화면이 좁을 때(모바일) 닉네임과 날짜 줄바꿈 */
 @media (max-width: 400px) {
+  /* 헤더는 항상 한 줄 */
   .chatPage :global(.chat-header) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
   }
 
+  /* 이름 영역만 줄어들 수 있게 */
   .chatPage :global(.chat-name-row) {
-    width: 100%;
-    margin-right: 0;
-    margin-bottom: 2px;
+    flex: 1;
+    min-width: 0;
   }
 
-  /* 시간은 우측 정렬 */
+  /* 이름 말줄임 */
+  .chatPage :global(.chat-name) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 시간 + 더보기는 절대 줄어들지 않게 */
+  .chatPage :global(.chat-header > .flex) {
+    flex-shrink: 0;
+  }
+
   .chatPage :global(.chat-time) {
-    align-self: flex-end; 
-    line-height: 1;
+    white-space: nowrap;
+    display: none;
   }
 }

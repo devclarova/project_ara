@@ -28,28 +28,57 @@ const ChatItem = memo(
   }) => {
     const { t, i18n } = useTranslation();
     // Main 브랜치의 robust한 시간 포맷팅 로직 유지 (I18N + 24시 처리)
-    const formatTime = useCallback((dateString: string) => {
-      try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return '';
-        const now = new Date();
-        const diff = now.getTime() - date.getTime();
-        const lang = i18n.language || 'ko';
-        if (diff < 24 * 60 * 60 * 1000) {
-          return new Intl.DateTimeFormat(lang, { hour: '2-digit', minute: '2-digit', hour12: true }).format(date);
-        } else {
-          return new Intl.DateTimeFormat(lang, { 
-            month: 'short', 
+    const formatTime = useCallback(
+      (dateString: string) => {
+        try {
+          const date = new Date(dateString);
+          if (isNaN(date.getTime())) return '';
+
+          const now = new Date();
+          const lang = i18n.language || 'ko';
+
+          // 오늘 00:00
+          const todayStart = new Date(now);
+          todayStart.setHours(0, 0, 0, 0);
+
+          // 어제 00:00
+          const yesterdayStart = new Date(todayStart);
+          yesterdayStart.setDate(todayStart.getDate() - 1);
+
+          // 오늘
+          if (date >= todayStart) {
+            return new Intl.DateTimeFormat(lang, {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true,
+            }).format(date);
+          }
+
+          // 어제
+          if (date >= yesterdayStart) {
+            return lang.startsWith('ko') ? '어제' : 'Yesterday';
+          }
+
+          // 다른 해 → 연 + 날짜
+          if (date.getFullYear() !== now.getFullYear()) {
+            return new Intl.DateTimeFormat(lang, {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+            }).format(date);
+          }
+
+          // 같은 해의 과거 → 날짜만
+          return new Intl.DateTimeFormat(lang, {
+            month: 'short',
             day: 'numeric',
-            hour: '2-digit', 
-            minute: '2-digit', 
-            hour12: true 
           }).format(date);
+        } catch {
+          return '';
         }
-      } catch (e) {
-        return '';
-      }
-    }, [i18n.language]);
+      },
+      [i18n.language],
+    );
     // 팀원(10-zzeon)의 새로운 기능(신고/차단 메뉴) State & Hooks 병합
     const [showMenu, setShowMenu] = useState(false);
     const [isBlocked, setIsBlocked] = useState(false);
@@ -75,7 +104,12 @@ const ChatItem = memo(
       >
         <div className="chat-avatar">
           {chat.other_user.avatar_url ? (
-            <img src={chat.other_user.avatar_url} alt={chat.other_user.nickname} loading="lazy" decoding="async" />
+            <img
+              src={chat.other_user.avatar_url}
+              alt={chat.other_user.nickname}
+              loading="lazy"
+              decoding="async"
+            />
           ) : (
             <div className="avatar-placeholder">{chat.other_user.nickname.charAt(0)}</div>
           )}
@@ -117,9 +151,10 @@ const ChatItem = memo(
           <div className="chat-preview">
             {chat.last_message ? (
               <span className={chat.unread_count > 0 ? 'unread' : ''}>
-                {chat.last_message.sender_id === currentUserId 
-                  ? t('chat.me') 
-                  : (chat.last_message.sender_nickname || chat.other_user.nickname)} : {chat.last_message.content}
+                {chat.last_message.sender_id === currentUserId
+                  ? t('chat.me')
+                  : chat.last_message.sender_nickname || chat.other_user.nickname}{' '}
+                : {chat.last_message.content}
               </span>
             ) : (
               <span className="no-message">{t('chat.no_messages')}</span>
@@ -144,7 +179,15 @@ const ChatItem = memo(
 ChatItem.displayName = 'ChatItem';
 // 사용자 검색 아이템 메모이제이션
 const UserItem = memo(
-  ({ user, onSelect, query }: { user: ChatUser; onSelect: (user: ChatUser) => void; query?: string }) => {
+  ({
+    user,
+    onSelect,
+    query,
+  }: {
+    user: ChatUser;
+    onSelect: (user: ChatUser) => void;
+    query?: string;
+  }) => {
     return (
       <div className="user-item" onClick={() => onSelect(user)}>
         <div className="user-avatar">
@@ -166,7 +209,15 @@ const UserItem = memo(
 );
 UserItem.displayName = 'UserItem';
 const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectChatListProps) => {
-  const { createDirectChat, error, users, searchUsers, clearSearchResults, userSearchLoading, chats } = useDirectChat();
+  const {
+    createDirectChat,
+    error,
+    users,
+    searchUsers,
+    clearSearchResults,
+    userSearchLoading,
+    chats,
+  } = useDirectChat();
   const { user } = useAuth();
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -229,8 +280,8 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
         <div className="chat-list-title">
           <h2>{t('chat.title_direct_chat')}</h2>
         </div>
-        <button 
-          className="new-chat-btn" 
+        <button
+          className="new-chat-btn"
           onClick={() => {
             if (!showUserSearch) {
               setSearchTerm('');
@@ -247,26 +298,30 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
       </div>
       {showUserSearch && (
         <div className="user-search">
-            <div className="flex items-center w-full px-4 h-10 bg-background border border-border rounded-full focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all duration-200 shadow-sm">
-              <img src="/images/searchT.svg" alt="검색" className="chat-room-search-input-icon mr-2" />
-              <input
-                ref={userSearchInputRef}
-                type="text"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                placeholder={t('chat.user_search_placeholder')}
-                className="w-full bg-transparent border-none outline-none ring-0 shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none text-sm placeholder:text-muted-foreground"
-              />
-            </div>
+          <div className="flex items-center w-full px-4 h-10 bg-background border border-border rounded-full focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all duration-200 shadow-sm">
+            <img
+              src="/images/searchT.svg"
+              alt="검색"
+              className="chat-room-search-input-icon mr-2"
+            />
+            <input
+              ref={userSearchInputRef}
+              type="text"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder={t('chat.user_search_placeholder')}
+              className="w-full bg-transparent border-none outline-none ring-0 shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none text-sm placeholder:text-muted-foreground"
+            />
+          </div>
           <div className="search-result">
             {userSearchLoading ? (
               <div className="loading">{t('chat.user_search_loading')}</div>
             ) : (
               users.map(user => (
-                <UserItem 
-                  key={user.id} 
-                  user={user} 
-                  onSelect={handleUserSelect} 
+                <UserItem
+                  key={user.id}
+                  user={user}
+                  onSelect={handleUserSelect}
                   query={searchTerm} // 검색어 전달
                 />
               ))
