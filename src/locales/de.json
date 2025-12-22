@@ -35,6 +35,7 @@
     "delete_confirm_desc": "Möchten Sie diese Benachrichtigung löschen?"
   },
   "study": {
+    "studylist": "Lernliste",
     "search_placeholder": "Suchen...",
     "no_content": "Kein Inhalt.",
     "category": {
@@ -69,6 +70,9 @@
     "study_card_title": "Lernkarte",
     "vocab_explanation": "Wortschatz",
     "culture_note": "Kulturhinweis",
+    "subtitle_title": "Untertitel",
+    "subtitle_loading": "Untertitel werden geladen...",
+    "subtitle_no_data": "Keine Untertiteldaten.",
     "login_required": "Anmeldung erforderlich",
     "preview": "Vorschau"
   },
@@ -476,5 +480,9 @@
     "buy_now": "Jetzt kaufen",
     "quantity": "Menge",
     "back_to_list": "Zurück zur Liste"
+  },
+  "translation": {
+    "login_required": "Bitte melden Sie sich an, um die Übersetzungsfunktion zu nutzen.",
+    "guest_limit_reached": "Sie haben alle kostenlosen Übersetzungen aufgebraucht. Melden Sie sich an, um fortzufahren."
   }
 }

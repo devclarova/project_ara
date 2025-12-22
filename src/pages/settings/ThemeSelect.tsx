@@ -15,16 +15,16 @@ import { useTranslation } from 'react-i18next';
 function ThemeSelect({ value, onChange, onClose, onSave, onCancel }: ThemeSelectProps) {
   const { t } = useTranslation();
   const options = [
-    { key: 'light', label: t('settings.theme_light'), icon: <Sun className="w-4 h-4" /> },
-    { key: 'dark', label: t('settings.theme_dark'), icon: <Moon className="w-4 h-4" /> },
-    { key: 'system', label: t('settings.theme_system'), icon: <Monitor className="w-4 h-4" /> },
+    { key: 'light', label: t('settings.theme_options.light'), icon: <Sun className="w-4 h-4" /> },
+    { key: 'dark', label: t('settings.theme_options.dark'), icon: <Moon className="w-4 h-4" /> },
+    { key: 'system', label: t('settings.theme_options.system'), icon: <Monitor className="w-4 h-4" /> },
   ] as const;
 
   return (
     <div className="flex flex-col min-h-[420px]">
       {/* 상단 영역 */}
       <div className="space-y-4">
-        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings.themeSelect')}</p>
+        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings.themeSelect', 'Select Theme')}</p>
         <div
           className="flex-col items-center gap-2 rounded-lg p-1.5"
           role="radiogroup"

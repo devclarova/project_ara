@@ -472,21 +472,22 @@ export default function TweetDetailCard({
       )}
 
       <div className="mt-4">
+        {/* 텍스트 + 번역 버튼 */}
         {hasText && (
-          <div
-            className="text-gray-900 dark:text-gray-100 text-xl leading-relaxed break-words whitespace-pre-line"
-            dangerouslySetInnerHTML={{ __html: safeContent }}
-          />
-        )}
-
-        {/* 번역 버튼 */}
-        {plainTextContent.trim().length > 0 && (
-          <div className="mt-2">
-            <TranslateButton
-              text={plainTextContent}
-              contentId={`tweet_${tweet.id}`}
-              setTranslated={setTranslated}
+          <div className="flex items-center gap-2">
+            <div
+              className="text-gray-900 dark:text-gray-100 text-xl leading-relaxed break-words whitespace-pre-line"
+              dangerouslySetInnerHTML={{ __html: safeContent }}
             />
+            {/* 번역 버튼 */}
+            {plainTextContent.trim().length > 0 && (
+              <TranslateButton
+                text={plainTextContent}
+                contentId={`tweet_${tweet.id}`}
+                setTranslated={setTranslated}
+                size="sm"
+              />
+            )}
           </div>
         )}
 

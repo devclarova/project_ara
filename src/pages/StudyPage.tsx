@@ -26,6 +26,7 @@ type VideoRow = {
   runtime_bucket: string | null;
   image_url: string | null;
   view_count: number | null;
+  study: { title: string; short_description: string | null } | Array<{ title: string; short_description: string | null }> | null;
 };
 
 const StudyPage = () => {
@@ -67,37 +68,60 @@ const StudyPage = () => {
 
   // Title Logic (Korean Mode & Auto Translation)
   const isKoreanTitle = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(study?.contents ?? '');
-  const { translatedText: translatedTitle } = useAutoTranslation(study?.contents ?? '', `study_title_${study?.id ?? '0'}`, targetLang);
-  const { translatedText: translatedRuntime } = useAutoTranslation(study?.runtime_bucket ?? '', `study_runtime_${study?.id ?? '0'}`, targetLang);
-  const { translatedText: translatedCategory } = useAutoTranslation(study?.categories ?? '', `category_${study?.categories}`, targetLang);
+  // Study List와 동일한 제목(부모 Study의 title)을 우선 사용
+  const parentTitle = study?.study && !Array.isArray(study.study) 
+    ? study.study.title 
+    : (Array.isArray(study?.study) ? study?.study[0]?.title : null);
 
-  let displayTitle = study?.contents ?? t('study.no_title');
-
-  if (translatedTitle && study?.contents) {
-     if (targetLang.startsWith('en')) {
-         if (isKoreanTitle && translatedTitle.toLowerCase() !== study.contents.toLowerCase()) {
-            displayTitle = `${study.contents} - ${translatedTitle}`;
-         }
-     } else if (targetLang.startsWith('ko')) {
-         displayTitle = study.contents;
-     } else {
-         if (translatedTitle !== study.contents) {
-             displayTitle = `${study.contents} - ${translatedTitle}`;
-         }
-     }
-  }
+  const effectiveTitle = parentTitle || study?.contents || '';
+  
+  const { translatedText: translatedTitle } = useAutoTranslation(effectiveTitle, `study_title_${study?.study_id || study?.id}`, targetLang);
+  const { translatedText: translatedRuntime } = useAutoTranslation(study?.runtime || '', `study_runtime_${study?.id}`, targetLang);
+  const { translatedText: translatedRuntimeBucket } = useAutoTranslation(study?.runtime_bucket || '', `study_runtime_bucket_${study?.id}`, targetLang);
+  const { translatedText: translatedLevel } = useAutoTranslation(study?.level || '', `study_level_${study?.id}`, targetLang);
+  const { translatedText: translatedCategory } = useAutoTranslation(study?.categories || '', `category_${study?.id}`, targetLang);
+  const { translatedText: translatedEpisode } = useAutoTranslation(study?.episode || '', `study_episode_${study?.id}`, targetLang);
+  const parentShortDesc = study?.study && !Array.isArray(study.study) 
+    ? study.study.short_description 
+    : (Array.isArray(study?.study) ? study?.study[0]?.short_description : null);
+  
+  const { translatedText: translatedDescription } = useAutoTranslation(parentShortDesc || '', `study_desc_${study?.study_id || study?.id}`, targetLang);
 
   const formatValue = (key: string, val: string | number | null | undefined) => {
-      if (!val) return '';
-      if (String(val).match(/^\d+$/)) {
-          return t(`study.formats.${key}`, { val });
-      }
-      return String(val);
+    if (!val) return '';
+    const str = String(val).trim();
+    // Match "Ep 1", "Episode 01", "제1화", "1" etc.
+    const match = str.match(/^(\d+)$/) || str.match(/^(?:ep|episode|제|第)?\.?\s*(\d+)(?:화|회|集|話)?$/i);
+    if (match) {
+      return t(`study.formats.${key}`, { val: match[1] });
+    }
+    return str;
   };
+
   const displayEpisode = formatValue('episode', study?.episode);
   const displayScene = formatValue('scene', study?.scene);
 
-  const translatedLevel = useMemo(() => {
+  // 음악 카테고리 여부 (제목 표시 및 에피소드 노출 여부에 사용)
+  const isMusic = study?.categories?.includes('음악') || study?.categories?.includes('Music');
+
+  let displayTitle = effectiveTitle || t('study.no_title');
+
+  // 번역 적용 로직
+  if (translatedTitle && effectiveTitle && translatedTitle !== effectiveTitle) {
+    if (targetLang.startsWith('ko')) {
+      displayTitle = effectiveTitle;
+    } else {
+      // 음악 카테고리는 중복 느낌을 줄이기 위해 괄호 병기 사용 (가수 - 제목 (번역))
+      // 그 외(드라마, 영화 등)는 기존 포맷 유지 (원제 - 번역)
+      if (isMusic) {
+        displayTitle = `${effectiveTitle} (${translatedTitle})`;
+      } else {
+        displayTitle = `${effectiveTitle} - ${translatedTitle}`;
+      }
+    }
+  }
+
+  const translatedLevelDisplay = useMemo(() => {
     const lvl = study?.level;
     if (lvl === '초급') return t('study.level.beginner');
     if (lvl === '중급') return t('study.level.intermediate');
@@ -160,7 +184,7 @@ const StudyPage = () => {
         const { data, error } = await supabase
           .from('video')
           .select(
-            'id,study_id,categories,contents,episode,scene,level,runtime,runtime_bucket,image_url,view_count',
+            'id,study_id,categories,contents,episode,scene,level,runtime,runtime_bucket,image_url,view_count, study:study_id(title,short_description)',
           )
           .eq('contents', c)
           .eq('episode', e)
@@ -181,7 +205,7 @@ const StudyPage = () => {
           }
         }
 
-        setStudy((data as VideoRow) ?? null);
+        setStudy((data as unknown as VideoRow) ?? null);
         setLoading(false);
         return;
       }
@@ -190,14 +214,14 @@ const StudyPage = () => {
       const { data } = await supabase
         .from('video')
         .select(
-          'id,study_id,categories,contents,episode,scene,level,runtime,runtime_bucket,image_url,view_count',
+          'id,study_id,categories,contents,episode,scene,level,runtime,runtime_bucket,image_url,view_count, study:study_id(title,short_description)',
         )
         .eq('contents', c)
         .eq('episode', e)
         .order('scene', { ascending: true })
         .limit(1);
 
-      const row = (data?.[0] as VideoRow) ?? null;
+      const row = (data?.[0] as unknown as VideoRow) ?? null;
 
       // 게스트 보호 처리
       if (isGuest && row) {
@@ -350,7 +374,7 @@ const StudyPage = () => {
                     >
                       <i className="ri-home-5-line text-base opacity-70 group-hover:opacity-100 dark:text-gray-100" />
                       <span className="font-medium hidden sm:inline-block dark:text-gray-100">
-                        Studylist
+                        {t('study.studylist')}
                       </span>
                     </NavLink>
 
@@ -366,7 +390,7 @@ const StudyPage = () => {
                       }
                       className={({
                         isActive,
-                      }) => `group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full leading-none transition-all text-sm max-w-[32vw] md:max-w-[28vw] truncate
+                      }) => `group inline-flex items-center px-3 py-1 rounded-xl leading-[0.9] transition-all text-sm whitespace-normal break-words text-left h-auto
         ${
           isActive
             ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10'
@@ -374,9 +398,9 @@ const StudyPage = () => {
         }`}
                       title={study?.categories ?? '카테고리'}
                     >
-                      <i className="ri-folder-2-line text-base opacity-70 group-hover:opacity-100 dark:text-gray-100" />
-                      <span className="font-medium hidden sm:inline-block truncate dark:text-gray-100">
-                        {translatedCategory ?? study?.categories ?? '카테고리'}
+                      <i className="ri-folder-2-line text-base opacity-70 group-hover:opacity-100 shrink-0 dark:text-gray-100 mr-1" />
+                      <span className="font-medium hidden sm:block dark:text-gray-100 leading-[0.9]">
+                        {translatedCategory ?? study?.categories ?? t('study.category.all')}
                       </span>
                     </NavLink>
 
@@ -396,18 +420,18 @@ const StudyPage = () => {
                           : '/studylist'
                       }
                       className={({ isActive }) =>
-                        `group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full leading-none transition-all text-sm max-w-[32vw] md:max-w-[28vw] truncate
+                        `group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl leading-none transition-all text-sm whitespace-normal break-words text-left h-auto
         ${
           isActive
             ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10'
             : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white dark:hover:bg-gray-600'
         }`
                       }
-                      title={loading ? '로딩 중' : (study?.contents ?? '제목 없음')}
+                      title={loading ? t('common.loading') : (study?.contents ?? t('study.no_title'))}
                     >
-                      <i className="ri-movie-2-line text-base opacity-70 group-hover:opacity-100 dark:text-gray-100" />
-                      <span className="font-medium hidden sm:inline-block truncate dark:text-gray-100">
-                        {loading ? t('common.loading') : (displayTitle ?? '제목 없음')}
+                      <i className="ri-movie-2-line text-base opacity-70 group-hover:opacity-100 shrink-0 dark:text-gray-100 mr-1" />
+                      <span className="font-medium hidden sm:block dark:text-gray-100 leading-[0.9]">
+                        {loading ? t('common.loading') : (displayTitle ?? t('study.no_title'))}
                       </span>
                     </NavLink>
 
@@ -429,53 +453,59 @@ const StudyPage = () => {
                           : '/studylist'
                       }
                       className={({ isActive }) =>
-                        `group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full leading-none transition-all text-sm max-w-[32vw] md:max-w-[28vw] truncate
+                        `group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl leading-none transition-all text-sm whitespace-normal break-words text-left h-auto
         ${
           isActive
             ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10'
             : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white hover:dark:bg-gray-600 dark:text-gray-300'
         }`
                       }
-                      title={loading ? '로딩 중' : (study?.episode ?? '에피소드 없음')}
+                      title={loading ? t('common.loading') : (displayEpisode || t('study.no_episode'))}
                     >
-                      <i className="ri-hashtag text-base opacity-70 group-hover:opacity-100 dark:text-gray-100" />
-                      <span className="font-medium hidden sm:inline-block truncate dark:text-gray-100">
-                        {loading ? '로딩 중' : (study?.episode ?? '에피소드 없음')}
+                      <i className={`${isMusic ? 'ri-music-2-line' : 'ri-hashtag'} text-base opacity-70 group-hover:opacity-100 shrink-0 dark:text-gray-100 mr-1`} />
+                      <span className="font-medium hidden sm:block dark:text-gray-100 leading-[0.9]">
+                        {loading ? t('common.loading') : (
+                          isMusic && translatedEpisode && translatedEpisode !== study?.episode
+                            ? `${displayEpisode} (${translatedEpisode})`
+                            : (displayEpisode || t('study.no_episode'))
+                        )}
                       </span>
                     </NavLink>
                   </div>
                 </nav>
 
                 {/* 콘텐츠명 */}
-                <div className="flex justify-between items-center mb-3 relative h-14">
+                <div className="flex justify-between items-center mb-3">
                   {/* 이전 버튼 */}
                   <button
                     onClick={handlePrevPage}
-                    className="group flex justify-start items-center gap-2 pl-4 py-2 rounded-lg transition-all duration-200 text-gray-700 hover:text-primary w-full sm:w-auto dark:text-gray-100"
+                    className="group shrink-0 flex justify-center items-center py-2 rounded-lg transition-all duration-200 text-gray-700 hover:text-primary dark:text-gray-100"
+                    aria-label="Previous Episode"
                   >
-                    <i className="ri-arrow-drop-left-line text-5xl transition-transform duration-200 group-hover:-translate-x-1" />
+                    <i className="ri-arrow-drop-left-line text-4xl sm:text-5xl transition-transform duration-200 group-hover:-translate-x-1" />
                   </button>
 
                   {/* 중앙 타이틀 */}
-                  <h1 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center font-bold text-gray-900 select-none tracking-tight transition-all duration-300 whitespace-nowrap">
+                  <h1 className="flex-1 flex flex-col items-center justify-center font-bold text-gray-900 select-none tracking-tight px-2 min-w-0">
                     {loading ? (
-                      <span className="animate-pulse text-gray-400 text-lg sm:text-xl lg:text-2xl xl:text-3xl dark:text-gray-100">
+                      <span className="animate-pulse text-gray-400 text-lg sm:text-xl lg:text-2xl dark:text-gray-100">
                         {t('common.loading')}
                       </span>
                     ) : (
-                      <div className="relative flex items-baseline justify-center">
-                        <span className="text-lg sm:text-xl lg:text-2xl xl:text-3xl dark:text-gray-100">
+                      <div className="flex flex-col sm:flex-row items-center justify-center text-center gap-1 sm:gap-2 w-full">
+                        <span className="text-lg sm:text-xl lg:text-2xl xl:text-3xl dark:text-gray-100 break-keep leading-tight">
                           {displayTitle}
                         </span>
 
-                        <div className="flex items-baseline ml-2">
-                          {displayEpisode && (
-                            <span className="text-sm sm:text-base lg:text-lg text-gray-600 mr-1 dark:text-gray-300">
+                        <div className="flex items-baseline gap-1 shrink-0">
+                          {/* 음악 카테고리는 에피소드/씬 정보 숨김 (사용자 요청) */}
+                          {!isMusic && displayEpisode && (
+                            <span className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-300 whitespace-nowrap">
                               {displayEpisode}
                             </span>
                           )}
-                          {displayScene && (
-                            <span className="text-xs sm:text-sm lg:text-base text-gray-500 dark:text-gray-400">
+                          {!isMusic && displayScene && (
+                            <span className="text-xs sm:text-sm lg:text-base text-gray-500 dark:text-gray-400 whitespace-nowrap">
                               {displayScene}
                             </span>
                           )}
@@ -483,42 +513,52 @@ const StudyPage = () => {
                       </div>
                     )}
                   </h1>
-                  {/* 다음 버튼 */}
 
+                  {/* 다음 버튼 */}
                   <button
                     onClick={handleNextPage}
-                    className="group flex justify-end items-center gap-2 pr-4 py-2 rounded-lg transition-all duration-200 text-gray-700 hover:text-primary w-full sm:w-auto dark:text-gray-100"
+                    className="group shrink-0 flex justify-center items-center py-2 rounded-lg transition-all duration-200 text-gray-700 hover:text-primary dark:text-gray-100"
+                    aria-label="Next Episode"
                   >
-                    <i className="ri-arrow-drop-right-line text-5xl transition-transform duration-200 group-hover:translate-x-1" />
+                    <i className="ri-arrow-drop-right-line text-4xl sm:text-5xl transition-transform duration-200 group-hover:translate-x-1" />
                   </button>
                 </div>
+                
+                {/* 설명글 */}
+                {!loading && (translatedDescription || parentShortDesc) && (
+                  <div className="mt-3 px-4 sm:px-6 md:px-8">
+                    <p className="text-center text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed max-w-3xl mx-auto">
+                      {translatedDescription || parentShortDesc}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* 메타 정보 라인: 시간/난이도/카테고리 */}
-              <div className="flex items-center gap-5 text-sm text-gray-600 dark:text-gray-300">
-                <span className="flex items-center gap-1">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600 dark:text-gray-300 px-1">
+                <span className="flex items-center gap-1 shrink-0">
                   {/* 시간(runtime) */}
                   <InfoItem
                     icon="ri-time-line"
-                    text={loading ? '—' : (translatedRuntime ?? study?.runtime_bucket ?? study?.runtime ?? '—')}
+                    text={loading ? '—' : (translatedRuntime ?? translatedRuntimeBucket ?? study?.runtime ?? study?.runtime_bucket ?? '—')}
                   />
                 </span>
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 shrink-0">
                   {/* 난이도 */}
                   <InfoItem icon="ri-star-line" text={loading ? '—' : (translatedLevel ?? study?.level ?? '—')} />
                 </span>
                 {/* 조회수 */}
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 shrink-0">
                   <InfoItem
                     icon="ri-eye-line"
                     text={loading ? '—' : `${study?.view_count ?? '—'}`}
                   />
                 </span>
                 {!loading && (
-                  <div className="ml-auto">
+                  <div className="ml-auto shrink-0">
                     <ShareButton
                       title={`${displayTitle}`}
-                      text={`${t('study.share_text_prefix')} ${displayTitle} ${displayEpisode} ${displayScene}`}
+                      text={`${t('study.share_text_prefix')} ${displayTitle} ${!isMusic ? displayEpisode : ''} ${!isMusic ? displayScene : ''}`}
                     />
                   </div>
                 )}

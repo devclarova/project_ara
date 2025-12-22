@@ -89,7 +89,6 @@ const RichTextEditor = ({
 
         // 생성된 정보를 보관한다.
         tempImagesRef.current.push(tempImage);
-        console.log(`이미지가 추가됨 : ${tempId} ${tempUrl}`);
 
         try {
           // 직접 html 태그를 만들어서 삽입해줌.
@@ -127,14 +126,14 @@ const RichTextEditor = ({
           // 다음 이미지를 위해서 입력 위치만 업데이트
           insertIndex++;
         } catch (error) {
-          console.log('이미지 삽입 중 오류 : ', error);
+          // 이미지 삽입 오류 발생 시 HTML 대체 방법 시도
           // 오류 이더라도 다시 html 을 추가해 봄.
           try {
             const imgHtml = `<img src=${tempUrl} data-temp-id=${tempId} style="max-width:100%; height:auto; maring: 10px 0;"/>`;
             quill.clipboard.dangerouslyPasteHTML(insertIndex, imgHtml);
             insertIndex++;
           } catch (err) {
-            console.log('이미지 삽입 정말 실패 : ', err);
+            // 대체 방법도 실패한 경우 조용히 무시
           }
         }
       }
@@ -198,7 +197,6 @@ const RichTextEditor = ({
       if (!usedTempUrls.has(item.tempUrl)) {
         // 사용하지 않는 blob url 을 정리하기
         URL.revokeObjectURL(item.tempUrl);
-        console.log(`이미지 삭제됨 : ${item.id} ${item.tempUrl}`);
       }
     });
     // 에디터 순서대로 재 정렬된 배열로 업데이트
@@ -270,7 +268,6 @@ const RichTextEditor = ({
         // console.log('Quill 에디터 초기화 성공!');
         const toolbar = quill.getModule('toolbar') as any;
         if (toolbar && toolbar.addHandler) {
-          // console.log('이미지 핸들러 등록 실행 함');
           // 우리가 원하는 핸들러 등록
           toolbar.addHandler('image', imageHandler);
         }

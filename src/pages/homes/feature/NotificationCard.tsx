@@ -101,9 +101,14 @@ export default function NotificationCard({
     ? parseContent(notification.content) 
     : { text: '', imageUrl: null };
 
+  // 댓글 좋아요인데 content가 없는 경우 체크
+  const isCommentLikeWithoutContent = 
+    notification.type === 'like' && notification.replyId && !contentText && !imageUrl;
+  
   // 어떤 타입에 대해 내용 박스를 보여줄지 결정
   const shouldShowPreview =
-    (notification.type === 'comment' || notification.type === 'like') && (!!contentText || !!imageUrl);
+    (notification.type === 'comment' || notification.type === 'like') 
+    && (!!contentText || !!imageUrl || isCommentLikeWithoutContent);
 
   const unreadClasses = !notification.isRead
     ? 'relative bg-primary/10 dark:bg-primary/20 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary'
@@ -232,40 +237,47 @@ export default function NotificationCard({
 
         {/* 본문 */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center space-x-2 mb-1">
-            <span className={`text-lg ${getInteractionColor(notification.type)}`}>
+          <div className="flex items-start space-x-2 sm:space-x-3 mb-1">
+            <span className={`text-base sm:text-lg flex-shrink-0 ${getInteractionColor(notification.type)}`}>
               {getInteractionIcon(notification.type)}
             </span>
 
             <div className="flex-1 min-w-0">
-              <span className="font-semibold text-gray-900 dark:text-gray-100">
-                {t('notification.user_action', { name: notification.user.name })}
-              </span>
-              <span className="text-gray-600 dark:text-gray-300 ml-1">
-                {notification.type === 'like' && (notification.replyId ? t('notification.like_comment') : t('notification.like_feed'))}
-                {notification.type === 'comment' && t('notification.comment_feed')}
-                {notification.type === 'follow' && t('notification.follow_msg')}
-                {notification.type === 'repost' && t('notification.repost_msg')}
-                {notification.type === 'mention' && t('notification.mention_msg')}
-              </span>
+              <div className="line-clamp-2">
+                <span className="font-semibold text-sm sm:text-base text-gray-900 dark:text-gray-100">
+                  {notification.user.name}
+                </span>
+                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 ml-1">
+                  {notification.type === 'like' && (notification.replyId ? t('notification.like_comment') : t('notification.like_feed'))}
+                  {notification.type === 'comment' && t('notification.comment_feed')}
+                  {notification.type === 'follow' && t('notification.follow_msg')}
+                  {notification.type === 'repost' && t('notification.repost_msg')}
+                  {notification.type === 'mention' && t('notification.mention_msg')}
+                </span>
+              </div>
             </div>
 
-            <div className="flex items-center space-x-2 flex-shrink-0">
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+              <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                 {(() => {
                   const ts = notification.timestamp;
                   if (!ts) return '';
                   try {
                     const date = new Date(ts);
                     if (isNaN(date.getTime())) return ts; // 원본 반환
-                     // 24시간 이내는 시간만, 그 이후는 날짜
                     const now = new Date();
-                    const diff = now.getTime() - date.getTime();
                     const currentLang = i18n.language || 'ko';
+                    
+                    // 오늘 날짜인지 확인 (년, 월, 일이 모두 같은지)
+                    const isToday = date.getFullYear() === now.getFullYear() &&
+                                    date.getMonth() === now.getMonth() &&
+                                    date.getDate() === now.getDate();
 
-                    if (diff < 24 * 60 * 60 * 1000) {
+                    // 오늘 기록은 시간만 표시
+                    if (isToday) {
                        return new Intl.DateTimeFormat(currentLang, { hour: 'numeric', minute: 'numeric', hour12: true }).format(date);
                     }
+                    // 이전 날짜는 날짜 + 시간 표시
                     return new Intl.DateTimeFormat(currentLang, { 
                       month: 'short', 
                       day: 'numeric',
@@ -285,10 +297,10 @@ export default function NotificationCard({
                     e.stopPropagation();
                     onDelete(notification.id);
                   }}
-                  className="p-1.5 rounded-full text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  className="p-1 sm:p-1.5 rounded-full text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0"
                   title="삭제"
                 >
-                  <i className="ri-delete-bin-line text-lg" />
+                  <i className="ri-delete-bin-line text-base sm:text-lg" />
                 </button>
               )}
             </div>
@@ -296,15 +308,17 @@ export default function NotificationCard({
 
           {/* 댓글/좋아요 알림일 때 내용 미리보기 */}
           {shouldShowPreview && (
-            <div className="mt-3 p-3 bg-gray-50/50 dark:bg-zinc-800/50 rounded-xl border border-gray-200/60 dark:border-gray-700/60 flex items-center justify-between gap-3">
-              <p className="text-sm text-gray-700 dark:text-gray-200 line-clamp-2 whitespace-pre-wrap break-words flex-1 leading-relaxed">
-                {contentText}
+            <div className="mt-2 sm:mt-3 p-2.5 sm:p-3 bg-gray-50/50 dark:bg-zinc-800/50 rounded-xl border border-gray-200/60 dark:border-gray-700/60 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+              <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-200 line-clamp-2 whitespace-pre-wrap break-words flex-1 leading-relaxed w-full">
+                {isCommentLikeWithoutContent 
+                  ? t('notification.no_content_available', '내용을 불러올 수 없습니다')
+                  : contentText}
               </p>
               {imageUrl && (
                 <img 
                   src={imageUrl} 
                   alt="preview" 
-                  className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-black/5 dark:border-white/5 bg-gray-200 dark:bg-gray-800"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover flex-shrink-0 border border-black/5 dark:border-white/5 bg-gray-200 dark:bg-gray-800"
                 />
               )}
             </div>

@@ -35,6 +35,7 @@
     "delete_confirm_desc": "هل ترغب في حذف هذا الإشعار؟"
   },
   "study": {
+    "studylist": "قائمة الدراسة",
     "search_placeholder": "بحث...",
     "no_content": "لا يوجد محتوى.",
     "category": {
@@ -69,6 +70,9 @@
     "study_card_title": "بطاقة الدراسة",
     "vocab_explanation": "شرح المفردات",
     "culture_note": "ملاحظة ثقافية",
+    "subtitle_title": "ترجمة",
+    "subtitle_loading": "جاري تحميل الترجمة...",
+    "subtitle_no_data": "لا تتوفر بيانات الترجمة.",
     "login_required": "تسجيل الدخول مطلوب",
     "preview": "معاينة"
   },
@@ -511,5 +515,9 @@
     "buy_now": "شراء الآن",
     "quantity": "الكمية",
     "back_to_list": "العودة للقائمة"
+  },
+  "translation": {
+    "login_required": "يرجى تسجيل الدخول لاستخدام ميزة الترجمة.",
+    "guest_limit_reached": "لقد استخدمت جميع الترجمات المجانية. قم بتسجيل الدخول للمتابعة."
   }
 }

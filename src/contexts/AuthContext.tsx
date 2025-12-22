@@ -163,6 +163,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
         const u = newSession?.user;
         if (u) {
+          // 로그인 시 게스트 번역 카운트 초기화
+          if (event === 'SIGNED_IN') {
+            try {
+              localStorage.removeItem('guest-translation-count');
+            } catch {}
+          }
+
           // 계정 삭제 상태 체크
           checkAccountStatus(u.id);
 

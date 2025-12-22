@@ -48,7 +48,7 @@ export default function ImageSlider({
       className="mt-3 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 relative"
       onClick={e => e.stopPropagation()} 
     >
-      <div className="relative w-full h-[450px] bg-black/5 dark:bg-black/20 flex items-center justify-center">
+      <div className="relative w-full aspect-[4/3] max-h-[500px] bg-black/5 dark:bg-black/20 flex items-center justify-center">
         {/* 페이지 표시 */}
         {allImages.length > 1 && (
           <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2.5 py-1 rounded-full z-20">

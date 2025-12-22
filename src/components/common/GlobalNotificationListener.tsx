@@ -11,6 +11,8 @@ export const GlobalNotificationListener: React.FC = () => {
   
   // 현재 보고 있는 채팅방 ID를 ref로 추적 (의존성 배열 영향 없이 콜백 내부에서 접근)
   const currentChatRef = useRef<string | null>(null);
+  // 최근 알림 추적 (0.5초 이내 동일 알림 = 중복, 그 이후는 새 알림)
+  const recentNotificationsRef = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
     currentChatRef.current = currentChat?.id || null;
@@ -34,7 +36,6 @@ export const GlobalNotificationListener: React.FC = () => {
       if (!isMounted) return;
 
       if (profile) {
-        console.log('GlobalNotificationListener: Subscribing to notifications for profile', profile.id);
         // 2. Setup Notification Subscription
         notifChannel = supabase
           .channel(`global-notif-${profile.id}`)
@@ -47,7 +48,6 @@ export const GlobalNotificationListener: React.FC = () => {
               filter: `receiver_id=eq.${profile.id}`,
             },
             async (payload: any) => {
-              console.log('GlobalNotificationListener: Received notification payload', payload);
               const newNotif = payload.new;
               
               const { data: senderProfile } = await supabase
@@ -55,6 +55,29 @@ export const GlobalNotificationListener: React.FC = () => {
                 .select('nickname, avatar_url')
                 .eq('id', newNotif.sender_id)
                 .maybeSingle();
+
+              // ID가 없으면 무시
+              if (!newNotif.id) return;
+
+              // 짧은 시간(0.5초) 내 동일 알림만 차단 (한 번의 이벤트로 중복 생성된 경우만)
+              const notifKey = `${newNotif.sender_id}-${newNotif.receiver_id}-${newNotif.type}-${newNotif.comment_id || ''}-${newNotif.tweet_id || ''}`;
+              const now = Date.now();
+              const lastSeen = recentNotificationsRef.current.get(notifKey);
+              
+              // 0.5초 이내 같은 알림이면 중복으로 간주하고 무시
+              if (lastSeen && (now - lastSeen) < 500) {
+                return;
+              }
+              
+              // 새 타임스탬프 기록
+              recentNotificationsRef.current.set(notifKey, now);
+              
+              // 메모리 관리: 5초 이상 지난 항목 제거
+              for (const [key, timestamp] of recentNotificationsRef.current.entries()) {
+                if (now - timestamp > 5000) {
+                  recentNotificationsRef.current.delete(key);
+                }
+              }
 
               // 프로필이 없어도 알림은 띄움 (Fallback)
               toast.custom((_t) => (
@@ -64,7 +87,7 @@ export const GlobalNotificationListener: React.FC = () => {
                     nickname: senderProfile?.nickname ?? '알 수 없는 사용자',
                     avatar_url: senderProfile?.avatar_url ?? null,
                   }}
-                  content={newNotif.content}
+                  content={newNotif.content?.replace(/<[^>]*>/g, '') || ''}
                   timestamp={newNotif.created_at}
                   replyId={newNotif.comment_id}
                 />

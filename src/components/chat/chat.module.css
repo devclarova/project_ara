@@ -1312,6 +1312,6 @@
 
   .chatPage :global(.chat-time) {
     white-space: nowrap;
-    display: none;
+    font-size: 10px; /* 숨기지 않고 작게 표시 */
   }
 }

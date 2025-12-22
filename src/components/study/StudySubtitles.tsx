@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { useParams } from 'react-router-dom';
 import type { Subtitle } from '../../types/study';
 import SubtitleItem from './SubtitleItem';
+import { useBatchAutoTranslation } from '@/hooks/useBatchAutoTranslation';
 
 interface SubtitleListProps {
   onSelectDialogue: (subtitle: Subtitle) => void;
@@ -127,22 +129,40 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
   const isLastPage = currentPage * pageSize + pageSize >= dialogues.length;
   const isFirstPage = currentPage === 0;
 
+  const { t, i18n } = useTranslation();
+  const targetLang = i18n.language;
+
+  // --- Batch Translation Integration ---
+  // 현재 페이지의 자막 텍스트 수집
+  const pronTexts = currentDialogues.map(d => d.pronunciation ?? '');
+  const pronKeys = currentDialogues.map(d => `subtitle_pron_${d.id}`);
+  
+  const contentTexts = currentDialogues.map(d => d.english_subtitle ?? '');
+  const contentKeys = currentDialogues.map(d => `subtitle_content_${d.id}`);
+
+  // 배치 번역 훅 호출
+  const { translatedTexts: translatedProns } = useBatchAutoTranslation(pronTexts, pronKeys, targetLang);
+  const { translatedTexts: translatedContents } = useBatchAutoTranslation(contentTexts, contentKeys, targetLang);
+  // -------------------------------------
+
   return (
     <div>
-      <h2 className="text-lg sm:text-xl font-bold ml-2 mb-2 dark:text-gray-100">자막</h2>
+      <h2 className="text-lg sm:text-xl font-bold ml-2 mb-2 dark:text-gray-100">{t('study.subtitle_title')}</h2>
 
-      {loading && <p className="text-sm sm:text-base">자막 로딩 중...</p>}
-      {error && <p className="text-sm sm:text-base text-red-600">오류: {error}</p>}
+      {loading && <p className="text-sm sm:text-base">{t('study.subtitle_loading')}</p>}
+      {error && <p className="text-sm sm:text-base text-red-600">{t('common.error')}: {error}</p>}
 
       {!loading && !error && currentDialogues.length > 0 ? (
         <>
           <ul className="space-y-1.5 sm:space-y-2">
-            {currentDialogues.map(d => (
+            {currentDialogues.map((d, idx) => (
               <SubtitleItem
                 key={d.id}
                 subtitle={d}
                 onSelect={onSelectDialogue}
                 onSeek={onSeek}
+                translatedPron={translatedProns[idx]}
+                translatedContent={translatedContents[idx]}
               />
             ))}
           </ul>
@@ -153,7 +173,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
               <button
                 onClick={handlePrevPage}
                 disabled={currentPage === 0}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 disabled:opacity-50 ml-3 sm:ml-4 cursor-pointer"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 disabled:opacity-50 ml-3 sm:ml-4 cursor-pointer text-gray-700 dark:text-gray-300"
                 style={{ pointerEvents: currentPage === 0 ? 'none' : 'auto' }}
               >
                 <svg
@@ -162,18 +182,17 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
                   height="24"
                   viewBox="0 0 24 24"
                   fill="none"
+                  className="stroke-current"
                 >
                   <g clipPath="url(#clip0_108_493)">
                     <path
                       d="M0.75 12C0.75 14.9837 1.93526 17.8452 4.04505 19.955C6.15483 22.0647 9.01631 23.25 12 23.25C14.9837 23.25 17.8452 22.0647 19.955 19.955C22.0647 17.8452 23.25 14.9837 23.25 12C23.25 9.01631 22.0647 6.15483 19.955 4.04505C17.8452 1.93526 14.9837 0.75 12 0.75C9.01631 0.75 6.15483 1.93526 4.04505 4.04505C1.93526 6.15483 0.75 9.01631 0.75 12Z"
-                      stroke="black"
                       strokeWidth="1.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
                     <path
                       d="M15.7501 16.819V7.183C15.7501 6.633 15.2751 6.27 14.8621 6.504L6.36209 11.322C6.25195 11.3976 6.16187 11.4989 6.09964 11.6171C6.0374 11.7353 6.00488 11.8669 6.00488 12.0005C6.00488 12.1341 6.0374 12.2657 6.09964 12.3839C6.16187 12.5021 6.25195 12.6034 6.36209 12.679L14.8621 17.498C15.2751 17.732 15.7501 17.369 15.7501 16.819Z"
-                      stroke="black"
                       strokeWidth="1.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -190,7 +209,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
               <button
                 onClick={handleNextPage}
                 disabled={currentPage * pageSize + pageSize >= dialogues.length}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded disabled:opacity-50 ml-3 sm:ml-4 cursor-pointer"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded disabled:opacity-50 ml-3 sm:ml-4 cursor-pointer text-gray-700 dark:text-gray-300"
                 style={{
                   pointerEvents: isLastPage ? 'none' : 'auto',
                   cursor: isLastPage ? 'default' : 'pointer',
@@ -202,19 +221,17 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
                   height="24"
                   viewBox="0 0 24 24"
                   fill="none"
-                  className="rotate-180"
+                  className="rotate-180 stroke-current"
                 >
                   <g clipPath="url(#clip0_108_493)">
                     <path
                       d="M0.75 12C0.75 14.9837 1.93526 17.8452 4.04505 19.955C6.15483 22.0647 9.01631 23.25 12 23.25C14.9837 23.25 17.8452 22.0647 19.955 19.955C22.0647 17.8452 23.25 14.9837 23.25 12C23.25 9.01631 22.0647 6.15483 19.955 4.04505C17.8452 1.93526 14.9837 0.75 12 0.75C9.01631 0.75 6.15483 1.93526 4.04505 4.04505C1.93526 6.15483 0.75 9.01631 0.75 12Z"
-                      stroke="black"
                       strokeWidth="1.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
                     <path
                       d="M15.7501 16.819V7.183C15.7501 6.633 15.2751 6.27 14.8621 6.504L6.36209 11.322C6.25195 11.3976 6.16187 11.4989 6.09964 11.6171C6.0374 11.7353 6.00488 11.8669 6.00488 12.0005C6.00488 12.1341 6.0374 12.2657 6.09964 12.3839C6.16187 12.5021 6.25195 12.6034 6.36209 12.679L14.8621 17.498C15.2751 17.732 15.7501 17.369 15.7501 16.819Z"
-                      stroke="black"
                       strokeWidth="1.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -231,7 +248,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
           )}
         </>
       ) : (
-        !loading && !error && <p className="text-sm sm:text-base">자막 데이터가 없습니다.</p>
+        !loading && !error && <p className="text-sm sm:text-base">{t('study.subtitle_no_data')}</p>
       )}
     </div>
   );

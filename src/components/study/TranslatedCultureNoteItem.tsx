@@ -17,7 +17,7 @@ const TranslatedCultureNoteItem: React.FC<Props> = ({ content, idKey }) => {
   );
   
   return (
-    <li className="flex items-start text-sm sm:text-base">
+    <li className="flex items-start text-sm sm:text-base cursor-default">
        <span className="text-pink-500 mr-2">•</span>
        <span>{translatedText || content}</span>
     </li>

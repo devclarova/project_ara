@@ -8,6 +8,10 @@ import ContentCard from '@/components/study/ContentCard';
 import type { StudyListProps } from '@/types/study';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
+import { useBatchAutoTranslation } from '@/hooks/useBatchAutoTranslation';
+import SignInModal from '../auth/SignInModal';
+
 
 type SwiperStyle = CSSProperties & {
   '--swiper-pagination-color': string;
@@ -76,6 +80,28 @@ export default function PopularContentSection() {
     void fetchFeatured();
   }, []);
 
+  const { i18n } = useTranslation();
+  const [showSignIn, setShowSignIn] = useState(false);
+  const targetLang = i18n.language;
+
+  // --- Batch Translation ---
+  const titles = items.map(i => i.title);
+  const titleKeys = items.map(i => `study_title_${i.id}`);
+  const { translatedTexts: trTitles } = useBatchAutoTranslation(titles, titleKeys, targetLang);
+
+  const descs = items.map(i => i.short_description || '');
+  const descKeys = items.map(i => `study_desc_${i.id}`);
+  const { translatedTexts: trDescs } = useBatchAutoTranslation(descs, descKeys, targetLang);
+
+  const durations = items.map(i => i.duration ?? ''); 
+  const durationKeys = items.map(i => `study_duration_${i.id}`);
+  const { translatedTexts: trDurations } = useBatchAutoTranslation(durations, durationKeys, targetLang);
+
+  const episodes = items.map(i => i.episode || '');
+  const episodeKeys = items.map(i => `study_episode_${i.id}`);
+  const { translatedTexts: trEpisodes } = useBatchAutoTranslation(episodes, episodeKeys, targetLang);
+  // -------------------------
+
   const swiperStyle: SwiperStyle = {
     '--swiper-pagination-color': 'rgb(0,191,165)',
   };
@@ -139,7 +165,7 @@ export default function PopularContentSection() {
             style={swiperStyle}
             className="w-full landing-swiper"
           >
-            {items.map(item => (
+            {items.map((item, index) => (
               <SwiperSlide key={item.id} className="pb-10">
                 <div className="h-full cursor-pointer">
                   <ContentCard
@@ -154,12 +180,19 @@ export default function PopularContentSection() {
                     duration={item.duration}
                     comments={item.comments}
                     basePath={user ? '/study' : '/guest-study'}
+                    isGuest={!user}
+                    openLoginModal={() => setShowSignIn(true)}
+                    translatedTitleProp={trTitles[index]}
+                    translatedDescProp={trDescs[index]}
+                    translatedDurationProp={trDurations[index]}
+                    translatedEpisodeProp={trEpisodes[index]}
                   />
                 </div>
               </SwiperSlide>
             ))}
           </Swiper>
         )}
+        <SignInModal isOpen={showSignIn} onClose={() => setShowSignIn(false)} />
       </div>
     </motion.section>
   );

@@ -7,31 +7,17 @@ interface SubtitleItemProps {
   subtitle: Subtitle;
   onSelect: (subtitle: Subtitle) => void;
   onSeek?: (start: number) => void;
+  translatedPron?: string | null;
+  translatedContent?: string | null;
 }
 
-const SubtitleItem: React.FC<SubtitleItemProps> = ({ subtitle, onSelect, onSeek }) => {
-  const { i18n } = useTranslation();
-  const targetLang = i18n.language;
-
-  // 발음 번역 (옵션)
-  const { translatedText: translatedPron } = useAutoTranslation(
-    subtitle.pronunciation ?? '',
-    `subtitle_pron_${subtitle.id}`,
-    targetLang
-  );
-  
-  // 내용(영어 자막) 번역
-  const { translatedText: translatedContent } = useAutoTranslation(
-    subtitle.english_subtitle ?? '',
-    `subtitle_content_${subtitle.id}`,
-    targetLang
-  );
+const SubtitleItem: React.FC<SubtitleItemProps> = ({ subtitle, onSelect, onSeek, translatedPron, translatedContent }) => {
 
   return (
-    <li className="p-2.5 sm:p-3 bg-white dark:bg-secondary rounded-lg shadow cursor-pointer hover:bg-gray-50 hover:border-l-4 hover:border-primary dark:hover:border-gray-600">
+    <li className="p-2.5 sm:p-3 bg-white/50 dark:bg-secondary rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 cursor-default">
       {subtitle.korean_subtitle && (
         <button
-          className="block w-full text-base sm:text-lg text-gray-600 dark:text-gray-100 hover:text-green-600 dark:hover:text-gray-400 text-left"
+          className="block w-full text-base sm:text-lg text-gray-600 dark:text-gray-100 hover:text-primary/80 dark:hover:text-primary/80 text-left cursor-pointer transition-colors"
           onClick={() => {
             onSelect(subtitle);
             const start = subtitle.subtitle_start_time ?? 0;
@@ -43,21 +29,15 @@ const SubtitleItem: React.FC<SubtitleItemProps> = ({ subtitle, onSelect, onSeek 
       )}
       {/* 발음 번역 (또는 원본) */}
       {(translatedPron || subtitle.pronunciation) && (
-        <button
-          className="block w-full text-base sm:text-lg text-gray-500 dark:text-gray-100 text-left"
-          onClick={() => onSelect(subtitle)}
-        >
+        <div className="block w-full text-base sm:text-lg text-gray-500 dark:text-gray-400 text-left mt-1 cursor-default select-text">
           [{translatedPron || subtitle.pronunciation}]
-        </button>
+        </div>
       )}
       {/* 내용 번역 (또는 원본) */}
       {(translatedContent || subtitle.english_subtitle) && (
-        <button
-          className="block w-full text-base sm:text-lg text-gray-700 dark:text-gray-100 text-left"
-          onClick={() => onSelect(subtitle)}
-        >
+        <div className="block w-full text-base sm:text-lg text-gray-700 dark:text-gray-300 text-left mt-0.5 cursor-default select-text">
           {translatedContent || subtitle.english_subtitle}
-        </button>
+        </div>
       )}
     </li>
   );

@@ -23,7 +23,6 @@ interface Report {
 const AdminReports = () => {
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'resolved'>('all');
 
-  // Mock Data
   const [reports, setReports] = useState<Report[]>([
     { id: 'R-001', reporter: 'user123', target: 'bad_user', type: 'user', reason: '부적절한 프로필 사진', created_at: '2025-12-19 10:30', status: 'pending' },
     { id: 'R-002', reporter: 'study_fan', target: 'Aggressive Comment', type: 'comment', reason: '욕설 및 비방', created_at: '2025-12-19 09:15', status: 'pending' },
@@ -44,38 +43,38 @@ const AdminReports = () => {
   const filteredReports = reports.filter(r => filterStatus === 'all' || r.status === filterStatus);
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+    <div className="w-full p-3 sm:p-4 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">신고 및 문의 관리</h1>
-          <p className="text-slate-500">접수된 사용자 신고를 검토하고 처리합니다.</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">신고 및 문의 관리</h1>
+          <p className="text-muted-foreground">접수된 사용자 신고를 검토하고 처리합니다.</p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input 
               type="text" 
               placeholder="검색..." 
-              className="pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+              className="pl-9 pr-4 py-2 border-2 border-gray-300 dark:border-gray-500 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-1 focus:ring-primary/30/20 focus:border-ring bg-background text-foreground"
             />
           </div>
-          <div className="flex bg-white border border-slate-200 rounded-lg p-1">
+          <div className="flex bg-secondary border-2 border-gray-300 dark:border-gray-500 rounded-lg p-1">
             <button 
               onClick={() => setFilterStatus('all')}
-              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${filterStatus === 'all' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${filterStatus === 'all' ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground hover:text-foreground'}`}
             >
               전체
             </button>
             <button 
               onClick={() => setFilterStatus('pending')}
-              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${filterStatus === 'pending' ? 'bg-orange-50 font-medium text-orange-700' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${filterStatus === 'pending' ? 'bg-orange-50 dark:bg-orange-900/30 font-medium text-orange-700 dark:text-orange-400' : 'text-muted-foreground  hover:text-foreground'}`}
             >
               대기중
             </button>
              <button 
               onClick={() => setFilterStatus('resolved')}
-              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${filterStatus === 'resolved' ? 'bg-emerald-50 font-medium text-emerald-700' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${filterStatus === 'resolved' ? 'bg-primary/10 dark:bg-primary-900/30 font-medium text-primary' : 'text-muted-foreground  hover:text-foreground'}`}
             >
               처리완료
             </button>
@@ -83,73 +82,73 @@ const AdminReports = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-secondary rounded-2xl border-2 border-gray-300 dark:border-gray-500 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full min-w-[600px] text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">상태</th>
-                <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">신고 유형</th>
-                <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">신고 사유</th>
-                <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">신고자 / 대상</th>
-                <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">접수 일시</th>
-                <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">관리</th>
+              <tr className="bg-muted border-b border-gray-300 dark:border-gray-600 dark:border-border">
+                <th className="py-4 px-6 text-xs font-bold text-muted-foreground  uppercase tracking-wider">상태</th>
+                <th className="py-4 px-6 text-xs font-bold text-muted-foreground  uppercase tracking-wider">신고 유형</th>
+                <th className="py-4 px-6 text-xs font-bold text-muted-foreground  uppercase tracking-wider">신고 사유</th>
+                <th className="py-4 px-6 text-xs font-bold text-muted-foreground  uppercase tracking-wider">신고자 / 대상</th>
+                <th className="py-4 px-6 text-xs font-bold text-muted-foreground  uppercase tracking-wider">접수 일시</th>
+                <th className="py-4 px-6 text-xs font-bold text-muted-foreground  uppercase tracking-wider text-right">관리</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-border">
               {filteredReports.map((report) => (
-                <tr key={report.id} className="hover:bg-slate-50/80 transition-colors">
+                <tr key={report.id} className="hover:bg-muted dark:hover:bg-accent700/50 transition-colors">
                   <td className="py-4 px-6">
                     {report.status === 'pending' && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-800">
                         <AlertTriangle size={12} /> 대기중
                       </span>
                     )}
                     {report.status === 'resolved' && (
-                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-200">
+                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-primary-900/30 text-primary border border-primary/30">
                         <CheckCircle size={12} /> 처리완료
                       </span>
                     )}
                     {report.status === 'dismissed' && (
-                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground border-2 border-gray-300 dark:border-gray-500 dark:border-border">
                         <XOctagon size={12} /> 반려됨
                       </span>
                     )}
                   </td>
                   <td className="py-4 px-6">
-                    <span className="capitalize text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded border border-slate-200">
+                    <span className="capitalize text-sm font-medium text-foreground bg-muted px-2 py-1 rounded border-2 border-gray-300 dark:border-gray-500 dark:border-border">
                       {report.type}
                     </span>
                   </td>
                   <td className="py-4 px-6">
-                    <p className="text-sm text-slate-900 font-medium">{report.reason}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">ID: {report.id}</p>
+                    <p className="text-sm text-muted-foreground  font-medium">{report.reason}</p>
+                    <p className="text-xs text-muted-foreground  mt-0.5">ID: {report.id}</p>
                   </td>
                   <td className="py-4 px-6">
                     <div className="text-sm">
-                      <p className="text-slate-900">From: <span className="font-medium text-slate-700">{report.reporter}</span></p>
-                      <p className="text-slate-500">To: <span className="font-medium text-red-500">{report.target}</span></p>
+                      <p className="text-muted-foreground ">From: <span className="font-medium text-foreground">{report.reporter}</span></p>
+                      <p className="text-muted-foreground ">To: <span className="font-medium text-red-500 dark:text-red-400">{report.target}</span></p>
                     </div>
                   </td>
                   <td className="py-4 px-6">
-                    <span className="text-sm text-slate-500">{report.created_at}</span>
+                    <span className="text-sm text-muted-foreground ">{report.created_at}</span>
                   </td>
                   <td className="py-4 px-6 text-right">
                     <div className="flex justify-end items-center gap-2">
-                      <button className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="상세 보기">
+                      <button className="p-2 text-muted-foreground hover:text-primary dark:hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" title="상세 보기">
                         <Eye size={18} />
                       </button>
                       {report.status === 'pending' && (
                         <>
                           <button 
                             onClick={() => handleResolve(report.id)}
-                            className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors text-xs font-medium border border-emerald-200"
+                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors text-xs font-medium border border-primary/30"
                           >
                             처리
                           </button>
                            <button 
                              onClick={() => handleDismiss(report.id)}
-                            className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors text-xs font-medium border border-slate-200"
+                            className="p-2 text-muted-foreground  hover:bg-accent rounded-lg transition-colors text-xs font-medium border-2 border-gray-300 dark:border-gray-500 dark:border-border"
                           >
                             반려
                           </button>
@@ -161,16 +160,16 @@ const AdminReports = () => {
               ))}
             </tbody>
           </table>
-          
-          {filteredReports.length === 0 && (
-            <div className="py-12 text-center">
-              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle size={32} className="text-slate-300" />
-              </div>
-              <p className="text-slate-500">표시할 신고 내역이 없습니다.</p>
-            </div>
-          )}
         </div>
+          
+        {filteredReports.length === 0 && (
+          <div className="py-12 text-center">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle size={32} className="text-muted-foreground " />
+            </div>
+            <p className="text-muted-foreground ">표시할 신고 내역이 없습니다.</p>
+          </div>
+        )}
       </div>
     </div>
   );

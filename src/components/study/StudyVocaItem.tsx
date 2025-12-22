@@ -42,7 +42,7 @@ const StudyVocaItem: React.FC<StudyVocaItemProps> = ({ item, id }) => {
   );
 
   return (
-    <div className="p-3 border dark:border-gray-600 rounded-lg bg-white dark:bg-secondary shadow-sm hover:bg-gray-50 dark:hover:bg-primary/5 transition-colors w-full h-[140px]">
+    <div className="p-3 border dark:border-gray-600 rounded-lg bg-white dark:bg-secondary shadow-sm hover:bg-gray-50 dark:hover:bg-primary/5 transition-colors w-full min-h-[140px] h-full flex flex-col cursor-default">
       <h4 className="font-semibold dark:text-gray-300">{item.term}</h4>
       <p className="text-sm text-gray-600 dark:text-gray-400">
         {translatedMeaning || item.meaning}

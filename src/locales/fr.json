@@ -35,6 +35,7 @@
     "delete_confirm_desc": "Voulez-vous supprimer cette notification ?"
   },
   "study": {
+    "studylist": "Liste d'étude",
     "search_placeholder": "Rechercher...",
     "no_content": "Aucun contenu.",
     "category": {
@@ -69,6 +70,9 @@
     "study_card_title": "Carte d'étude",
     "vocab_explanation": "Vocabulaire",
     "culture_note": "Note culturelle",
+    "subtitle_title": "Sous-titres",
+    "subtitle_loading": "Chargement des sous-titres...",
+    "subtitle_no_data": "Aucune donnée de sous-titres.",
     "login_required": "Connexion requise",
     "preview": "Aperçu"
   },
@@ -476,5 +480,9 @@
     "buy_now": "Acheter maintenant",
     "quantity": "Quantité",
     "back_to_list": "Retour à la liste"
+  },
+  "translation": {
+    "login_required": "Veuillez vous connecter pour utiliser la fonction de traduction.",
+    "guest_limit_reached": "Vous avez utilisé toutes vos traductions gratuites. Connectez-vous pour continuer."
   }
 }

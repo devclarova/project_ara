@@ -132,7 +132,7 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
           {styles.label}
         </p>
         
-        {type !== 'like' && type !== 'follow' && (
+        {type !== 'follow' && (
           <div className="relative">
             <p className="text-[13px] text-gray-700 dark:text-zinc-300 line-clamp-2 break-words leading-snug font-medium">
               {content}

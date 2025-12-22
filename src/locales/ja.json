@@ -36,6 +36,7 @@
     "delete_confirm_desc": "この通知を削除しますか？"
   },
   "study": {
+    "studylist": "学習リスト",
     "search_placeholder": "けんさく...",
     "no_content": "コンテンツが見つかりませんでした。",
     "category": {
@@ -73,6 +74,9 @@
     "study_card_title": "がくしゅうカード",
     "vocab_explanation": "たんごのせつめい",
     "culture_note": "ぶんかノート",
+    "subtitle_title": "字幕",
+    "subtitle_loading": "字幕を読み込み中...",
+    "subtitle_no_data": "字幕データがありません。",
     "has_content": "コンテンツがあります",
     "login_required": "ログインが必要です",
     "preview": "プレビュー"
@@ -88,7 +92,7 @@
     "email": "メールアドレス",
     "password": "パスワード",
     "logging_in": "ログイン中です...",
-    "auto_login": "じど��ログイン",
+    "auto_login": "自動ログイン",
     "find_email": "メールをさがす",
     "find_password": "パスワードをさがす",
     "resend_verification": "認証メールを再送します",
@@ -107,7 +111,7 @@
     "previous": "まえへ",
     "signing_up": "登録中です...",
     "signup_complete": "登録が完了しました！",
-    "signup_complete_message": "会員登録が完了��ました！",
+    "signup_complete_message": "会員登録が完了しました！",
     "service_ready": "サービスをお楽しみください。",
     "start_now": "今すぐはじめる",
     "go_home": "ホームへ戻る",
@@ -412,7 +416,7 @@
     "delete_msg_desc": "削除すると元に戻せませんよ。",
     "delete_success": "削除しました！",
     "delete_failed": "削除に失敗しました。",
-    "no_replies": "返信がありません��",
+    "no_replies": "返信がありません。",
     "be_first": "最初のコメントを投稿しましょう！",
     "cannot_delete": "削除できません",
     "deleted_reply": "削除された返信です",
@@ -528,7 +532,7 @@
       },
       "ai": {
         "h": "第7条（AI機能の告知）",
-        "usage": "サービスは、投稿推薦、コンテンツ生成・要約、通報審査補助などのAI・アルゴリ���ム機能を使用する場合があります。",
+        "usage": "サービスは、投稿推薦、コンテンツ生成・要約、通報審査補助などのAI・アルゴリズム機能を使用する場合があります。",
         "disclaimer": "AI結果には誤りが含まれる可能性があり、参考用として提供されます。会員は結果を自己確認の上活用する必要があります。"
       },
       "payment": {
@@ -561,7 +565,7 @@
       },
       "notice": {
         "h": "第14条（規約の改定および告知）",
-        "body": "当社は関連法令を遵守する範囲内で規約を改定することができ、改定内容およ���施行日を最低7日前（会員に不利な場合30日前）にサービス内で告知します。"
+        "body": "当社は関連法令を遵守する範囲内で規約を改定することができ、改定内容および施行日を最低7日前（会員に不利な場合30日前）にサービス内で告知します。"
       }
     },
     "privacy": {
@@ -709,5 +713,9 @@
     "buy_now": "今すぐ購入",
     "quantity": "数量",
     "back_to_list": "一覧に戻る"
+  },
+  "translation": {
+    "login_required": "ログイン後に翻訳機能をご利用いただけます。",
+    "guest_limit_reached": "無料翻訳の回数を使い切りました。ログインして続けてください。"
   }
 }

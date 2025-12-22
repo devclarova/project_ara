@@ -19,6 +19,16 @@ input:-moz-ui-valid {
   color: #111827 !important;
 }
 
+/* Hide number input spin buttons */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
 /* 프로젝트 공통 유틸 */
 :root {
   --app-max-w: 720px;
@@ -580,28 +590,21 @@ hr {
 .input,
 .select,
 .textarea {
-  width: 100%;
-  padding: 0.65rem 0.8rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-elev-1);
-  color: var(--color-text);
-  transition:
-    border-color var(--duration) var(--ease),
-    box-shadow var(--duration) var(--ease);
+  @apply w-full px-4 py-2.5 rounded-lg;
+  @apply bg-secondary;
+  @apply border-2 border-gray-300 dark:border-gray-500;
+  @apply text-foreground placeholder:text-muted-foreground;
+  @apply focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary;
+  @apply hover:border-gray-400 dark:hover:border-gray-400;
+  @apply transition-all duration-200;
 }
+
+.textarea {
+  @apply resize-y min-h-[100px];
+}
+
 .input::placeholder,
 .textarea::placeholder {
-  color: var(--color-text-muted);
-}
-.input:focus,
-.select:focus,
-.textarea:focus {
-  border-color: var(--color-brand);
-  box-shadow: var(--focus-ring);
-}
-.textarea {
-  min-height: 120px;
   resize: vertical;
 }
 
@@ -1228,4 +1231,20 @@ hr {
     /* Ensure it doesn't stick to the very bottom */
     bottom: 24px !important; 
   }
+}
+
+/* ===== Horizontal Scroll Affordance ===== */
+/* Gradient mask to indicate more content on the right */
+.mask-gradient {
+  -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+  mask-image: linear-gradient(to right, black 85%, transparent 100%);
+}
+
+/* Hide scrollbar while maintaining scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
