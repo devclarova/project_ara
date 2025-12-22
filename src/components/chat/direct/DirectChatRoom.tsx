@@ -368,7 +368,6 @@ const DirectChatRoom = ({
       // 정방향 로딩(isLoadingNewerRef) 중이었다면, 스크롤을 강제하면 안 됨 (자연스럽게 이어지도록)
       // 이 시점에서 로딩 UI 상태도 해제한다. (렌더링 직후 타이밍)
       if (isLoadingNewerRef.current) {
-        console.log('Skipping auto-scroll due to forward loading');
         isLoadingNewerRef.current = false;
         setIsLoadingNewer(false);
       } else {

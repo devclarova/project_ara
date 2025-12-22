@@ -35,6 +35,7 @@
     "delete_confirm_desc": "Você deseja excluir esta notificação?"
   },
   "study": {
+    "studylist": "Lista de Estudo",
     "search_placeholder": "Pesquisar...",
     "no_content": "Nenhum conteúdo.",
     "category": {
@@ -69,6 +70,9 @@
     "study_card_title": "Cartão de Estudo",
     "vocab_explanation": "Vocabulário",
     "culture_note": "Nota Cultural",
+    "subtitle_title": "Legendas",
+    "subtitle_loading": "A carregar legendas...",
+    "subtitle_no_data": "Sem dados de legendas.",
     "login_required": "Login necessário",
     "preview": "Visualizar"
   },
@@ -512,5 +516,9 @@
     "buy_now": "Comprar agora",
     "quantity": "Quantidade",
     "back_to_list": "Voltar para a lista"
+  },
+  "translation": {
+    "login_required": "Por favor, faça login para usar a função de tradução.",
+    "guest_limit_reached": "Você usou todas as traduções gratuitas. Faça login para continuar."
   }
 }

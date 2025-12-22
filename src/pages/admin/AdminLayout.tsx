@@ -15,26 +15,42 @@ import {
   PieChart,
   Package
 } from 'lucide-react';
-import { Link, useLocation, Outlet } from 'react-router-dom';
+import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
+import ThemeSwitcher from '../../components/common/ThemeSwitcher';
+import { supabase } from '../../lib/supabase';
+import { toast } from 'sonner';
 
 const AdminLayout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Sidebar closed by default on mobile, will be open on desktop via CSS
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success('로그아웃되었습니다');
+      window.location.href = '/';  // 강제 리다이렉트
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('로그아웃 중 오류가 발생했습니다');
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex font-sans text-slate-900">
-      {/* Sidebar */}
+    <div className="min-h-screen min-w-[300px] bg-background flex font-sans text-foreground overflow-x-hidden">
+      {/* Sidebar - Hidden on mobile, always visible on desktop */}
       <aside 
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-secondary border-r border-gray-300 dark:border-gray-600 transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        } md:relative md:translate-x-0`}
       >
         <div className="h-full flex flex-col">
-          <div className="h-16 flex items-center px-6 border-b border-slate-100">
+          <div className="h-16 flex items-center px-6 border-b border-gray-300 dark:border-gray-600">
             <Link to="/admin" className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-emerald-600">
-              Ara Admin
+              ARA Admin
             </Link>
             <button 
-              className="md:hidden ml-auto text-slate-500"
+              className="md:hidden ml-auto text-muted-foreground hover:text-foreground"
               onClick={() => setSidebarOpen(false)}
             >
               <X size={20} />
@@ -43,29 +59,35 @@ const AdminLayout = () => {
 
           <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
             <NavItem to="/admin" icon={Home} label="대시보드" end />
-            <div className="pt-4 pb-2 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">콘텐츠 관리</div>
-            <NavItem to="/admin/study/upload" icon={Video} label="학습 영상 업로드" />
-            <NavItem to="/admin/content" icon={ShieldAlert} label="콘텐츠 중재" />
-            <NavItem to="/admin/goods/new" icon={Package} label="상품 등록" />
             
-            <div className="pt-4 pb-2 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">운영 지원</div>
+            <div className="pt-4 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">콘텐츠 관리</div>
+            <NavItem to="/admin/study/upload" icon={Video} label="학습 영상 업로드" />
+            <NavItem to="/admin/study/manage" icon={Video} label="학습 관리" />
+            <NavItem to="/admin/goods/new" icon={Package} label="상품 등록" />
+            <NavItem to="/admin/goods/manage" icon={Package} label="상품 관리" />
+            <NavItem to="/admin/content" icon={ShieldAlert} label="콘텐츠 중재" />
+            
+            <div className="pt-4 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">운영 지원</div>
             <NavItem to="/admin/reports" icon={AlertTriangle} label="신고 및 문의" />
             <NavItem to="/admin/analytics" icon={PieChart} label="통계 및 분석" />
             <NavItem to="/admin/users" icon={Users} label="사용자 관리" />
             
-             <div className="pt-4 pb-2 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">설정</div>
+             <div className="pt-4 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">설정</div>
             <NavItem to="/admin/settings" icon={Settings} label="설정" />
           </div>
 
-          <div className="p-4 border-t border-slate-100">
+          <div className="p-4 border-t border-gray-300 dark:border-gray-600">
             <div className="flex items-center gap-3 px-2 py-2 mb-2">
-              <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-500">A</div>
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">A</div>
               <div className="flex-1 overflow-hidden">
-                <p className="text-sm font-medium truncate">관리자</p>
-                <p className="text-xs text-slate-500 truncate">admin@project-ara.com</p>
+                <p className="text-sm font-medium text-foreground truncate">관리자</p>
+                <p className="text-xs text-muted-foreground truncate">admin@project-ara.com</p>
               </div>
             </div>
-            <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+            >
               <LogOut size={16} />
               로그아웃
             </button>
@@ -74,43 +96,51 @@ const AdminLayout = () => {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
         {/* Header */}
-        <header className="h-16 bg-white/80 backdrop-blur border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-40">
-          <div className="flex items-center gap-4">
+        <header className="h-14 sm:h-16 bg-secondary/80 backdrop-blur border-b border-gray-300 dark:border-gray-600 flex items-center justify-between px-2 sm:px-4 md:px-6 sticky top-0 z-40">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-1">
             <button 
-              className="md:hidden text-slate-500 hover:text-slate-700 p-1"
+              className="md:hidden text-muted-foreground hover:text-foreground p-1 flex-shrink-0"
               onClick={() => setSidebarOpen(true)}
             >
-              <Menu size={20} />
+              <Menu size={18} className="sm:w-5 sm:h-5" />
             </button>
-            <div className="relative hidden md:block w-96">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search size={16} className="text-slate-400" />
+
+            {/* Search - Hidden on very small screens */}
+            <div className="hidden min-[500px]:flex items-center flex-1 max-w-xl">
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                <input
+                  type="text"
+                  placeholder="검색..."
+                  className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-background border border-gray-300 dark:border-gray-500 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-transparent transition-all text-foreground"
+                />
               </div>
-              <input
-                type="text"
-                placeholder="검색..."
-                className="w-full pl-10 pr-4 py-2 bg-slate-100 border-transparent focus:bg-white focus:border-emerald-500 focus:ring-0 rounded-lg text-sm transition-all"
-              />
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button className="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors relative">
-              <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-3 flex-shrink-0">
+            {/* Theme Switcher */}
+            <div className="scale-75 sm:scale-100 -mr-2 sm:mr-0">
+              <ThemeSwitcher />
+            </div>
+
+            {/* Notifications */}
+            <button className="relative p-1.5 sm:p-2 hover:bg-muted rounded-lg transition-colors flex-shrink-0">
+              <Bell size={18} className="sm:w-5 sm:h-5 text-muted-foreground" />
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full" />
             </button>
           </div>
         </header>
 
         {/* Dynamic Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-0 sm:p-4 md:p-6 lg:p-8 bg-background w-full max-w-full box-border">
             <Outlet />
         </main>
       </div>
 
-      {/* Mobile Overlay */}
+      {/* Mobile Overlay - Only show on mobile when sidebar is open */}
       {sidebarOpen && (
         <div 
           className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
@@ -124,8 +154,6 @@ const AdminLayout = () => {
 // Subcomponent for nav items
 function NavItem({ icon: Icon, label, to, end }: { icon: any, label: string, to: string, end?: boolean }) {
   const location = useLocation();
-  // Simple active check logic
-  // If end is true, exact match. Else, startsWith match.
   const isActive = end 
     ? location.pathname === to 
     : location.pathname.startsWith(to);
@@ -133,12 +161,12 @@ function NavItem({ icon: Icon, label, to, end }: { icon: any, label: string, to:
   return (
     <Link to={to} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors mb-1 ${
       isActive 
-        ? 'bg-emerald-50 text-emerald-600 font-medium' 
-        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+        ? 'bg-primary/10 text-primary font-medium' 
+        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
     }`}>
       <Icon size={18} />
       <span className="text-sm">{label}</span>
-      {isActive && <div className="ml-auto w-1.5 h-1.5 bg-emerald-500 rounded-full" />}
+      {isActive && <div className="ml-auto w-1.5 h-1.5 bg-primary rounded-full" />}
     </Link>
   );
 }

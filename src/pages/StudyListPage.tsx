@@ -4,9 +4,10 @@ import CategoryTabs, { type TCategory } from '@/components/study/CategoryTabs';
 import ContentCard from '@/components/study/ContentCard';
 import FilterDropdown, { type TDifficulty } from '@/components/study/FilterDropdown';
 import SearchBar from '@/components/ui/SearchBar';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
+import { useBatchAutoTranslation } from '@/hooks/useBatchAutoTranslation';
 import { supabase } from '../lib/supabase';
 import type { Study } from '../types/study';
 import { useAuth } from '@/contexts/AuthContext';
@@ -46,7 +47,9 @@ const LEANING_GUIDE_SLIDES = [
 ];
 
 const StudyListPage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const targetLang = i18n.language;
+
   const [clips, setClips] = useState<Study[]>([]); // 콘텐츠 목록
   const [keyword, setKeyword] = useState(''); // 검색
   const [page, setPage] = useState(1); // 현재 페이지
@@ -86,10 +89,42 @@ const StudyListPage = () => {
   const [activeCategory, setActiveCategory] = useState<TCategory>(displayCategory);
   const [levelFilter, setLevelFilter] = useState<TDifficulty>(displayLevel);
 
+  // Ref for horizontal scroll on wheel
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+
+  // Batch Translation
+  const titles = clips.map(c => c.title);
+  const titleKeys = clips.map(c => `study_title_${c.id}`);
+  const { translatedTexts: trTitles } = useBatchAutoTranslation(titles, titleKeys, targetLang);
+
+  const descs = clips.map(c => c.short_description || '');
+  const descKeys = clips.map(c => `study_desc_${c.id}`);
+  const { translatedTexts: trDescs } = useBatchAutoTranslation(descs, descKeys, targetLang);
+
+  const durations = clips.map(c => {
+    const v = Array.isArray(c.video) ? c.video[0] : c.video as any; // Safe cast or check
+    return typeof v?.runtime_bucket === 'string' ? v.runtime_bucket : '';
+  });
+  const durationKeys = clips.map(c => `study_duration_${c.id}`);
+  const { translatedTexts: trDurations } = useBatchAutoTranslation(durations, durationKeys, targetLang);
+
+  const episodes = clips.map(c => {
+    const v = Array.isArray(c.video) ? c.video[0] : c.video as any;
+    return v?.episode || '';
+  });
+  const episodeKeys = clips.map(c => `study_episode_${c.id}`);
+  const { translatedTexts: trEpisodes } = useBatchAutoTranslation(episodes, episodeKeys, targetLang);
+
   // 데이터 불러오기
   useEffect(() => {
     const fetchData = async () => {
       const from = (page - 1) * limit;
+      // ... (rest of logic is unchanged here, just context)
+
+// ... separating hook logic and render logic for clarity, 
+// actually I'm replacing the block from "const descs..." down to render is too big.
+// I will target the Hooks area first.
+
       const to = from + limit - 1;
 
       let query = supabase
@@ -115,29 +150,72 @@ const StudyListPage = () => {
         if (needsLevel) query = query.eq('video.level', levelFilter);
       }
 
-      if (keyword.trim()) {
-        query = query.or(`title.ilike.%${keyword}%,short_description.ilike.%${keyword}%`);
-      }
-
-      const { data, count, error } = await query.range(from, to);
+      // keyword 검색은 클라이언트 사이드에서 처리 (번역 대응)
+      // keyword가 있을 때는 전체 데이터를 가져와서 클라이언트에서 필터링
+      const hasKeyword = keyword.trim().length > 0;
+      
+      const { data, count, error } = hasKeyword 
+        ? await query // 검색 시: 전체 데이터 가져오기
+        : await query.range(from, to); // 검색 없을 때: 페이지네이션
+        
       if (error) {
         console.error('데이터 불러오기 오류:', error.message);
         return;
       }
       setClips((data ?? []) as Study[]);
-      setTotal(count ?? 0);
+      
+      // keyword 없을 때만 DB count 사용 (검색 시는 필터링 후 count)
+      if (!hasKeyword) {
+        setTotal(count ?? 0);
+      }
     };
 
     fetchData();
-  }, [page, limit, activeCategory, levelFilter, keyword, contentFilter, episodeFilter]); // 의존성 최소화
+  }, [page, limit, activeCategory, levelFilter, contentFilter, episodeFilter]); // keyword 제거
 
-  const finalList = clips;
+  // 클라이언트 사이드 검색 필터링 (번역된 텍스트 포함)
+  const finalList = useMemo(() => {
+    if (!keyword.trim()) return clips;
+
+    const lowerKeyword = keyword.toLowerCase();
+    
+    return clips.filter((clip, idx) => {
+      const originalTitle = clip.title?.toLowerCase() || '';
+      const translatedTitle = (trTitles[idx] || '').toLowerCase();
+      const originalDesc = (clip.short_description || '').toLowerCase();
+      const translatedDesc = (trDescs[idx] || '').toLowerCase();
+
+      // 원문 또는 번역문에서 검색어 포함 여부 확인
+      return (
+        originalTitle.includes(lowerKeyword) ||
+        translatedTitle.includes(lowerKeyword) ||
+        originalDesc.includes(lowerKeyword) ||
+        translatedDesc.includes(lowerKeyword)
+      );
+    });
+  }, [clips, keyword, trTitles, trDescs]);
+
+  // 검색 필터링 후 total 업데이트 + 페이지네이션 적용
+  const paginatedList = useMemo(() => {
+    // 검색이 있을 때는 필터링 후 클라이언트 페이지네이션
+    if (keyword.trim()) {
+      const start = (page - 1) * pageSize;
+      const end = start + pageSize;
+      return finalList.slice(start, end);
+    }
+    // 검색 없을 때는 이미 DB에서 페이지네이션된 결과
+    return finalList;
+  }, [finalList, keyword, page, pageSize]);
+
+  useEffect(() => {
+    setTotal(finalList.length);
+  }, [finalList]);
 
   // URL이 바뀌면 탭/페이지도 맞춰주기
   useEffect(() => {
     setActiveCategory(displayCategory);
     setPage(1);
-  }, [displayCategory, contentFilter, episodeFilter]);
+  }, [displayCategory, contentFilter, episodeFilter, keyword]); // keyword 추가
 
   useEffect(() => {
     setLevelFilter(displayLevel);
@@ -152,18 +230,33 @@ const StudyListPage = () => {
       if (width < 640) {
         // 모바일 (1열)
         setPageSize(6); // ← 여기서 모바일 개수 조절
-      } else if (width >= 640 && width < 1024) {
-        // 태블릿 (2열)
-        setPageSize(8);
       } else {
-        // 데스크톱 (3열 이상)
-        setPageSize(9);
+        // 태블릿/데스크톱 (2열, 3열, 4열 모두 호환)
+        // 12는 2와 3 (그리고 4)의 공배수이므로 빈 칸 없이 정렬됨
+        setPageSize(12);
       }
     };
 
     updatePageSize();
     window.addEventListener('resize', updatePageSize);
     return () => window.removeEventListener('resize', updatePageSize);
+  }, []);
+
+  // Enable horizontal scroll on wheel for category tabs
+  useEffect(() => {
+    const scrollContainer = categoryScrollRef.current;
+    if (!scrollContainer) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // Only handle horizontal scroll if there's overflow
+      if (scrollContainer.scrollWidth > scrollContainer.clientWidth) {
+        e.preventDefault();
+        scrollContainer.scrollLeft += e.deltaY;
+      }
+    };
+
+    scrollContainer.addEventListener('wheel', handleWheel, { passive: false });
+    return () => scrollContainer.removeEventListener('wheel', handleWheel);
   }, []);
 
   useEffect(() => {
@@ -220,11 +313,10 @@ const StudyListPage = () => {
       display: none !important;
     }
 
-  /* 모바일: 돋보기 아이콘을 오른쪽으로 밀기 */
-   .mobile-search-absolute {
-    position: absolute !important;
-    right: 16px !important;
-  }
+    /* desktop 검색바 숨기기 */
+    .desktop-search-only {
+      display: none !important;
+    }
   }
 `}
       </style>
@@ -254,24 +346,26 @@ const StudyListPage = () => {
             {/* 탭 + 검색 */}
             <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 bg-white dark:bg-background sticky top-0 z-20 pb-2 pl-6 pt-8 pr-6">
               {/* 왼쪽: 카테고리 + 모바일용 검색 아이콘 */}
-              <div className="flex items-center justify-between w-full md:w-auto search-row">
-                <CategoryTabs 
-                  active={displayCategory} 
-                  onChange={handleCategoryChange} 
-                  categories={ALL_CATEGORIES.map(c => ({
-                    value: c,
-                    label: c === '전체' ? t('study.category.all') :
-                           c === '드라마' ? t('study.category.drama') :
-                           c === '영화' ? t('study.category.movie') :
-                           c === '예능' ? t('study.category.entertainment') :
-                           c === '음악' ? t('study.category.music') : c
-                  }))}
-                />
+              <div className="flex items-center justify-between w-full md:w-auto search-row relative gap-2">
+                <div ref={categoryScrollRef} className="flex-1 min-w-0 overflow-x-auto no-scrollbar mask-gradient">
+                  <CategoryTabs 
+                    active={displayCategory} 
+                    onChange={handleCategoryChange} 
+                    categories={ALL_CATEGORIES.map(c => ({
+                      value: c,
+                      label: c === '전체' ? t('study.category.all') :
+                             c === '드라마' ? t('study.category.drama') :
+                             c === '영화' ? t('study.category.movie') :
+                             c === '예능' ? t('study.category.entertainment') :
+                             c === '음악' ? t('study.category.music') : c
+                    }))}
+                  />
+                </div>
 
                 {/* 모바일 전용 검색 버튼 (카테고리 옆에 위치) */}
                 <button
                   onClick={() => setShowSearch(true)}
-                  className="md:hidden mobile-search-absolute ml-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-secondary transition"
+                  className="md:hidden shrink-0 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-secondary transition"
                   aria-label="검색 열기"
                 >
                   <i className="ri-search-line text-[20px] sm:text-[24px] md:text-[28px] text-gray-600 dark:text-gray-200" />
@@ -297,7 +391,7 @@ const StudyListPage = () => {
                     placeholder={t('study.search_placeholder')}
                     value={keyword}
                     onChange={handleKeywordChange}
-                    onSubmit={q => console.log('검색어:', q)}
+                    onSubmit={() => {}}
                   />
                 </div>
               </div>
@@ -327,8 +421,7 @@ const StudyListPage = () => {
                         placeholder={t('study.search_placeholder')}
                         value={keyword}
                         onChange={handleKeywordChange}
-                        onSubmit={q => {
-                          console.log('검색어:', q); // 실제 검색 로직 연결
+                        onSubmit={() => {
                           setShowSearch(false); // 검색 후 모달 닫기
                         }}
                       />
@@ -342,8 +435,10 @@ const StudyListPage = () => {
             <div className="w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1400px] bg-white dark:bg-background">
               {/* 카드 그리드 */}
               <div className="grid gap-6 sm:gap-8 px-0 grid-cols-1 sm:grid-cols-2 lg:[grid-template-columns:repeat(3,minmax(260px,1fr))] bg-white dark:bg-background">
-                {finalList.length > 0 ? (
-                  finalList.map(study => {
+                {paginatedList.length > 0 ? (
+                  paginatedList.map((study) => {
+                    // 원본 clips 배열에서 인덱스 찾기 (번역 데이터 매칭용)
+                    const originalIndex = clips.findIndex(c => c.id === study.id);
                     const [v] = study.video ?? [];
                     return (
                       <ContentCard
@@ -361,6 +456,11 @@ const StudyListPage = () => {
                         isGuest={!user} // 게스트 여부
                         isPreview={study.is_featured}
                         openLoginModal={() => setShowSignIn(true)} // 잠금 콘텐츠 눌렀을 때 로그인 모달 열기
+                        categories={v?.categories || null}
+                        translatedTitleProp={originalIndex >= 0 ? trTitles[originalIndex] : null}
+                        translatedDescProp={originalIndex >= 0 ? trDescs[originalIndex] : null}
+                        translatedDurationProp={originalIndex >= 0 ? trDurations[originalIndex] : null}
+                        translatedEpisodeProp={originalIndex >= 0 ? trEpisodes[originalIndex] : null}
                       />
                     );
                   })

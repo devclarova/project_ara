@@ -35,6 +35,7 @@
     "delete_confirm_desc": "क्या आप इस अधिसूचना को हटाना चाहते हैं?"
   },
   "study": {
+    "studylist": "अध्ययन सूची",
     "search_placeholder": "खोजें...",
     "no_content": "कोई सामग्री नहीं।",
     "category": {
@@ -69,6 +70,9 @@
     "study_card_title": "स्टडी कार्ड",
     "vocab_explanation": "शब्दावली",
     "culture_note": "संस्कृति नोट",
+    "subtitle_title": "उपशीर्षक",
+    "subtitle_loading": "उपशीर्षक लोड हो रहे हैं...",
+    "subtitle_no_data": "कोई उपशीर्षक डेटा नहीं",
     "login_required": "लॉगिन आवश्यक",
     "preview": "पूर्वावलोकन"
   },
@@ -509,5 +513,9 @@
     "buy_now": "अभी खरीदें",
     "quantity": "मात्रा",
     "back_to_list": "सूची पर वापस जाएं"
+  },
+  "translation": {
+    "login_required": "अनुवाद सुविधा का उपयोग करने के लिए कृपया लॉगिन करें।",
+    "guest_limit_reached": "आपने सभी मुफ़्त अनुवादों का उपयोग कर लिया है। जारी रखने के लिए लॉगिन करें।"
   }
 }

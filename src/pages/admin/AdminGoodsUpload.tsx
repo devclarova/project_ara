@@ -38,7 +38,8 @@ const AdminGoodsUpload = () => {
     name: '',
     categoryId: '',
     price: 0,
-    salePrice: 0,
+    discountPercent: 0, // 할인율 (%)
+    salePrice: 0, // 자동 계산될 최종 가격
     status: 'draft', // draft, active, soldout
     summary: '',
     badge_new: false,
@@ -66,11 +67,42 @@ const AdminGoodsUpload = () => {
   // Handlers
   const handleBasicChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    // Checkbox handling hack if needed, but usually controlled separately
-    setBasicInfo(prev => ({
-      ...prev,
-      [name]: type === 'number' ? Number(value) : value
-    }));
+    const numValue = type === 'number' ? Number(value) : value;
+    
+    setBasicInfo(prev => {
+      const updated = {
+        ...prev,
+        [name]: numValue
+      };
+      
+      // 가격 또는 할인율이 변경되면 최종 가격 자동 계산
+      if (name === 'price' || name === 'discountPercent') {
+        const price = name === 'price' ? Number(value) : prev.price;
+        const discountPercent = name === 'discountPercent' ? Number(value) : prev.discountPercent;
+        
+        // 할인율이 0보다 크면 할인가 계산, 아니면 0
+        if (discountPercent > 0) {
+          updated.salePrice = price * (1 - discountPercent / 100);
+        } else {
+          updated.salePrice = 0;
+        }
+      }
+      
+      // 최종 가격이 직접 변경되면 할인율 역계산
+      if (name === 'salePrice') {
+        const salePrice = Number(value);
+        const price = prev.price;
+        
+        if (price > 0 && salePrice > 0 && salePrice < price) {
+          // 할인율 = (1 - 최종가격/원가) * 100
+          updated.discountPercent = Math.round((1 - salePrice / price) * 100);
+        } else if (salePrice === 0 || salePrice >= price) {
+          updated.discountPercent = 0;
+        }
+      }
+      
+      return updated;
+    });
   };
 
   const handleCheckboxChange = (name: string, checked: boolean) => {
@@ -150,52 +182,48 @@ const AdminGoodsUpload = () => {
     <button
       type="button"
       onClick={() => setActiveTab(id)}
-      className={`flex items-center gap-2 px-6 py-3 border-b-2 font-medium transition-colors ${
+      className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 min-w-[100px] sm:min-w-[140px] font-medium transition-all whitespace-nowrap flex-shrink-0 ${
         activeTab === id 
-          ? 'border-emerald-500 text-emerald-600' 
-          : 'border-transparent text-slate-500 hover:text-slate-700'
+          ? 'border-b-2 border-primary text-primary bg-primary/5' 
+          : 'border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50'
       }`}
     >
-      <Icon size={18} />
-      {label}
+      <Icon size={18} className="flex-shrink-0" />
+      <span className="hidden sm:inline">{label}</span>
     </button>
   );
 
   return (
-    <div className="max-w-6xl mx-auto p-6 pb-20">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">상품 등록</h1>
-          <p className="text-slate-500">굿즈샵에 새로운 상품을 등록합니다.</p>
+    <div className="w-full min-w-[300px] space-y-3 sm:space-y-4 md:space-y-6">
+      
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground break-words">새 상품 등록</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground break-words mt-1">판매할 상품을 등록합니다.</p>
         </div>
-        <div className="flex gap-3">
-          <button 
-            type="button"
-            className="px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50"
-            onClick={() => window.history.back()}
-          >
-            취소
-          </button>
+        <div className="flex-shrink-0">
           <button 
             type="button"
             onClick={handleSubmit}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-sm shadow-emerald-200 transition-colors"
+            className="flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-sm sm:text-base whitespace-nowrap"
           >
-            <Save size={18} />
-            저장하기
+            <Save size={18} className="flex-shrink-0" />
+            <span className="hidden xs:inline">저장하기</span>
+            <span className="xs:hidden">저장</span>
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-secondary rounded-2xl border-2 border-gray-300 dark:border-gray-500 shadow-sm overflow-hidden">
         {/* Tabs */}
-        <div className="flex border-b border-slate-100 overflow-x-auto">
+        <div className="flex border-b border-gray-300 dark:border-gray-600 dark:border-border overflow-x-auto">
           <TabButton id="basic" label="기본 정보" icon={Package} />
           <TabButton id="detail" label="상세 정보" icon={Type} />
           <TabButton id="options" label="옵션 및 재고" icon={Layers} />
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 md:p-8">
+        <form onSubmit={handleSubmit} className="p-3 sm:p-4 md:p-6 lg:p-8">
 
           {/* ----- STEP 1: BASIC INFO ----- */}
           <div className={activeTab === 'basic' ? 'block space-y-8' : 'hidden'}>
@@ -203,8 +231,8 @@ const AdminGoodsUpload = () => {
             {/* Status & Category Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                <div className="field">
-                <label className="label font-semibold text-slate-700">판매 상태</label>
-                <div className="flex gap-2 p-1 bg-slate-100 rounded-lg w-fit">
+                <label className="label font-semibold text-foreground">판매 상태</label>
+                <div className="flex gap-2 p-1 bg-muted rounded-lg w-fit">
                    {(['draft', 'active', 'soldout'] as const).map(status => (
                      <button
                         key={status}
@@ -212,8 +240,8 @@ const AdminGoodsUpload = () => {
                         onClick={() => setBasicInfo(prev => ({...prev, status}))}
                         className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
                           basicInfo.status === status 
-                            ? 'bg-white text-emerald-600 shadow-sm' 
-                            : 'text-slate-500 hover:text-slate-700'
+                            ? 'bg-secondary  text-primary shadow-sm' 
+                            : 'text-muted-foreground hover:text-foreground'
                         }`}
                      >
                        {status === 'draft' ? '작성 중' : status === 'active' ? '판매 중' : '품절'}
@@ -223,7 +251,7 @@ const AdminGoodsUpload = () => {
               </div>
               
               <div className="field">
-                <label className="label font-semibold text-slate-700">카테고리</label>
+                <label className="label font-semibold text-foreground">카테고리</label>
                 <div className="flex gap-2">
                   <select 
                     name="categoryId" 
@@ -246,7 +274,7 @@ const AdminGoodsUpload = () => {
 
             {/* Product Name */}
              <div className="field">
-              <label className="label font-semibold text-slate-700">상품명 <span className="text-red-500">*</span></label>
+              <label className="label font-semibold text-foreground">상품명 <span className="text-red-500">*</span></label>
               <input 
                 type="text" 
                 name="name"
@@ -258,58 +286,108 @@ const AdminGoodsUpload = () => {
               />
             </div>
 
-            {/* Price & Shipping */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="field">
-                 <label className="label font-semibold text-slate-700">판매가 ($)</label>
-                 <div className="relative">
-                   <DollarSign size={16} className="absolute left-3 top-3 text-slate-400" />
-                   <input 
+
+            {/* Price & Discount */}
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Original Price */}
+                <div className="field">
+                  <label className="label font-semibold text-foreground">원가 ($) <span className="text-red-500">*</span></label>
+                  <input 
                     type="number" 
                     name="price"
                     value={basicInfo.price}
                     onChange={handleBasicChange}
-                    className="input pl-9" 
+                    className="input text-lg" 
+                    placeholder="0.00"
                     min="0"
                     step="0.01"
-                   />
-                 </div>
-              </div>
-              <div className="field">
-                 <label className="label font-semibold text-slate-700">할인가 ($) <span className="text-slate-400 font-normal text-xs">(0이면 미적용)</span></label>
-                 <div className="relative">
-                   <DollarSign size={16} className="absolute left-3 top-3 text-slate-400" />
-                   <input 
+                    required
+                  />
+                </div>
+
+                {/* Discount Percentage */}
+                <div className="field">
+                  <label className="label font-semibold text-foreground">
+                    할인율 (%) 
+                    <span className="text-muted-foreground font-normal text-xs ml-2">(0이면 할인 없음)</span>
+                  </label>
+                  <div className="relative">
+                    <input 
+                      type="number" 
+                      name="discountPercent"
+                      value={basicInfo.discountPercent}
+                      onChange={handleBasicChange}
+                      className="input pr-12" 
+                      placeholder="0"
+                      min="0"
+                      max="100"
+                      step="1"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">%</span>
+                  </div>
+                </div>
+
+                {/* Final Price Input */}
+                <div className="field">
+                  <label className="label font-semibold text-foreground">
+                    최종 판매가 ($)
+                    <span className="text-muted-foreground font-normal text-xs ml-2">(직접 입력 가능)</span>
+                  </label>
+                  <input 
                     type="number" 
                     name="salePrice"
                     value={basicInfo.salePrice}
                     onChange={handleBasicChange}
-                    className="input pl-9" 
+                    className="input text-lg font-semibold text-primary" 
+                    placeholder="0.00"
                     min="0"
                     step="0.01"
-                   />
-                 </div>
+                  />
+                </div>
               </div>
+
+              {/* Final Price Display */}
+              {basicInfo.discountPercent > 0 && (
+                <div className="bg-primary/10 border border-emerald-200 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-primary font-medium mb-1">최종 판매가</p>
+                      <p className="text-xs text-primary">
+                        원가 ${basicInfo.price.toFixed(2)} - 할인 {basicInfo.discountPercent}%
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-primary">
+                        ${basicInfo.salePrice.toFixed(2)}
+                      </p>
+                      <p className="text-xs text-primary">
+                        절약: ${(basicInfo.price - basicInfo.salePrice).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Shipping Fee */}
               <div className="field">
-                 <label className="label font-semibold text-slate-700">배송비 ($)</label>
-                 <div className="relative">
-                   <Truck size={16} className="absolute left-3 top-3 text-slate-400" />
-                   <input 
-                    type="number" 
-                    name="shippingFee"
-                    value={basicInfo.shippingFee}
-                    onChange={handleBasicChange}
-                    className="input pl-9" 
-                    min="0"
-                    step="0.01"
-                   />
-                 </div>
+                <label className="label font-semibold text-foreground">배송비 ($)</label>
+                <input 
+                  type="number" 
+                  name="shippingFee"
+                  value={basicInfo.shippingFee}
+                  onChange={handleBasicChange}
+                  className="w-full px-4 py-2.5 bg-secondary border-2 border-gray-300 dark:border-gray-500 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-foreground placeholder:text-muted-foreground transition-all" 
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                />
               </div>
             </div>
             
              {/* Summary */}
              <div className="field">
-               <label className="label font-semibold text-slate-700">간략 소개</label>
+               <label className="label font-semibold text-foreground">간략 소개</label>
                <textarea 
                   name="summary"
                   value={basicInfo.summary}
@@ -322,8 +400,8 @@ const AdminGoodsUpload = () => {
              {/* Images - Mock Upload */}
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                <div className="space-y-4">
-                 <label className="label font-semibold text-slate-700">대표 이미지</label>
-                 <div className="aspect-square bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:border-emerald-400 hover:text-emerald-500 transition-colors cursor-pointer">
+                 <label className="label font-semibold text-foreground">대표 이미지</label>
+                 <div className="aspect-square bg-muted border-2 border-dashed border-gray-300 dark:border-gray-500 rounded-xl flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer">
                     {mainImage ? (
                       <img src={mainImage} className="w-full h-full object-cover rounded-xl" />
                     ) : (
@@ -336,33 +414,33 @@ const AdminGoodsUpload = () => {
                </div>
 
                <div className="space-y-4">
-                 <label className="label font-semibold text-slate-700">추가 갤러리 이미지</label>
+                 <label className="label font-semibold text-foreground">추가 갤러리 이미지</label>
                  <div className="grid grid-cols-3 gap-2">
                     {[1, 2, 3, 4, 5].map(i => (
-                      <div key={i} className="aspect-square bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center text-slate-300 hover:bg-slate-100 cursor-pointer">
+                      <div key={i} className="aspect-square bg-muted border-2 border-gray-300 dark:border-gray-500 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-accent cursor-pointer">
                         <Plus size={24} />
                       </div>
                     ))}
                  </div>
-                 <p className="text-xs text-slate-400">* 최대 10장까지 등록 가능</p>
+                 <p className="text-xs text-muted-foreground">* 최대 10장까지 등록 가능</p>
                </div>
              </div>
 
              {/* Badges */}
-             <div className="pt-4 border-t border-slate-100">
-               <label className="label font-semibold text-slate-700 mb-4 block">상품 뱃지 설정</label>
+             <div className="pt-4 border-t border-gray-300 dark:border-gray-600">
+               <label className="label font-semibold text-foreground mb-4 block">상품 뱃지 설정</label>
                <div className="flex flex-wrap gap-4">
-                 <label className="flex items-center gap-2 cursor-pointer p-3 border border-slate-200 rounded-lg hover:bg-slate-50">
-                   <input type="checkbox" checked={basicInfo.badge_new} onChange={(e) => handleCheckboxChange('badge_new', e.target.checked)} className="rounded text-emerald-500 focus:ring-emerald-500" />
-                   <span className="font-medium text-slate-700">New (신상품)</span>
+                 <label className="flex items-center gap-2 cursor-pointer p-3 border-2 border-gray-300 dark:border-gray-500 rounded-lg hover:bg-muted">
+                   <input type="checkbox" checked={basicInfo.badge_new} onChange={(e) => handleCheckboxChange('badge_new', e.target.checked)} className="rounded text-primary focus:ring-1 focus:ring-primary/30" />
+                   <span className="font-medium text-foreground">New (신상품)</span>
                  </label>
-                 <label className="flex items-center gap-2 cursor-pointer p-3 border border-slate-200 rounded-lg hover:bg-slate-50">
-                   <input type="checkbox" checked={basicInfo.badge_best} onChange={(e) => handleCheckboxChange('badge_best', e.target.checked)} className="rounded text-emerald-500 focus:ring-emerald-500" />
-                   <span className="font-medium text-slate-700">Best (인기)</span>
+                 <label className="flex items-center gap-2 cursor-pointer p-3 border-2 border-gray-300 dark:border-gray-500 rounded-lg hover:bg-muted">
+                   <input type="checkbox" checked={basicInfo.badge_best} onChange={(e) => handleCheckboxChange('badge_best', e.target.checked)} className="rounded text-primary focus:ring-1 focus:ring-primary/30" />
+                   <span className="font-medium text-foreground">Best (인기)</span>
                  </label>
-                 <label className="flex items-center gap-2 cursor-pointer p-3 border border-slate-200 rounded-lg hover:bg-slate-50">
-                   <input type="checkbox" checked={basicInfo.badge_sale} onChange={(e) => handleCheckboxChange('badge_sale', e.target.checked)} className="rounded text-emerald-500 focus:ring-emerald-500" />
-                   <span className="font-medium text-slate-700">Sale (세일)</span>
+                 <label className="flex items-center gap-2 cursor-pointer p-3 border-2 border-gray-300 dark:border-gray-500 rounded-lg hover:bg-muted">
+                   <input type="checkbox" checked={basicInfo.badge_sale} onChange={(e) => handleCheckboxChange('badge_sale', e.target.checked)} className="rounded text-primary focus:ring-1 focus:ring-primary/30" />
+                   <span className="font-medium text-foreground">Sale (세일)</span>
                  </label>
                </div>
              </div>
@@ -374,29 +452,29 @@ const AdminGoodsUpload = () => {
 
           {/* ----- STEP 2: DETAIL (RICH TEXT) ----- */}
           <div className={activeTab === 'detail' ? 'block space-y-6' : 'hidden'}>
-             <div className="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden min-h-[500px] flex flex-col">
+             <div className="bg-muted border-2 border-gray-300 dark:border-gray-500 rounded-xl overflow-hidden min-h-[500px] flex flex-col">
                 {/* Toolbar Mock */}
-                <div className="bg-white border-b border-slate-200 p-2 flex gap-1 items-center flex-wrap">
-                  <div className="flex gap-1 border-r border-slate-200 pr-2 mr-2">
-                     <button type="button" className="p-1.5 hover:bg-slate-100 rounded text-slate-600"><Type size={18} /></button>
-                     <button type="button" className="p-1.5 hover:bg-slate-100 rounded text-slate-600 font-bold">B</button>
-                     <button type="button" className="p-1.5 hover:bg-slate-100 rounded text-slate-600 italic">I</button>
-                     <button type="button" className="p-1.5 hover:bg-slate-100 rounded text-slate-600 underline">U</button>
+                <div className="bg-secondary border-b border-gray-300 dark:border-gray-600 p-2 flex gap-1 items-center flex-wrap">
+                  <div className="flex gap-1 border-r border-gray-300 dark:border-gray-600 pr-2 mr-2">
+                     <button type="button" className="p-1.5 hover:bg-accent rounded text-muted-foreground"><Type size={18} /></button>
+                     <button type="button" className="p-1.5 hover:bg-accent rounded text-muted-foreground font-bold">B</button>
+                     <button type="button" className="p-1.5 hover:bg-accent rounded text-muted-foreground italic">I</button>
+                     <button type="button" className="p-1.5 hover:bg-accent rounded text-muted-foreground underline">U</button>
                   </div>
-                  <div className="flex gap-1 border-r border-slate-200 pr-2 mr-2">
-                     <button type="button" className="p-1.5 hover:bg-slate-100 rounded text-slate-600 flex items-center gap-1"><ImageIcon size={18} /> <span className="text-xs">이미지</span></button>
-                     <button type="button" className="p-1.5 hover:bg-slate-100 rounded text-slate-600 flex items-center gap-1"><Video size={18} /> <span className="text-xs">동영상</span></button>
+                  <div className="flex gap-1 border-r border-gray-300 dark:border-gray-600 pr-2 mr-2">
+                     <button type="button" className="p-1.5 hover:bg-accent rounded text-muted-foreground flex items-center gap-1"><ImageIcon size={18} /> <span className="text-xs">이미지</span></button>
+                     <button type="button" className="p-1.5 hover:bg-accent rounded text-muted-foreground flex items-center gap-1"><Video size={18} /> <span className="text-xs">동영상</span></button>
                   </div>
                   <div className="flex gap-1">
-                     <button type="button" className="p-1.5 hover:bg-slate-100 rounded text-slate-600">H1</button>
-                     <button type="button" className="p-1.5 hover:bg-slate-100 rounded text-slate-600">H2</button>
-                     <button type="button" className="p-1.5 hover:bg-slate-100 rounded text-slate-600">Quote</button>
+                     <button type="button" className="p-1.5 hover:bg-accent rounded text-muted-foreground">H1</button>
+                     <button type="button" className="p-1.5 hover:bg-accent rounded text-muted-foreground">H2</button>
+                     <button type="button" className="p-1.5 hover:bg-accent rounded text-muted-foreground">Quote</button>
                   </div>
                 </div>
                 
                 {/* Editor Content Area */}
                 <textarea 
-                  className="flex-1 w-full bg-slate-50 p-6 focus:outline-none resize-none" 
+                  className="flex-1 w-full bg-muted p-6 focus:outline-none resize-none" 
                   placeholder="여기에 상품 상세 설명을 작성하세요. 텍스트, 이미지 드래그 등을 자유롭게 배치할 수 있습니다."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -412,17 +490,17 @@ const AdminGoodsUpload = () => {
           {/* ----- STEP 3: OPTIONS & STOCK ----- */}
           <div className={activeTab === 'options' ? 'block space-y-8' : 'hidden'}>
             
-            <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl">
+            <div className="flex items-center justify-between p-4 bg-muted border-2 border-gray-300 dark:border-gray-500 rounded-xl">
                <div className="flex items-center gap-3">
-                 <Layers className="text-emerald-600" size={24} />
+                 <Layers className="text-primary" size={24} />
                  <div>
-                   <h3 className="font-bold text-slate-900">옵션 사용 여부</h3>
-                   <p className="text-sm text-slate-500">사이즈, 색상 등 옵션이 있는 상품인가요?</p>
+                   <h3 className="font-bold text-foreground">옵션 사용 여부</h3>
+                   <p className="text-sm text-muted-foreground">사이즈, 색상 등 옵션이 있는 상품인가요?</p>
                  </div>
                </div>
                <label className="relative inline-flex items-center cursor-pointer">
                  <input type="checkbox" className="sr-only peer" checked={useOptions} onChange={(e) => setUseOptions(e.target.checked)} />
-                 <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                 <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-secondary after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                </label>
             </div>
 
@@ -431,9 +509,9 @@ const AdminGoodsUpload = () => {
                 {/* Option Groups Config */}
                 <div className="space-y-4">
                    {optionGroups.map((group, idx) => (
-                     <div key={group.id} className="p-4 border border-slate-200 rounded-xl space-y-4 bg-white shadow-sm">
+                     <div key={group.id} className="p-4 border-2 border-gray-300 dark:border-gray-500 rounded-xl space-y-4 bg-secondary shadow-sm hover:shadow-md transition-shadow">
                        <div className="flex items-center gap-4">
-                         <span className="font-bold text-slate-400 w-6 text-center">{idx + 1}</span>
+                         <span className="font-bold text-muted-foreground w-6 text-center">{idx + 1}</span>
                          <input 
                             type="text" 
                             value={group.name} 
@@ -445,10 +523,10 @@ const AdminGoodsUpload = () => {
                                setOptionGroups(newGroups);
                             }}
                          />
-                         <div className="h-6 w-px bg-slate-200 mx-2"></div>
+                         <div className="h-6 w-px bg-muted mx-2"></div>
                          <div className="flex-1 flex flex-wrap gap-2">
                             {group.values.map(val => (
-                              <span key={val} className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium flex items-center gap-1">
+                              <span key={val} className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium flex items-center gap-1">
                                 {val}
                                 <button type="button" onClick={() => removeOptionValue(idx, val)} className="hover:text-emerald-900"><XIcon size={14}/></button>
                               </span>
@@ -466,36 +544,55 @@ const AdminGoodsUpload = () => {
                               }}
                             />
                          </div>
+                         {/* Delete Option Group Button */}
+                         <button
+                           type="button"
+                           onClick={() => toast.info('옵션 그룹 삭제 (기능 개발 예정)')}
+                           className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                           title="옵션 그룹 삭제"
+                         >
+                           <Trash2 size={18} />
+                         </button>
                        </div>
                      </div>
                    ))}
+                   
+                   {/* Add Option Group Button */}
+                   <button
+                     type="button"
+                     onClick={() => toast.info('옵션 그룹 추가 (기능 개발 예정)')}
+                     className="w-full p-4 border-2 border-dashed border-gray-300 dark:border-gray-500 rounded-xl text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary-50/30 transition-all flex items-center justify-center gap-2 font-medium"
+                   >
+                     <Plus size={20} />
+                     옵션 그룹 추가
+                   </button>
                 </div>
 
                 {/* Variants Table */}
                 <div className="space-y-2">
-                   <h3 className="font-bold text-slate-800">품목 리스트</h3>
-                   <div className="border border-slate-200 rounded-xl overflow-hidden">
-                     <table className="w-full text-left bg-white">
-                       <thead className="bg-slate-50 border-b border-slate-200">
+                   <h3 className="font-bold text-foreground">품목 리스트</h3>
+                   <div className="border-2 border-gray-300 dark:border-gray-500 rounded-xl overflow-hidden">
+                     <table className="w-full text-left bg-secondary">
+                       <thead className="bg-muted border-b border-gray-300 dark:border-gray-600">
                          <tr>
-                           <th className="py-3 px-4 font-semibold text-slate-500 w-[40%]">옵션 조합</th>
-                           <th className="py-3 px-4 font-semibold text-slate-500 w-[20%]">추가 금액 ($)</th>
-                           <th className="py-3 px-4 font-semibold text-slate-500 w-[20%]">재고 수량</th>
-                           <th className="py-3 px-4 font-semibold text-slate-500 w-[20%]">SKU 관리</th>
+                           <th className="py-3 px-4 font-semibold text-muted-foreground w-[40%]">옵션 조합</th>
+                           <th className="py-3 px-4 font-semibold text-muted-foreground w-[20%]">추가 금액 ($)</th>
+                           <th className="py-3 px-4 font-semibold text-muted-foreground w-[20%]">재고 수량</th>
+                           <th className="py-3 px-4 font-semibold text-muted-foreground w-[20%]">SKU 관리</th>
                          </tr>
                        </thead>
-                       <tbody className="divide-y divide-slate-100">
+                       <tbody className="divide-y divide-border100">
                          {variants.length === 0 ? (
                            <tr>
-                              <td colSpan={4} className="py-8 text-center text-slate-400">옵션 값을 입력하면 리스트가 생성됩니다.</td>
+                              <td colSpan={4} className="py-8 text-center text-muted-foreground">옵션 값을 입력하면 리스트가 생성됩니다.</td>
                            </tr>
                          ) : (
                            variants.map(variant => (
-                             <tr key={variant.id} className="hover:bg-slate-50">
+                             <tr key={variant.id} className="hover:bg-muted">
                                <td className="py-3 px-4">
                                  <div className="flex gap-2">
                                    {Object.entries(variant.options).map(([key, val]) => (
-                                      <span key={key} className="text-slate-700 font-medium">{val}</span>
+                                      <span key={key} className="text-foreground font-medium">{val}</span>
                                    ))}
                                  </div>
                                </td>
@@ -505,7 +602,7 @@ const AdminGoodsUpload = () => {
                                <td className="py-3 px-4">
                                   <input type="number" className="input py-1 px-2 h-8 text-sm" defaultValue={10} />
                                </td>
-                               <td className="py-3 px-4 text-sm text-slate-400">
+                               <td className="py-3 px-4 text-sm text-muted-foreground">
                                   {/* Mock SKU */}
                                   GD-{Math.random().toString(36).substr(2, 6).toUpperCase()}
                                </td>
@@ -519,21 +616,21 @@ const AdminGoodsUpload = () => {
 
               </div>
             ) : (
-               <div className="p-8 border border-slate-200 border-dashed rounded-xl bg-slate-50 text-center animate-in fade-in">
-                  <div className="mx-auto w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm mb-3">
-                     <Package className="text-emerald-500" />
+               <div className="p-8 border-2 border-gray-300 dark:border-gray-500 border-dashed rounded-xl bg-muted text-center animate-in fade-in">
+                  <div className="mx-auto w-12 h-12 bg-secondary rounded-full flex items-center justify-center shadow-sm mb-3">
+                     <Package className="text-primary" />
                   </div>
-                  <h3 className="font-semibold text-slate-700 mb-1">단일 상품입니다</h3>
-                  <p className="text-slate-500 text-sm mb-6">옵션이 없다면 기본 재고 수량만 입력하세요.</p>
+                  <h3 className="font-semibold text-foreground mb-1">단일 상품입니다</h3>
+                  <p className="text-muted-foreground text-sm mb-6">옵션이 없다면 기본 재고 수량만 입력하세요.</p>
                   
                   <div className="max-w-xs mx-auto field">
-                    <label className="label text-slate-700">재고 수량</label>
+                    <label className="label text-foreground">재고 수량</label>
                     <input type="number" className="input text-center" defaultValue={100} />
                   </div>
                </div>
             )}
 
-            <div className="flex justify-between pt-8 border-t border-slate-100 mt-8">
+            <div className="flex justify-between pt-8 border-t border-gray-300 dark:border-gray-600 mt-8">
                <button type="button" onClick={() => setActiveTab('detail')} className="btn btn-outline">이전</button>
                <button 
                   type="button" 

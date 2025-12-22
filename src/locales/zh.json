@@ -35,6 +35,7 @@
     "delete_confirm_desc": "您要删除此通知吗？"
   },
   "study": {
+    "studylist": "学习列表",
     "search_placeholder": "搜索...",
     "no_content": "未找到内容。",
     "category": {
@@ -666,5 +667,9 @@
     "buy_now": "立即购买",
     "quantity": "数量",
     "back_to_list": "返回列表"
+  },
+  "translation": {
+    "login_required": "登录后可使用翻译功能。",
+    "guest_limit_reached": "您已用完所有免费翻译次数。请登录继续使用。"
   }
 }

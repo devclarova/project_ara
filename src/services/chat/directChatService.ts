@@ -53,19 +53,11 @@ async function getCurrentUser() {
  */
 export async function getUserProfile(userId: string): Promise<ChatApiResponse<ChatUser>> {
   try {
-    console.log('사용자 프로필 조회 시작:', userId);
-
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('id, nickname, avatar_url')
       .eq('user_id', userId)
       .single();
-
-    console.log('사용자 프로필 조회 결과:', {
-      profileData,
-      profileError,
-      userId,
-    });
 
     if (profileError || !profileData) {
       return {
@@ -442,7 +434,6 @@ export async function sendMessage(
 
     // 상대방이 나간 상태에서 메시지를 받으면 알림 설정
     if (!chat[otherUserActiveField]) {
-      console.log('상대방의 채팅방 참여 상태를 활성화하고 알림을 설정합니다.');
       const updateData = {
         [otherUserActiveField]: true,
         [otherUserNotifiedField]: true, // 새 메시지 알림 설정
@@ -1196,7 +1187,7 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
         currentUserNickname = currentUserProfile.nickname;
       }
     } catch (error) {
-      console.log('현재 사용자 닉네임 조회 실패, 기본값 사용:', error);
+      // 닉네임 조회 실패 시 기본값 사용
     }
 
     const systemMessage = `${currentUserNickname}님이 채팅방을 나갔습니다.`;
@@ -1214,7 +1205,7 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
         otherUserAuthId = otherUserProfile.user_id;
       }
     } catch (error) {
-      console.log('상대방 프로필 조회 실패:', error);
+      // 상대방 프로필 조회 실패 시 기본값 사용
     }
 
     // 시스템 메시지 전송 (상대방의 auth.users.id를 sender_id로 사용)

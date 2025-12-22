@@ -98,8 +98,8 @@ export default function LanguageSwitcher({ open, onOpenChange }: LanguageSwitche
           align="center" 
           className="w-64 p-2 overflow-hidden
                      bg-white dark:bg-secondary 
-                     border border-gray-100 dark:border-gray-700
-                     shadow-xl rounded-xl outline-none ring-0 focus:ring-0 z-[200]"
+                     border border-gray-100 dark:border-gray-700/70
+                     shadow-xl rounded-xl outline-none ring-0 focus:ring-0 focus-visible:outline-none focus:outline-none z-[200]"
         sideOffset={8}
         onInteractOutside={(e) => {
           // Allow closing when clicking outside

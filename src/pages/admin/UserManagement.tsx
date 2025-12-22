@@ -14,16 +14,12 @@ import {
   X
 } from 'lucide-react';
 import React, { useState } from 'react';
-// Since we don't have a shared layout yet, I'll implement a clean page structure 
-// that can be wrapped by the AdminHome sidebar logic or a new AdminLayout later.
-// For now, this component assumes it's rendered inside the "Main Content" area of an admin layout.
 
 const UserManagement = () => {
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [filterRole, setFilterRole] = useState('All');
   const [filterStatus, setFilterStatus] = useState('All');
 
-  // Ensure this data is diverse and looks realistic
   const users = [
     { id: 1, name: 'Sarah Wilson', email: 'sarah.w@example.com', role: 'Admin', status: 'Active', location: 'Seoul, KR', joined: '2023-11-12', avatar: 'S' },
     { id: 2, name: 'Michael Chen', email: 'm.chen@example.com', role: 'Editor', status: 'Active', location: 'Busan, KR', joined: '2023-12-05', avatar: 'M' },
@@ -36,19 +32,19 @@ const UserManagement = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Active': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-      case 'Banned': return 'bg-red-50 text-red-600 border-red-100';
-      case 'Inactive': return 'bg-slate-50 text-slate-500 border-slate-100';
-      case 'Reported': return 'bg-amber-50 text-amber-600 border-amber-100';
-      default: return 'bg-gray-50 text-gray-600 border-gray-100';
+      case 'Active': return 'bg-primary/10 text-primary border-emerald-100 dark:border-emerald-800';
+      case 'Banned': return 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-100 dark:border-red-800';
+      case 'Inactive': return 'bg-muted text-muted-foreground border-gray-300 dark:border-gray-500 dark:border-border';
+      case 'Reported': return 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-800';
+      default: return 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-gray-100 dark:border-gray-600';
     }
   };
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'Admin': return 'text-violet-600 bg-violet-50 border-violet-100';
-      case 'Editor': return 'text-blue-600 bg-blue-50 border-blue-100';
-      default: return 'text-slate-600 bg-slate-50 border-slate-100';
+      case 'Admin': return 'text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/30 border-violet-100 dark:border-violet-800';
+      case 'Editor': return 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 border-primary-100 dark:border-primary-800';
+      default: return 'text-muted-foreground bg-muted border-gray-300 dark:border-gray-500 dark:border-border';
     }
   };
 
@@ -57,15 +53,15 @@ const UserManagement = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">사용자 관리</h1>
-          <p className="text-slate-500 mt-1">총 <span className="font-semibold text-slate-900">{users.length}</span>명의 사용자가 등록되어 있습니다.</p>
+          <h1 className="text-2xl font-bold text-foreground">사용자 관리</h1>
+          <p className="text-muted-foreground mt-1">총 <span className="font-semibold text-foreground">{users.length}</span>명의 사용자가 등록되어 있습니다.</p>
         </div>
         <div className="flex items-center gap-2">
-           <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors font-medium text-sm">
+           <button className="flex items-center gap-2 px-4 py-2 bg-secondary border-2 border-gray-300 dark:border-gray-500 text-muted-foreground rounded-lg hover:bg-muted dark:hover:bg-accent700 transition-colors font-medium text-sm">
             <Download size={16} />
             내보내기
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-sm shadow-emerald-200 font-medium text-sm">
+          <button className="flex items-center gap-2 px-4 py-2 bg-primary dark:bg-emerald-700 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-800 transition-colors shadow-sm shadow-emerald-200 dark:shadow-emerald-900/20 font-medium text-sm">
             <Plus size={16} />
             새 사용자 추가
           </button>
@@ -80,38 +76,38 @@ const UserManagement = () => {
           { label: '신고된 사용자', value: '23', trend: '+2', color: 'amber' },
           { label: '차단된 사용자', value: '12', trend: '-1', color: 'red' },
         ].map((stat, idx) => (
-          <div key={idx} className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+          <div key={idx} className="bg-secondary p-5 rounded-2xl border-2 border-gray-300 dark:border-gray-500 shadow-sm">
             <div className="flex justify-between items-start">
-              <p className="text-sm font-medium text-slate-500">{stat.label}</p>
-              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full bg-${stat.color}-50 text-${stat.color}-600`}>
+              <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full bg-${stat.color}-50 dark:bg-${stat.color}-900/30 text-${stat.color}-600 dark:text-${stat.color}-400`}>
                 {stat.trend}
               </span>
             </div>
-            <h3 className="text-2xl font-bold text-slate-800 mt-2">{stat.value}</h3>
+            <h3 className="text-2xl font-bold text-foreground mt-2">{stat.value}</h3>
           </div>
         ))}
       </div>
 
       {/* Main Content Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/60 shadow-[0_2px_10px_rgba(0,0,0,0.02)] overflow-hidden">
+      <div className="bg-secondary rounded-2xl border-2 border-gray-300 dark:border-gray-500 shadow-sm overflow-hidden">
         
         {/* Filters Toolbar */}
-        <div className="p-5 border-b border-slate-100 flex flex-col lg:flex-row gap-4 lg:items-center justify-between">
+        <div className="p-5 border-b border-gray-300 dark:border-gray-600 flex flex-col lg:flex-row gap-4 lg:items-center justify-between">
           <div className="relative max-w-md w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
             <input 
               type="text" 
               placeholder="이름, 이메일로 검색..." 
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200/50 transition-all outline-none text-sm"
+              className="w-full pl-10 pr-4 py-2.5 bg-muted border-2 border-gray-300 dark:border-gray-500 rounded-xl focus:bg-white dark:focus:bg-muted focus:border-ring dark:focus:border-ring focus:ring-2 focus:ring-1 focus:ring-primary/30/50 dark:focus:ring-1 focus:ring-primary/30/50 transition-all outline-none text-sm text-foreground"
             />
           </div>
           
           <div className="flex items-center gap-3 overflow-x-auto pb-1 lg:pb-0">
-             <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg">
-                <Filter size={16} className="text-slate-500" />
-                <span className="text-sm text-slate-600 font-medium">필터:</span>
+             <div className="flex items-center gap-2 px-3 py-2 bg-muted border-2 border-gray-300 dark:border-gray-500 rounded-lg">
+                <Filter size={16} className="text-muted-foreground" />
+                <span className="text-sm text-muted-foreground font-medium">필터:</span>
                 <select 
-                  className="bg-transparent border-none text-sm text-slate-800 font-medium focus:ring-0 cursor-pointer"
+                  className="bg-transparent border-none text-sm text-foreground font-medium focus:ring-0 cursor-pointer"
                   value={filterRole}
                   onChange={(e) => setFilterRole(e.target.value)}
                 >
@@ -122,7 +118,7 @@ const UserManagement = () => {
                 </select>
              </div>
              
-             <div className="h-8 w-px bg-slate-200 hidden lg:block" />
+             <div className="h-8 w-px bg-muted  hidden lg:block" />
              
              <div className="flex gap-2">
                {['Active', 'Banned'].map(status => (
@@ -130,8 +126,8 @@ const UserManagement = () => {
                   key={status}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
                     filterStatus === status 
-                      ? 'bg-slate-800 text-white border-slate-800' 
-                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                      ? 'bg-muted  text-white border-gray-300 dark:border-gray-500 dark:border-border' 
+                      : 'bg-secondary text-muted-foreground border-gray-300 dark:border-gray-500 hover:bg-muted dark:hover:bg-accent700'
                   }`}
                   onClick={() => setFilterStatus(filterStatus === status ? 'All' : status)}
                  >
@@ -144,11 +140,11 @@ const UserManagement = () => {
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full min-w-[600px] text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/50 text-slate-500 text-xs uppercase tracking-wider font-semibold border-b border-slate-100">
+              <tr className="bg-muted text-muted-foreground text-xs uppercase tracking-wider font-semibold border-b border-gray-300 dark:border-gray-600 dark:border-border">
                 <th className="px-6 py-4 w-12">
-                  <input type="checkbox" className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500/30" />
+                  <input type="checkbox" className="rounded border-gray-300 dark:border-gray-500 dark:border-border text-primary dark:text-primary focus:ring-1 focus:ring-primary/30/30 " />
                 </th>
                 <th className="px-6 py-4">사용자 정보</th>
                 <th className="px-6 py-4">권한</th>
@@ -158,20 +154,20 @@ const UserManagement = () => {
                 <th className="px-6 py-4 text-right">관리</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-border">
               {users.map((user) => (
-                <tr key={user.id} className="hover:bg-slate-50/60 transition-colors group">
+                <tr key={user.id} className="hover:bg-muted dark:hover:bg-accent700/50 transition-colors group">
                   <td className="px-6 py-4">
-                    <input type="checkbox" className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500/30" />
+                    <input type="checkbox" className="rounded border-gray-300 dark:border-gray-500 dark:border-border text-primary dark:text-primary focus:ring-1 focus:ring-primary/30/30 " />
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold border border-slate-200">
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-foreground font-bold border-2 border-gray-300 dark:border-gray-500">
                         {user.avatar}
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">{user.name}</p>
-                        <p className="text-xs text-slate-500">{user.email}</p>
+                        <p className="text-sm font-semibold text-foreground">{user.name}</p>
+                        <p className="text-xs text-muted-foreground">{user.email}</p>
                       </div>
                     </div>
                   </td>
@@ -190,19 +186,19 @@ const UserManagement = () => {
                      </span>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-1.5 text-sm text-slate-500">
-                      <MapPin size={14} className="text-slate-400" />
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <MapPin size={14} className="text-muted-foreground" />
                       {user.location}
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-1.5 text-sm text-slate-500">
-                      <Calendar size={14} className="text-slate-400" />
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <Calendar size={14} className="text-muted-foreground" />
                       {user.joined}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors">
+                    <button className="p-2 hover:bg-accent dark:hover:bg-accent600 rounded-lg text-muted-foreground hover:text-muted-foreground dark:hover:text-muted-foreground transition-colors">
                       <MoreVertical size={16} />
                     </button>
                   </td>
@@ -213,11 +209,11 @@ const UserManagement = () => {
         </div>
         
         {/* Pagination (Visual) */}
-        <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
-           <p className="text-sm text-slate-500">Showing <span className="font-semibold text-slate-900">1-7</span> of <span className="font-semibold text-slate-900">42</span></p>
+        <div className="px-6 py-4 border-t border-gray-300 dark:border-gray-600 flex items-center justify-between">
+           <p className="text-sm text-muted-foreground">Showing <span className="font-semibold text-foreground">1-7</span> of <span className="font-semibold text-foreground">42</span></p>
            <div className="flex items-center gap-2">
-             <button className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-50">이전</button>
-             <button className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50">다음</button>
+             <button className="px-3 py-1.5 border-2 border-gray-300 dark:border-gray-500 rounded-lg text-sm text-muted-foreground hover:bg-muted dark:hover:bg-accent700 disabled:opacity-50">이전</button>
+             <button className="px-3 py-1.5 border-2 border-gray-300 dark:border-gray-500 rounded-lg text-sm text-muted-foreground hover:bg-muted dark:hover:bg-accent700">다음</button>
            </div>
         </div>
       </div>

@@ -104,8 +104,8 @@ export function useSnsLoginGate(user: User | null) {
 
   const handleLoginModalClose = () => {
     setShowLoginModal(false);
-    // SNS를 계속 쓰는 게 아니라, 바깥으로 내보내기
-    navigate('/');
+    // SNS를 계속 쓰는 게 아니라, 바깥으로 내보내기 (replace로 히스토리 중복 방지)
+    navigate('/', { replace: true });
   };
 
   return { showLoginModal, handleLoginModalClose };

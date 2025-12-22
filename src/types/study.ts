@@ -13,6 +13,7 @@ export type StudyListProps = {
   // levelColor: string;
   duration: string | null;
   comments?: string;
+  categories?: string | null;
 };
 
 // 1. Study (학습 단위)

@@ -35,6 +35,7 @@
     "delete_confirm_desc": "Haluatko poistaa tämän ilmoituksen?"
   },
   "study": {
+    "studylist": "Opiskelulista",
     "search_placeholder": "Hae...",
     "no_content": "Ei sisältöä.",
     "category": {
@@ -69,6 +70,9 @@
     "study_card_title": "Opiskelukortti",
     "vocab_explanation": "Sanasto",
     "culture_note": "Kulttuuri",
+    "subtitle_title": "Tekstitykset",
+    "subtitle_loading": "Ladataan tekstityksiä...",
+    "subtitle_no_data": "Ei tekstitystietoja",
     "login_required": "Kirjautuminen vaaditaan",
     "preview": "Esikatselu"
   },
@@ -510,5 +514,9 @@
     "buy_now": "Osta nyt",
     "quantity": "Määrä",
     "back_to_list": "Takaisin luetteloon"
+  },
+  "translation": {
+    "login_required": "Kirjaudu sisään käyttääksesi käännöstoimintoa.",
+    "guest_limit_reached": "Olet käyttänyt kaikki ilmaiset käännökset. Kirjaudu sisään jatkaaksesi."
   }
 }

@@ -339,9 +339,8 @@ function SignInCard() {
 
       <div className="mt-5 flex flex-row items-center justify-between gap-2 px-3 flex-wrap">
         {/* 자동 로그인 체크박스 (CheckboxSquare 스타일 적용, UI 전용) */}
-        <label
-          htmlFor="remember"
-          className="flex items-center gap-3 cursor-pointer select-none"
+        {/* 자동 로그인 체크박스 (CheckboxSquare 내부에서 label/input 처리) */}
+        <div
           style={
             {
               '--ara-checkbox-bg': 'var(--ara-surface, #ffffff)',
@@ -351,16 +350,14 @@ function SignInCard() {
             } as React.CSSProperties
           }
         >
-          {/* 시각용 상태만 토글 — 비즈니스 로직 영향 없음 */}
-          <input
-            id="remember"
-            type="checkbox"
-            className="sr-only"
-            checked={remember}
-            onChange={e => setRemember(e.target.checked)}
+          <CheckboxSquare 
+            checked={remember} 
+            onChange={setRemember} 
+            label={t('auth.auto_login')}
+            // 긴 텍스트 줄바꿈/잘림 방지 (필요 시 whitespace-nowrap 제거 또는 flex 조정)
+            className="whitespace-normal" 
           />
-          <CheckboxSquare checked={remember} onChange={setRemember} label={t('auth.auto_login')} />
-        </label>
+        </div>
 
         {/* 이메일/비밀번호 찾기 (그대로 유지) */}
         <div className="flex items-center gap-3">

@@ -1,5 +1,9 @@
 import { supabase } from '@/lib/supabase';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/contexts/AuthContext';
+import { SignInModal } from '@/components/auth/SignInModal';
+import { toast } from 'sonner';
 
 interface TranslateButtonProps {
   text: string;
@@ -7,6 +11,9 @@ interface TranslateButtonProps {
   setTranslated: (value: string) => void;
   size?: 'sm' | 'md' | 'lg';
 }
+
+const GUEST_TRANSLATION_LIMIT = 3;
+const GUEST_TRANSLATION_COUNT_KEY = 'guest-translation-count';
 
 export default function TranslateButton({
   text,
@@ -16,6 +23,9 @@ export default function TranslateButton({
 }: TranslateButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const { i18n, t } = useTranslation();
+  const { user } = useAuth();
 
   const sizeMap = {
     sm: {
@@ -32,7 +42,14 @@ export default function TranslateButton({
     },
   };
 
-  // 사용자 타겟 언어 가져오기
+  // 사용자 타겟 언어 가져오기 (언어 선택 기반)
+  const getUserTargetLang = async () => {
+    // i18n에서 선택된 언어 사용
+    return i18n.language || 'en';
+  };
+
+  /* [이전 구현 - 프로필 국가 기반 번역]
+  // 나중에 프로필 기반으로 되돌리고 싶다면 아래 코드 사용
   const getUserTargetLang = async () => {
     const authUser = (await supabase.auth.getUser()).data.user;
     if (!authUser) return 'en';
@@ -55,6 +72,7 @@ export default function TranslateButton({
 
     return countryRow?.language_code || 'en';
   };
+  */
 
   // 의미 없는 문자 감지
   const detectLanguage = async (inputText: string) => {
@@ -96,6 +114,19 @@ export default function TranslateButton({
 
     setIsOpen(true);
     if (!text.trim()) return;
+
+    // 게스트 번역 제한 체크
+    if (!user) {
+      const count = Number(localStorage.getItem(GUEST_TRANSLATION_COUNT_KEY) || '0');
+      
+      if (count >= GUEST_TRANSLATION_LIMIT) {
+        setShowLoginModal(true);
+        toast.error(t('translation.login_required'));
+        setIsOpen(false);
+        return;
+      }
+    }
+
     setIsLoading(true);
 
     try {
@@ -105,20 +136,21 @@ export default function TranslateButton({
       // (1) 타깃 언어 가져오기
       const targetLang = await getUserTargetLang();
 
-      // (2) 캐시 확인
-      const { data: existing } = await supabase
-        .from('translations')
-        .select('translated_text')
-        .eq('content_id', contentId)
-        .eq('user_id', userId)
-        .eq('target_lang', targetLang) // 언어가 다르면 캐시 무효
-        .maybeSingle();
+      // (2) 캐시 확인 (로그인 사용자만)
+      if (userId) {
+        const { data: existing } = await supabase
+          .from('translations')
+          .select('translated_text')
+          .eq('content_id', contentId)
+          .eq('user_id', userId)
+          .eq('target_lang', targetLang)
+          .maybeSingle();
 
-      if (existing) {
-        setTranslated(existing.translated_text);
-        // 이미 번역된 내용이 있으면 로딩 끝
-        setIsLoading(false);
-        return;
+        if (existing) {
+          setTranslated(existing.translated_text);
+          setIsLoading(false);
+          return;
+        }
       }
 
       // (3) 의미 없는 문장 검출
@@ -170,21 +202,29 @@ export default function TranslateButton({
         translatedText = translatedText.replace(`<URL_${index}>`, url);
       });
 
-      // (6) 번역 결과 저장
-      await supabase.from('translations').upsert(
-        {
-          user_id: userId,
-          content_id: contentId,
-          original_text: text,
-          translated_text: translatedText,
-          target_lang: targetLang,
-        },
-        {
-          onConflict: 'user_id,content_id,target_lang',
-        },
-      );
+      // (6) 번역 결과 저장 (로그인 사용자만)
+      if (userId) {
+        await supabase.from('translations').upsert(
+          {
+            user_id: userId,
+            content_id: contentId,
+            original_text: text,
+            translated_text: translatedText,
+            target_lang: targetLang,
+          },
+          {
+            onConflict: 'user_id,content_id,target_lang',
+          },
+        );
+      }
 
       setTranslated(translatedText);
+
+      // 게스트 번역 카운트 증가
+      if (!user) {
+        const count = Number(localStorage.getItem(GUEST_TRANSLATION_COUNT_KEY) || '0');
+        localStorage.setItem(GUEST_TRANSLATION_COUNT_KEY, String(count + 1));
+      }
     } catch (err) {
       console.error(err);
       setTranslated('번역 중 오류가 발생했습니다.');
@@ -194,21 +234,28 @@ export default function TranslateButton({
   };
 
   return (
-    <button
-      onClick={e => {
-        e.stopPropagation();
-        handleTranslate();
-      }}
-      disabled={isLoading || !text.trim()}
-      className={`flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors ${sizeMap[size].button}`}
-    >
-      {isLoading ? (
-        <i
-          className={`ri-loader-4-line animate-spin text-gray-600 dark:text-gray-300 ${sizeMap[size].icon}`}
-        />
-      ) : (
-        <i className={`ri-translate-2 text-gray-700 dark:text-gray-200 ${sizeMap[size].icon}`} />
+    <>
+      <button
+        onClick={e => {
+          e.stopPropagation();
+          handleTranslate();
+        }}
+        disabled={isLoading || !text.trim()}
+        className={`flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors ${sizeMap[size].button}`}
+      >
+        {isLoading ? (
+          <i
+            className={`ri-loader-4-line animate-spin text-gray-600 dark:text-gray-300 ${sizeMap[size].icon}`}
+          />
+        ) : (
+          <i className={`ri-translate-2 text-gray-700 dark:text-gray-200 ${sizeMap[size].icon}`} />
+        )}
+      </button>
+
+      {/* 게스트 로그인 모달 */}
+      {!user && (
+        <SignInModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
       )}
-    </button>
+    </>
   );
 }

@@ -36,6 +36,7 @@
     "delete_confirm_desc": "Would you like to delete this notification?"
   },
   "study": {
+    "studylist": "Study List",
     "search_placeholder": "Search...",
     "no_content": "No content found.",
     "category": {
@@ -70,6 +71,9 @@
     "study_card_title": "Study Card",
     "vocab_explanation": "Vocabulary",
     "culture_note": "Culture Note",
+    "subtitle_title": "Subtitles",
+    "subtitle_loading": "Loading subtitles...",
+    "subtitle_no_data": "No subtitle data available.",
     "login_required": "Login Required",
     "preview": "Preview"
   },
@@ -717,5 +721,9 @@
     "free_shipping": "Free Shipping over $50",
     "authentic_guarantee": "Authentic Guarantee",
     "product_details": "Product Details"
+  },
+  "translation": {
+    "login_required": "Please log in to use the translation feature.",
+    "guest_limit_reached": "You have used all free translations. Log in to continue."
   }
 }

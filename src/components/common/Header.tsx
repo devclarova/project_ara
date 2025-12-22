@@ -28,6 +28,7 @@ function Header() {
   const [profileNickname, setProfileNickname] = useState<string | null>(null);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   // 알림 미읽음 개수
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   // 채팅 미읽음 개수
@@ -93,18 +94,19 @@ function Header() {
       : undefined;
   const fallbackNickname =
     rawNickname ?? (user?.email ? user.email.split('@')[0] : t('auth.please_login'));
-  // Supabase profiles에서 id, nickname, avatar_url 가져오기
+  // Supabase profiles에서 id, nickname, avatar_url, is_admin 가져오기
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) {
         setProfileNickname(null);
         setProfileAvatar(null);
         setProfileId(null);
+        setIsAdmin(false);
         return;
       }
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, nickname, avatar_url')
+        .select('id, nickname, avatar_url, is_admin')
         .eq('user_id', user.id)
         .maybeSingle();
       if (error) {
@@ -115,6 +117,7 @@ function Header() {
         setProfileNickname(data.nickname ?? null);
         setProfileAvatar(data.avatar_url ?? null);
         setProfileId(data.id ?? null);
+        setIsAdmin(data.is_admin ?? false);
       }
     };
     loadProfile();
@@ -215,6 +218,12 @@ function Header() {
   const targetOf = (item: (typeof menuItems)[number]) =>
     item.key === 'home' ? homePath : item.path;
   const handleSignout = async () => {
+    // 로그아웃 전에 즉시 상태 초기화 (타이밍 이슈 방지)
+    setUnreadNotificationCount(0);
+    setProfileNickname(null);
+    setProfileAvatar(null);
+    setProfileId(null);
+    
     await signOut();
     setIsOpen(false);
     setIsProfileMenuOpen(false);
@@ -419,32 +428,34 @@ function Header() {
                         </div>
                       </button>
 
-                      {/* Admin Mode - Only helpful if we want quick access */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigate('/admin');
-                          setIsProfileMenuOpen(false);
-                        }}
-                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm
-                                   text-gray-700 dark:text-gray-100
-                                   hover:bg-primary/5 dark:hover:bg-primary/20
-                                   transition-colors"
-                      >
-                        <span
-                          className="inline-flex items-center justify-center rounded-md p-1.5
-                                     bg-red-50 text-red-600
-                                     dark:bg-red-900/20 dark:text-red-400"
+                      {/* Admin Mode - Only visible if is_admin */}
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigate('/admin');
+                            setIsProfileMenuOpen(false);
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm
+                                     text-gray-700 dark:text-gray-100
+                                     hover:bg-primary/5 dark:hover:bg-primary/20
+                                     transition-colors"
                         >
-                          <ShieldCheck className="w-4 h-4" />
-                        </span>
-                        <div className="flex flex-col items-start">
-                          <span className="font-medium">{t('nav.admin')}</span>
-                          <span className="text-xs text-gray-400 dark:text-gray-500">
-                            {t('nav.admin_dashboard')}
+                          <span
+                            className="inline-flex items-center justify-center rounded-md p-1.5
+                                       bg-red-50 text-red-600
+                                       dark:bg-red-900/20 dark:text-red-400"
+                          >
+                            <ShieldCheck className="w-4 h-4" />
                           </span>
-                        </div>
-                      </button>
+                          <div className="flex flex-col items-start">
+                            <span className="font-medium">{t('nav.admin')}</span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500">
+                              {t('nav.admin_dashboard')}
+                            </span>
+                          </div>
+                        </button>
+                      )}
                       
                       {/* 로그아웃 버튼 - 드롭다운 하단에 작은 텍스트로 */}
                       <div className="px-4 pt-2 pb-3 border-t border-gray-100/80 dark:border-gray-700/70 mt-1">
@@ -661,6 +672,27 @@ function Header() {
               );
             })}
         </div>
+        {/* Admin Menu Item - Mobile */}
+        {user && isAdmin && (
+          <>
+            <div className="h-px bg-gray-100 dark:bg-primary/20 my-2" />
+            <button
+              type="button"
+              onClick={() => {
+                navigate('/admin');
+                setIsOpen(false);
+              }}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm
+                         text-gray-600 hover:bg-primary/10 dark:text-gray-300 dark:hover:bg-primary/20"
+            >
+              <span className="inline-flex items-center justify-center rounded-md p-1.5
+                               bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                <ShieldCheck className="w-4 h-4" />
+              </span>
+              <span>{t('nav.admin')}</span>
+            </button>
+          </>
+        )}
         <div className="h-px bg-gray-100 dark:bg-primary/20 my-2" />
         <div className="flex gap-2">
           {user ? (

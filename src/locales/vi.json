@@ -35,6 +35,7 @@
     "delete_confirm_desc": "Bạn có muốn xóa thông báo này không?"
   },
   "study": {
+    "studylist": "Danh sách học",
     "search_placeholder": "Tìm kiếm...",
     "no_content": "Không tìm thấy nội dung.",
     "category": {
@@ -69,6 +70,9 @@
     "study_card_title": "Thẻ học tập",
     "vocab_explanation": "Giải thích từ vựng",
     "culture_note": "Ghi chú văn hóa",
+    "subtitle_title": "Phụ đề",
+    "subtitle_loading": "Đang tải phụ đề...",
+    "subtitle_no_data": "Không có dữ liệu phụ đề.",
     "login_required": "Cần đăng nhập",
     "preview": "Xem trước"
   },
@@ -511,5 +515,9 @@
     "buy_now": "Mua ngay",
     "quantity": "Số lượng",
     "back_to_list": "Quay lại danh sách"
+  },
+  "translation": {
+    "login_required": "Vui lòng đăng nhập để sử dụng tính năng dịch.",
+    "guest_limit_reached": "Bạn đã sử dụng hết bản dịch miễn phí. Đăng nhập để tiếp tục."
   }
 }

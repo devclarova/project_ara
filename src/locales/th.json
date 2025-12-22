@@ -35,6 +35,7 @@
     "delete_confirm_desc": "คุณต้องการลบการแจ้งเตือนนี้หรือไม่?"
   },
   "study": {
+    "studylist": "รายการการเรียนรู้",
     "search_placeholder": "ค้นหา...",
     "no_content": "ไม่พบเนื้อหา",
     "category": {
@@ -69,6 +70,9 @@
     "study_card_title": "การ์ดเรียนรู้",
     "vocab_explanation": "คำศัพท์",
     "culture_note": "วัฒนธรรม",
+    "subtitle_title": "คำบรรยาย",
+    "subtitle_loading": "กำลังโหลดคำบรรยาย...",
+    "subtitle_no_data": "ไม่มีข้อมูลคำบรรยาย",
     "login_required": "ต้องเข้าสู่ระบบ",
     "preview": "ดูตัวอย่าง"
   },
@@ -511,5 +515,9 @@
     "buy_now": "ซื้อเลย",
     "quantity": "จำนวน",
     "back_to_list": "กลับไปที่รายการ"
+  },
+  "translation": {
+    "login_required": "กรุณาเข้าสู่ระบบเพื่อใช้ฟังก์ชันการแปล",
+    "guest_limit_reached": "คุณใช้การแปลฟรีครบแล้ว เข้าสู่ระบบเพื่อใช้ต่อ"
   }
 }

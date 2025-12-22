@@ -315,12 +315,16 @@ export default function TweetCard({
           .insert([{ tweet_id: id, user_id: likeUserId }]);
         // 이미 눌렀던 경우(UNIQUE 충돌)만 조용히 무시
         if (likeError && likeError.code !== '23505') throw likeError;
+        
+        // 토스트 메시지 (간단하게)
+        toast.success(t('common.success_like', '좋아요했습니다'));
+        
         // 2) 알림 추가 (자기 글 좋아요면 알림 안 보냄, 작성자 프로필 없으면 스킵)
         if (authorProfileId && authorProfileId !== likeUserId) {
           const { error: notiError } = await supabase.from('notifications').insert([
             {
               type: 'like',
-              content: '당신의 피드를 좋아합니다.',
+              content: content || safeContent,  // 실제 게시글 내용
               is_read: false,
               tweet_id: id,
               comment_id: null,
@@ -340,6 +344,8 @@ export default function TweetCard({
           .eq('tweet_id', id)
           .eq('user_id', likeUserId);
         if (error) throw error;
+        
+        toast.info(t('common.cancel_like', '좋아요를 취소했습니다'));
         // 알림은 취소해도 남겨두는 정책이므로 건드리지 않음
       }
     } catch (err: any) {
@@ -495,16 +501,21 @@ export default function TweetCard({
                     
                   // 언어 설정 확인 (i18n.language가 없으면 기본값 'ko')
                   const currentLang = i18n.language || 'ko';
+                  
+                  // 오늘 날짜인지 확인 (년, 월, 일이 모두 같은지)
+                  const isToday = date.getFullYear() === now.getFullYear() &&
+                                  date.getMonth() === now.getMonth() &&
+                                  date.getDate() === now.getDate();
                     
-                  // 24시간 이내는 시간만 표시
-                  if (diff < 24 * 60 * 60 * 1000) {
+                  // 오늘 기록은 시간만 표시
+                  if (isToday) {
                     return new Intl.DateTimeFormat(currentLang, { 
                       hour: 'numeric', 
                       minute: 'numeric', 
                       hour12: true 
                     }).format(date);
                   }
-                  // 24시간 이후는 날짜 + 시간 표시 (원복)
+                  // 이전 날짜는 날짜 + 시간 표시
                   return new Intl.DateTimeFormat(currentLang, { 
                     month: 'short', 
                     day: 'numeric',
@@ -567,46 +578,58 @@ export default function TweetCard({
 
       {/* Full Width Content & Actions */}
       <div className="w-full">
-          <div
-            ref={contentRef}
-            className={`${contentClass} transition-all ${
-              expanded ? 'max-h-none' : 'overflow-hidden'
-            }`}
-            style={!expanded ? { maxHeight: '60px' } : undefined} // 약 3줄
-            dangerouslySetInnerHTML={{ __html: safeContent }}
-            // 드래그 시작
-            onMouseDown={e => {
-              dragInfo.current.startX = e.clientX;
-              dragInfo.current.startY = e.clientY;
-              dragInfo.current.moved = false;
-            }}
-            // 드래그 중 감지
-            onMouseMove={e => {
-              // 이미 움직임으로 판명났으면 계산 불필요
-              if (dragInfo.current.moved) return;
-              const dx = Math.abs(e.clientX - dragInfo.current.startX);
-              const dy = Math.abs(e.clientY - dragInfo.current.startY);
-              // 5px 이상 움직이면 드래그(텍스트 선택)로 판단
-              if (dx > 5 || dy > 5) {
-                dragInfo.current.moved = true;
-                setIsDraggingText(true);
-              }
-            }}
-            // 드래그 종료 시
-            onMouseUp={() => {
-              // 드래그가 끝났으면 잠시 후 상태 해제 (Click 이벤트가 돌고 나서 false가 되도록)
-              if (isDraggingText) {
-                setTimeout(() => setIsDraggingText(false), 50);
-              }
-            }}
-            onClick={e => {
-              // 텍스트 선택(드래그)이 아니었을 때만 카드 클릭 처리
-              if (!dragInfo.current.moved) {
-                e.stopPropagation(); // 👈 부모로 버블링 방지 (부모도 navigate를 호출하므로 중복 방지)
-                handleCardClick(); 
-              }
-            }}
-          />
+          {/* 텍스트 + 번역 버튼 */}
+          <div className="flex items-center gap-2">
+            <div
+              ref={contentRef}
+              className={`${contentClass} transition-all ${
+                expanded ? 'max-h-none' : 'overflow-hidden'
+              }`}
+              style={!expanded ? { maxHeight: '60px' } : undefined} // 약 3줄
+              dangerouslySetInnerHTML={{ __html: safeContent }}
+              // 드래그 시작
+              onMouseDown={e => {
+                dragInfo.current.startX = e.clientX;
+                dragInfo.current.startY = e.clientY;
+                dragInfo.current.moved = false;
+              }}
+              // 드래그 중 감지
+              onMouseMove={e => {
+                // 이미 움직임으로 판명났으면 계산 불필요
+                if (dragInfo.current.moved) return;
+                const dx = Math.abs(e.clientX - dragInfo.current.startX);
+                const dy = Math.abs(e.clientY - dragInfo.current.startY);
+                // 5px 이상 움직이면 드래그(텍스트 선택)로 판단
+                if (dx > 5 || dy > 5) {
+                  dragInfo.current.moved = true;
+                  setIsDraggingText(true);
+                }
+              }}
+              // 드래그 종료 시
+              onMouseUp={() => {
+                // 드래그가 끝났으면 잠시 후 상태 해제 (Click 이벤트가 돌고 나서 false가 되도록)
+                if (isDraggingText) {
+                  setTimeout(() => setIsDraggingText(false), 50);
+                }
+              }}
+              onClick={e => {
+                // 텍스트 선택(드래그)이 아니었을 때만 카드 클릭 처리
+                if (!dragInfo.current.moved) {
+                  e.stopPropagation(); // 👈 부모로 버블링 방지 (부모도 navigate를 호출하므로 중복 방지)
+                  handleCardClick(); 
+                }
+              }}
+            />
+            {/* 번역 버튼 - 더보기가 없거나 expanded일 때만 표시 */}
+            {plainTextContent.trim().length > 0 && (!isLong || expanded) && (
+              <TranslateButton
+                text={plainTextContent}
+                contentId={`tweet_${id}`}
+                setTranslated={setTranslated}
+                size="sm"
+              />
+            )}
+          </div>
           {/* 더보기 버튼 */}
           {isLong && (
             <button
@@ -635,25 +658,7 @@ export default function TweetCard({
               {expanded ? '접기' : '더보기'}
             </button>
           )}
-          {/* 번역 버튼 */}
-          {plainTextContent.trim().length > 0 && (
-            <div 
-              className="mt-2"
-              onClick={(e) => {
-                 // 번역 버튼 빈 영역 클릭 시 이동
-                 if (e.target === e.currentTarget) {
-                    e.stopPropagation();
-                    handleCardClick();
-                 }
-              }}
-            >
-              <TranslateButton
-                text={plainTextContent}
-                contentId={`tweet_${id}`}
-                setTranslated={setTranslated}
-              />
-            </div>
-          )}
+
             {/* 번역 결과 */}
           {translated && (
             <div

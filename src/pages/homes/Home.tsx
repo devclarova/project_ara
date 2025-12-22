@@ -75,7 +75,12 @@ export default function Home({ searchQuery }: HomeProps) {
   const fetchTweets = useCallback(async (reset = false) => {
     if (loadingRef.current && !reset) return;
     if (!hasMore && !reset) return;
+    
     loadingRef.current = true;
+    
+    // 무한 스크롤 카운트 카드 추가 시 스크롤 위치 저장
+    const savedScrollY = !reset ? window.scrollY : 0;
+    
     if (reset) {
         setLoading(true);
         pageRef.current = 0;
@@ -149,6 +154,14 @@ export default function Home({ searchQuery }: HomeProps) {
     } finally {
       setLoading(false);
       loadingRef.current = false;
+      
+      // 무한 스크롤 추가 로드 시 스크롤 위치 복원
+      if (!reset && savedScrollY > 0) {
+        // requestAnimationFrame으로 DOM 렌더링 완료 후 복원
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: savedScrollY, behavior: 'auto' });
+        });
+      }
     }
   }, [isSearching, mergedSearchQuery, hasMore]);
   // 3. 초기 로드 및 검색어 변경 감지

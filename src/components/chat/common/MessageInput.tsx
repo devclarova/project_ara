@@ -99,7 +99,7 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
           if (textareaRef.current) textareaRef.current.style.height = 'auto';
         }
       } catch (error) {
-        console.log('메시지 전송 오류 : ', error);
+        // Error handled silently or could show toast
       } finally {
         setSending(false);
         requestAnimationFrame(() => textareaRef.current?.focus());

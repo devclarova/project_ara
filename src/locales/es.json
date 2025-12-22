@@ -35,6 +35,7 @@
     "delete_confirm_desc": "¿Desea eliminar esta notificación?"
   },
   "study": {
+    "studylist": "Lista de estudio",
     "search_placeholder": "Buscar...",
     "no_content": "No se encontró contenido.",
     "category": {
@@ -69,6 +70,9 @@
     "study_card_title": "Tarjeta de estudio",
     "vocab_explanation": "Vocabulario",
     "culture_note": "Nota cultural",
+    "subtitle_title": "Subtítulos",
+    "subtitle_loading": "Cargando subtítulos...",
+    "subtitle_no_data": "No hay datos de subtítulos.",
     "login_required": "Inicio de sesión requerido",
     "preview": "Vista previa"
   },
@@ -476,5 +480,9 @@
     "buy_now": "Comprar ahora",
     "quantity": "Cantidad",
     "back_to_list": "Volver a la lista"
+  },
+  "translation": {
+    "login_required": "Inicia sesión para usar la función de traducción.",
+    "guest_limit_reached": "Has usado todas tus traducciones gratuitas. Inicia sesión para continuar."
   }
 }

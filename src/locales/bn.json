@@ -35,6 +35,7 @@
     "delete_confirm_desc": "আপনি কি এই বিজ্ঞপ্তিটি মুছে ফেলতে চান?"
   },
   "study": {
+    "studylist": "অध्यয়ন তালিকা",
     "search_placeholder": "অনুসন্ধান...",
     "no_content": "কোন বিষয়বস্তু নেই।",
     "category": {
@@ -69,6 +70,9 @@
     "study_card_title": "স্টাডি কার্ড",
     "vocab_explanation": "শব্দার্থ",
     "culture_note": "সংস্কৃতি নোট",
+    "subtitle_title": "সাবটাইটেল",
+    "subtitle_loading": "সাবটাইটেল লোড হচ্ছে...",
+    "subtitle_no_data": "কোনো সাবটাইটেল ডেটা নেই",
     "login_required": "লগইন প্রয়োজন",
     "preview": "পূর্বরূপ"
   },
@@ -511,5 +515,9 @@
     "buy_now": "এখন কিনুন",
     "quantity": "পরিমাণ",
     "back_to_list": "তালিকায় ফিরে যান"
+  },
+  "translation": {
+    "login_required": "অনুবাদ বৈশিষ্ট্য ব্যবহার করতে অনুগ্রহ করে লগইন করুন।",
+    "guest_limit_reached": "আপনি সমস্ত বিনামূল্যে অনুবাদ ব্যবহার করে ফেলেছেন। চালিয়ে যেতে লগইন করুন।"
   }
 }

@@ -6,49 +6,50 @@ import {
   Routes,
   useLocation,
 } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import ScrollToTop from './components/common/ScrollToTop';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { supabase } from './lib/supabase';
 
+import Header from './components/common/Header';
 import ProfileSettings from './components/profile/ProfileSettings';
-import Home from './pages/homes/Home';
+import { DirectChatProvider } from './contexts/DirectChatContext';
+import { NewChatNotificationProvider } from './contexts/NewChatNotificationContext';
+import AdminLogin from './pages/admin/AdminLogin';
+import AuthCallback from './pages/AuthCallback';
+import DirectChatPage from './pages/chat/DirectChatPage';
+import GoodsDetailPage from './pages/goods/GoodsDetailPage';
+import GoodsPage from './pages/goods/GoodsPage';
 import HomesTest from './pages/homes/HomesTest';
-import Layout from './pages/homes/Layout';
 import NotFoundPage from './pages/homes/NotFoundPage';
+import HNotificationsPage from './pages/homes/notifications/HNotificationsPage';
+import ProfileAsap from './pages/homes/profile/ProfileAsap';
 import LandingPage from './pages/LandingPage';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
+import SignUpWizard from './pages/SignUpWizard';
+import SnsDetailPage from './pages/sns/SnsDetailPage';
+import SnsPage from './pages/sns/SnsPage';
 import StudyListPage from './pages/StudyListPage';
 import StudyPage from './pages/StudyPage';
 import TempHomePage from './pages/TempHomePage';
-import { NewChatNotificationProvider } from './contexts/NewChatNotificationContext';
-import AuthCallback from './pages/AuthCallback';
-import DirectChatPage from './pages/chat/DirectChatPage';
-import HNotificationsPage from './pages/homes/notifications/HNotificationsPage';
-import ProfileAsap from './pages/homes/profile/ProfileAsap';
-import TweetDetail from './pages/homes/tweet/TweetDetail';
-import SignUpWizard from './pages/SignUpWizard';
 import OnboardingWall from './routes/guards/OnboardingWall';
-import { DirectChatProvider } from './contexts/DirectChatContext';
-import Header from './components/common/Header';
-import SnsPage from './pages/sns/SnsPage';
-import SnsDetailPage from './pages/sns/SnsDetailPage';
-import GoodsPage from './pages/goods/GoodsPage';
-import GoodsDetailPage from './pages/goods/GoodsDetailPage';
-import AdminLogin from './pages/admin/AdminLogin';
-
-import AdminHome from './pages/admin/AdminHome';
-import AdminStudyUpload from './pages/admin/AdminStudyUpload';
-import AdminReports from './pages/admin/AdminReports';
-import AdminContentModeration from './pages/admin/AdminContentModeration';
-import AdminGoodsUpload from './pages/admin/AdminGoodsUpload'; // Added
-import AdminAnalytics from './pages/admin/AdminAnalytics'; // To be created next
-import { Toaster } from 'sonner'; // 토스트 컴포넌트 추가
+import { Toaster } from 'sonner';
 import Footer from './components/common/Footer';
-import { ThemeProvider, useTheme } from './components/theme-provider';
-import AdminLayout from './pages/admin/AdminLayout'; // Layout 추가
-import UserManagement from './pages/admin/UserManagement'; // UserManagement 추가
-import AdminSettings from './pages/admin/AdminSettings'; // AdminSettings 추가
 import { GlobalNotificationListener } from './components/common/GlobalNotificationListener';
+import { ThemeProvider, useTheme } from './components/theme-provider';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
+import AdminContentModeration from './pages/admin/AdminContentModeration';
+import AdminGoodsManagement from './pages/admin/AdminGoodsManagement';
+import AdminGoodsUpload from './pages/admin/AdminGoodsUpload';
+import AdminHome from './pages/admin/AdminHome';
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminReports from './pages/admin/AdminReports';
+import AdminSettings from './pages/admin/AdminSettings';
+import AdminStudyManagement from './pages/admin/AdminStudyManagement';
+import AdminStudyUpload from './pages/admin/AdminStudyUpload';
+import UserManagement from './pages/admin/UserManagement';
+import AdminAuthCallback from './pages/admin/AdminAuthCallback';
 
 // ---------- 인증 가드 ----------
 function RequireAuth() {
@@ -70,6 +71,55 @@ function RequireGuest() {
   return <Outlet />;
 }
 
+// 관리자 인증 가드
+function RequireAdmin() {
+  const { session, loading } = useAuth();
+  const location = useLocation();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!session) {
+        setIsAdmin(false);
+        setChecking(false);
+        return;
+      }
+
+      try {
+        // Supabase에서 is_admin 확인
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (error) throw error;
+        setIsAdmin(data?.is_admin || false);
+      } catch (error) {
+        console.error('Admin check error:', error);
+        setIsAdmin(false);
+      } finally {
+        setChecking(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [session]);
+
+  if (loading || checking) {
+    // 로딩 중
+    return null;
+  }
+
+  if (!session || !isAdmin) {
+    // 인증되지 않았거나 관리자가 아니면 로그인 페이지로
+    return <Navigate to="/admin/login" replace state={{ from: location }} />;
+  }
+
+  return <Outlet />;
+}
+
 // ---------- 실제 라우트 + 헤더 제어 ----------
 function AppInner() {
   const location = useLocation();
@@ -79,13 +129,8 @@ function AppInner() {
   const hideHeader = HIDE_HEADER_PATHS.some(path => location.pathname.startsWith(path));
 
   // 푸터를 숨길 경로들 (채팅방, 로그인 등)
-  // 채팅방(/chat)은 헤더는 필요하지만, 푸터는 화면 높이를 위해 숨김
-  const HIDE_FOOTER_PATHS = [...HIDE_HEADER_PATHS, '/chat', '/sns']; 
-  // 참고: /sns도 무한 스크롤 피드라면 푸터가 도달 불가능하므로 사이드바에 두는 게 낫지만,
-  // 일단 사용자 요청에 따라 헤더가 있는 곳엔 붙이되, '채팅'은 확실히 뺌. 
-  // (사용자 질문에 답변하기 위해 일단 로직 분리. /sns는 아래 답변에서 설명 후 결정 가능하지만, 
-  // 현재 코드상으로는 /sns에서 푸터를 보면 어색할 수 있음. 일단 /chat만 확실히 추가하고 /sns는 답변에 맡김)
-  
+  const HIDE_FOOTER_PATHS = [...HIDE_HEADER_PATHS, '/chat', '/sns'];
+ 
   const hideFooter = [...HIDE_HEADER_PATHS, '/chat'].some(path => location.pathname.startsWith(path));
 
   return (
@@ -117,15 +162,20 @@ function AppInner() {
 
             {/* Admin Routes */}
             <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminHome />} />
-              <Route path="users" element={<UserManagement />} />
-              <Route path="settings" element={<AdminSettings />} />
-              <Route path="study/upload" element={<AdminStudyUpload />} />
-              <Route path="reports" element={<AdminReports />} />
-              <Route path="content" element={<AdminContentModeration />} />
-              <Route path="analytics" element={<AdminAnalytics />} />
-              <Route path="goods/new" element={<AdminGoodsUpload />} />
+            <Route path="/admin/callback" element={<AdminAuthCallback />} />
+            <Route element={<RequireAdmin />}>
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminHome />} />
+                <Route path="users" element={<UserManagement />} />
+                <Route path="settings" element={<AdminSettings />} />
+                <Route path="study/upload" element={<AdminStudyUpload />} />
+                <Route path="study/manage" element={<AdminStudyManagement />} />
+                <Route path="reports" element={<AdminReports />} />
+                <Route path="content" element={<AdminContentModeration />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
+                <Route path="goods/new" element={<AdminGoodsUpload />} />
+                <Route path="goods/manage" element={<AdminGoodsManagement />} />
+              </Route>
             </Route>
 
             <Route element={<RequireGuest />}>
@@ -189,7 +239,8 @@ const ThemedToaster = () => {
           padding: '10px 14px',
           maxWidth: '280px',
           boxShadow: '0 8px 32px 0 rgba(0, 191, 165, 0.12), 0 1px 2px 0 rgba(0, 0, 0, 0.02)',
-          marginBottom: '8px', 
+          marginBottom: '8px',
+          zIndex: 9999, // 모달보다 위에 표시
         }
       }}
     />

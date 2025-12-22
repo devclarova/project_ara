@@ -35,6 +35,7 @@
     "delete_confirm_desc": "Вы хотите удалить это уведомление?"
   },
   "study": {
+    "studylist": "Список обучения",
     "search_placeholder": "Поиск...",
     "no_content": "Контент не найден.",
     "category": {
@@ -69,6 +70,9 @@
     "study_card_title": "Карточка обучения",
     "vocab_explanation": "Словарь",
     "culture_note": "Культурная заметка",
+    "subtitle_title": "Субтитры",
+    "subtitle_loading": "Загрузка субтитров...",
+    "subtitle_no_data": "Нет данных субтитров.",
     "login_required": "Требуется авторизация",
     "preview": "Предпросмотр"
   },
@@ -511,5 +515,9 @@
     "buy_now": "Купить сейчас",
     "quantity": "Количество",
     "back_to_list": "Вернуться к списку"
+  },
+  "translation": {
+    "login_required": "Пожалуйста, войдите в систему, чтобы использовать функцию перевода.",
+    "guest_limit_reached": "Вы использовали все бесплатные переводы. Войдите, чтобы продолжить."
   }
 }

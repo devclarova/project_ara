@@ -122,7 +122,7 @@ export default function TrendsPanel({
               ))}
             </div>
           ) : trendingTweets.length === 0 ? (
-            <p className="text-gray-500 dark:text-gray-400 text-sm">No trending tweets yet</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm text-center py-8">{t('trending.no_trending', 'No trending tweets yet')}</p>
           ) : (
             <div className="space-y-2">
               {trendingTweets.map(tweet => {

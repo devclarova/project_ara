@@ -327,18 +327,11 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
 
   const sendMessage = useCallback(
     async (messageData: CreateMessageData) => {
-      console.log('SEND MESSAGE PAYLOAD', {
-        content: messageData.content,
-        attachments: messageData.attachments,
-        attachmentsLength: messageData.attachments?.length,
-      });
-
       // 텍스트도 이미지도 없으면 보내지 않음
       if (
         (!messageData.content || messageData.content.trim() === '') &&
         (!messageData.attachments || messageData.attachments.length === 0)
       ) {
-        console.warn('SEND BLOCKED: no content, no attachments');
         return false;
       }
       // 1. 낙관적 업데이트 (Optimistic Update)

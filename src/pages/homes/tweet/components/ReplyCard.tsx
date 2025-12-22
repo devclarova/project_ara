@@ -169,9 +169,13 @@ export function ReplyCard({
       toast.error(t('common.error_delete'));
     }
   };
+  const [isLikeProcessing, setIsLikeProcessing] = useState(false);
+
   // 댓글 좋아요 토글
   const toggleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isLikeProcessing) return;
+
     if (!authUser) {
       toast.error(t('auth.login_needed'));
       return;
@@ -180,6 +184,9 @@ export function ReplyCard({
       toast.error(t('common.error_profile_loading'));
       return;
     }
+
+    setIsLikeProcessing(true);
+
     // Toggle optimistic
     const nextLiked = !liked;
     const nextCount = nextLiked ? likeCount + 1 : Math.max(0, likeCount - 1);
@@ -196,6 +203,8 @@ export function ReplyCard({
           .eq('reply_id', reply.id)
           .eq('user_id', profileId);
         if (deleteError) throw deleteError;
+        
+        toast.info(t('common.cancel_like', '좋아요를 취소했습니다'));
       } else {
         // 좋아요 추가
         const { error: insertError } = await supabase.from('tweet_replies_likes').insert({
@@ -203,6 +212,10 @@ export function ReplyCard({
           user_id: profileId,
         });
         if (insertError) throw insertError;
+        
+        // 토스트 메시지 (간단하게)
+        toast.success(t('common.success_like', '좋아요했습니다'));
+        
         // 알림 생성 (본인 댓글이 아닐 때만)
         if (reply.user.username !== authUser.id) {
           const { data: receiverProfile, error: receiverError } = await supabase
@@ -211,14 +224,25 @@ export function ReplyCard({
             .eq('user_id', reply.user.username)
             .maybeSingle();
           if (!receiverError && receiverProfile && receiverProfile.id !== profileId) {
-            await supabase.from('notifications').insert({
-              receiver_id: receiverProfile.id,
-              sender_id: profileId,
-              type: 'like',
-              content: '당신의 댓글을 좋아합니다.',
-              tweet_id: reply.tweetId,
-              comment_id: reply.id,
-            });
+            // 중복 알림 체크
+            const { data: existingNoti } = await supabase
+              .from('notifications')
+              .select('id')
+              .eq('receiver_id', receiverProfile.id)
+              .eq('type', 'like')
+              .eq('comment_id', reply.id)
+              .maybeSingle();
+
+            if (!existingNoti) {
+              await supabase.from('notifications').insert({
+                receiver_id: receiverProfile.id,
+                sender_id: profileId,
+                type: 'like',
+                content: reply.content || rawContent,
+                tweet_id: reply.tweetId,
+                comment_id: reply.id,
+              });
+            }
           }
         }
       }
@@ -229,6 +253,8 @@ export function ReplyCard({
       setLiked(!nextLiked);
       setLikeCount(likeCount); // Revert to original
       onLike?.(reply.id, !nextLiked ? 1 : -1);
+    } finally {
+      setIsLikeProcessing(false);
     }
   };
   const isDeleted = reply.user.username === 'anonymous';
@@ -358,21 +384,22 @@ export function ReplyCard({
               </div>
             )}
           </div>
-          {/* 본문 */}
-          <div
-            className="mt-1 text-gray-900 dark:text-gray-100 whitespace-normal break-words leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: safeContentWithoutImages }}
-          />
-          {/* 번역 버튼 */}
-          {plainTextContent.trim().length > 0 && (
-            <div className="mt-2">
+          {/* 본문 + 번역 버튼 */}
+          <div className="flex items-center gap-2 mt-1">
+            <div
+              className="text-gray-900 dark:text-gray-100 whitespace-normal break-words leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: safeContentWithoutImages }}
+            />
+            {/* 번역 버튼 */}
+            {plainTextContent.trim().length > 0 && (
               <TranslateButton
                 text={plainTextContent}
                 contentId={`reply_${reply.id}`}
                 setTranslated={setTranslated}
+                size="sm"
               />
-            </div>
-          )}
+            )}
+          </div>
           {/* 번역 결과 */}
           {translated && (
             <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 rounded-lg text-sm whitespace-pre-line break-words">

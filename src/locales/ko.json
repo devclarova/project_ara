@@ -37,6 +37,7 @@
     "photo_content": "[사진]"
   },
   "study": {
+    "studylist": "학습 목록",
     "search_placeholder": "검색...",
     "no_content": "콘텐츠가 없습니다.",
     "category": {
@@ -71,6 +72,9 @@
     "study_card_title": "학습 카드",
     "vocab_explanation": "단어 설명",
     "culture_note": "문화 노트",
+    "subtitle_title": "자막",
+    "subtitle_loading": "자막 로딩 중...",
+    "subtitle_no_data": "자막 데이터가 없습니다.",
     "login_required": "로그인 필요",
     "preview": "미리보기"
   },
@@ -726,5 +730,9 @@
     "free_shipping": "$50 이상 무료 배송",
     "authentic_guarantee": "정품 보증",
     "product_details": "상품 상세 정보"
+  },
+  "translation": {
+    "login_required": "로그인 후 번역 기능을 사용하실 수 있습니다.",
+    "guest_limit_reached": "무료 번역 횟수를 모두 사용하셨습니다. 로그인하여 계속 이용하세요."
   }
 }
