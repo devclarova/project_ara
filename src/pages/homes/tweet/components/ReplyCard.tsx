@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import BlockButton from '@/components/common/BlockButton';
 import ReportButton from '@/components/common/ReportButton';
 import ModalImageSlider from './ModalImageSlider';
+import { formatRelativeTime } from '@/utils/dateUtils';
 function stripImagesAndEmptyLines(html: string) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   // img 제거
@@ -318,32 +319,7 @@ export function ReplyCard({
               </span>
               <span className="text-gray-500 dark:text-gray-400">·</span>
               <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
-                {(() => {
-                  if (!reply.timestamp) return '';
-                  try {
-                    const date = new Date(reply.timestamp);
-                    if (isNaN(date.getTime())) return reply.timestamp;
-                    const now = new Date();
-                    const diff = now.getTime() - date.getTime();
-                    const currentLang = i18n.language || 'ko';
-                    if (diff < 24 * 60 * 60 * 1000) {
-                      return new Intl.DateTimeFormat(currentLang, {
-                        hour: 'numeric',
-                        minute: 'numeric',
-                        hour12: true,
-                      }).format(date);
-                    }
-                    return new Intl.DateTimeFormat(currentLang, {
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: true,
-                    }).format(date);
-                  } catch {
-                    return reply.timestamp;
-                  }
-                })()}
+                {formatRelativeTime(reply.timestamp)}
               </span>
             </div>
             {/* 더보기 버튼 */}

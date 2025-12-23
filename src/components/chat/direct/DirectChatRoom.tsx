@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import { ArrowDown } from 'lucide-react';
 import styles from '../chat.module.css';
 import HighlightText from '../../common/HighlightText';
+import MediaGalleryModal from './MediaGalleryModal';
+import { formatMessageTime, formatDividerDate } from '@/utils/dateUtils';
 // HMR Trigger
 interface MessageGroup {
   [date: string]: DirectMessage[];
@@ -49,11 +51,13 @@ const loadImage = (url: string): Promise<string> => {
 };
 // LazyImage 최적화
 const LazyImage = memo(
-  ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
+  ({ src, alt, className, style }: { src: string; alt: string; className?: string; style?: React.CSSProperties }) => {
     const [loaded, setLoaded] = useState(() => imageCache.has(src));
     const imgRef = useRef<HTMLImageElement>(null);
+
     useEffect(() => {
       if (!src || loaded) return;
+
       const observer = new IntersectionObserver(
         entries => {
           entries.forEach(entry => {
@@ -67,19 +71,23 @@ const LazyImage = memo(
         },
         { rootMargin: '100px' }, // 더 일찍 로드
       );
+
       if (imgRef.current) {
         observer.observe(imgRef.current);
       }
+
       return () => observer.disconnect();
     }, [src, loaded]);
+
     return loaded ? (
-      <img src={src} alt={alt} className={className} />
+      <img src={src} alt={alt} className={className} style={style} />
     ) : (
-      <div ref={imgRef} className={className} style={{ backgroundColor: '#e5e7eb' }} />
+      <div ref={imgRef} className={className} style={{ ...style, backgroundColor: '#e5e7eb' }} />
     );
   },
 );
 LazyImage.displayName = 'LazyImage';
+
 const CachedAvatar = memo(
   ({ url, nickname, size = 32 }: { url?: string | null; nickname: string; size?: number }) => {
     if (!url) {
@@ -92,10 +100,19 @@ const CachedAvatar = memo(
         </div>
       );
     }
-    return <LazyImage src={url} alt={nickname} className="avatar-image" />;
+    return (
+      <LazyImage
+        src={url}
+        alt={nickname}
+        className="avatar-image object-cover rounded-full"
+        style={{ width: size, height: size }}
+      />
+    );
   },
 );
 CachedAvatar.displayName = 'CachedAvatar';
+import { useNavigate } from 'react-router-dom';
+
 // 메시지 아이템 최적화
 const MessageItem = memo(
   ({
@@ -118,20 +135,20 @@ const MessageItem = memo(
       typeof message.content === 'string' && message.content.includes('님이 채팅방을 나갔습니다');
     const [translated, setTranslated] = useState<string>('');
     const { t, i18n } = useTranslation();
+    const navigate = useNavigate();
+
+    const handleAvatarClick = useCallback((e: React.MouseEvent) => {
+      e.stopPropagation();
+      // username이 있으면 username으로, 없으면 id로 (프로필 페이지 지원 여부에 따라)
+      const target = message.sender?.username || message.sender?.id;
+      if (target) {
+        navigate(`/profile/${target}`);
+      }
+    }, [message.sender, navigate]);
+
     const formatTime = useCallback(
       (dateString: string) => {
-        try {
-          const date = new Date(dateString);
-          if (isNaN(date.getTime())) return '';
-          const lang = i18n.language || 'ko';
-          return new Intl.DateTimeFormat(lang, {
-            hour: 'numeric',
-            minute: 'numeric',
-            hour12: true,
-          }).format(date);
-        } catch {
-          return '';
-        }
+        return formatMessageTime(dateString);
       },
       [i18n.language],
     );
@@ -193,7 +210,10 @@ const MessageItem = memo(
               <div className="message-time">{formatTime(message.created_at)}</div>
             </div>
 
-            <div className="message-avatar">
+            <div 
+              className="message-avatar cursor-pointer" 
+              onClick={handleAvatarClick}
+            >
               <CachedAvatar
                 url={message.sender?.avatar_url}
                 nickname={message.sender?.nickname || '나'}
@@ -202,7 +222,10 @@ const MessageItem = memo(
           </>
         ) : (
           <>
-            <div className="message-avatar">
+            <div 
+              className="message-avatar cursor-pointer" 
+              onClick={handleAvatarClick}
+            >
               <CachedAvatar
                 url={message.sender?.avatar_url}
                 nickname={message.sender?.nickname || '?'}
@@ -312,6 +335,18 @@ const DirectChatRoom = ({
   const [showMenu, setShowMenu] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
 
+  // New Message Floating Button State
+  const [newMessageToast, setNewMessageToast] = useState<{
+    id: string;
+    sender: string;
+    content: string;
+    avatar?: string | null;
+  } | null>(null);
+  const isUserNearBottomRef = useRef(true); // 스크롤이 바닥 근처인지 추적
+
+  // Media Gallery State
+  const [showMediaGallery, setShowMediaGallery] = useState(false);
+
   // Main: 무한 스크롤 및 UI 상태
   const [showScrollDownBtn, setShowScrollDownBtn] = useState(false);
   const prevLastMessageId = useRef<string | null>(null); // 마지막 메시지 ID 추적용
@@ -365,15 +400,25 @@ const DirectChatRoom = ({
     }
     // 3. 새 메시지가 도착한 경우 (내 메시지거나 맨 아래 보고 있을 때) -> 맨 아래로
     else if (isNewMessageArrived) {
-      // 정방향 로딩(isLoadingNewerRef) 중이었다면, 스크롤을 강제하면 안 됨 (자연스럽게 이어지도록)
-      // 이 시점에서 로딩 UI 상태도 해제한다. (렌더링 직후 타이밍)
       if (isLoadingNewerRef.current) {
         isLoadingNewerRef.current = false;
         setIsLoadingNewer(false);
       } else {
-        // 간단하게 무조건 내리면 읽던 중 불편할 수 있으므로,
-        // 내 메시지이거나(내가 씀) 스크롤이 거의 바닥일 때만 내림
-        scrollToBottom(false);
+        const isMyMessage = lastMessage.sender_id === currentUserId;
+        // 내가 쓴 메시지이거나, 이미 바닥에 보고 있었으면 자동 스크롤
+        if (isMyMessage || isUserNearBottomRef.current) {
+          scrollToBottom(false);
+        } else {
+          // 아니면 "새 메시지" 버튼 표시
+          if (!isMyMessage) {
+            setNewMessageToast({
+              id: lastMessage.id,
+              sender: lastMessage.sender?.nickname || 'Unknown',
+              content: typeof lastMessage.content === 'string' ? lastMessage.content : (t('chat.image_message') || '사진'),
+              avatar: lastMessage.sender?.avatar_url
+            });
+          }
+        }
       }
     }
     prevLastMessageId.current = lastMessage.id;
@@ -451,6 +496,13 @@ const DirectChatRoom = ({
     const { scrollTop, scrollHeight, clientHeight } = container;
     // 바닥에서 100px 이상 떨어지면 버튼 표시
     const isBottom = scrollHeight - scrollTop - clientHeight < 100;
+    
+    isUserNearBottomRef.current = isBottom; // Ref 업데이트
+
+    if (isBottom) {
+      setNewMessageToast(null); // 바닥에 오면 토스트 숨김
+    }
+
     setShowScrollDownBtn(!isBottom);
   };
   // 채팅방 변경 시 로드 최적화 & 딥링킹(검색 이동) 처리
@@ -526,6 +578,7 @@ const DirectChatRoom = ({
   }, [highlightMessageId, messages, isLoadingMessages]);
   const { t, i18n } = useTranslation();
   // 버튼 클릭 감지
+  // 버튼 클릭 감지
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -539,27 +592,17 @@ const DirectChatRoom = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showMenu]);
-  const formatDate = useCallback(
-    (dateString: string) => {
-      try {
-        const date = new Date(dateString);
-        const now = new Date();
-        const lang = i18n.language || 'ko';
 
-        if (date.toDateString() === now.toDateString()) {
-          return t('chat.today');
-        }
-        return new Intl.DateTimeFormat(lang, {
-          month: 'short',
-          day: 'numeric',
-          weekday: 'short',
-        }).format(date);
-      } catch {
-        return '';
-      }
-    },
-    [t, i18n.language],
-  );
+  // 새 메시지 알림 자동 숨김 제거 (사용자 요청)
+  // useEffect(() => {
+  //   if (newMessageToast) {
+  //     const timer = setTimeout(() => {
+  //       setNewMessageToast(null);
+  //     }, 4000);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [newMessageToast]);
+
   // 메시지 그룹핑 최적화
   const messageGroups = useMemo(() => {
     const groups: MessageGroup = {};
@@ -714,7 +757,7 @@ const DirectChatRoom = ({
     );
   }
   return (
-    <div className="chat-room">
+    <div className="chat-room relative">
       <div className="chat-room-header">
         <div className="chat-room-info">
           <div className="chat-room-header-left">
@@ -749,15 +792,16 @@ const DirectChatRoom = ({
               <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
             </button>
             {showMenu && (
-              <div className="absolute right-0 top-12 w-36 bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg py-2 z-50">
+              <div className="absolute right-0 top-12 w-auto min-w-[144px] bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg py-2 z-50">
                 <button
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-red-500 text-sm"
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 text-sm flex items-center gap-2 whitespace-nowrap"
                   onClick={() => {
                     setShowMenu(false);
-                    handleExitChat();
+                    setShowMediaGallery(true);
                   }}
                 >
-                  {t('chat.btn_leave')}
+                  <i className="ri-gallery-line" />
+                  {t('chat.media_gallery', '미디어')}
                 </button>
                 <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" />
                 <ReportButton onClose={() => setShowMenu(false)} />
@@ -767,6 +811,16 @@ const DirectChatRoom = ({
                   onToggle={() => setIsBlocked(prev => !prev)}
                   onClose={() => setShowMenu(false)}
                 />
+                <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" />
+                <button
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-red-500 text-sm whitespace-nowrap"
+                  onClick={() => {
+                    setShowMenu(false);
+                    handleExitChat();
+                  }}
+                >
+                  {t('chat.btn_leave')}
+                </button>
               </div>
             )}
           </div>
@@ -841,7 +895,7 @@ const DirectChatRoom = ({
             Object.entries(messageGroups).map(([date, dateMessages]) => (
               <div key={date} className="message-group">
                 <div className="date-divider">
-                  <span>{formatDate((dateMessages[0] as DirectMessage).created_at)}</span>
+                  <span>{formatDividerDate((dateMessages[0] as DirectMessage).created_at)}</span>
                 </div>
                 <div className="message-group-container">
                   {dateMessages.map((message: DirectMessage) => {
@@ -882,7 +936,33 @@ const DirectChatRoom = ({
             }}
           />
         </div>
-        {showScrollDownBtn && (
+        {/* 새 메시지 알림 버튼 */}
+        {newMessageToast && (
+          <button
+            onClick={() => {
+              scrollToBottom(false);
+              setNewMessageToast(null);
+            }}
+            className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-primary/95 text-primary-foreground shadow-lg backdrop-blur-sm rounded-full pl-2 pr-4 py-1.5 flex items-center gap-2 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 transition-all active:scale-95 hover:scale-105 group max-w-[70vw] sm:max-w-[350px]"
+          >
+            <div className="shrink-0">
+              <CachedAvatar url={newMessageToast.avatar} nickname={newMessageToast.sender} size={24} />
+            </div>
+            
+            <div className="flex items-center gap-2 min-w-0 flex-1 text-xs sm:text-sm">
+              <span className="font-bold whitespace-nowrap shrink-0 max-w-[80px] truncate">
+                {newMessageToast.sender}
+              </span>
+              <span className="truncate opacity-90 block max-w-[150px]">
+                {newMessageToast.content}
+              </span>
+            </div>
+            
+            <ArrowDown className="w-3.5 h-3.5 animate-bounce shrink-0 opacity-90 ml-0.5" />
+          </button>
+        )}
+
+        {showScrollDownBtn && !newMessageToast && (
           <button
             className="scroll-bottom-btn"
             onClick={() => scrollToBottom(false)}
@@ -892,6 +972,14 @@ const DirectChatRoom = ({
           </button>
         )}
       </div>
+
+      {/* Media Gallery Modal */}
+      <MediaGalleryModal
+        isOpen={showMediaGallery}
+        onClose={() => setShowMediaGallery(false)}
+        chatId={chatId}
+      />
+
       <MessageInput chatId={chatId} />
     </div>
   );

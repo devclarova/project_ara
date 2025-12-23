@@ -5,6 +5,7 @@ export interface ChatUser {
   id: string; // 사용자 고유 식별자 (UUID)
   email?: string; // 사용자 이메일 주소
   nickname: string; // 표시용 닉네임
+  username?: string; // 사용자 고유 ID (URL용)
   avatar_url?: string | null; // 프로필 이미지 URL (선택)
 }
 

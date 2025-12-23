@@ -219,18 +219,19 @@ export default function ProfileHeader({
           {/* 자기소개 */}
           {userProfile.bio ? (
             <div className="space-y-2">
-              <div className="flex items-start gap-2">
-                {!isOwnProfile && (
-                  <TranslateButton
-                    text={userProfile.bio}
-                    contentId={`profile-bio-${userProfile.user_id}`}
-                    setTranslated={setTranslated}
-                    size="sm"
-                  />
-                )}
-
-                <p className="flex-1 text-gray-800 dark:text-gray-200 whitespace-pre-line leading-snug">
+              <div>
+                <p className="text-gray-800 dark:text-gray-200 whitespace-pre-line leading-snug">
                   {userProfile.bio}
+                  {!isOwnProfile && (
+                    <span className="inline-block ml-2 align-middle">
+                      <TranslateButton
+                        text={userProfile.bio}
+                        contentId={`profile-bio-${userProfile.user_id}`}
+                        setTranslated={setTranslated}
+                        size="sm"
+                      />
+                    </span>
+                  )}
                 </p>
               </div>
 

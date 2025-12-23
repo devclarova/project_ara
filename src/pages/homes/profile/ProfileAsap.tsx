@@ -67,7 +67,14 @@ export default function ProfileAsap() {
         if (!decodedUsername && user) {
           baseQuery = baseQuery.eq('user_id', user.id);
         } else {
-          baseQuery = baseQuery.eq('nickname', decodedUsername);
+          // UUID 형식 체크
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedUsername);
+          
+          if (isUuid) {
+            baseQuery = baseQuery.eq('id', decodedUsername);
+          } else {
+            baseQuery = baseQuery.eq('nickname', decodedUsername);
+          }
         }
         const { data: profile, error: profileError } = await baseQuery.single();
         if (profileError || !profile) throw profileError;

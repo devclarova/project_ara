@@ -1,11 +1,41 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ShoppingBag, Heart, Share2, Star, Truck, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, ShoppingBag, Heart, Share2, Star, Truck, ShieldCheck, ThumbsUp, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { MOCK_PRODUCTS } from './data';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
+
+const MOCK_REVIEWS = [
+  {
+    id: 1,
+    user: { name: 'Sarah K.', image: 'https://i.pravatar.cc/150?u=1' },
+    rating: 5,
+    date: '2024-10-15',
+    content: "Absolutely love this hoodie! The material is so soft and thick, perfect for fall weather. The resizing is slightly oversized which I prefer. Will definitely buy in other colors.",
+    images: ['https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&q=80&w=200&h=200'],
+    likes: 12
+  },
+  {
+    id: 2,
+    user: { name: 'Michael C.', image: 'https://i.pravatar.cc/150?u=2' },
+    rating: 4,
+    date: '2024-10-10',
+    content: "Great quality for the price. Fast shipping too. I took one star off because the color is slightly darker than the picture, but still looks good.",
+    likes: 5
+  },
+  {
+    id: 3,
+    user: { name: 'Emily R.', image: 'https://i.pravatar.cc/150?u=3' },
+    rating: 5,
+    date: '2024-09-28',
+    content: "This planner has changed my life! So easy to use on my iPad. Highly recommend for students.",
+    likes: 24
+  }
+];
 
 export default function GoodsDetailPage() {
   const { id } = useParams();
@@ -198,6 +228,7 @@ export default function GoodsDetailPage() {
            </div>
         </div>
 
+
         {/* Related */}
         <div className="mt-24">
            <h2 className="text-2xl font-bold mb-8">{t('goods.related_items')}</h2>
@@ -211,6 +242,111 @@ export default function GoodsDetailPage() {
                     <div className="text-gray-500 text-sm">${p.price.toFixed(2)}</div>
                  </div>
               ))}
+           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="mt-24 border-t border-gray-100 dark:border-gray-800 pt-16">
+           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
+              <div>
+                <h2 className="text-2xl font-bold mb-2">{t('goods.reviews.title')} <span className="text-gray-400 text-lg font-normal">({t('goods.reviews.count', {count: 128})})</span></h2>
+                <div className="flex items-center gap-4">
+                   <div className="flex items-center text-yellow-500">
+                      <Star className="w-6 h-6 fill-current" />
+                      <span className="text-2xl font-bold ml-2 text-gray-900 dark:text-white">4.9</span>
+                   </div>
+                   <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {t('goods.reviews.rating_average')}
+                   </div>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                 <Button variant="outline" className="rounded-full">
+                    {t('goods.reviews.photo_review')}
+                 </Button>
+                 <Button className="rounded-full">
+                    {t('goods.reviews.write_btn')}
+                 </Button>
+              </div>
+           </div>
+
+           {/* Rating Bars - Visual Only */}
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
+              <div className="space-y-2">
+                 {[5,4,3,2,1].map((r) => (
+                    <div key={r} className="flex items-center gap-3 text-sm">
+                       <span className="w-3 font-medium">{r}</span>
+                       <Star className="w-3 h-3 text-gray-300 fill-gray-300" />
+                       <Progress value={r === 5 ? 85 : r === 4 ? 10 : 5} className="h-2 flex-1" />
+                       <span className="w-8 text-right text-gray-400">{r === 5 ? '85%' : r === 4 ? '10%' : '5%'}</span>
+                    </div>
+                 ))}
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-6 flex items-center justify-center text-center">
+                 <div>
+                    <p className="text-sm text-gray-500 mb-2">{t('goods.reviews.verified_purchase')}</p>
+                    <p className="font-medium text-lg">98% {t('goods.reviews.helpful')}</p>
+                 </div>
+              </div>
+           </div>
+
+           {/* Review List */}
+           <div className="space-y-8">
+              {MOCK_REVIEWS.map((review) => (
+                 <div key={review.id} className="border-b border-gray-100 dark:border-gray-800 pb-8 last:border-0">
+                    <div className="flex justify-between items-start mb-4">
+                       <div className="flex items-center gap-3">
+                          <Avatar>
+                             <AvatarImage src={review.user.image} />
+                             <AvatarFallback>{review.user.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                             <div className="font-semibold text-sm">{review.user.name}</div>
+                             <div className="flex items-center text-xs text-gray-500 gap-2">
+                                <span>{review.date}</span>
+                                <span className="w-0.5 h-0.5 bg-gray-300 rounded-full" />
+                                <span className="text-green-600 font-medium">{t('goods.reviews.verified_purchase')}</span>
+                             </div>
+                          </div>
+                       </div>
+                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                       </Button>
+                    </div>
+
+                    <div className="flex text-yellow-500 mb-3">
+                       {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={`w-4 h-4 ${i < review.rating ? 'fill-current' : 'text-gray-200'}`} />
+                       ))}
+                    </div>
+
+                    <p className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">
+                       {review.content}
+                    </p>
+
+                    {review.images && (
+                       <div className="flex gap-2 mb-4">
+                          {review.images.map((img, i) => (
+                             <img key={i} src={img} alt="review" className="w-20 h-20 rounded-lg object-cover cursor-pointer hover:opacity-90" />
+                          ))}
+                       </div>
+                    )}
+
+                    <div className="flex items-center gap-4">
+                       <Button variant="ghost" size="sm" className="text-gray-500 gap-1.5 h-8 hover:text-primary">
+                          <ThumbsUp className="w-4 h-4" />
+                          <span className="text-xs font-medium">{t('goods.reviews.helpful')} ({review.likes})</span>
+                       </Button>
+                    </div>
+                 </div>
+              ))}
+           </div>
+           
+           <div className="mt-8 text-center">
+              <Button variant="outline" className="w-full md:w-auto px-8 rounded-full">
+                 More Reviews
+              </Button>
            </div>
         </div>
 

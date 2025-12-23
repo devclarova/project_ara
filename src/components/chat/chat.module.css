@@ -510,7 +510,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  max-width: 100%;
+  /* 최대 너비 제한 (사용자 요청: 상대 영역 침범 방지) */
+  max-width: 70%;
 }
 .chatPage :global(.message-bubble:hover .message-time) {
   opacity: 1;
@@ -538,7 +539,8 @@
   display: flex;
   justify-content: flex-end;
   align-items: flex-end;
-  max-width: 100%;
+  /* max-width는 bubble이 담당하므로 wrapper는 100%여도 되지만 확실하게 상속 */
+  max-width: 100%; 
   gap: 8px;
 }
 .chatPage :global(.my-message .message-text) {
@@ -582,7 +584,7 @@
 /* 아바타 */
 .chatPage :global(.message-avatar) {
   flex-shrink: 0;
-  margin: 0 4px;
+  margin: 0 2px;
 }
 .chatPage :global(.message-avatar img) {
   width: 32px;
@@ -671,7 +673,8 @@
 .chatPage :global(.chat-room-message) {
   flex: 1;
   overflow-y: auto;
-  padding: 20px 20px 10px 20px; /* 하단 패딩 축소 (20px -> 10px) */
+  /* 좌우 패딩 축소 (20px -> 4px) *사용자 요청: 프로필 좌우 여백을 화면 끝에 더 가깝게 */
+  padding: 20px 4px 10px 4px;
   /* border-bottom 등은 유지 */
   display: flex;
   flex-direction: column;

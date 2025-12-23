@@ -55,7 +55,7 @@ export async function getUserProfile(userId: string): Promise<ChatApiResponse<Ch
   try {
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .select('id, nickname, avatar_url')
+      .select('id, nickname, avatar_url, username')
       .eq('user_id', userId)
       .single();
 
@@ -70,6 +70,7 @@ export async function getUserProfile(userId: string): Promise<ChatApiResponse<Ch
       id: profileData.id,
       email: `user-${profileData.id}@example.com`,
       nickname: profileData.nickname,
+      username: profileData.username,
       avatar_url: profileData.avatar_url,
     };
 
@@ -280,7 +281,7 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
     if (otherUserIds.length > 0) {
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
-        .select('id, nickname, avatar_url')
+        .select('id, nickname, avatar_url, username')
         .in('id', otherUserIds);
 
       if (!profileError && profiles) {
@@ -289,6 +290,7 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
             id: p.id,
             email: `user-${p.id}@example.com`,
             nickname: p.nickname,
+            username: p.username,
             avatar_url: p.avatar_url,
           });
         });
@@ -738,7 +740,7 @@ export async function getMessages(
     // 프로필 정보 조회
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, nickname, avatar_url, user_id')
+      .select('id, nickname, avatar_url, user_id, username')
       .in('user_id', senderIds);
 
     const profileMap = new Map<string, ChatUser>();
@@ -747,6 +749,7 @@ export async function getMessages(
       id: currentUser.profileId,
       email: currentUser.email || '',
       nickname: '나',
+      username: currentUser.user_metadata?.username, // user_metadata에서 가져오거나 undefined
       avatar_url: currentUser.user_metadata?.avatar_url || null,
     });
 
@@ -756,6 +759,7 @@ export async function getMessages(
           id: p.id,
           email: `user-${p.id}@example.com`,
           nickname: p.nickname,
+          username: p.username,
           avatar_url: p.avatar_url,
         });
       });
@@ -1400,3 +1404,124 @@ export async function searchMessagesInChat(
     };
   }
 }
+
+/**
+ * 채팅방의 모든 미디어(이미지) 메시지 조회
+ * - 미디어 갤러리에서 사용
+ * @param chatId - 채팅방 ID
+ */
+export async function getMediaInChat(
+  chatId: string,
+): Promise<ChatApiResponse<DirectMessage[]>> {
+  try {
+    const currentUser = await getCurrentUser();
+
+    // 채팅방 정보 조회 (사용자가 나간 시점 확인)
+    const { data: chatInfo, error: chatError } = await supabase
+      .from('direct_chats')
+      .select('user1_id, user2_id, user1_left_at, user2_left_at')
+      .eq('id', chatId)
+      .single();
+
+    if (chatError || !chatInfo) {
+      console.error('채팅방 정보 조회 오류:', chatError);
+      return { success: false, error: '채팅방을 찾을 수 없습니다.' };
+    }
+
+    // 현재 사용자가 나간 시점 확인
+    const isCurrentUserUser1 = chatInfo.user1_id === currentUser.profileId;
+    const userLeftAt = isCurrentUserUser1 ? chatInfo.user1_left_at : chatInfo.user2_left_at;
+
+    // 미디어가 있는 메시지만 조회
+    const { data: rawMessages, error } = await supabase
+      .from('direct_messages')
+      .select(`
+        id,
+        chat_id,
+        sender_id,
+        content,
+        created_at,
+        is_read,
+        read_at,
+        attachments:direct_message_attachments (
+          id,
+          type,
+          url,
+          width,
+          height
+        )
+      `)
+      .eq('chat_id', chatId)
+      .gte('created_at', userLeftAt || '1970-01-01')
+      .order('created_at', { ascending: false });
+
+
+
+    if (error) {
+      console.error('미디어 메시지 조회 오류:', error);
+      return { success: false, error: '미디어를 불러올 수 없습니다.' };
+    }
+
+    // attachments가 실제로 있는 메시지만 필터링
+    const messagesWithMedia = (rawMessages || []).filter(
+      msg => msg.attachments && msg.attachments.length > 0,
+    );
+
+    if (messagesWithMedia.length === 0) {
+      return { success: true, data: [] };
+    }
+
+    // 발신자 정보 일괄 조회 (Batch Fetching)
+    const senderIds = Array.from(new Set(messagesWithMedia.map(m => m.sender_id)));
+
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, nickname, avatar_url, user_id')
+      .in('user_id', senderIds);
+
+    const profileMap = new Map<string, ChatUser>();
+
+    if (profiles) {
+      profiles.forEach(p => {
+        profileMap.set(p.user_id, {
+          id: p.id,
+          email: `user-${p.id}@example.com`,
+          nickname: p.nickname,
+          avatar_url: p.avatar_url,
+        });
+      });
+    }
+
+    // 데이터 변환
+    const messages: DirectMessage[] = messagesWithMedia.map(msg => {
+      let senderInfo = profileMap.get(msg.sender_id);
+
+      if (!senderInfo) {
+        senderInfo = {
+          id: msg.sender_id,
+          email: `user-${msg.sender_id}@example.com`,
+          nickname: '알 수 없음',
+          avatar_url: null,
+        };
+      }
+
+      return {
+        id: msg.id,
+        chat_id: msg.chat_id,
+        sender_id: msg.sender_id,
+        content: msg.content,
+        created_at: msg.created_at,
+        is_read: msg.is_read,
+        read_at: msg.read_at,
+        sender: senderInfo,
+        attachments: msg.attachments || [],
+      };
+    });
+
+    return { success: true, data: messages };
+  } catch (err) {
+    console.error('미디어 조회 중 오류:', err);
+    return { success: false, error: '미디어 조회 중 오류가 발생했습니다.' };
+  }
+}
+

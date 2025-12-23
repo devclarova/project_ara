@@ -121,7 +121,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, nickname, avatar_url')
+      .select('id, nickname, avatar_url, username')
       .eq('user_id', authUserId)
       .single();
 
@@ -130,6 +130,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           id: data.id,
           email: `user-${data.id}@example.com`,
           nickname: data.nickname,
+          username: data.username,
           avatar_url: data.avatar_url,
         }
       : {

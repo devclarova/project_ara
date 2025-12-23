@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { formatRelativeTime, formatMessageTime } from '@/utils/dateUtils';
 
 interface NotificationToastProps {
   type: 'chat' | 'comment' | 'like' | 'mention' | 'follow' | 'repost';
@@ -11,6 +13,8 @@ interface NotificationToastProps {
   content: string;
   timestamp: string;
   replyId?: string | null;
+  onClick?: () => void;
+  toastId: string | number; // ID for dismissal
 }
 
 export const NotificationToast: React.FC<NotificationToastProps> = ({
@@ -19,10 +23,50 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
   content,
   timestamp,
   replyId,
+  onClick,
+  toastId,
 }) => {
   const { t, i18n } = useTranslation();
+  const [isPaused, setIsPaused] = useState(false);
+  const remainingTime = useRef(4000);
+  const startTime = useRef(Date.now());
+  const timerId = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    // Start timer on mount
+    startTimer();
+    return () => clearTimer();
+  }, []);
+
+  const startTimer = () => {
+    startTime.current = Date.now();
+    timerId.current = setTimeout(() => {
+      toast.dismiss(toastId);
+    }, remainingTime.current);
+  };
+
+  const clearTimer = () => {
+    if (timerId.current) {
+      clearTimeout(timerId.current);
+      timerId.current = null;
+    }
+  };
+
+  const handleMouseEnter = () => {
+    setIsPaused(true);
+    clearTimer();
+    // Calculate remaining time
+    const elapsed = Date.now() - startTime.current;
+    remainingTime.current = Math.max(0, remainingTime.current - elapsed);
+  };
+
+  const handleMouseLeave = () => {
+    setIsPaused(false);
+    startTimer();
+  };
 
   const getStyles = () => {
+    // ... (existing getStyles logic, keep it same)
     switch (type) {
       case 'chat': return {
         icon: '💬',
@@ -88,24 +132,18 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
   const styles = getStyles();
 
   const formatTime = (ts: string) => {
-    if (!ts) return '';
-    try {
-      const date = new Date(ts);
-      if (isNaN(date.getTime())) return '';
-      const currentLang = i18n.language || 'ko';
-      return new Intl.DateTimeFormat(currentLang, {
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: true
-      }).format(date);
-    } catch {
-      return '';
-    }
+    return formatMessageTime(ts);
   };
 
   return (
-    <div className="flex items-start space-x-3 w-full group animate-in fade-in slide-in-from-right-4 duration-300">
-      <div className="flex-shrink-0 relative">
+    <div 
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onClick={onClick}
+      className={`flex items-start space-x-3 w-full group animate-in fade-in slide-in-from-right-4 duration-300 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 p-2 rounded-2xl transition-all active:scale-[0.98] ${onClick ? '' : 'pointer-events-none'}`}
+    >
+       {/* ... content ... */}
+       <div className="flex-shrink-0 relative">
         <div className={`absolute -inset-1 rounded-full opacity-10 blur-[2px] transition-opacity group-hover:opacity-20 ${styles.iconBg}`}></div>
         <Avatar className="w-10 h-10 border border-white/20 dark:border-white/10 shadow-sm relative z-10">
           <AvatarImage src={sender.avatar_url || '/default-avatar.svg'} alt={sender.nickname} />
@@ -120,21 +158,21 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
       
       <div className="flex-1 min-w-0 pt-0.5">
         <div className="flex items-center justify-between gap-2 mb-0.5">
-          <p className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate flex items-center gap-1.5">
+          <p className="text-sm font-bold text-black dark:text-white truncate flex items-center gap-1.5">
             {sender.nickname}
           </p>
-          <span className="text-[10px] text-gray-400 dark:text-zinc-500 whitespace-nowrap tabular-nums">
+          <span className="text-[10px] text-gray-500 dark:text-zinc-400 whitespace-nowrap tabular-nums">
             {formatTime(timestamp)}
           </span>
         </div>
         
-        <p className={`text-[12px] font-semibold mb-1 leading-tight ${styles.textColor}`}>
+        <p className={`text-[12px] font-bold mb-1 leading-tight ${styles.textColor}`}>
           {styles.label}
         </p>
         
         {type !== 'follow' && (
           <div className="relative">
-            <p className="text-[13px] text-gray-700 dark:text-zinc-300 line-clamp-2 break-words leading-snug font-medium">
+            <p className="text-[13px] text-gray-900 dark:text-zinc-100 line-clamp-2 break-words leading-snug font-medium">
               {content}
             </p>
           </div>

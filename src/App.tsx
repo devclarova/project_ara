@@ -10,7 +10,6 @@ import { useEffect, useState } from 'react';
 import ScrollToTop from './components/common/ScrollToTop';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { supabase } from './lib/supabase';
-
 import Header from './components/common/Header';
 import ProfileSettings from './components/profile/ProfileSettings';
 import { DirectChatProvider } from './contexts/DirectChatContext';
@@ -227,20 +226,16 @@ const ThemedToaster = () => {
       richColors
       theme={theme as 'light' | 'dark' | 'system'}
       toastOptions={{
-        duration: 4000,
-        className: 'font-sans',
+        duration: 4000, 
+        // Tailwind 클래스로 !important 강제 적용 (배경색 문제 해결)
+        className: 'font-sans !bg-white dark:!bg-[#18181b] !border-teal-500/30 !shadow-xl',
         style: {
-          background: isDarkMode ? 'rgba(24, 24, 27, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(16px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(16px) saturate(180%)',
-          border: '1px solid rgba(0, 191, 165, 0.2)', // Original Teal Border
-          color: isDarkMode ? '#fff' : 'hsl(var(--foreground))',
+          color: isDarkMode ? '#fff' : '#09090b',
           borderRadius: '16px',
-          padding: '10px 14px',
-          maxWidth: '280px',
-          boxShadow: '0 8px 32px 0 rgba(0, 191, 165, 0.12), 0 1px 2px 0 rgba(0, 0, 0, 0.02)',
+          padding: '12px 16px',
+          maxWidth: '320px',
           marginBottom: '8px',
-          zIndex: 9999, // 모달보다 위에 표시
+          zIndex: 9999,
         }
       }}
     />
