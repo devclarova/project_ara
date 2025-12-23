@@ -129,8 +129,10 @@ function AppInner() {
 
   // 푸터를 숨길 경로들 (채팅방, 로그인 등)
   const HIDE_FOOTER_PATHS = [...HIDE_HEADER_PATHS, '/chat', '/sns'];
- 
-  const hideFooter = [...HIDE_HEADER_PATHS, '/chat'].some(path => location.pathname.startsWith(path));
+
+  const hideFooter = [...HIDE_HEADER_PATHS, '/chat'].some(path =>
+    location.pathname.startsWith(path),
+  );
 
   return (
     <>
@@ -214,8 +216,10 @@ function AppInner() {
 // 감싸야 useTheme 사용 가능
 const ThemedToaster = () => {
   const { theme } = useTheme();
-  
-  const isDarkMode = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  const isDarkMode =
+    theme === 'dark' ||
+    (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   return (
     <Toaster
@@ -224,7 +228,7 @@ const ThemedToaster = () => {
       richColors
       theme={theme as 'light' | 'dark' | 'system'}
       toastOptions={{
-        duration: 4000, 
+        duration: 4000,
         // Tailwind 클래스로 !important 강제 적용 (배경색 문제 해결)
         className: 'font-sans !bg-white dark:!bg-[#18181b] !border-teal-500/30 !shadow-xl',
         style: {
@@ -234,7 +238,7 @@ const ThemedToaster = () => {
           maxWidth: '320px',
           marginBottom: '8px',
           zIndex: 9999,
-        }
+        },
       }}
     />
   );
