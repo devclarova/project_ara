@@ -306,7 +306,10 @@
     "reason_rejoin": "Để tham gia lại",
     "reason_privacy": "Lo ngại về quyền riêng tư",
     "reason_feature": "Không hài lòng với tính năng",
-    "reason_other": "Khác"
+    "reason_other": "Khác",
+    "alarm_chat": "Thông báo trò chuyện",
+    "alarm_chat_desc": "Nhận thông báo khi bạn nhận được tin nhắn trò chuyện mới.",
+    "saved": "Đã lưu cài đặt."
   },
   "profile": {
     "edit_profile": "Sửa hồ sơ",

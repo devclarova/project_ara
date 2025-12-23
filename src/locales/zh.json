@@ -318,7 +318,10 @@
     "reason_rejoin": "为了重新注册",
     "reason_privacy": "隐私/安全担忧",
     "reason_feature": "功能不满意",
-    "reason_other": "其他"
+    "reason_other": "其他",
+    "alarm_chat": "聊天通知",
+    "alarm_chat_desc": "当您收到新的聊天消息时接收通知。",
+    "saved": "设置已保存。"
   },
   "profile": {
     "edit_profile": "编辑资料",

@@ -270,7 +270,10 @@
     "reason_rejoin": "To rejoin with a new account",
     "reason_privacy": "Privacy/Security concerns",
     "reason_feature": "Unsatisfied with features",
-    "reason_other": "Other"
+    "reason_other": "Other",
+    "alarm_chat": "Chat Notifications",
+    "alarm_chat_desc": "Get notified when you receive new chat messages.",
+    "saved": "Settings saved."
   },
   "profile": {
     "edit_profile": "Edit Profile",

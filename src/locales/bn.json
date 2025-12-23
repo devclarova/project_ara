@@ -306,7 +306,10 @@
     "reason_rejoin": "পুনরায় যোগ দেওয়ার জন্য",
     "reason_privacy": "গোপনীয়তা উদ্বেগ",
     "reason_feature": "বৈশিষ্ট্য নিয়ে অসন্তুষ্ট",
-    "reason_other": "অন্যান্য"
+    "reason_other": "অন্যান্য",
+    "alarm_chat": "চ্যাট বিজ্ঞপ্তি",
+    "alarm_chat_desc": "নতুন চ্যাট বার্তা পেলে বিজ্ঞপ্তি পান।",
+    "saved": "Settings saved."
   },
   "profile": {
     "edit_profile": "প্রোফাইল সম্পাদনা",

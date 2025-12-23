@@ -52,7 +52,6 @@ const StudyListPage = () => {
 
   const [clips, setClips] = useState<Study[]>([]); // 콘텐츠 목록
   const [keyword, setKeyword] = useState(''); // 검색
-  const [page, setPage] = useState(1); // 현재 페이지
   const [total, setTotal] = useState(0); // 전체 콘텐츠 개수
   const [showSearch, setShowSearch] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams(); // URL 쿼리
@@ -86,11 +85,20 @@ const StudyListPage = () => {
     return (ALL_LEVELS.includes(raw as TDifficulty) ? (raw as TDifficulty) : '') as TDifficulty;
   }, [searchParams]);
 
+  // 쿼리에서 초기 page 읽기
+  const initialPage = useMemo(() => {
+    const pageParam = searchParams.get('page');
+    const pageNum = pageParam ? parseInt(pageParam, 10) : 1;
+    return pageNum > 0 ? pageNum : 1;
+  }, [searchParams.get('page')]);
+
   const [activeCategory, setActiveCategory] = useState<TCategory>(displayCategory);
   const [levelFilter, setLevelFilter] = useState<TDifficulty>(displayLevel);
+  const [page, setPage] = useState(initialPage); // URL에서 초기화
 
   // Ref for horizontal scroll on wheel
   const categoryScrollRef = useRef<HTMLDivElement>(null);
+  const [isScrollable, setIsScrollable] = useState(false);
 
   // Batch Translation
   const titles = clips.map(c => c.title);
@@ -117,14 +125,10 @@ const StudyListPage = () => {
 
   // 데이터 불러오기
   useEffect(() => {
+    let ignore = false;
+
     const fetchData = async () => {
       const from = (page - 1) * limit;
-      // ... (rest of logic is unchanged here, just context)
-
-// ... separating hook logic and render logic for clarity, 
-// actually I'm replacing the block from "const descs..." down to render is too big.
-// I will target the Hooks area first.
-
       const to = from + limit - 1;
 
       let query = supabase
@@ -158,6 +162,8 @@ const StudyListPage = () => {
         ? await query // 검색 시: 전체 데이터 가져오기
         : await query.range(from, to); // 검색 없을 때: 페이지네이션
         
+      if (ignore) return;
+
       if (error) {
         console.error('데이터 불러오기 오류:', error.message);
         return;
@@ -171,6 +177,10 @@ const StudyListPage = () => {
     };
 
     fetchData();
+
+    return () => {
+      ignore = true;
+    };
   }, [page, limit, activeCategory, levelFilter, contentFilter, episodeFilter]); // keyword 제거
 
   // 클라이언트 사이드 검색 필터링 (번역된 텍스트 포함)
@@ -207,9 +217,12 @@ const StudyListPage = () => {
     return finalList;
   }, [finalList, keyword, page, pageSize]);
 
+  // 검색 필터링 후 total 업데이트 (검색이 있을 때만)
   useEffect(() => {
-    setTotal(finalList.length);
-  }, [finalList]);
+    if (keyword.trim()) {
+      setTotal(finalList.length);
+    }
+  }, [finalList, keyword]);
 
   // URL이 바뀌면 탭/페이지도 맞춰주기
   useEffect(() => {
@@ -228,12 +241,14 @@ const StudyListPage = () => {
       const width = window.innerWidth;
 
       if (width < 640) {
-        // 모바일 (1열)
-        setPageSize(6); // ← 여기서 모바일 개수 조절
+        // 모바일 (1열) - 6개
+        setPageSize(6);
+      } else if (width < 1024) {
+        // 태블릿 (2열) - 8개
+        setPageSize(8);
       } else {
-        // 태블릿/데스크톱 (2열, 3열, 4열 모두 호환)
-        // 12는 2와 3 (그리고 4)의 공배수이므로 빈 칸 없이 정렬됨
-        setPageSize(12);
+        // 데스크톱 (3열) - 9개
+        setPageSize(9);
       }
     };
 
@@ -259,11 +274,127 @@ const StudyListPage = () => {
     return () => scrollContainer.removeEventListener('wheel', handleWheel);
   }, []);
 
+  // Check if category tabs are scrollable
   useEffect(() => {
-    setPage(1);
-  }, [pageSize]);
+    const checkScrollable = () => {
+      const scrollContainer = categoryScrollRef.current;
+      if (!scrollContainer) return;
+      
+      const hasOverflow = scrollContainer.scrollWidth > scrollContainer.clientWidth;
+      setIsScrollable(hasOverflow);
+    };
+
+    checkScrollable();
+    window.addEventListener('resize', checkScrollable);
+    return () => window.removeEventListener('resize', checkScrollable);
+  }, [activeCategory, ALL_CATEGORIES]); // Re-check when categories change
+
+  // Enable drag scrolling for category tabs
+  useEffect(() => {
+    const scrollContainer = categoryScrollRef.current;
+    if (!scrollContainer) return;
+
+    let isDown = false;
+    let startX: number;
+    let scrollLeft: number;
+    let hasMoved = false; // Track if user actually dragged
+
+    const handleMouseDown = (e: MouseEvent) => {
+      // 스크롤 가능할 때만 드래그 활성화
+      if (scrollContainer.scrollWidth <= scrollContainer.clientWidth) return;
+      
+      isDown = true;
+      hasMoved = false; // Reset on new drag
+      scrollContainer.style.cursor = 'grabbing';
+      startX = e.pageX - scrollContainer.offsetLeft;
+      scrollLeft = scrollContainer.scrollLeft;
+    };
+
+    const handleMouseLeave = () => {
+      isDown = false;
+      if (scrollContainer.scrollWidth > scrollContainer.clientWidth) {
+        scrollContainer.style.cursor = 'grab';
+      }
+    };
+
+    const handleMouseUp = () => {
+      isDown = false;
+      if (scrollContainer.scrollWidth > scrollContainer.clientWidth) {
+        scrollContainer.style.cursor = 'grab';
+      }
+      
+      // Prevent click if user dragged
+      if (hasMoved) {
+        setTimeout(() => {
+          hasMoved = false;
+        }, 10);
+      }
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - scrollContainer.offsetLeft;
+      const walk = (x - startX) * 2; // Scroll speed multiplier
+      
+      // If moved more than 5px, consider it a drag
+      if (Math.abs(walk) > 5) {
+        hasMoved = true;
+      }
+      
+      scrollContainer.scrollLeft = scrollLeft - walk;
+    };
+
+    const handleClick = (e: MouseEvent) => {
+      // Prevent click if user was dragging
+      if (hasMoved) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    // 스크롤 가능할 때만 grab 커서 적용
+    if (scrollContainer.scrollWidth > scrollContainer.clientWidth) {
+      scrollContainer.style.cursor = 'grab';
+    } else {
+      scrollContainer.style.cursor = 'default';
+    }
+    
+    scrollContainer.addEventListener('mousedown', handleMouseDown);
+    scrollContainer.addEventListener('mouseleave', handleMouseLeave);
+    scrollContainer.addEventListener('mouseup', handleMouseUp);
+    scrollContainer.addEventListener('mousemove', handleMouseMove);
+    scrollContainer.addEventListener('click', handleClick, true); // Use capture phase
+
+    return () => {
+      scrollContainer.removeEventListener('mousedown', handleMouseDown);
+      scrollContainer.removeEventListener('mouseleave', handleMouseLeave);
+      scrollContainer.removeEventListener('mouseup', handleMouseUp);
+      scrollContainer.removeEventListener('mousemove', handleMouseMove);
+      scrollContainer.removeEventListener('click', handleClick, true);
+    };
+  }, [isScrollable]); // isScrollable이 변경될 때마다 재실행
+
+  useEffect(() => {
+    const newTotalPages = Math.ceil(total / pageSize);
+    // 현재 페이지가 새로운 총 페이지 수를 초과하면 마지막 페이지로 이동
+    if (page > newTotalPages && newTotalPages > 0) {
+      setPage(newTotalPages);
+    }
+  }, [pageSize, total, page]);
 
   const totalPages = Math.ceil(total / limit);
+
+  // page \ubcc0\uacbd \uc2dc URL \ub3d9\uae30\ud654
+  useEffect(() => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (page === 1) {
+      nextParams.delete('page');
+    } else {
+      nextParams.set('page', page.toString());
+    }
+    setSearchParams(nextParams, { replace: true });
+  }, [page]);
 
   const handleKeywordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setKeyword(e.target.value);
@@ -302,7 +433,7 @@ const StudyListPage = () => {
       {/* StudyListPage 전용 미디어쿼리 */}
       <style>
         {`
-  @media (max-width: 900px) {
+  @media (max-width: 1023px) {
     /* md:hidden → 보이게 하는 기존 override */
     .md\\:hidden {
       display: inline-flex !important;
@@ -312,10 +443,22 @@ const StudyListPage = () => {
     .desktop-search-only {
       display: none !important;
     }
-
-    /* desktop 검색바 숨기기 */
-    .desktop-search-only {
+    
+    /* 1023px 이하에서 모바일 검색 버튼 표시 */
+    .mobile-search-btn-900 {
+      display: flex !important;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    /* 1024px 이상에서 모바일 검색 버튼 숨김 */
+    .mobile-search-btn-900 {
       display: none !important;
+    }
+    
+    /* 1024px 이상에서 데스크톱 검색 영역 표시 */
+    .desktop-search-900 {
+      display: flex !important;
     }
   }
 `}
@@ -344,36 +487,26 @@ const StudyListPage = () => {
           {/* 메인 영역 */}
           <main className="flex-1 min-w-0 overflow-y-auto overflow-x-auto bg-white dark:bg-background">
             {/* 탭 + 검색 */}
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center md:gap-5 bg-white dark:bg-background sticky top-0 z-20 pb-2 pl-6 pt-8 pr-6">
-              {/* 왼쪽: 카테고리 + 모바일용 검색 아이콘 */}
-              <div className="flex items-center justify-between w-full md:w-auto search-row relative gap-2">
-                <div ref={categoryScrollRef} className="flex-1 min-w-0 overflow-x-auto no-scrollbar mask-gradient">
-                  <CategoryTabs 
-                    active={displayCategory} 
-                    onChange={handleCategoryChange} 
-                    categories={ALL_CATEGORIES.map(c => ({
-                      value: c,
-                      label: c === '전체' ? t('study.category.all') :
-                             c === '드라마' ? t('study.category.drama') :
-                             c === '영화' ? t('study.category.movie') :
-                             c === '예능' ? t('study.category.entertainment') :
-                             c === '음악' ? t('study.category.music') : c
-                    }))}
-                  />
-                </div>
-
-                {/* 모바일 전용 검색 버튼 (카테고리 옆에 위치) */}
-                <button
-                  onClick={() => setShowSearch(true)}
-                  className="md:hidden shrink-0 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-secondary transition"
-                  aria-label="검색 열기"
-                >
-                  <i className="ri-search-line text-[20px] sm:text-[24px] md:text-[28px] text-gray-600 dark:text-gray-200" />
-                </button>
+            <div className="flex flex-row justify-between items-center gap-1 md:gap-3 bg-white dark:bg-background sticky top-0 z-20 pb-2 pl-6 pt-8 pr-2">
+              {/* 왼쪽: 카테고리 탭 (스크롤 가능) */}
+              <div className={`flex-1 min-w-0 overflow-x-auto no-scrollbar ${isScrollable ? 'mask-gradient' : ''}`} ref={categoryScrollRef}>
+                <CategoryTabs 
+                  active={displayCategory} 
+                  onChange={handleCategoryChange} 
+                  categories={ALL_CATEGORIES.map(c => ({
+                    value: c,
+                    label: c === '전체' ? t('study.category.all') :
+                           c === '드라마' ? t('study.category.drama') :
+                           c === '영화' ? t('study.category.movie') :
+                           c === '예능' ? t('study.category.entertainment') :
+                           c === '음악' ? t('study.category.music') : c
+                  }))}
+                />
               </div>
 
-              {/* 오른쪽: 필터 + 검색 그룹 (데스크톱 전용) */}
-              <div className="hidden md:flex desktop-search-only items-center gap-2 mt-3 md:mt-0 flex-nowrap">
+              {/* 오른쪽: 필터 + 검색 (고정 크기) */}
+              <div className="flex items-center gap-1 flex-shrink-0">
+                {/* 필터는 항상 표시 */}
                 <div className="flex items-center h-11">
                   <FilterDropdown 
                     value={levelFilter} 
@@ -386,7 +519,18 @@ const StudyListPage = () => {
                     }}
                   />
                 </div>
-                <div className="flex items-center h-11">
+
+                {/* 모바일 전용 검색 버튼 (필터 옆에 위치) */}
+                <button
+                  onClick={() => setShowSearch(true)}
+                  className="hidden mobile-search-btn-900 shrink-0 h-11 w-11 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-secondary transition"
+                  aria-label="검색 열기"
+                >
+                  <i className="ri-search-line text-[20px] sm:text-[24px] text-gray-600 dark:text-gray-200" />
+                </button>
+                
+                {/* 검색바는 1024px 이상에서만 표시 */}
+                <div className="hidden desktop-search-900 items-center h-11">
                   <SearchBar
                     placeholder={t('study.search_placeholder')}
                     value={keyword}
@@ -398,7 +542,7 @@ const StudyListPage = () => {
 
               {/* 모바일: 검색 전용 모달 */}
               {showSearch && (
-                <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-20 md:hidden">
+                <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-20 lg:hidden">
                   <div className="bg-white dark:bg-secondary w-[90%] max-w-sm rounded-xl shadow-lg p-4 flex flex-col gap-4">
                     {/* 헤더 */}
                     <div className="flex justify-between items-center">
@@ -424,6 +568,7 @@ const StudyListPage = () => {
                         onSubmit={() => {
                           setShowSearch(false); // 검색 후 모달 닫기
                         }}
+                        useSecondaryBg={true}
                       />
                     </div>
                   </div>

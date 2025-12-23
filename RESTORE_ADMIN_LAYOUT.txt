@@ -1,2 +1,0 @@
-git checkout HEAD -- src/pages/admin/AdminLayout.tsx
-sed -i '119s/overflow-hidden/overflow-x-hidden/' src/pages/admin/AdminLayout.tsx

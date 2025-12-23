@@ -364,7 +364,10 @@
     "reason_rejoin": "再加入のため",
     "reason_privacy": "個人情報/セキュリティの懸念",
     "reason_feature": "機能に不満がある",
-    "reason_other": "その他"
+    "reason_other": "その他",
+    "alarm_chat": "チャット通知",
+    "alarm_chat_desc": "新しいチャットメッセージを受信したときに通知を受け取ります。",
+    "saved": "設定が保存されました。"
   },
   "profile": {
     "edit_profile": "プロフィール編集",

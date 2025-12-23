@@ -307,7 +307,10 @@
     "reason_rejoin": "Para entrar novamente",
     "reason_privacy": "Preocupações com privacidade",
     "reason_feature": "Insatisfeito com recursos",
-    "reason_other": "Outro"
+    "reason_other": "Outro",
+    "alarm_chat": "Notificações de bate-papo",
+    "alarm_chat_desc": "Receba notificações quando receber novas mensagens de bate-papo.",
+    "saved": "Configurações salvas."
   },
   "profile": {
     "edit_profile": "Editar perfil",

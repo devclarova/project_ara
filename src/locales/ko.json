@@ -289,6 +289,8 @@
     "alarm_like_desc": "누군가가 게시물을 좋아하면 알림을 받습니다.",
     "alarm_follow": "팔로우 알림",
     "alarm_follow_desc": "누군가가 회원님을 팔로우하면 알림을 받습니다.",
+    "alarm_chat": "채팅 알림",
+    "alarm_chat_desc": "새로운 채팅 메시지를 받으면 알림을 받습니다.",
     "privacy": "개인정보 설정",
     "change_password": "비밀번호 변경",
     "connect_sns": "SNS 계정 연결",
@@ -341,7 +343,8 @@
     "reason_rejoin": "재가입 목적",
     "reason_privacy": "개인정보/보안 우려",
     "reason_feature": "기능 불만족",
-    "reason_other": "기타"
+    "reason_other": "기타",
+    "saved": "설정이 저장되었습니다."
   },
   "profile": {
     "edit_profile": "프로필 편집",

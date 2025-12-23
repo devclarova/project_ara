@@ -271,7 +271,10 @@
     "reason_rejoin": "Um wieder beizutreten",
     "reason_privacy": "Datenschutzbedenken",
     "reason_feature": "Unzufrieden mit Funktionen",
-    "reason_other": "Andere"
+    "reason_other": "Andere",
+    "alarm_chat": "Chat-Benachrichtigungen",
+    "alarm_chat_desc": "Erhalten Sie Benachrichtigungen, wenn Sie neue Chat-Nachrichten erhalten.",
+    "saved": "Einstellungen gespeichert."
   },
   "profile": {
     "edit_profile": "Profil bearbeiten",

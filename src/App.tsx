@@ -144,11 +144,11 @@ function AppInner() {
         {!hideHeader && <Header />}
 
         {/* 헤더가 있을 때만 상단 여백 주기 (고정 헤더 높이 보정) */}
-        <main
-          className={
-            hideHeader ? 'flex-1' : 'flex-1 pt-[73px] sm:pt-[81px] mid:pt-[81px] md:pt-[97px]'
-          }
-        >
+          <main
+            className={
+              hideHeader ? 'flex-1' : 'flex-1 pt-[57px] sm:pt-[73px] lg:pt-[81px] xl:pt-[97px]'
+            }
+          >
           <Routes>
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/" element={<LandingPage />} />

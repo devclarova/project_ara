@@ -722,6 +722,10 @@ export type Database = {
           nickname_normalized: string | null;
           nickname_script: string | null;
           nickname_set_at: string | null;
+          notify_chat: boolean;
+          notify_comment: boolean;
+          notify_follow: boolean;
+          notify_like: boolean;
           privacy_agreed: boolean;
           tos_agreed: boolean;
           updated_at: string;

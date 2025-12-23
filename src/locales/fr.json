@@ -271,7 +271,10 @@
     "reason_rejoin": "Pour rejoindre à nouveau",
     "reason_privacy": "Problèmes de confidentialité",
     "reason_feature": "Insatisfait des fonctionnalités",
-    "reason_other": "Autre"
+    "reason_other": "Autre",
+    "alarm_chat": "Notifications de discussion",
+    "alarm_chat_desc": "Recevez des notifications lorsque vous recevez de nouveaux messages de discussion.",
+    "saved": "Paramètres enregistrés."
   },
   "profile": {
     "edit_profile": "Éditer profil",

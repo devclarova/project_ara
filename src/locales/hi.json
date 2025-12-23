@@ -304,7 +304,10 @@
     "reason_rejoin": "फिर से जुड़ने के लिए",
     "reason_privacy": "गोपनीयता चिंता",
     "reason_feature": "सुविधाओं से असंतुष्ट",
-    "reason_other": "अन्य"
+    "reason_other": "अन्य",
+    "alarm_chat": "चैट सूचनाएं",
+    "alarm_chat_desc": "जब आपको नए चैट संदेश मिलते हैं तो सूचनाएं प्राप्त करें।",
+    "saved": "Settings saved."
   },
   "profile": {
     "edit_profile": "प्रोफाइल संपादित करें",

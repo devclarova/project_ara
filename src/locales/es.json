@@ -270,7 +270,10 @@
     "reason_rejoin": "Para volver a unirse",
     "reason_privacy": "Preocupaciones de privacidad",
     "reason_feature": "Insatisfecho con las funciones",
-    "reason_other": "Otro"
+    "reason_other": "Otro",
+    "alarm_chat": "Notificaciones de chat",
+    "alarm_chat_desc": "Recibe notificaciones cuando recibas nuevos mensajes de chat.",
+    "saved": "Configuración guardada."
   },
   "profile": {
     "edit_profile": "Editar perfil",

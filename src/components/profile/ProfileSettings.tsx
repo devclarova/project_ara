@@ -6,6 +6,7 @@ import type { MenuId, SidebarItem } from '@/types/settings';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
+import SearchBar from '@/components/ui/SearchBar';
 import SettingsContent from './SettingsContent';
 import SettingsLayout from './SettingsLayout';
 import SettingsSidebar from './SettingsSidebar';
@@ -147,9 +148,11 @@ export default function ProfileSettings() {
           <main className="px-4 sm:px-6 md:px-8 py-6 md:py-8 text-[17px] md:text-[18px] text-gray-900 dark:text-gray-100 transition-colors">
             {/* 상단 검색 인풋 여백 */}
             <div className="mb-4 md:mb-6">
-              <Input 
+              <SearchBar
                 placeholder={t('common.search_placeholder', 'Search...')} 
+                value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
+                onSubmit={() => {}}
               />
             </div>
 
@@ -172,19 +175,17 @@ export default function ProfileSettings() {
               />
             ) : showMenuOnMobile ? (
               // 모바일: 메뉴 화면
-              <div className="mt-4">
-                <SettingsSidebar
-                  title={t('settings.account_settings')}
-                  items={filteredItems}
-                  activeId={activeId}
-                  onChange={handleChange}
-                  className="w-full"
-                  searchQuery={searchQuery}
-                />
-              </div>
+              <SettingsSidebar
+                title={t('settings.account_settings')}
+                items={filteredItems}
+                activeId={activeId}
+                onChange={handleChange}
+                className="w-full"
+                searchQuery={searchQuery}
+              />
             ) : (
               // 모바일: 설정 내용 화면
-              <div className="mt-4">{rightPanel}</div>
+              rightPanel
             )}
           </main>
         </div>

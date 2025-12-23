@@ -119,7 +119,14 @@ function SignInCard() {
   const [notConfirmed, setNotConfirmed] = useState(false);
   const [resendMsg, setResendMsg] = useState('');
   const [suppressEffects, setSuppressEffects] = useState(false);
-  const [remember, setRemember] = useState(false);
+  const [remember, setRemember] = useState(() => {
+    // Load previous preference from localStorage
+    try {
+      return localStorage.getItem('auth-remember-me') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const location = useLocation();
 
   const handleChange = (field: 'email' | 'pw', value: string) => {
@@ -165,6 +172,13 @@ function SignInCard() {
     }
 
     // 로그인 시도(직접 호출; useAuth.signIn 사용해도 무방)
+    // Save remember preference BEFORE login so storage adapter can use it
+    try {
+      localStorage.setItem('auth-remember-me', remember.toString());
+    } catch (e) {
+      console.warn('Failed to save remember preference:', e);
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email: normalizedEmail,
       password: pwValue,
@@ -225,7 +239,7 @@ function SignInCard() {
       await postSignInRoute(navigate);
     } catch (e) {
       console.warn('[signin route] fallback social:', (e as any)?.message);
-      navigate('/social', { replace: true });
+      navigate('/studyList', { replace: true });
     } finally {
       setLoading(false);
     }
@@ -414,7 +428,15 @@ function SignInCard() {
         <button
           type="button"
           className="w-full flex items-center justify-center gap-2 border border-solid border-gray-300 dark:border-gray-600 rounded-xl py-2 sm:py-3 text-sm sm:text-base font-medium text-black bg-[#fff] hover:bg-gray-50 dark:hover:bg-gray-100/90 transition-opacity dark:hover:opacity-90"
-          onClick={signInWithGoogle}
+          onClick={() => {
+            // Save remember preference before OAuth
+            try {
+              localStorage.setItem('auth-remember-me', remember.toString());
+            } catch (e) {
+              console.warn('Failed to save remember preference:', e);
+            }
+            signInWithGoogle();
+          }}
         >
           <img src="/images/google_logo.png" alt="Sign in with Google" className="w-5 h-5" />
           <span>{t('auth.login_with_google')}</span>
@@ -422,7 +444,15 @@ function SignInCard() {
         <button
           type="button"
           className="w-full flex items-center justify-center gap-2 border border-gray-300 dark:border-gray-600 rounded-xl py-2 sm:py-3 text-sm sm:text-base font-medium text-black bg-[#FEE500] hover:opacity-80 transition-opacity"
-          onClick={signInWithKakao}
+          onClick={() => {
+            // Save remember preference before OAuth
+            try {
+              localStorage.setItem('auth-remember-me', remember.toString());
+            } catch (e) {
+              console.warn('Failed to save remember preference:', e);
+            }
+            signInWithKakao();
+          }}
         >
           <img src="/images/kakao_logo.png" alt="Sign in with Kakao" className="w-5 h-5" />
           <span>{t('auth.login_with_kakao')}</span>

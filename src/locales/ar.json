@@ -306,7 +306,10 @@
     "reason_rejoin": "لإعادة الانضمام",
     "reason_privacy": "مخاوف الخصوصية",
     "reason_feature": "غير راض عن الميزات",
-    "reason_other": "آخر"
+    "reason_other": "آخر",
+    "alarm_chat": "إشعارات الدردشة",
+    "alarm_chat_desc": "احصل على إشعارات عند تلقي رسائل دردشة جديدة.",
+    "saved": "تم حفظ الإعدادات"
   },
   "profile": {
     "edit_profile": "تعديل الملف الشخصي",

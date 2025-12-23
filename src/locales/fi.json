@@ -306,7 +306,10 @@
     "reason_rejoin": "Liittyäkseni uudelleen",
     "reason_privacy": "Yksityisyyshuolet",
     "reason_feature": "Tyytymätön ominaisuuksiin",
-    "reason_other": "Muu"
+    "reason_other": "Muu",
+    "alarm_chat": "Chat-ilmoitukset",
+    "alarm_chat_desc": "Saat ilmoituksen, kun saat uusia chat-viestejä.",
+    "saved": "Asetukset tallennettu."
   },
   "profile": {
     "edit_profile": "Muokkaa profiilia",
