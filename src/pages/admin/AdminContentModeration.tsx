@@ -8,15 +8,17 @@ import {
   Search
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 type ContentType = 'post' | 'comment' | 'chat';
 
 const AdminContentModeration = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<ContentType>('post');
 
   const handleDelete = (id: string, type: string) => {
     if (confirm('정말로 이 콘텐츠를 삭제하시겠습니까? 복구할 수 없습니다.')) {
-      toast.success(`${type} (ID: ${id}) 가 삭제되었습니다.`);
+      toast.success(t('admin.content_deleted', { type, id }));
     }
   };
 

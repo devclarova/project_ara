@@ -119,7 +119,8 @@
     "restore_desc_1": "Tài khoản này đang trong thời gian ân hạn xóa.",
     "restore_desc_2": "Bạn có muốn khôi phục tài khoản không?",
     "restore_remaining": "Còn {{days}} ngày cho đến khi xóa vĩnh viễn.",
-    "restore_confirm": "Khôi phục tài khoản"
+    "restore_confirm": "Khôi phục tài khoản",
+    "signin": "Đăng nhập"
   },
   "signup": {
     "title_social": "Đăng Ký Mạng Xã Hội",
@@ -222,8 +223,8 @@
     "block": "Chặn",
     "unblock": "Bỏ chặn",
     "report": "Báo cáo",
-    "cancel_like": "Unliked.",
-    "success_like": "Liked."
+    "cancel_like": "Bỏ thích",
+    "success_like": "Đã thích"
   },
   "settings": {
     "languageSelect": "Ngôn ngữ",
@@ -305,7 +306,10 @@
     "reason_rejoin": "Để tham gia lại",
     "reason_privacy": "Lo ngại về quyền riêng tư",
     "reason_feature": "Không hài lòng với tính năng",
-    "reason_other": "Khác"
+    "reason_other": "Khác",
+    "alarm_chat": "Thông báo trò chuyện",
+    "alarm_chat_desc": "Nhận thông báo khi bạn nhận được tin nhắn trò chuyện mới.",
+    "saved": "Đã lưu cài đặt."
   },
   "profile": {
     "edit_profile": "Sửa hồ sơ",
@@ -367,7 +371,9 @@
     "cannot_delete": "Không thể xóa",
     "deleted_reply": "Câu trả lời này đã bị xóa",
     "deleted_or_not_exist": "Bài viết này đã bị xóa hoặc không tồn tại",
-    "deleted_while_viewing": "Bài viết này đã bị xóa."
+    "deleted_while_viewing": "Bài viết này đã bị xóa.",
+    "login_to_reply": "Bạn có thể viết bình luận sau khi đăng nhập.",
+    "join_community_desc": "Vui lòng đăng nhập hoặc đăng ký để tham gia cộng đồng."
   },
   "trending": {
     "title": "Xu hướng",
@@ -529,5 +535,25 @@
   "translation": {
     "login_required": "Vui lòng đăng nhập để sử dụng tính năng dịch.",
     "guest_limit_reached": "Bạn đã sử dụng hết bản dịch miễn phí. Đăng nhập để tiếp tục."
+  },
+  "admin": {
+    "report_processed": "Báo cáo đã được xử lý.",
+    "report_rejected": "Báo cáo đã bị từ chối.",
+    "no_permission": "Không có quyền quản trị.",
+    "login_success": "Đăng nhập quản trị thành công.",
+    "study_deleted": "Nội dung học tập đã bị xóa.",
+    "study_uploaded": "Tải lên nội dung học tập thành công!",
+    "goods_registered": "Đăng ký sản phẩm thành công!",
+    "goods_deleted": "Sản phẩm đã bị xóa.",
+    "goods_hidden": "Đã ẩn sản phẩm",
+    "goods_visible": "Sản phẩm đang hiển thị",
+    "study_hidden": "Đã ẩn nội dung học tập",
+    "study_visible": "Nội dung học tập đang hiển thị",
+    "permission_check_error": "Error checking permissions.",
+    "option_group_delete_wip": "Option group deletion (WIP)",
+    "option_group_add_wip": "Option group addition (WIP)",
+    "content_deleted": "{{type}} (ID: {{id}}) deleted.",
+    "logged_out": "Logged out",
+    "logout_error": "Error during logout"
   }
 }

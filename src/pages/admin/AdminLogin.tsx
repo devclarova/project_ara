@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 const AdminLogin = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,7 +28,7 @@ const AdminLogin = () => {
       await checkAdminAndNavigate(authData.user.id);
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.message || '로그인에 실패했습니다.');
+      toast.error(error.message || t('auth.auth_failed'));
       setIsLoading(false);
     }
   };
@@ -45,7 +47,7 @@ const AdminLogin = () => {
       if (error) throw error;
     } catch (error: any) {
       console.error('Social login error:', error);
-      toast.error(error.message || '소셜 로그인에 실패했습니다.');
+      toast.error(error.message || t('auth.auth_failed'));
       setIsLoading(false);
     }
   };
@@ -63,17 +65,17 @@ const AdminLogin = () => {
       if (!userData?.is_admin) {
         // 관리자가 아닌 경우
         await supabase.auth.signOut();
-        toast.error('관리자 권한이 없습니다.');
+        toast.error(t('admin.no_permission'));
         setIsLoading(false);
         return;
       }
 
       // 관리자 확인 완료
-      toast.success('관리자 로그인 성공');
+      toast.success(t('admin.login_success'));
       navigate('/admin');
     } catch (error: any) {
       console.error('Admin check error:', error);
-      toast.error('권한 확인 중 오류가 발생했습니다.');
+      toast.error(t('admin.permission_check_error'));
       setIsLoading(false);
     }
   };

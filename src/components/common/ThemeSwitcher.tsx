@@ -30,15 +30,25 @@ export default function ThemeSwitcher({ open, onOpenChange }: Props) {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="rounded-full w-10 h-10 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 ring-0 outline-none border-none"
+          className="rounded-full w-10 h-10 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 ring-0 outline-none border-none group"
         >
-          {theme === 'dark' ? (
-             <Moon className="h-6 w-6 text-gray-700 dark:text-gray-300" style={{ width: '24px', height: '24px' }} />
-          ) : theme === 'light' ? (
-             <Sun className="h-6 w-6 text-gray-700 dark:text-gray-300" style={{ width: '24px', height: '24px' }} />
-          ) : (
-             <Laptop className="h-6 w-6 text-gray-700 dark:text-gray-300" style={{ width: '24px', height: '24px' }} />
-          )}
+          <div className={`relative w-7 h-7 rounded-full shadow-md overflow-hidden group-hover:scale-110 transition-transform duration-300 flex items-center justify-center
+            ${theme === 'light' ? 'bg-amber-100' : theme === 'dark' ? 'bg-indigo-950' : 'bg-slate-200 dark:bg-slate-800'}
+          `}>
+             {/* 아이콘 */}
+             {theme === 'dark' ? (
+                 <Moon className="h-4 w-4 text-indigo-200 z-10 relative" />
+              ) : theme === 'light' ? (
+                 <Sun className="h-4 w-4 text-amber-600 z-10 relative" />
+              ) : (
+                 <Laptop className="h-4 w-4 text-slate-600 dark:text-slate-300 z-10 relative" />
+              )}
+             
+             {/* 배경 그라데이션 (Glossy Effect) */}
+             <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-black/10 via-transparent to-white/40 pointer-events-none" />
+             {/* 상단 하이라이트 */}
+             <div className="absolute inset-0 rounded-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.6)] pointer-events-none" />
+          </div>
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>

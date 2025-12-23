@@ -19,8 +19,10 @@ import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import ThemeSwitcher from '../../components/common/ThemeSwitcher';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 const AdminLayout = () => {
+  const { t } = useTranslation();
   // Sidebar closed by default on mobile, will be open on desktop via CSS
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
@@ -28,11 +30,11 @@ const AdminLayout = () => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      toast.success('로그아웃되었습니다');
+      toast.success(t('admin.logged_out'));
       window.location.href = '/';  // 강제 리다이렉트
     } catch (error) {
       console.error('Logout error:', error);
-      toast.error('로그아웃 중 오류가 발생했습니다');
+      toast.error(t('admin.logout_error'));
     }
   };
 

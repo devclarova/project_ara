@@ -119,7 +119,8 @@
     "restore_desc_1": "এই অ্যাকাউন্টটি বর্তমানে মুছে ফেলার গ্রেস পিরিয়ডে রয়েছে।",
     "restore_desc_2": "আপনি কি আপনার অ্যাকাউন্ট পুনরুদ্ধার করতে চান?",
     "restore_remaining": "স্থায়ীভাবে মুছে ফেলা পর্যন্ত {{days}} দিন বাকি আছে।",
-    "restore_confirm": "অ্যাকাউন্ট পুনরুদ্ধার করুন"
+    "restore_confirm": "অ্যাকাউন্ট পুনরুদ্ধার করুন",
+    "signin": "সাইন ইন"
   },
   "signup": {
     "title_social": "সোশ্যাল সাইন আপ",
@@ -222,8 +223,8 @@
     "block": "ব্লক",
     "unblock": "আনব্লক",
     "report": "রিপোর্ট",
-    "cancel_like": "Unliked.",
-    "success_like": "Liked."
+    "cancel_like": "অপছন্দ করা হয়েছে",
+    "success_like": "পছন্দ হয়েছে"
   },
   "settings": {
     "languageSelect": "ভাষা নির্বাচন",
@@ -305,7 +306,10 @@
     "reason_rejoin": "পুনরায় যোগ দেওয়ার জন্য",
     "reason_privacy": "গোপনীয়তা উদ্বেগ",
     "reason_feature": "বৈশিষ্ট্য নিয়ে অসন্তুষ্ট",
-    "reason_other": "অন্যান্য"
+    "reason_other": "অন্যান্য",
+    "alarm_chat": "চ্যাট বিজ্ঞপ্তি",
+    "alarm_chat_desc": "নতুন চ্যাট বার্তা পেলে বিজ্ঞপ্তি পান।",
+    "saved": "Settings saved."
   },
   "profile": {
     "edit_profile": "প্রোফাইল সম্পাদনা",
@@ -367,7 +371,9 @@
     "cannot_delete": "মুছে ফেলা যাবে না",
     "deleted_reply": "এই উত্তরটি মুছে ফেলা হয়েছে",
     "deleted_or_not_exist": "এই পোস্টটি মুছে ফেলা হয়েছে বা বিদ্যমান নেই",
-    "deleted_while_viewing": "এই পোস্টটি মুছে ফেলা হয়েছে।"
+    "deleted_while_viewing": "এই পোস্টটি মুছে ফেলা হয়েছে।",
+    "login_to_reply": "লগইন করার পরে আপনি মন্তব্য লিখতে পারবেন।",
+    "join_community_desc": "অনুগ্রহ করে কমিউনিটিতে যোগ দিতে সাইন ইন বা সাইন আপ করুন।"
   },
   "trending": {
     "title": "আপনার জন্য ট্রেন্ডিং",
@@ -529,5 +535,25 @@
   "translation": {
     "login_required": "অনুবাদ বৈশিষ্ট্য ব্যবহার করতে অনুগ্রহ করে লগইন করুন।",
     "guest_limit_reached": "আপনি সমস্ত বিনামূল্যে অনুবাদ ব্যবহার করে ফেলেছেন। চালিয়ে যেতে লগইন করুন।"
+  },
+  "admin": {
+    "report_processed": "রিপোর্টটি প্রসেস করা হয়েছে।",
+    "report_rejected": "রিপোর্টটি প্রত্যাখ্যান করা হয়েছে।",
+    "no_permission": "অ্যাডমিন অনুমতি নেই।",
+    "login_success": "অ্যাডমিন লগইন সফল।",
+    "study_deleted": "স্টাডি কন্টেন্ট মুছে ফেলা হয়েছে।",
+    "study_uploaded": "স্টাডি কন্টেন্ট সফলভাবে আপলোড করা হয়েছে!",
+    "goods_registered": "পণ্য সফলভাবে নিবন্ধিত হয়েছে!",
+    "goods_deleted": "পণ্য মুছে ফেলা হয়েছে।",
+    "goods_hidden": "পণ্য লুকানো হয়েছে",
+    "goods_visible": "পণ্য এখন দৃশ্যমান",
+    "study_hidden": "স্টাডি কন্টেন্ট লুকানো হয়েছে",
+    "study_visible": "স্টাডি কন্টেন্ট এখন দৃশ্যমান",
+    "permission_check_error": "Error checking permissions.",
+    "option_group_delete_wip": "Option group deletion (WIP)",
+    "option_group_add_wip": "Option group addition (WIP)",
+    "content_deleted": "{{type}} (ID: {{id}}) deleted.",
+    "logged_out": "Logged out",
+    "logout_error": "Error during logout"
   }
 }

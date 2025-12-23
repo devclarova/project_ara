@@ -116,7 +116,8 @@
     "restore_desc_1": "此账户目前处于注销宽限期。",
     "restore_desc_2": "您想恢复账户并继续使用吗？",
     "restore_remaining": "距离永久删除还有{{days}}天。",
-    "restore_confirm": "恢复账户"
+    "restore_confirm": "恢复账户",
+    "signin": "登录"
   },
   "signup": {
     "title_social": "社交账号注册",
@@ -230,8 +231,8 @@
     "edit_mode": "正在切换到编辑模式。",
     "block_success": "已屏蔽 {{name}}。",
     "unblock_success": "已解除对 {{name}} 的屏蔽。",
-    "cancel_like": "取消点赞。",
-    "success_like": "已点赞。"
+    "cancel_like": "取消点赞",
+    "success_like": "已点赞"
   },
   "settings": {
     "languageSelect": "语言选择",
@@ -317,7 +318,10 @@
     "reason_rejoin": "为了重新注册",
     "reason_privacy": "隐私/安全担忧",
     "reason_feature": "功能不满意",
-    "reason_other": "其他"
+    "reason_other": "其他",
+    "alarm_chat": "聊天通知",
+    "alarm_chat_desc": "当您收到新的聊天消息时接收通知。",
+    "saved": "设置已保存。"
   },
   "profile": {
     "edit_profile": "编辑资料",
@@ -379,7 +383,9 @@
     "cannot_delete": "Cannot delete",
     "deleted_reply": "该回复已被删除",
     "deleted_or_not_exist": "该帖子已被删除或不存在",
-    "deleted_while_viewing": "该帖子已被删除。"
+    "deleted_while_viewing": "该帖子已被删除。",
+    "login_to_reply": "登录后您可以撰写评论。",
+    "join_community_desc": "请登录或注册以加入社区。"
   },
   "trending": {
     "title": "趋势",
@@ -681,5 +687,25 @@
   "translation": {
     "login_required": "登录后可使用翻译功能。",
     "guest_limit_reached": "您已用完所有免费翻译次数。请登录继续使用。"
+  },
+  "admin": {
+    "report_processed": "举报已处理。",
+    "report_rejected": "举报已驳回。",
+    "no_permission": "没有管理员权限。",
+    "login_success": "管理员登录成功。",
+    "study_deleted": "学习内容已删除。",
+    "study_uploaded": "学习内容上传成功！",
+    "goods_registered": "商品注册成功！",
+    "goods_deleted": "商品已删除。",
+    "goods_hidden": "商品已隐藏",
+    "goods_visible": "商品已显示",
+    "study_hidden": "学习内容已隐藏",
+    "study_visible": "学习内容已显示",
+    "permission_check_error": "Error checking permissions.",
+    "option_group_delete_wip": "Option group deletion (WIP)",
+    "option_group_add_wip": "Option group addition (WIP)",
+    "content_deleted": "{{type}} (ID: {{id}}) deleted.",
+    "logged_out": "Logged out",
+    "logout_error": "Error during logout"
   }
 }

@@ -181,6 +181,7 @@ export default function PopularContentSection() {
                     comments={item.comments}
                     basePath={user ? '/study' : '/guest-study'}
                     isGuest={!user}
+                    isPreview={!user}
                     openLoginModal={() => setShowSignIn(true)}
                     translatedTitleProp={trTitles[index]}
                     translatedDescProp={trDescs[index]}

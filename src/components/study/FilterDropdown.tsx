@@ -51,7 +51,9 @@ const FilterDropdown = ({ value, onApply, labelMap }: FilterDropdownProps) => {
       </button>
 
       {open && (
-        <div className="absolute left-0 mt-2 w-64 bg-white dark:bg-secondary rounded-lg shadow-lg border border-gray-100 dark:border-secondary z-[999]">
+        <div 
+          className="absolute mt-2 w-48 bg-white dark:bg-secondary rounded-lg shadow-lg border border-gray-100 dark:border-secondary z-[999] right-0 lg:right-auto lg:left-0"
+        >
           <div className="p-4 space-y-4">
             {/* 난이도 */}
             <div>

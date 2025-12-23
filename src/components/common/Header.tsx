@@ -248,7 +248,7 @@ function Header() {
           className="w-10 sm:w-14 lg:w-16 xl:w-20 cursor-pointer"
         />
         {/* 데스크탑 메뉴 (설정은 제거: 프로필 드롭다운에서만 접근) */}
-        <div className="hidden md:flex gap-1 lg:gap-3 xl:gap-4">
+        <div className="hidden lg:flex gap-2 lg:gap-4 xl:gap-5 2xl:gap-6">
           {menuItems
             .filter(item => item.key !== 'settings')
             .map(item => {
@@ -309,7 +309,7 @@ function Header() {
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         {/* 데스크탑 프로필 영역 */}
-        <div className="hidden md:flex items-center gap-2 lg:gap-3 flex-shrink-0 min-w-fit">
+        <div className="hidden lg:flex items-center gap-2 lg:gap-3 flex-shrink-0 min-w-fit">
           <div className="hidden sm:block">
             <ThemeSwitcher
               open={isThemeMenuOpen}
@@ -500,7 +500,7 @@ function Header() {
           )}
         </div>
         <div
-          className="md:hidden flex items-center gap-0" // 간격을 동일하게 하기 위해 gap-0 또는 gap-1 사용
+          className="lg:hidden flex items-center gap-0" // 간격을 동일하게 하기 위해 gap-0 또는 gap-1 사용
           onClick={e => {
             e.stopPropagation();
           }}
@@ -561,7 +561,7 @@ function Header() {
       <div
         ref={menuRef}
         className={`absolute top-full right-0 -mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg
-                   flex flex-col p-2 md:hidden z-[150]
+                   flex flex-col p-2 lg:hidden z-[150]
                    dark:bg-secondary dark:border-gray-700
                    transition-all duration-300 ease-in-out
                    ${

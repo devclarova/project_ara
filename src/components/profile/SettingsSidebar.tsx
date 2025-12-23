@@ -28,7 +28,7 @@ export default function SettingsSidebar({
 
   return (
     <aside
-      className={`bg-white dark:bg-secondary rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)] w-full ${className}`}
+      className={`bg-white dark:bg-secondary rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)] min-h-[420px] max-h-[calc(100vh-250px)] overflow-y-auto w-full ${className}`}
     >
       <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{displayTitle}</h2>
       {items.length === 0 ? (
@@ -36,7 +36,7 @@ export default function SettingsSidebar({
             <p className="text-sm">{t('chat.no_result')}</p>
         </div>
       ) : (
-      <ul className="space-y-1">
+      <ul className="space-y-2">
         {items.map(it => {
           const active = activeId === it.id;
           return (

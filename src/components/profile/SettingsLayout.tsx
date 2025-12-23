@@ -13,8 +13,8 @@ export default function SettingsLayout({
 }) {
   return (
     <div className={`flex ${gapClass}`}>
-      {left}
-      {right}
+      <div className="flex-1 min-w-0">{left}</div>
+      <div className="flex-1 min-w-0">{right}</div>
     </div>
   );
 }

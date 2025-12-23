@@ -120,7 +120,8 @@
     "restore_desc_1": "Esta cuenta está actualmente en el período de gracia de eliminación.",
     "restore_desc_2": "¿Desea restaurar su cuenta?",
     "restore_remaining": "Quedan {{days}} días para la eliminación permanente.",
-    "restore_confirm": "Restaurar cuenta"
+    "restore_confirm": "Restaurar cuenta",
+    "signin": "Iniciar sesión"
   },
   "signup": {
     "title_social": "Registro con Redes Sociales",
@@ -186,8 +187,8 @@
     "block": "Bloquear",
     "unblock": "Desbloquear",
     "report": "Reportar",
-    "cancel_like": "Ya no me gusta.",
-    "success_like": "Me gusta."
+    "cancel_like": "Ya no me gusta",
+    "success_like": "Me gusta"
   },
   "settings": {
     "languageSelect": "Idioma",
@@ -269,7 +270,10 @@
     "reason_rejoin": "Para volver a unirse",
     "reason_privacy": "Preocupaciones de privacidad",
     "reason_feature": "Insatisfecho con las funciones",
-    "reason_other": "Otro"
+    "reason_other": "Otro",
+    "alarm_chat": "Notificaciones de chat",
+    "alarm_chat_desc": "Recibe notificaciones cuando recibas nuevos mensajes de chat.",
+    "saved": "Configuración guardada."
   },
   "profile": {
     "edit_profile": "Editar perfil",
@@ -331,7 +335,9 @@
     "cannot_delete": "No se puede eliminar",
     "deleted_reply": "Esta respuesta ha sido eliminada",
     "deleted_or_not_exist": "Esta publicación ha sido eliminada o no existe",
-    "deleted_while_viewing": "Esta publicación ha sido eliminada."
+    "deleted_while_viewing": "Esta publicación ha sido eliminada.",
+    "login_to_reply": "Puedes escribir comentarios después de iniciar sesión.",
+    "join_community_desc": "Por favor, inicia sesión o regístrate para unirte a la comunidad."
   },
   "trending": {
     "title": "Tendencias",
@@ -494,5 +500,25 @@
   "translation": {
     "login_required": "Inicia sesión para usar la función de traducción.",
     "guest_limit_reached": "Has usado todas tus traducciones gratuitas. Inicia sesión para continuar."
+  },
+  "admin": {
+    "report_processed": "Reporte procesado.",
+    "report_rejected": "Reporte rechazado.",
+    "no_permission": "Sin permiso de administrador.",
+    "login_success": "Inicio de sesión de administrador exitoso.",
+    "study_deleted": "Contenido de estudio eliminado.",
+    "study_uploaded": "¡Contenido de estudio subido con éxito!",
+    "goods_registered": "¡Producto registrado con éxito!",
+    "goods_deleted": "Producto eliminado.",
+    "goods_hidden": "Producto oculto",
+    "goods_visible": "Producto visible",
+    "study_hidden": "Contenido de estudio oculto",
+    "study_visible": "Contenido de estudio visible",
+    "permission_check_error": "Error checking permissions.",
+    "option_group_delete_wip": "Option group deletion (WIP)",
+    "option_group_add_wip": "Option group addition (WIP)",
+    "content_deleted": "{{type}} (ID: {{id}}) deleted.",
+    "logged_out": "Logged out",
+    "logout_error": "Error during logout"
   }
 }

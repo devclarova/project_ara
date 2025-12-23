@@ -317,7 +317,7 @@ export default function TweetCard({
         if (likeError && likeError.code !== '23505') throw likeError;
         
         // 토스트 메시지 (간단하게)
-        toast.success(t('common.success_like', '좋아요했습니다'));
+        toast.success(t('common.success_like'));
         
         // 2) 알림 추가 (자기 글 좋아요면 알림 안 보냄, 작성자 프로필 없으면 스킵)
         if (authorProfileId && authorProfileId !== likeUserId) {
@@ -345,7 +345,7 @@ export default function TweetCard({
           .eq('user_id', likeUserId);
         if (error) throw error;
         
-        toast.info(t('common.cancel_like', '좋아요를 취소했습니다'));
+        toast.info(t('common.cancel_like'));
         // 알림은 취소해도 남겨두는 정책이므로 건드리지 않음
       }
     } catch (err: any) {

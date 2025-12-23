@@ -1,4 +1,4 @@
-import TweetDetail from '../homes/tweet/TweetDetail';
+import TweetDetail from '../community/tweet/TweetDetail';
 import SnsLayout from './SnsLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSnsLoginGate } from '@/hooks/useSnsLoginGate';

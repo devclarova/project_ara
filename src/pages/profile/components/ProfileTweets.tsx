@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import TweetCard from '../../feature/TweetCard';
-import { ReplyCard } from '../../tweet/components/ReplyCard';
+import TweetCard from '@/pages/community/feature/TweetCard';
+import { ReplyCard } from '@/pages/community/tweet/components/ReplyCard';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { FeedItem, UIPost, UIReply } from '@/types/sns';
 import { tweetService } from '@/services/tweetService';
@@ -162,7 +162,7 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
             key={item.id}
             reply={item}
             highlight={false}
-            onUnlike={id => {
+            onUnlike={(id: string) => {
                // 좋아요 탭에서는 좋아요 취소 시 목록에서 즉시 제거
                if (activeTab === 'likes') {
                  setTweets(prev => prev.filter(t => t.id !== id));

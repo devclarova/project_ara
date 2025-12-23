@@ -15,23 +15,23 @@ import ProfileSettings from './components/profile/ProfileSettings';
 import { DirectChatProvider } from './contexts/DirectChatContext';
 import { NewChatNotificationProvider } from './contexts/NewChatNotificationContext';
 import AdminLogin from './pages/admin/AdminLogin';
-import AuthCallback from './pages/AuthCallback';
+import AuthCallback from './pages/auth/AuthCallback';
 import DirectChatPage from './pages/chat/DirectChatPage';
 import GoodsDetailPage from './pages/goods/GoodsDetailPage';
 import GoodsPage from './pages/goods/GoodsPage';
-import HomesTest from './pages/homes/HomesTest';
-import NotFoundPage from './pages/homes/NotFoundPage';
-import HNotificationsPage from './pages/homes/notifications/HNotificationsPage';
-import ProfileAsap from './pages/homes/profile/ProfileAsap';
+import CommunityFeed from './pages/community/CommunityFeed';
+import CommunityLayout from './pages/community/CommunityLayout';
+import NotFoundPage from './pages/community/NotFoundPage';
+import HNotificationsPage from './pages/notifications/HNotificationsPage';
+import ProfileAsap from './pages/profile/ProfileAsap';
 import LandingPage from './pages/LandingPage';
-import SignInPage from './pages/SignInPage';
-import SignUpPage from './pages/SignUpPage';
-import SignUpWizard from './pages/SignUpWizard';
+import SignInPage from './pages/auth/SignInPage';
+import SignUpPage from './pages/auth/SignUpPage';
+import SignUpWizard from './pages/auth/SignUpWizard';
 import SnsDetailPage from './pages/sns/SnsDetailPage';
 import SnsPage from './pages/sns/SnsPage';
 import StudyListPage from './pages/StudyListPage';
 import StudyPage from './pages/StudyPage';
-import TempHomePage from './pages/TempHomePage';
 import OnboardingWall from './routes/guards/OnboardingWall';
 import { Toaster } from 'sonner';
 import Footer from './components/common/Footer';
@@ -142,11 +142,11 @@ function AppInner() {
         {!hideHeader && <Header />}
 
         {/* 헤더가 있을 때만 상단 여백 주기 (고정 헤더 높이 보정) */}
-        <main
-          className={
-            hideHeader ? 'flex-1' : 'flex-1 pt-[73px] sm:pt-[81px] mid:pt-[81px] md:pt-[97px]'
-          }
-        >
+          <main
+            className={
+              hideHeader ? 'flex-1' : 'flex-1 pt-[57px] sm:pt-[73px] lg:pt-[81px] xl:pt-[97px]'
+            }
+          >
           <Routes>
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/" element={<LandingPage />} />
@@ -186,16 +186,14 @@ function AppInner() {
               <Route path="/signup/social" element={<SignUpWizard mode="social" />} />
               <Route element={<OnboardingWall />}>
                 <Route path="/study/:contents/:episode/:scene?" element={<StudyPage />} />
-                <Route path="/test" element={<TempHomePage />} />
                 <Route path="/settings" element={<ProfileSettings />} />
                 <Route path="/profile" element={<ProfileAsap />} />
                 <Route path="/profile/:username" element={<ProfileAsap />} />
-                <Route path="hometest" element={<HomesTest />} />
                 <Route path="hnotifications" element={<HNotificationsPage />} />
                 <Route path="chat" element={<DirectChatPage />} />
-
-                {/* <Route path="/finalhome" element={<Layout />}>
-                  <Route index element={<Home />} /> */}
+                <Route path="community" element={<CommunityLayout />}>
+                  <Route index element={<CommunityFeed />} />
+                </Route>
               </Route>
             </Route>
             {/* </Route> */}

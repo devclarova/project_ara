@@ -9,7 +9,7 @@ export default function SettingsContent({
 }) {
   return (
     <section
-      className={`bg-white dark:bg-secondary rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)] min-h-[420px] ${className}`}
+      className={`bg-white dark:bg-secondary rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)] min-h-[420px] max-h-[calc(100vh-250px)] overflow-y-auto ${className}`}
     >
       {children}
     </section>

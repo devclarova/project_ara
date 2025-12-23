@@ -88,9 +88,39 @@ export default function LanguageSwitcher({ open, onOpenChange }: LanguageSwitche
         <Button 
           variant="ghost" 
           size="icon" 
-          className="rounded-full w-10 h-10 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 ring-0 outline-none border-none"
+          className="rounded-full w-10 h-10 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 ring-0 outline-none border-none group"
         >
-          <Globe className="h-6 w-6 text-gray-700 dark:text-gray-300" style={{ width: '24px', height: '24px' }} />
+          {/* Globe 아이콘 대신 현재 언어 국기 표시 (Glossy Effect) */}
+          {(() => {
+            const currentIso = LANG_TO_ISO[i18n.language];
+            const currentFlagUrl = currentIso ? flagMap[currentIso] : null;
+            const currentEmoji = EMOJI_FLAGS[i18n.language];
+
+            if (currentFlagUrl) {
+              // 중국 국기는 별이 좌측 상단에 있으므로 object-left 적용 (원형 크롭 시 잘림 방지)
+              const isChina = currentIso === 'CN';
+              
+              return (
+                <div className="relative w-6 h-6 rounded-full shadow-md overflow-hidden group-hover:scale-110 transition-transform duration-300">
+                  <img 
+                    src={currentFlagUrl} 
+                    alt="Current Language" 
+                    className={`w-full h-full object-cover ${isChina ? 'object-left' : 'object-center'}`}
+                  />
+                  {/* 유리 질감 (Glossy Effect) - 상단 반사광 & 하단 그림자 */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-black/10 via-transparent to-white/50 pointer-events-none ring-1 ring-inset ring-black/5 dark:ring-white/10" />
+                  <div className="absolute inset-0 rounded-full shadow-[inset_0_2px_4px_rgba(255,255,255,0.4)] pointer-events-none" />
+                </div>
+              );
+            }
+            
+            // 국기 이미지가 없을 경우 (로딩 중이거나 에러) -> 기존 Globe 아이콘 유지하되 스타일링
+            if (currentEmoji) {
+               return <span className="text-2xl filter drop-shadow-sm hover:scale-110 transition-transform cursor-default">{currentEmoji}</span>;
+            }
+
+            return <Globe className="h-6 w-6 text-gray-700 dark:text-gray-300" style={{ width: '24px', height: '24px' }} />;
+          })()}
           <span className="sr-only">Toggle language</span>
         </Button>
       </DropdownMenuTrigger>

@@ -12,6 +12,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 // Types based on user requirements
 type DifficultyLevel = 'Easy' | 'Normal' | 'Hard';
@@ -35,6 +36,7 @@ interface Word {
 }
 
 const AdminStudyUpload = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'basic' | 'source' | 'content'>('basic');
   const [uploadType, setUploadType] = useState<'youtube' | 'direct'>('youtube');
   
@@ -135,7 +137,7 @@ const AdminStudyUpload = () => {
       cultureNotes,
       words
     });
-    toast.success('학습 콘텐츠가 성공적으로 업로드되었습니다!');
+    toast.success(t('admin.study_uploaded'));
   };
 
   // UI Components

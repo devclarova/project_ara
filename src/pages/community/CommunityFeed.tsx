@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react
 import { useOutletContext, useNavigationType } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import TweetCard from './feature/TweetCard';
+import TweetCard from '@/pages/community/feature/TweetCard';
 import SnsInlineEditor from '@/components/common/SnsInlineEditor';
 import { SnsStore } from '@/lib/snsState';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
@@ -23,7 +23,7 @@ const defaultOutletCtx: OutletCtx = {
 };
 const SNS_LAST_TWEET_ID_KEY = 'sns-last-tweet-id';
 const PAGE_SIZE = 10;
-export default function Home({ searchQuery }: HomeProps) {
+export default function CommunityFeed({ searchQuery }: HomeProps) {
   const outletCtx = useOutletContext<OutletCtx | null>() ?? defaultOutletCtx;
   const { newTweet, setNewTweet, searchQuery: outletSearchQuery } = outletCtx;
   const mergedSearchQuery = (searchQuery ?? outletSearchQuery ?? '').trim();

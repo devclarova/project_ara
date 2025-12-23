@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import NotificationCard from '../feature/NotificationCard';
+import NotificationCard from '@/pages/community/feature/NotificationCard';
 import { toast } from 'sonner';
 
 interface Notification {

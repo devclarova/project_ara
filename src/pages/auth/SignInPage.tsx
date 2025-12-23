@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import CheckboxSquare from '@/components/common/CheckboxSquare';
 import { Helmet } from 'react-helmet-async';
 import SignInCard from '@/components/auth/SignInCard';

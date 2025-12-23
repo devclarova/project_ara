@@ -119,7 +119,8 @@
     "restore_desc_1": "यह खाता वर्तमान में विलोपन अनुग्रह अवधि में है।",
     "restore_desc_2": "क्या आप अपना खाता बहाल करना चाहते हैं?",
     "restore_remaining": "स्थायी विलोपन तक {{days}} दिन शेष हैं।",
-    "restore_confirm": "खाता बहाल करें"
+    "restore_confirm": "खाता बहाल करें",
+    "signin": "साइन इन करें"
   },
   "signup": {
     "title_social": "सोशल साइन अप",
@@ -222,8 +223,8 @@
     "block": "ब्लॉक",
     "unblock": "अनब्लॉक",
     "report": "रिपोर्ट",
-    "cancel_like": "Unliked.",
-    "success_like": "Liked."
+    "cancel_like": "पसंद हटाया",
+    "success_like": "पसंद किया"
   },
   "settings": {
     "languageSelect": "भाषा चुनें",
@@ -303,7 +304,10 @@
     "reason_rejoin": "फिर से जुड़ने के लिए",
     "reason_privacy": "गोपनीयता चिंता",
     "reason_feature": "सुविधाओं से असंतुष्ट",
-    "reason_other": "अन्य"
+    "reason_other": "अन्य",
+    "alarm_chat": "चैट सूचनाएं",
+    "alarm_chat_desc": "जब आपको नए चैट संदेश मिलते हैं तो सूचनाएं प्राप्त करें।",
+    "saved": "Settings saved."
   },
   "profile": {
     "edit_profile": "प्रोफाइल संपादित करें",
@@ -365,7 +369,9 @@
     "cannot_delete": "हटाया नहीं जा सकता",
     "deleted_reply": "यह जवाब हटा दिया गया है",
     "deleted_or_not_exist": "यह पोस्ट हटा दी गई है या मौजूद नहीं है",
-    "deleted_while_viewing": "यह पोस्ट हटा दी गई है।"
+    "deleted_while_viewing": "यह पोस्ट हटा दी गई है।",
+    "login_to_reply": "लॉगिन करने के बाद आप टिप्पणियां लिख सकते हैं।",
+    "join_community_desc": "समुदाय में शामिल होने के लिए कृपया साइन इन करें या साइन अप करें।"
   },
   "trending": {
     "title": "आपके लिए ट्रेंडिंग",
@@ -527,5 +533,25 @@
   "translation": {
     "login_required": "अनुवाद सुविधा का उपयोग करने के लिए कृपया लॉगिन करें।",
     "guest_limit_reached": "आपने सभी मुफ़्त अनुवादों का उपयोग कर लिया है। जारी रखने के लिए लॉगिन करें।"
+  },
+  "admin": {
+    "report_processed": "रिपोर्ट संसाधित की गई।",
+    "report_rejected": "रिपोर्ट अस्वीकार कर दी गई।",
+    "no_permission": "कोई व्यवस्थापक अनुमति नहीं।",
+    "login_success": "व्यवस्थापक लॉगिन सफल।",
+    "study_deleted": "अध्ययन सामग्री हटा दी गई।",
+    "study_uploaded": "अध्ययन सामग्री सफलतापूर्वक अपलोड की गई!",
+    "goods_registered": "उत्पाद सफलतापूर्वक पंजीकृत!",
+    "goods_deleted": "उत्पाद हटा दिया गया।",
+    "goods_hidden": "उत्पाद छिपा दिया गया",
+    "goods_visible": "उत्पाद दिखाई दे रहा है",
+    "study_hidden": "अध्ययन सामग्री छिपा दी गई",
+    "study_visible": "अध्ययन सामग्री दिखाई दे रही है",
+    "permission_check_error": "Error checking permissions.",
+    "option_group_delete_wip": "Option group deletion (WIP)",
+    "option_group_add_wip": "Option group addition (WIP)",
+    "content_deleted": "{{type}} (ID: {{id}}) deleted.",
+    "logged_out": "Logged out",
+    "logout_error": "Error during logout"
   }
 }

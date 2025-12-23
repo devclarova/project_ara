@@ -20,30 +20,53 @@ const SUPABASE_URL = mustEnv('VITE_SUPABASE_URL').replace(/\/+$/, '');
 const SUPABASE_ANON_KEY = mustEnv('VITE_SUPABASE_ANON_KEY');
 
 /**
- * 브라우저 환경에서만 sessionStorage 사용
- * - 새로고침: 같은 탭에서는 세션 유지
- * - 탭/브라우저를 닫으면: 세션 삭제 → 재접속 시 로그아웃 상태
+ * Custom storage adapter for auto-login functionality
+ * - Uses localStorage when "remember me" is checked (persistent across browser restarts)
+ * - Uses sessionStorage when unchecked (cleared on browser/tab close)
  */
-const browserSessionStorage =
-  typeof window !== 'undefined' && 'sessionStorage' in window
-    ? window.sessionStorage
-    : undefined;
+const customStorage = {
+  getItem: (key: string): string | null => {
+    if (typeof window === 'undefined') return null;
+    // Check both storages, prioritize sessionStorage if exists
+    return sessionStorage.getItem(key) || localStorage.getItem(key);
+  },
+  setItem: (key: string, value: string): void => {
+    if (typeof window === 'undefined') return;
+    
+    // Check user preference from localStorage
+    const rememberMe = localStorage.getItem('auth-remember-me') === 'true';
+    
+    if (rememberMe) {
+      localStorage.setItem(key, value);
+     // Clean up from sessionStorage if it was there
+      sessionStorage.removeItem(key);
+    } else {
+      sessionStorage.setItem(key, value);
+      // Clean up from localStorage if it was there
+      localStorage.removeItem(key);
+    }
+  },
+  removeItem: (key: string): void => {
+    if (typeof window === 'undefined') return;
+    // Remove from both to ensure complete cleanup
+    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
+  },
+};
 
 /**
  * Browser Supabase Client (Typed)
- * - persistSession: 브라우저 세션 스토리지에 세션 유지
+ * - Custom storage adapter respects "remember me" preference
  * - autoRefreshToken: 토큰 만료 전 자동 갱신
  * - detectSessionInUrl: OAuth/Email 링크 콜백 쿼리에서 세션 감지
  */
 export const supabase = createClient<DatabaseWithRPC>(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    persistSession: true,
-    storage: browserSessionStorage, // ✅ localStorage 대신 sessionStorage 사용
+    storage: customStorage,
     autoRefreshToken: true,
+    persistSession: true,
     detectSessionInUrl: true,
   },
-  // 필요 시 전역 fetch/headers/logging 등 추가 가능
-  // global: { headers: { 'x-foo': 'bar' } },
 });
 
 export type SupabaseClientTyped = typeof supabase;
