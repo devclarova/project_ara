@@ -13,6 +13,26 @@
     "admin_dashboard": "Admin Dashboard",
     "goods": "Goods Shop"
   },
+  "admin": {
+    "report_processed": "Report processed.",
+    "report_rejected": "Report rejected.",
+    "no_permission": "No admin permission.",
+    "login_success": "Admin login successful",
+    "permission_check_error": "Error checking permissions.",
+    "study_deleted": "Study content deleted",
+    "study_uploaded": "Study content uploaded successfully!",
+    "goods_registered": "Product registered successfully!",
+    "option_group_delete_wip": "Option group deletion (WIP)",
+    "option_group_add_wip": "Option group addition (WIP)",
+    "goods_deleted": "Product deleted",
+    "content_deleted": "{{type}} (ID: {{id}}) has been deleted.",
+    "goods_hidden": "Product hidden",
+    "goods_visible": "Product visible",
+    "study_hidden": "Study content hidden",
+    "study_visible": "Study content visible",
+    "logged_out": "Logged out",
+    "logout_error": "Error occurred during logout"
+  },
   "notification": {
     "like_feed": "liked your post.",
     "user_action": "{{name}}",
@@ -120,7 +140,10 @@
     "restore_desc_1": "This account is currently in the graceful deletion period.",
     "restore_desc_2": "Do you want to restore your account?",
     "restore_remaining": "{{days}} days remaining until permanent deletion.",
-    "restore_confirm": "Restore Account"
+    "restore_confirm": "Restore Account",
+    "profile_not_found_contact_admin": "Profile not created. Please contact admin.",
+    "auth_failed": "Authentication failed.",
+    "signin": "Sign In"
   },
   "common": {
     "save": "Save",
@@ -309,7 +332,9 @@
     "cannot_delete": "Cannot delete",
     "deleted_reply": "This reply has been deleted",
     "deleted_or_not_exist": "This post has been deleted or does not exist",
-    "deleted_while_viewing": "This post has been deleted."
+    "deleted_while_viewing": "This post has been deleted.",
+    "login_to_reply": "You can write comments after logging in.",
+    "join_community_desc": "Please sign in or sign up to join the community."
   },
   "trending": {
     "title": "Real-time Popular Feeds",

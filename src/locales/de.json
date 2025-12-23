@@ -120,7 +120,8 @@
     "restore_desc_1": "Dieses Konto befindet sich derzeit in der Löschfrist.",
     "restore_desc_2": "Möchten Sie Ihr Konto wiederherstellen?",
     "restore_remaining": "Noch {{days}} Tage bis zur endgültigen Löschung.",
-    "restore_confirm": "Konto wiederherstellen"
+    "restore_confirm": "Konto wiederherstellen",
+    "signin": "Anmelden"
   },
   "signup": {
     "title_social": "Social Media Registrierung",
@@ -187,8 +188,8 @@
     "edit_mode": "Wechseln in den Bearbeitungsmodus.",
     "block_success": "{{name}} blockiert.",
     "unblock_success": "{{name}} entblockt.",
-    "cancel_like": "Unliked.",
-    "success_like": "Liked."
+    "cancel_like": "Gefällt mir nicht mehr",
+    "success_like": "Gefällt mir"
   },
   "settings": {
     "languageSelect": "Sprache wählen",
@@ -332,7 +333,9 @@
     "cannot_delete": "Kann nicht gelöscht werden",
     "deleted_reply": "Diese Antwort wurde gelöscht",
     "deleted_or_not_exist": "Dieser Beitrag wurde gelöscht oder existiert nicht",
-    "deleted_while_viewing": "Dieser Beitrag wurde gelöscht."
+    "deleted_while_viewing": "Dieser Beitrag wurde gelöscht.",
+    "login_to_reply": "Sie können nach dem Anmelden Kommentare schreiben.",
+    "join_community_desc": "Bitte melden Sie sich an oder registrieren Sie sich, um der Community beizutreten."
   },
   "trending": {
     "title": "Trends für dich",
@@ -494,5 +497,25 @@
   "translation": {
     "login_required": "Bitte melden Sie sich an, um die Übersetzungsfunktion zu nutzen.",
     "guest_limit_reached": "Sie haben alle kostenlosen Übersetzungen aufgebraucht. Melden Sie sich an, um fortzufahren."
+  },
+  "admin": {
+    "report_processed": "Meldung bearbeitet.",
+    "report_rejected": "Meldung abgelehnt.",
+    "no_permission": "Keine Administratorrechte.",
+    "login_success": "Admin-Login erfolgreich.",
+    "study_deleted": "Lerninhalt gelöscht.",
+    "study_uploaded": "Lerninhalt erfolgreich hochgeladen!",
+    "goods_registered": "Produkt erfolgreich registriert!",
+    "goods_deleted": "Produkt gelöscht.",
+    "goods_hidden": "Produkt ausgeblendet",
+    "goods_visible": "Produkt sichtbar",
+    "study_hidden": "Lerninhalt ausgeblendet",
+    "study_visible": "Lerninhalt sichtbar",
+    "permission_check_error": "Error checking permissions.",
+    "option_group_delete_wip": "Option group deletion (WIP)",
+    "option_group_add_wip": "Option group addition (WIP)",
+    "content_deleted": "{{type}} (ID: {{id}}) deleted.",
+    "logged_out": "Logged out",
+    "logout_error": "Error during logout"
   }
 }

@@ -15,6 +15,7 @@ import {
   Video
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 // Types
 interface ProductOption {
@@ -31,6 +32,7 @@ interface ProductVariant {
 }
 
 const AdminGoodsUpload = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'basic' | 'detail' | 'options'>('basic');
   
   // Basic Info State
@@ -174,7 +176,7 @@ const AdminGoodsUpload = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log({ basicInfo, mainImage, galleryImages, description, variants });
-    toast.success('상품이 성공적으로 등록되었습니다!');
+    toast.success(t('admin.goods_registered'));
   };
 
   // UI Components
@@ -547,7 +549,7 @@ const AdminGoodsUpload = () => {
                          {/* Delete Option Group Button */}
                          <button
                            type="button"
-                           onClick={() => toast.info('옵션 그룹 삭제 (기능 개발 예정)')}
+                           onClick={() => toast.info(t('admin.option_group_delete_wip'))}
                            className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                            title="옵션 그룹 삭제"
                          >
@@ -560,7 +562,7 @@ const AdminGoodsUpload = () => {
                    {/* Add Option Group Button */}
                    <button
                      type="button"
-                     onClick={() => toast.info('옵션 그룹 추가 (기능 개발 예정)')}
+                     onClick={() => toast.info(t('admin.option_group_add_wip'))}
                      className="w-full p-4 border-2 border-dashed border-gray-300 dark:border-gray-500 rounded-xl text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary-50/30 transition-all flex items-center justify-center gap-2 font-medium"
                    >
                      <Plus size={20} />

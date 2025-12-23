@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Search, Edit, Trash2, Eye, EyeOff, ChevronDown, Calendar, Package, DollarSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 const AdminGoodsManagement = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -54,7 +56,7 @@ const AdminGoodsManagement = () => {
       product.id === id ? { ...product, visible: !product.visible } : product
     ));
     const product = goods.find(p => p.id === id);
-    toast.success(product?.visible ? '상품을 숨겼습니다' : '상품을 표시했습니다');
+    toast.success(product?.visible ? t('admin.goods_hidden') : t('admin.goods_visible'));
   };
 
   const handleEdit = (id: number) => {
@@ -69,7 +71,7 @@ const AdminGoodsManagement = () => {
   const handleDeleteConfirm = () => {
     if (selectedProduct) {
       setGoods(goods.filter(p => p.id !== selectedProduct));
-      toast.success('상품이 삭제되었습니다');
+      toast.success(t('admin.goods_deleted'));
       setDeleteModalOpen(false);
       setSelectedProduct(null);
     }

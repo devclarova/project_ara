@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Search, Edit, Trash2, Eye, EyeOff, ChevronDown, Calendar, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 const AdminStudyManagement = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -49,7 +51,7 @@ const AdminStudyManagement = () => {
       study.id === id ? { ...study, visible: !study.visible } : study
     ));
     const study = studies.find(s => s.id === id);
-    toast.success(study?.visible ? '학습 콘텐츠를 숨겼습니다' : '학습 콘텐츠를 표시했습니다');
+    toast.success(study?.visible ? t('admin.study_hidden') : t('admin.study_visible'));
   };
 
   const handleEdit = (id: number) => {
@@ -64,7 +66,7 @@ const AdminStudyManagement = () => {
   const handleDeleteConfirm = () => {
     if (selectedStudy) {
       setStudies(studies.filter(s => s.id !== selectedStudy));
-      toast.success('학습 콘텐츠가 삭제되었습니다');
+      toast.success(t('admin.study_deleted'));
       setDeleteModalOpen(false);
       setSelectedStudy(null);
     }

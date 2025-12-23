@@ -2,10 +2,12 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 // 소셜 로그인 콜백 페이지
 // /admin/callback으로 리다이렉트됨
 const AdminAuthCallback = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,7 +19,7 @@ const AdminAuthCallback = () => {
         if (sessionError) throw sessionError;
         
         if (!session) {
-          toast.error('인증에 실패했습니다.');
+          toast.error(t('auth.auth_failed'));
           navigate('/admin/login');
           return;
         }
@@ -32,7 +34,7 @@ const AdminAuthCallback = () => {
         if (userError) {
           // profiles row가 없는 경우
           if (userError.code === 'PGRST116') {
-            toast.error('프로필이 생성되지 않았습니다. 관리자에게 문의하세요.');
+            toast.error(t('auth.profile_not_found_contact_admin'));
             await supabase.auth.signOut();
             navigate('/admin/login');
             return;
@@ -43,17 +45,17 @@ const AdminAuthCallback = () => {
         if (!userData?.is_admin) {
           // 관리자가 아닌 경우
           await supabase.auth.signOut();
-          toast.error('관리자 권한이 없습니다.');
+          toast.error(t('admin.no_permission'));
           navigate('/admin/login');
           return;
         }
 
         // 관리자 확인 완료
-        toast.success('관리자 로그인 성공');
+        toast.success(t('admin.login_success'));
         navigate('/admin');
       } catch (error: any) {
         console.error('Auth callback error:', error);
-        toast.error('인증 처리 중 오류가 발생했습니다.');
+        toast.error(t('auth.auth_failed'));
         navigate('/admin/login');
       }
     };
