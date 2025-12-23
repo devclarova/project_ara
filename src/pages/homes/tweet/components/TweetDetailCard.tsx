@@ -17,6 +17,7 @@ import ReportButton from '@/components/common/ReportButton';
 import BlockButton from '@/components/common/BlockButton';
 
 import type { UIPost } from '@/types/sns';
+import { formatDate } from '@/utils/dateUtils';
 
 interface TweetDetailCardProps {
   tweet: UIPost;
@@ -397,7 +398,7 @@ export default function TweetDetailCard({
             )}
 
             <span className="mx-1 text-gray-500 dark:text-gray-400">·</span>
-            <span className="text-gray-500 dark:text-gray-400 text-sm">{tweet.timestamp}</span>
+            <span className="text-gray-500 dark:text-gray-400 text-sm">{formatDate(tweet.timestamp)}</span>
           </div>
         </div>
         <div className="relative ml-auto" ref={menuRef}>

@@ -236,19 +236,19 @@ function Header() {
   const headerAvatar = profileAvatar ?? '/default-avatar.svg';
   return (
     <div
-      className="fixed inset-x-0 top-0 z-[100] flex justify-between items-center px-4 sm:px-8 lg:px-36 py-2
+      className="fixed inset-x-0 top-0 z-[100] flex justify-between items-center px-4 sm:px-8 lg:px-12 xl:px-24 2xl:px-36 py-2
                  border-b border-gray-200 bg-white
                  dark:border-gray-800 dark:bg-secondary"
     >
-      <div className="flex items-center gap-4 sm:gap-6">
+      <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
         <img
           onClick={handleLogoClick}
           src="/images/sample_font_logo.png"
           alt="Logo"
-          className="w-14 sm:w-16 lg:w-20 cursor-pointer"
+          className="w-10 sm:w-14 lg:w-16 xl:w-20 cursor-pointer"
         />
         {/* 데스크탑 메뉴 (설정은 제거: 프로필 드롭다운에서만 접근) */}
-        <div className="hidden md:flex gap-2 md:gap-3 lg:gap-6">
+        <div className="hidden md:flex gap-1 lg:gap-3 xl:gap-4">
           {menuItems
             .filter(item => item.key !== 'settings')
             .map(item => {
@@ -275,7 +275,7 @@ function Header() {
                     }
                   }}
                   aria-current={active ? 'page' : undefined}
-                  className={`relative inline-flex items-center text-sm lg:text-base xl:text-lg font-bold p-0 ${
+                  className={`relative inline-flex items-center text-xs md:text-sm lg:text-base font-bold p-0 whitespace-nowrap ${
                     active
                       ? 'text-primary hover:opacity-60'
                       : 'text-gray-500 hover:text-primary/60 dark:text-gray-300'
@@ -307,9 +307,9 @@ function Header() {
             })}
         </div>
       </div>
-      <div className="flex items-center">
+      <div className="flex items-center gap-2 flex-shrink-0">
         {/* 데스크탑 프로필 영역 */}
-        <div className="hidden md:flex items-center gap-3 sm:gap-4">
+        <div className="hidden md:flex items-center gap-2 lg:gap-3 flex-shrink-0 min-w-fit">
           <div className="hidden sm:block">
             <ThemeSwitcher
               open={isThemeMenuOpen}
@@ -347,7 +347,7 @@ function Header() {
                     setIsThemeMenuOpen(false);
                     setIsProfileMenuOpen(prev => !prev);
                   }}
-                  className="flex items-center gap-2 sm:gap-3 group"
+                  className="flex items-center gap-2 group"
                   title="내 프로필"
                   aria-expanded={isProfileMenuOpen}
                 >
@@ -355,11 +355,11 @@ function Header() {
                     <AvatarImage src={headerAvatar} alt={displayNickname} />
                     <AvatarFallback>{displayNickname.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
-                  <div className="flex flex-col items-start">
-                    <span className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 group-hover:opacity-80">
+                  <div className="flex flex-col items-start min-w-0">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 group-hover:opacity-80 whitespace-nowrap">
                       {displayNickname}
                     </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                       {t('common.settings_desc')}
                     </span>
                   </div>

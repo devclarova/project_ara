@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
-const BATCH_TRANSLATION_VERSION = 'v2_force_target';
+const BATCH_TRANSLATION_VERSION = 'v3_local_api';
 
 interface UseBatchAutoTranslationResult {
   translatedTexts: (string | null)[];
@@ -48,18 +48,12 @@ export const useBatchAutoTranslation = (
       setError(null);
 
       // 0. Get User (needed for DB operations)
-      // Guests will skip DB read/write to avoid schema/policy errors
       const { data: { user } } = await supabase.auth.getUser();
 
       try {
-        // Prepare unique IDs (content_id) with version appended
-        // This matches the schema used in useAutoTranslation: `${contentId}_${TRANSLATION_VERSION}`
         const uniqueKeys = cacheKeyInfos.map(k => `${k}_${BATCH_TRANSLATION_VERSION}`);
 
-        // 2. Check DB Cache (Only if logged in)
-        // If guest, we skip DB cache check (relying on memory/session cache or fresh API call)
-        // Note: For now, guests will always hit OpenAI on refresh. 
-        // Improvement: Implement session storage caching for batch results.
+        // 2. Check DB Cache
         const finalResults = [...translatedTexts];
         let cacheMap: Record<string, string> = {};
 
@@ -81,14 +75,11 @@ export const useBatchAutoTranslation = (
         texts.forEach((text, idx) => {
             const uniqueId = uniqueKeys[idx];
             
-            // Priority 1: DB Cache (if found)
             if (cacheMap[uniqueId]) {
                 finalResults[idx] = cacheMap[uniqueId];
             } else if (text && text.trim()) {
-                // Priority 2: Needs Translation
                 missingIndices.push(idx);
             } else {
-                // Priority 3: Empty string
                 finalResults[idx] = text; 
             }
         });
@@ -104,105 +95,27 @@ export const useBatchAutoTranslation = (
 
         const inputsToTranslate = missingIndices.map(i => texts[i]);
 
-        // 3. OpenAI API Call
-        const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-
-        if (!apiKey) {
-           console.error('OpenAI API Key missing');
-           if (mounted) setLoading(false);
-           return;
-        }
-
-        const langCodeToName: Record<string, string> = {
-            'ko': 'Korean',
-            'en': 'English',
-            'ja': 'Japanese',
-            'zh': 'Chinese (Simplified)',
-            'ru': 'Russian',
-            'vi': 'Vietnamese',
-            'bn': 'Bengali',
-            'ar': 'Arabic',
-            'hi': 'Hindi',
-            'th': 'Thai',
-            'es': 'Spanish',
-            'fr': 'French',
-            'pt': 'Portuguese',
-            'pt-br': 'Brazilian Portuguese',
-            'de': 'German',
-            'fi': 'Finnish',
-            'id': 'Indonesian',
-            'it': 'Italian',
-            'tr': 'Turkish',
-        };
-        const targetLanguageName = langCodeToName[targetLang] || targetLang;
-
-        const systemPrompt = `You are a high-performance translation engine for a language learning app.
-Target Language: ${targetLanguageName} (Code: ${targetLang})
-Context: Korean Subtitles, K-Pop Lyrics, K-Drama.
-
-Output Format: JSON Object with key "translations" containing an Array of Strings.
-Example: { "translations": ["Translated Text 1", "Translated Text 2"] }
-
-CRITICAL TRANSLATION RULES (Follow Strictly):
-1. **Target Language Only**: The output MUST be in **${targetLanguageName}**. 
-   - If the input is English, **TRANSLATE** it to ${targetLanguageName}. Do NOT keep it in English (unless Target is English).
-   - If the input is Korean, **TRANSLATE** it to ${targetLanguageName}.
-2. **PRONUNCIATION (Romanization) HANDLING (HIGHEST PRIORITY)**:
-   - **Scenario A (Bracketed)**: Input contains '[Romanization]'.
-     - Action: Transliterate content inside '[]' to Target Script (Sound Only). **No Meaning Translation.**
-   - **Scenario B (Raw/Unbracketed)**: Input is ONLY Romanized Korean (e.g. "Saranghae", "Annyeong").
-     - Action: **Transliterate** to Target Script (Sound Only).
-     - **Strict Rule**: NEVER translate the meaning of Romanized Korean.
-     - **Bad Example**: "Saranghae" -> "I Love You" (Wrong! Meaning)
-     - **Good Example (JA)**: "Saranghae" -> "サランヘ" (Correct! Sound)
-     - **Good Example (RU)**: "Annyeong" -> "Аннён" (Correct! Sound)
-3. **NO KOREAN CHARACTERS**: The output MUST NOT contain any Korean characters (Hangul).
-4. **NO QUOTES**: Do NOT wrap strings in extra quotes inside the JSON array.
-5. **Music Titles**:
-   - If input is "Artist - Title", output "Artist - Translated Title".
-   - If input is ONLY "Title", output "Translated Title". Do NOT add artist.
-`;
-
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        // 3. call Local Server API
+        const response = await fetch('/api/translate-batch', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-              model: 'gpt-4o',
-              messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: JSON.stringify({ texts: inputsToTranslate }) }, // Wrap in object for clarity
-              ],
-              response_format: { type: "json_object" },
-              temperature: 0.3,
+              texts: inputsToTranslate,
+              targetLang
             }),
         });
 
         if (!response.ok) {
-            throw new Error(`OpenAI API Error: ${response.status}`);
+            throw new Error(`Translation API Error: ${response.status}`);
         }
 
         const data = await response.json();
-        const contentStr = data.choices[0].message.content;
+        const parsedResults = data.translations; // Expect { translations: [] }
         
-        // Parse JSON safely
-        let parsedResults: string[] = [];
-        try {
-            const parsed = JSON.parse(contentStr);
-            if (parsed.translations && Array.isArray(parsed.translations)) {
-                parsedResults = parsed.translations;
-            } else if (Array.isArray(parsed)) {
-                parsedResults = parsed;
-            } else {
-                 console.warn('Unexpected JSON structure', parsed);
-                 // Fallback: try to find any array
-                 const firstArray = Object.values(parsed).find(v => Array.isArray(v));
-                 if (firstArray) parsedResults = firstArray as string[];
-            }
-        } catch (e) {
-            console.error('Failed to parse JSON response', e);
+        if (!parsedResults || !Array.isArray(parsedResults)) {
+             throw new Error('Invalid API Response Format');
         }
 
         // Apply results
@@ -214,7 +127,6 @@ CRITICAL TRANSLATION RULES (Follow Strictly):
                 if (tr) {
                     finalResults[originalIdx] = tr;
                     
-                    // Prepare DB data
                     if (user) {
                         upsertData.push({
                             user_id: user.id,
@@ -229,7 +141,7 @@ CRITICAL TRANSLATION RULES (Follow Strictly):
 
              if (mounted) setTranslatedTexts([...finalResults]);
 
-             // 4. Save to DB (Fire and forget, only if user exists)
+             // 4. Save to DB
              if (upsertData.length > 0) {
                  supabase.from('translations').upsert(upsertData, { 
                      onConflict: 'user_id,content_id,target_lang' 
@@ -240,7 +152,6 @@ CRITICAL TRANSLATION RULES (Follow Strictly):
 
         } else {
              console.error('Mismatch in translation count', inputsToTranslate.length, parsedResults.length);
-             // Partial persistence could be dangerous if indices differ, so we skip DB save
         }
 
       } catch (err) {

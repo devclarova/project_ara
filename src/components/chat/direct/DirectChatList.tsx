@@ -7,12 +7,15 @@ import type { ChatUser } from '../../../types/ChatType';
 import ReportButton from '@/components/common/ReportButton';
 import BlockButton from '@/components/common/BlockButton';
 import HighlightText from '../../common/HighlightText';
+import { formatChatListDate } from '@/utils/dateUtils';
 // HMR Trigger
 interface DirectChatListProps {
   onChatSelect: (chatId: string) => void;
   onCreateChat: () => void;
   selectedChatId?: string;
 }
+import { useNavigate } from 'react-router-dom';
+
 // 채팅 아이템 메모이제이션
 const ChatItem = memo(
   ({
@@ -27,57 +30,22 @@ const ChatItem = memo(
     currentUserId?: string;
   }) => {
     const { t, i18n } = useTranslation();
-    // Main 브랜치의 robust한 시간 포맷팅 로직 유지 (I18N + 24시 처리)
+    const navigate = useNavigate();
+
+    const handleAvatarClick = useCallback((e: React.MouseEvent) => {
+      e.stopPropagation();
+      const target = chat.other_user.username || chat.other_user.id;
+      if (target) {
+        navigate(`/profile/${target}`);
+      }
+    }, [chat.other_user, navigate]);
+
+    // dateUtils를 사용한 날짜 포맷팅
     const formatTime = useCallback(
       (dateString: string) => {
-        try {
-          const date = new Date(dateString);
-          if (isNaN(date.getTime())) return '';
-
-          const now = new Date();
-          const lang = i18n.language || 'ko';
-
-          // 오늘 00:00
-          const todayStart = new Date(now);
-          todayStart.setHours(0, 0, 0, 0);
-
-          // 어제 00:00
-          const yesterdayStart = new Date(todayStart);
-          yesterdayStart.setDate(todayStart.getDate() - 1);
-
-          // 오늘
-          if (date >= todayStart) {
-            return new Intl.DateTimeFormat(lang, {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true,
-            }).format(date);
-          }
-
-          // 어제
-          if (date >= yesterdayStart) {
-            return lang.startsWith('ko') ? '어제' : 'Yesterday';
-          }
-
-          // 다른 해 → 연 + 날짜
-          if (date.getFullYear() !== now.getFullYear()) {
-            return new Intl.DateTimeFormat(lang, {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-            }).format(date);
-          }
-
-          // 같은 해의 과거 → 날짜만
-          return new Intl.DateTimeFormat(lang, {
-            month: 'short',
-            day: 'numeric',
-          }).format(date);
-        } catch {
-          return '';
-        }
+        return formatChatListDate(dateString);
       },
-      [i18n.language],
+      [i18n.language], // locale 변경 시 리렌더링 (formatChatListDate 내부에서 getLocale 호출)
     );
     // 팀원(10-zzeon)의 새로운 기능(신고/차단 메뉴) State & Hooks 병합
     const [showMenu, setShowMenu] = useState(false);
@@ -102,7 +70,10 @@ const ChatItem = memo(
         className={`chat-item ${isSelected ? 'selected' : ''}`}
         onClick={() => onSelect(chat.id)}
       >
-        <div className="chat-avatar">
+        <div 
+          className="chat-avatar cursor-pointer" 
+          onClick={handleAvatarClick}
+        >
           {chat.other_user.avatar_url ? (
             <img
               src={chat.other_user.avatar_url}

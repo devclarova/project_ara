@@ -32,7 +32,9 @@
     "action_like_feed": "我喜欢您的动态。",
     "no_notifications": "尚无新的通知。",
     "delete_confirm_title": "删除通知",
-    "delete_confirm_desc": "您要删除此通知吗？"
+    "delete_confirm_desc": "您要删除此通知吗？",
+    "action_mention": "提到了你。",
+    "action_repost": "转发了你的动态。"
   },
   "study": {
     "studylist": "学习列表",
@@ -227,7 +229,9 @@
     "report": "举报",
     "edit_mode": "正在切换到编辑模式。",
     "block_success": "已屏蔽 {{name}}。",
-    "unblock_success": "已解除对 {{name}} 的屏蔽。"
+    "unblock_success": "已解除对 {{name}} 的屏蔽。",
+    "cancel_like": "取消点赞。",
+    "success_like": "已点赞。"
   },
   "settings": {
     "languageSelect": "语言选择",
@@ -429,7 +433,13 @@
     "search_result_messages": "对话内容",
     "last_message_label": "最后对话",
     "searching": "搜索中...",
-    "no_search_result_desc": "无法找到关于 '{{query}}' 的对话记录。"
+    "no_search_result_desc": "无法找到关于 '{{query}}' 的对话记录。",
+    "media_gallery": "媒体",
+    "no_media": "没有共享的媒体",
+    "image_message": "图片",
+    "confirm_exit_title": "要退出聊天室吗？",
+    "confirm_exit_desc": "退出后将返回对话列表。",
+    "exit_success": "已退出聊天室。"
   },
   "policy": {
     "close": "关闭",

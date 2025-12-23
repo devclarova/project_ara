@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDirectChat } from '@/contexts/DirectChatContext';
@@ -6,6 +7,7 @@ import { toast } from 'sonner';
 import { NotificationToast } from './NotificationToast';
 
 export const GlobalNotificationListener: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { currentChat } = useDirectChat();
   
@@ -80,7 +82,7 @@ export const GlobalNotificationListener: React.FC = () => {
               }
 
               // 프로필이 없어도 알림은 띄움 (Fallback)
-              toast.custom((_t) => (
+              toast.custom((t) => (
                 <NotificationToast
                   type={newNotif.type}
                   sender={{
@@ -90,10 +92,25 @@ export const GlobalNotificationListener: React.FC = () => {
                   content={newNotif.content?.replace(/<[^>]*>/g, '') || ''}
                   timestamp={newNotif.created_at}
                   replyId={newNotif.comment_id}
+                  onClick={() => {
+                    toast.dismiss(t);
+                    if (newNotif.tweet_id) {
+                      navigate(`/sns/${newNotif.tweet_id}`, { 
+                        state: { 
+                          highlightCommentId: newNotif.comment_id,
+                          scrollKey: Date.now() // 강제 스크롤 트리거
+                        } 
+                      });
+                    } else if (newNotif.type === 'follow' && newNotif.sender_id) {
+                       // tweet_id가 없는 경우 /sns로 fallback
+                       navigate('/sns');
+                    }
+                  }}
+                  toastId={t}
                 />
               ), {
                 id: `notif-${newNotif.id}`,
-                duration: 4000
+                duration: Infinity // 개별 타이머가 제어
               });
             }
           )
@@ -109,22 +126,12 @@ export const GlobalNotificationListener: React.FC = () => {
             event: 'INSERT',
             schema: 'public',
             table: 'direct_messages',
-            // ⚠️ direct_messages에는 receiver_id가 없음 -> 필터 불가능 (RLS로 막혀있지 않다면 전체 수신됨)
-            // 따라서 클라이언트 레벨에서 "내가 속한 채팅방인지" 확인해야 함.
           },
           async (payload: any) => {
             const newMessage = payload.new;
             if (newMessage.sender_id === user.id) return;
-
-            // 1. 내가 참여 중인 채팅방인지 확인 (sender가 아니므로 receiver여야 함)
-            // direct_chats 조회: user1_id, user2_id 확인
-            // 이때 profile.id가 필요함. (상단에서 이미 fetched)
             if (!profile?.id) return;
-
-            // ⚠️ [추가] 현재 이 채팅방을 보고 있다면 알림 띄우지 않음
-            if (currentChatRef.current === newMessage.chat_id) {
-               return; 
-            }
+            if (currentChatRef.current === newMessage.chat_id) return;
 
             const { data: chatInfo, error: chatError } = await supabase
                .from('direct_chats')
@@ -134,18 +141,16 @@ export const GlobalNotificationListener: React.FC = () => {
             
             if (chatError || !chatInfo) return;
 
-            // 내가 참여자가 아니면 무시 (다른 사람들의 대화)
             const isMyChat = (chatInfo.user1_id === profile.id) || (chatInfo.user2_id === profile.id);
             if (!isMyChat) return;
 
-            // 2. 보낸 사람 정보 조회
             const { data: senderProfile } = await supabase
               .from('profiles')
               .select('nickname, avatar_url')
               .eq('user_id', newMessage.sender_id)
               .maybeSingle();
 
-            toast.custom((_t) => (
+            toast.custom((t) => (
               <NotificationToast
                 type="chat"
                 sender={{
@@ -154,10 +159,19 @@ export const GlobalNotificationListener: React.FC = () => {
                 }}
                 content={newMessage.content}
                 timestamp={newMessage.created_at}
+                onClick={() => {
+                   toast.dismiss(t);
+                   navigate('/chat', { 
+                     state: { 
+                       roomId: newMessage.chat_id
+                     } 
+                   });
+                }}
+                toastId={t}
               />
             ), {
               id: `chat-${newMessage.id}`,
-              duration: 4000
+              duration: Infinity // 개별 타이머가 제어
             });
           }
         )

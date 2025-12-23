@@ -48,60 +48,29 @@ export default function TranslateButton({
     return i18n.language || 'en';
   };
 
-  /* [이전 구현 - 프로필 국가 기반 번역]
-  // 나중에 프로필 기반으로 되돌리고 싶다면 아래 코드 사용
-  const getUserTargetLang = async () => {
-    const authUser = (await supabase.auth.getUser()).data.user;
-    if (!authUser) return 'en';
-
-    // profiles.country = country_id (예: 106)
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('country')
-      .eq('user_id', authUser.id)
-      .maybeSingle();
-
-    if (!profile?.country) return 'en';
-
-    // country_id 로 countries 테이블 조회
-    const { data: countryRow } = await supabase
-      .from('countries')
-      .select('language_code, name')
-      .eq('id', profile.country)
-      .maybeSingle();
-
-    return countryRow?.language_code || 'en';
-  };
-  */
-
   // 의미 없는 문자 감지
   const detectLanguage = async (inputText: string) => {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: `
-다음 문장이 의미 있는 자연어인지 판별해라.
-한국어/영어/기타 문장 → "valid"
-의미 없는 랜덤 문자(예: 뷃둙훽뤰줻) → "invalid"
-설명 없이 valid 또는 invalid만 출력.
-            `,
+    // 서버리스/로컬 API 사용 (보안 강화)
+    try {
+        const response = await fetch('/api/detect-language', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-          { role: 'user', content: inputText },
-        ],
-        max_tokens: 10,
-      }),
-    });
-
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content?.trim() || 'invalid';
+          body: JSON.stringify({ text: inputText }),
+        });
+    
+        if (!response.ok) {
+          console.error('Language detection failed');
+          return 'invalid';
+        }
+    
+        const data = await response.json();
+        return data.validation || 'invalid';
+    } catch (e) {
+        console.error('Language detection error', e);
+        return 'invalid';
+    }
   };
 
   // 번역 처리
@@ -160,47 +129,31 @@ export default function TranslateButton({
         return;
       }
 
-      // (4) URL placeholder 처리
+      // (4) URL 추출
       const urls = text.match(/https?:\/\/\S+/g) || [];
-      let replacedText = text;
-      urls.forEach((url, index) => {
-        replacedText = replacedText.replace(url, `<URL_${index}>`);
-      });
 
       // (5) 번역 API 요청
-      const systemPrompt = `
-너는 전문 번역가다.
-사용자의 국가 언어 코드: "${targetLang}"
-텍스트를 반드시 이 언어("${targetLang}")로 번역하라.
-<URL_n> 패턴은 절대 변경 금지.
-설명 없이 번역만 출력하라.
-      `;
+      let translatedText: string;
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      // 서버리스/로컬 API 사용 (항상)
+      const response = await fetch('/api/translate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: replacedText },
-          ],
-          max_tokens: 500,
+          text,
+          targetLang,
+          urls,
         }),
       });
 
-      if (!response.ok) throw new Error('API 요청 실패');
+      if (!response.ok) {
+        throw new Error('API 요청 실패');
+      }
 
       const data = await response.json();
-      let translatedText = data.choices[0].message.content;
-
-      // URL 복원
-      urls.forEach((url, index) => {
-        translatedText = translatedText.replace(`<URL_${index}>`, url);
-      });
+      translatedText = data.translatedText;
 
       // (6) 번역 결과 저장 (로그인 사용자만)
       if (userId) {

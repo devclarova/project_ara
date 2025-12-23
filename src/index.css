@@ -1248,3 +1248,13 @@ hr {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+/* Sonner Toast Background Force Override */
+html:not(.dark) li[data-sonner-toast] {
+    background-color: #ffffff !important;
+    border-color: rgba(0, 191, 165, 0.4) !important;
+}
+
+html.dark li[data-sonner-toast] {
+    background-color: #18181b !important;
+    border-color: rgba(0, 191, 165, 0.3) !important;
+}
