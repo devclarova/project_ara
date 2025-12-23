@@ -100,12 +100,12 @@
     "preview": "Preview"
   },
   "auth": {
-    "login": "Log in",
+    "login": "Sign in",
     "signup": "Sign up",
     "logout": "Log out",
     "login_needed": "Login needed",
-    "please_login": "Please log in",
-    "click_to_login": "Click to log in",
+    "please_login": "Please sign in",
+    "click_to_login": "Click to sign in",
     "welcome": "Welcome",
     "email": "Email",
     "password": "Password",
@@ -115,8 +115,8 @@
     "find_password": "Find Password",
     "resend_verification": "Resend",
     "first_time": "First time?",
-    "login_with_google": "Log in with Google",
-    "login_with_kakao": "Log in with Kakao",
+    "login_with_google": "Sign in with Google",
+    "login_with_kakao": "Sign in with Kakao",
     "verification_sent": "Verification sent",
     "email_verification_failed": "Verification failed",
     "verify_before_login": "Please verify your email",
@@ -162,7 +162,7 @@
     "loading": "Loading...",
     "error": "An error occurred",
     "error_profile_load": "Failed to load profile information",
-    "error_profile_missing": "Profile information is missing. Please log in again",
+    "error_profile_missing": "Profile information is missing. Please sign in again",
     "error_profile_loading": "Loading profile information. Please try again later",
     "error_navigate_profile": "An error occurred while navigating to profile",
     "error_profile_not_load": "Unable to load profile information",
@@ -773,7 +773,7 @@
     }
   },
   "translation": {
-    "login_required": "Please log in to use the translation feature.",
-    "guest_limit_reached": "You have used all free translations. Log in to continue."
+    "login_required": "Please sign in to use the translation feature.",
+    "guest_limit_reached": "You have used all free translations. sign in to continue."
   }
 }
