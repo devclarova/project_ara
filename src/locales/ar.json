@@ -119,7 +119,8 @@
     "restore_desc_1": "هذا الحساب حاليًا في فترة سماح الحذف.",
     "restore_desc_2": "هل ترغب في استعادة حسابك؟",
     "restore_remaining": "يتبقى {{days}} أيام حتى الحذف النهائي.",
-    "restore_confirm": "استعادة الحساب"
+    "restore_confirm": "استعادة الحساب",
+    "signin": "تسجيل الدخول"
   },
   "signup": {
     "title_social": "التسجيل عبر وسائل التواصل",
@@ -222,8 +223,8 @@
     "block": "حظر",
     "unblock": "إلغاء الحظر",
     "report": "إبلاغ",
-    "cancel_like": "Unliked.",
-    "success_like": "Liked."
+    "cancel_like": "ألغيت الإعجاب",
+    "success_like": "أعجبني"
   },
   "settings": {
     "languageSelect": "اختيار اللغة",
@@ -367,7 +368,9 @@
     "cannot_delete": "لا يمكن الحذف",
     "deleted_reply": "تم حذف هذا الرد",
     "deleted_or_not_exist": "تم حذف هذا المنشور أو أنه غير موجود",
-    "deleted_while_viewing": "تم حذف هذا المنشور."
+    "deleted_while_viewing": "تم حذف هذا المنشور.",
+    "login_to_reply": "يمكنك كتابة التعليقات بعد تسجيل الدخول.",
+    "join_community_desc": "يرجى تسجيل الدخول أو التسجيل للانضمام إلى المجتمع."
   },
   "trending": {
     "title": "المتداول لك",
@@ -529,5 +532,25 @@
   "translation": {
     "login_required": "يرجى تسجيل الدخول لاستخدام ميزة الترجمة.",
     "guest_limit_reached": "لقد استخدمت جميع الترجمات المجانية. قم بتسجيل الدخول للمتابعة."
+  },
+  "admin": {
+    "report_processed": "تم معالجة البلاغ.",
+    "report_rejected": "تم رفض البلاغ.",
+    "no_permission": "ليس لديك صلاحية المسؤول.",
+    "login_success": "تم تسجيل الدخول كمسؤول بنجاح.",
+    "study_deleted": "تم حذف محتوى الدراسة.",
+    "study_uploaded": "تم تحميل محتوى الدراسة بنجاح!",
+    "goods_registered": "تم تسجيل المنتج بنجاح!",
+    "goods_deleted": "تم حذف المنتج.",
+    "goods_hidden": "تم إخفاء المنتج",
+    "goods_visible": "المنتج مرئي الآن",
+    "study_hidden": "تم إخفاء محتوى الدراسة",
+    "study_visible": "محتوى الدراسة مرئي الآن",
+    "permission_check_error": "Error checking permissions.",
+    "option_group_delete_wip": "Option group deletion (WIP)",
+    "option_group_add_wip": "Option group addition (WIP)",
+    "content_deleted": "{{type}} (ID: {{id}}) deleted.",
+    "logged_out": "Logged out",
+    "logout_error": "Error during logout"
   }
 }

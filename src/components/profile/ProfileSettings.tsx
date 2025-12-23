@@ -5,7 +5,7 @@ import SystemSettings from '@/pages/settings/SystemSettings';
 import type { MenuId, SidebarItem } from '@/types/settings';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import Input from '../Input';
+import { Input } from '@/components/ui/input';
 import SettingsContent from './SettingsContent';
 import SettingsLayout from './SettingsLayout';
 import SettingsSidebar from './SettingsSidebar';
@@ -149,7 +149,7 @@ export default function ProfileSettings() {
             <div className="mb-4 md:mb-6">
               <Input 
                 placeholder={t('common.search_placeholder', 'Search...')} 
-                onChange={handleSearch}
+                onChange={(e) => handleSearch(e.target.value)}
               />
             </div>
 

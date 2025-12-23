@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import TrendsPanel from '../homes/feature/TrendsPanel';
+import TrendsPanel from '../community/feature/TrendsPanel';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 
 interface SnsLayoutProps {

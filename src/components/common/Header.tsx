@@ -248,7 +248,7 @@ function Header() {
           className="w-10 sm:w-14 lg:w-16 xl:w-20 cursor-pointer"
         />
         {/* 데스크탑 메뉴 (설정은 제거: 프로필 드롭다운에서만 접근) */}
-        <div className="hidden md:flex gap-1 lg:gap-3 xl:gap-4">
+        <div className="hidden md:flex gap-2 md:gap-4 lg:gap-5 xl:gap-6">
           {menuItems
             .filter(item => item.key !== 'settings')
             .map(item => {

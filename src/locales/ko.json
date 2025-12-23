@@ -13,6 +13,26 @@
     "admin_dashboard": "관리자 대시보드",
     "goods": "굿즈샵"
   },
+  "admin": {
+    "report_processed": "신고가 처리되었습니다.",
+    "report_rejected": "신고가 반려되었습니다.",
+    "no_permission": "관리자 권한이 없습니다.",
+    "login_success": "관리자 로그인 성공",
+    "permission_check_error": "권한 확인 중 오류가 발생했습니다.",
+    "study_deleted": "학습 콘텐츠가 삭제되었습니다",
+    "study_uploaded": "학습 콘텐츠가 성공적으로 업로드되었습니다!",
+    "goods_registered": "상품이 성공적으로 등록되었습니다!",
+    "option_group_delete_wip": "옵션 그룹 삭제 (기능 개발 예정)",
+    "option_group_add_wip": "옵션 그룹 추가 (기능 개발 예정)",
+    "goods_deleted": "상품이 삭제되었습니다",
+    "content_deleted": "{{type}} (ID: {{id}}) 가 삭제되었습니다.",
+    "goods_hidden": "상품을 숨겼습니다",
+    "goods_visible": "상품을 표시했습니다",
+    "study_hidden": "학습 콘텐츠를 숨겼습니다",
+    "study_visible": "학습 콘텐츠를 표시했습니다",
+    "logged_out": "로그아웃되었습니다",
+    "logout_error": "로그아웃 중 오류가 발생했습니다"
+  },
   "notification": {
     "like_feed": "님이 회원님의 게시물을 좋아합니다.",
     "user_action": "{{name}}",
@@ -82,6 +102,7 @@
   },
   "auth": {
     "login": "로그인",
+    "signin": "로그인",
     "signup": "회원가입",
     "logout": "로그아웃",
     "login_needed": "로그인이 필요합니다",
@@ -122,7 +143,9 @@
     "restore_desc_1": "이 계정은 현재 탈퇴 유예 기간 중입니다.",
     "restore_desc_2": "계정을 복구하고 다시 사용하시겠습니까?",
     "restore_remaining": "영구 삭제까지 {{days}}일 남았습니다.",
-    "restore_confirm": "계정 복구하기"
+    "restore_confirm": "계정 복구하기",
+    "profile_not_found_contact_admin": "프로필이 생성되지 않았습니다. 관리자에게 문의하세요.",
+    "auth_failed": "인증에 실패했습니다."
   },
   "signup": {
     "title_social": "소셜 회원가입",
@@ -381,7 +404,9 @@
     "cannot_delete": "본인이 작성한 게시글만 삭제할 수 있습니다.",
     "deleted_reply": "삭제된 댓글입니다",
     "deleted_or_not_exist": "삭제된 게시글이거나 존재하지 않는 게시글입니다",
-    "deleted_while_viewing": "게시글이 삭제되었습니다."
+    "deleted_while_viewing": "게시글이 삭제되었습니다.",
+    "login_to_reply": "댓글은 로그인 후 작성하실 수 있어요.",
+    "join_community_desc": "커뮤니티에 참여하려면 로그인 또는 회원가입을 진행해주세요."
   },
   "trending": {
     "title": "실시간 인기 게시글",

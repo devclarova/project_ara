@@ -9,6 +9,7 @@ import {
   Search
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface Report {
   id: string;
@@ -21,6 +22,7 @@ interface Report {
 }
 
 const AdminReports = () => {
+  const { t } = useTranslation();
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'resolved'>('all');
 
   const [reports, setReports] = useState<Report[]>([
@@ -32,12 +34,12 @@ const AdminReports = () => {
 
   const handleResolve = (id: string) => {
     setReports(reports.map(r => r.id === id ? { ...r, status: 'resolved' } : r));
-    toast.success('신고가 처리되었습니다.');
+    toast.success(t('admin.report_processed'));
   };
 
   const handleDismiss = (id: string) => {
     setReports(reports.map(r => r.id === id ? { ...r, status: 'dismissed' } : r));
-    toast.info('신고가 반려되었습니다.');
+    toast.info(t('admin.report_rejected'));
   };
 
   const filteredReports = reports.filter(r => filterStatus === 'all' || r.status === filterStatus);
