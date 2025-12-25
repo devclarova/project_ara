@@ -394,10 +394,17 @@
     "no_search_result_desc": "No conversation history found for '{{query}}'.",
     "media_gallery": "Media",
     "no_media": "No media shared",
-    "image_message": "Photo",
+    "image_message": "Picture",
+    "image_preview": "[Image]",
+    "video_preview": "[Video]",
+    "file_preview": "[File]",
+    "attach_image": "Photo",
+    "attach_video": "Video",
+    "attach_file": "File",
     "confirm_exit_title": "Leave Chat?",
     "confirm_exit_desc": "You will be returned to the chat list.",
-    "exit_success": "Left chat room."
+    "exit_success": "Left chat room.",
+    "creating_chat": "Creating chat..."
   },
   "policy": {
     "close": "Close",

@@ -395,6 +395,12 @@
     "media_gallery": "Medios",
     "no_media": "No hay medios compartidos",
     "image_message": "Foto",
+    "image_preview": "[Imagen]",
+    "video_preview": "[Vídeo]",
+    "file_preview": "[Archivo]",
+    "attach_image": "Foto",
+    "attach_video": "Vídeo",
+    "attach_file": "Archivo",
     "confirm_exit_title": "¿Salir del chat?",
     "confirm_exit_desc": "Volverás a la lista de chats.",
     "exit_success": "Has salido del chat."

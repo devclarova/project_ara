@@ -21,8 +21,10 @@ import type {
   MessageAttachment,
 } from '../types/ChatType';
 import {
+
   getChatList,
   getMessages,
+  getDirectChat,
   sendMessage as sendMessageService,
   searchUsers as searchUsersService,
   searchMessagesInChat as searchMessagesInChatService,
@@ -219,7 +221,19 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         setHasMoreMessages(false);
 
         // ref에서 chatInfo 찾기
-        const chatInfo = chatsRef.current.find(chat => chat.id === chatId) || null;
+        let chatInfo = chatsRef.current.find(chat => chat.id === chatId) || null;
+
+        if (!chatInfo) {
+          try {
+            const res = await getDirectChat(chatId);
+            if (res.success && res.data) {
+              chatInfo = res.data;
+            }
+          } catch (e) {
+            console.error('getDirectChat error', e);
+          }
+        }
+
         if (chatInfo) {
           setCurrentChat(chatInfo);
           if (chatInfo.is_new_chat) {
@@ -230,7 +244,17 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         // 초기 로딩은 30개만 (targetId가 있으면 딥링킹)
         const response = await getMessages(chatId, 30, undefined, targetId);
         if (response.success && response.data) {
-          setMessages(response.data.messages);
+          // Service delivers DESC by default (unless targetId is used).
+          // We need ASC (Oldest -> Newest) for correct Chat Room rendering & Infinite Scroll logic.
+          const incoming = response.data.messages;
+          const sorted = targetId ? incoming : [...incoming].reverse(); // targetId logic in service is already ASC.
+
+          // De-duplicate by ID (Critical for safety/re-rendering)
+          const unique = Array.from(new Map(sorted.map(m => [m.id, m])).values());
+          // Sort by created_at ASC (Oldest -> Newest) (Strict enforcement)
+          unique.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+          setMessages(unique);
           setHasMoreMessages(response.data.hasNext); // 과거 데이터 존재 여부
 
           // 딥링킹(targetId)의 경우, 가져온 데이터가 limit보다 많으면 '미래 데이터'가 더 있을 수 있음을 의미할 수도 있지만,
@@ -275,8 +299,17 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         const { messages: olderMessages, hasNext } = response.data;
 
         if (olderMessages.length > 0) {
-          // 기존 메시지 앞에 추가
-          setMessages(prev => [...olderMessages, ...prev]);
+          // olderMessages are DESC. Reverse to ASC before prepending.
+          const sortedOlder = [...olderMessages].reverse();
+          
+          setMessages(prev => {
+            const combined = [...sortedOlder, ...prev];
+            // De-duplicate by ID
+            const unique = Array.from(new Map(combined.map(m => [m.id, m])).values());
+            // Sort by created_at ASC (Oldest -> Newest)
+            unique.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+            return unique;
+          });
         }
 
         setHasMoreMessages(hasNext);
@@ -310,8 +343,14 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         const { messages: newerMessages, hasNext } = response.data;
 
         if (newerMessages.length > 0) {
-          // 기존 메시지 뒤에 추가
-          setMessages(prev => [...prev, ...newerMessages]);
+          setMessages(prev => {
+            const combined = [...prev, ...newerMessages];
+            // De-duplicate by ID
+            const unique = Array.from(new Map(combined.map(m => [m.id, m])).values());
+            // Sort by created_at ASC (Oldest -> Newest)
+            unique.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+            return unique;
+          });
         }
 
         setHasNewerMessages(hasNext); // 더 미래의 데이터가 있는지 업데이트
@@ -344,12 +383,20 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       const myProfile = user ? await fetchProfileByAuthId(user.id) : null;
 
       const previewAttachments: MessageAttachment[] =
-        messageData.attachments?.map(file => ({
-          id: crypto.randomUUID(),
-          type: 'image',
-          url: URL.createObjectURL(file), // 🔥 핵심
-          is_temp: true, // 선택 (구분용)
-        })) ?? [];
+        messageData.attachments?.map(file => {
+          // MIME 타입 기반 타입 결정
+          let type: 'image' | 'video' | 'file' = 'file';
+          if (file.type.startsWith('image/')) type = 'image';
+          else if (file.type.startsWith('video/')) type = 'video';
+
+          return {
+            id: crypto.randomUUID(),
+            type,
+            url: URL.createObjectURL(file), // 🔥 핵심
+            name: file.name,
+            is_temp: true, // 선택 (구분용)
+          };
+        }) ?? [];
 
       const optimisticMessage: DirectMessage = {
         id: tempId,
@@ -373,22 +420,23 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       }
 
       // 채팅 목록 미리보기 즉시 업데이트
-      // setChats(prev =>
-      //   prev.map(chat =>
-      //     chat.id === messageData.chat_id
-      //       ? {
-      //           ...chat,
-      //           last_message: {
-      //             content: messageData.content,
-      //             created_at: now,
-      //             sender_nickname: myProfile?.nickname || '',
-      //             sender_id: user?.id || '',
-      //           },
-      //           last_message_at: now,
-      //         }
-      //       : chat,
-      //   ),
-      // );
+      setChats(prev =>
+        prev.map(chat =>
+          chat.id === messageData.chat_id
+            ? {
+                ...chat,
+                last_message: {
+                  content: messageData.content ?? '',
+                  created_at: now,
+                  sender_nickname: myProfile?.nickname || '',
+                  sender_id: user?.id || '',
+                  attachments: previewAttachments,  // 첨부파일 정보 포함
+                },
+                last_message_at: now,
+              }
+            : chat,
+        ),
+      );
 
       try {
         // 2. 실제 전송 요청
@@ -425,10 +473,11 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
                 ? {
                     ...chat,
                     last_message: {
-                      content: sent.content ?? (sent.attachments?.length ? '📷 사진' : ''),
+                      content: sent.content ?? '',
                       created_at: sent.created_at,
                       sender_nickname: sent.sender?.nickname || '',
                       sender_id: sent.sender_id,
+                      attachments: sent.attachments ?? [],  // 첨부파일 정보 유지
                     },
                     last_message_at: sent.created_at,
                   }
@@ -643,8 +692,25 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
 
     // INSERT: direct_messages (새 메시지 도착)
     const handleNewMessage = async (payload: any) => {
-      const newMessage = payload.new;
+      let newMessage = payload.new;
       const chatId = newMessage.chat_id;
+
+      // Realtime Payload에는 Relation 데이터(attachments 등)가 포함되지 않음.
+      // 따라서 첨부파일이 있는 메시지일 경우, 별도로 전체 데이터를 조회해야 함.
+      // content가 없고 attachments가 있어야 하는 경우(이미지/영상 등) 필수.
+      try {
+         const { data: fullMessage } = await supabase
+            .from('direct_messages')
+            .select(`*, attachments:direct_message_attachments(*)`)
+            .eq('id', newMessage.id)
+            .single();
+         
+         if (fullMessage) {
+            newMessage = fullMessage;
+         }
+      } catch (e) {
+         console.warn('Realtime message fetch failed, using payload', e);
+      }
 
       // 1. 현재 보고 있는 채팅방이면 메시지 추가
       if (currentChatId.current === chatId) {
@@ -706,38 +772,43 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       }
 
       // 2. 채팅 목록 업데이트 (Optimistic Update)
-      setChats(prevChats => {
-        const existingChatIndex = prevChats.findIndex(chat => chat.id === chatId);
+      // 내가 보낸 메시지는 이미 sendMessage에서 optimistic update + 서버 응답으로 2번 업데이트되므로
+      // realtime으로 다시 업데이트하면 타이밍 이슈로 attachment 정보가 사라질 수 있음
+      if (newMessage.sender_id !== currentUserId) {
+        setChats(prevChats => {
+          const existingChatIndex = prevChats.findIndex(chat => chat.id === chatId);
 
-        // 목록에 있는 채팅방이면 -> 맨 위로 이동 + 마지막 메시지 업데이트
-        if (existingChatIndex !== -1) {
-          const updatedChat = { ...prevChats[existingChatIndex] };
+          // 목록에 있는 채팅방이면 -> 맨 위로 이동 + 마지막 메시지 업데이트
+          if (existingChatIndex !== -1) {
+            const updatedChat = { ...prevChats[existingChatIndex] };
 
-          updatedChat.last_message = {
-            content: newMessage.content ?? (newMessage.attachments?.length ? '📷 사진' : ''),
-            created_at: newMessage.created_at,
-            sender_id: newMessage.sender_id,
-            // 닉네임은 기존 chat 정보나 payload에서 유추 불가하면 비워둠(표시단에서 처리)
-            sender_nickname: '',
-          };
-          updatedChat.last_message_at = newMessage.created_at;
+            updatedChat.last_message = {
+              content: newMessage.content ?? '',  // 원본 content 유지 (첨부파일만 있으면 '' 또는 '\u200B')
+              created_at: newMessage.created_at,
+              sender_id: newMessage.sender_id,
+              // 닉네임은 기존 chat 정보나 payload에서 유추 불가하면 비워둠(표시단에서 처리)
+              sender_nickname: '',
+              attachments: newMessage.attachments ?? [],  // 첨부파일 정보 포함 - DirectChatList가 이를 보고 번역된 텍스트 표시
+            };
+            updatedChat.last_message_at = newMessage.created_at;
 
-          // 내가 보낸게 아니고, 현재 보고있는 방이 아니면 안읽음 + 1
-          if (newMessage.sender_id !== currentUserId && currentChatId.current !== chatId) {
-            updatedChat.unread_count = (updatedChat.unread_count || 0) + 1;
-            updatedChat.is_new_chat = true; // 시각적 배지
+            // 내가 보낸게 아니고, 현재 보고있는 방이 아니면 안읽음 + 1
+            if (currentChatId.current !== chatId) {
+              updatedChat.unread_count = (updatedChat.unread_count || 0) + 1;
+              updatedChat.is_new_chat = true; // 시각적 배지
+            }
+
+            // 배열에서 제거 후 맨 앞에 추가
+            const newChats = [...prevChats];
+            newChats.splice(existingChatIndex, 1);
+            return [updatedChat, ...newChats];
+          } else {
+            // 목록에 없던 새로운 채팅방이면 -> 서버에서 목록 다시 로드 (드문 케이스)
+            loadChats();
+            return prevChats;
           }
-
-          // 배열에서 제거 후 맨 앞에 추가
-          const newChats = [...prevChats];
-          newChats.splice(existingChatIndex, 1);
-          return [updatedChat, ...newChats];
-        } else {
-          // 목록에 없던 새로운 채팅방이면 -> 서버에서 목록 다시 로드 (드문 케이스)
-          loadChats();
-          return prevChats;
-        }
-      });
+        });
+      }
     };
 
     const channel = supabase

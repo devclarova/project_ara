@@ -29,10 +29,11 @@ export interface DirectChat {
 
 export interface MessageAttachment {
   id: string;
-  type: 'image';
+  type: 'image' | 'video' | 'file';
   url: string;
   width?: number;
   height?: number;
+  name?: string; // 파일 원본 이름 추가
 }
 
 // 1:1 메시지 타입
@@ -46,13 +47,7 @@ export interface DirectMessage {
   created_at: string; // 전송 시간
   is_system_message?: boolean; // 시스템 메시지 여부
   sender?: ChatUser; // 발신자 정보
-  attachments?: {
-    id: string;
-    type: 'image';
-    url: string;
-    width?: number;
-    height?: number;
-  }[];
+  attachments?: MessageAttachment[];
 }
 
 // 메시지의 상세 추가 확장 정보
@@ -69,6 +64,7 @@ export interface ChatListItem {
     created_at: string; // 작성시간
     sender_nickname: string; // 보낸사람 닉네임
     sender_id: string; // 보낸사람 ID (for 'Me' check)
+    attachments?: MessageAttachment[]; // 첨부파일
   };
   unread_count: number; // 읽지 않은 메시지 수
   is_new_chat?: boolean; // 새 채팅방 알림 여부

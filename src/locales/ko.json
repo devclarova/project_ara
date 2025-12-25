@@ -469,9 +469,16 @@
     "media_gallery": "미디어",
     "no_media": "공유된 미디어가 없습니다",
     "image_message": "사진",
+    "image_preview": "[사진]",
+    "video_preview": "[동영상]",
+    "file_preview": "[파일]",
+    "attach_image": "사진",
+    "attach_video": "동영상",
+    "attach_file": "파일",
     "confirm_exit_title": "채팅방을 나가시겠습니까?",
     "confirm_exit_desc": "나가면 대화 목록으로 돌아갑니다.",
-    "exit_success": "채팅방에서 나갔습니다."
+    "exit_success": "채팅방에서 나갔습니다.",
+    "creating_chat": "채팅방 생성 중..."
   },
   "policy": {
     "close": "닫기",

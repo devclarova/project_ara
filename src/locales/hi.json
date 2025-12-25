@@ -429,6 +429,12 @@
     "media_gallery": "मीडिया",
     "no_media": "कोई साझा मीडिया नहीं",
     "image_message": "Photo",
+    "image_preview": "[छवि]",
+    "video_preview": "[वीडियो]",
+    "file_preview": "[फ़ाइल]",
+    "attach_image": "फ़ोटो",
+    "attach_video": "वीडियो",
+    "attach_file": "फ़ाइल",
     "confirm_exit_title": "Leave Chat?",
     "confirm_exit_desc": "You will be returned to the chat list.",
     "exit_success": "Left chat room."

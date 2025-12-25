@@ -13,8 +13,11 @@ interface DirectChatListProps {
   onChatSelect: (chatId: string) => void;
   onCreateChat: () => void;
   selectedChatId?: string;
+  onLeave?: () => void;
 }
+
 import { useNavigate } from 'react-router-dom';
+import Modal from '@/components/common/Modal';
 
 // 채팅 아이템 메모이제이션
 const ChatItem = memo(
@@ -23,11 +26,13 @@ const ChatItem = memo(
     isSelected,
     onSelect,
     currentUserId,
+    onLeave,
   }: {
     chat: any;
     isSelected: boolean;
     onSelect: (id: string) => void;
     currentUserId?: string;
+    onLeave: (chatId: string) => void;
   }) => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
@@ -114,6 +119,18 @@ const ChatItem = memo(
                       onToggle={() => setIsBlocked(prev => !prev)}
                       onClose={() => setShowMenu(false)}
                     />
+                    <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setShowMenu(false);
+                        onLeave(chat.id);
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                    >
+                      <i className="ri-logout-box-r-line" />
+                      {t('chat.action_exit')}
+                    </button>
                   </div>
                 )}
               </div>
@@ -125,7 +142,13 @@ const ChatItem = memo(
                 {chat.last_message.sender_id === currentUserId
                   ? t('chat.me')
                   : chat.last_message.sender_nickname || chat.other_user.nickname}{' '}
-                : {chat.last_message.content}
+                : {(chat.last_message.content === '\u200B' || !chat.last_message.content) 
+                  ? (chat.last_message.attachments?.[0]?.type === 'video' 
+                      ? t('chat.video_preview') 
+                      : (chat.last_message.attachments?.[0]?.type === 'file' 
+                          ? t('chat.file_preview') 
+                          : t('chat.image_preview')))
+                  : chat.last_message.content}
               </span>
             ) : (
               <span className="no-message">{t('chat.no_messages')}</span>
@@ -160,7 +183,7 @@ const UserItem = memo(
     query?: string;
   }) => {
     return (
-      <div className="user-item" onClick={() => onSelect(user)}>
+      <div className="user-item" onMouseDown={() => onSelect(user)}>
         <div className="user-avatar">
           {user.avatar_url ? (
             <img src={user.avatar_url} alt={user.nickname} />
@@ -179,7 +202,7 @@ const UserItem = memo(
   (prev, next) => prev.user.id === next.user.id && prev.query === next.query,
 );
 UserItem.displayName = 'UserItem';
-const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectChatListProps) => {
+const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId, onLeave }: DirectChatListProps) => {
   const {
     createDirectChat,
     error,
@@ -188,30 +211,55 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
     clearSearchResults,
     userSearchLoading,
     chats,
+    exitDirectChat,
   } = useDirectChat();
   const { user } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [showUserSearch, setShowUserSearch] = useState<boolean>(false);
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
+  // 모달 상태
+  const [isExitModalOpen, setIsExitModalOpen] = useState(false);
+  const [exitTargetChatId, setExitTargetChatId] = useState<string | null>(null);
+
   // 디바운스 개선 (useRef + cleanup)
   const debounceRef = useRef<number | null>(null);
   const userSearchInputRef = useRef<HTMLInputElement>(null);
+
+  // 검색어 변경 감지용 Ref (불필요한 중복 검색 방지)
+  // useEffect가 searchUsers 변경으로 인해 실행될 때, 검색어가 그대로라면 무시하기 위함
+  const lastProcessedTermRef = useRef<string>(searchTerm);
+
   useEffect(() => {
+    // 0. 채팅방 생성 중이면 검색 중단 (중복 실행 방지)
+    if (isCreatingChat) return;
+
+    // 1. 검색어가 이전 렌더링과 동일하다면(단순 리렌더링) 검색 로직 스킵
+    if (searchTerm === lastProcessedTermRef.current) {
+      return;
+    }
+    // 2. 검색어가 변했으므로 업데이트
+    lastProcessedTermRef.current = searchTerm;
+
     // 이전 타이머 취소
     if (debounceRef.current) {
       window.clearTimeout(debounceRef.current);
       debounceRef.current = null;
     }
+
     const trimmed = searchTerm.trim();
     if (!trimmed) {
       clearSearchResults(); // 검색어 없으면 결과 초기화
       return;
     }
+
     // 300ms 디바운스
     debounceRef.current = window.setTimeout(() => {
       searchUsers(trimmed);
       debounceRef.current = null;
     }, 300);
+
     return () => {
       if (debounceRef.current) {
         window.clearTimeout(debounceRef.current);
@@ -219,13 +267,54 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
       }
     };
   }, [searchTerm, searchUsers]);
+  const handleLeaveChat = useCallback((chatId: string) => {
+    setExitTargetChatId(chatId);
+    setIsExitModalOpen(true);
+  }, []);
+
+  // 실제 나가기 실행
+  const confirmLeave = useCallback(async () => {
+    if (!exitTargetChatId) return;
+    
+    try {
+      const success = await exitDirectChat(exitTargetChatId);
+      if (success) {
+        if (selectedChatId === exitTargetChatId) {
+          navigate('/chat');
+          if (onLeave) onLeave();
+        }
+      } else {
+        alert(t('chat.exit_fail'));
+      }
+    } catch (err) {
+      console.error(err);
+      alert(t('chat.exit_fail'));
+    } finally {
+      setIsExitModalOpen(false);
+      setExitTargetChatId(null);
+    }
+  }, [exitTargetChatId, exitDirectChat, navigate, onLeave, selectedChatId, t]);
+
+
   const handleUserSelect = useCallback(
     async (user: ChatUser) => {
-      const chatId = await createDirectChat(user.id);
-      if (chatId) {
-        onChatSelect(chatId);
-        setShowUserSearch(false);
-        setSearchTerm('');
+      // 선택 시 진행 중이던 검색 타이머 취소 (중복 검색 방지)
+      if (debounceRef.current) {
+        window.clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
+      try {
+        setIsCreatingChat(true);
+        const chatId = await createDirectChat(user.id);
+        if (chatId) {
+          onChatSelect(chatId);
+          setShowUserSearch(false);
+          setSearchTerm('');
+        }
+      } catch (error) {
+        console.error('Failed to create chat:', error);
+      } finally {
+        setIsCreatingChat(false);
       }
     },
     [createDirectChat, onChatSelect],
@@ -267,6 +356,12 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
           <Plus className="w-5 h-5" />
         </button>
       </div>
+      {isCreatingChat && (
+        <div className="absolute inset-0 bg-white/50 dark:bg-black/50 z-50 flex flex-col items-center justify-center rounded-2xl">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <span className="mt-2 text-sm text-primary font-medium">{t('chat.creating_chat')}</span>
+        </div>
+      )}
       {showUserSearch && (
         <div className="user-search">
           <div className="flex items-center w-full px-4 h-10 bg-background border border-border rounded-full focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all duration-200 shadow-sm">
@@ -317,10 +412,40 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId }: DirectCh
               isSelected={selectedChatId === chat.id}
               onSelect={handleChatSelect}
               currentUserId={user?.id}
+              onLeave={handleLeaveChat}
             />
           ))
         )}
       </div>
+
+      
+      {/* 나가기 확인 모달 */}
+      <Modal
+        isOpen={isExitModalOpen}
+        onClose={() => setIsExitModalOpen(false)}
+        title={t('chat.confirm_exit_title')}
+        className="max-w-sm h-auto"
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-gray-600 dark:text-gray-300 font-medium">
+            {t('chat.confirm_exit_desc')}
+          </p>
+          <div className="flex justify-end gap-2 mt-2">
+            <button
+              onClick={() => setIsExitModalOpen(false)}
+              className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200"
+            >
+              {t('common.cancel', '취소')}
+            </button>
+            <button
+              onClick={confirmLeave}
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500 text-white hover:bg-red-600"
+            >
+              {t('chat.btn_leave', '나가기')}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

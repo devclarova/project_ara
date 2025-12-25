@@ -140,7 +140,10 @@ export const formatChatListDate = (dateString: string): string => {
     }
 
     if (isSameYear(date, new Date())) {
-      return format(date, 'MMM d', { locale }); // Oct 5 or 10월 5일
+      if (locale === ko) {
+        return format(date, "M월 d일", { locale });
+      }
+      return format(date, 'MMM d', { locale }); // Oct 5
     }
 
     return format(date, 'yyyy. M. d.', { locale }); // Standard short date

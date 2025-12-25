@@ -318,7 +318,7 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
         try {
           const { data: lastMessageData } = await supabase
             .from('direct_messages')
-            .select('content, created_at, sender_id')
+            .select('content, created_at, sender_id, attachments:direct_message_attachments(type)')
             .eq('chat_id', chat.id)
             .order('created_at', { ascending: false })
             .limit(1);
@@ -362,6 +362,7 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
                 sender_nickname:
                   lastMessage.sender_id === currentUser.id ? '나' : otherUserInfo.nickname,
                 sender_id: lastMessage.sender_id,
+                attachments: lastMessage.attachments || [],
               }
             : undefined,
           unread_count: unreadCount || 0,
@@ -381,9 +382,120 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
   }
 }
 
+/**
+ * 단일 채팅방 정보 조회 (ChatListItem 형태)
+ * - 채팅방 목록에 없는 경우(새로 생성 직후 등) 상세 정보를 조회하기 위함
+ */
+export async function getDirectChat(chatId: string): Promise<ChatApiResponse<ChatListItem>> {
+  try {
+    const currentUser = await getCurrentUser();
+
+    // 채팅방 정보 조회
+    const { data: chat, error: chatError } = await supabase
+      .from('direct_chats')
+      .select('*')
+      .eq('id', chatId)
+      .single();
+
+    if (chatError || !chat) {
+      return { success: false, error: '채팅방을 찾을 수 없습니다.' };
+    }
+
+    // 상대방 ID 확인
+    const otherUserId = chat.user1_id === currentUser.profileId ? chat.user2_id : chat.user1_id;
+
+    // 상대방 프로필 조회
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, nickname, avatar_url, username')
+      .eq('id', otherUserId)
+      .single();
+
+    const otherUserInfo: ChatUser = profile
+      ? {
+          id: profile.id,
+          email: `user-${profile.id}@example.com`,
+          nickname: profile.nickname,
+          username: profile.username,
+          avatar_url: profile.avatar_url,
+        }
+      : {
+          id: otherUserId,
+          email: `user-${otherUserId}@example.com`,
+          nickname: `User ${otherUserId.slice(0, 8)}`,
+          avatar_url: null,
+        };
+
+    // 마지막 메시지 조회
+    let lastMessage = null;
+    try {
+      const { data: lastMessageData } = await supabase
+        .from('direct_messages')
+        .select('content, created_at, sender_id, attachments:direct_message_attachments(type)')
+        .eq('chat_id', chat.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (lastMessageData && lastMessageData.length > 0) {
+        lastMessage = lastMessageData[0];
+      }
+    } catch (error) {
+      // ignore
+    }
+
+    // 읽지 않은 메시지 수 조회
+    let unreadCount = 0;
+    try {
+      const { count } = await supabase
+        .from('direct_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('chat_id', chat.id)
+        .eq('is_read', false)
+        .neq('sender_id', currentUser.id);
+
+      if (count !== null) {
+        unreadCount = count;
+      }
+    } catch (error) {
+      // ignore
+    }
+
+    // 새 채팅방 알림 상태 확인
+    const isCurrentUserUser1 = chat.user1_id === currentUser.profileId;
+    const isNewChat = isCurrentUserUser1 ? chat.user1_notified : chat.user2_notified;
+
+    const chatItem: ChatListItem = {
+      id: chat.id,
+      other_user: otherUserInfo,
+      last_message: lastMessage
+        ? {
+            content: lastMessage.content,
+            created_at: lastMessage.created_at,
+            sender_nickname:
+              lastMessage.sender_id === currentUser.id ? '나' : otherUserInfo.nickname,
+            sender_id: lastMessage.sender_id,
+            attachments: lastMessage.attachments || [],
+          }
+        : undefined,
+      unread_count: unreadCount || 0,
+      is_new_chat: isNewChat || false,
+      last_message_at: chat.last_message_at,
+    };
+
+    return { success: true, data: chatItem };
+  } catch (error) {
+    console.error('getDirectChat 오류:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
+    };
+  }
+}
+
 // 업로드 함수
-async function uploadImages(files: File[], chatId: string) {
-  const uploadedUrls: string[] = [];
+// 업로드 함수 (이미지, 동영상, 파일 통합 지원)
+async function uploadAttachments(files: File[], chatId: string) {
+  const uploads: { url: string; type: 'image' | 'video' | 'file'; name: string }[] = [];
 
   for (const file of files) {
     const ext = file.name.split('.').pop();
@@ -400,10 +512,19 @@ async function uploadImages(files: File[], chatId: string) {
 
     const { data } = supabase.storage.from('chat_attachments').getPublicUrl(path);
 
-    uploadedUrls.push(data.publicUrl);
+    // MIME 타입 기반 타입 결정
+    let type: 'image' | 'video' | 'file' = 'file';
+    if (file.type.startsWith('image/')) type = 'image';
+    else if (file.type.startsWith('video/')) type = 'video';
+
+    uploads.push({
+      url: data.publicUrl,
+      type,
+      name: file.name,
+    });
   }
 
-  return uploadedUrls;
+  return uploads;
 }
 
 /**
@@ -473,14 +594,15 @@ export async function sendMessage(
       return { success: false, error: `메시지를 전송할 수 없습니다: ${messageError.message}` };
     }
 
-    // 이미지 업로드 + attachment insert
+    // 파일 업로드 + attachment insert
     if (messageData.attachments?.length) {
-      const imageUrls: string[] = await uploadImages(messageData.attachments, messageData.chat_id);
+      const uploadedFiles = await uploadAttachments(messageData.attachments, messageData.chat_id);
 
-      const rows = imageUrls.map(url => ({
+      const rows = uploadedFiles.map(file => ({
         message_id: newMessage.id,
-        type: 'image',
-        url,
+        type: file.type,
+        url: file.url,
+        name: file.name, // 파일명 저장
       }));
 
       const { error: attachError } = await supabase.from('direct_message_attachments').insert(rows);
@@ -504,7 +626,7 @@ export async function sendMessage(
     // attachment 조회
     const { data: attachments } = await supabase
       .from('direct_message_attachments')
-      .select('id, type, url, width, height')
+      .select('id, type, url, width, height, name')
       .eq('message_id', newMessage.id);
 
     return {
@@ -564,7 +686,7 @@ export async function getMessages(
     // 쿼리 구성 시작
     let query = supabase
       .from('direct_messages')
-      .select(`*, attachments:direct_message_attachments (id, type, url, width, height)`)
+      .select(`*, attachments:direct_message_attachments (id, type, url, width, height, name)`)
       .eq('chat_id', chatId);
 
     // 사용자가 나간 시점이 있으면 그 이후의 메시지만 조회
@@ -587,7 +709,7 @@ export async function getMessages(
         const contextLimit = 5;
         const { data: prevMessages } = await supabase
           .from('direct_messages')
-          .select(`*, attachments:direct_message_attachments ( id, type, url, width, height)`)
+          .select(`*, attachments:direct_message_attachments ( id, type, url, width, height, name)`)
           .eq('chat_id', chatId)
           .lt('created_at', targetMsg.created_at) // 타겟보다 과거
           .order('created_at', { ascending: false }) // 최신순(타겟에 가까운 순)으로 가져옴
@@ -597,7 +719,7 @@ export async function getMessages(
         const nextLimit = limit - (prevMessages?.length || 0); // 나머지 개수만큼
         const { data: nextMessages, error: nextError } = await supabase
           .from('direct_messages')
-          .select(`*, attachments:direct_message_attachments ( id, type, url, width, height)`)
+          .select(`*, attachments:direct_message_attachments ( id, type, url, width, height, name)`)
           .eq('chat_id', chatId)
           .gte('created_at', targetMsg.created_at)
           .order('created_at', { ascending: true })
@@ -1107,7 +1229,7 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
         // 마지막 메시지 조회
         const { data: lastMessage } = await supabase
           .from('direct_messages')
-          .select('*')
+          .select('*, attachments:direct_message_attachments(type)')
           .eq('chat_id', chat.id)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -1174,6 +1296,9 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
       return { success: false, error: '채팅방을 찾을 수 없습니다.' };
     }
 
+
+
+    /* [단체 대화방 구현을 위한 예약 코드 - 현재 비활성화]
     // 2단계: 상대방에게 시스템 메시지 전송
     const isCurrentUserUser1 = chat.user1_id === currentUser.profileId;
     const otherUserId = isCurrentUserUser1 ? chat.user2_id : chat.user1_id;
@@ -1229,9 +1354,11 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
       console.error('시스템 메시지 전송 오류:', systemMessageError);
       // 시스템 메시지 실패해도 채팅방 나가기는 계속 진행
     }
+    */
 
     // 3단계: 논리적 삭제 (현재 사용자의 active 상태를 false로 설정하고 나간 시점 기록)
     const currentTime = new Date().toISOString();
+    const isCurrentUserUser1 = chat.user1_id === currentUser.profileId; // Define here as previous definition was removed
     const updateData = isCurrentUserUser1
       ? { user1_active: false, user1_left_at: currentTime }
       : { user2_active: false, user2_left_at: currentTime };
@@ -1278,6 +1405,10 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
       }
     }
 
+
+
+
+    /* [단체 대화방 구현을 위한 예약 코드 - 현재 비활성화]
     // 4단계: 채팅방의 마지막 메시지 시간 업데이트
     const { error: timestampError } = await supabase
       .from('direct_chats')
@@ -1288,6 +1419,7 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
       console.error('채팅방 타임스탬프 업데이트 오류:', timestampError);
       // 오류가 있어도 성공으로 처리
     }
+    */
 
     return { success: true, data: true };
   } catch (error) {

@@ -432,6 +432,12 @@
     "media_gallery": "Mídia",
     "no_media": "Nenhuma mídia compartilhada",
     "image_message": "Photo",
+    "image_preview": "[Imagem]",
+    "video_preview": "[Vídeo]",
+    "file_preview": "[Arquivo]",
+    "attach_image": "Foto",
+    "attach_video": "Vídeo",
+    "attach_file": "Arquivo",
     "confirm_exit_title": "Leave Chat?",
     "confirm_exit_desc": "You will be returned to the chat list.",
     "exit_success": "Left chat room."

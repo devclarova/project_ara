@@ -431,6 +431,12 @@
     "media_gallery": "สื่อ",
     "no_media": "ไม่มีสื่อที่แชร์",
     "image_message": "Photo",
+    "image_preview": "[รูปภาพ]",
+    "video_preview": "[วิดีโอ]",
+    "file_preview": "[ไฟล์]",
+    "attach_image": "รูปภาพ",
+    "attach_video": "วิดีโอ",
+    "attach_file": "ไฟล์",
     "confirm_exit_title": "Leave Chat?",
     "confirm_exit_desc": "You will be returned to the chat list.",
     "exit_success": "Left chat room."
