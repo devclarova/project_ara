@@ -149,6 +149,8 @@ export const GlobalNotificationListener: React.FC = () => {
           async (payload: any) => {
             const newMessage = payload.new;
             if (newMessage.sender_id === user.id) return;
+            // 시스템 메시지(예: 나가기 알림 등)는 글로벌 토스트 띄우지 않음
+            if (newMessage.is_system_message) return;
             if (!profile?.id) return;
             if (currentChatRef.current === newMessage.chat_id) return;
 
@@ -164,16 +166,26 @@ export const GlobalNotificationListener: React.FC = () => {
                return;
             }
 
+            // active 상태도 같이 조회하여, 내가 나간 채팅방인지 확인
             const { data: chatInfo, error: chatError } = await supabase
                .from('direct_chats')
-               .select('user1_id, user2_id')
+               .select('user1_id, user2_id, user1_active, user2_active')
                .eq('id', newMessage.chat_id)
                .single();
             
             if (chatError || !chatInfo) return;
 
-            const isMyChat = (chatInfo.user1_id === profile?.id) || (chatInfo.user2_id === profile?.id);
-            if (!isMyChat) return;
+            // 내가 참여중이고(active=true), 내 채팅방인 경우만 알림
+            const isUser1 = chatInfo.user1_id === profile?.id;
+            const isUser2 = chatInfo.user2_id === profile?.id;
+
+            if (isUser1) {
+              if (!chatInfo.user1_active) return; // 내가 나갔으면 알림 X
+            } else if (isUser2) {
+              if (!chatInfo.user2_active) return; // 내가 나갔으면 알림 X
+            } else {
+              return; // 내 채팅방 아님
+            }
 
             const { data: senderProfile } = await supabase
               .from('profiles')
@@ -206,6 +218,7 @@ export const GlobalNotificationListener: React.FC = () => {
             });
           }
         )
+
         .subscribe();
     };
 

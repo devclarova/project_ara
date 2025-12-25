@@ -431,6 +431,12 @@
     "media_gallery": "মিডিয়া",
     "no_media": "কোন শেয়ার করা মিডিয়া নেই",
     "image_message": "Photo",
+    "image_preview": "[ছবি]",
+    "video_preview": "[ভিডিও]",
+    "file_preview": "[ফাইল]",
+    "attach_image": "ছবি",
+    "attach_video": "ভিডিও",
+    "attach_file": "ফাইল",
     "confirm_exit_title": "Leave Chat?",
     "confirm_exit_desc": "You will be returned to the chat list.",
     "exit_success": "Left chat room."

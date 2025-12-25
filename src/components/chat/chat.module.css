@@ -73,6 +73,7 @@
   flex-direction: column;
   height: 100%;
   background-color: hsl(var(--secondary));
+  position: relative;
   /* border-right removed */
 }
 
@@ -233,7 +234,7 @@
 .chatPage :global(.chat-item) {
   display: flex;
   align-items: center;
-  padding: 18px 20px;
+  padding: 18px 10px 18px 20px;
   cursor: pointer;
   border-bottom: 1px solid hsl(var(--border));
   border-right: 1px solid hsl(var(--border));
@@ -601,6 +602,25 @@
   background-color: hsl(var(--primary));
 }
 
+/* 첨부 버튼 */
+.chatPage :global(.attach-button) {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  color: hsl(var(--muted-foreground));
+  transition: all 0.2s;
+  padding: 0;
+  margin: 0;
+}
+.chatPage :global(.attach-button:hover) {
+  background-color: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
 /* 입력 영역 */
 .chatPage :global(.message-input) {
   border-top: 1px solid hsl(var(--border));
@@ -613,6 +633,7 @@
 .chatPage :global(.input-container) {
   display: flex;
   gap: 8px;
+  align-items: flex-end; /* 입력창 늘어나도 버튼은 하단 정렬 */
 }
 .chatPage :global(.message-textarea) {
   flex: 1;

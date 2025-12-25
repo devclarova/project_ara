@@ -29,12 +29,13 @@ const AdminLayout = () => {
 
   const handleLogout = async () => {
     try {
+      // 먼저 리다이렉트하여 RequireAdmin 가드가 작동하기 전에 페이지 이동
+      window.location.href = '/';
+      // 백그라운드에서 로그아웃
       await supabase.auth.signOut();
-      toast.success(t('admin.logged_out'));
-      window.location.href = '/';  // 강제 리다이렉트
     } catch (error) {
       console.error('Logout error:', error);
-      toast.error(t('admin.logout_error'));
+      // 에러가 발생해도 이미 리다이렉트되었으므로 토스트는 생략
     }
   };
 
@@ -44,7 +45,7 @@ const AdminLayout = () => {
       <aside 
         className={`fixed inset-y-0 left-0 z-50 w-64 bg-secondary border-r border-gray-300 dark:border-gray-600 transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:relative md:translate-x-0`}
+        } md:translate-x-0`}
       >
         <div className="h-full flex flex-col">
           <div className="h-16 flex items-center px-6 border-b border-gray-300 dark:border-gray-600">
@@ -59,7 +60,8 @@ const AdminLayout = () => {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+
+          <div className="flex-1 min-h-0 overflow-y-auto py-4 px-3 space-y-1">
             <NavItem to="/admin" icon={Home} label="대시보드" end />
             
             <div className="pt-4 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">콘텐츠 관리</div>
@@ -78,7 +80,7 @@ const AdminLayout = () => {
             <NavItem to="/admin/settings" icon={Settings} label="설정" />
           </div>
 
-          <div className="p-4 border-t border-gray-300 dark:border-gray-600">
+          <div className="p-4 border-t border-gray-300 dark:border-gray-600 shrink-0">
             <div className="flex items-center gap-3 px-2 py-2 mb-2">
               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">A</div>
               <div className="flex-1 overflow-hidden">
@@ -98,7 +100,7 @@ const AdminLayout = () => {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden md:ml-64">
         {/* Header */}
         <header className="h-14 sm:h-16 bg-secondary/80 backdrop-blur border-b border-gray-300 dark:border-gray-600 flex items-center justify-between px-2 sm:px-4 md:px-6 sticky top-0 z-40">
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-1">

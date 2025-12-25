@@ -443,6 +443,12 @@
     "media_gallery": "媒体",
     "no_media": "没有共享的媒体",
     "image_message": "图片",
+    "image_preview": "[图片]",
+    "video_preview": "[视频]",
+    "file_preview": "[文件]",
+    "attach_image": "照片",
+    "attach_video": "视频",
+    "attach_file": "文件",
     "confirm_exit_title": "要退出聊天室吗？",
     "confirm_exit_desc": "退出后将返回对话列表。",
     "exit_success": "已退出聊天室。"

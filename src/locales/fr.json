@@ -396,6 +396,12 @@
     "media_gallery": "Médias",
     "no_media": "Aucun média partagé",
     "image_message": "Photo",
+    "image_preview": "[Image]",
+    "video_preview": "[Vidéo]",
+    "file_preview": "[Fichier]",
+    "attach_image": "Photo",
+    "attach_video": "Vidéo",
+    "attach_file": "Fichier",
     "confirm_exit_title": "Quitter le chat ?",
     "confirm_exit_desc": "Vous retournerez à la liste des discussions.",
     "exit_success": "Vous avez quitté le chat."

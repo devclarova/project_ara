@@ -489,6 +489,12 @@
     "media_gallery": "メディア",
     "no_media": "共有されたメディアがありません",
     "image_message": "写真",
+    "image_preview": "[画像]",
+    "video_preview": "[動画]",
+    "file_preview": "[ファイル]",
+    "attach_image": "写真",
+    "attach_video": "動画",
+    "attach_file": "ファイル",
     "confirm_exit_title": "チャットルームを退出しますか？",
     "confirm_exit_desc": "退出すると会話一覧に戻ります。",
     "exit_success": "チャットルームから退出しました。"

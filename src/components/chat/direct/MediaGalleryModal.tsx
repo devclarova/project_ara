@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { X, Download, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { X, Calendar } from 'lucide-react';
 import type { DirectMessage } from '@/types/ChatType';
 import { useTranslation } from 'react-i18next';
 import { getMediaInChat } from '@/services/chat/directChatService';
+import MediaViewer, { type MediaItem } from './MediaViewer';
 
 interface MediaGalleryModalProps {
   isOpen: boolean;
@@ -10,14 +11,7 @@ interface MediaGalleryModalProps {
   chatId: string;
 }
 
-interface MediaItem {
-  url: string;
-  messageId: string;
-  date: string;
-  senderId: string;
-  senderName: string;
-}
-
+// MediaItem removed (imported), GroupedMedia stays
 interface GroupedMedia {
   [date: string]: MediaItem[];
 }
@@ -27,25 +21,6 @@ export default function MediaGalleryModal({ isOpen, onClose, chatId }: MediaGall
   const [selectedImage, setSelectedImage] = useState<MediaItem | null>(null);
   const [mediaMessages, setMediaMessages] = useState<DirectMessage[]>([]);
   const [loading, setLoading] = useState(false);
-  const [imageOpacity, setImageOpacity] = useState(1);
-  const [dragOffset, setDragOffset] = useState(0);
-  
-  // 확대/축소 기능
-  const [scale, setScale] = useState(1);
-  const [panX, setPanX] = useState(0);
-  const [panY, setPanY] = useState(0);
-  
-  // 드래그 상태 관리
-  const dragStartX = useRef<number>(0);
-  const dragStartY = useRef<number>(0);
-  const isDragging = useRef<boolean>(false);
-  const lastPanX = useRef<number>(0);
-  const lastPanY = useRef<number>(0);
-  const imgRef = useRef<HTMLImageElement>(null);
-  
-  // 핀치 제스처
-  const initialDistance = useRef<number>(0);
-  const initialScale = useRef<number>(1);
 
   // 모달이 열릴 때 채팅방의 모든 미디어 메시지 로드
   useEffect(() => {
@@ -70,30 +45,43 @@ export default function MediaGalleryModal({ isOpen, onClose, chatId }: MediaGall
     }
   }, [isOpen, chatId]);
   
-  // 이미지 변경 시 확대/위치 초기화
-  useEffect(() => {
-    setScale(1);
-    setPanX(0);
-    setPanY(0);
-    setDragOffset(0);
-    lastPanX.current = 0;
-    lastPanY.current = 0;
-  }, [selectedImage]);
+  // No reset needed as MediaViewer handles generic state
+
 
   // 메시지에서 모든 미디어 추출
   const allMedia = useMemo(() => {
     const media: MediaItem[] = [];
     
-    mediaMessages.forEach(msg => {
+    // DB returns DESC (Newest first). We want Chronological (ASC) for Gallery Navigation (Left=Older, Right=Newer)
+    // So we reverse/sort it.
+    const sorted = [...mediaMessages].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    
+    sorted.forEach(msg => {
       if (msg.attachments && msg.attachments.length > 0) {
-        msg.attachments.forEach(att => {
-          media.push({
-            url: att.url,
-            messageId: msg.id,
-            date: msg.created_at,
-            senderId: msg.sender_id,
-            senderName: msg.sender?.nickname || 'Unknown',
-          });
+        msg.attachments.forEach((att: any) => {
+          // 파일 타입은 제외하고 이미지와 비디오만 갤러리에 표시
+            const type = (att.type || '').toLowerCase();
+            if (type === 'video') {
+              media.push({
+                url: att.url,
+                messageId: msg.id,
+                date: msg.created_at,
+                senderId: msg.sender_id,
+                senderName: msg.sender?.nickname || 'Unknown',
+                senderAvatarUrl: msg.sender?.avatar_url,
+                type: 'video',
+              });
+            } else if (type !== 'file') {
+              media.push({
+                url: att.url,
+                messageId: msg.id,
+                date: msg.created_at,
+                senderId: msg.sender_id,
+                senderName: msg.sender?.nickname || 'Unknown',
+                senderAvatarUrl: msg.sender?.avatar_url,
+                type: 'image',
+              });
+            }
         });
       }
     });
@@ -127,330 +115,10 @@ export default function MediaGalleryModal({ isOpen, onClose, chatId }: MediaGall
     }).format(date);
   };
 
-  const handleDownload = async (url: string) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = `image-${Date.now()}.jpg`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      console.error('Download failed:', error);
-    }
-  };
+  // Helper functions moved to MediaViewer or removed if not used locally
 
-  // 이전/다음 이미지 네비게이션 (애니메이션 포함)
-  const handlePrevImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!selectedImage) return;
+  // Gesture handlers removed
 
-    const currentIndex = allMedia.findIndex(item => item.url === selectedImage.url);
-    if (currentIndex > 0) {
-      setDragOffset(-window.innerWidth * 0.3);
-      setTimeout(() => {
-        setSelectedImage(allMedia[currentIndex - 1]);
-        setDragOffset(window.innerWidth * 0.3);
-        setTimeout(() => {
-          setDragOffset(0);
-        }, 20);
-      }, 100);
-    }
-  };
-
-  const handleNextImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!selectedImage) return;
-
-    const currentIndex = allMedia.findIndex(item => item.url === selectedImage.url);
-    if (currentIndex < allMedia.length - 1) {
-      setDragOffset(window.innerWidth * 0.3);
-      setTimeout(() => {
-        setSelectedImage(allMedia[currentIndex + 1]);
-        setDragOffset(-window.innerWidth * 0.3);
-        setTimeout(() => {
-          setDragOffset(0);
-        }, 20);
-      }, 100);
-    }
-  };
-
-  // 키보드 이벤트 핸들러 (좌우 화살표)
-  useEffect(() => {
-    if (!selectedImage) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') {
-        const currentIndex = allMedia.findIndex(item => item.url === selectedImage.url);
-        if (currentIndex > 0) {
-          setDragOffset(-window.innerWidth * 0.3);
-          setTimeout(() => {
-            setSelectedImage(allMedia[currentIndex - 1]);
-            setDragOffset(window.innerWidth * 0.3);
-            setTimeout(() => {
-              setDragOffset(0);
-            }, 20);
-          }, 100);
-        }
-      } else if (e.key === 'ArrowRight') {
-        const currentIndex = allMedia.findIndex(item => item.url === selectedImage.url);
-        if (currentIndex < allMedia.length - 1) {
-          setDragOffset(window.innerWidth * 0.3);
-          setTimeout(() => {
-            setSelectedImage(allMedia[currentIndex + 1]);
-            setDragOffset(-window.innerWidth * 0.3);
-            setTimeout(() => {
-              setDragOffset(0);
-            }, 20);
-          }, 100);
-        }
-      } else if (e.key === 'Escape') {
-        setSelectedImage(null);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedImage, allMedia]);
-
-  // 드래그 이벤트 핸들러
-  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
-    isDragging.current = true;
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    dragStartX.current = clientX;
-    dragStartY.current = clientY;
-    lastPanX.current = panX;
-    lastPanY.current = panY;
-  };
-
-  const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDragging.current) return;
-    e.preventDefault();
-    
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-    
-    if (scale > 1) {
-      // 확대된 상태: 팬 기능
-      const deltaX = clientX - dragStartX.current;
-      const deltaY = clientY - dragStartY.current;
-      setPanX(lastPanX.current + deltaX);
-      setPanY(lastPanY.current + deltaY);
-    } else {
-      // 원래 크기: 슬라이드 기능
-      const offset = clientX - dragStartX.current;
-      setDragOffset(offset);
-    }
-  };
-
-  const handleDragEnd = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDragging.current) return;
-    
-    if (scale > 1) {
-      // 확대된 상태: 팬 위치 고정
-      isDragging.current = false;
-      return;
-    }
-    
-    // 원래 크기: 슬라이드 기능
-    const clientX = 'touches' in e ? (e as React.TouchEvent).changedTouches[0].clientX : (e as React.MouseEvent).clientX;
-    const dragDistance = clientX - dragStartX.current;
-    const threshold = 50;
-
-    if (Math.abs(dragDistance) > threshold) {
-      if (dragDistance > 0) {
-        const currentIndex = allMedia.findIndex(item => item.url === selectedImage?.url);
-        if (currentIndex > 0) {
-          setDragOffset(window.innerWidth * 0.3);
-          setTimeout(() => {
-            setSelectedImage(allMedia[currentIndex - 1]);
-            setDragOffset(-window.innerWidth * 0.3);
-            setTimeout(() => {
-              setDragOffset(0);
-            }, 20);
-          }, 100);
-        } else {
-          setDragOffset(0);
-        }
-      } else {
-        const currentIndex = allMedia.findIndex(item => item.url === selectedImage?.url);
-        if (currentIndex < allMedia.length - 1) {
-          setDragOffset(-window.innerWidth * 0.3);
-          setTimeout(() => {
-            setSelectedImage(allMedia[currentIndex + 1]);
-            setDragOffset(window.innerWidth * 0.3);
-            setTimeout(() => {
-              setDragOffset(0);
-            }, 20);
-          }, 100);
-        } else {
-          setDragOffset(0);
-        }
-      }
-    } else {
-      setDragOffset(0);
-    }
-
-    isDragging.current = false;
-    dragStartX.current = 0;
-  };
-  
-  // 확대/축소 기능 - wheel 이벤트
-  useEffect(() => {
-    const img = imgRef.current;
-    if (!img || !selectedImage) return;
-
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? -0.1 : 0.1;
-      setScale(prev => {
-        const newScale = Math.min(Math.max(1, prev + delta), 4);
-        if (newScale === 1) {
-          setPanX(0);
-          setPanY(0);
-        }
-        return newScale;
-      });
-    };
-
-    img.addEventListener('wheel', handleWheel, { passive: false });
-    return () => img.removeEventListener('wheel', handleWheel);
-  }, [selectedImage]);
-  
-  const handleDoubleClick = () => {
-    if (scale > 1) {
-      setScale(1);
-      setPanX(0);
-      setPanY(0);
-    } else {
-      setScale(2);
-    }
-  };
-  
-  // 핀치 제스처 및 터치 이벤트
-  useEffect(() => {
-    const img = imgRef.current;
-    if (!img || !selectedImage) return;
-
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 2) {
-        const touch1 = e.touches[0];
-        const touch2 = e.touches[1];
-        const distance = Math.hypot(
-          touch2.clientX - touch1.clientX,
-          touch2.clientY - touch1.clientY
-        );
-        initialDistance.current = distance;
-        initialScale.current = scale;
-      } else if (e.touches.length === 1) {
-        isDragging.current = true;
-        const clientX = e.touches[0].clientX;
-        const clientY = e.touches[0].clientY;
-        dragStartX.current = clientX;
-        dragStartY.current = clientY;
-        lastPanX.current = panX;
-        lastPanY.current = panY;
-      }
-    };
-    
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length === 2) {
-        e.preventDefault();
-        const touch1 = e.touches[0];
-        const touch2 = e.touches[1];
-        const distance = Math.hypot(
-          touch2.clientX - touch1.clientX,
-          touch2.clientY - touch1.clientY
-        );
-        const scaleChange = distance / initialDistance.current;
-        const newScale = Math.min(Math.max(1, initialScale.current * scaleChange), 4);
-        setScale(newScale);
-        if (newScale === 1) {
-          setPanX(0);
-          setPanY(0);
-        }
-      } else if (e.touches.length === 1 && isDragging.current) {
-        e.preventDefault();
-        const clientX = e.touches[0].clientX;
-        const clientY = e.touches[0].clientY;
-        
-        if (scale > 1) {
-          const deltaX = clientX - dragStartX.current;
-          const deltaY = clientY - dragStartY.current;
-          setPanX(lastPanX.current + deltaX);
-          setPanY(lastPanY.current + deltaY);
-        } else {
-          const offset = clientX - dragStartX.current;
-          setDragOffset(offset);
-        }
-      }
-    };
-    
-    const handleTouchEnd = (e: TouchEvent) => {
-      if (e.touches.length === 0 && isDragging.current) {
-        if (scale > 1) {
-          isDragging.current = false;
-          return;
-        }
-        
-        const clientX = e.changedTouches[0].clientX;
-        const dragDistance = clientX - dragStartX.current;
-        const threshold = 50;
-
-        if (Math.abs(dragDistance) > threshold) {
-          if (dragDistance > 0) {
-            const currentIndex = allMedia.findIndex(item => item.url === selectedImage?.url);
-            if (currentIndex > 0) {
-              setDragOffset(window.innerWidth * 0.3);
-              setTimeout(() => {
-                setSelectedImage(allMedia[currentIndex - 1]);
-                setDragOffset(-window.innerWidth * 0.3);
-                setTimeout(() => {
-                  setDragOffset(0);
-                }, 20);
-              }, 100);
-            } else {
-              setDragOffset(0);
-            }
-          } else {
-            const currentIndex = allMedia.findIndex(item => item.url === selectedImage?.url);
-            if (currentIndex < allMedia.length - 1) {
-              setDragOffset(-window.innerWidth * 0.3);
-              setTimeout(() => {
-                setSelectedImage(allMedia[currentIndex + 1]);
-                setDragOffset(window.innerWidth * 0.3);
-                setTimeout(() => {
-                  setDragOffset(0);
-                }, 20);
-              }, 100);
-            } else {
-              setDragOffset(0);
-            }
-          }
-        } else {
-          setDragOffset(0);
-        }
-
-        isDragging.current = false;
-        dragStartX.current = 0;
-      }
-    };
-
-    img.addEventListener('touchstart', handleTouchStart, { passive: false });
-    img.addEventListener('touchmove', handleTouchMove, { passive: false });
-    img.addEventListener('touchend', handleTouchEnd, { passive: false });
-    
-    return () => {
-      img.removeEventListener('touchstart', handleTouchStart);
-      img.removeEventListener('touchmove', handleTouchMove);
-      img.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [selectedImage, scale, panX, panY, allMedia]);
 
   if (!isOpen) return null;
 
@@ -505,14 +173,23 @@ export default function MediaGalleryModal({ isOpen, onClose, chatId }: MediaGall
                           className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer group"
                           onClick={() => setSelectedImage(item)}
                         >
-                          <img
-                            src={item.url}
-                            alt=""
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                          />
+                          {item.type === 'video' ? (
+                             <video
+                               src={item.url}
+                               className="w-full h-full object-cover"
+                               muted
+                             />
+                          ) : (
+                            <img
+                              src={item.url}
+                              alt=""
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                            />
+                          )}
                           {/* 호버 오버레이 */}
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                            <div className="text-white text-xs font-medium">
+                            {item.type === 'video' && <i className="ri-play-circle-fill text-3xl text-white/90" />}
+                            <div className="absolute bottom-2 text-white text-xs font-medium">
                               {item.senderName}
                             </div>
                           </div>
@@ -527,87 +204,13 @@ export default function MediaGalleryModal({ isOpen, onClose, chatId }: MediaGall
         </div>
       </div>
 
-      {/* 라이트박스 (이미지 확대) */}
-      {selectedImage && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center"
-        >
-          {/* 닫기 버튼 */}
-          <button
-            onClick={() => setSelectedImage(null)}
-            className="absolute top-12 right-4 p-2 rounded-full hover:bg-black/50 transition z-10"
-            style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.3)',
-              backdropFilter: 'blur(8px)',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)'
-            }}
-          >
-            <X size={24} className="text-white" strokeWidth={2.5} />
-          </button>
-
-          {/* 다운로드 버튼 */}
-          <button
-            onClick={() => handleDownload(selectedImage.url)}
-            className="absolute top-12 right-16 p-2 rounded-full hover:bg-black/50 transition z-10"
-            style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.3)',
-              backdropFilter: 'blur(8px)',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)'
-            }}
-          >
-            <Download size={24} className="text-white" strokeWidth={2.5} />
-          </button>
-
-          {/* 이전 이미지 버튼 */}
-          {allMedia.findIndex(item => item.url === selectedImage.url) > 0 && (
-            <button
-              onClick={handlePrevImage}
-              className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 transition z-20"
-              aria-label="Previous image"
-            >
-              <ChevronLeft size={36} className="text-white" />
-            </button>
-          )}
-
-          {/* 다음 이미지 버튼 */}
-          {allMedia.findIndex(item => item.url === selectedImage.url) < allMedia.length - 1 && (
-            <button
-              onClick={handleNextImage}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 transition z-20"
-              aria-label="Next image"
-            >
-              <ChevronRight size={36} className="text-white" />
-            </button>
-          )}
-
-          <img
-            ref={imgRef}
-            src={selectedImage.url}
-            alt=""
-            className="max-w-[90vw] max-h-[90vh] object-contain select-none"
-            style={{ 
-              opacity: imageOpacity,
-              transform: `translateX(${dragOffset}px) scale(${scale}) translate(${panX / scale}px, ${panY / scale}px)`,
-              transition: dragOffset === 0 && !isDragging.current ? 'all 350ms cubic-bezier(0.4, 0, 0.2, 1)' : 'opacity 250ms ease-out',
-              willChange: 'transform, opacity',
-              cursor: scale > 1 ? (isDragging.current ? 'grabbing' : 'grab') : (isDragging.current ? 'grabbing' : 'grab')
-            }}
-            draggable={false}
-            onMouseDown={handleDragStart}
-            onMouseMove={handleDragMove}
-            onMouseUp={handleDragEnd}
-            onMouseLeave={handleDragEnd}
-            onDoubleClick={handleDoubleClick}
-          />
-
-          {/* 이미지 정보 */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-sm rounded-full px-6 py-3 text-white text-sm">
-            <span className="font-medium">{selectedImage.senderName}</span>
-            <span className="mx-2">•</span>
-            <span>{formatDate(selectedImage.date)}</span>
-          </div>
-        </div>
-      )}
+      {/* 라이트박스 뷰어 (MediaViewer 사용) */}
+      <MediaViewer
+        isOpen={!!selectedImage}
+        onClose={() => setSelectedImage(null)}
+        mediaList={allMedia}
+        initialMediaId={selectedImage?.url} // Pass URL for unique identification
+      />
     </>
   );
 }

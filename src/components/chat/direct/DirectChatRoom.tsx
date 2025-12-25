@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback, memo, useLayoutEffect } from 'react';
 import { useDirectChat } from '../../../contexts/DirectChatContext';
+import { getMediaInChat } from '@/services/chat/directChatService';
 import type { DirectMessage } from '../../../types/ChatType';
 import MessageInput from '../common/MessageInput';
 import TranslateButton from '@/components/common/TranslateButton';
@@ -8,10 +9,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import ReportButton from '@/components/common/ReportButton';
 import BlockButton from '@/components/common/BlockButton';
 import { toast } from 'sonner';
-import { ArrowDown } from 'lucide-react';
+import { ArrowDown, X } from 'lucide-react';
 import styles from '../chat.module.css';
 import HighlightText from '../../common/HighlightText';
 import MediaGalleryModal from './MediaGalleryModal';
+import MediaViewer, { type MediaItem } from './MediaViewer';
+import Modal from '@/components/common/Modal';
 import { formatMessageTime, formatDividerDate } from '@/utils/dateUtils';
 // HMR Trigger
 interface MessageGroup {
@@ -51,19 +54,24 @@ const loadImage = (url: string): Promise<string> => {
 };
 // LazyImage 최적화
 const LazyImage = memo(
-  ({ src, alt, className, style }: { src: string; alt: string; className?: string; style?: React.CSSProperties }) => {
+  ({ src, alt, className, style, onLoad }: { src: string; alt: string; className?: string; style?: React.CSSProperties; onLoad?: () => void }) => {
     const [loaded, setLoaded] = useState(() => imageCache.has(src));
     const imgRef = useRef<HTMLImageElement>(null);
 
     useEffect(() => {
-      if (!src || loaded) return;
+      if (!src || loaded) {
+        if (loaded) onLoad?.();
+        return;
+      }
 
       const observer = new IntersectionObserver(
         entries => {
           entries.forEach(entry => {
             if (entry.isIntersecting) {
               loadImage(src)
-                .then(() => setLoaded(true))
+                .then(() => {
+                  setLoaded(true);
+                })
                 .catch(() => setLoaded(false));
               observer.disconnect();
             }
@@ -78,6 +86,12 @@ const LazyImage = memo(
 
       return () => observer.disconnect();
     }, [src, loaded]);
+
+    useEffect(() => {
+      if (loaded && onLoad) {
+        onLoad();
+      }
+    }, [loaded, onLoad]);
 
     return loaded ? (
       <img src={src} alt={alt} className={className} style={style} />
@@ -122,6 +136,8 @@ const MessageItem = memo(
     isFlashing,
     isCurrent,
     searchQuery,
+    onImageLoad,
+    onViewMedia, // 미디어(이미지/동영상) 크게보기 핸들러
   }: {
     message: DirectMessage;
     currentUserId: string;
@@ -129,6 +145,8 @@ const MessageItem = memo(
     isFlashing?: boolean;
     isCurrent: boolean;
     searchQuery?: string;
+    onImageLoad?: () => void;
+    onViewMedia?: (url: string) => void;
   }) => {
     const isMyMessage = message.sender_id === currentUserId;
     const isSystemMessage =
@@ -166,7 +184,7 @@ const MessageItem = memo(
       );
     }
 
-    const hasText = typeof message.content === 'string' && message.content.length > 0;
+    const hasText = typeof message.content === 'string' && message.content.replace(/\u200B/g, '').trim().length > 0;
     const hasImages = message.attachments && message.attachments.length > 0;
 
     if (!hasText && !hasImages) {
@@ -182,22 +200,76 @@ const MessageItem = memo(
         {isMyMessage ? (
           <>
             <div className="message-bubble">
-              {/* 이미지 */}
+              {/* 첨부파일 (이미지/동영상/파일) */}
               {message.attachments?.length ? (
                 <div className="mb-2 flex flex-col gap-2">
-                  {message.attachments.map(att => (
-                    <LazyImage
-                      key={`${message.id}-${att.url}`}
-                      src={att.url}
-                      alt="image"
-                      className="rounded-lg max-w-[240px]"
-                    />
-                  ))}
+                  {message.attachments.map(att => {
+                    if (att.type === 'video') {
+                      return (
+                        <div key={`${message.id}-${att.url}`} className="relative group max-w-[240px]">
+                           <video
+                             src={att.url}
+                             className="rounded-lg w-full h-full object-cover"
+                             controls={false} // 커스텀 컨트롤 사용 위해 네이티브 숨김 or 그냥 썸네일처럼
+                           />
+                           {/* 재생/확대 버튼 오버레이 */}
+                           <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors rounded-lg cursor-pointer"
+                                onClick={() => onViewMedia?.(att.url)}>
+                             <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm hover:bg-black/70 transition">
+                                <i className="ri-play-fill text-white text-xl ml-0.5" />
+                             </div>
+                           </div>
+                        </div>
+                      );
+                    } else if (att.type === 'file') {
+                      const fileName = att.name || 'file';
+                      
+                      return (
+                        <button
+                          key={`${message.id}-${att.url}`}
+                          onClick={() => {
+                             // Force Download
+                             const filename = att.name || 'download';
+                             fetch(att.url)
+                               .then(resp => resp.blob())
+                               .then(blob => {
+                                 const url = window.URL.createObjectURL(blob);
+                                 const a = document.createElement('a');
+                                 a.href = url;
+                                 a.download = filename;
+                                 a.click();
+                                 window.URL.revokeObjectURL(url);
+                               });
+                          }}
+                          className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-sm max-w-[280px] hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-primary dark:hover:border-primary transition-all duration-200 w-full text-left group"
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-700 flex items-center justify-center shrink-0 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600">
+                             <i className="ri-file-text-line text-2xl" />
+                          </div>
+                          <div className="flex flex-col min-w-0 flex-1">
+                             <span className="truncate font-semibold text-gray-800 dark:text-gray-200 text-sm">
+                               {fileName}
+                             </span>
+                          </div>
+                        </button>
+                      );
+                    }
+                    // Default to image (Make clickable)
+                    return (
+                      <div key={`${message.id}-${att.url}`} onClick={() => onViewMedia?.(att.url)} className="cursor-pointer">
+                        <LazyImage
+                          src={att.url}
+                          alt="image"
+                          className="rounded-lg max-w-[240px] hover:opacity-90 transition-opacity"
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               ) : null}
 
               {/* 텍스트 */}
-              {typeof message.content === 'string' && message.content.length > 0 && (
+              {typeof message.content === 'string' && message.content.replace(/\u200B/g, '').trim().length > 0 && (
                 <div className="message-text whitespace-pre-wrap break-words break-all">
                   <HighlightText
                     text={message.content}
@@ -232,21 +304,75 @@ const MessageItem = memo(
               />
             </div>
             <div className="message-bubble relative px-3 py-2">
-              {/* 이미지 */}
+              {/* 첨부파일 (이미지/동영상/파일) */}
               {message.attachments?.length ? (
                 <div className="mb-2 flex flex-col gap-2">
-                  {message.attachments.map(att => (
-                    <LazyImage
-                      key={`${message.id}-${att.url}`}
-                      src={att.url}
-                      alt="image"
-                      className="rounded-lg max-w-[240px]"
-                    />
-                  ))}
+                  {message.attachments.map(att => {
+                    if (att.type === 'video') {
+                      return (
+                         <div key={`${message.id}-${att.url}`} className="relative group max-w-[240px]">
+                           <video
+                             src={att.url}
+                             className="rounded-lg w-full h-full object-cover"
+                             controls={false}
+                           />
+                           {/* 재생/확대 버튼 오버레이 */}
+                           <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors rounded-lg cursor-pointer"
+                                onClick={() => onViewMedia?.(att.url)}>
+                             <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm hover:bg-black/70 transition">
+                                <i className="ri-play-fill text-white text-xl ml-0.5" />
+                             </div>
+                           </div>
+                        </div>
+                      );
+                    } else if (att.type === 'file') {
+                      return (
+                         <button
+                          key={`${message.id}-${att.url}`}
+                          onClick={() => {
+                             // Force Download
+                             const filename = att.name || 'download';
+                             fetch(att.url)
+                               .then(resp => resp.blob())
+                               .then(blob => {
+                                 const url = window.URL.createObjectURL(blob);
+                                 const a = document.createElement('a');
+                                 a.href = url;
+                                 a.download = filename;
+                                 a.click();
+                                 window.URL.revokeObjectURL(url);
+                               });
+                          }}
+                          className="flex items-center gap-2 p-3 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm max-w-[240px] hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors w-full text-left border border-gray-200 dark:border-gray-700"
+                        >
+                           <div className="w-8 h-8 rounded-full bg-white dark:bg-gray-600 flex items-center justify-center shrink-0 text-gray-500 dark:text-gray-300">
+                             <i className="ri-file-line" />
+                           </div>
+                           <div className="flex flex-col min-w-0">
+                             <span className="truncate font-medium text-gray-700 dark:text-gray-200 w-full text-left">
+                               {att.name || 'File'}
+                             </span>
+                             <span className="text-xs text-blue-500 text-left">Download</span>
+                          </div>
+                        </button>
+                      );
+                    }
+                    return (
+                      <div key={`${message.id}-${att.url}`} onClick={() => onViewMedia?.(att.url)} className="cursor-pointer">
+                        <LazyImage
+                          src={att.url}
+                          alt="image"
+                          className="rounded-lg max-w-[240px] hover:opacity-90 transition-opacity"
+                          onLoad={onImageLoad}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               ) : null}
+
               {/* 텍스트 + 번역 */}
-              {typeof message.content === 'string' && message.content.length > 0 && (
+              {typeof message.content === 'string' && message.content.replace(/\u200B/g, '').trim().length > 0 && (
                 <div className="flex items-center gap-2">
                   <div className="message-text whitespace-pre-line break-words">
                     <HighlightText text={message.content} query={searchQuery} />
@@ -269,19 +395,7 @@ const MessageItem = memo(
                 </div>
               )}
 
-              {/* 이미지 */}
-              {message.attachments?.length ? (
-                <div className="mt-2 flex flex-col gap-2">
-                  {message.attachments.map(att => (
-                    <LazyImage
-                      key={`${message.id}-${att.url}`}
-                      src={att.url}
-                      alt="image"
-                      className="rounded-lg max-w-[240px]"
-                    />
-                  ))}
-                </div>
-              ) : null}
+
 
               <div className="message-time mt-1">{formatTime(message.created_at)}</div>
             </div>
@@ -334,6 +448,106 @@ const DirectChatRoom = ({
   // 10-zzeon: 신고 취소 메뉴 State
   const [showMenu, setShowMenu] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [showMediaGallery, setShowMediaGallery] = useState(false);
+  const [isExitModalOpen, setIsExitModalOpen] = useState(false);
+  const [viewingMediaUrl, setViewingMediaUrl] = useState<string | null>(null); // 통합 미디어 뷰어 상태
+
+  // 현재 로드된 메시지에서 미디어 추출 (Memoized)
+  const allCurrentMedia = useMemo(() => {
+    const media: MediaItem[] = [];
+    
+    // Sort messages by created_at ASC (Chronological) for intuitive gallery navigation
+    const sortedMsgs = [...messages].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+    sortedMsgs.forEach(msg => {
+       if (msg.attachments?.length) {
+         msg.attachments.forEach(att => {
+            const type = (att.type || '').toLowerCase();
+            if (type === 'video') {
+              media.push({
+                url: att.url,
+                messageId: msg.id,
+                date: msg.created_at,
+                senderId: msg.sender_id,
+                senderName: msg.sender?.nickname || 'Unknown',
+                senderAvatarUrl: msg.sender?.avatar_url,
+                type: 'video',
+              });
+            } else if (type !== 'file') {
+              // Treat everything else (that renders as image) as 'image'
+              media.push({
+                url: att.url,
+                messageId: msg.id,
+                date: msg.created_at,
+                senderId: msg.sender_id,
+                senderName: msg.sender?.nickname || 'Unknown',
+                senderAvatarUrl: msg.sender?.avatar_url,
+                type: 'image',
+              });
+            }
+         });
+       }
+    });
+    return media;
+  }, [messages]);
+
+  // 전체 미디어 목록 (무한 스크롤 너머의 데이터 포함)
+  const [fullMediaList, setFullMediaList] = useState<MediaItem[]>([]);
+  const [isFetchingFullMedia, setIsFetchingFullMedia] = useState(false);
+
+  // 미디어 뷰어가 열리면 백그라운드에서 전체 미디어 로드
+  useEffect(() => {
+    if (viewingMediaUrl && !isFetchingFullMedia && fullMediaList.length <= allCurrentMedia.length) {
+      if (allCurrentMedia.length === 0) return; // Wait for initial load
+
+      setIsFetchingFullMedia(true);
+      getMediaInChat(chatId)
+        .then(response => {
+          if (response.success && response.data) {
+            const fullList: MediaItem[] = [];
+            // Sort by created_at ASC (Oldest to Newest)
+            const sorted = [...response.data].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+            
+            sorted.forEach(msg => {
+              if (msg.attachments?.length) {
+                msg.attachments.forEach((att: any) => {
+                   const type = (att.type || '').toLowerCase();
+                   if (type === 'video') {
+                     fullList.push({
+                       url: att.url,
+                       messageId: msg.id,
+                       date: msg.created_at,
+                       senderId: msg.sender_id,
+                       senderName: msg.sender?.nickname || 'Unknown',
+                       senderAvatarUrl: msg.sender?.avatar_url,
+                       type: 'video',
+                     });
+                   } else if (type !== 'file') {
+                     fullList.push({
+                       url: att.url,
+                       messageId: msg.id,
+                       date: msg.created_at,
+                       senderId: msg.sender_id,
+                       senderName: msg.sender?.nickname || 'Unknown',
+                       senderAvatarUrl: msg.sender?.avatar_url,
+                       type: 'image',
+                     });
+                   }
+                });
+              }
+            });
+            
+            // Remove duplicates just in case
+            const uniqueList = Array.from(new Map(fullList.map(item => [item.url, item])).values());
+            setFullMediaList(uniqueList);
+          }
+        })
+        .finally(() => setIsFetchingFullMedia(false));
+    }
+  }, [viewingMediaUrl, chatId]); // Removed allCurrentMedia dependency to avoid infinite fetch loop, logic handled inside
+
+  // 뷰어에 전달할 리스트: 전체 리스트가 로드되었으면 그것을, 아니면 현재 리스트 사용
+  const viewerMediaList = fullMediaList.length > allCurrentMedia.length ? fullMediaList : allCurrentMedia;
 
   // New Message Floating Button State
   const [newMessageToast, setNewMessageToast] = useState<{
@@ -345,7 +559,7 @@ const DirectChatRoom = ({
   const isUserNearBottomRef = useRef(true); // 스크롤이 바닥 근처인지 추적
 
   // Media Gallery State
-  const [showMediaGallery, setShowMediaGallery] = useState(false);
+  // Removed duplicate showMediaGallery
 
   // Main: 무한 스크롤 및 UI 상태
   const [showScrollDownBtn, setShowScrollDownBtn] = useState(false);
@@ -356,29 +570,50 @@ const DirectChatRoom = ({
   // 무한 스크롤용 Refs & State
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
   const prevScrollHeightRef = useRef<number>(0);
+  const isRestoringHistoryRef = useRef(false); // Ref for sync control of history restore
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const { user } = useAuth();
   const currentUserId = user?.id ?? '';
   const menuRef = useRef<HTMLDivElement>(null);
   const scrollToBottom = useCallback((force = false) => {
-    requestAnimationFrame(() => {
-      const messageContainer = document.querySelector('.chat-room-message');
-      if (messageContainer) {
-        const el = messageContainer as HTMLElement;
+    // History Restore 중에는 절대 스크롤 간섭 금지 (비디오/이미지 로드 등 방어)
+    if (isRestoringHistoryRef.current) return;
+
+    const doScroll = () => {
+      const el = containerRef.current;
+      if (el) {
         if (force) {
           el.scrollTop = el.scrollHeight;
+          isUserNearBottomRef.current = true; // Sync update to handle rapid image loads
         } else {
           el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
         }
       } else {
+        // Fallback for initial render safety
         messageEndRef.current?.scrollIntoView({
           behavior: force ? 'auto' : 'smooth',
           block: 'nearest',
         });
       }
-    });
+    };
+
+    if (force) {
+      doScroll();
+    } else {
+      requestAnimationFrame(doScroll);
+    }
   }, []);
+
+  const handleImageLoad = useCallback(() => {
+    // History Restore 중이면 무시
+    if (isRestoringHistoryRef.current) return;
+    
+    if (isUserNearBottomRef.current) {
+      scrollToBottom(true);
+    }
+  }, [scrollToBottom]);
   // 메시지 변경 시 스크롤 제어 (떨림 방지를 위해 useLayoutEffect 사용)
   useLayoutEffect(() => {
     if (!messages || messages.length === 0) return;
@@ -386,12 +621,25 @@ const DirectChatRoom = ({
     const isNewMessageArrived = lastMessage.id !== prevLastMessageId.current;
 
     // 1. 메시지 추가 로드(무한 스크롤)로 인한 변경인 경우 -> 스크롤 위치 보정
-    if (prevScrollHeightRef.current > 0 && containerRef.current) {
+    // isRestoringHistoryRef를 사용하여 정확한 타이밍 제어
+    if (isRestoringHistoryRef.current && containerRef.current && prevScrollHeightRef.current > 0) {
       const newScrollHeight = containerRef.current.scrollHeight;
       const diff = newScrollHeight - prevScrollHeightRef.current;
       containerRef.current.scrollTop = diff; // 기존 보고 있던 위치 유지
-      prevScrollHeightRef.current = 0; // 초기화
+      
+      // 상태 및 Ref 초기화
+      prevScrollHeightRef.current = 0; 
       setIsLoadingMore(false);
+
+      // Delay unlock to let layout/resize observers settle (especially for Heavy media/videos)
+      setTimeout(() => {
+        isRestoringHistoryRef.current = false;
+      }, 100);
+      
+      // Update tracking refs to correct state so next render doesn't misfire
+      prevLastMessageId.current = lastMessage.id;
+      previousMessageCount.current = messages.length;
+      return; // Critical: Stop processing to prevent fall-through to "New Message" logic
     }
     // 2. 초기 로딩인 경우 -> 맨 아래로
     else if (isInitialLoad.current) {
@@ -426,30 +674,52 @@ const DirectChatRoom = ({
     prevLastMessageId.current = lastMessage.id;
     previousMessageCount.current = messages.length;
   }, [messages, scrollToBottom]);
-  // 컨테이너 크기 변화 감지 (입력창 줄바꿈으로 인한 높이 변화 대응)
+  // 컨테이너 크기 변화 감지 (이미지 로드 등으로 인한 높이 변화 대응)
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    let prevHeight = container.clientHeight;
-    const observer = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        const newHeight = entry.contentRect.height;
-        // 높이가 줄어듦 (입력창이 커짐) && 기존에 바닥 근처였음
-        // -> 스크롤을 그만큼 더 내려줘야 바닥이 유지됨
-        if (newHeight < prevHeight) {
-          const { scrollTop, scrollHeight } = container;
-          const isBottom = scrollHeight - scrollTop - prevHeight < 50;
 
-          if (isBottom) {
-            // 높이 차이만큼 스크롤 보정
-            container.scrollTop += prevHeight - newHeight;
-          }
+    let prevScrollHeight = container.scrollHeight;
+    let prevClientHeight = container.clientHeight;
+
+    const handleResize = () => {
+      // Locking during history restore
+      if (isRestoringHistoryRef.current) return;
+      
+      const { scrollHeight, clientHeight, scrollTop } = container;
+      const heightChanged = scrollHeight !== prevScrollHeight;
+      
+      // 만약 높이가 변했고, 사용자가 바닥에 있었거나(isUserNearBottomRef), 
+      // 혹은 스크롤 위치가 변하지 않았는데 높이만 커진 경우(이미지 로드 등)
+      if (heightChanged) {
+        const isBottom = prevScrollHeight - (scrollTop + prevClientHeight) < 50;
+        
+        // 바닥 근처였으면 새 바닥으로 이동
+        if (isBottom || isUserNearBottomRef.current) {
+          container.scrollTop = scrollHeight;
         }
-        prevHeight = newHeight;
+        prevScrollHeight = scrollHeight;
+        prevClientHeight = clientHeight;
       }
-    });
+    };
+
+    const observer = new ResizeObserver(handleResize);
+    // 관찰 대상을 컨테이너의 자식(메시지 리스트 전체)으로 설정해야 정확함
+    // 하지만 구조상 container 자체가 스크롤 영역이므로 container를 관찰하되, scrollHeight 변화를 감지해야 함.
+    // ResizeObserver는 contentRect만 감지하므로, MutationObserver가 더 적합할 수 있으나, 
+    // 이미지 로드는 layout을 바꾸므로 ResizeObserver가 트리거될 수 있음. 
+    // 여기서는 간단히 모든 자식 요소의 변화를 감지하기 위해 wrapper div를 하나 더 두는 것이 좋으나, 
+    // 기존 구조 유지를 위해 container를 관찰.
     observer.observe(container);
-    return () => observer.disconnect();
+
+    // 이미지 로드 등 미세한 변화를 위해 MutationObserver 추가
+    const mutationObserver = new MutationObserver(handleResize);
+    mutationObserver.observe(container, { childList: true, subtree: true, attributes: true });
+
+    return () => {
+      observer.disconnect();
+      mutationObserver.disconnect();
+    };
   }, []);
   // 스크롤 이벤트 핸들러
   const handleScroll = async (e: React.UIEvent<HTMLDivElement>) => {
@@ -459,6 +729,8 @@ const DirectChatRoom = ({
     // 맨 위 도달 (여유분 50px) & 더 불러올 메시지 있음 & 로딩 중 아님
     if (container.scrollTop < 50 && hasMoreMessages && !isLoadingMore && messages.length > 0) {
       setIsLoadingMore(true);
+      isRestoringHistoryRef.current = true; // Sync Lock
+      isUserNearBottomRef.current = false; // FORCE RESET: We are at top, not bottom. Prevent sticky logic.
       prevScrollHeightRef.current = container.scrollHeight;
 
       const addedCount = await loadMoreMessages();
@@ -466,6 +738,7 @@ const DirectChatRoom = ({
       // 추가된 메시지가 없으면 로딩 상태 해제 및 스크롤 높이 참조 초기화
       if (addedCount === 0) {
         setIsLoadingMore(false);
+        isRestoringHistoryRef.current = false; // Sync Unlock
         prevScrollHeightRef.current = 0;
       }
     }
@@ -614,50 +887,26 @@ const DirectChatRoom = ({
     }
     return groups;
   }, [messages]);
-  // 10-zzeon: 향상된 UX를 위한 Toast 기반 나가기 확인
+  // 10-zzeon: 향상된 UX를 위한 Modal 기반 나가기 확인
   const handleExitChat = useCallback(() => {
-    toast.custom(t => (
-      <div className="flex items-center justify-between gap-3 px-3 py-2 w-96">
-        {/* 텍스트 영역 */}
-        <div className="flex-1">
-          <p className="text-base font-medium text-gray-800 dark:text-gray-100">
-            {i18n.t('chat.confirm_exit_title', '채팅방을 나가시겠습니까?')}
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {i18n.t('chat.confirm_exit_desc', '나가면 대화 목록으로 돌아갑니다.')}
-          </p>
-        </div>
-        {/* 버튼 영역 */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button
-            onClick={() => toast.dismiss(t)}
-            className="text-sm px-2 py-1 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10"
-          >
-            {i18n.t('common.cancel', '취소')}
-          </button>
-          <button
-            onClick={async () => {
-              toast.dismiss(t);
-              try {
-                const success = await exitDirectChat(chatId);
-                if (success) {
-                  toast.success(i18n.t('chat.exit_success', '채팅방에서 나갔습니다.'));
-                  onBackToList?.();
-                } else {
-                  toast.error(i18n.t('chat.exit_fail', '채팅방 나가기에 실패했습니다.'));
-                }
-              } catch {
-                toast.error(i18n.t('chat.exit_error', '채팅방 나가기 중 오류가 발생했습니다.'));
-              }
-            }}
-            className="text-sm px-2 py-1 rounded-md bg-red-500 text-white hover:bg-red-600"
-          >
-            {i18n.t('chat.btn_leave', '나가기')}
-          </button>
-        </div>
-      </div>
-    ));
-  }, [chatId, exitDirectChat, onBackToList, i18n]);
+    setIsExitModalOpen(true);
+  }, []);
+
+  const confirmExitChat = useCallback(async () => {
+    try {
+      const success = await exitDirectChat(chatId);
+      if (success) {
+        // toast removed as per request
+        onBackToList?.();
+      } else {
+        toast.error(t('chat.exit_fail', '채팅방 나가기에 실패했습니다.'));
+      }
+    } catch {
+      toast.error(t('chat.exit_error', '채팅방 나가기 중 오류가 발생했습니다.'));
+    } finally {
+      setIsExitModalOpen(false);
+    }
+  }, [chatId, exitDirectChat, onBackToList, t]);
   const scrollToMessage = useCallback((messageId: string) => {
     const el = document.getElementById(`msg-${messageId}`);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -794,7 +1043,7 @@ const DirectChatRoom = ({
             {showMenu && (
               <div className="absolute right-0 top-12 w-auto min-w-[144px] bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg py-2 z-50">
                 <button
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 text-sm flex items-center gap-2 whitespace-nowrap"
+                  className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-800 dark:text-gray-200 flex items-center gap-2 whitespace-nowrap"
                   onClick={() => {
                     setShowMenu(false);
                     setShowMediaGallery(true);
@@ -813,12 +1062,13 @@ const DirectChatRoom = ({
                 />
                 <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" />
                 <button
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-white/10 text-red-500 text-sm whitespace-nowrap"
+                  className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-500 flex items-center gap-2 whitespace-nowrap"
                   onClick={() => {
                     setShowMenu(false);
                     handleExitChat();
                   }}
                 >
+                  <i className="ri-logout-box-r-line" />
                   {t('chat.btn_leave')}
                 </button>
               </div>
@@ -892,37 +1142,44 @@ const DirectChatRoom = ({
               <p>{t('chat.send_first_message')}</p>
             </div>
           ) : (
-            Object.entries(messageGroups).map(([date, dateMessages]) => (
-              <div key={date} className="message-group">
-                <div className="date-divider">
-                  <span>{formatDividerDate((dateMessages[0] as DirectMessage).created_at)}</span>
-                </div>
-                <div className="message-group-container">
-                  {dateMessages.map((message: DirectMessage) => {
-                    const lowerQ = searchQuery.trim().toLowerCase();
-                    const isMatched =
-                      !!lowerQ &&
-                      typeof message.content === 'string' &&
-                      message.content.toLowerCase().includes(lowerQ);
-                    const isCurrent =
-                      isMatched &&
-                      searchResults.length > 0 &&
-                      searchResults[currentResultIndex] === message.id;
-                    return (
-                      <MessageItem
-                        key={message.id}
-                        message={message}
-                        currentUserId={currentUserId}
-                        isHighlighted={isMatched}
-                        isFlashing={message.id === highlightMessageId}
-                        isCurrent={isCurrent}
-                        searchQuery={searchQuery}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            ))
+            Object.keys(messageGroups)
+              .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+              .map(date => {
+                const dateMessages = messageGroups[date];
+                return (
+                  <div key={date} className="message-group">
+                    <div className="date-divider">
+                      <span>{formatDividerDate((dateMessages[0] as DirectMessage).created_at)}</span>
+                    </div>
+                    <div className="message-group-container">
+                      {dateMessages.map((message: DirectMessage) => {
+                        const lowerQ = searchQuery.trim().toLowerCase();
+                        const isMatched =
+                          !!lowerQ &&
+                          typeof message.content === 'string' &&
+                          message.content.toLowerCase().includes(lowerQ);
+                        const isCurrent =
+                          isMatched &&
+                          searchResults.length > 0 &&
+                          searchResults[currentResultIndex] === message.id;
+                        return (
+                          <MessageItem
+                            key={message.id}
+                            message={message}
+                            currentUserId={currentUserId}
+                            isHighlighted={isMatched}
+                            isFlashing={message.id === highlightMessageId}
+                            isCurrent={isCurrent}
+                            searchQuery={searchQuery}
+                            onImageLoad={handleImageLoad}
+                            onViewMedia={setViewingMediaUrl} // 통합 미디어 핸들러
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })
           )}
           <div
             ref={messageEndRef}
@@ -979,6 +1236,42 @@ const DirectChatRoom = ({
         onClose={() => setShowMediaGallery(false)}
         chatId={chatId}
       />
+      
+      {/* 통합 미디어 뷰어 (채팅방 내 클릭용) */}
+      <MediaViewer
+        isOpen={!!viewingMediaUrl}
+        onClose={() => setViewingMediaUrl(null)}
+        mediaList={viewerMediaList}
+        initialMediaId={viewingMediaUrl || undefined}
+      />
+
+      {/* 나가기 확인 모달 */}
+        <Modal
+          isOpen={isExitModalOpen}
+          onClose={() => setIsExitModalOpen(false)}
+          title={t('chat.confirm_exit_title')}
+          className="max-w-sm h-auto"
+        >
+          <div className="flex flex-col gap-4">
+            <p className="text-gray-600 dark:text-gray-300 font-medium">
+              {t('chat.confirm_exit_desc')}
+            </p>
+            <div className="flex justify-end gap-2 mt-2">
+              <button
+                onClick={() => setIsExitModalOpen(false)}
+                className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200"
+              >
+                {t('common.cancel', '취소')}
+              </button>
+              <button
+                onClick={confirmExitChat}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500 text-white hover:bg-red-600"
+              >
+                {t('chat.btn_leave', '나가기')}
+              </button>
+            </div>
+          </div>
+        </Modal>
 
       <MessageInput chatId={chatId} />
     </div>

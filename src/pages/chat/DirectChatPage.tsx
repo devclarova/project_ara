@@ -113,6 +113,7 @@ function DirectChatPage() {
                     onChatSelect={handleChatSelect}
                     onCreateChat={() => {}}
                     selectedChatId={selectedChatId || undefined}
+                    onLeave={handleBackToList}
                   />
                 </div>
               )}
@@ -127,9 +128,7 @@ function DirectChatPage() {
                     />
                   ) : (
                     !isMobile && (
-                    !isMobile && (
                       <ChatWelcomeSearch onChatSelect={handleChatSelect} />
-                    )
                     )
                   )}
                 </div>
