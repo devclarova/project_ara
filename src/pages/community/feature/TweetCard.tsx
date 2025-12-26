@@ -249,45 +249,7 @@ export default function TweetCard({
       setIsLong(true);
     }
   }, [safeContent]);
-  // 이미지 모달 열릴 때 바깥 스크롤 완전 차단 & 스크롤 위치 고정 (Main 브랜치 Fix 적용)
-  useEffect(() => {
-    if (!showImageModal) return;
-    const scrollY = window.scrollY;
-    const body = document.body;
-    
-    // 기존 스타일 저장
-    const originalStyle = {
-      position: body.style.position,
-      top: body.style.top,
-      width: body.style.width,
-      overflow: body.style.overflow,
-      touchAction: (body.style as any).touchAction
-    };
-    const preventScroll = (e: Event) => e.preventDefault();
-    // 스크롤 위치만큼 올려서 고정
-    body.style.position = 'fixed';
-    body.style.top = `-${scrollY}px`;
-    body.style.width = '100%';
-    body.style.overflow = 'hidden';
-    (body.style as any).touchAction = 'none';
-    document.addEventListener('touchmove', preventScroll, { passive: false });
-    document.addEventListener('wheel', preventScroll, { passive: false });
-    document.addEventListener('mousewheel', preventScroll, { passive: false });
-    return () => {
-      // 스타일 복구
-      body.style.position = originalStyle.position;
-      body.style.top = originalStyle.top;
-      body.style.width = originalStyle.width;
-      body.style.overflow = originalStyle.overflow;
-      (body.style as any).touchAction = originalStyle.touchAction;
-      document.removeEventListener('touchmove', preventScroll);
-      document.removeEventListener('wheel', preventScroll);
-      document.removeEventListener('mousewheel', preventScroll);
-      
-      // 스크롤 위치 복구
-      window.scrollTo(0, scrollY);
-    };
-  }, [showImageModal]);
+  // 이미지 모달 스크롤 잠금은 ModalImageSlider의 useBodyScrollLock hook에서 처리
   /** 좋아요 토글 (user_id = profiles.id 사용 + 알림 생성) */
   const handleLikeToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();

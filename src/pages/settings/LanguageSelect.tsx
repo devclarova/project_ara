@@ -89,22 +89,20 @@ function LanguageSelect({ value, onChange, onClose, onSave, onCancel }: Language
   ];
 
   return (
-    <div className="px-6 py-4">
+    <div className="flex flex-col h-full">
       {/* 상단 영역 */}
-      <div className="mb-6 px-1">
+      <div className="px-6 pt-4 pb-2 shrink-0">
         <p className="text-base font-semibold text-gray-800 dark:text-gray-200">{t('settings.languageSelect')}</p>
       </div>
 
-      {/* 스크롤 영역 */}
+      {/* 스크롤 영역 - flex-1로 남은 공간 차지 */}
       <div
-        className="custom-scrollbar"
+        className="flex-1 px-6 overflow-y-auto custom-scrollbar"
         style={{
-          height: '400px',
-          overflowY: 'auto',
-          paddingRight: '8px',
+          minHeight: 0, // flex에서 overflow가 작동하도록
         }}
       >
-        <div className="flex flex-col gap-3" role="radiogroup" aria-label="언어 선택">
+        <div className="flex flex-col gap-3 py-2" role="radiogroup" aria-label="언어 선택">
           {options.map(({ code, label, flag }) => {
             const selected = value === code;
             const isoCode = LANG_TO_ISO[code];
@@ -154,8 +152,8 @@ function LanguageSelect({ value, onChange, onClose, onSave, onCancel }: Language
         </div>
       </div>
 
-      {/* 하단 버튼 */}
-      <div className="mt-6 pt-5 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+      {/* 하단 버튼 - 항상 아래 고정 */}
+      <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 shrink-0 bg-white dark:bg-secondary">
         <Button type="button" variant="ghost" size="md" onClick={onCancel ?? onClose}>
           {t('common.cancel')}
         </Button>

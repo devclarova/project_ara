@@ -304,7 +304,18 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           
           setMessages(prev => {
             const combined = [...sortedOlder, ...prev];
-            // De-duplicate by ID
+            
+            // Optimized: Only deduplicate if there's potential overlap
+            // Check if last old message overlaps with first new message
+            const needsDedup = sortedOlder.length > 0 && prev.length > 0 &&
+              sortedOlder[sortedOlder.length - 1].id === prev[0].id;
+            
+            if (!needsDedup) {
+              // No overlap, skip expensive deduplication
+              return combined;
+            }
+            
+            // De-duplicate by ID (only when needed)
             const unique = Array.from(new Map(combined.map(m => [m.id, m])).values());
             // Sort by created_at ASC (Oldest -> Newest)
             unique.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
@@ -345,7 +356,17 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         if (newerMessages.length > 0) {
           setMessages(prev => {
             const combined = [...prev, ...newerMessages];
-            // De-duplicate by ID
+            
+            // Optimized: Only deduplicate if there's potential overlap
+            const needsDedup = prev.length > 0 && newerMessages.length > 0 &&
+              prev[prev.length - 1].id === newerMessages[0].id;
+            
+            if (!needsDedup) {
+              // No overlap, skip expensive deduplication
+              return combined;
+            }
+            
+            // De-duplicate by ID (only when needed)
             const unique = Array.from(new Map(combined.map(m => [m.id, m])).values());
             // Sort by created_at ASC (Oldest -> Newest)
             unique.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
@@ -754,10 +775,17 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
             return next;
           }
 
-          return [
-            ...prev,
-            { ...newMessage, sender: senderProfile, attachments: newMessage.attachments ?? [] },
-          ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+          // Optimized: Insert at end if new message is newer than last message
+          // Avoids full array sort for the common case (99% of messages are chronological)
+          const newMsgTime = new Date(newMessage.created_at).getTime();
+          if (prev.length === 0 || new Date(prev[prev.length - 1].created_at).getTime() <= newMsgTime) {
+            return [...prev, { ...newMessage, sender: senderProfile, attachments: newMessage.attachments ?? [] }];
+          }
+
+          // Fallback: Out-of-order message, need to sort (rare case)
+          const combined = [...prev, { ...newMessage, sender: senderProfile, attachments: newMessage.attachments ?? [] }];
+          combined.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+          return combined;
         });
 
         // 내가 보낸게 아니면 읽음 처리

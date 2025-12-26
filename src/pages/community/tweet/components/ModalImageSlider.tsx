@@ -49,7 +49,7 @@ export default function ModalImageSlider({
       }}
     >
       <div
-        className=" relative w-[min(750px,90vw)] h-[min(90vh,900px)] bg-black/20 backdrop-blur-md flex items-center justify-center rounded-xl overflow-hidden select-none"
+        className="relative w-[min(750px,90vw)] h-[min(90vh,900px)] bg-white/90 dark:bg-black/30 backdrop-blur-md flex items-center justify-center rounded-xl overflow-hidden select-none"
         onClick={e => e.stopPropagation()}
       >
         {/* 닫기 버튼 */}
@@ -58,7 +58,7 @@ export default function ModalImageSlider({
             e.stopPropagation();
             onClose();
           }}
-          className="absolute top-4 right-4 text-white text-3xl bg-black/50 hover:bg-black/70 w-10 h-10 rounded-full z-[10001] flex items-center justify-center transition-colors border border-white/20"
+          className="absolute top-4 right-4 text-gray-700 dark:text-white text-3xl bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-black/70 w-10 h-10 rounded-full z-[10001] flex items-center justify-center transition-colors border border-gray-300 dark:border-white/20"
         >
           <i className="ri-close-line" />
         </button>
@@ -71,7 +71,7 @@ export default function ModalImageSlider({
         >
           {/* 이미지 안 카운터 */}
           {allImages.length > 1 && (
-            <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full z-40">
+            <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/60 backdrop-blur-sm text-gray-900 dark:text-white text-xs px-3 py-1 rounded-full z-40">
               {modalIndex + 1} / {allImages.length}
             </div>
           )}
@@ -129,7 +129,7 @@ export default function ModalImageSlider({
               setDirection(-1);
               setModalIndex(prev => prev - 1);
             }}
-            className="absolute left-5 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white text-4xl w-8 h-8 rounded-full flex justify-center items-center z-30"
+            className="absolute left-5 top-1/2 -translate-y-1/2 bg-white/70 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 text-gray-700 dark:text-white text-4xl w-8 h-8 rounded-full flex justify-center items-center z-30"
           >
             <span className="absolute -translate-y-1 -translate-x-0.7">‹</span>
           </button>
@@ -143,7 +143,7 @@ export default function ModalImageSlider({
               setDirection(1);
               setModalIndex(prev => prev + 1);
             }}
-            className="absolute right-5 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white text-4xl w-8 h-8 rounded-full flex justify-center items-center z-30"
+            className="absolute right-5 top-1/2 -translate-y-1/2 bg-white/70 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 text-gray-700 dark:text-white text-4xl w-8 h-8 rounded-full flex justify-center items-center z-30"
           >
             <span className="absolute -translate-y-1 -translate-x-0.7">›</span>
           </button>
@@ -164,7 +164,7 @@ export default function ModalImageSlider({
                   setModalIndex(i);
                 }}
                 className={`w-2.5 h-2.5 rounded-full transition-all ${
-                  i === modalIndex ? 'bg-white scale-125' : 'bg-white/40'
+                  i === modalIndex ? 'bg-gray-800 dark:bg-white scale-125' : 'bg-gray-400 dark:bg-white/40'
                 }`}
               />
             ))}

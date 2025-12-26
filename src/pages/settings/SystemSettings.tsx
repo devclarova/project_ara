@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import LanguageSelect from './LanguageSelect';
 import ThemeSelect from './ThemeSelect';
+import { useTheme } from '@/components/theme-provider';
 
 interface PrivacySettingsProps {
   onBackToMenu?: () => void;
@@ -14,11 +15,12 @@ interface PrivacySettingsProps {
 
 function SystemSettings({ onBackToMenu, searchQuery }: PrivacySettingsProps) {
   const { t, i18n } = useTranslation();
+  const { theme, setTheme } = useTheme();
   const [active, setActive] = useState<ActiveSystem>(null);
 
-  // ✅ 실제로 앱에 적용된 현재값(저장된 값)
+  // ✅ 실제로 앱에 적용된 현재값(저장된 값) - localStorage에서 읽기
   const [committedLanguage, setCommittedLanguage] = useState<Lang>((i18n.language as Lang) || 'ko');
-  const [committedTheme, setCommittedTheme] = useState<Mode>('system');
+  const [committedTheme, setCommittedTheme] = useState<Mode>(theme as Mode);
 
   // ✅ 모달에서만 사용하는 임시값(초안)
   const [draftLanguage, setDraftLanguage] = useState<Lang>(committedLanguage);
@@ -60,8 +62,7 @@ function SystemSettings({ onBackToMenu, searchQuery }: PrivacySettingsProps) {
     }
     if (active === 'theme') {
       setCommittedTheme(draftTheme);
-      applyTheme(draftTheme);
-      (window as any).__setTheme?.(draftTheme);
+      setTheme(draftTheme); // Use theme provider's setTheme
     }
     close();
   };
@@ -69,7 +70,7 @@ function SystemSettings({ onBackToMenu, searchQuery }: PrivacySettingsProps) {
   // ✅ 취소: 임시값 버리고, 실제(저장된)값으로 화면 복구
   const handleCancel = () => {
     applyLanguage(committedLanguage);
-    applyTheme(committedTheme);
+    setTheme(committedTheme); // Restore original theme using provider
 
     setDraftLanguage(committedLanguage);
     setDraftTheme(committedTheme);
@@ -77,15 +78,13 @@ function SystemSettings({ onBackToMenu, searchQuery }: PrivacySettingsProps) {
     close();
   };
 
-  // 모달 안에서 변경할 때: 미리보기 즉시 반영(저장은 아님)
+  // 모달 안에서 변경할 때: draft만 업데이트 (저장 전까지 실제로 적용하지 않음)
   const handleChangeLanguage = (l: Lang) => {
-    setDraftLanguage(l);
-    applyLanguage(l); // 저장 전 미리보기 즉시 적용
+    setDraftLanguage(l); // 언어도 선택만 하고 저장 버튼 누를 때까지 적용 안 함
   };
 
   const handleChangeTheme = (m: Mode) => {
-    setDraftTheme(m);
-    applyTheme(m); // 저장 전 미리보기 즉시 적용
+    setDraftTheme(m); // 테마는 선택만 하고 저장 버튼 누를 때까지 적용 안 함
   };
 
   return (
