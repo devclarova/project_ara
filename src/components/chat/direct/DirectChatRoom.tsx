@@ -405,12 +405,14 @@ const MessageItem = memo(
     );
   },
   (prev, next) => {
+    // Optimized: Use stable message properties instead of deep object comparison
+    // message.id + created_at is unique and stable, avatar changes are rare
     return (
       prev.message.id === next.message.id &&
+      prev.message.created_at === next.message.created_at &&
       prev.isHighlighted === next.isHighlighted &&
       prev.isFlashing === next.isFlashing &&
       prev.isCurrent === next.isCurrent &&
-      prev.message.sender?.avatar_url === next.message.sender?.avatar_url &&
       prev.searchQuery === next.searchQuery
     );
   },
@@ -671,8 +673,6 @@ const DirectChatRoom = ({
     }
     prevLastMessageId.current = lastMessage.id;
     previousMessageCount.current = messages.length;
-    prevLastMessageId.current = lastMessage.id;
-    previousMessageCount.current = messages.length;
   }, [messages, scrollToBottom]);
   // 컨테이너 크기 변화 감지 (이미지 로드 등으로 인한 높이 변화 대응)
   useEffect(() => {
@@ -681,35 +681,37 @@ const DirectChatRoom = ({
 
     let prevScrollHeight = container.scrollHeight;
     let prevClientHeight = container.clientHeight;
+    let debounceTimeout: number | null = null;
 
     const handleResize = () => {
       // Locking during history restore
       if (isRestoringHistoryRef.current) return;
       
-      const { scrollHeight, clientHeight, scrollTop } = container;
-      const heightChanged = scrollHeight !== prevScrollHeight;
-      
-      // 만약 높이가 변했고, 사용자가 바닥에 있었거나(isUserNearBottomRef), 
-      // 혹은 스크롤 위치가 변하지 않았는데 높이만 커진 경우(이미지 로드 등)
-      if (heightChanged) {
-        const isBottom = prevScrollHeight - (scrollTop + prevClientHeight) < 50;
-        
-        // 바닥 근처였으면 새 바닥으로 이동
-        if (isBottom || isUserNearBottomRef.current) {
-          container.scrollTop = scrollHeight;
-        }
-        prevScrollHeight = scrollHeight;
-        prevClientHeight = clientHeight;
+      // Debounce to batch rapid changes (16ms = one frame)
+      if (debounceTimeout) {
+        window.clearTimeout(debounceTimeout);
       }
+
+      debounceTimeout = window.setTimeout(() => {
+        const { scrollHeight, clientHeight, scrollTop } = container;
+        const heightChanged = scrollHeight !== prevScrollHeight;
+        
+        // 만약 높이가 변했고, 사용자가 바닥에 있었거나(isUserNearBottomRef), 
+        // 혹은 스크롤 위치가 변하지 않았는데 높이만 커진 경우(이미지 로드 등)
+        if (heightChanged) {
+          const isBottom = prevScrollHeight - (scrollTop + prevClientHeight) < 50;
+          
+          // 바닥 근처였으면 새 바닥으로 이동
+          if (isBottom || isUserNearBottomRef.current) {
+            container.scrollTop = scrollHeight;
+          }
+          prevScrollHeight = scrollHeight;
+          prevClientHeight = clientHeight;
+        }
+      }, 16);
     };
 
     const observer = new ResizeObserver(handleResize);
-    // 관찰 대상을 컨테이너의 자식(메시지 리스트 전체)으로 설정해야 정확함
-    // 하지만 구조상 container 자체가 스크롤 영역이므로 container를 관찰하되, scrollHeight 변화를 감지해야 함.
-    // ResizeObserver는 contentRect만 감지하므로, MutationObserver가 더 적합할 수 있으나, 
-    // 이미지 로드는 layout을 바꾸므로 ResizeObserver가 트리거될 수 있음. 
-    // 여기서는 간단히 모든 자식 요소의 변화를 감지하기 위해 wrapper div를 하나 더 두는 것이 좋으나, 
-    // 기존 구조 유지를 위해 container를 관찰.
     observer.observe(container);
 
     // 이미지 로드 등 미세한 변화를 위해 MutationObserver 추가
@@ -717,6 +719,9 @@ const DirectChatRoom = ({
     mutationObserver.observe(container, { childList: true, subtree: true, attributes: true });
 
     return () => {
+      if (debounceTimeout) {
+        window.clearTimeout(debounceTimeout);
+      }
       observer.disconnect();
       mutationObserver.disconnect();
     };

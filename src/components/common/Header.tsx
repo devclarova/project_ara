@@ -430,31 +430,35 @@ function Header() {
 
                       {/* Admin Mode - Only visible if is_admin */}
                       {isAdmin && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigate('/admin');
-                            setIsProfileMenuOpen(false);
-                          }}
-                          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm
-                                     text-gray-700 dark:text-gray-100
-                                     hover:bg-primary/5 dark:hover:bg-primary/20
-                                     transition-colors"
-                        >
-                          <span
-                            className="inline-flex items-center justify-center rounded-md p-1.5
-                                       bg-red-50 text-red-600
-                                       dark:bg-red-900/20 dark:text-red-400"
+                        <>
+                          {/* Separator for admin section */}
+                          <div className="h-px bg-gray-100 dark:bg-gray-700/70 my-1" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigate('/admin');
+                              setIsProfileMenuOpen(false);
+                            }}
+                            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm
+                                       text-gray-700 dark:text-gray-100
+                                       hover:bg-primary/5 dark:hover:bg-primary/20
+                                       transition-colors"
                           >
-                            <ShieldCheck className="w-4 h-4" />
-                          </span>
-                          <div className="flex flex-col items-start">
-                            <span className="font-medium">{t('nav.admin')}</span>
-                            <span className="text-xs text-gray-400 dark:text-gray-500">
-                              {t('nav.admin_dashboard')}
+                            <span
+                              className="inline-flex items-center justify-center rounded-md p-1.5
+                                         bg-red-50 text-red-600
+                                         dark:bg-red-900/20 dark:text-red-400"
+                            >
+                              <ShieldCheck className="w-4 h-4" />
                             </span>
-                          </div>
-                        </button>
+                            <div className="flex flex-col items-start">
+                              <span className="font-medium">{t('nav.admin')}</span>
+                              <span className="text-xs text-gray-400 dark:text-gray-500">
+                                {t('nav.admin_dashboard')}
+                              </span>
+                            </div>
+                          </button>
+                        </>
                       )}
                       
                       {/* 로그아웃 버튼 - 드롭다운 하단에 작은 텍스트로 */}

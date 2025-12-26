@@ -69,7 +69,7 @@ export default function Modal({
 
         {/* Content Wrapper */}
         <div
-          className={`flex-1 overflow-y-auto block relative overscroll-contain ${contentClassName || 'px-6 py-4'}`}
+          className={`flex-1 overflow-y-auto block relative overscroll-contain ${contentClassName || ''}`}
           data-scroll-lock-scrollable=""
         >
           {children}

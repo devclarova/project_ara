@@ -119,14 +119,7 @@ function SignInCard() {
   const [notConfirmed, setNotConfirmed] = useState(false);
   const [resendMsg, setResendMsg] = useState('');
   const [suppressEffects, setSuppressEffects] = useState(false);
-  const [remember, setRemember] = useState(() => {
-    // Load previous preference from localStorage
-    try {
-      return localStorage.getItem('auth-remember-me') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  const [remember, setRemember] = useState(false);
   const location = useLocation();
 
   const handleChange = (field: 'email' | 'pw', value: string) => {

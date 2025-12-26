@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BarChart, 
   Users, 
@@ -20,12 +20,51 @@ import ThemeSwitcher from '../../components/common/ThemeSwitcher';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../contexts/AuthContext';
 
 const AdminLayout = () => {
   const { t } = useTranslation();
-  // Sidebar closed by default on mobile, will be open on desktop via CSS
+  const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [adminProfile, setAdminProfile] = useState<{
+    nickname: string;
+    email: string;
+    avatar_url: string | null;
+  } | null>(null);
   const navigate = useNavigate();
+
+  // Fetch admin profile data
+  useEffect(() => {
+    const fetchAdminProfile = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('nickname, avatar_url')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        setAdminProfile({
+          nickname: data?.nickname || '관리자',
+          email: user.email || 'admin@project-ara.com',
+          avatar_url: data?.avatar_url || null,
+        });
+      } catch (error) {
+        console.error('Error fetching admin profile:', error);
+        // Fallback to user email if profile fetch fails
+        setAdminProfile({
+          nickname: '관리자',
+          email: user.email || 'admin@project-ara.com',
+          avatar_url: null,
+        });
+      }
+    };
+
+    fetchAdminProfile();
+  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -82,12 +121,33 @@ const AdminLayout = () => {
 
           <div className="p-4 border-t border-gray-300 dark:border-gray-600 shrink-0">
             <div className="flex items-center gap-3 px-2 py-2 mb-2">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">A</div>
+              {adminProfile?.avatar_url ? (
+                <img 
+                  src={adminProfile.avatar_url} 
+                  alt={adminProfile.nickname}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">
+                  {adminProfile?.nickname?.charAt(0).toUpperCase() || 'A'}
+                </div>
+              )}
               <div className="flex-1 overflow-hidden">
-                <p className="text-sm font-medium text-foreground truncate">관리자</p>
-                <p className="text-xs text-muted-foreground truncate">admin@project-ara.com</p>
+                <p className="text-sm font-medium text-foreground truncate">
+                  {adminProfile?.nickname || '관리자'}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {adminProfile?.email || 'admin@project-ara.com'}
+                </p>
               </div>
             </div>
+            <button 
+              onClick={() => navigate('/')}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors mb-2"
+            >
+              <Home size={16} />
+              사용자 페이지로 이동
+            </button>
             <button 
               onClick={handleLogout}
               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"

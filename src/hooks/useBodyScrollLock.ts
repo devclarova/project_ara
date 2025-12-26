@@ -7,9 +7,25 @@ export function useBodyScrollLock(lock: boolean) {
   useEffect(() => {
     if (!lock) return;
 
-    // 모달 오픈 시 클래스 추가
+    // 스크롤 위치 저장 (모달 열릴 때)
+    const scrollY = window.scrollY;
+    const body = document.body;
+
+    // 기존 스타일 저장
+    const originalStyle = {
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+    };
+
+    // 모달 오픈 시 클래스 추가 및 body 고정
     document.body.classList.add('prevent-scroll');
     document.documentElement.classList.add('prevent-scroll');
+    
+    // Body를 fixed로 만들어 스크롤 위치 고정
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.width = '100%';
 
     const preventScroll = (e: Event) => {
       const target = e.target as HTMLElement;
@@ -109,13 +125,23 @@ export function useBodyScrollLock(lock: boolean) {
     window.addEventListener('keydown', preventKeys, options);
 
     return () => {
+      // 이벤트 리스너 제거
       window.removeEventListener('wheel', preventScroll);
       window.removeEventListener('touchmove', preventScroll);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('keydown', preventKeys);
       
+      // 클래스 제거
       document.body.classList.remove('prevent-scroll');
       document.documentElement.classList.remove('prevent-scroll');
+
+      // 스타일 복구
+      body.style.position = originalStyle.position;
+      body.style.top = originalStyle.top;
+      body.style.width = originalStyle.width;
+
+      // 스크롤 위치 복구
+      window.scrollTo(0, scrollY);
     };
   }, [lock]);
 }
