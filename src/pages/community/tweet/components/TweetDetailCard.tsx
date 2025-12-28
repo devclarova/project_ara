@@ -1,23 +1,22 @@
-
+import BlockButton from '@/components/common/BlockButton';
+import ReportButton from '@/components/common/ReportButton';
+import TranslateButton from '@/components/common/TranslateButton';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
+import { SnsStore } from '@/lib/snsState';
+import { supabase } from '@/lib/supabase';
+import DOMPurify from 'dompurify';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import DOMPurify from 'dompurify';
+import { toast } from 'sonner';
 import ImageSlider from './ImageSlider';
 import ModalImageSlider from './ModalImageSlider';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
-import TranslateButton from '@/components/common/TranslateButton';
-import { useTranslation } from 'react-i18next';
-import { SnsStore } from '@/lib/snsState';
-import ReportButton from '@/components/common/ReportButton';
-import BlockButton from '@/components/common/BlockButton';
 
 import type { UIPost } from '@/types/sns';
-import { formatDate } from '@/utils/dateUtils';
+import { formatTweetCardTime } from '@/utils/dateUtils';
 
 interface TweetDetailCardProps {
   tweet: UIPost;
@@ -26,10 +25,10 @@ interface TweetDetailCardProps {
   onReplyClick?: () => void;
 }
 
-export default function TweetDetailCard({ 
-  tweet, 
-  replyCount, 
-  onDeleted, 
+export default function TweetDetailCard({
+  tweet,
+  replyCount,
+  onDeleted,
   onReplyClick,
 }: TweetDetailCardProps) {
   const { t, i18n } = useTranslation();
@@ -53,7 +52,7 @@ export default function TweetDetailCard({
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [isBlocked, setIsBlocked] = useState(false);
-  
+
   // Merged States
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [authorProfileId, setAuthorProfileId] = useState<string | null>(null);
@@ -84,10 +83,7 @@ export default function TweetDetailCard({
 
   // replies 는 외부에서 받은 값 우선 사용
   const normalizedStats = {
-    replies:
-      typeof replyCount === 'number'
-        ? replyCount
-        : tweet.stats.replies || 0,
+    replies: typeof replyCount === 'number' ? replyCount : tweet.stats.replies || 0,
     retweets: tweet.stats.retweets || 0,
     likes: tweet.stats.likes || 0,
     views: tweet.stats.views || 0,
@@ -112,10 +108,10 @@ export default function TweetDetailCard({
   // Load Author's Country & Profile ID (from Main)
   useEffect(() => {
     if (isDeleted) {
-       setAuthorProfileId(null);
-       setAuthorCountryFlagUrl(null);
-       setAuthorCountryName(null);
-       return;
+      setAuthorProfileId(null);
+      setAuthorCountryFlagUrl(null);
+      setAuthorCountryName(null);
+      return;
     }
     const fetchAuthorCountry = async () => {
       try {
@@ -289,7 +285,7 @@ export default function TweetDetailCard({
 
       // SnsStore 동기화
       SnsStore.updateStats(tweet.id, {
-        likes: (tweet.stats.likes || 0) + 1
+        likes: (tweet.stats.likes || 0) + 1,
       });
     } catch (err: any) {
       console.error('트윗 좋아요 처리 실패:', err.message);
@@ -316,7 +312,7 @@ export default function TweetDetailCard({
       toast.success(t('tweet.delete_success', '피드가 삭제되었습니다.'));
       setShowDeleteDialog(false);
       setShowMenu(false);
-      
+
       onDeleted?.();
 
       // SnsStore에서 해당 트윗 제거
@@ -362,9 +358,15 @@ export default function TweetDetailCard({
           <i className="ri-arrow-left-line text-lg text-gray-700 dark:text-gray-100" />
         </button>
 
-        <div onClick={handleAvatarClick} className={`cursor-pointer flex-shrink-0 ${isDeleted ? 'cursor-default' : ''}`}>
+        <div
+          onClick={handleAvatarClick}
+          className={`cursor-pointer flex-shrink-0 ${isDeleted ? 'cursor-default' : ''}`}
+        >
           <Avatar>
-            <AvatarImage src={tweet.user.avatar || '/default-avatar.svg'} alt={isDeleted ? t('deleted_user') : tweet.user.name} />
+            <AvatarImage
+              src={tweet.user.avatar || '/default-avatar.svg'}
+              alt={isDeleted ? t('deleted_user') : tweet.user.name}
+            />
             <AvatarFallback>{isDeleted ? '?' : tweet.user.name.charAt(0)}</AvatarFallback>
           </Avatar>
         </div>
@@ -400,7 +402,9 @@ export default function TweetDetailCard({
             )}
 
             <span className="mx-1 text-gray-500 dark:text-gray-400">·</span>
-            <span className="text-gray-500 dark:text-gray-400 text-sm">{formatDate(tweet.timestamp)}</span>
+            <span className="text-gray-500 dark:text-gray-400 text-sm">
+              {formatTweetCardTime(tweet.createdAt || tweet.timestamp, i18n.language || 'ko')}
+            </span>
           </div>
         </div>
         <div className="relative ml-auto" ref={menuRef}>
@@ -413,7 +417,7 @@ export default function TweetDetailCard({
           >
             <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
           </button>
-          
+
           {showMenu && (
             <div className="absolute right-3 top-8 min-w-[9rem] whitespace-nowrap bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
               {authUser?.id === tweet.user.username ? (
@@ -453,7 +457,10 @@ export default function TweetDetailCard({
               {t('tweet.delete_msg_title', '이 게시글을 삭제하시겠어요?')}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-              {t('tweet.delete_msg_desc', '삭제한 게시글은 되돌릴 수 없습니다. 정말 삭제하시겠습니까?')}
+              {t(
+                'tweet.delete_msg_desc',
+                '삭제한 게시글은 되돌릴 수 없습니다. 정말 삭제하시겠습니까?',
+              )}
             </p>
 
             <div className="flex justify-end space-x-2">
@@ -529,7 +536,7 @@ export default function TweetDetailCard({
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-start gap-8 text-sm text-gray-500 dark:text-gray-400">
           {/* 댓글 수: 항상 replyCount 기반 */}
-          <button 
+          <button
             className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400 transition-colors group"
             onClick={onReplyClick}
           >

@@ -13,6 +13,24 @@ import ReportButton from '@/components/common/ReportButton';
 import ModalImageSlider from './ModalImageSlider';
 import { formatRelativeTime } from '@/utils/dateUtils';
 
+function linkifyMentions(html: string) {
+  if (/<a\b[^>]*>/.test(html)) return html;
+
+  // @아이디(영문/숫자/언더스코어/점) 패턴
+  // 한국어 닉네임을 @로 멘션하는 경우는 별도 규칙 필요
+  const mentionRegex = /(^|[\s>])@([a-zA-Z0-9_.]{2,30})\b/g;
+  const mentionClass =
+    'mention-link text-sky-500 dark:text-sky-400 font-medium hover:underline underline-offset-2';
+
+  return html.replace(
+    mentionRegex,
+    (_match, prefix, username) =>
+      `${prefix}<a href="/profile/${encodeURIComponent(
+        username,
+      )}" class="${mentionClass}" data-mention="${username}">@${username}</a>`,
+  );
+}
+
 function stripImagesAndEmptyLines(html: string) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   // img 제거
@@ -58,13 +76,15 @@ export function ReplyCard({
   const [modalIndex, setModalIndex] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
   const [contentImages, setContentImages] = useState<string[]>([]);
-  const contentRef = useRef<HTMLDivElement>(null);
+  // const contentRef = useRef<HTMLDivElement>(null);
+  const timeSource = reply.createdAt || reply.timestamp;
+  const timeLabel = timeSource ? formatRelativeTime(timeSource) : '';
 
   // Sync likeCount with props
   useEffect(() => {
     setLikeCount(reply.stats?.likes ?? 0);
   }, [reply.stats?.likes]);
-  
+
   // 하이라이트 상태 (잠깐 색 들어왔다 빠지는 용도)
   const [isHighlighted, setIsHighlighted] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
@@ -206,7 +226,7 @@ export function ReplyCard({
     // Toggle optimistic
     const nextLiked = !liked;
     const nextCount = nextLiked ? likeCount + 1 : Math.max(0, likeCount - 1);
-    
+
     setLiked(nextLiked);
     setLikeCount(nextCount);
     onLike?.(reply.id, nextLiked ? 1 : -1);
@@ -220,7 +240,7 @@ export function ReplyCard({
           .eq('reply_id', reply.id)
           .eq('user_id', profileId);
         if (deleteError) throw deleteError;
-        
+
         toast.info(t('common.cancel_like', '좋아요를 취소했습니다'));
       } else {
         // 좋아요 추가
@@ -229,10 +249,10 @@ export function ReplyCard({
           user_id: profileId,
         });
         if (insertError) throw insertError;
-        
+
         // 토스트 메시지 (간단하게)
         toast.success(t('common.success_like'));
-        
+
         // 알림 생성 (본인 댓글이 아닐 때만)
         if (reply.user.username !== authUser.id) {
           const { data: receiverProfile, error: receiverError } = await supabase
@@ -297,9 +317,19 @@ export function ReplyCard({
 
   // 텍스트만 추출 (번역용)
   const plainTextContent = stripImagesAndEmptyLines(safeContent);
-  const safeContentWithoutImages = DOMPurify.sanitize(plainTextContent, {
-    ADD_TAGS: ['iframe', 'video', 'source'],
-    ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
+  const safeContentWithoutImages = DOMPurify.sanitize(linkifyMentions(plainTextContent), {
+    ADD_TAGS: ['iframe', 'video', 'source', 'span', 'a'],
+    ADD_ATTR: [
+      'href',
+      'allow',
+      'allowfullscreen',
+      'frameborder',
+      'scrolling',
+      'src',
+      'controls',
+      'data-mention',
+      'class',
+    ],
   });
 
   return (
@@ -326,9 +356,15 @@ export function ReplyCard({
       }}
     >
       <div className="flex space-x-3">
-        <div onClick={handleAvatarClick} className={`cursor-pointer ${isDeleted ? 'cursor-default' : ''}`}>
+        <div
+          onClick={handleAvatarClick}
+          className={`cursor-pointer ${isDeleted ? 'cursor-default' : ''}`}
+        >
           <Avatar>
-            <AvatarImage src={reply.user.avatar || '/default-avatar.svg'} alt={isDeleted ? t('deleted_user') : reply.user.name} />
+            <AvatarImage
+              src={reply.user.avatar || '/default-avatar.svg'}
+              alt={isDeleted ? t('deleted_user') : reply.user.name}
+            />
             <AvatarFallback>{isDeleted ? '?' : reply.user.name.charAt(0)}</AvatarFallback>
           </Avatar>
         </div>
@@ -344,9 +380,7 @@ export function ReplyCard({
                 {isDeleted ? t('deleted_user') : reply.user.name}
               </span>
               <span className="text-gray-500 dark:text-gray-400">·</span>
-              <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
-                {formatRelativeTime(reply.timestamp)}
-              </span>
+              <span className="text-gray-500 dark:text-gray-400 text-sm">{timeLabel}</span>
             </div>
 
             {/* 더보기 버튼 */}
@@ -394,6 +428,19 @@ export function ReplyCard({
             <div
               className="text-gray-900 dark:text-gray-100 whitespace-normal break-words leading-relaxed"
               dangerouslySetInnerHTML={{ __html: safeContentWithoutImages }}
+              onClick={e => {
+                const el = (e.target as HTMLElement)?.closest?.(
+                  '.mention-link',
+                ) as HTMLElement | null;
+                if (!el) return;
+
+                // e.stopPropagation(); // 댓글 카드 클릭(페이지 이동) 막기
+                const username = el.dataset.mention;
+                if (!username) return;
+
+                // 멘션 클릭 → 프로필 이동
+                navigate(`/profile/${encodeURIComponent(username)}`);
+              }}
             />
             {/* 번역 버튼 */}
             {plainTextContent.trim().length > 0 && (
@@ -486,13 +533,13 @@ export function ReplyCard({
               className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400 transition-colors group"
               onClick={e => {
                 e.stopPropagation();
-                onReply?.(reply); // 부모로 “이 댓글에 답글” 전달
+                onReply?.(reply);
               }}
             >
               <div className="p-2 rounded-full group-hover:bg-blue-50 dark:group-hover:bg-primary/10 transition-colors">
                 <i className="ri-chat-3-line text-lg" />
               </div>
-              <span className="text-sm">{reply.stats.replies}</span>
+              <span className="text-sm">{reply.stats?.replies ?? 0}</span>
             </button>
 
             {/* Like */}

@@ -1,4 +1,3 @@
-
 import SnsInlineEditor, { type SnsInlineEditorHandle } from '@/components/common/SnsInlineEditor';
 import type { Database } from '@/types/database';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +22,8 @@ export default function TweetDetail() {
   const [tweet, setTweet] = useState<UIPost | null>(null);
   const [replies, setReplies] = useState<UIReply[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  // const [replyTarget, setReplyTarget] = useState<UIReply | null>(null);
+  const [openReplyId, setOpenReplyId] = useState<string | null>(null);
 
   // Pagination states
   const [page, setPage] = useState(0);
@@ -61,10 +62,10 @@ export default function TweetDetail() {
 
     // 스크롤 타겟 설정
     setScrollTargetId(locationState.highlightCommentId);
-    
+
     // 현재 키 저장
     if (locationState.scrollKey) {
-        scrollKeyRef.current = locationState.scrollKey;
+      scrollKeyRef.current = locationState.scrollKey;
     }
   }, [locationState?.highlightCommentId, locationState?.scrollKey]);
 
@@ -82,7 +83,7 @@ export default function TweetDetail() {
     setReplies([]);
     setPage(0);
     setHasMore(true);
-    fetchReplies(id, 0); // 초기 페이지 0
+    fetchReplies(id, 0, true); // 초기 페이지 0
   }, [id]);
 
   // 댓글 수가 변하면(실시간 추가/삭제 등) SnsStore에도 반영
@@ -90,7 +91,7 @@ export default function TweetDetail() {
     if (!tweet) return;
     // replies 변경될 때마다 캐시에 동기화
     SnsStore.updateStats(tweet.id, {
-      replies: replies.length
+      replies: replies.length,
     });
   }, [replies.length, tweet?.id]);
 
@@ -106,7 +107,7 @@ export default function TweetDetail() {
           event: 'DELETE',
           schema: 'public',
           table: 'tweet_replies',
-          filter: `tweet_id=eq.${id}`, 
+          filter: `tweet_id=eq.${id}`,
         },
         payload => {
           const oldRecord = payload.old as { id: string };
@@ -149,14 +150,14 @@ export default function TweetDetail() {
               },
             };
           });
-          
+
           // SnsStore 동기화
           SnsStore.updateStats(id, {
             likes: newTweet.like_count ?? 0,
             views: newTweet.view_count ?? 0,
-            replies: newTweet.reply_count ?? 0
+            replies: newTweet.reply_count ?? 0,
           });
-        }
+        },
       )
       .on(
         'postgres_changes',
@@ -170,7 +171,7 @@ export default function TweetDetail() {
           SnsStore.removeTweet(id);
           toast.error(t('tweet.deleted_while_viewing'));
           navigate('/sns', { replace: true });
-        }
+        },
       )
       .subscribe();
 
@@ -181,21 +182,22 @@ export default function TweetDetail() {
 
   // 조회수 증가 (로그인 유저에게만, 트윗 로드 된 후 1회만)
   const isViewedRef = useRef(false);
-  
+
   useEffect(() => {
     // 1. 기본 조건 체크
     if (!id || !user || !tweet) return;
-    
+
     // 2. 이미 이 컴포넌트 생명주기에서 조회수 처리를 했는지 확인
     if (isViewedRef.current) return;
 
     // 3. 새로고침 확인 (Navigation Timing API Level 2)
-    // SPA에서는 'reload'가 앱 초기 진입 방식을 의미하므로, 
+    // SPA에서는 'reload'가 앱 초기 진입 방식을 의미하므로,
     // 현재 컴포넌트가 '앱 실행 직후(2초 이내)'에 마운트된 경우만 진짜 새로고침으로 간주
     const navEntries = performance.getEntriesByType('navigation');
-    const isReload = navEntries.length > 0 
-      ? (navEntries[0] as PerformanceNavigationTiming).type === 'reload'
-      : performance.navigation.type === 1; // Fallback
+    const isReload =
+      navEntries.length > 0
+        ? (navEntries[0] as PerformanceNavigationTiming).type === 'reload'
+        : performance.navigation.type === 1; // Fallback
 
     if (isReload && performance.now() < 2000) {
       isViewedRef.current = true;
@@ -218,15 +220,15 @@ export default function TweetDetail() {
         // 이미 방금 증가시킨 상태라면 또 올리지 않도록 (혹시 모를 중복 방지)
         // 하지만 여기선 단순 증가시킴. 상위 useEffect에서 가드하므로 괜찮음.
         const newViews = (prev.stats.views || 0) + 1;
-        
+
         SnsStore.updateStats(tweetId, { views: newViews });
 
         return {
           ...prev,
           stats: {
             ...prev.stats,
-            views: newViews
-          }
+            views: newViews,
+          },
         };
       });
 
@@ -247,7 +249,6 @@ export default function TweetDetail() {
       if (error) {
         console.error('조회수 RPC 실패:', error.message);
       }
-      
     } catch (err) {
       console.error('조회수 처리 실패:', err);
     }
@@ -276,13 +277,15 @@ export default function TweetDetail() {
   };
 
   // 댓글 목록 불러오기 (페이지네이션)
-  const fetchReplies = async (tweetId: string, pageParam = 0) => {
+  const fetchReplies = async (tweetId: string, pageParam = 0, loadAll = false) => {
     // 알림으로 들어와서 특정 댓글을 하이라이트해야 하는 경우, 전체 로드 (무한스크롤 일시 중지)
     // 단, pageParam > 0 이면 무한스크롤 로드 중이므로 range 적용
-    const shouldLoadAll = !!highlightFromNotification && pageParam === 0;
+    const shouldLoadAllFromNotification = !!highlightFromNotification && pageParam === 0;
+    const shouldLoadAll = loadAll || shouldLoadAllFromNotification;
 
     try {
-      const mapped = await tweetService.getRepliesByTweetId(tweetId, pageParam, shouldLoadAll);
+      const mapped = await tweetService.getRepliesByTweetId(tweetId, pageParam, loadAll);
+      // const mapped = await tweetService.getRepliesByTweetId(tweetId, pageParam, shouldLoadAll);
 
       if (shouldLoadAll) {
         // 전체 로드 시에는 기존 것 덮어쓰고 더보기 없음 처리
@@ -299,12 +302,12 @@ export default function TweetDetail() {
         setReplies(prev => {
           // 중복 제거 및 created_at 순 정렬
           const merged = pageParam === 0 ? mapped : [...prev, ...mapped];
-          const unique = merged.filter((r, i, self) => 
-            i === self.findIndex(t => t.id === r.id)
+          const unique = merged.filter((r, i, self) => i === self.findIndex(t => t.id === r.id));
+          return unique.sort(
+            (a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime(),
           );
-          return unique.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
         });
-        
+
         setPage(pageParam + 1);
       }
     } catch (error: any) {
@@ -351,9 +354,13 @@ export default function TweetDetail() {
               avatar: profile?.avatar_url ?? '/default-avatar.svg',
             },
             content: newReply.content,
-            timestamp: new Date(newReply.created_at ?? Date.now()).toLocaleString('ko-KR', {
-              hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric',
-            }),
+            // timestamp: new Date(newReply.created_at ?? Date.now()).toLocaleString('ko-KR', {
+            //   hour: '2-digit',
+            //   minute: '2-digit',
+            //   month: 'short',
+            //   day: 'numeric',
+            // }),
+            timestamp: newReply.created_at ?? new Date().toISOString(),
             createdAt: newReply.created_at ?? new Date().toISOString(),
             stats: { replies: 0, retweets: 0, likes: newReply.like_count ?? 0, views: 0 },
             liked: false,
@@ -361,7 +368,9 @@ export default function TweetDetail() {
           setReplies(prev => {
             if (prev.some(r => r.id === formattedReply.id)) return prev;
             const combined = [...prev, formattedReply];
-            return combined.sort((a,b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+            return combined.sort(
+              (a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime(),
+            );
           });
         },
       )
@@ -375,16 +384,20 @@ export default function TweetDetail() {
         },
         payload => {
           const newReply = payload.new as Database['public']['Tables']['tweet_replies']['Row'];
-          setReplies(prev => 
-            prev.map(r => r.id === newReply.id ? {
-              ...r,
-              stats: {
-                ...r.stats,
-                likes: newReply.like_count ?? r.stats.likes,
-              }
-            } : r)
+          setReplies(prev =>
+            prev.map(r =>
+              r.id === newReply.id
+                ? {
+                    ...r,
+                    stats: {
+                      ...r.stats,
+                      likes: newReply.like_count ?? r.stats.likes,
+                    },
+                  }
+                : r,
+            ),
           );
-        }
+        },
       )
       .subscribe();
 
@@ -393,28 +406,85 @@ export default function TweetDetail() {
     };
   }, [id]);
 
-   // 새 댓글 작성 후 콜백: 새로 작성된 댓글로 스크롤 + 하이라이트
+  // 새 댓글 작성 후 콜백: 새로 작성된 댓글로 스크롤 + 하이라이트
   const handleReplyCreated = (reply: UIReply) => {
+    const fixed: UIReply = {
+      ...reply,
+      createdAt: reply.createdAt ?? new Date().toISOString(),
+    };
+
     // 1. Optimistic Update: 즉시 목록에 추가
     setReplies(prev => {
-        // 이미 존재하면 추가하지 않음 (혹시 모를 중복 방지)
-        if (prev.some(r => r.id === reply.id)) return prev;
-        
-        const combined = [...prev, reply];
-        // 정렬
-        return combined.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+      // 이미 존재하면 추가하지 않음 (혹시 모를 중복 방지)
+      if (prev.some(r => r.id === reply.id)) return prev;
+
+      const combined = [...prev, reply];
+      // 정렬
+      return combined.sort(
+        (a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime(),
+      );
     });
 
     // 2. 스크롤 처리
     setTimeout(() => {
-      setScrollTargetId(reply.id);
+      setScrollTargetId(fixed.id);
       requestAnimationFrame(() => {
-        const el = document.getElementById(`reply-${reply.id}`);
-        if (el) {
-          el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        }
+        document
+          .getElementById(`reply-${fixed.id}`)
+          ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
       });
-    }, 100); 
+    }, 100);
+  };
+
+  const handleChildReplyAdded = (newReply: UIReply) => {
+    // 1) 대댓글을 목록에 추가 (트리 렌더링은 ReplyList가 parent_reply_id로 알아서 붙임)
+    setReplies(prev => {
+      if (prev.some(r => r.id === newReply.id)) return prev;
+
+      // 부모 댓글의 replies 숫자 +1 (프론트에서만)
+      const parentId = (newReply as any).parent_reply_id as string | undefined | null;
+
+      const bumped = prev.map(r => {
+        if (!parentId) return r;
+        if (r.id !== parentId) return r;
+
+        return {
+          ...r,
+          stats: {
+            ...r.stats,
+            replies: (r.stats?.replies ?? 0) + 1,
+          },
+        };
+      });
+
+      return [...bumped, newReply].sort(
+        (a, b) =>
+          new Date(a.createdAt || a.timestamp || 0).getTime() -
+          new Date(b.createdAt || b.timestamp || 0).getTime(),
+      );
+    });
+
+    // 2) UI: 입력창 닫기
+    setOpenReplyId(null);
+
+    // 3) (선택) 방금 단 대댓글로 스크롤/하이라이트
+    setTimeout(() => {
+      setScrollTargetId(newReply.id);
+      requestAnimationFrame(() => {
+        document
+          .getElementById(`reply-${newReply.id}`)
+          ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      });
+    }, 50);
+  };
+
+  const handleToggleReply = (id: string) => {
+    setScrollTargetId(id);
+    setOpenReplyId(prev => (prev === id ? null : id));
+  };
+
+  const handleCloseReply = () => {
+    setOpenReplyId(null);
   };
 
   // replies가 로드된 뒤 scrollTargetId를 다시 트리거하여 스크롤이 실행되도록 함
@@ -441,7 +511,9 @@ export default function TweetDetail() {
     const tryScroll = () => {
       if (cancelled) return;
 
-      const el = document.getElementById(`reply-${scrollTargetId}`) || document.getElementById(scrollTargetId!);
+      const el =
+        document.getElementById(`reply-${scrollTargetId}`) ||
+        document.getElementById(scrollTargetId!);
       if (el) {
         // comment-editor인 경우 화면 중앙에 오도록 처리
         if (scrollTargetId === 'comment-editor') {
@@ -492,11 +564,7 @@ export default function TweetDetail() {
   return (
     <div className="border-x border-gray-200 dark:border-gray-700 dark:bg-background">
       {/* 댓글 수는 항상 replies.length 기준으로 표시 */}
-      <TweetDetailCard 
-        tweet={tweet} 
-        replyCount={replies.length} 
-        onReplyClick={handleReplyClick} 
-      />
+      <TweetDetailCard tweet={tweet} replyCount={replies.length} onReplyClick={handleReplyClick} />
       {/* 
         Wait, TweetDetailCard prop `onReplyClick` usually focuses editor. 
         In my previous code it was `handleReplyClick`.
@@ -511,7 +579,10 @@ export default function TweetDetail() {
               {t('tweet.login_to_reply', '댓글은 로그인 후 작성하실 수 있어요.')}
             </span>
             <span className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              {t('tweet.join_community_desc', '커뮤니티에 참여하려면 로그인 또는 회원가입을 진행해주세요.')}
+              {t(
+                'tweet.join_community_desc',
+                '커뮤니티에 참여하려면 로그인 또는 회원가입을 진행해주세요.',
+              )}
             </span>
           </div>
           <div className="flex gap-2 flex-shrink-0">
@@ -558,22 +629,43 @@ export default function TweetDetail() {
 
       <ReplyList
         replies={replies}
-        onDeleted={id => {
-          setReplies(prev => prev.filter(r => r.id !== id));
-          if (tweet) {
-            SnsStore.updateStats(tweet.id, {
-              replies: Math.max(0, replies.length - 1)
-            });
-          }
+        openReplyId={openReplyId}
+        // onDeleted={id => {
+        //   setReplies(prev => prev.filter(r => r.id !== id));
+        //   if (tweet) {
+        //     SnsStore.updateStats(tweet.id, {
+        //       replies: Math.max(0, replies.length - 1),
+        //     });
+        //   }
+        // }}
+        onDeleted={deletedId => {
+          setReplies(prev => {
+            const target = prev.find(r => r.id === deletedId);
+            const parentId = (target as any)?.parent_reply_id;
+
+            const filtered = prev.filter(r => r.id !== deletedId);
+
+            if (!parentId) return filtered;
+
+            return filtered.map(r =>
+              r.id === parentId
+                ? { ...r, stats: { ...r.stats, replies: Math.max(0, (r.stats?.replies ?? 0) - 1) } }
+                : r,
+            );
+          });
         }}
         hasMore={hasMore}
         fetchMore={() => {
           if (tweet?.id) fetchReplies(tweet.id, page);
         }}
-        onCommentClick={(commentId) => {
-            setScrollTargetId(commentId);
+        onCommentClick={id => {
+          setScrollTargetId(id);
+          setOpenReplyId(prev => (prev === id ? null : id)); // 토글
         }}
+        // onAddedReply={newReply => handleReplyCreated(newReply)}
+        onAddedReply={handleChildReplyAdded}
         highlightId={scrollTargetId}
+        onCloseReply={handleCloseReply}
       />
     </div>
   );
