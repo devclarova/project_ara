@@ -45,7 +45,7 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-7 right-7 z-20 bg-black text-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer"
+              className="absolute top-6 right-7 z-20 font-extrabold hover:font-black text-gray-500 hover:text-gray-700 dark:text-gray-100 dark:hover:text-gray-400 flex items-center justify-center cursor-pointer"
             >
               ✕
             </button>

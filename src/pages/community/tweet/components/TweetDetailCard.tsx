@@ -17,6 +17,7 @@ import ModalImageSlider from './ModalImageSlider';
 
 import type { UIPost } from '@/types/sns';
 import { formatTweetCardTime } from '@/utils/dateUtils';
+import EditButton from '@/components/common/EditButton';
 
 interface TweetDetailCardProps {
   tweet: UIPost;
@@ -59,6 +60,12 @@ export default function TweetDetailCard({
 
   const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
   const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
+
+  // 게시글 수정
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(tweet.content);
+  const [currentContent, setCurrentContent] = useState(tweet.content);
+  const [isComposing, setIsComposing] = useState(false);
 
   const handleBackClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -168,19 +175,24 @@ export default function TweetDetailCard({
     if (typeof window === 'undefined') return;
 
     const parser = new DOMParser();
-    const doc = parser.parseFromString(tweet.content, 'text/html');
+    const doc = parser.parseFromString(currentContent, 'text/html');
 
     const imgs = Array.from(doc.querySelectorAll('img'))
       .map(img => img.src)
       .filter(Boolean);
 
     setContentImages(imgs);
+  }, [currentContent]);
+
+  useEffect(() => {
+    setCurrentContent(tweet.content);
+    setDraft(tweet.content);
   }, [tweet.content]);
 
   const propImages = Array.isArray(tweet.image) ? tweet.image : tweet.image ? [tweet.image] : [];
   const allImages = propImages.length > 0 ? propImages : contentImages;
 
-  const safeContent = DOMPurify.sanitize(tweet.content, {
+  const safeContent = DOMPurify.sanitize(currentContent, {
     ADD_TAGS: ['iframe', 'video', 'source'],
     ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
     FORBID_TAGS: ['img'],
@@ -347,6 +359,30 @@ export default function TweetDetailCard({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const saveEdit = async () => {
+    if (!profileId) {
+      toast.error(t('common.error_profile_missing'));
+      return;
+    }
+
+    const next = draft.trim();
+    if (!next) return;
+
+    const { error } = await supabase.from('tweets').update({ content: next }).eq('id', tweet.id);
+
+    if (error) {
+      toast.error(t('common.error_edit'));
+      return;
+    }
+
+    setCurrentContent(next);
+    setIsEditing(false);
+    toast.success(t('common.success_edit'));
+
+    // 캐시 반영 (있으면)
+    (SnsStore as any)?.updateContent?.(tweet.id, next);
+  };
+
   return (
     <div className="relative border-b border-gray-200 dark:border-gray-700 px-4 py-6 bg-white dark:bg-background">
       <div className="flex items-start space-x-3">
@@ -421,16 +457,25 @@ export default function TweetDetailCard({
           {showMenu && (
             <div className="absolute right-3 top-8 min-w-[9rem] whitespace-nowrap bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
               {authUser?.id === tweet.user.username ? (
-                <button
-                  onClick={e => {
-                    e.stopPropagation();
-                    setShowDeleteDialog(true);
-                  }}
-                  className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
-                >
-                  <i className="ri-delete-bin-line" />
-                  {t('common.delete')}
-                </button>
+                <>
+                  <EditButton
+                    onEdit={() => {
+                      setDraft(currentContent);
+                      setIsEditing(true);
+                    }}
+                    onClose={() => setShowMenu(false)}
+                  />
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      setShowDeleteDialog(true);
+                    }}
+                    className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
+                  >
+                    <i className="ri-delete-bin-line" />
+                    {t('common.delete')}
+                  </button>
+                </>
               ) : (
                 <>
                   <ReportButton onClose={() => setShowMenu(false)} />
@@ -485,10 +530,63 @@ export default function TweetDetailCard({
         {/* 텍스트 + 번역 버튼 */}
         {hasText && (
           <div className="flex items-center gap-2">
-            <div
-              className="text-gray-900 dark:text-gray-100 text-xl leading-relaxed break-words whitespace-pre-line"
-              dangerouslySetInnerHTML={{ __html: safeContent }}
-            />
+            {isEditing ? (
+              <div className="w-full" onClick={e => e.stopPropagation()}>
+                <textarea
+                  value={draft}
+                  onChange={e => setDraft(e.target.value)}
+                  rows={6}
+                  className="
+        w-full resize-none rounded-2xl border border-gray-300 dark:border-gray-700
+        bg-gray-50 dark:bg-background px-3 py-2 text-base
+        text-gray-900 dark:text-gray-100
+        focus:outline-none focus:ring-2 focus:ring-primary/60
+      "
+                  onKeyDown={e => {
+                    if (isComposing) return;
+
+                    // ESC = 취소
+                    if (e.key === 'Escape') {
+                      e.preventDefault();
+                      setDraft(currentContent);
+                      setIsEditing(false);
+                      return;
+                    }
+
+                    // Enter 단독 = 저장
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      saveEdit();
+                      return;
+                    }
+                  }}
+                />
+
+                <div className="mt-3 flex justify-end gap-2">
+                  <button
+                    className="text-sm text-gray-500 hover:underline"
+                    onClick={() => {
+                      setDraft(currentContent);
+                      setIsEditing(false);
+                    }}
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={saveEdit}
+                    className="px-4 py-2 rounded-full bg-primary text-white hover:bg-primary/80"
+                  >
+                    저장
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div
+                className="text-gray-900 dark:text-gray-100 text-xl leading-relaxed break-words whitespace-pre-line"
+                dangerouslySetInnerHTML={{ __html: safeContent }}
+              />
+            )}
+
             {/* 번역 버튼 */}
             {plainTextContent.trim().length > 0 && (
               <TranslateButton

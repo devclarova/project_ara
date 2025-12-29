@@ -12,6 +12,7 @@ import BlockButton from '@/components/common/BlockButton';
 import ReportButton from '@/components/common/ReportButton';
 import ModalImageSlider from './ModalImageSlider';
 import { formatRelativeTime } from '@/utils/dateUtils';
+import EditButton from '@/components/common/EditButton';
 
 function linkifyMentions(html: string) {
   if (/<a\b[^>]*>/.test(html)) return html;
@@ -91,7 +92,14 @@ export function ReplyCard({
 
   // reply.content could be undefined in some types, fallback
   const rawContent = reply.content ?? '';
-  const safeContent = DOMPurify.sanitize(rawContent, {
+
+  // 댓글 수정
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(rawContent); // 편집중 값
+  const [currentContent, setCurrentContent] = useState(rawContent); // 화면 표시용
+  const [isComposing, setIsComposing] = useState(false);
+
+  const safeContent = DOMPurify.sanitize(currentContent, {
     ADD_TAGS: ['iframe', 'video', 'source', 'img'],
     ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
   });
@@ -180,6 +188,21 @@ export function ReplyCard({
       .filter(Boolean);
     setContentImages(imgs);
   }, [rawContent]);
+
+  useEffect(() => {
+    setCurrentContent(rawContent);
+    setDraft(rawContent);
+  }, [rawContent]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(currentContent, 'text/html');
+    const imgs = Array.from(doc.querySelectorAll('img'))
+      .map(img => img.src)
+      .filter(Boolean);
+    setContentImages(imgs);
+  }, [currentContent]);
 
   // 댓글 삭제
   const handleDelete = async () => {
@@ -332,6 +355,36 @@ export function ReplyCard({
     ],
   });
 
+  const saveEdit = async () => {
+    if (!profileId) {
+      toast.error(t('common.error_profile_missing'));
+      return;
+    }
+
+    const next = draft.trim();
+    if (!next) return;
+
+    const { error } = await supabase
+      .from('tweet_replies')
+      .update({ content: next })
+      .eq('id', reply.id)
+      .eq('author_id', profileId);
+
+    if (error) {
+      console.error('댓글 편집 실패:', error.message);
+      toast.error(t('common.error_edit'));
+      return;
+    }
+
+    setCurrentContent(next);
+    setIsEditing(false);
+    setShowMenu(false);
+    toast.success(t('common.success_edit'));
+
+    // 부모가 리스트 캐시를 가지고 있으면 알려주기(선택)
+    // onEdited?.(reply.id, next) 같은 콜백을 나중에 추가해도 됨
+  };
+
   return (
     <div
       id={`reply-${reply.id}`}
@@ -398,16 +451,25 @@ export function ReplyCard({
             {showMenu && (
               <div className="absolute right-0 top-8 min-w-[9rem] whitespace-nowrap bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
                 {isMyReply ? (
-                  <button
-                    onClick={e => {
-                      e.stopPropagation();
-                      setShowDialog(true);
-                    }}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
-                  >
-                    <i className="ri-delete-bin-line" />
-                    <span>{t('common.delete')}</span>
-                  </button>
+                  <>
+                    <EditButton
+                      onEdit={() => {
+                        setDraft(currentContent);
+                        setIsEditing(true);
+                      }}
+                      onClose={() => setShowMenu(false)}
+                    />
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setShowDialog(true);
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
+                    >
+                      <i className="ri-delete-bin-line" />
+                      <span>{t('common.delete')}</span>
+                    </button>
+                  </>
                 ) : (
                   <>
                     <ReportButton onClose={() => setShowMenu(false)} />
@@ -425,31 +487,79 @@ export function ReplyCard({
 
           {/* 본문 + 번역 버튼 */}
           <div className="flex items-center gap-2 mt-1">
-            <div
-              className="text-gray-900 dark:text-gray-100 whitespace-normal break-words leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: safeContentWithoutImages }}
-              onClick={e => {
-                const el = (e.target as HTMLElement)?.closest?.(
-                  '.mention-link',
-                ) as HTMLElement | null;
-                if (!el) return;
+            {isEditing ? (
+              <div className="w-full" onClick={e => e.stopPropagation()}>
+                <textarea
+                  value={draft}
+                  onChange={e => setDraft(e.target.value)}
+                  rows={5}
+                  className="
+          w-full resize-none rounded-2xl border border-gray-300 dark:border-gray-700
+          bg-gray-50 dark:bg-background px-3 py-2 text-sm
+          text-gray-900 dark:text-gray-100
+          focus:outline-none focus:ring-2 focus:ring-primary/60
+        "
+                  onKeyDown={e => {
+                    if (isComposing) return;
 
-                // e.stopPropagation(); // 댓글 카드 클릭(페이지 이동) 막기
-                const username = el.dataset.mention;
-                if (!username) return;
+                    // ESC = 취소
+                    if (e.key === 'Escape') {
+                      e.preventDefault();
+                      setDraft(currentContent);
+                      setIsEditing(false);
+                      return;
+                    }
 
-                // 멘션 클릭 → 프로필 이동
-                navigate(`/profile/${encodeURIComponent(username)}`);
-              }}
-            />
-            {/* 번역 버튼 */}
-            {plainTextContent.trim().length > 0 && (
-              <TranslateButton
-                text={plainTextContent}
-                contentId={`reply_${reply.id}`}
-                setTranslated={setTranslated}
-                size="sm"
-              />
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      saveEdit();
+                      return;
+                    }
+                  }}
+                />
+
+                <div className="mt-3 flex justify-end gap-2">
+                  <button
+                    className="text-sm text-gray-500 hover:underline"
+                    onClick={() => {
+                      setDraft(currentContent);
+                      setIsEditing(false);
+                    }}
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={saveEdit}
+                    className="px-4 py-2 rounded-full bg-primary text-white hover:bg-primary/80"
+                  >
+                    저장
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div
+                  className="text-gray-900 dark:text-gray-100 whitespace-normal break-words leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: safeContentWithoutImages }}
+                  onClick={e => {
+                    const el = (e.target as HTMLElement)?.closest?.(
+                      '.mention-link',
+                    ) as HTMLElement | null;
+                    if (!el) return;
+                    const username = el.dataset.mention;
+                    if (!username) return;
+                    navigate(`/profile/${encodeURIComponent(username)}`);
+                  }}
+                />
+                {plainTextContent.trim().length > 0 && (
+                  <TranslateButton
+                    text={plainTextContent}
+                    contentId={`reply_${reply.id}`}
+                    setTranslated={setTranslated}
+                    size="sm"
+                  />
+                )}
+              </>
             )}
           </div>
 
