@@ -151,6 +151,8 @@ const ContentCard = ({
   };
 
   const handleClick = () => {
+    if (!contents || !episode) return;
+    
     if (isGuest && !isPreview) {
       openLoginModal?.(); // 로그인 모달
       return;
