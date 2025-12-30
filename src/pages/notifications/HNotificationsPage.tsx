@@ -78,6 +78,14 @@ export default function HNotificationsPage() {
             contentToUse = n.tweet.content;
           }
 
+          if (
+            n.type === 'mention' &&
+            (!contentToUse || contentToUse.trim() === '') &&
+            n.tweet?.content
+          ) {
+            contentToUse = n.tweet.content;
+          }
+
           return {
             id: n.id,
             type: n.type,
@@ -125,12 +133,20 @@ export default function HNotificationsPage() {
 
           // 피드 좋아요인 경우 트윗 내용 추가 fetch
           let contentToUse = newItem.content;
-          if (newItem.type === 'like' && newItem.tweet_id && !newItem.comment_id) {
+
+          const needTweetContent =
+            (newItem.type === 'like' && newItem.tweet_id && !newItem.comment_id) ||
+            (newItem.type === 'mention' &&
+              newItem.tweet_id &&
+              (!contentToUse || contentToUse.trim() === ''));
+
+          if (needTweetContent) {
             const { data: tweetData } = await supabase
               .from('tweets')
               .select('content')
               .eq('id', newItem.tweet_id)
               .maybeSingle();
+
             if (tweetData?.content) {
               contentToUse = tweetData.content;
             }

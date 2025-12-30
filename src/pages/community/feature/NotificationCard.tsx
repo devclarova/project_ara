@@ -5,8 +5,6 @@ import DOMPurify from 'dompurify';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-
-
 interface NotificationCardProps {
   notification: {
     id: string;
@@ -91,24 +89,26 @@ export default function NotificationCard({
     }
 
     if (!text && imageUrl) {
-        text = t('notification.photo_content', '[사진]');
+      text = t('notification.photo_content', '[사진]');
     }
 
     return { text, imageUrl };
   };
 
-  const { text: contentText, imageUrl } = notification.content 
-    ? parseContent(notification.content) 
+  const { text: contentText, imageUrl } = notification.content
+    ? parseContent(notification.content)
     : { text: '', imageUrl: null };
 
   // 댓글 좋아요인데 content가 없는 경우 체크
-  const isCommentLikeWithoutContent = 
+  const isCommentLikeWithoutContent =
     notification.type === 'like' && notification.replyId && !contentText && !imageUrl;
-  
+
   // 어떤 타입에 대해 내용 박스를 보여줄지 결정
   const shouldShowPreview =
-    (notification.type === 'comment' || notification.type === 'like') 
-    && (!!contentText || !!imageUrl || isCommentLikeWithoutContent);
+    (notification.type === 'comment' ||
+      notification.type === 'like' ||
+      notification.type === 'mention') &&
+    (!!contentText || !!imageUrl || isCommentLikeWithoutContent);
 
   const unreadClasses = !notification.isRead
     ? 'relative bg-primary/10 dark:bg-primary/20 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary'
@@ -153,7 +153,7 @@ export default function NotificationCard({
     // "삭제된 댓글"로 판단되는 알림 (이미 정보가 불완전한 경우)
     if (isDeletedCommentNotification) {
       toast.info(t('notification.deleted_comment'));
-      
+
       if (location.pathname !== targetSns) {
         navigate(targetSns);
       }
@@ -173,14 +173,14 @@ export default function NotificationCard({
       if (!replyExists) {
         // 이미 삭제된 댓글임
         toast.info(t('notification.deleted_comment'));
-        
+
         // 그래도 게시글로 이동은 함 (사용자 경험 유지) - 먼저 이동
         if (location.pathname !== targetSns) {
-           navigate(targetSns);
+          navigate(targetSns);
         }
-        
+
         // 이동 후 삭제 (컴포넌트 언마운트되더라도 실행됨)
-        onSilentDelete?.(notification.id); 
+        onSilentDelete?.(notification.id);
         return;
       }
 
@@ -238,7 +238,9 @@ export default function NotificationCard({
         {/* 본문 */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start space-x-2 sm:space-x-3 mb-1">
-            <span className={`text-base sm:text-lg flex-shrink-0 ${getInteractionColor(notification.type)}`}>
+            <span
+              className={`text-base sm:text-lg flex-shrink-0 ${getInteractionColor(notification.type)}`}
+            >
               {getInteractionIcon(notification.type)}
             </span>
 
@@ -248,7 +250,10 @@ export default function NotificationCard({
                   {notification.user.name}
                 </span>
                 <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 ml-1">
-                  {notification.type === 'like' && (notification.replyId ? t('notification.like_comment') : t('notification.like_feed'))}
+                  {notification.type === 'like' &&
+                    (notification.replyId
+                      ? t('notification.like_comment')
+                      : t('notification.like_feed'))}
                   {notification.type === 'comment' && t('notification.comment_feed')}
                   {notification.type === 'follow' && t('notification.follow_msg')}
                   {notification.type === 'repost' && t('notification.repost_msg')}
@@ -267,33 +272,38 @@ export default function NotificationCard({
                     if (isNaN(date.getTime())) return ts; // 원본 반환
                     const now = new Date();
                     const currentLang = i18n.language || 'ko';
-                    
+
                     // 오늘 날짜인지 확인 (년, 월, 일이 모두 같은지)
-                    const isToday = date.getFullYear() === now.getFullYear() &&
-                                    date.getMonth() === now.getMonth() &&
-                                    date.getDate() === now.getDate();
+                    const isToday =
+                      date.getFullYear() === now.getFullYear() &&
+                      date.getMonth() === now.getMonth() &&
+                      date.getDate() === now.getDate();
 
                     // 오늘 기록은 시간만 표시
                     if (isToday) {
-                       return new Intl.DateTimeFormat(currentLang, { hour: 'numeric', minute: 'numeric', hour12: true }).format(date);
+                      return new Intl.DateTimeFormat(currentLang, {
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        hour12: true,
+                      }).format(date);
                     }
                     // 이전 날짜는 날짜 + 시간 표시
-                    return new Intl.DateTimeFormat(currentLang, { 
-                      month: 'short', 
+                    return new Intl.DateTimeFormat(currentLang, {
+                      month: 'short',
                       day: 'numeric',
                       hour: '2-digit',
                       minute: '2-digit',
-                      hour12: true
+                      hour12: true,
                     }).format(date);
                   } catch {
                     return ts;
                   }
                 })()}
               </span>
-              
+
               {onDelete && (
                 <button
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation();
                     onDelete(notification.id);
                   }}
@@ -310,14 +320,14 @@ export default function NotificationCard({
           {shouldShowPreview && (
             <div className="mt-2 sm:mt-3 p-2.5 sm:p-3 bg-gray-50/50 dark:bg-zinc-800/50 rounded-xl border border-gray-200/60 dark:border-gray-700/60 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
               <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-200 line-clamp-2 whitespace-pre-wrap break-words flex-1 leading-relaxed w-full">
-                {isCommentLikeWithoutContent 
+                {isCommentLikeWithoutContent
                   ? t('notification.no_content_available', '내용을 불러올 수 없습니다')
                   : contentText}
               </p>
               {imageUrl && (
-                <img 
-                  src={imageUrl} 
-                  alt="preview" 
+                <img
+                  src={imageUrl}
+                  alt="preview"
                   className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover flex-shrink-0 border border-black/5 dark:border-white/5 bg-gray-200 dark:bg-gray-800"
                 />
               )}

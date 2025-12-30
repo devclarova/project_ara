@@ -164,7 +164,9 @@ export default function ModalImageSlider({
                   setModalIndex(i);
                 }}
                 className={`w-2.5 h-2.5 rounded-full transition-all ${
-                  i === modalIndex ? 'bg-gray-800 dark:bg-white scale-125' : 'bg-gray-400 dark:bg-white/40'
+                  i === modalIndex
+                    ? 'bg-gray-800 dark:bg-white scale-125'
+                    : 'bg-gray-400 dark:bg-white/40'
                 }`}
               />
             ))}
