@@ -136,8 +136,8 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
     const imgTags: string[] = [];
     for (let i = 0; i < files.length; i++) {
       let file = files[i];
-      
-      // 🟢 클라이언트 압축 적용
+
+      // 클라이언트 압축 적용
       try {
         const options = {
           maxSizeMB: 1, // 최대 1MB
@@ -230,33 +230,33 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
           setIsSubmitting(false);
           return;
         }
-        
+
         const uiReply: UIReply = {
-           type: 'reply',
-           id: inserted.id,
-           tweetId: tweetId,
-           parent_reply_id: null, // 대댓글인 경우 분기 필요하지만 현재 SnsInlineEditor는 1 depth 댓글만 가정하는듯? (확인 필요) -> 일단 null
-           root_reply_id: null,
-           user: {
-               name: profileNickname || 'Unknown',
-               username: profileUserId || user.id,
-               avatar: profileAvatar ?? '/default-avatar.svg'
-           },
-           content: finalContent,
-           timestamp: new Date().toLocaleString('ko-KR', {
-               hour: '2-digit',
-               minute: '2-digit',
-               month: 'short',
-               day: 'numeric',
-           }),
-           createdAt: inserted.created_at || new Date().toISOString(),
-           stats: {
-               replies: 0,
-               retweets: 0,
-               likes: 0,
-               views: 0
-           },
-           liked: false
+          type: 'reply',
+          id: inserted.id,
+          tweetId: tweetId,
+          parent_reply_id: null, // 대댓글인 경우 분기 필요하지만 현재 SnsInlineEditor는 1 depth 댓글만 가정하는듯? (확인 필요) -> 일단 null
+          root_reply_id: null,
+          user: {
+            name: profileNickname || 'Unknown',
+            username: profileUserId || user.id,
+            avatar: profileAvatar ?? '/default-avatar.svg',
+          },
+          content: finalContent,
+          timestamp: new Date().toLocaleString('ko-KR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            month: 'short',
+            day: 'numeric',
+          }),
+          createdAt: inserted.created_at || new Date().toISOString(),
+          stats: {
+            replies: 0,
+            retweets: 0,
+            likes: 0,
+            views: 0,
+          },
+          liked: false,
         };
 
         if (onReplyCreated) {
@@ -353,7 +353,8 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
   // 비로그인일 때는 이 컴포넌트는 렌더 안 하게 (상위에서 CTA 따로 처리)
   if (!user) return null;
 
-  const placeholder = mode === 'reply' ? t('tweets.placeholder_reply') : t('tweets.placeholder_tweet');
+  const placeholder =
+    mode === 'reply' ? t('tweets.placeholder_reply') : t('tweets.placeholder_tweet');
   const buttonLabel =
     mode === 'reply'
       ? isSubmitting
@@ -382,7 +383,7 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
             }}
             onKeyDown={handleKeyDown}
             onCompositionStart={() => setIsComposing(true)}
-            onCompositionEnd={(e) => {
+            onCompositionEnd={e => {
               setIsComposing(false);
               props.onCompositionEnd?.();
             }}
