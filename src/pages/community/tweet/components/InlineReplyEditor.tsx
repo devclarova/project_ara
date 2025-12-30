@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,7 +22,7 @@ export default function InlineReplyEditor({ tweetId, onReplyCreated }: InlineRep
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // 🔹 내 아바타 불러오기
+  // 내 아바타 불러오기
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
@@ -70,7 +69,7 @@ export default function InlineReplyEditor({ tweetId, onReplyCreated }: InlineRep
 
     setIsSubmitting(true);
     try {
-      // 🔹 profiles.id 조회
+      // profiles.id 조회
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
@@ -85,7 +84,7 @@ export default function InlineReplyEditor({ tweetId, onReplyCreated }: InlineRep
 
       let finalContent = value.trim();
 
-      // 🔹 이미지 업로드 후 <img> 태그를 content 뒤에 붙이기
+      // 이미지 업로드 후 <img> 태그를 content 뒤에 붙이기
       if (files.length > 0) {
         const imgTags: string[] = [];
 
