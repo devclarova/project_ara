@@ -38,6 +38,8 @@ export interface ReplyQueryResponse {
   content: string;
   created_at: string;
   tweet_id: string;
+  parent_reply_id?: string | null;
+  root_reply_id?: string | null;
   profiles: {
     id: string;
     nickname: string;
