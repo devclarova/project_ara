@@ -52,8 +52,6 @@ export interface ReplyQueryResponse {
     content: string;
     author_id: string;
   } | null;
-  parent_reply_id?: string | null;
-  root_reply_id?: string | null;
 }
 
 export type TweetStats = {
