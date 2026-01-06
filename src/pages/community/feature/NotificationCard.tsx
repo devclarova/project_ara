@@ -1,14 +1,18 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import DOMPurify from 'dompurify';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { formatSmartDate } from '@/utils/dateUtils';
+
+
 
 interface NotificationCardProps {
   notification: {
     id: string;
-    type: 'like' | 'comment' | 'repost' | 'mention' | 'follow';
+    type: 'like' | 'comment' | 'repost' | 'mention' | 'follow' | 'reply' | 'system' | 'like_comment' | 'like_feed';
     user: {
       name: string;
       username: string;
@@ -49,6 +53,8 @@ export default function NotificationCard({
         return '🏷️';
       case 'follow':
         return '👤';
+      case 'system':
+        return '📢';
       default:
         return '📢';
     }
@@ -89,42 +95,35 @@ export default function NotificationCard({
     }
 
     if (!text && imageUrl) {
-      text = t('notification.photo_content', '[사진]');
+        text = t('notification.media_photo');
     }
 
     return { text, imageUrl };
   };
 
-  const { text: contentText, imageUrl } = notification.content
-    ? parseContent(notification.content)
+  const { text: contentText, imageUrl } = notification.content 
+    ? parseContent(notification.content) 
     : { text: '', imageUrl: null };
 
   // 댓글 좋아요인데 content가 없는 경우 체크
-  const isCommentLikeWithoutContent =
+  const isCommentLikeWithoutContent = 
     notification.type === 'like' && notification.replyId && !contentText && !imageUrl;
-
+  
   // 어떤 타입에 대해 내용 박스를 보여줄지 결정
   const shouldShowPreview =
-    (notification.type === 'comment' ||
-      notification.type === 'like' ||
-      notification.type === 'mention') &&
-    (!!contentText || !!imageUrl || isCommentLikeWithoutContent);
+    (notification.type === 'comment' || notification.type === 'like' || notification.type === 'mention' || notification.type === 'reply') 
+    && (!!contentText || !!imageUrl || isCommentLikeWithoutContent);
 
   const unreadClasses = !notification.isRead
     ? 'relative bg-primary/10 dark:bg-primary/20 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary'
     : '';
 
   // "삭제된 댓글"로 취급해야 하는 알림인지 판별
-  // 1) type === 'comment' 이면서 replyId 없음 → 원래 댓글 알림인데 댓글이 삭제된 케이스
-  // 2) type === 'like' 이면서:
-  //    - replyId 없음
-  //    - 내용(contentText)이 있고
-  //    - 그 내용이 우리가 피드 좋아요에서 넣은 고정 문구가 아닐 때
-  //    → 원래는 댓글 좋아요였는데 댓글이 지워진 케이스로 판단
+  // type === 'comment' 이면서 replyId 없음 → 원래 댓글 알림인데 댓글이 삭제된 케이스
+  // 참고: type === 'like' 이면서 replyId 없음 → 정상적인 게시글 좋아요 (삭제된 댓글 아님)
+  // 댓글 좋아요(type === 'like' + replyId 있음)의 삭제 체크는 handleClick 내부의 DB 조회로 처리
   const isDeletedCommentNotification =
-    !notification.replyId &&
-    (notification.type === 'comment' ||
-      (notification.type === 'like' && !!contentText && contentText !== FEED_LIKE_MESSAGE));
+    notification.type === 'comment' && !notification.replyId;
 
   // Check logic inside handleClick
   const handleClick = async () => {
@@ -153,7 +152,7 @@ export default function NotificationCard({
     // "삭제된 댓글"로 판단되는 알림 (이미 정보가 불완전한 경우)
     if (isDeletedCommentNotification) {
       toast.info(t('notification.deleted_comment'));
-
+      
       if (location.pathname !== targetSns) {
         navigate(targetSns);
       }
@@ -173,14 +172,14 @@ export default function NotificationCard({
       if (!replyExists) {
         // 이미 삭제된 댓글임
         toast.info(t('notification.deleted_comment'));
-
+        
         // 그래도 게시글로 이동은 함 (사용자 경험 유지) - 먼저 이동
         if (location.pathname !== targetSns) {
-          navigate(targetSns);
+           navigate(targetSns);
         }
-
+        
         // 이동 후 삭제 (컴포넌트 언마운트되더라도 실행됨)
-        onSilentDelete?.(notification.id);
+        onSilentDelete?.(notification.id); 
         return;
       }
 
@@ -223,7 +222,7 @@ export default function NotificationCard({
     >
       <div className="flex items-start space-x-3">
         {/* Avatar */}
-        <div onClick={handleAvatarClick} className="cursor-pointer flex-shrink-0">
+        <div onClick={handleAvatarClick} className="cursor-pointer flex-shrink-0 relative">
           <Avatar className="w-10 h-10">
             <AvatarImage
               src={notification.user.avatar || '/default-avatar.svg'}
@@ -233,14 +232,17 @@ export default function NotificationCard({
               {notification.user.name ? notification.user.name.charAt(0).toUpperCase() : 'U'}
             </AvatarFallback>
           </Avatar>
+          <OnlineIndicator 
+            userId={notification.user.username} 
+            size="sm" 
+            className="absolute -bottom-0.5 -right-0.5 z-10 border-white dark:border-secondary border-2"
+          />
         </div>
 
         {/* 본문 */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start space-x-2 sm:space-x-3 mb-1">
-            <span
-              className={`text-base sm:text-lg flex-shrink-0 ${getInteractionColor(notification.type)}`}
-            >
+            <span className={`text-base sm:text-lg flex-shrink-0 ${getInteractionColor(notification.type)}`}>
               {getInteractionIcon(notification.type)}
             </span>
 
@@ -250,65 +252,30 @@ export default function NotificationCard({
                   {notification.user.name}
                 </span>
                 <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 ml-1">
-                  {notification.type === 'like' &&
-                    (notification.replyId
-                      ? t('notification.like_comment')
-                      : t('notification.like_feed'))}
+                  {notification.type === 'like' && (notification.replyId ? t('notification.like_comment') : t('notification.like_feed'))}
                   {notification.type === 'comment' && t('notification.comment_feed')}
+                  {notification.type === 'reply' && t('notification.comment_feed')}
                   {notification.type === 'follow' && t('notification.follow_msg')}
                   {notification.type === 'repost' && t('notification.repost_msg')}
                   {notification.type === 'mention' && t('notification.mention_msg')}
+                  {notification.type === 'system' && t('notification.system_notice', '시스템 알림')}
                 </span>
               </div>
             </div>
 
             <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
               <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                {(() => {
-                  const ts = notification.timestamp;
-                  if (!ts) return '';
-                  try {
-                    const date = new Date(ts);
-                    if (isNaN(date.getTime())) return ts; // 원본 반환
-                    const now = new Date();
-                    const currentLang = i18n.language || 'ko';
-
-                    // 오늘 날짜인지 확인 (년, 월, 일이 모두 같은지)
-                    const isToday =
-                      date.getFullYear() === now.getFullYear() &&
-                      date.getMonth() === now.getMonth() &&
-                      date.getDate() === now.getDate();
-
-                    // 오늘 기록은 시간만 표시
-                    if (isToday) {
-                      return new Intl.DateTimeFormat(currentLang, {
-                        hour: 'numeric',
-                        minute: 'numeric',
-                        hour12: true,
-                      }).format(date);
-                    }
-                    // 이전 날짜는 날짜 + 시간 표시
-                    return new Intl.DateTimeFormat(currentLang, {
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: true,
-                    }).format(date);
-                  } catch {
-                    return ts;
-                  }
-                })()}
+                {formatSmartDate(notification.timestamp)}
               </span>
-
+              
               {onDelete && (
                 <button
-                  onClick={e => {
+                  onClick={(e) => {
                     e.stopPropagation();
                     onDelete(notification.id);
                   }}
                   className="p-1 sm:p-1.5 rounded-full text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0"
-                  title="삭제"
+                  title={t('common.delete')}
                 >
                   <i className="ri-delete-bin-line text-base sm:text-lg" />
                 </button>
@@ -316,18 +283,18 @@ export default function NotificationCard({
             </div>
           </div>
 
-          {/* 댓글/좋아요 알림일 때 내용 미리보기 */}
+          {/* 댓글/좋아요/멘션/답글 알림일 때 내용 미리보기 */}
           {shouldShowPreview && (
-            <div className="mt-2 sm:mt-3 p-2.5 sm:p-3 bg-gray-50/50 dark:bg-zinc-800/50 rounded-xl border border-gray-200/60 dark:border-gray-700/60 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+            <div className="mt-2 sm:mt-3 p-2.5 sm:p-3 bg-gray-50/50 dark:bg-zinc-800/50 rounded-xl border border-gray-200/60 dark:border-gray-700/60 flex flex-row items-center gap-2 sm:gap-3">
               <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-200 line-clamp-2 whitespace-pre-wrap break-words flex-1 leading-relaxed w-full">
-                {isCommentLikeWithoutContent
+                {isCommentLikeWithoutContent 
                   ? t('notification.no_content_available', '내용을 불러올 수 없습니다')
                   : contentText}
               </p>
               {imageUrl && (
-                <img
-                  src={imageUrl}
-                  alt="preview"
+                <img 
+                  src={imageUrl} 
+                  alt="preview" 
                   className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover flex-shrink-0 border border-black/5 dark:border-white/5 bg-gray-200 dark:bg-gray-800"
                 />
               )}

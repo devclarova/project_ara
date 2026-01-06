@@ -1,6 +1,6 @@
-
 import { Facebook, Instagram, Youtube, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 /**
  * High-End Premium Footer Section for Landing Page
@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
  * - 정교한 호버 인터랙션 및 타이포그래피
  */
 export default function FooterSection() {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -30,23 +31,22 @@ export default function FooterSection() {
               Expand <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-primary">World</span>.
             </h2>
             <p className="text-lg md:text-xl text-muted-foreground/80 font-medium max-w-lg mb-8">
-              언어의 장벽을 넘어 문화를 경험하세요. <br className="hidden md:block" />
-              아라와 함께라면 전 세계가 당신의 무대입니다.
+              {t('footer.brand.slogan_sub')}
             </p>
             
             <Link to="/signup" className="group inline-flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground rounded-full text-lg font-bold transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/20">
-              Start Your Journey
+              {t('landing.cta_start', 'Start Your Journey')}
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
           {/* 뉴스레터 구독 (Minimalist Form) */}
           <div className="lg:w-[400px] flex flex-col justify-end">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">Subscribe to our newsletter</h3>
+            <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">{t('footer.newsletter.title', 'Subscribe to our newsletter')}</h3>
             <div className="relative group">
               <input 
                 type="email" 
-                placeholder="Enter your email address" 
+                placeholder={t('footer.newsletter.placeholder', 'Enter your email address')}
                 className="w-full bg-transparent border-b-2 border-border py-4 text-lg focus:outline-none focus:border-primary transition-colors placeholder:text-muted-foreground/50"
               />
               <button className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-primary transition-colors">
@@ -54,37 +54,37 @@ export default function FooterSection() {
               </button>
             </div>
             <p className="text-xs text-muted-foreground/60 mt-4">
-              Join 10,000+ others and never miss out on new tips, tutorials, and more.
+              {t('footer.newsletter.desc', 'Join 10,000+ others and never miss out on new tips, tutorials, and more.')}
             </p>
           </div>
         </div>
 
         {/* 중단: 링크 그리드 (Clean & Professional) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-8 border-t border-border/40 pt-16 mb-16">
-          <FooterColumn title="Product">
-            <FooterLink>Features</FooterLink>
-            <FooterLink>Pricing</FooterLink>
-            <FooterLink>Enterprise</FooterLink>
-            <FooterLink>Changelog</FooterLink>
+          <FooterColumn title={t('footer.columns.product.title')}>
+            <FooterLink>{t('footer.columns.product.features')}</FooterLink>
+            <FooterLink>{t('footer.columns.product.pricing')}</FooterLink>
+            <FooterLink>{t('footer.columns.product.enterprise')}</FooterLink>
+            <FooterLink>{t('footer.columns.product.security', 'Security')}</FooterLink>
           </FooterColumn>
           
-          <FooterColumn title="Resources">
-            <FooterLink>Documentation</FooterLink>
-            <FooterLink>Community</FooterLink>
-            <FooterLink>Webinars</FooterLink>
-            <FooterLink>Help Center</FooterLink>
+          <FooterColumn title={t('footer.columns.resources.title')}>
+            <FooterLink>{t('footer.columns.resources.documentation')}</FooterLink>
+            <FooterLink>{t('footer.columns.resources.community')}</FooterLink>
+            <FooterLink>{t('footer.columns.resources.webinars', 'Webinars')}</FooterLink>
+            <FooterLink>{t('footer.columns.resources.help_center')}</FooterLink>
           </FooterColumn>
 
-          <FooterColumn title="Company">
-             <FooterLink>About</FooterLink>
-             <FooterLink>Careers</FooterLink>
-             <FooterLink>Blog</FooterLink>
-             <FooterLink>Contact</FooterLink>
+          <FooterColumn title={t('footer.columns.company.title')}>
+             <FooterLink>{t('footer.columns.company.about')}</FooterLink>
+             <FooterLink>{t('footer.columns.company.careers')}</FooterLink>
+             <FooterLink>{t('footer.columns.company.blog')}</FooterLink>
+             <FooterLink>{t('footer.columns.company.contact')}</FooterLink>
           </FooterColumn>
 
           {/* 오피스 정보 (Visual) */}
           <div className="flex flex-col gap-6">
-            <h3 className="font-bold text-foreground">Office</h3>
+            <h3 className="font-bold text-foreground">{t('footer.columns.company.office', 'Office')}</h3>
             <address className="not-italic text-sm text-muted-foreground leading-relaxed">
               <span className="block font-medium text-foreground mb-1">Seoul HQ</span>
               Teheran-ro 123, Gangnam-gu<br />
@@ -98,14 +98,16 @@ export default function FooterSection() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-8 border-t border-border/40">
           <div className="flex items-center gap-2">
             <span className="text-xl font-black tracking-tighter">ARA</span>
-            <span className="text-xs text-muted-foreground ml-2">&copy; {currentYear} Ara Inc. All rights reserved.</span>
+            <span className="text-xs text-muted-foreground ml-2">
+              {t('footer.bottom.rights', { year: currentYear })}
+            </span>
           </div>
 
           <div className="flex items-center gap-6">
-             <SocialIcon href="https://twitter.com" icon={<XIcon />} label="X" />
-             <SocialIcon href="https://instagram.com" icon={<Instagram className="w-5 h-5" />} label="Instagram" />
-             <SocialIcon href="https://youtube.com" icon={<Youtube className="w-5 h-5" />} label="YouTube" />
-             <SocialIcon href="https://facebook.com" icon={<Facebook className="w-5 h-5" />} label="Facebook" />
+             <SocialIcon href="https://twitter.com" icon={<XIcon />} label={t('footer.social.x')} />
+             <SocialIcon href="https://instagram.com" icon={<Instagram className="w-5 h-5" />} label={t('footer.social.instagram')} />
+             <SocialIcon href="https://youtube.com" icon={<Youtube className="w-5 h-5" />} label={t('footer.social.youtube')} />
+             <SocialIcon href="https://facebook.com" icon={<Facebook className="w-5 h-5" />} label={t('footer.social.facebook')} />
           </div>
         </div>
       </div>

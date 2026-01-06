@@ -8,6 +8,8 @@ import { useDirectChat } from '@/contexts/DirectChatContext';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
+import { OnlineIndicator } from './OnlineIndicator';
+
 function Header() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -32,8 +34,12 @@ function Header() {
   // 알림 미읽음 개수
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   // 채팅 미읽음 개수
-  const { chats } = useDirectChat();
-  const unreadChatCount = chats.reduce((sum, chat) => sum + (chat.unread_count || 0), 0);
+  const { chats, blockedUserIds } = useDirectChat();
+  const unreadChatCount = chats.reduce((sum, chat) => {
+    // 차단한 유저의 채팅방이면 미읽음 카운트에서 제외
+    if (blockedUserIds.has(chat.other_user.id)) return sum;
+    return sum + (chat.unread_count || 0);
+  }, 0);
   // 로그인 여부에 따라 홈 목적지
   const homePath = user ? '/studyList' : '/';
   const menuItems = [
@@ -129,16 +135,34 @@ function Header() {
       return;
     }
     const fetchUnreadCount = async () => {
-      const { error, count } = await supabase
+      // 1. 모든 미이미 읽은 알림 가져오기 (필터링을 위해 sender_id 포함)
+      const { data: unreadNotis, error } = await supabase
         .from('notifications')
-        .select('*', { count: 'exact', head: true })
+        .select('id, sender_id')
         .eq('receiver_id', profileId)
         .eq('is_read', false);
+
       if (error) {
-        console.error('알림 개수 불러오기 실패:', error.message);
+        console.error('알림 로드 실패:', error.message);
         return;
       }
-      setUnreadNotificationCount(count ?? 0);
+
+      // 2. 차단한 사용자의 알림 필터링 + 자동 읽음 처리
+      const blockedNotiIds = (unreadNotis || [])
+        .filter(n => blockedUserIds.has(n.sender_id))
+        .map(n => n.id);
+
+      if (blockedNotiIds.length > 0) {
+        // 차단된 알림은 백그라운드에서 읽음 처리
+        await supabase
+          .from('notifications')
+          .update({ is_read: true })
+          .in('id', blockedNotiIds);
+      }
+
+      // 3. 실제 표시될 숫자 계산
+      const validCount = (unreadNotis || []).filter(n => !blockedUserIds.has(n.sender_id)).length;
+      setUnreadNotificationCount(validCount);
     };
     fetchUnreadCount();
     // 실시간 업데이트 구독 (알림 INSERT/UPDATE 시 다시 카운트)
@@ -160,7 +184,7 @@ function Header() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [profileId]);
+  }, [profileId, blockedUserIds]);
   // 알림 전체 비우기 이벤트 감지 → 뱃지 0으로
   useEffect(() => {
     const handleCleared = () => {
@@ -356,9 +380,17 @@ function Header() {
                     <AvatarFallback>{displayNickname.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col items-start min-w-0">
-                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 group-hover:opacity-80 whitespace-nowrap">
-                      {displayNickname}
-                    </span>
+                    <div className="relative inline-flex items-center">
+                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 group-hover:opacity-80 whitespace-nowrap">
+                        {displayNickname}
+                      </span>
+                      <OnlineIndicator 
+                        userId={user.id} 
+                        size="sm" 
+                        isOnlineOverride={true}
+                        className="absolute -top-1 -right-2.5 z-10 border-white dark:border-secondary border-[1.5px] shadow-none" 
+                      />
+                    </div>
                     <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                       {t('common.settings_desc')}
                     </span>
@@ -595,8 +627,18 @@ function Header() {
             <AvatarFallback>{displayNickname.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-              {user ? displayNickname : t('auth.please_login')}
+            <div className="relative inline-flex items-center">
+              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                {user ? displayNickname : t('auth.please_login')}
+              </div>
+              {user && (
+                <OnlineIndicator 
+                  userId={user.id} 
+                  size="sm" 
+                  isOnlineOverride={true}
+                  className="absolute -top-1 -right-2.5 z-10 border-white dark:border-secondary border-[1.5px] shadow-none" 
+                />
+              )}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">
               {user ? t('common.view_profile') : t('auth.click_to_login')}

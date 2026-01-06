@@ -4,12 +4,14 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDirectChat } from '@/contexts/DirectChatContext';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { NotificationToast } from './NotificationToast';
 
 export const GlobalNotificationListener: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useAuth();
-  const { currentChat } = useDirectChat();
+  const { currentChat, blockedUserIds } = useDirectChat();
   
   // 현재 보고 있는 채팅방 ID를 ref로 추적 (의존성 배열 영향 없이 콜백 내부에서 접근)
   const currentChatRef = useRef<string | null>(null);
@@ -51,6 +53,11 @@ export const GlobalNotificationListener: React.FC = () => {
             },
             async (payload: any) => {
               const newNotif = payload.new;
+
+              // Shadow Block Check
+              if (blockedUserIds.has(newNotif.sender_id)) {
+                return;
+              }
               
               // 실시간으로 최신 설정 조회 (설정 변경 시 즉시 반영을 위해)
               const { data: latestProfile } = await supabase
@@ -148,6 +155,12 @@ export const GlobalNotificationListener: React.FC = () => {
           },
           async (payload: any) => {
             const newMessage = payload.new;
+
+            // Shadow Block Check
+            if (blockedUserIds.has(newMessage.sender_id)) {
+              return;
+            }
+
             if (newMessage.sender_id === user.id) return;
             // 시스템 메시지(예: 나가기 알림 등)는 글로벌 토스트 띄우지 않음
             if (newMessage.is_system_message) return;
@@ -193,6 +206,28 @@ export const GlobalNotificationListener: React.FC = () => {
               .eq('user_id', newMessage.sender_id)
               .maybeSingle();
 
+            // Realtime Payload에는 Relation 데이터(attachments 등)가 포함되지 않음.
+            // 따라서 첨부파일이 있는 메시지일 경우, 별도로 전체 데이터를 조회해야 함.
+            let contentWithMedia = newMessage.content || '';
+            const { data: fullMessage } = await supabase
+              .from('direct_messages')
+              .select(`*, attachments:direct_message_attachments(*)`)
+              .eq('id', newMessage.id)
+              .maybeSingle();
+
+            if (fullMessage?.attachments && fullMessage.attachments.length > 0) {
+              const types = fullMessage.attachments.map((a: any) => a.type);
+              let prefix = '';
+              if (types.includes('video')) prefix = `[${t('notification.media_video', '동영상')}] `;
+              else if (types.includes('file')) prefix = `[${t('notification.media_file', '파일')}] `;
+              else if (types.includes('image')) prefix = `[${t('notification.media_photo', '사진')}] `;
+              
+              contentWithMedia = `${prefix}${contentWithMedia}`.trim();
+            } else if (!contentWithMedia) {
+              // 첨부파일 표시 시도 (fullMessage fetch 실패 시 등 방어 로직)
+              contentWithMedia = t('chat.new_message_received', '새 메시지가 도착했습니다.');
+            }
+
             toast.custom((t) => (
               <NotificationToast
                 type="chat"
@@ -200,7 +235,7 @@ export const GlobalNotificationListener: React.FC = () => {
                   nickname: senderProfile?.nickname ?? '알 수 없는 사용자',
                   avatar_url: senderProfile?.avatar_url ?? null,
                 }}
-                content={newMessage.content}
+                content={contentWithMedia}
                 timestamp={newMessage.created_at}
                 onClick={() => {
                    toast.dismiss(t);

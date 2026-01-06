@@ -116,8 +116,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
       console.error('[RPC] increment_video_view ERROR:', error);
       return false;
     }
-    // data에 최신 view_count(또는 업데이트된 row 수)가 오도록 DB 함수를 설계
-    console.log('[RPC] increment_video_view OK. new_count =', data);
+    // increment_video_view success
     return typeof data === 'number' ? data > 0 : true;
   };
 
@@ -317,7 +316,10 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
             config={{
               youtube: {
                 playerVars: {
-                  origin: window.location.origin,
+                  origin: typeof window !== 'undefined' ? window.location.origin : undefined,
+                  enablejsapi: 1,
+                  rel: 0,
+                  modestbranding: 1,
                 },
               },
             }}

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useDirectChat } from '@/contexts/DirectChatContext';
 import { Search, User, MessageCircle, ArrowRight, X } from 'lucide-react';
 import HighlightText from '@/components/common/HighlightText';
+import { BanBadge } from '@/components/common/BanBadge';
 // import styles from '../chat.module.css';
 
 interface Props {
@@ -133,8 +134,9 @@ export default function ChatWelcomeSearch({ onChatSelect }: Props) {
                             )}
                             <div className="flex-1 min-w-0">
                               {/* justify-between 제거하여 닉네임 분할 문제 해결 */}
-                              <div className="font-semibold text-lg text-foreground flex items-center mb-0.5">
+                              <div className="font-semibold text-lg text-foreground flex items-center mb-0.5 gap-1">
                                 <HighlightText text={otherUser.nickname} query={query} />
+                                <BanBadge bannedUntil={otherUser.banned_until ?? null} size="xs" />
                               </div>
                               <p className="text-sm text-muted-foreground truncate">
                                 {t('chat.last_message_label', '마지막 대화')}:{' '}
@@ -187,8 +189,9 @@ export default function ChatWelcomeSearch({ onChatSelect }: Props) {
                             )}
                             <div className="flex-1 min-w-0">
                               <div className="flex justify-between items-center mb-1.5">
-                                <span className="font-semibold text-sm text-foreground">
+                                <span className="font-semibold text-sm text-foreground flex items-center gap-1">
                                   {msg.sender?.nickname || '알 수 없음'}
+                                  <BanBadge bannedUntil={msg.sender?.banned_until ?? null} size="xs" />
                                 </span>
                                 <span className="text-xs text-muted-foreground/60 tabular-nums">
                                   {new Intl.DateTimeFormat(i18n.language, {

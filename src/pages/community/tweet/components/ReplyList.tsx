@@ -1,8 +1,8 @@
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useTranslation } from 'react-i18next';
 import { ReplyCard } from './ReplyCard';
+import SnsInlineEditor from '@/components/common/SnsInlineEditor';
 import type { UIReply } from '@/types/sns';
-import { ReplyInput } from './ReplyInput';
 import { useEffect, useMemo } from 'react';
 
 interface ReplyListProps {
@@ -15,6 +15,7 @@ interface ReplyListProps {
   onAddedReply?: (reply: UIReply) => void;
   highlightId?: string | null;
   onCloseReply?: () => void;
+  disableInteractions?: boolean;
 }
 
 type ReplyNode = UIReply & { children: ReplyNode[] };
@@ -32,7 +33,9 @@ function ReplyTree({
   onCommentClick,
   openReplyId,
   onAddedReply,
+  onCloseReply,
   highlightId,
+  disableInteractions = false,
 }: {
   node: ReplyNode;
   depth: number;
@@ -40,8 +43,12 @@ function ReplyTree({
   onCommentClick?: (id: string) => void;
   openReplyId?: string | null;
   onAddedReply?: (reply: UIReply) => void;
+  onCloseReply?: () => void;
   highlightId?: string | null;
+  disableInteractions?: boolean;
 }) {
+  const isReplying = openReplyId === node.id;
+
   return (
     <div className={depth > 0 ? 'ml-10' : ''}>
       <ReplyCard
@@ -49,22 +56,31 @@ function ReplyTree({
           ...node,
           stats: {
             ...node.stats,
-            replies: node.children.length,
+            replies: node.children.length, // Show children count
           },
         }}
         onDeleted={onDeleted}
-        onReply={depth === 0 ? r => onCommentClick?.(r.id) : undefined}
+        onReply={!disableInteractions ? () => onCommentClick?.(node.id) : undefined}
         highlight={node.id === highlightId}
+        disableInteractions={disableInteractions}
       />
 
       {/* 답글 입력창 */}
-      {openReplyId === node.id && (
-        <ReplyInput
-          target={node}
-          onCancel={() => onCommentClick?.(node.id)}
-          onAdded={newReply => onAddedReply?.(newReply)}
-          onClose={() => onCommentClick?.(node.id)}
-        />
+      {isReplying && !disableInteractions && (
+        <div className="ml-4 my-2 pr-4 animate-in fade-in slide-in-from-top-2 duration-200">
+           <SnsInlineEditor
+              mode="reply"
+              tweetId={String(node.tweetId)}
+              parentReplyId={node.id}
+              onReplyCreated={(newReply) => {
+                  onAddedReply?.(newReply);
+              }}
+              onCancel={() => {
+                  onCloseReply?.();
+              }}
+              ref={(r) => r && r.focus()}
+           />
+        </div>
       )}
 
       {/* 자식(대댓글/손자댓글...) 재귀 렌더 */}
@@ -77,7 +93,9 @@ function ReplyTree({
           onCommentClick={onCommentClick}
           openReplyId={openReplyId}
           onAddedReply={onAddedReply}
+          onCloseReply={onCloseReply}
           highlightId={highlightId}
+          disableInteractions={disableInteractions}
         />
       ))}
     </div>
@@ -93,16 +111,20 @@ export default function ReplyList({
   openReplyId,
   onAddedReply,
   highlightId,
+  onCloseReply,
+  disableInteractions = false,
 }: ReplyListProps) {
   const { t } = useTranslation();
 
   const threaded = useMemo(() => {
     const map = new Map<string, ReplyNode>();
-    replies.forEach(r => map.set(r.id, { ...(r as any), children: [] }));
+    // Deep copy to avoid mutating original props if necessary, but here spread is enough for shallow structure
+    replies.forEach(r => map.set(r.id, { ...r, children: [] }));
 
     const roots: ReplyNode[] = [];
 
     map.forEach(node => {
+      // Use parent_reply_id to build tree
       const parentId = (node as any).parent_reply_id as string | null | undefined;
 
       if (parentId && map.has(parentId)) {
@@ -148,9 +170,7 @@ export default function ReplyList({
 
   return (
     <InfiniteScroll
-      // dataLength={replies.length}
-      key={renderedCount}
-      dataLength={renderedCount}
+      dataLength={renderedCount} // Use total node count for accurate scroll checks
       next={fetchMore}
       hasMore={hasMore}
       loader={
@@ -168,12 +188,14 @@ export default function ReplyList({
         <ReplyTree
           key={root.id}
           node={root}
-          depth={0}
+          depth={0} // Start depth 0
           onDeleted={onDeleted}
           onCommentClick={onCommentClick}
           openReplyId={openReplyId}
           onAddedReply={onAddedReply}
+          onCloseReply={onCloseReply}
           highlightId={highlightId}
+          disableInteractions={disableInteractions}
         />
       ))}
     </InfiniteScroll>

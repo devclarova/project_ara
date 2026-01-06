@@ -1,0 +1,96 @@
+              {messages.map((msg: any) => {
+                const isReporter = msg.sender?.user_id === reporterUserId;
+                
+                return (
+                  <div key={msg.id} className="flex flex-col gap-1 w-full mb-4">
+                    <div className={`flex gap-2 items-start ${isReporter ? 'justify-end' : 'justify-start'}`}>
+                      {/* Left Avatar (for reported user) */}
+                      {!isReporter && (
+                        <Avatar className="w-8 h-8 flex-shrink-0">
+                          <AvatarImage src={msg.sender?.avatar_url} />
+                          <AvatarFallback>?</AvatarFallback>
+                        </Avatar>
+                      )}
+                      
+                      {/* Message Bubble */}
+                      <div className={`flex flex-col max-w-[65%] min-w-0 ${isReporter ? 'items-end' : 'items-start'}`}>
+                        {/* Sender Name & Time */}
+                        <div className="flex items-center gap-2 mb-1 px-1">
+                          <span className="text-xs font-medium text-muted-foreground">
+                            {msg.sender?.nickname}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        
+                        {/* Text Content */}
+                        {msg.content && (
+                          <div className={`px-3 py-2 rounded-2xl text-sm break-all whitespace-pre-wrap ${
+                            isReporter 
+                              ? 'bg-primary text-primary-foreground rounded-tr-sm' 
+                              : 'bg-secondary/70 text-foreground bg-gray-100 dark:bg-gray-800 rounded-tl-sm'
+                          }`}>
+                            {msg.content}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Right Avatar (for reporter) */}
+                      {isReporter && (
+                        <Avatar className="w-8 h-8 flex-shrink-0">
+                          <AvatarImage src={msg.sender?.avatar_url} />
+                          <AvatarFallback>?</AvatarFallback>
+                        </Avatar>
+                      )}
+                    </div>
+
+                    {/* Attachments (Separate Row) */}
+                    {msg.attachments && Array.isArray(msg.attachments) && msg.attachments.length > 0 && (
+                      <div className={`flex flex-wrap gap-2 ${isReporter ? 'justify-end pr-10' : 'pl-10'}`}>
+                        {msg.attachments.map((att: any) => {
+                          const fileUrl = att.url || att.file_url || '';
+                          const fileName = att.name || att.file_name || 'File';
+                          const fileType = att.type || att.file_type || '';
+                          const isImage = fileType === 'image' || /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(fileUrl);
+                          const isVideo = fileType === 'video' || /\.(mp4|webm|ogg|mov)$/i.test(fileUrl);
+                          
+                          return (
+                            <div key={att.id || Math.random()}>
+                              {isImage && (
+                                <img 
+                                  src={fileUrl} 
+                                  alt={fileName}
+                                  className="max-w-sm max-h-64 rounded-lg border cursor-pointer hover:opacity-90 transition-opacity bg-background"
+                                  onClick={() => window.open(fileUrl, '_blank')}
+                                />
+                              )}
+                              {isVideo && (
+                                <video 
+                                  src={fileUrl} 
+                                  controls 
+                                  className="max-w-sm max-h-64 rounded-lg border bg-background"
+                                />
+                              )}
+                              {!isImage && !isVideo && (
+                                <a 
+                                  href={fileUrl} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                                    isReporter
+                                      ? 'bg-primary/10 text-primary hover:bg-primary/20'
+                                      : 'bg-secondary text-foreground hover:bg-secondary/80 border border-border'
+                                  }`}
+                                >
+                                  í³Ž {fileName}
+                                </a>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}

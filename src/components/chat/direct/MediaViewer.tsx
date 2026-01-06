@@ -197,7 +197,17 @@ const CustomVideoPlayer = ({
         playsInline
         disablePictureInPicture
         controlsList="nodownload nofullscreen noremoteplayback"
-        style={{ opacity }}
+        style={{ 
+          opacity,
+          // Checkerboard background for transparency support
+          backgroundImage: `conic-gradient(
+            ${document.documentElement.classList.contains('dark') ? '#1a1a1a' : '#f8f8f8'} 90deg, 
+            ${document.documentElement.classList.contains('dark') ? '#222222' : '#ffffff'} 90deg 180deg, 
+            ${document.documentElement.classList.contains('dark') ? '#1a1a1a' : '#f8f8f8'} 180deg 270deg, 
+            ${document.documentElement.classList.contains('dark') ? '#222222' : '#ffffff'} 270deg
+          )`,
+          backgroundSize: '16px 16px'
+        }}
       />
       
       {/* Center Play/Pause Overlay */}
@@ -438,6 +448,29 @@ export default function MediaViewer({ isOpen, onClose, mediaList, initialMediaId
     try {
       const response = await fetch(url);
       const blob = await response.blob();
+      
+      // Try File System Access API first (for "Save As" dialog)
+      if ('showSaveFilePicker' in window) {
+        try {
+            const name = filename || url.split('/').pop() || `download-${Date.now()}`;
+            const handle = await (window as any).showSaveFilePicker({
+                suggestedName: name,
+                types: [{
+                    description: 'Media File',
+                    accept: { [blob.type]: ['.' + (name.split('.').pop() || 'dat')] },
+                }],
+            });
+            const writable = await handle.createWritable();
+            await writable.write(blob);
+            await writable.close();
+            return;
+        } catch (pickerError: any) {
+            if (pickerError.name === 'AbortError') return; // User cancelled
+            console.warn('File picker failed, falling back to blob link:', pickerError);
+            // Fallthrough to link download
+        }
+      }
+
       const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = blobUrl;
@@ -449,6 +482,8 @@ export default function MediaViewer({ isOpen, onClose, mediaList, initialMediaId
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
       console.error('Download failed:', error);
+      // Last resort fallback
+      window.open(url, '_blank');
     }
   };
 
@@ -725,6 +760,14 @@ export default function MediaViewer({ isOpen, onClose, mediaList, initialMediaId
                   transform: `scale(${scale}) translate(${panX / scale}px, ${panY / scale}px)`,
                   transition: isDragging.current ? 'none' : 'transform 200ms ease-out',
                   willChange: 'transform',
+                  // Checkerboard background for transparency support
+                  backgroundImage: `conic-gradient(
+                    ${document.documentElement.classList.contains('dark') ? '#1a1a1a' : '#f8f8f8'} 90deg, 
+                    ${document.documentElement.classList.contains('dark') ? '#222222' : '#ffffff'} 90deg 180deg, 
+                    ${document.documentElement.classList.contains('dark') ? '#1a1a1a' : '#f8f8f8'} 180deg 270deg, 
+                    ${document.documentElement.classList.contains('dark') ? '#222222' : '#ffffff'} 270deg
+                  )`,
+                  backgroundSize: '16px 16px'
                 }}
                 draggable={false}
               />

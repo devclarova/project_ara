@@ -1265,6 +1265,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      user_follows: {
+        Row: {
+          id: string;
+          follower_id: string;
+          following_id: string;
+          created_at: string;
+          ended_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          follower_id: string;
+          following_id: string;
+          created_at?: string;
+          ended_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          follower_id?: string;
+          following_id?: string;
+          created_at?: string;
+          ended_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'user_follows_follower_id_fkey';
+            columns: ['follower_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'user_follows_following_id_fkey';
+            columns: ['following_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       user_reports: {
         Row: {
           created_at: string;

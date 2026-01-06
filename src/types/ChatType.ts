@@ -7,6 +7,7 @@ export interface ChatUser {
   nickname: string; // 표시용 닉네임
   username?: string; // 사용자 고유 ID (URL용)
   avatar_url?: string | null; // 프로필 이미지 URL (선택)
+  banned_until?: string | null;
 }
 
 // 1:1 채팅 정보
@@ -48,6 +49,7 @@ export interface DirectMessage {
   is_system_message?: boolean; // 시스템 메시지 여부
   sender?: ChatUser; // 발신자 정보
   attachments?: MessageAttachment[];
+  deleted_at?: string;
 }
 
 // 메시지의 상세 추가 확장 정보

@@ -3,8 +3,11 @@ import { Button } from '@/components/ui/button';
 import { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner'; // Add import
+import { getBanMessage } from '@/utils/banUtils'; // Add import
 
 interface ComposeBoxProps {
+// ... existing interface ...
   onTweetPost?: (tweet: {
     id: string;
     user: {
@@ -31,7 +34,7 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user } = useAuth();
+  const { user, isBanned, bannedUntil } = useAuth(); // Add destructuring
   const maxLength = 280;
 
   const emojis = ['😀', '😂', '🥰', '😍', '🤔', '👍', '❤️', '🔥', '💯', '🎉', '🚀', '✨'];
@@ -51,8 +54,15 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
   const handleTweet = async () => {
     if (!tweetText.trim() || !user) return;
 
+    // 제재 중인 사용자는 게시글 작성 불가
+    if (isBanned && bannedUntil) {
+      toast.error(getBanMessage(bannedUntil, '게시글을 작성'));
+      return;
+    }
+
     try {
       setUploading(true);
+      // ... rest of logic
 
       let uploadedImageUrl: string | null = null;
 

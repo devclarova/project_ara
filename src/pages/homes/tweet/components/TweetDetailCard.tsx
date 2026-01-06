@@ -17,7 +17,8 @@ import ReportButton from '@/components/common/ReportButton';
 import BlockButton from '@/components/common/BlockButton';
 
 import type { UIPost } from '@/types/sns';
-import { formatDate } from '@/utils/dateUtils';
+import { formatDate, formatSmartDate } from '@/utils/dateUtils';
+import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 
 interface TweetDetailCardProps {
   tweet: UIPost;
@@ -351,7 +352,7 @@ export default function TweetDetailCard({
 
   return (
     <div className="relative border-b border-gray-200 dark:border-gray-700 px-4 py-6 bg-white dark:bg-background">
-      <div className="flex items-start space-x-3">
+      <div className="flex items-center space-x-3">
         <button
           type="button"
           onClick={handleBackClick}
@@ -360,24 +361,33 @@ export default function TweetDetailCard({
           <i className="ri-arrow-left-line text-lg text-gray-700 dark:text-gray-100" />
         </button>
 
-        <div onClick={handleAvatarClick} className={`cursor-pointer flex-shrink-0 ${isDeleted ? 'cursor-default' : ''}`}>
+        <div onClick={handleAvatarClick} className={`cursor-pointer flex-shrink-0 relative ${isDeleted ? 'cursor-default' : ''}`}>
           <Avatar>
             <AvatarImage src={tweet.user.avatar || '/default-avatar.svg'} alt={isDeleted ? t('deleted_user') : tweet.user.name} />
-            <AvatarFallback>{isDeleted ? '?' : tweet.user.name.charAt(0)}</AvatarFallback>
+            <AvatarFallback>{isDeleted ? '?' : tweet.user.name.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center flex-wrap gap-x-2">
-            <span
-              className={`font-bold text-gray-900 dark:text-gray-100 truncate ${isDeleted ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
-              onClick={handleAvatarClick}
-            >
-              {isDeleted ? t('deleted_user') : tweet.user.name}
-            </span>
+          <div className="flex items-center flex-wrap">
+            <div className="relative inline-flex items-center pr-2.5">
+              <span
+                className={`font-bold text-gray-900 dark:text-gray-100 truncate ${isDeleted ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
+                onClick={handleAvatarClick}
+              >
+                {isDeleted ? t('deleted_user') : tweet.user.name}
+              </span>
+              {!isDeleted && (
+                <OnlineIndicator 
+                  userId={tweet.user.username} 
+                  size="sm" 
+                  className="absolute -top-0.5 right-0 z-20 border-white dark:border-background border shadow-none"
+                />
+              )}
+            </div>
 
             {authorCountryFlagUrl && !isDeleted && (
-              <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 h-5">
+              <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 h-5 ml-2">
                 <img
                   src={authorCountryFlagUrl}
                   alt={authorCountryName ?? '국가'}
@@ -390,15 +400,17 @@ export default function TweetDetailCard({
             {!authorCountryFlagUrl && authorCountryName && (
               <Badge
                 variant="secondary"
-                className="flex items-center px-1 py-0.5"
+                className="flex items-center px-1 py-0.5 ml-2"
                 title={authorCountryName}
               >
                 <span className="text-xs">🌐</span>
               </Badge>
             )}
 
-            <span className="mx-1 text-gray-500 dark:text-gray-400">·</span>
-            <span className="text-gray-500 dark:text-gray-400 text-sm">{formatDate(tweet.timestamp)}</span>
+            <span className="mx-2 text-gray-500 dark:text-gray-400">·</span>
+            <span className="text-gray-500 dark:text-gray-400 text-sm">
+              {formatSmartDate(tweet.timestamp)}
+            </span>
           </div>
         </div>
         <div className="relative ml-auto" ref={menuRef}>
@@ -427,13 +439,13 @@ export default function TweetDetailCard({
                 </button>
               ) : (
                 <>
-                  <ReportButton onClose={() => setShowMenu(false)} />
-                  <BlockButton
-                    username={tweet.user.name}
-                    isBlocked={isBlocked}
-                    onToggle={() => setIsBlocked(prev => !prev)}
-                    onClose={() => setShowMenu(false)}
-                  />
+                  <ReportButton onClick={() => setShowMenu(false)} />
+                  {authorProfileId && (
+                    <BlockButton
+                      targetProfileId={authorProfileId}
+                      onClose={() => setShowMenu(false)}
+                    />
+                  )}
                 </>
               )}
             </div>

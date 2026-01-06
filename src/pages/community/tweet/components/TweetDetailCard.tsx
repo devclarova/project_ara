@@ -16,7 +16,9 @@ import ImageSlider from './ImageSlider';
 import ModalImageSlider from './ModalImageSlider';
 
 import type { UIPost } from '@/types/sns';
-import { formatTweetCardTime } from '@/utils/dateUtils';
+import { formatSmartDate } from '@/utils/dateUtils';
+import { BanBadge } from '@/components/common/BanBadge';
+import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import EditButton from '@/components/common/EditButton';
 
 interface TweetDetailCardProps {
@@ -24,6 +26,7 @@ interface TweetDetailCardProps {
   replyCount: number; // 상세 페이지에서 내려주는 실시간 댓글 수
   onDeleted?: () => void;
   onReplyClick?: () => void;
+  isAdminView?: boolean;
 }
 
 export default function TweetDetailCard({
@@ -31,6 +34,7 @@ export default function TweetDetailCard({
   replyCount,
   onDeleted,
   onReplyClick,
+  isAdminView = false,
 }: TweetDetailCardProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -52,7 +56,6 @@ export default function TweetDetailCard({
   const [translated, setTranslated] = useState<string>('');
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [isBlocked, setIsBlocked] = useState(false);
 
   // Merged States
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -80,11 +83,12 @@ export default function TweetDetailCard({
     }
   };
 
-  const isDeleted = tweet.user.username === 'anonymous';
+  const isDeletedUser = tweet.user.username === 'anonymous';
+  const isSoftDeleted = !!tweet.deleted_at;
 
   const handleAvatarClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
-    if (isDeleted) return;
+    if (isDeletedUser) return;
     navigate(`/profile/${encodeURIComponent(tweet.user.name)}`);
   };
 
@@ -112,16 +116,17 @@ export default function TweetDetailCard({
     loadProfileId();
   }, [authUser]);
 
-  // Load Author's Country & Profile ID (from Main)
+  // Load Author's Country & Profile ID (Merged Logic)
   useEffect(() => {
-    if (isDeleted) {
-      setAuthorProfileId(null);
-      setAuthorCountryFlagUrl(null);
-      setAuthorCountryName(null);
-      return;
+    if (isDeletedUser) {
+       setAuthorProfileId(null);
+       setAuthorCountryFlagUrl(null);
+       setAuthorCountryName(null);
+       return;
     }
     const fetchAuthorCountry = async () => {
       try {
+        if (!tweet.user.username || tweet.user.username === 'anonymous') return;
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('id, country')
@@ -168,7 +173,7 @@ export default function TweetDetailCard({
     };
 
     fetchAuthorCountry();
-  }, [tweet.user.username, isDeleted]);
+  }, [tweet.user.username, isDeletedUser]);
 
   // content에서 <img> 태그 src 추출
   useEffect(() => {
@@ -190,9 +195,11 @@ export default function TweetDetailCard({
   }, [tweet.content]);
 
   const propImages = Array.isArray(tweet.image) ? tweet.image : tweet.image ? [tweet.image] : [];
-  const allImages = propImages.length > 0 ? propImages : contentImages;
+  const allImages = (isSoftDeleted && !isAdminView) ? [] : (propImages.length > 0 ? propImages : contentImages);
 
-  const safeContent = DOMPurify.sanitize(currentContent, {
+  const displayContent = (isSoftDeleted && !isAdminView) ? '관리자에 의해 삭제된 메시지입니다.' : currentContent;
+
+  const safeContent = DOMPurify.sanitize(displayContent, {
     ADD_TAGS: ['iframe', 'video', 'source'],
     ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
     FORBID_TAGS: ['img'],
@@ -283,7 +290,7 @@ export default function TweetDetailCard({
       toast.success(t('common.success_like'));
 
       // 알림 생성 (본인 게시글이 아닐 때만, 작성자 없으면 스킵)
-      if (authorProfileId && !isDeleted && authorProfileId !== profileId) {
+      if (authorProfileId && !isDeletedUser && authorProfileId !== profileId) {
         await supabase.from('notifications').insert({
           type: 'like',
           content: '당신의 피드를 좋아합니다.',
@@ -385,7 +392,7 @@ export default function TweetDetailCard({
 
   return (
     <div className="relative border-b border-gray-200 dark:border-gray-700 px-4 py-6 bg-white dark:bg-background">
-      <div className="flex items-start space-x-3">
+      <div className="flex items-center space-x-3">
         <button
           type="button"
           onClick={handleBackClick}
@@ -394,30 +401,34 @@ export default function TweetDetailCard({
           <i className="ri-arrow-left-line text-lg text-gray-700 dark:text-gray-100" />
         </button>
 
-        <div
-          onClick={handleAvatarClick}
-          className={`cursor-pointer flex-shrink-0 ${isDeleted ? 'cursor-default' : ''}`}
-        >
+        <div onClick={handleAvatarClick} className={`cursor-pointer flex-shrink-0 relative ${isDeletedUser ? 'cursor-default' : ''}`}>
           <Avatar>
-            <AvatarImage
-              src={tweet.user.avatar || '/default-avatar.svg'}
-              alt={isDeleted ? t('deleted_user') : tweet.user.name}
-            />
-            <AvatarFallback>{isDeleted ? '?' : tweet.user.name.charAt(0)}</AvatarFallback>
+            <AvatarImage src={tweet.user.avatar || '/default-avatar.svg'} alt={isDeletedUser ? t('deleted_user') : tweet.user.name} />
+            <AvatarFallback>{isDeletedUser ? '?' : tweet.user.name.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center flex-wrap gap-x-2">
-            <span
-              className={`font-bold text-gray-900 dark:text-gray-100 truncate ${isDeleted ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
-              onClick={handleAvatarClick}
-            >
-              {isDeleted ? t('deleted_user') : tweet.user.name}
-            </span>
+          <div className="flex items-center flex-wrap">
+            <div className="relative inline-flex items-center pr-2.5">
+              <span
+                className={`font-bold text-gray-900 dark:text-gray-100 truncate ${isDeletedUser ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
+                onClick={handleAvatarClick}
+              >
+                {isDeletedUser ? t('deleted_user') : tweet.user.name}
+              </span>
+              {!isDeletedUser && (
+                <OnlineIndicator 
+                  userId={tweet.user.username} 
+                  size="sm" 
+                  className="absolute -top-0.5 right-0 z-20 border-white dark:border-background border shadow-none"
+                />
+              )}
+            </div>
+            <BanBadge bannedUntil={tweet.user.banned_until ?? null} size="sm" />
 
-            {authorCountryFlagUrl && !isDeleted && (
-              <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 h-5">
+            {authorCountryFlagUrl && !isDeletedUser && (
+              <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 h-5 ml-2">
                 <img
                   src={authorCountryFlagUrl}
                   alt={authorCountryName ?? '국가'}
@@ -430,16 +441,16 @@ export default function TweetDetailCard({
             {!authorCountryFlagUrl && authorCountryName && (
               <Badge
                 variant="secondary"
-                className="flex items-center px-1 py-0.5"
+                className="flex items-center px-1 py-0.5 ml-2"
                 title={authorCountryName}
               >
                 <span className="text-xs">🌐</span>
               </Badge>
             )}
 
-            <span className="mx-1 text-gray-500 dark:text-gray-400">·</span>
+            <span className="mx-2 text-gray-500 dark:text-gray-400">·</span>
             <span className="text-gray-500 dark:text-gray-400 text-sm">
-              {formatTweetCardTime(tweet.createdAt || tweet.timestamp, i18n.language || 'ko')}
+              {formatSmartDate(tweet.timestamp)}
             </span>
           </div>
         </div>
@@ -478,13 +489,13 @@ export default function TweetDetailCard({
                 </>
               ) : (
                 <>
-                  <ReportButton onClose={() => setShowMenu(false)} />
-                  <BlockButton
-                    username={tweet.user.name}
-                    isBlocked={isBlocked}
-                    onToggle={() => setIsBlocked(prev => !prev)}
-                    onClose={() => setShowMenu(false)}
-                  />
+                  <ReportButton onClick={() => setShowMenu(false)} />
+                  {authorProfileId && (
+                    <BlockButton
+                      targetProfileId={authorProfileId}
+                      onClose={() => setShowMenu(false)}
+                    />
+                  )}
                 </>
               )}
             </div>
@@ -560,6 +571,8 @@ export default function TweetDetailCard({
                       return;
                     }
                   }}
+                  onCompositionStart={() => setIsComposing(true)}
+                  onCompositionEnd={() => setIsComposing(false)}
                 />
 
                 <div className="mt-3 flex justify-end gap-2">
@@ -581,14 +594,13 @@ export default function TweetDetailCard({
                 </div>
               </div>
             ) : (
-              <div
-                className="text-gray-900 dark:text-gray-100 text-xl leading-relaxed break-words whitespace-pre-line"
-                dangerouslySetInnerHTML={{ __html: safeContent }}
-              />
+                <div className={`text-xl leading-relaxed break-words whitespace-pre-line ${isSoftDeleted ? 'italic text-gray-500 opacity-60' : 'text-gray-900 dark:text-gray-100'}`}>
+                    <div dangerouslySetInnerHTML={{ __html: safeContent }} />
+                </div>
             )}
-
+            
             {/* 번역 버튼 */}
-            {plainTextContent.trim().length > 0 && (
+            {!isSoftDeleted && !isEditing && plainTextContent.trim().length > 0 && (
               <TranslateButton
                 text={plainTextContent}
                 contentId={`tweet_${tweet.id}`}
@@ -606,8 +618,8 @@ export default function TweetDetailCard({
           </div>
         )}
 
-        {/* 이미지 슬라이더 (Import path needs verification in actual project structure, assumed ../tweet/components as standard) */}
-        {allImages.length > 0 && (
+        {/* 이미지 슬라이더 */}
+        {allImages.length > 0 && !isEditing && (
           <ImageSlider
             allImages={allImages}
             currentImage={currentImage}
@@ -633,7 +645,7 @@ export default function TweetDetailCard({
 
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-start gap-8 text-sm text-gray-500 dark:text-gray-400">
-          {/* 댓글 수: 항상 replyCount 기반 */}
+          {/* 댓글 수 */}
           <button
             className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400 transition-colors group"
             onClick={onReplyClick}
