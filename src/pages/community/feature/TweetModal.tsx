@@ -19,12 +19,12 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
   const [images, setImages] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ✅ 이미지 배열 업데이트
+  // 이미지 배열 업데이트
   const handleImagesChange = useCallback((files: File[]) => {
     setImages(files);
   }, []);
 
-  // ✅ 파일명 안전하게 변환 (중복 확장자 방지)
+  // 파일명 안전하게 변환 (중복 확장자 방지)
   const safeFileName = (name: string) => {
     const clean = name.replace(/\s+/g, '_').replace(/[^\w\-_.]/g, '_');
     const ext = clean.split('.').pop() ?? 'jpg';
@@ -49,7 +49,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
     try {
       let finalContent = content;
 
-      // ✅ 이미지 업로드
+      // 이미지 업로드
       if (images.length > 0) {
         const blobUrls = finalContent.match(/blob:[^"'\s]+/g) || [];
 
@@ -60,9 +60,9 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
           const fileName = `${user.id}_${timestamp}_${safeFileName(file.name)}`;
           const filePath = `tweet_images/${user.id}/${fileName}`.replace(/^\/+/, '');
 
-          // ✅ Supabase Storage 업로드
+          // Supabase Storage 업로드
           const { error: uploadError } = await supabase.storage
-            .from('tweet_media') // ✅ bucket 이름
+            .from('tweet_media') // bucket 이름
             .upload(filePath, file, {
               cacheControl: '3600',
               upsert: false,
@@ -73,7 +73,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
             continue;
           }
 
-          // ✅ public URL 가져오기
+          // public URL 가져오기
           const { data: urlData } = await supabase.storage
             .from('tweet_media')
             .getPublicUrl(filePath);
@@ -84,7 +84,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
         }
       }
 
-      // ✅ 프로필 ID 조회 (user.id → profiles.id)
+      // 프로필 ID 조회 (user.id → profiles.id)
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id, nickname, user_id, avatar_url')
@@ -97,7 +97,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
         return;
       }
 
-      // ✅ tweets 테이블에 저장
+      // tweets 테이블에 저장
       const { data, error: insertError } = await supabase
         .from('tweets')
         .insert([
@@ -127,7 +127,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
         return;
       }
 
-      // ✅ 상위(Home)로 전달할 새 트윗 객체 구성
+      // 상위(Home)로 전달할 새 트윗 객체 구성
       const newTweet = {
         id: data.id,
         user: {

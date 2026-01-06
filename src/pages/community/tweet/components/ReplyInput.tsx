@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
 
@@ -8,14 +7,28 @@ import type { UIReply } from '@/types/sns';
 import { toast } from 'sonner';
 import { getBanMessage } from '@/utils/banUtils';
 
+function extractMentions(text: string): string[] {
+  const regex = /@([a-zA-Z0-9_.]{2,30})/g;
+  const set = new Set<string>();
+  let m: RegExpExecArray | null;
+
+  while ((m = regex.exec(text)) !== null) {
+    set.add(m[1]);
+  }
+
+  return Array.from(set);
+}
+
 export function ReplyInput({
   target,
   onCancel,
   onAdded,
+  onClose,
 }: {
   target: UIReply;
   onCancel: () => void;
   onAdded: (reply: UIReply) => void;
+  onClose: () => void;
 }) {
   const { user, isBanned, bannedUntil } = useAuth();
   const [profileId, setProfileId] = useState<string | null>(null);
@@ -23,18 +36,20 @@ export function ReplyInput({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
   const [myAvatar, setMyAvatar] = useState<string | null>(null);
+  const [myNickname, setMyNickname] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
     supabase
       .from('profiles')
-      .select('id, avatar_url')
+      .select('id, avatar_url, nickname')
       .eq('user_id', user.id)
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
           setProfileId(data.id);
           setMyAvatar(data.avatar_url);
+          setMyNickname(data.nickname ?? null);
         }
       });
   }, [user]);
@@ -63,16 +78,17 @@ export function ReplyInput({
     }
 
     setIsSubmitting(true);
+    onClose();
 
     // parent_reply_id logic: if target is a reply, we reply to it.
-    // However, UIReply type doesn't explicitly have parent_reply_id in the shared definition 
+    // However, UIReply type doesn't explicitly have parent_reply_id in the shared definition
     // but the DB row does. We should infer checking the object or assuming target.id is parent.
     // For safety with UIReply (which might be from a view), we assume we comment on the target.
-    
+
     // NOTE: The previous code accessed target.parent_reply_id. UIReply as BaseFeedItem doesn't list it strictly
-    // but at runtime/Supabase return it might exist. 
+    // but at runtime/Supabase return it might exist.
     // Let's assume we reply to the target ID as parent.
-    const parentId = target.id; 
+    const parentId = target.id;
     // Root logic is complex without tree. For now, flat structure or simple nesting.
     // If target has a root_reply_id, use it. Otherwise target.id is root?
     // Casting target to any to access potential extra fields safely
@@ -96,15 +112,60 @@ export function ReplyInput({
       return;
     }
 
+    if (!myNickname) {
+      setIsSubmitting(false);
+      return; // 또는 toast로 "프로필 로딩중" 표시
+    }
+
+    const createdAt = data.created_at ?? new Date().toISOString();
+
+    // 멘션 알림 생성 (댓글/대댓글 저장 성공 후)
+    try {
+      const mentioned = extractMentions(content);
+
+      // 내가 멘션한 것 중 내 닉네임은 제외 (원하면 조건 제거 가능)
+      const filtered = mentioned.filter(m => m !== myNickname);
+
+      if (filtered.length > 0) {
+        // nickname 기준으로 멘션 대상 프로필 찾기
+        const { data: mentionedProfiles } = await supabase
+          .from('profiles')
+          .select('id, nickname')
+          .in('nickname', filtered);
+
+        if (mentionedProfiles && mentionedProfiles.length > 0) {
+          // notifications insert
+          await supabase.from('notifications').insert(
+            mentionedProfiles
+              .filter(p => p.id !== profileId) // 혹시 동일인 방지(안전)
+              .map(p => ({
+                receiver_id: p.id,
+                sender_id: profileId,
+                type: 'mention',
+                content: content.trim(),
+                tweet_id: target.tweetId,
+                comment_id: data.id, // 방금 생성된 reply id
+              })),
+          );
+        }
+      }
+    } catch (e) {
+      console.error('멘션 알림 생성 실패:', e);
+    }
+
     onAdded({
       id: data.id,
       tweetId: data.tweet_id,
       type: 'reply', // Required by UIReply
       content: data.content,
-      timestamp: '방금 전', // Placeholder
+      createdAt,
+      timestamp: createdAt,
+      // timestamp: '방금 전', // Placeholder
       liked: false,
+      parent_reply_id: parentId,
+      root_reply_id: rootId,
       user: {
-        name: user.email?.split('@')[0] ?? 'Me',
+        name: myNickname,
         username: user.id,
         avatar: myAvatar || '/default-avatar.svg',
       },
@@ -118,7 +179,6 @@ export function ReplyInput({
 
     setContent('');
     setIsSubmitting(false);
-    onCancel();
   };
 
   if (!user) return null;
@@ -154,7 +214,7 @@ export function ReplyInput({
             </button>
             <button
               onClick={handleSubmit}
-              disabled={!content.trim() || isSubmitting}
+              disabled={!content.trim() || isSubmitting || !profileId || !myNickname}
               className={`
                 px-4 py-1.5 rounded-full text-sm font-semibold
                 ${

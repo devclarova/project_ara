@@ -51,12 +51,28 @@ const ContentCard = ({
 
   // Auto Translations
   const isMusic = categories?.includes('음악') || categories?.includes('Music');
-  
+
   // Optimization: If prop is provided, pass empty string to hook to skip internal processing
-  const { translatedText: translatedTitleHook } = useAutoTranslation(translatedTitleProp ? '' : title, `study_title_${id}`, targetLang);
-  const { translatedText: translatedDescHook } = useAutoTranslation(translatedDescProp ? '' : short_description, `study_desc_${id}`, targetLang);
-  const { translatedText: translatedDurationHook } = useAutoTranslation(translatedDurationProp ? '' : (duration || ''), `study_duration_${id}`, targetLang);
-  const { translatedText: translatedEpisodeHook } = useAutoTranslation(translatedEpisodeProp ? '' : (episode || ''), `study_episode_${id}`, targetLang);
+  const { translatedText: translatedTitleHook } = useAutoTranslation(
+    translatedTitleProp ? '' : title,
+    `study_title_${id}`,
+    targetLang,
+  );
+  const { translatedText: translatedDescHook } = useAutoTranslation(
+    translatedDescProp ? '' : short_description,
+    `study_desc_${id}`,
+    targetLang,
+  );
+  const { translatedText: translatedDurationHook } = useAutoTranslation(
+    translatedDurationProp ? '' : duration || '',
+    `study_duration_${id}`,
+    targetLang,
+  );
+  const { translatedText: translatedEpisodeHook } = useAutoTranslation(
+    translatedEpisodeProp ? '' : episode || '',
+    `study_episode_${id}`,
+    targetLang,
+  );
 
   const translatedTitle = translatedTitleProp || translatedTitleHook;
   const translatedDesc = translatedDescProp || translatedDescHook;
@@ -70,7 +86,8 @@ const ContentCard = ({
     if (!val) return '';
     const str = String(val).trim();
     // Use same robust regex as StudyPage to handle "Ep 1", "제1화", "1" etc.
-    const match = str.match(/^(\d+)$/) || str.match(/^(?:ep|episode|제|第)?\.?\s*(\d+)(?:화|회|集|話)?$/i);
+    const match =
+      str.match(/^(\d+)$/) || str.match(/^(?:ep|episode|제|第)?\.?\s*(\d+)(?:화|회|集|話)?$/i);
 
     if (match) {
       return t(`study.formats.${key}`, { val: match[1] });
@@ -92,30 +109,31 @@ const ContentCard = ({
   // Title Formatting
   const isKoreanTitle = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(title);
   let displayTitle = title;
-  
-  
-  const shouldShowTranslation = translatedTitle && (() => {
+
+  const shouldShowTranslation =
+    translatedTitle &&
+    (() => {
       if (targetLang.startsWith('ko')) return false;
       if (targetLang.startsWith('en')) {
-         return isKoreanTitle && translatedTitle.toLowerCase() !== title.toLowerCase();
+        return isKoreanTitle && translatedTitle.toLowerCase() !== title.toLowerCase();
       }
       return translatedTitle !== title;
-  })();
+    })();
 
   if (shouldShowTranslation) {
-     if (isMusic) {
-         // Music: Original (Translated)
-         displayTitle = `${title} (${translatedTitle})`;
-     } else {
-         // Others: Original - Translated
-         displayTitle = `${title} - ${translatedTitle}`;
-     }
+    if (isMusic) {
+      // Music: Original (Translated)
+      displayTitle = `${title} (${translatedTitle})`;
+    } else {
+      // Others: Original - Translated
+      displayTitle = `${title} - ${translatedTitle}`;
+    }
   }
 
   // Description Formatting
   let displayDesc = short_description;
   if (translatedDesc && translatedDesc !== short_description) {
-      displayDesc = translatedDesc;
+    displayDesc = translatedDesc;
   }
 
   // Helpers
@@ -133,6 +151,8 @@ const ContentCard = ({
   };
 
   const handleClick = () => {
+    if (!contents || !episode) return;
+    
     if (isGuest && !isPreview) {
       openLoginModal?.(); // 로그인 모달
       return;
@@ -160,14 +180,14 @@ const ContentCard = ({
           ) : (
             <div className="absolute inset-0 bg-gray-200 w-full h-full" />
           )}
-          
+
           {/* 게스트 잠금 오버레이 - 이미지 위에 은은하게 (Premium Look) */}
           {isGuest && !isPreview && (
             <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-10 transition-colors group-hover:bg-black/50">
               <div className="relative group/lock">
                 <div className="absolute inset-0 bg-primary/30 blur-xl rounded-full transform scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="bg-white/10 p-3 rounded-full border border-white/30 backdrop-blur-md shadow-2xl relative z-10 transform group-hover:scale-110 transition-transform duration-300">
-                   <i className="ri-lock-2-fill text-white text-2xl drop-shadow-md"></i>
+                  <i className="ri-lock-2-fill text-white text-2xl drop-shadow-md"></i>
                 </div>
               </div>
             </div>
@@ -192,19 +212,21 @@ const ContentCard = ({
                 )}
 
                 {/* 왼쪽 아이템 (Music: Content Title, Others: Episode) */}
-                <div className={`flex items-center justify-start ${scene ? 'w-1/2 pr-3' : 'w-full'}`}>
-                  {isMusic ? (
-                     episode && (
-                      <InfoItem 
-                        icon="ri-music-2-line" 
-                        text={translatedEpisode && translatedEpisode !== episode 
-                              ? `${displayEpisode} (${translatedEpisode})` 
-                              : displayEpisode} 
-                      />
-                     )
-                  ) : (
-                    episode && <InfoItem icon="ri-youtube-line" text={displayEpisode} />
-                  )}
+                <div
+                  className={`flex items-center justify-start ${scene ? 'w-1/2 pr-3' : 'w-full'}`}
+                >
+                  {isMusic
+                    ? episode && (
+                        <InfoItem
+                          icon="ri-music-2-line"
+                          text={
+                            translatedEpisode && translatedEpisode !== episode
+                              ? `${displayEpisode} (${translatedEpisode})`
+                              : displayEpisode
+                          }
+                        />
+                      )
+                    : episode && <InfoItem icon="ri-youtube-line" text={displayEpisode} />}
                 </div>
 
                 {/* 오른쪽 아이템 (scene이 있을 때만 렌더링) */}
@@ -229,7 +251,9 @@ const ContentCard = ({
 
                 {/* 오른쪽 */}
                 <div className="flex items-center justify-start w-1/2 pl-3">
-                  {duration && <InfoItem icon="ri-time-line" text={`${translatedDuration || duration}`} />}
+                  {duration && (
+                    <InfoItem icon="ri-time-line" text={`${translatedDuration || duration}`} />
+                  )}
                 </div>
               </div>
             )}
@@ -240,11 +264,12 @@ const ContentCard = ({
       {/* Hover 오버레이 (배경) - Primary Color Tints restored for brand identity */}
       <div className="pointer-events-none absolute inset-0 rounded-xl bg-white/40 md:bg-white/50 opacity-0 group-hover:opacity-100 transition duration-300 z-20"></div>
       <div className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-t from-primary/20 via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 z-20"></div>
-      
+
       {/* Hover 내용 — 중앙의 작은 하얀 카드 */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition z-30 dark:bg-secondary/10">
-        <div className={`relative bg-white/95 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-[20px] w-[85%] max-w-[280px] ${isGuest && !isPreview ? 'h-[250px]' : 'h-[220px]'} p-5 text-center flex flex-col justify-between translate-y-2 group-hover:translate-y-0 transition-transform duration-300 dark:bg-gray-800 border-2 border-primary/10 dark:border-primary/20`}>
-          
+        <div
+          className={`relative bg-white/95 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-[20px] w-[85%] max-w-[280px] ${isGuest && !isPreview ? 'h-[250px]' : 'h-[220px]'} p-5 text-center flex flex-col justify-between translate-y-2 group-hover:translate-y-0 transition-transform duration-300 dark:bg-gray-800 border-2 border-primary/10 dark:border-primary/20`}
+        >
           {/* 제목 - 고정 영역 */}
           <div className="flex-shrink-0 mb-2">
             <div className="text-[15px] sm:text-base font-bold text-gray-900 leading-[1.3] dark:text-gray-100 line-clamp-2 group-hover:text-primary transition-colors">
@@ -264,23 +289,23 @@ const ContentCard = ({
           {/* 하단 메타 정보 - 고정 영역 */}
           <div className="flex-shrink-0 pt-2.5 mt-2 border-t border-gray-100 dark:border-gray-700">
             <div className="flex items-center justify-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-             <div className="flex items-center gap-1">
-               <i className="ri-star-fill text-primary/80"></i>
-               <span>{translatedLevel}</span>
-             </div>
-             <div className="flex items-center gap-1">
-               <i className="ri-time-line text-primary/80"></i>
-               <span>{translatedDuration || duration}</span>
-             </div>
+              <div className="flex items-center gap-1">
+                <i className="ri-star-fill text-primary/80"></i>
+                <span>{translatedLevel}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <i className="ri-time-line text-primary/80"></i>
+                <span>{translatedDuration || duration}</span>
+              </div>
             </div>
           </div>
-          
+
           {/* 잠금 상태면 추가 표시 */}
           {isGuest && !isPreview && (
-             <div className="mt-1.5 text-xs font-semibold text-rose-500 bg-rose-50 dark:bg-rose-900/20 py-1.5 rounded-lg flex items-center justify-center gap-1">
-                <i className="ri-lock-2-line"></i>
-                {t('study.login_required')}
-             </div>
+            <div className="mt-1.5 text-xs font-semibold text-rose-500 bg-rose-50 dark:bg-rose-900/20 py-1.5 rounded-lg flex items-center justify-center gap-1">
+              <i className="ri-lock-2-line"></i>
+              {t('study.login_required')}
+            </div>
           )}
         </div>
       </div>
