@@ -23,8 +23,10 @@ export default function TweetDetail() {
 
   const [tweet, setTweet] = useState<UIPost | null>(null);
   const [replies, setReplies] = useState<UIReply[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const { blockedIds } = useBlockedUsers(); // 차단 유저 확인
+  
+  const [openReplyId, setOpenReplyId] = useState<string | null>(null);
 
   // Pagination states
   const [page, setPage] = useState(0);
@@ -72,7 +74,7 @@ export default function TweetDetail() {
     
     // 현재 키 저장
     if (locationState.scrollKey) {
-        scrollKeyRef.current = locationState.scrollKey;
+      scrollKeyRef.current = locationState.scrollKey;
     }
   }, [locationState?.highlightCommentId, locationState?.scrollKey]);
 
@@ -89,7 +91,7 @@ export default function TweetDetail() {
     // Parallelize for speed
     Promise.all([
       fetchTweetById(id),
-      fetchReplies(id, 0)
+      fetchReplies(id, 0, true) // 초기 페이지 0, 전체 로드? 
     ]);
     setReplies([]);
     setPage(0);
@@ -112,7 +114,7 @@ export default function TweetDetail() {
     if (!tweet) return;
     // replies 변경될 때마다 캐시에 동기화
     SnsStore.updateStats(tweet.id, {
-      replies: replies.length
+      replies: replies.length,
     });
   }, [replies.length, tweet?.id]);
 
@@ -176,7 +178,7 @@ export default function TweetDetail() {
           SnsStore.updateStats(id, {
             likes: newTweet.like_count ?? 0,
             views: newTweet.view_count ?? 0,
-            replies: newTweet.reply_count ?? 0
+            replies: newTweet.reply_count ?? 0,
           });
         }
       )
@@ -192,7 +194,7 @@ export default function TweetDetail() {
           SnsStore.removeTweet(id);
           toast.error(t('tweet.deleted_while_viewing'));
           navigate('/sns', { replace: true });
-        }
+        },
       )
       .subscribe();
 
@@ -253,8 +255,8 @@ export default function TweetDetail() {
           ...prev,
           stats: {
             ...prev.stats,
-            views: newViews
-          }
+            views: newViews,
+          },
         };
       });
 
@@ -285,7 +287,7 @@ export default function TweetDetail() {
   const fetchTweetById = async (tweetId: string) => {
     // If fromAdmin, don't set global loading to true to prevent screen flicker
     if (!locationState?.fromAdmin) {
-        setLoading(true);
+        setIsLoading(true);
     }
     try {
       const data = await tweetService.getTweetById(tweetId);
@@ -302,18 +304,19 @@ export default function TweetDetail() {
       toast.info(t('tweet.deleted_or_not_exist'));
       navigate(-1);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   // 댓글 목록 불러오기 (페이지네이션)
-  const fetchReplies = async (tweetId: string, pageParam = 0) => {
+  const fetchReplies = async (tweetId: string, pageParam = 0, loadAll = false) => {
     // 알림으로 들어와서 특정 댓글을 하이라이트해야 하는 경우, 전체 로드 (무한스크롤 일시 중지)
     // 단, pageParam > 0 이면 무한스크롤 로드 중이므로 range 적용
-    const shouldLoadAll = !!highlightFromNotification && pageParam === 0;
+    const shouldLoadAllFromNotification = !!highlightFromNotification && pageParam === 0;
+    const shouldLoadAll = loadAll || shouldLoadAllFromNotification;
 
     try {
-      // setLoading(true); // 무한 스크롤 시 전체 로딩 걸리는 문제 수정
+      // setIsLoading(true); // 무한 스크롤 시 전체 로딩 걸리는 문제 수정
       const mapped = await tweetService.getRepliesByTweetId(tweetId, pageParam, shouldLoadAll);
       
       // 차단 필터링 적용
@@ -386,17 +389,26 @@ export default function TweetDetail() {
               avatar: profile?.avatar_url ?? '/default-avatar.svg',
             },
             content: newReply.content,
-            timestamp: new Date(newReply.created_at ?? Date.now()).toLocaleString('ko-KR', {
-              hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric',
-            }),
+            // timestamp: new Date(newReply.created_at ?? Date.now()).toLocaleString('ko-KR', {
+            //   hour: '2-digit',
+            //   minute: '2-digit',
+            //   month: 'short',
+            //   day: 'numeric',
+            // }),
+            timestamp: newReply.created_at ?? new Date().toISOString(),
             createdAt: newReply.created_at ?? new Date().toISOString(),
             stats: { replies: 0, retweets: 0, likes: newReply.like_count ?? 0, views: 0 },
             liked: false,
           } as UIReply;
           setReplies(prev => {
             if (prev.some(r => r.id === formattedReply.id)) return prev;
+            // 차단된 유저의 실시간 댓글이면 추가하지 않음 (선택 사항)
+            if (blockedIds.includes(formattedReply.user.username)) return prev;
+
             const combined = [...prev, formattedReply];
-            return combined.sort((a,b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+            return combined.sort(
+              (a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime(),
+            );
           });
         },
       )
@@ -426,10 +438,15 @@ export default function TweetDetail() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [id]);
+  }, [id, blockedIds]); // blockedIds 의존성 추가
 
    // 새 댓글 작성 후 콜백: 새로 작성된 댓글로 스크롤 + 하이라이트
   const handleReplyCreated = (reply: UIReply) => {
+    const fixed: UIReply = {
+      ...reply,
+      createdAt: reply.createdAt ?? new Date().toISOString(),
+    };
+
     // 1. Optimistic Update: 즉시 목록에 추가
     setReplies(prev => {
         // 이미 존재하면 추가하지 않음 (혹시 모를 중복 방지)
@@ -442,17 +459,67 @@ export default function TweetDetail() {
 
     // 2. 스크롤 처리
     setTimeout(() => {
-      setScrollTargetId(reply.id);
+      setScrollTargetId(fixed.id);
+      setActiveHighlightId(fixed.id); // 작성 직후 하이라이트
       requestAnimationFrame(() => {
-        const el = document.getElementById(`reply-${reply.id}`);
-        if (el) {
-          el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        }
+        document
+          .getElementById(`reply-${fixed.id}`)
+          ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
       });
     }, 100); 
   };
 
-  // No-op: Removed old broken re-trigger logic to consolidate into single robust effect below
+  const handleChildReplyAdded = (newReply: UIReply) => {
+    // 1) 대댓글을 목록에 추가 (트리 렌더링은 ReplyList가 parent_reply_id로 알아서 붙임)
+    setReplies(prev => {
+      if (prev.some(r => r.id === newReply.id)) return prev;
+
+      // 부모 댓글의 replies 숫자 +1 (프론트에서만)
+      const parentId = (newReply as any).parent_reply_id as string | undefined | null;
+
+      const bumped = prev.map(r => {
+        if (!parentId) return r;
+        if (r.id !== parentId) return r;
+
+        return {
+          ...r,
+          stats: {
+            ...r.stats,
+            replies: (r.stats?.replies ?? 0) + 1,
+          },
+        };
+      });
+
+      return [...bumped, newReply].sort(
+        (a, b) =>
+          new Date(a.createdAt || a.timestamp || 0).getTime() -
+          new Date(b.createdAt || b.timestamp || 0).getTime(),
+      );
+    });
+
+    // 2) UI: 입력창 닫기
+    setOpenReplyId(null);
+
+    // 3) (선택) 방금 단 대댓글로 스크롤/하이라이트
+    setTimeout(() => {
+      setScrollTargetId(newReply.id);
+      setActiveHighlightId(newReply.id);
+      requestAnimationFrame(() => {
+        document
+          .getElementById(`reply-${newReply.id}`)
+          ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      });
+    }, 50);
+  };
+
+  const handleToggleReply = (id: string) => {
+    setScrollTargetId(id);
+    setOpenReplyId(prev => (prev === id ? null : id));
+  };
+
+  const handleCloseReply = () => {
+    setOpenReplyId(null);
+  };
 
   // ULTIMATE 'Magnet' Scroll Engine: Maximum resilience for viral threads
   useEffect(() => {
@@ -537,7 +604,7 @@ export default function TweetDetail() {
   }, [id, locationState?.scrollKey]);
 
   // 로딩 상태: 관리자 페이지 접속 시에는 로딩 스피너 우회 (즉시 레이아웃 노출)
-  if (loading && !locationState?.fromAdmin) {
+  if (isLoading && !locationState?.fromAdmin) {
     return (
       <div className="border-x border-gray-200 dark:border-gray-700 dark:bg-background">
         <div className="flex justify-center items-center py-20">
@@ -566,7 +633,7 @@ export default function TweetDetail() {
             <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
               {t('tweet.login_to_reply', '댓글은 로그인 후 작성하실 수 있어요.')}
             </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5">
               {t('tweet.join_community_desc', '커뮤니티에 참여하려면 로그인 또는 회원가입을 진행해주세요.')}
             </span>
           </div>
@@ -614,13 +681,22 @@ export default function TweetDetail() {
 
       <ReplyList
         replies={replies}
-        onDeleted={id => {
-          setReplies(prev => prev.filter(r => r.id !== id));
-          if (tweet) {
-            SnsStore.updateStats(tweet.id, {
-              replies: Math.max(0, replies.length - 1)
-            });
-          }
+        openReplyId={openReplyId}
+        onDeleted={deletedId => {
+          setReplies(prev => {
+            const target = prev.find(r => r.id === deletedId);
+            const parentId = (target as any)?.parent_reply_id;
+
+            const filtered = prev.filter(r => r.id !== deletedId);
+
+            if (!parentId) return filtered;
+
+            return filtered.map(r =>
+              r.id === parentId
+                ? { ...r, stats: { ...r.stats, replies: Math.max(0, (r.stats?.replies ?? 0) - 1) } }
+                : r,
+            );
+          });
         }}
         hasMore={hasMore}
         fetchMore={() => {
@@ -628,9 +704,12 @@ export default function TweetDetail() {
         }}
         onCommentClick={(commentId) => {
             setScrollTargetId(commentId);
-            setActiveHighlightId(commentId); // 수동 클릭 시에는 즉시 하이라이트
+            setOpenReplyId(prev => (prev === commentId ? null : commentId)); // 토글 지원으로 통합
+            setActiveHighlightId(commentId);
         }}
-        highlightId={activeHighlightId}
+        onAddedReply={handleChildReplyAdded}
+        highlightId={activeHighlightId} // 스크롤용 ID와 별개로 하이라이트 전용 ID 사용
+        onCloseReply={handleCloseReply}
       />
     </div>
   );

@@ -18,6 +18,24 @@ import { BanBadge } from '@/components/common/BanBadge';
 import { useBlockedUsers } from '@/hooks/useBlockedUsers';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 
+function linkifyMentions(html: string) {
+  if (/<a\b[^>]*>/.test(html)) return html;
+
+  // @아이디(영문/숫자/언더스코어/점) 패턴
+  // 한국어 닉네임을 @로 멘션하는 경우는 별도 규칙 필요
+  const mentionRegex = /(^|[\s>])@([a-zA-Z0-9_.]{2,30})\b/g;
+  const mentionClass =
+    'mention-link text-sky-500 dark:text-sky-400 font-medium hover:underline underline-offset-2';
+
+  return html.replace(
+    mentionRegex,
+    (_match, prefix, username) =>
+      `${prefix}<a href="/profile/${encodeURIComponent(
+        username,
+      )}" class="${mentionClass}" data-mention="${username}">@${username}</a>`,
+  );
+}
+
 function stripImagesAndEmptyLines(html: string) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   // img 제거
@@ -344,9 +362,9 @@ export function ReplyCard({
 
   // 텍스트만 추출 (번역용)
   const plainTextContent = stripImagesAndEmptyLines(safeContent);
-  const safeContentWithoutImages = DOMPurify.sanitize(plainTextContent, {
-    ADD_TAGS: ['iframe', 'video', 'source'],
-    ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
+  const safeContentWithoutImages = DOMPurify.sanitize(linkifyMentions(plainTextContent), {
+    ADD_TAGS: ['iframe', 'video', 'source', 'a', 'span'],
+    ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls', 'href', 'target', 'class', 'data-mention'],
   });
 
   // 본인 댓글 여부

@@ -1,9 +1,24 @@
 import { format, formatDistanceToNow, isToday, isYesterday, isSameYear } from 'date-fns';
-import { 
-  ko, enUS, ja, zhCN, es, fr, de, ru, pt, ptBR, 
-  vi, th, id, ar, hi, bn, fi 
+import {
+  ko,
+  enUS,
+  ja,
+  zhCN,
+  es,
+  fr,
+  de,
+  ru,
+  pt,
+  ptBR,
+  vi,
+  th,
+  id,
+  ar,
+  hi,
+  bn,
+  fi,
 } from 'date-fns/locale';
-import i18n from '@/lib/i18n'; 
+import i18n from '@/lib/i18n';
 
 const localeMap: Record<string, any> = {
   ko: ko,
@@ -30,12 +45,12 @@ const getLocale = () => {
   const lang = i18n.language || 'en';
   // Check for exact match first (e.g. 'pt-BR')
   if (localeMap[lang]) return localeMap[lang];
-  
+
   // Check for language code match (e.g. 'ko-KR' -> 'ko')
   const baseLang = lang.split('-')[0];
   if (localeMap[baseLang]) return localeMap[baseLang];
 
-  return enUS; 
+  return enUS;
 };
 
 /**
@@ -65,12 +80,12 @@ export const formatRelativeTime = (dateString: string): string => {
     if (isNaN(date.getTime())) return '';
     const now = new Date();
     const diff = now.getTime() - date.getTime();
-    
+
     // Less than 1 minute
     if (diff < 60000 && diff >= 0) {
       const lang = i18n.language || 'en';
       const baseLang = lang.split('-')[0];
-      
+
       const justNowMap: Record<string, string> = {
         ko: '방금 전',
         en: 'Just now',
@@ -87,7 +102,7 @@ export const formatRelativeTime = (dateString: string): string => {
         ar: 'للتو',
         hi: 'अभी',
         bn: 'এইমাত্র',
-        fi: 'Juuri nyt'
+        fi: 'Juuri nyt',
       };
 
       return justNowMap[lang] || justNowMap[baseLang] || justNowMap['en'];
@@ -130,18 +145,18 @@ export const formatChatListDate = (dateString: string): string => {
     if (isNaN(date.getTime())) return '';
 
     const locale = getLocale();
-    
+
     if (isToday(date)) {
       return format(date, 'p', { locale }); // Time
     }
-    
+
     if (isYesterday(date)) {
       return locale === ko ? '어제' : 'Yesterday';
     }
 
     if (isSameYear(date, new Date())) {
       if (locale === ko) {
-        return format(date, "M월 d일", { locale });
+        return format(date, 'M월 d일', { locale });
       }
       return format(date, 'MMM d', { locale }); // Oct 5
     }
@@ -155,6 +170,7 @@ export const formatChatListDate = (dateString: string): string => {
 /**
  * Numeric-only date format: "YY. MM. DD."
  * Example: "25. 12. 31."
+ * Kept from jh-93
  */
 export const formatNumericDate = (dateString: string): string => {
   if (!dateString) return '';
@@ -162,8 +178,6 @@ export const formatNumericDate = (dateString: string): string => {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '';
     
-    // Using Intl.DateTimeFormat for localized numeric parts but forcing a dot-space sequence
-    // or just direct date-fns format if we stick to the dots.
     // The user wants: '25. 12. 31.'
     return format(date, 'yy. MM. dd.');
   } catch (err) {
@@ -176,28 +190,82 @@ export const formatNumericDate = (dateString: string): string => {
  * Enhanced formatter for notifications/tweets:
  * - Today: "오후 3:00" / "3:00 PM"
  * - Past: "25. 12. 31. 15:00"
+ * Kept from jh-93
  */
 export const formatSmartDate = (dateString: string): string => {
   if (!dateString) return '';
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '';
+    
+    // We can enhance this to start with "Today at..." if current date, basically combining logic
+    // But sticking to the jh-93 definition for consistency with recent fixes:
     return format(date, 'yy. MM. dd. HH:mm');
   } catch {
     return dateString;
   }
 };
+
 /**
- * Formats date for chat dividers (Grouping key).
- * Returns toDateString() for stable comparison as a key.
+ * Formats date for visual dividers (e.g. "Today", "October 5th, Monday")
+ * Merged from main logic (visual preference) but kept function signature
  */
 export const formatDividerDate = (dateString: string): string => {
   if (!dateString) return '';
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '';
-    return date.toDateString();
+    
+    const locale = getLocale();
+
+    if (isToday(date)) {
+      return locale === ko ? '오늘' : 'Today';
+    }
+
+    // PPP: Oct 5th, 2024 / 2024년 10월 5일
+    // EEEE: Monday / 월요일
+    return format(date, 'PPP EEEE', { locale });
   } catch {
     return '';
   }
 };
+
+/**
+ * Formats time specifically for TweetCards (from main)
+ * Supports TweetCard.tsx which might expect this specific logic
+ */
+export function formatTweetCardTime(timestamp: string, lang: string = 'ko') {
+  if (!timestamp) return '';
+  try {
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return timestamp;
+
+    const now = new Date();
+
+    const isToday =
+      date.getFullYear() === now.getFullYear() &&
+      date.getMonth() === now.getMonth() &&
+      date.getDate() === now.getDate();
+
+    // 오늘 기록은 시간만 표시
+    if (isToday) {
+      return new Intl.DateTimeFormat(lang, {
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true,
+      }).format(date);
+    }
+
+    // 이전 날짜는 날짜 + 시간 표시
+    return new Intl.DateTimeFormat(lang, {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    }).format(date);
+  } catch (e) {
+    console.error('Date formatting error:', e);
+    return timestamp;
+  }
+}

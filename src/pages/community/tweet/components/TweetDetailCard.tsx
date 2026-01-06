@@ -1,25 +1,25 @@
-
+import BlockButton from '@/components/common/BlockButton';
+import ReportButton from '@/components/common/ReportButton';
+import TranslateButton from '@/components/common/TranslateButton';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
+import { SnsStore } from '@/lib/snsState';
+import { supabase } from '@/lib/supabase';
+import DOMPurify from 'dompurify';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import DOMPurify from 'dompurify';
+import { toast } from 'sonner';
 import ImageSlider from './ImageSlider';
 import ModalImageSlider from './ModalImageSlider';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
-import TranslateButton from '@/components/common/TranslateButton';
-import { useTranslation } from 'react-i18next';
-import { SnsStore } from '@/lib/snsState';
-import ReportButton from '@/components/common/ReportButton';
-import BlockButton from '@/components/common/BlockButton';
 
 import type { UIPost } from '@/types/sns';
-import { formatDate, formatSmartDate } from '@/utils/dateUtils';
+import { formatSmartDate } from '@/utils/dateUtils';
 import { BanBadge } from '@/components/common/BanBadge';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
+import EditButton from '@/components/common/EditButton';
 
 interface TweetDetailCardProps {
   tweet: UIPost;
@@ -29,10 +29,10 @@ interface TweetDetailCardProps {
   isAdminView?: boolean;
 }
 
-export default function TweetDetailCard({ 
-  tweet, 
-  replyCount, 
-  onDeleted, 
+export default function TweetDetailCard({
+  tweet,
+  replyCount,
+  onDeleted,
   onReplyClick,
   isAdminView = false,
 }: TweetDetailCardProps) {
@@ -56,14 +56,19 @@ export default function TweetDetailCard({
   const [translated, setTranslated] = useState<string>('');
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [isBlocked, setIsBlocked] = useState(false);
-  
+
   // Merged States
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [authorProfileId, setAuthorProfileId] = useState<string | null>(null);
 
   const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
   const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
+
+  // 게시글 수정
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(tweet.content);
+  const [currentContent, setCurrentContent] = useState(tweet.content);
+  const [isComposing, setIsComposing] = useState(false);
 
   const handleBackClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -89,10 +94,7 @@ export default function TweetDetailCard({
 
   // replies 는 외부에서 받은 값 우선 사용
   const normalizedStats = {
-    replies:
-      typeof replyCount === 'number'
-        ? replyCount
-        : tweet.stats.replies || 0,
+    replies: typeof replyCount === 'number' ? replyCount : tweet.stats.replies || 0,
     retweets: tweet.stats.retweets || 0,
     likes: tweet.stats.likes || 0,
     views: tweet.stats.views || 0,
@@ -114,7 +116,7 @@ export default function TweetDetailCard({
     loadProfileId();
   }, [authUser]);
 
-  // Load Author's Country & Profile ID (from Main)
+  // Load Author's Country & Profile ID (Merged Logic)
   useEffect(() => {
     if (isDeletedUser) {
        setAuthorProfileId(null);
@@ -178,19 +180,24 @@ export default function TweetDetailCard({
     if (typeof window === 'undefined') return;
 
     const parser = new DOMParser();
-    const doc = parser.parseFromString(tweet.content, 'text/html');
+    const doc = parser.parseFromString(currentContent, 'text/html');
 
     const imgs = Array.from(doc.querySelectorAll('img'))
       .map(img => img.src)
       .filter(Boolean);
 
     setContentImages(imgs);
+  }, [currentContent]);
+
+  useEffect(() => {
+    setCurrentContent(tweet.content);
+    setDraft(tweet.content);
   }, [tweet.content]);
 
   const propImages = Array.isArray(tweet.image) ? tweet.image : tweet.image ? [tweet.image] : [];
   const allImages = (isSoftDeleted && !isAdminView) ? [] : (propImages.length > 0 ? propImages : contentImages);
 
-  const displayContent = (isSoftDeleted && !isAdminView) ? '관리자에 의해 삭제된 메시지입니다.' : tweet.content;
+  const displayContent = (isSoftDeleted && !isAdminView) ? '관리자에 의해 삭제된 메시지입니다.' : currentContent;
 
   const safeContent = DOMPurify.sanitize(displayContent, {
     ADD_TAGS: ['iframe', 'video', 'source'],
@@ -297,7 +304,7 @@ export default function TweetDetailCard({
 
       // SnsStore 동기화
       SnsStore.updateStats(tweet.id, {
-        likes: (tweet.stats.likes || 0) + 1
+        likes: (tweet.stats.likes || 0) + 1,
       });
     } catch (err: any) {
       console.error('트윗 좋아요 처리 실패:', err.message);
@@ -324,7 +331,7 @@ export default function TweetDetailCard({
       toast.success(t('tweet.delete_success', '피드가 삭제되었습니다.'));
       setShowDeleteDialog(false);
       setShowMenu(false);
-      
+
       onDeleted?.();
 
       // SnsStore에서 해당 트윗 제거
@@ -358,6 +365,30 @@ export default function TweetDetailCard({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const saveEdit = async () => {
+    if (!profileId) {
+      toast.error(t('common.error_profile_missing'));
+      return;
+    }
+
+    const next = draft.trim();
+    if (!next) return;
+
+    const { error } = await supabase.from('tweets').update({ content: next }).eq('id', tweet.id);
+
+    if (error) {
+      toast.error(t('common.error_edit'));
+      return;
+    }
+
+    setCurrentContent(next);
+    setIsEditing(false);
+    toast.success(t('common.success_edit'));
+
+    // 캐시 반영 (있으면)
+    (SnsStore as any)?.updateContent?.(tweet.id, next);
+  };
 
   return (
     <div className="relative border-b border-gray-200 dark:border-gray-700 px-4 py-6 bg-white dark:bg-background">
@@ -433,20 +464,29 @@ export default function TweetDetailCard({
           >
             <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
           </button>
-          
+
           {showMenu && (
             <div className="absolute right-3 top-8 min-w-[9rem] whitespace-nowrap bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
               {authUser?.id === tweet.user.username ? (
-                <button
-                  onClick={e => {
-                    e.stopPropagation();
-                    setShowDeleteDialog(true);
-                  }}
-                  className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
-                >
-                  <i className="ri-delete-bin-line" />
-                  {t('common.delete')}
-                </button>
+                <>
+                  <EditButton
+                    onEdit={() => {
+                      setDraft(currentContent);
+                      setIsEditing(true);
+                    }}
+                    onClose={() => setShowMenu(false)}
+                  />
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      setShowDeleteDialog(true);
+                    }}
+                    className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
+                  >
+                    <i className="ri-delete-bin-line" />
+                    {t('common.delete')}
+                  </button>
+                </>
               ) : (
                 <>
                   <ReportButton onClick={() => setShowMenu(false)} />
@@ -473,7 +513,10 @@ export default function TweetDetailCard({
               {t('tweet.delete_msg_title', '이 게시글을 삭제하시겠어요?')}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-              {t('tweet.delete_msg_desc', '삭제한 게시글은 되돌릴 수 없습니다. 정말 삭제하시겠습니까?')}
+              {t(
+                'tweet.delete_msg_desc',
+                '삭제한 게시글은 되돌릴 수 없습니다. 정말 삭제하시겠습니까?',
+              )}
             </p>
 
             <div className="flex justify-end space-x-2">
@@ -497,13 +540,67 @@ export default function TweetDetailCard({
       <div className="mt-4">
         {/* 텍스트 + 번역 버튼 */}
         {hasText && (
-          <div className={`flex items-center gap-2 ${isSoftDeleted ? 'italic text-gray-500 opacity-60' : ''}`}>
-            <div
-              className="text-gray-900 dark:text-gray-100 text-xl leading-relaxed break-words whitespace-pre-line"
-              dangerouslySetInnerHTML={{ __html: safeContent }}
-            />
+          <div className="flex items-center gap-2">
+            {isEditing ? (
+              <div className="w-full" onClick={e => e.stopPropagation()}>
+                <textarea
+                  value={draft}
+                  onChange={e => setDraft(e.target.value)}
+                  rows={6}
+                  className="
+        w-full resize-none rounded-2xl border border-gray-300 dark:border-gray-700
+        bg-gray-50 dark:bg-background px-3 py-2 text-base
+        text-gray-900 dark:text-gray-100
+        focus:outline-none focus:ring-2 focus:ring-primary/60
+      "
+                  onKeyDown={e => {
+                    if (isComposing) return;
+
+                    // ESC = 취소
+                    if (e.key === 'Escape') {
+                      e.preventDefault();
+                      setDraft(currentContent);
+                      setIsEditing(false);
+                      return;
+                    }
+
+                    // Enter 단독 = 저장
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      saveEdit();
+                      return;
+                    }
+                  }}
+                  onCompositionStart={() => setIsComposing(true)}
+                  onCompositionEnd={() => setIsComposing(false)}
+                />
+
+                <div className="mt-3 flex justify-end gap-2">
+                  <button
+                    className="text-sm text-gray-500 hover:underline"
+                    onClick={() => {
+                      setDraft(currentContent);
+                      setIsEditing(false);
+                    }}
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={saveEdit}
+                    className="px-4 py-2 rounded-full bg-primary text-white hover:bg-primary/80"
+                  >
+                    저장
+                  </button>
+                </div>
+              </div>
+            ) : (
+                <div className={`text-xl leading-relaxed break-words whitespace-pre-line ${isSoftDeleted ? 'italic text-gray-500 opacity-60' : 'text-gray-900 dark:text-gray-100'}`}>
+                    <div dangerouslySetInnerHTML={{ __html: safeContent }} />
+                </div>
+            )}
+            
             {/* 번역 버튼 */}
-            {!isSoftDeleted && plainTextContent.trim().length > 0 && (
+            {!isSoftDeleted && !isEditing && plainTextContent.trim().length > 0 && (
               <TranslateButton
                 text={plainTextContent}
                 contentId={`tweet_${tweet.id}`}
@@ -521,8 +618,8 @@ export default function TweetDetailCard({
           </div>
         )}
 
-        {/* 이미지 슬라이더 (Import path needs verification in actual project structure, assumed ../tweet/components as standard) */}
-        {allImages.length > 0 && (
+        {/* 이미지 슬라이더 */}
+        {allImages.length > 0 && !isEditing && (
           <ImageSlider
             allImages={allImages}
             currentImage={currentImage}
@@ -548,8 +645,8 @@ export default function TweetDetailCard({
 
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-start gap-8 text-sm text-gray-500 dark:text-gray-400">
-          {/* 댓글 수: 항상 replyCount 기반 */}
-          <button 
+          {/* 댓글 수 */}
+          <button
             className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400 transition-colors group"
             onClick={onReplyClick}
           >

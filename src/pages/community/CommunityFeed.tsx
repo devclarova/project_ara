@@ -153,11 +153,11 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
             if (seen.has(t.id)) return false;
             seen.add(t.id);
             return true;
+          });
         });
-      });
-      if (!isSearching && !reset && data.length > 0) {
+        if (!isSearching && !reset && data.length > 0) {
           pageRef.current += 1;
-      }
+        }
     } catch (err) {
       console.error('Error fetching tweets:', err);
     } finally {

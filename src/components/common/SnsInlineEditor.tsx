@@ -43,6 +43,7 @@ type TweetModeProps = {
 type ReplyModeProps = {
   mode: 'reply';
   tweetId: string;
+  parentReplyId?: string | null;
   onReplyCreated?: (reply: UIReply) => void;
   onFocus?: () => void;
   onInput?: () => void;
@@ -52,6 +53,7 @@ type ReplyModeProps = {
 
 type SnsInlineEditorProps = (TweetModeProps | ReplyModeProps) & {
   className?: string;
+  onCancel?: () => void;
 };
 
 export interface SnsInlineEditorHandle {
@@ -60,7 +62,7 @@ export interface SnsInlineEditorHandle {
 
 const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>((props, ref) => {
   const { t } = useTranslation();
-  const { mode } = props;
+  const { mode, onCancel } = props;
   const { user, isBanned, bannedUntil } = useAuth();
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
@@ -221,13 +223,14 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
 
       // ================= 댓글 모드 =================
       if (mode === 'reply') {
-        const { tweetId, onReplyCreated } = props as ReplyModeProps;
+        const { tweetId, onReplyCreated, parentReplyId } = props as ReplyModeProps;
         const { data: inserted, error: insertError } = await supabase
           .from('tweet_replies')
           .insert({
             tweet_id: tweetId,
             author_id: profileId,
             content: finalContent,
+            parent_reply_id: parentReplyId || null,
           })
           .select('id, created_at')
           .single();
@@ -243,10 +246,10 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
            type: 'reply',
            id: inserted.id,
            tweetId: tweetId,
-           parent_reply_id: null, // 대댓글인 경우 분기 필요하지만 현재 SnsInlineEditor는 1 depth 댓글만 가정하는듯? (확인 필요) -> 일단 null
+           parent_reply_id: parentReplyId || null,
            root_reply_id: null,
            user: {
-               id: profileId,
+               id: profileId, // Keeping id from jh-93 as it is more complete
                name: profileNickname || 'Unknown',
                username: profileUserId || user.id,
                avatar: profileAvatar ?? '/default-avatar.svg'
@@ -336,6 +339,13 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+      // If we provided onReplyCreated or it was a temporary editor (like in ReplyList), we might want to close it? 
+      // But usually SnsInlineEditor stays open. The parent handles closing if needed via onReplyCreated wrapper.
+      if (onCancel && mode === 'reply') {
+          // If it's a transient reply box, maybe we want to call onCancel (close) after success?
+          // Let's leave that to the parent to decide.
+      }
+
     } catch (err) {
       console.error('❌ 에디터 처리 오류:', err);
       toast.error(t('tweets.error_general'));
@@ -432,21 +442,33 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
                 </span>
               )}
             </div>
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={disabled}
-              className={`
-                px-4 py-1.5 rounded-full text-sm font-semibold
-                ${
-                  disabled
-                    ? 'bg-gray-300 dark:bg-gray-700 text-gray-600 dark:text-gray-400 cursor-not-allowed'
-                    : 'bg-primary text-white hover:bg-primary/80'
-                }
-              `}
-            >
-              {buttonLabel}
-            </button>
+            
+            <div className="flex items-center gap-2">
+                 {onCancel && (
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="px-3 py-1.5 rounded-full text-sm font-medium text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                    >
+                        {t('common.cancel', '취소')}
+                    </button>
+                 )}
+                <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={disabled}
+                className={`
+                    px-4 py-1.5 rounded-full text-sm font-semibold
+                    ${
+                    disabled
+                        ? 'bg-gray-300 dark:bg-gray-700 text-gray-600 dark:text-gray-400 cursor-not-allowed'
+                        : 'bg-primary text-white hover:bg-primary/80'
+                    }
+                `}
+                >
+                {buttonLabel}
+                </button>
+            </div>
           </div>
           {/* 이미지 미리보기 영역 */}
           {previewUrls.length > 0 && (

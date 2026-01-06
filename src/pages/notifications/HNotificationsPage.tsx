@@ -46,10 +46,6 @@ export default function HNotificationsPage() {
     loadProfile();
   }, [user]);
 
-  // ... (기존 useEffect들 생략 가능하지만 안전하게 전체 구조 잡기 위해 유지하거나, 위쪽은 건드리지 않고 중간부터 수정)
-  // 여기서는 replace 범위가 전체가 아니므로 로직 삽입 위치를 잘 잡아야 함.
-  // 30라인부터 다시 씀.
-
   // 초기 알림 불러오기
   useEffect(() => {
     if (!profileId) return;
@@ -76,9 +72,20 @@ export default function HNotificationsPage() {
         (data ?? []).map((n: any) => {
           // 피드 좋아요 혹은 멘션인 경우, 알림 자체 content가 비어있으면 원본 트윗 내용을 보여줌
           let contentToUse = n.content;
-          if ((n.type === 'like' || n.type === 'mention') && !n.comment_id && n.tweet?.content && !contentToUse) {
-             contentToUse = n.tweet.content;
+
+          // Merged Logic: Robust check from 'main'
+          if (n.type === 'like' && !n.comment_id && n.tweet?.content) {
+            contentToUse = n.tweet.content;
           }
+
+          if (
+            n.type === 'mention' &&
+            (!contentToUse || contentToUse.trim() === '') &&
+            n.tweet?.content
+          ) {
+            contentToUse = n.tweet.content;
+          }
+          
           // 대댓글 알림인 경우
           if (n.type === 'reply' && n.comment_id && n.reply?.content && !contentToUse) {
              contentToUse = n.reply.content;
@@ -93,12 +100,12 @@ export default function HNotificationsPage() {
             tweet_id: n.tweet_id,
             comment_id: n.comment_id,
             sender: n.sender
-                ? {
-                    name: n.sender.nickname,
-                    username: n.sender.nickname, 
-                    avatar: n.sender.avatar_url,
+              ? {
+                  name: n.sender.nickname,
+                  username: n.sender.nickname,
+                  avatar: n.sender.avatar_url,
                 }
-                : null,
+              : null,
           };
         }),
       );
@@ -131,16 +138,26 @@ export default function HNotificationsPage() {
 
           // 피드 좋아요 혹은 멘션인 경우 트윗 내용 추가 fetch
           let contentToUse = newItem.content;
-          if ((newItem.type === 'like' || newItem.type === 'mention') && newItem.tweet_id && !newItem.comment_id && !contentToUse) {
-             const { data: tweetData } = await supabase
-               .from('tweets')
-               .select('content')
-               .eq('id', newItem.tweet_id)
-               .maybeSingle();
-             if (tweetData?.content) {
-               contentToUse = tweetData.content;
-             }
+
+          // Merged Logic: Robust check from 'main'
+          const needTweetContent =
+            (newItem.type === 'like' && newItem.tweet_id && !newItem.comment_id) ||
+            (newItem.type === 'mention' &&
+              newItem.tweet_id &&
+              (!contentToUse || contentToUse.trim() === ''));
+
+          if (needTweetContent) {
+            const { data: tweetData } = await supabase
+              .from('tweets')
+              .select('content')
+              .eq('id', newItem.tweet_id)
+              .maybeSingle();
+
+            if (tweetData?.content) {
+              contentToUse = tweetData.content;
+            }
           }
+
           // 대댓글 알림인 경우
           if (newItem.type === 'reply' && newItem.comment_id && !contentToUse) {
             const { data: replyData } = await supabase
@@ -222,7 +239,7 @@ export default function HNotificationsPage() {
     try {
       // 삭제 대상 알림 정보 찾기 (읽지 않은 알림인지 확인용)
       const targetNotification = notifications.find(n => n.id === deleteId);
-      
+
       // UI에서 선제거
       setNotifications(prev => prev.filter(n => n.id !== deleteId));
       setShowDeleteModal(false);
@@ -231,11 +248,11 @@ export default function HNotificationsPage() {
       if (targetNotification && !targetNotification.is_read) {
         window.dispatchEvent(new Event('notification:deleted-one'));
       }
-      
+
       // DB 삭제
       const { error } = await supabase.from('notifications').delete().eq('id', deleteId);
       if (error) throw error;
-      
+
       toast.success(t('common.success_delete'));
     } catch (err: any) {
       console.error('알림 삭제 실패:', err.message);
@@ -268,16 +285,7 @@ export default function HNotificationsPage() {
 
   return (
     <div className="flex justify-center bg-white dark:bg-background">
-      <div
-        className="
-        flex flex-col 
-        w-full max-w-2xl lg:max-w-3xl
-        border-x border-gray-200 dark:border-gray-700
-        min-h-[calc(100vh-73px)]
-        sm:min-h-[calc(100vh-81px)]
-        md:min-h-[calc(100vh-97px)]
-      "
-      >
+      <div className="flex flex-col w-full max-w-2xl lg:max-w-3xl border-x border-gray-200 dark:border-gray-700 min-h-[calc(100vh-73px)] sm:min-h-[calc(100vh-81px)] md:min-h-[calc(100vh-97px)]">
         {/* 상단 헤더 */}
         <div
           className="
@@ -290,9 +298,11 @@ export default function HNotificationsPage() {
             flex items-center justify-between
           "
         >
-          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('nav.notifications')}</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            {t('nav.notifications')}
+          </h1>
 
-            {notifications.length > 0 && (
+          {notifications.length > 0 && (
             <button
               type="button"
               onClick={handleClearAll}
@@ -394,13 +404,13 @@ export default function HNotificationsPage() {
                   }}
                   onMarkAsRead={markAsRead}
                   onDelete={handleRequestDelete}
-                  onSilentDelete={async (id) => {
+                  onSilentDelete={async id => {
                     // 직접 삭제 (모달 없이) - 삭제된 컨텐츠 클릭 시 사용
                     try {
                       // UI 선반영
                       const target = notifications.find(n => n.id === id);
                       setNotifications(prev => prev.filter(n => n.id !== id));
-                      
+
                       // 뱃지 업데이트
                       if (target && !target.is_read) {
                         window.dispatchEvent(new Event('notification:deleted-one'));
@@ -429,8 +439,11 @@ export default function HNotificationsPage() {
 
       {/* 삭제 확인 모달 */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4" onClick={() => setShowDeleteModal(false)}>
-          <div 
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setShowDeleteModal(false)}
+        >
+          <div
             className="bg-white dark:bg-secondary w-full max-w-sm rounded-xl p-6 shadow-xl relative animate-in fade-in zoom-in duration-200"
             onClick={e => e.stopPropagation()}
           >

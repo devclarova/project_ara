@@ -1,5 +1,11 @@
 import { supabase } from '@/lib/supabase';
-import type { FeedItem, UIPost, UIReply, TweetQueryResponse, ReplyQueryResponse } from '@/types/sns';
+import type {
+  FeedItem,
+  UIPost,
+  UIReply,
+  TweetQueryResponse,
+  ReplyQueryResponse,
+} from '@/types/sns';
 
 const PAGE_SIZE = 10;
 
@@ -66,12 +72,14 @@ export const tweetService = {
         created_at,
         deleted_at,
         tweet_id,
-        profiles:author_id (id, nickname, user_id, avatar_url),
+        parent_reply_id,
+        root_reply_id,
+        profiles:author_id (id, nickname, user_id, avatar_url, banned_until),
         tweet_replies_likes!left(count),
         tweets!left (
           content,
           author_id
-        )`
+        )`,
       )
       .eq('author_id', userId)
       .order('created_at', { ascending: false })
@@ -87,6 +95,8 @@ export const tweetService = {
       type: 'reply',
       id: r.id,
       tweetId: r.tweet_id,
+      parent_reply_id: r.parent_reply_id ?? null,
+      root_reply_id: r.root_reply_id ?? null,
       user: {
         id: r.profiles?.id ?? '00000000-0000-0000-0000-000000000000',
         name: r.profiles?.nickname ?? 'Unknown',
@@ -105,52 +115,59 @@ export const tweetService = {
         views: 0,
         retweets: 0,
       },
-    }));
+    } as UIReply));
   },
 
   /**
    * Fetch liked items (posts and replies) for a user
    * Handles the complex logic of fetching IDs first, merging, sorting, and then fetching details.
    */
-  async getLikedItems(userId: string, page: number, cachedItems?: { type: 'post' | 'reply'; id: string; date: string; likedAt: string }[]): Promise<{ items: FeedItem[], allLikedItems: { type: 'post' | 'reply'; id: string; date: string; likedAt: string }[] }> {
+  async getLikedItems(
+    userId: string,
+    page: number,
+    cachedItems?: { type: 'post' | 'reply'; id: string; date: string; likedAt: string }[],
+  ): Promise<{
+    items: FeedItem[];
+    allLikedItems: { type: 'post' | 'reply'; id: string; date: string; likedAt: string }[];
+  }> {
     let allItems = cachedItems || [];
 
     // If no cache provided or it's the first page request and we want to refresh, fetch all IDs
     if (!cachedItems || cachedItems.length === 0) {
-        // 1. Fetch Post Likes
-        const { data: postLikes, error: pErr } = await supabase
+      // 1. Fetch Post Likes
+      const { data: postLikes, error: pErr } = await supabase
         .from('tweet_likes')
         .select('tweet_id, created_at')
         .eq('user_id', userId);
-        
-        if (pErr) throw pErr;
 
-        // 2. Fetch Reply Likes
-        const { data: replyLikes, error: rErr } = await supabase
+      if (pErr) throw pErr;
+
+      // 2. Fetch Reply Likes
+      const { data: replyLikes, error: rErr } = await supabase
         .from('tweet_replies_likes')
         .select('reply_id, created_at')
         .eq('user_id', userId);
 
-        if (rErr) throw rErr;
+      if (rErr) throw rErr;
 
-        const pItems = (postLikes || []).map((i: { tweet_id: string; created_at: string }) => ({ 
-          type: 'post' as const, 
-          id: i.tweet_id, 
-          date: i.created_at, 
-          likedAt: i.created_at 
-        }));
-        
-        const rItems = (replyLikes || []).map((i: { reply_id: string; created_at: string }) => ({ 
-          type: 'reply' as const, 
-          id: i.reply_id, 
-          date: i.created_at, 
-          likedAt: i.created_at 
-        }));
+      const pItems = (postLikes || []).map((i: { tweet_id: string; created_at: string }) => ({
+        type: 'post' as const,
+        id: i.tweet_id,
+        date: i.created_at,
+        likedAt: i.created_at,
+      }));
 
-        // Merge and sort by liked time (descending)
-        allItems = [...pItems, ...rItems].sort((a, b) => 
-        new Date(b.likedAt).getTime() - new Date(a.likedAt).getTime()
-        );
+      const rItems = (replyLikes || []).map((i: { reply_id: string; created_at: string }) => ({
+        type: 'reply' as const,
+        id: i.reply_id,
+        date: i.created_at,
+        likedAt: i.created_at,
+      }));
+
+      // Merge and sort by liked time (descending)
+      allItems = [...pItems, ...rItems].sort(
+        (a, b) => new Date(b.likedAt).getTime() - new Date(a.likedAt).getTime(),
+      );
     }
 
     const from = page * PAGE_SIZE;
@@ -158,7 +175,7 @@ export const tweetService = {
     const currentSlice = allItems.slice(from, sliceEnd);
 
     if (currentSlice.length === 0) {
-        return { items: [], allLikedItems: allItems };
+      return { items: [], allLikedItems: allItems };
     }
 
     const postIds = currentSlice.filter(i => i.type === 'post').map(i => i.id);
@@ -178,7 +195,7 @@ export const tweetService = {
     if (replyIds.length > 0) {
         queries.push(
         supabase.from('tweet_replies').select(`
-            id, content, created_at, tweet_id, deleted_at,
+            id, content, created_at, tweet_id, deleted_at, parent_reply_id, root_reply_id,
             profiles(id, nickname, user_id, avatar_url, banned_until),
             tweet_replies_likes(count),
             tweets(content, author_id)
@@ -187,28 +204,29 @@ export const tweetService = {
     }
 
     const results = await Promise.all(queries);
-    
+
     let fetchedPosts: TweetQueryResponse[] = [];
     let fetchedReplies: ReplyQueryResponse[] = [];
-    
+
     // Assign results correctly based on initial checks
     if (postIds.length > 0) {
-        const res = results.shift();
-        if (res?.error) throw res.error;
-        fetchedPosts = (res?.data as unknown as TweetQueryResponse[]) ?? [];
+      const res = results.shift();
+      if (res?.error) throw res.error;
+      fetchedPosts = (res?.data as unknown as TweetQueryResponse[]) ?? [];
     }
     if (replyIds.length > 0) {
-        const res = results.shift();
-        if (res?.error) throw res.error;
-        fetchedReplies = (res?.data as unknown as ReplyQueryResponse[]) ?? [];
+      const res = results.shift();
+      if (res?.error) throw res.error;
+      fetchedReplies = (res?.data as unknown as ReplyQueryResponse[]) ?? [];
     }
 
     // Map back to FeedItem maintaining sort order
-    const mappedItems = currentSlice.map((item) => {
+    const mappedItems = currentSlice
+      .map(item => {
         if (item.type === 'post') {
-        const p = fetchedPosts.find(x => x.id === item.id);
-        if (!p) return null;
-        return {
+          const p = fetchedPosts.find(x => x.id === item.id);
+          if (!p) return null;
+          return {
             type: 'post',
             id: p.id,
             liked_at: item.likedAt,
@@ -224,20 +242,22 @@ export const tweetService = {
             timestamp: p.created_at,
             deleted_at: (p as any).deleted_at,
             stats: {
-            replies: p.reply_count ?? 0,
-            likes: p.like_count ?? 0,
-            views: p.view_count ?? 0,
-            retweets: 0,
+              replies: p.reply_count ?? 0,
+              likes: p.like_count ?? 0,
+              views: p.view_count ?? 0,
+              retweets: 0,
             },
             liked: true,
-        } as UIPost;
+          } as UIPost;
         } else {
-        const r = fetchedReplies.find(x => x.id === item.id);
-        if (!r) return null;
-        return {
+          const r = fetchedReplies.find(x => x.id === item.id);
+          if (!r) return null;
+          return {
             type: 'reply',
             id: r.id,
             tweetId: r.tweet_id,
+            parent_reply_id: r.parent_reply_id ?? null,
+            root_reply_id: r.root_reply_id ?? null,
             liked_at: item.likedAt,
             user: {
             id: r.profiles?.id ?? '00000000-0000-0000-0000-000000000000',
@@ -252,15 +272,16 @@ export const tweetService = {
             createdAt: r.created_at,
             deleted_at: (r as any).deleted_at,
             stats: {
-            replies: 0,
-            likes: r.tweet_replies_likes?.[0]?.count ?? 0,
-            views: 0,
-            retweets: 0,
+              replies: 0,
+              likes: r.tweet_replies_likes?.[0]?.count ?? 0,
+              views: 0,
+              retweets: 0,
             },
             liked: true,
-        } as UIReply;
+          } as UIReply;
         }
-    }).filter((item): item is FeedItem => item !== null);
+      })
+      .filter((item): item is FeedItem => item !== null);
 
     return { items: mappedItems, allLikedItems: allItems };
   },
@@ -282,13 +303,11 @@ export const tweetService = {
       .single();
 
     if (error) {
-      // It's common for a tweet to not be found (deleted), so we might simply return null or throw depending on usage.
-      // The original code handled it by showing a toast and redirecting. 
-      // Here we return null so the component can decide.
       return null;
     }
 
     const tweet = data as unknown as TweetQueryResponse;
+    const createdAt = tweet.created_at;
 
     return {
       type: 'tweet',
@@ -305,6 +324,7 @@ export const tweetService = {
       deleted_at: (tweet as any).deleted_at,
 
       timestamp: tweet.created_at,
+      createdAt,
       stats: {
         replies: tweet.reply_count ?? 0,
         retweets: tweet.repost_count ?? 0,
@@ -323,7 +343,7 @@ export const tweetService = {
     let query = supabase
       .from('tweet_replies')
       .select(
-        `id, content, created_at, deleted_at, profiles:author_id (id, nickname, user_id, avatar_url, banned_until), tweet_replies_likes (count)`,
+        `id, content, created_at, deleted_at, parent_reply_id, root_reply_id, profiles:author_id (id, nickname, user_id, avatar_url, banned_until), tweet_replies_likes (count)`,
       )
       .eq('tweet_id', tweetId)
       .order('created_at', { ascending: true });
@@ -338,44 +358,51 @@ export const tweetService = {
     }
 
     const { data, error } = await query;
-
     if (error) throw error;
 
     const replies = (data as unknown as ReplyQueryResponse[]) ?? [];
 
-    return replies.map(r => ({
-      type: 'reply',
-      id: r.id,
-      tweetId,
-      user: {
-        id: r.profiles?.id ?? '00000000-0000-0000-0000-000000000000',
-        name: r.profiles?.nickname ?? 'Unknown',
-        username: r.profiles?.user_id ?? 'anonymous',
-        avatar: r.profiles?.avatar_url ?? '/default-avatar.svg',
-        banned_until: r.profiles?.banned_until ?? null,
-      },
-      content: r.content,
-      deleted_at: (r as any).deleted_at,
+    return replies.map(
+      r =>
+        ({
+          type: 'reply',
+          id: r.id,
+          tweetId,
+          parent_reply_id: r.parent_reply_id ?? null,
+          root_reply_id: r.root_reply_id ?? null,
+          user: {
+            id: r.profiles?.id ?? '00000000-0000-0000-0000-000000000000',
+            name: r.profiles?.nickname ?? 'Unknown',
+            username: r.profiles?.user_id ?? 'anonymous',
+            avatar: r.profiles?.avatar_url ?? '/default-avatar.svg',
+            banned_until: r.profiles?.banned_until ?? null,
+          },
+          content: r.content,
+          deleted_at: (r as any).deleted_at,
 
-      timestamp: r.created_at,
-      createdAt: r.created_at, // for sorting
-      stats: {
-        replies: 0,
-        retweets: 0,
-        likes: Array.isArray(r.tweet_replies_likes) ? (r.tweet_replies_likes[0]?.count ?? 0) : 0,
-        views: 0,
-      },
-    } as UIReply));
+          timestamp: r.created_at,
+          createdAt: r.created_at, // for sorting
+          stats: {
+            replies: 0,
+            retweets: 0,
+            likes: Array.isArray(r.tweet_replies_likes)
+              ? (r.tweet_replies_likes[0]?.count ?? 0)
+              : 0,
+            views: 0,
+          },
+        }) as UIReply,
+    );
   },
 
   /**
    * Fetch replies for a specific parent reply
+   * Kept from jh-93 just in case, though main might handle nesting via parent_reply_id in getAll
    */
   async getRepliesByParentId(parentId: string): Promise<UIReply[]> {
     const { data, error } = await supabase
       .from('tweet_replies')
       .select(
-        `id, content, created_at, tweet_id, deleted_at, profiles:author_id (id, nickname, user_id, avatar_url, banned_until), tweet_replies_likes (count)`,
+        `id, content, created_at, tweet_id, deleted_at, parent_reply_id, root_reply_id, profiles:author_id (id, nickname, user_id, avatar_url, banned_until), tweet_replies_likes (count)`,
       )
       .eq('parent_reply_id', parentId)
       .order('created_at', { ascending: true });
@@ -388,6 +415,8 @@ export const tweetService = {
       type: 'reply',
       id: r.id,
       tweetId: r.tweet_id,
+      parent_reply_id: r.parent_reply_id ?? null,
+      root_reply_id: r.root_reply_id ?? null,
       user: {
         id: r.profiles?.id ?? '00000000-0000-0000-0000-000000000000',
         name: r.profiles?.nickname ?? 'Unknown',
