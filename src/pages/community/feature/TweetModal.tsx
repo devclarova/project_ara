@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import RichTextEditor from '../editor/RichTextEditor';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { getBanMessage } from '@/utils/banUtils';
 
 interface TweetModalProps {
   onClose: () => void;
@@ -13,7 +14,7 @@ interface TweetModalProps {
 
 export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps) {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, isBanned, bannedUntil } = useAuth();
   const [content, setContent] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,6 +36,12 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
     if (!content.trim() || isSubmitting) return;
     if (!user) {
       alert('로그인이 필요합니다.');
+      return;
+    }
+
+    // 제재 중인 사용자는 게시글 작성 불가
+    if (isBanned && bannedUntil) {
+      toast.error(getBanMessage(bannedUntil, '게시글을 작성'));
       return;
     }
 

@@ -6,6 +6,7 @@ import TweetCard from '@/pages/community/feature/TweetCard';
 import SnsInlineEditor from '@/components/common/SnsInlineEditor';
 import { SnsStore } from '@/lib/snsState';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { useBlockedUsers } from '@/hooks/useBlockedUsers';
 import type { UITweet } from '@/types/sns';
 import type { Database } from '@/types/database';
 type OutletCtx = {
@@ -29,6 +30,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
   const mergedSearchQuery = (searchQuery ?? outletSearchQuery ?? '').trim();
   const isSearching = mergedSearchQuery.length > 0;
   const { user } = useAuth();
+  const { blockedIds } = useBlockedUsers(); // 차단된 유저 목록 가져오기
   const [tweets, setTweets] = useState<UITweet[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -65,10 +67,13 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
     nickname?: string; // from RPC
     user_id?: string; // from RPC
     avatar_url?: string; // from RPC
+    deleted_at?: string | null; // Manually added
     profiles?: {
+      id: string; // ✅ Added
       nickname: string | null;
       user_id: string | null;
       avatar_url: string | null;
+      banned_until?: string | null;
     } | null;
   };
 
@@ -103,9 +108,9 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
         const { data: feedData, error } = await supabase
           .from('tweets')
           .select(`
-            id, content, image_url, created_at,
+            id, content, image_url, created_at, deleted_at,
             reply_count, repost_count, like_count, bookmark_count, view_count,
-            profiles:author_id ( nickname, user_id, avatar_url )
+            profiles:author_id ( id, nickname, user_id, avatar_url, banned_until )
           `)
           .order('created_at', { ascending: false })
           .range(from, to);
@@ -120,13 +125,16 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
       const mapped: UITweet[] = data.map((t) => ({
         id: t.id,
         user: {
+          id: t.profiles?.id ?? (t as any).author_id ?? '',
           name: t.nickname ?? t.profiles?.nickname ?? 'Unknown',
           username: t.user_id ?? t.profiles?.user_id ?? 'anonymous',
           avatar: t.avatar_url ?? t.profiles?.avatar_url ?? '/default-avatar.svg',
+          banned_until: t.profiles?.banned_until ?? null,
         },
         content: t.content,
         image: t.image_url || undefined,
         timestamp: t.created_at || new Date().toISOString(),
+        deleted_at: t.deleted_at,
         stats: {
           replies: t.reply_count ?? 0,
           retweets: t.repost_count ?? 0,
@@ -138,9 +146,10 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
       // 상태 업데이트
       setTweets(prev => {
         const combined = reset ? mapped : [...prev, ...mapped];
-        // 중복 제거
+        // 중복 제거 및 차단된 유저 필터링
         const seen = new Set();
         return combined.filter(t => {
+            if (t.user.id && blockedIds.includes(t.user.id)) return false; // 차단 필터링 (profiles.id UUID 기준)
             if (seen.has(t.id)) return false;
             seen.add(t.id);
             return true;
@@ -163,7 +172,14 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
         });
       }
     }
-  }, [isSearching, mergedSearchQuery, hasMore]);
+  }, [isSearching, mergedSearchQuery, hasMore, blockedIds]);
+
+  // blockedIds 변경 시 기존 트윗 목록에서 차단된 유저 제거
+  useEffect(() => {
+    if (blockedIds.length === 0) return;
+    setTweets(prev => prev.filter(t => !blockedIds.includes(t.user.id)));
+  }, [blockedIds]);
+
   // 3. 초기 로드 및 검색어 변경 감지
   useEffect(() => {
     // 검색 모드면 무조건 새로 로드
@@ -269,7 +285,8 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
   useEffect(() => {
       const channel = supabase.channel('home-feed-realtime')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tweets' }, async payload => {
-          const newTweet = payload.new as Database['public']['Tables']['tweets']['Row'];
+          // deleted_at might be missing in generated types
+          const newTweet = payload.new as Database['public']['Tables']['tweets']['Row'] & { deleted_at?: string | null };
           
           // 이미 리스트에 있는지 확인 (낙관적 업데이트 등으로)
           // setTweets 안에서 확인해야 최신 state 반영 가능하지만, 
@@ -278,20 +295,23 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
 
           const { data: profile } = await supabase
             .from('profiles')
-            .select('nickname, user_id, avatar_url')
+            .select('id, nickname, user_id, avatar_url, banned_until')
             .eq('id', newTweet.author_id)
             .maybeSingle();
 
           const formattedTweet: UITweet = {
               id: newTweet.id,
               user: {
+                  id: profile?.id || '00000000-0000-0000-0000-000000000000',
                   name: profile?.nickname || 'Unknown',
                   username: profile?.user_id || 'anonymous',
                   avatar: profile?.avatar_url || '/default-avatar.svg',
+                  banned_until: profile?.banned_until ?? null,
               },
               content: newTweet.content,
               image: newTweet.image_url || undefined,
               timestamp: newTweet.created_at || new Date().toISOString(),
+              deleted_at: newTweet.deleted_at,
               stats: {
                   replies: newTweet.reply_count ?? 0,
                   retweets: newTweet.repost_count ?? 0,
@@ -302,6 +322,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
           };
 
           setTweets(prev => {
+              if (blockedIds.includes(formattedTweet.user.id)) return prev; // 차단 필터링
               if (prev.some(t => t.id === formattedTweet.id)) return prev;
               return [formattedTweet, ...prev];
           });
@@ -326,7 +347,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
       return () => {
           supabase.removeChannel(channel);
       };
-  }, []);
+  }, [blockedIds]); // blockedIds 의존성 추가
   // 9. 안전장치: 로딩이 너무 오래 걸리면 강제 종료 (Main 브랜치 기능 통합)
   useEffect(() => {
     if (loading) {

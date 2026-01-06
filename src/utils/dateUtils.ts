@@ -153,22 +153,50 @@ export const formatChatListDate = (dateString: string): string => {
 };
 
 /**
- * Formats date divider in chat room (e.g., "2024년 10월 5일 월요일").
+ * Numeric-only date format: "YY. MM. DD."
+ * Example: "25. 12. 31."
+ */
+export const formatNumericDate = (dateString: string): string => {
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    
+    // Using Intl.DateTimeFormat for localized numeric parts but forcing a dot-space sequence
+    // or just direct date-fns format if we stick to the dots.
+    // The user wants: '25. 12. 31.'
+    return format(date, 'yy. MM. dd.');
+  } catch (err) {
+    console.error('Numeric date formatting error:', err);
+    return '';
+  }
+};
+
+/**
+ * Enhanced formatter for notifications/tweets:
+ * - Today: "오후 3:00" / "3:00 PM"
+ * - Past: "25. 12. 31. 15:00"
+ */
+export const formatSmartDate = (dateString: string): string => {
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    return format(date, 'yy. MM. dd. HH:mm');
+  } catch {
+    return dateString;
+  }
+};
+/**
+ * Formats date for chat dividers (Grouping key).
+ * Returns toDateString() for stable comparison as a key.
  */
 export const formatDividerDate = (dateString: string): string => {
   if (!dateString) return '';
   try {
     const date = new Date(dateString);
-    const now = new Date();
-    const locale = getLocale();
-
-    if (isToday(date)) {
-        return locale === ko ? '오늘' : 'Today'; // Optional: Just Date is often better
-    }
-    
-    // PPP: Oct 5th, 2024 / 2024년 10월 5일
-    // EEEE: Monday / 월요일
-    return format(date, 'PPP EEEE', { locale }); 
+    if (isNaN(date.getTime())) return '';
+    return date.toDateString();
   } catch {
     return '';
   }

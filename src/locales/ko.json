@@ -56,7 +56,22 @@
     "no_notifications": "아직 새로운 알림이 없습니다",
     "delete_confirm_title": "알림 삭제",
     "delete_confirm_desc": "이 알림을 삭제하시겠습니까?",
-    "photo_content": "[사진]"
+    "photo_content": "[사진]",
+    "tab_all": "전체",
+    "tab_likes": "좋아요",
+    "tab_comments": "댓글",
+    "tab_follow": "팔로우",
+    "tab_updates": "소식",
+    "media_photo": "[사진]",
+    "media_video": "[동영상]",
+    "media_file": "[파일]",
+    "follow_you": "님이 팔로우하기 시작했습니다",
+    "follow_request": "님이 팔로우 요청을 보냈습니다",
+    "accept": "수락",
+    "decline": "거절",
+    "no_content_available": "내용을 불러올 수 없습니다",
+    "tab_system": "시스템",
+    "system_notice": "시스템 알림"
   },
   "study": {
     "studylist": "학습 목록",
@@ -98,7 +113,11 @@
     "subtitle_loading": "자막 로딩 중...",
     "subtitle_no_data": "자막 데이터가 없습니다.",
     "login_required": "로그인 필요",
-    "preview": "미리보기"
+    "preview": "미리보기",
+    "meta_title": "ARA - K-콘텐츠 기반 한국어 학습 플랫폼",
+    "meta_desc_scene": "K-콘텐츠 장면으로 한국어 공부하기: {{contents}} {{episode}} {{scene}}",
+    "aria_prev_episode": "이전 에피소드",
+    "aria_next_episode": "다음 에피소드"
   },
   "auth": {
     "login": "로그인",
@@ -213,6 +232,8 @@
     "agree_and_close": "동의하고 닫기"
   },
   "common": {
+    "online": "온라인",
+    "offline": "오프라인",
     "save": "저장",
     "saving": "저장 중...",
     "apply": "적용하기",
@@ -244,6 +265,14 @@
     "close": "닫기",
     "share": "공유",
     "link_copied": "링크가 복사되었습니다",
+    "block_user": "님 차단하기",
+    "unblock_user": "님 차단 해제",
+    "block_user_desc": "차단하면 서로의 프로필을 볼 수 없으며, 채팅을 보낼 수 없습니다.",
+    "blocked_user_alert": "차단된 사용자입니다.",
+    "blocked_users": "차단된 사용자",
+    "blocked_users_desc": "차단한 사용자의 목록을 관리합니다.",
+    "no_blocked_users": "차단한 사용자가 없습니다.",
+    "confirm_unblock": "정말 차단을 해제하시겠습니까?",
     "block": "차단하기",
     "unblock": "차단해제",
     "report": "신고하기",
@@ -251,7 +280,20 @@
     "block_success": "{{name}}님을 차단했습니다.",
     "unblock_success": "{{name}}님 차단을 해제했습니다.",
     "cancel_like": "좋아요를 취소했습니다.",
-    "success_like": "좋아요했습니다."
+    "success_like": "좋아요했습니다.",
+    "blocked_comment_msg": "차단한 상대의 댓글입니다",
+    "view_content": "내용보기",
+    "hide_content": "다시 숨기기",
+    "mask_comments": "댓글 마스킹",
+    "hide_posts": "게시글 숨김",
+    "block_modal_title": "정말 차단하시겠습니까?",
+    "block_modal_notice_1": "상대방과 1:1 채팅방에서 자동으로 나갑니다.",
+    "block_modal_notice_2": "상대방이 보내는 메시지를 받을 수 없습니다.",
+    "block_modal_notice_3": "커뮤니티에서 상대방의 게시글이 숨겨집니다.",
+    "block_modal_notice_4": "상대방의 댓글이 마스킹 처리되어 표시됩니다.",
+    "block_modal_warning": "차단 정보는 '설정 > 차단된 사용자'에서 관리할 수 있습니다.",
+    "unknown": "알 수 없음",
+    "anonymous": "익명"
   },
   "settings": {
     "languageSelect": "언어 선택",
@@ -373,7 +415,31 @@
     "nickname_change_forbidden": "닉네임은 다시 변경할 수 없습니다.",
     "country_change_warning": "⚠️ 국적은 한 번만 변경 가능합니다.",
     "country_disabled_reason": "국적은 이미 한 번 변경되었습니다.",
-    "country_change_forbidden": "국적은 다시 변경할 수 없습니다."
+    "country_change_forbidden": "국적은 다시 변경할 수 없습니다.",
+    "follow": "팔로우",
+    "unfollow": "언팔로우",
+    "followers_count": "팔로워 {{count}}명",
+    "following_count": "팔로잉 {{count}}명",
+    "followers_list": "팔로워 목록",
+    "following_list": "팔로잉 목록",
+    "no_followers": "아직 팔로워가 없습니다",
+    "no_following": "아직 팔로잉하는 사람이 없습니다",
+    "search_users": "사용자 검색...",
+    "drag_to_reposition": "드래그해서 위치 조절",
+    "follow_feature_coming_soon": "팔로우 기능은 곧 제공될 예정입니다",
+    "turn_on_notifications": "알림 켜기",
+    "turn_off_notifications": "알림 끄기",
+    "followed": "팔로우 완료",
+    "unfollowed": "팔로우 취소",
+    "already_following": "이미 팔로우 중입니다",
+    "cannot_follow_self": "자기 자신을 팔로우할 수 없습니다",
+    "notifications_updated": "알림 설정이 변경되었습니다",
+    "blocked": "차단 완료",
+    "unblocked": "차단 해제",
+    "already_blocked": "이미 차단 중입니다",
+    "cannot_block_self": "자기 자신을 차단할 수 없습니다",
+    "block_list": "차단 목록",
+    "no_blocked_users": "차단한 사용자가 없습니다"
   },
   "tweets": {
     "placeholder_tweet": "무슨 생각을 하고 계신가요?",
@@ -452,9 +518,10 @@
     "new_badge": "새글",
     "loading_messages": "메시지를 불러오는 중...",
     "input_placeholder": "메시지를 입력하세요... (Enter 전송, Shift+Enter 줄바꿈)",
-    "notice_profanity": "⚠️ 비속어·혐오표현·차별적 발언은 자동 감지·마스킹/차단됩니다. 반복 시 제재될 수 있습니다.",
+    "notice_profanity": "⚠️ 비속어·혐오표현·차별적 발언은 자동 감지·마스킹/차단됩니다. 반복 시 이용 제한될 수 있습니다.",
     "notice_blocked": "🚫 부적절한 표현이 포함되어 전송이 차단되었습니다.",
     "notice_masked": "🔒 일부 단어가 정책에 따라 마스킹되었습니다.",
+    "block_messages": "메시지 차단",
     "title_direct_chat": "채팅",
     "action_exit": "나가기",
     "btn_leave": "나가기",
@@ -676,7 +743,35 @@
     "point_3": "글로벌 학습 커뮤니티",
     "cta_start": "바로 시작하기",
     "cta_explore": "콘텐츠 둘러보기",
-    "scroll_hint": "Scroll to explore"
+    "scroll_hint": "Scroll to explore",
+    "nav_top": "최상단",
+    "nav_how": "학습방법",
+    "nav_problems": "핵심가치",
+    "nav_features": "주요기능",
+    "nav_contents": "콘텐츠",
+    "nav_stories": "학습후기",
+    "nav_start": "시작하기",
+    "aria_badge": "플랫폼 소개",
+    "aria_start": "지금 바로 시작",
+    "aria_explore": "콘텐츠 둘러보기",
+    "cta_badge_text": "오늘 가입한 학습자",
+    "cta_title_1": "한국어, '공부'가 아닌",
+    "cta_title_2": "'경험'으로 시작하세요",
+    "cta_description": "지금 가입하고 인기 드라마 장면으로 만드는 나만의 첫 번째 학습 코스를 시작해 보세요.",
+    "cta_start_free": "무료로 시작하기",
+    "problem_title": "혹시 이런 고민, 해본 적 있나요?",
+    "problem_desc": "ARA는 실제 학습자들이 가장 많이 이야기한 고민에서 출발했습니다.",
+    "problem_badge": "real 고민",
+    "problems": {
+      "1": "자막 없이 드라마를 보고 싶은데, 어휘가 잘 안 외워져요.",
+      "2": "교과서 표현과 실제 사람들이 쓰는 말이 너무 달라요.",
+      "3": "배운 표현을 써보고 싶은데, 쓸 곳이 마땅치 않아요.",
+      "4": "내 수준에 딱 맞는 콘텐츠를 찾기가 너무 어려워요.",
+      "5": "혼자 공부하니까 동기부여가 금방 떨어져요."
+    },
+    "how_it_works_badge": "HOW IT WORKS",
+    "how_it_works_title": "ARA 학습 흐름이 이렇게 진행돼요",
+    "guide_alt": "ARA 가이드 {{index}}"
   },
   "footer": {
     "brand": {
@@ -723,6 +818,11 @@
       "terms": "이용약관",
       "privacy": "개인정보처리방침",
       "cookies": "쿠키"
+    },
+    "office": {
+      "address": "서울특별시 강남구",
+      "tel": "Tel: +82 2-1234-5678",
+      "registration": "사업자등록번호: 123-45-67890"
     }
   },
   "goods": {
@@ -791,5 +891,41 @@
   "translation": {
     "login_required": "로그인 후 번역 기능을 사용하실 수 있습니다.",
     "guest_limit_reached": "무료 번역 횟수를 모두 사용하셨습니다. 로그인하여 계속 이용하세요."
+  },
+  "report": {
+    "title": "신고하기",
+    "desc": "신고 사유를 선택해 주세요. 타당한 사유가 없을 경우 처리가 지연될 수 있습니다.",
+    "reason_label": "사유 선택",
+    "description_label": "상세 내용",
+    "description_placeholder": "신고 사유를 자세히 적어주세요.",
+    "select_placeholder": "사유를 선택하세요",
+    "select_reason": "신고 사유를 선택해주세요.",
+    "enter_description": "상세 사유를 입력해주세요.",
+    "success": "신고가 접수되었습니다.",
+    "reasons": {
+      "spam": "스팸 / 부적절한 홍보",
+      "abuse": "욕설 / 비하 발언",
+      "harmful": "유해한 콘텐츠",
+      "inappropriate": "부적절한 내용",
+      "other": "기타 (직접 입력)"
+    }
+  },
+  "home": {
+    "greeting_night": "안녕히 주무세요 / 새벽입니다",
+    "greeting_morning": "좋은 아침입니다",
+    "greeting_afternoon": "안녕하세요",
+    "greeting_evening": "안녕하세요 (저녁)",
+    "stats_due": "복습 예정",
+    "stats_new": "새로운 단어",
+    "stats_streak": "연속 학습",
+    "goal_text": "오늘의 목표 {{count}}개",
+    "recent_progress": "최근 학습 진행",
+    "continue_learning": "학습 계속하기",
+    "today_recommendation": "오늘의 추천",
+    "more": "더보기",
+    "weekly_stats": "주간 학습 통계",
+    "field_progress": "분야별 진도",
+    "percent_complete": "{{percent}}% 완료",
+    "time_left": "남은 시간 {{time}}"
   }
 }

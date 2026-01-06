@@ -8,6 +8,7 @@ import ReportButton from '@/components/common/ReportButton';
 import BlockButton from '@/components/common/BlockButton';
 import HighlightText from '../../common/HighlightText';
 import { formatChatListDate } from '@/utils/dateUtils';
+import { BanBadge } from '@/components/common/BanBadge';
 // HMR Trigger
 interface DirectChatListProps {
   onChatSelect: (chatId: string) => void;
@@ -18,6 +19,8 @@ interface DirectChatListProps {
 
 import { useNavigate } from 'react-router-dom';
 import Modal from '@/components/common/Modal';
+import ReportModal from '@/components/common/ReportModal';
+import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 
 // 채팅 아이템 메모이제이션
 const ChatItem = memo(
@@ -27,12 +30,14 @@ const ChatItem = memo(
     onSelect,
     currentUserId,
     onLeave,
+    onReport,
   }: {
     chat: any;
     isSelected: boolean;
     onSelect: (id: string) => void;
     currentUserId?: string;
     onLeave: (chatId: string) => void;
+    onReport: (targetId: string, type: 'chat' | 'user') => void;
   }) => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
@@ -89,12 +94,20 @@ const ChatItem = memo(
           ) : (
             <div className="avatar-placeholder">{chat.other_user.nickname.charAt(0)}</div>
           )}
+          <OnlineIndicator 
+            userId={chat.other_user.id} 
+            size="sm" 
+            className="absolute bottom-0 right-0 z-10 border-white dark:border-secondary border-2"
+          />
           {chat.unread_count > 0 && <div className="unread-badge">{chat.unread_count}</div>}
         </div>
         <div className="chat-info">
           <div className="chat-header">
             <div className="chat-name-row">
-              <div className="chat-name">{chat.other_user.nickname}</div>
+              <div className="chat-name flex items-center gap-1">
+                <span>{chat.other_user.nickname}</span>
+                <BanBadge bannedUntil={chat.other_user.nickname ? chat.other_user.banned_until : null} size="xs" />
+              </div>
             </div>
             <div className="flex items-center gap-1">
               <div className="chat-time">
@@ -112,13 +125,17 @@ const ChatItem = memo(
                 </button>
                 {showMenu && (
                   <div className="absolute right-0 top-full mt-2 w-36 bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg py-2 z-50">
-                    <ReportButton onClose={() => setShowMenu(false)} />
-                    <BlockButton
-                      username={chat.other_user.nickname} // BlockButton이 이 prop을 받는지 확인 필요하지만, snippet 기반으로 유지
-                      isBlocked={isBlocked}
-                      onToggle={() => setIsBlocked(prev => !prev)}
-                      onClose={() => setShowMenu(false)}
-                    />
+                    <ReportButton onClick={() => {
+                        setShowMenu(false);
+                        // Report Mode (Select Messages)
+                        onReport(chat.id, 'chat');
+                    }} />
+                    {chat.other_user.id && ( // Assuming item.other_profile_id refers to chat.other_user.id
+                      <BlockButton
+                        targetProfileId={chat.other_user.id}
+                        onClose={() => setShowMenu(false)}
+                      />
+                    )}
                     <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
                     <button
                       onClick={e => {
@@ -192,8 +209,9 @@ const UserItem = memo(
           )}
         </div>
         <div className="user-info">
-          <div className="user-nickname">
+          <div className="user-nickname flex items-center gap-1">
             <HighlightText text={user.nickname} query={query} />
+            <BanBadge bannedUntil={user.banned_until ?? null} size="xs" />
           </div>
         </div>
       </div>
@@ -222,6 +240,15 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId, onLeave }:
   // 모달 상태
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [exitTargetChatId, setExitTargetChatId] = useState<string | null>(null);
+
+  // 10-zzeon: Report Modal State
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportTarget, setReportTarget] = useState<{ type: 'user' | 'chat', id: string } | null>(null);
+
+  const handleReport = useCallback((targetId: string, type: 'chat' | 'user') => {
+    setReportTarget({ id: targetId, type });
+    setIsReportModalOpen(true);
+  }, []);
 
   // 디바운스 개선 (useRef + cleanup)
   const debounceRef = useRef<number | null>(null);
@@ -405,6 +432,7 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId, onLeave }:
             <p>{t('chat.start_conversation')}</p>
           </div>
         ) : (
+
           chats.map(chat => (
             <ChatItem
               key={chat.id}
@@ -413,6 +441,15 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId, onLeave }:
               onSelect={handleChatSelect}
               currentUserId={user?.id}
               onLeave={handleLeaveChat}
+              onReport={(targetId, type) => {
+                  if (type === 'chat') {
+                      // Navigate to chat room in report mode
+                      handleChatSelect(targetId);
+                      navigate('/chat', { state: { roomId: targetId, report: true } });
+                  } else {
+                      handleReport(targetId, type);
+                  }
+              }}
             />
           ))
         )}
@@ -446,6 +483,19 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId, onLeave }:
           </div>
         </div>
       </Modal>
+
+      {/* Report Modal */}
+      {reportTarget && (
+        <ReportModal
+          isOpen={isReportModalOpen}
+          onClose={() => {
+            setIsReportModalOpen(false);
+            setReportTarget(null);
+          }}
+          targetType={reportTarget.type}
+          targetId={reportTarget.id}
+        />
+      )}
     </div>
   );
 };

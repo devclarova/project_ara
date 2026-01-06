@@ -1,7 +1,8 @@
-
 import SnsInlineEditor, { type SnsInlineEditorHandle } from '@/components/common/SnsInlineEditor';
 import type { Database } from '@/types/database';
 import { useAuth } from '@/contexts/AuthContext';
+
+import { useBlockedUsers } from '@/hooks/useBlockedUsers';
 import { supabase } from '@/lib/supabase';
 import { useRef, useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -22,7 +23,8 @@ export default function TweetDetail() {
 
   const [tweet, setTweet] = useState<UIPost | null>(null);
   const [replies, setReplies] = useState<UIReply[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const { blockedIds } = useBlockedUsers(); // 차단 유저 확인
 
   // Pagination states
   const [page, setPage] = useState(0);
@@ -34,11 +36,13 @@ export default function TweetDetail() {
     highlightCommentId?: string;
     deletedComment?: boolean;
     scrollKey?: number;
+    fromAdmin?: boolean;
   } | null;
   const highlightFromNotification = locationState?.highlightCommentId ?? null;
   const deletedCommentFromNotification = locationState?.deletedComment ?? false;
   // 스크롤 타겟 id (내가 이동시키고 싶은 순간에만 변경)
-  const [scrollTargetId, setScrollTargetId] = useState<string | null>(null);
+  const [scrollTargetId, setScrollTargetId] = useState<string | null>(locationState?.highlightCommentId || null);
+  const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
 
   const editorRef = useRef<SnsInlineEditorHandle>(null); // Create ref for editor
 
@@ -59,8 +63,12 @@ export default function TweetDetail() {
       return;
     }
 
-    // 스크롤 타겟 설정
-    setScrollTargetId(locationState.highlightCommentId);
+    // 스크롤 타겟 설정 (강제 리셋 후 설정하여 하이라이트 재트리거 유도)
+    setScrollTargetId(null);
+    setActiveHighlightId(null);
+    setTimeout(() => {
+      setScrollTargetId(locationState.highlightCommentId || null);
+    }, 50);
     
     // 현재 키 저장
     if (locationState.scrollKey) {
@@ -78,12 +86,26 @@ export default function TweetDetail() {
   // 트윗 + 댓글 불러오기
   useEffect(() => {
     if (!id) return;
-    fetchTweetById(id);
+    // Parallelize for speed
+    Promise.all([
+      fetchTweetById(id),
+      fetchReplies(id, 0)
+    ]);
     setReplies([]);
     setPage(0);
     setHasMore(true);
-    fetchReplies(id, 0); // 초기 페이지 0
-  }, [id]);
+  }, [id, locationState?.scrollKey]);
+
+  // blockedIds 변경 시 댓글 목록 필터링
+  useEffect(() => {
+    if (blockedIds.length === 0) return;
+    setReplies(prev => prev.filter(r => !blockedIds.includes(r.user.username)));
+    // 트윗 본문 작성자가 차단된 경우 처리 (선택)
+    if (tweet && blockedIds.includes(tweet.user.username)) {
+        toast.info(t('tweet.author_blocked', '차단된 사용자의 트윗입니다.'));
+        navigate(-1);
+    }
+  }, [blockedIds, tweet]);
 
   // 댓글 수가 변하면(실시간 추가/삭제 등) SnsStore에도 반영
   useEffect(() => {
@@ -202,7 +224,13 @@ export default function TweetDetail() {
       return;
     }
 
-    // 4. 조회수 증가 요청
+    // 4. 관리자 페이지에서 접근한 경우 조회수 증가 생략
+    if (locationState?.fromAdmin) {
+      isViewedRef.current = true;
+      return;
+    }
+
+    // 5. 조회수 증가 요청
     handleViewCount(id);
     isViewedRef.current = true;
   }, [id, user, tweet]);
@@ -255,7 +283,10 @@ export default function TweetDetail() {
 
   // 트윗 데이터 불러오기
   const fetchTweetById = async (tweetId: string) => {
-    setIsLoading(true);
+    // If fromAdmin, don't set global loading to true to prevent screen flicker
+    if (!locationState?.fromAdmin) {
+        setLoading(true);
+    }
     try {
       const data = await tweetService.getTweetById(tweetId);
 
@@ -271,7 +302,7 @@ export default function TweetDetail() {
       toast.info(t('tweet.deleted_or_not_exist'));
       navigate(-1);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -282,11 +313,15 @@ export default function TweetDetail() {
     const shouldLoadAll = !!highlightFromNotification && pageParam === 0;
 
     try {
+      // setLoading(true); // 무한 스크롤 시 전체 로딩 걸리는 문제 수정
       const mapped = await tweetService.getRepliesByTweetId(tweetId, pageParam, shouldLoadAll);
-
+      
+      // 차단 필터링 적용
+      const filtered = mapped.filter(r => !blockedIds.includes(r.user.username));
+      
       if (shouldLoadAll) {
         // 전체 로드 시에는 기존 것 덮어쓰고 더보기 없음 처리
-        setReplies(mapped);
+        setReplies(filtered);
         setHasMore(false);
       } else {
         // 페이지네이션
@@ -417,64 +452,92 @@ export default function TweetDetail() {
     }, 100); 
   };
 
-  // replies가 로드된 뒤 scrollTargetId를 다시 트리거하여 스크롤이 실행되도록 함
-  useEffect(() => {
-    if (!scrollTargetId) return; // 스크롤할 타겟이 없으면 X
-    if (replies.length === 0) return; // 아직 댓글이 로드 안 됨
+  // No-op: Removed old broken re-trigger logic to consolidate into single robust effect below
 
-    // DOM 렌더가 완료되도록 약간의 텀을 줌
-    const t = setTimeout(() => {
-      setScrollTargetId(id => id); // 같은 값으로 다시 트리거 → scrollEffect 발동
-    }, 50);
-
-    return () => clearTimeout(t);
-  }, [replies]);
-
-  // 스크롤 이펙트: scrollTargetId 가 바뀔 때만 한 번 실행
+  // ULTIMATE 'Magnet' Scroll Engine: Maximum resilience for viral threads
   useEffect(() => {
     if (!scrollTargetId) return;
 
     let cancelled = false;
     let attempts = 0;
-    const maxAttempts = 8; // 최대 8번 재시도
+    const maxAttempts = 500; // Poll for up to 50 seconds - Extreme resilience
+    
+    // Force clear any global scroll reset if we're jumping to a comment
+    if (attempts === 0) {
+        window.history.scrollRestoration = 'manual';
+    }
+    let foundAndLocked = false;
+    let lockTimer: any = null;
 
-    const tryScroll = () => {
+    const findAndScroll = () => {
       if (cancelled) return;
 
-      const el = document.getElementById(`reply-${scrollTargetId}`) || document.getElementById(scrollTargetId!);
+      const targetId = `reply-${scrollTargetId}`;
+      const el = document.getElementById(targetId) || document.getElementById(scrollTargetId);
+      
       if (el) {
-        // comment-editor인 경우 화면 중앙에 오도록 처리
-        if (scrollTargetId === 'comment-editor') {
-          el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        } else {
-          // 댓글인 경우 헤더 오프셋 고려
-          const headerOffset = 120;
-          const rect = el.getBoundingClientRect();
-          const absoluteY = window.scrollY + rect.top;
+        const rect = el.getBoundingClientRect();
+        
+        // Ensure element is actually rendered and has height
+        if (rect.height === 0) {
+          if (attempts < maxAttempts) {
+            attempts++;
+            setTimeout(findAndScroll, 10);
+          }
+          return;
+        }
 
-          window.scrollTo({
-            top: absoluteY - headerOffset,
-            behavior: 'smooth',
-          });
+        // --- STAGE 1: CINEMATIC SMOOTH GLIDE ---
+        if (!foundAndLocked) {
+           const headerOffset = 130;
+           const targetY = window.scrollY + rect.top - headerOffset;
+           
+           // 단 한 번의 부드러운 스크롤 요청
+           window.scrollTo({ top: targetY, behavior: 'smooth' });
+           foundAndLocked = true;
+           
+           // 주행이 완료될 즈음(또는 시작 직후) 하이라이트 활성화
+           // v9: 요소가 발견된 즉시 하이라이트를 트리거하여 유저가 도착했을 때 이미 번쩍이고 있게 함
+           setActiveHighlightId(scrollTargetId);
+           
+           // 스크롤 완료 후 정밀 보정 (단 1회 수행, 루프 없음)
+           setTimeout(() => {
+              if (cancelled) return;
+              const finalRect = el.getBoundingClientRect();
+              if (Math.abs(finalRect.top - headerOffset) > 5) {
+                window.scrollTo({ top: window.scrollY + finalRect.top - headerOffset, behavior: 'auto' });
+              }
+              // 주행 완료 후 타겟 초기화 (무한 루프 방지 핵심)
+              setScrollTargetId(null);
+           }, 800); 
         }
         return;
       }
 
-      if (attempts < maxAttempts) {
-        attempts += 1;
-        setTimeout(tryScroll, 200);
+      // 아직 요소를 못 찾았을 때만 재시도 (최대 50초)
+      if (!foundAndLocked && attempts < maxAttempts) {
+        attempts++;
+        setTimeout(findAndScroll, 100); // v9: 폴링 간격을 100ms로 완화하여 CPU 부하 감소
       }
     };
 
-    tryScroll();
+    findAndScroll();
 
     return () => {
       cancelled = true;
+      if (lockTimer) clearTimeout(lockTimer);
     };
-  }, [scrollTargetId]);
+  }, [scrollTargetId, replies, locationState?.scrollKey]); 
 
-  // 로딩 상태
-  if (isLoading) {
+  // 게시글 자체 중재 시 최상단 강제 스택
+  useEffect(() => {
+    if (locationState?.fromAdmin && !locationState?.highlightCommentId) {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+  }, [id, locationState?.scrollKey]);
+
+  // 로딩 상태: 관리자 페이지 접속 시에는 로딩 스피너 우회 (즉시 레이아웃 노출)
+  if (loading && !locationState?.fromAdmin) {
     return (
       <div className="border-x border-gray-200 dark:border-gray-700 dark:bg-background">
         <div className="flex justify-center items-center py-20">
@@ -485,7 +548,6 @@ export default function TweetDetail() {
   }
 
   if (!tweet) {
-    navigate('/sns', { replace: true });
     return null;
   }
 
@@ -497,35 +559,29 @@ export default function TweetDetail() {
         replyCount={replies.length} 
         onReplyClick={handleReplyClick} 
       />
-      {/* 
-        Wait, TweetDetailCard prop `onReplyClick` usually focuses editor. 
-        In my previous code it was `handleReplyClick`.
-        Let's check the restored code.
-        Ah, I see `onReplyClick={handleReplyClick}` in my write_to_file content. Good.
-      */}
 
       {!user && (
-        <div className="border-y border-gray-200 dark:border-gray-700 px-3 sm:px-4 py-4 sm:py-7 bg-gray-50/80 dark:bg-muted/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="border-y border-gray-200 dark:border-gray-700 px-4 py-7 bg-gray-50/80 dark:bg-muted/40 flex items-center justify-between gap-3">
           <div className="flex flex-col">
-            <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100">
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
               {t('tweet.login_to_reply', '댓글은 로그인 후 작성하실 수 있어요.')}
             </span>
-            <span className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            <span className="text-xs text-gray-500 dark:text-gray-400">
               {t('tweet.join_community_desc', '커뮤니티에 참여하려면 로그인 또는 회원가입을 진행해주세요.')}
             </span>
           </div>
-          <div className="flex gap-2 flex-shrink-0">
+          <div className="flex gap-2">
             <button
               type="button"
               onClick={() => navigate('/signin')}
-              className="flex-1 sm:flex-none px-3 py-1.5 text-xs sm:text-sm rounded-full bg-primary text-white hover:opacity-90 whitespace-nowrap"
+              className="px-3 py-1.5 text-xs sm:text-sm rounded-full bg-primary text-white hover:opacity-90"
             >
               {t('auth.signin')}
             </button>
             <button
               type="button"
               onClick={() => navigate('/signup')}
-              className="flex-1 sm:flex-none px-3 py-1.5 text-xs sm:text-sm rounded-full border border-primary text-primary hover:bg-primary/5 whitespace-nowrap"
+              className="px-3 py-1.5 text-xs sm:text-sm rounded-full border border-primary text-primary hover:bg-primary/5"
             >
               {t('auth.signup')}
             </button>
@@ -572,8 +628,9 @@ export default function TweetDetail() {
         }}
         onCommentClick={(commentId) => {
             setScrollTargetId(commentId);
+            setActiveHighlightId(commentId); // 수동 클릭 시에는 즉시 하이라이트
         }}
-        highlightId={scrollTargetId}
+        highlightId={activeHighlightId}
       />
     </div>
   );

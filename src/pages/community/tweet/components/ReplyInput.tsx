@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import type { UIReply } from '@/types/sns';
+import { toast } from 'sonner';
+import { getBanMessage } from '@/utils/banUtils';
 
 export function ReplyInput({
   target,
@@ -15,7 +17,7 @@ export function ReplyInput({
   onCancel: () => void;
   onAdded: (reply: UIReply) => void;
 }) {
-  const { user } = useAuth();
+  const { user, isBanned, bannedUntil } = useAuth();
   const [profileId, setProfileId] = useState<string | null>(null);
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,6 +55,12 @@ export function ReplyInput({
 
   const handleSubmit = async () => {
     if (!user || !profileId || !content.trim() || isSubmitting) return;
+
+    // 제재 중인 사용자는 답글 작성 불가
+    if (isBanned && bannedUntil) {
+      toast.error(getBanMessage(bannedUntil, '댓글을 작성'));
+      return;
+    }
 
     setIsSubmitting(true);
 

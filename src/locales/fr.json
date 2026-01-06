@@ -34,7 +34,17 @@
     "delete_confirm_title": "Supprimer la notification",
     "delete_confirm_desc": "Voulez-vous supprimer cette notification ?",
     "action_mention": "vous a mentionné.",
-    "action_repost": "a republié votre post."
+    "action_repost": "a republié votre post.",
+    "tab_all": "Tout",
+    "tab_likes": "J'aime",
+    "tab_comments": "Commentaires",
+    "tab_follow": "Suivre",
+    "tab_updates": "Actualités",
+    "media_photo": "[Photo]",
+    "media_video": "[Vidéo]",
+    "media_file": "[Fichier]",
+    "follow_you": "vous a suivi",
+    "follow_request": "vous a envoyé une demande d'abonnement"
   },
   "study": {
     "studylist": "Liste d'étude",
@@ -152,6 +162,8 @@
     "agree_and_close": "Accepter et fermer"
   },
   "common": {
+    "online": "En ligne",
+    "offline": "Hors ligne",
     "save": "Enregistrer",
     "saving": "Enregistrement...",
     "apply": "Appliquer",
@@ -278,8 +290,6 @@
   },
   "profile": {
     "edit_profile": "Éditer profil",
-    "following": "Abonnements",
-    "followers": "Abonnés",
     "joined": "Rejoint le {{date}}",
     "tabs": {
       "posts": "Posts",
@@ -302,7 +312,19 @@
     "nickname_change_forbidden": "Le pseudo ne peut plus être changé.",
     "country_change_warning": "⚠️ Vous ne pouvez changer votre pays qu'une seule fois.",
     "country_disabled_reason": "Le pays a déjà été changé une fois.",
-    "country_change_forbidden": "Le pays ne peut plus être changé."
+    "country_change_forbidden": "Le pays ne peut plus être changé.",
+    "follow": "Suivre",
+    "following": "Abonnements",
+    "unfollow": "Ne plus suivre",
+    "followers": "Abonnés",
+    "followers_list": "Liste d'abonnés",
+    "following_list": "Liste d'abonnements",
+    "no_followers": "Aucun abonné pour le moment",
+    "no_following": "Aucun abonnement pour le moment",
+    "search_users": "Rechercher des utilisateurs...",
+    "follow_feature_coming_soon": "Fonction de suivi bientôt disponible",
+    "turn_on_notifications": "Activer les notifications",
+    "turn_off_notifications": "Désactiver les notifications"
   },
   "tweets": {
     "placeholder_tweet": "À quoi pensez-vous ?",
@@ -355,9 +377,9 @@
     "room_title": "Direct Chat",
     "loading": "Chargement...",
     "me": "Moi",
-    "unknown": "Unknown",
-    "today": "Today",
-    "exit": "Exit",
+    "unknown": "Inconnu",
+    "today": "Aujourd'hui",
+    "exit": "Quitter",
     "search_placeholder": "Chercher...",
     "search_btn": "Rechercher",
     "search_hint": "Rechercher le contenu du message.",
@@ -365,9 +387,9 @@
     "no_messages": "Pas encore de messages.",
     "send_first_message": "Envoyez le premier message !",
     "system_leave": " a quitté le chat",
-    "confirm_exit": "Voulez-vous quitter ce chat ?",
-    "exit_fail": "Échec de la sortie du chat.",
-    "exit_error": "Une erreur s'est produite lors de la sortie.",
+    "confirm_exit": "Voulez-vous quitter ce chat?",
+    "exit_fail": "Échec de la sortie du chat",
+    "exit_error": "Une erreur s'est produite lors de la sortie",
     "result_count": "{{index}} sur {{count}} résultats",
     "prev": "Préc",
     "next": "Suiv",

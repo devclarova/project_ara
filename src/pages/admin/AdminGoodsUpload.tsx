@@ -175,7 +175,7 @@ const AdminGoodsUpload = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ basicInfo, mainImage, galleryImages, description, variants });
+    // Admin Goods Upload Logic
     toast.success(t('admin.goods_registered'));
   };
 

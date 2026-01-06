@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { formatRelativeTime, formatMessageTime } from '@/utils/dateUtils';
 
 interface NotificationToastProps {
-  type: 'chat' | 'comment' | 'like' | 'mention' | 'follow' | 'repost';
+  type: 'chat' | 'comment' | 'like' | 'mention' | 'follow' | 'repost' | 'reply' | 'system' | 'like_comment' | 'like_feed';
   sender: {
     nickname: string;
     avatar_url: string | null;

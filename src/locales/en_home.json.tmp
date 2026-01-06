@@ -1,0 +1,20 @@
+,
+  "home": {
+    "greeting_night": "Good night / dawn",
+    "greeting_morning": "Good morning",
+    "greeting_afternoon": "Good afternoon",
+    "greeting_evening": "Good evening",
+    "stats_due": "Review Due",
+    "stats_new": "New Words",
+    "stats_streak": "Streak",
+    "goal_text": "Daily Goal {{count}}",
+    "recent_progress": "Recent Progress",
+    "continue_learning": "Continue Learning",
+    "today_recommendation": "Today's Recommendations",
+    "more": "More",
+    "weekly_stats": "Weekly Stats",
+    "field_progress": "Progress by Field",
+    "percent_complete": "{{percent}}% Complete",
+    "time_left": "{{time}} Left"
+  }
+}

@@ -6,6 +6,7 @@ import {
   Routes,
   useLocation,
 } from 'react-router-dom';
+import { AlertTriangle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import ScrollToTop from './components/common/ScrollToTop';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -14,6 +15,7 @@ import Header from './components/common/Header';
 import ProfileSettings from './components/profile/ProfileSettings';
 import { DirectChatProvider } from './contexts/DirectChatContext';
 import { NewChatNotificationProvider } from './contexts/NewChatNotificationContext';
+import { PresenceProvider } from './contexts/PresenceContext';
 import AdminLogin from './pages/admin/AdminLogin';
 import AuthCallback from './pages/auth/AuthCallback';
 import DirectChatPage from './pages/chat/DirectChatPage';
@@ -35,8 +37,9 @@ import StudyPage from './pages/StudyPage';
 import OnboardingWall from './routes/guards/OnboardingWall';
 import { Toaster } from 'sonner';
 import Footer from './components/common/Footer';
-import { GlobalNotificationListener } from './components/common/GlobalNotificationListener';
 import { ThemeProvider, useTheme } from './components/theme-provider';
+import { GlobalNotificationListener } from './components/common/GlobalNotificationListener';
+import { GlobalBanListener } from './components/common/GlobalBanListener';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminContentModeration from './pages/admin/AdminContentModeration';
 import AdminGoodsManagement from './pages/admin/AdminGoodsManagement';
@@ -49,6 +52,7 @@ import AdminStudyManagement from './pages/admin/AdminStudyManagement';
 import AdminStudyUpload from './pages/admin/AdminStudyUpload';
 import UserManagement from './pages/admin/UserManagement';
 import AdminAuthCallback from './pages/admin/AdminAuthCallback';
+import { GlobalUserStatusTracker } from './components/common/GlobalUserStatusTracker';
 
 // ---------- 인증 가드 ----------
 function RequireAuth() {
@@ -78,6 +82,10 @@ function RequireAdmin() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    // 세션이 변경되면 상태 초기화 후 재검사
+    setChecking(true);
+    setIsAdmin(null);
+
     const checkAdminStatus = async () => {
       if (!session) {
         setIsAdmin(false);
@@ -107,13 +115,48 @@ function RequireAdmin() {
   }, [session]);
 
   if (loading || checking) {
-    // 로딩 중
-    return null;
+    // 로딩 중 표시 (빈 화면 대신 스피너 등)
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
   }
 
-  if (!session || !isAdmin) {
-    // 인증되지 않았거나 관리자가 아니면 로그인 페이지로
+  if (!session) {
+    // 인증되지 않았으면 로그인 페이지로
     return <Navigate to="/admin/login" replace state={{ from: location }} />;
+  }
+
+  if (!isAdmin) {
+    // 관리자가 아님 -> 명시적 에러 페이지 표시 (무한 리다이렉트 방지)
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-4">
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-full">
+           <AlertTriangle className="w-12 h-12 text-red-500" />
+        </div>
+        <h1 className="text-2xl font-bold">Access Denied</h1>
+        <p className="text-center text-muted-foreground max-w-md">
+          Your account ({session.user.email}) does not have administrator privileges.
+          <br/>
+          Please ensure <code>is_admin</code> is set to true in the database.
+        </p>
+        <div className="flex gap-2 mt-4">
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition"
+          >
+            Retry Check
+          </button>
+          <button 
+            onClick={() => supabase.auth.signOut()} 
+            className="px-4 py-2 border border-input bg-background hover:bg-accent text-accent-foreground rounded-lg transition"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return <Outlet />;
@@ -249,15 +292,19 @@ const App = () => {
   return (
     <AuthProvider>
       <ThemeProvider defaultTheme="system" storageKey="theme-mode">
-        <NewChatNotificationProvider>
-          <DirectChatProvider>
-            <ThemedToaster />
-            <Router>
-              <GlobalNotificationListener />
-              <AppInner />
-            </Router>
-          </DirectChatProvider>
-        </NewChatNotificationProvider>
+        <PresenceProvider>
+          <NewChatNotificationProvider>
+            <DirectChatProvider>
+              <ThemedToaster />
+              <Router>
+                <GlobalNotificationListener />
+                <GlobalBanListener />
+                <GlobalUserStatusTracker />
+                <AppInner />
+              </Router>
+            </DirectChatProvider>
+          </NewChatNotificationProvider>
+        </PresenceProvider>
       </ThemeProvider>
     </AuthProvider>
   );

@@ -265,7 +265,6 @@ const RichTextEditor = ({
     const timer = setTimeout(() => {
       const quill = quilRef.current?.getEditor();
       if (quill) {
-        // console.log('Quill 에디터 초기화 성공!');
         const toolbar = quill.getModule('toolbar') as any;
         if (toolbar && toolbar.addHandler) {
           // 우리가 원하는 핸들러 등록

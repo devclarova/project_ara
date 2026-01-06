@@ -2,7 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
 
 function ScrollToTop() {
-  const { pathname, hash } = useLocation();
+  const location = useLocation();
+  const { pathname, hash } = location;
   const navType = useNavigationType();
   const prevPathname = useRef(pathname);
 
@@ -25,8 +26,13 @@ function ScrollToTop() {
     }
 
     // 3. 새로운 경로로 이동(PUSH)할 때만 최상단으로 이동
+    // 단, 관리자 페이지 등에서 내부 스크롤 로직을 가지고 넘어온 경우(fromAdmin)는 생략
     if (navType === 'PUSH' && pathname !== prevPathname.current) {
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      const state = (location.state as any);
+      // Only skip if we have a specific element to jump to (comment highlight)
+      if (!state?.fromAdmin || !state?.highlightCommentId) {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      }
     }
 
     prevPathname.current = pathname;

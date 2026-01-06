@@ -19,8 +19,9 @@ export default function ReplyList({
   hasMore, 
   fetchMore, 
   onCommentClick,
-  highlightId
-}: ReplyListProps) {
+  highlightId,
+  disableInteractions = false
+}: ReplyListProps & { disableInteractions?: boolean }) {
   const { t } = useTranslation();
 
   if (!replies.length) {
@@ -60,6 +61,7 @@ export default function ReplyList({
                 onCommentClick?.(reply.id);
             }}
             highlight={reply.id === highlightId}
+            disableInteractions={disableInteractions} 
           />
         ))}
       </div>

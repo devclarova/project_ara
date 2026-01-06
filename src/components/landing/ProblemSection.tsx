@@ -1,12 +1,14 @@
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 export default function ProblemSection() {
+  const { t } = useTranslation();
   const problems = [
-    '자막 없이 드라마를 보고 싶은데, 어휘가 잘 안 외워져요.',
-    '교과서 표현과 실제 사람들이 쓰는 말이 너무 달라요.',
-    '배운 표현을 써보고 싶은데, 쓸 곳이 마땅치 않아요.',
-    '내 수준에 딱 맞는 콘텐츠를 찾기가 너무 어려워요.',
-    '혼자 공부하니까 동기부여가 금방 떨어져요.',
+    t('landing.problems.1'),
+    t('landing.problems.2'),
+    t('landing.problems.3'),
+    t('landing.problems.4'),
+    t('landing.problems.5'),
   ];
 
   return (
@@ -31,16 +33,16 @@ export default function ProblemSection() {
       <div className="w-full max-w-screen-xl mx-auto px-6 pt-8 pb-12 md:pt-10 md:pb-14 lg:pt-12 lg:pb-16">
         <div className="max-w-2xl mx-auto text-center mb-10">
           <h2 className="text-2xl md:text-3xl font-bold mb-3 text-slate-900 dark:text-gray-100 break-keep">
-            혹시 이런 고민, 해본 적 있나요?
+            {t('landing.problem_title')}
           </h2>
           <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base break-keep">
-            ARA는 실제 학습자들이 가장 많이 이야기한 고민에서 출발했습니다.
+            {t('landing.problem_desc')}
           </p>
         </div>
 
         <div className="max-w-3xl mx-auto space-y-4">
           {problems.map((text, idx) => (
-            <div key={text} className={`flex ${idx % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
+            <div key={idx} className={`flex ${idx % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
               <motion.div
                 className="max-w-[80%] rounded-2xl bg-white dark:bg-secondary px-4 py-3 text-sm text-left shadow-sm border border-sky-100 dark:border-slate-700"
                 initial={{ opacity: 0, y: 16, scale: 0.98 }}
@@ -53,7 +55,7 @@ export default function ProblemSection() {
                     learner #{idx + 1}
                   </span>
                   <span className="inline-flex items-center rounded-full bg-sky-50 dark:bg-background px-2 py-[2px] text-[10px] text-sky-700 dark:text-sky-300 border border-sky-100 dark:border-slate-700">
-                    real 고민
+                    {t('landing.problem_badge')}
                   </span>
                 </div>
                 <p className="text-gray-800 dark:text-gray-100 break-keep">{text}</p>

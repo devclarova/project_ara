@@ -1,0 +1,6 @@
+{
+  "settings.blocked_users": "차단된 사용자",
+  "settings.blocked_users_desc": "차단한 사용자의 목록을 관리합니다.",
+  "settings.no_blocked_users": "차단한 사용자가 없습니다.",
+  "settings.confirm_unblock": "정말 차단을 해제하시겠습니까?"
+}

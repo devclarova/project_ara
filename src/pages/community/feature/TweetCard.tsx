@@ -12,9 +12,12 @@ import TranslateButton from '@/components/common/TranslateButton';
 import { useTranslation } from 'react-i18next';
 import { type UITweet, type TweetStats, type TweetUser } from '@/types/sns';
 import { SnsStore } from '@/lib/snsState';
-import ReportButton from '@/components/common/ReportButton';
-import BlockButton from '@/components/common/BlockButton';
 import EditButton from '@/components/common/EditButton';
+import ReportModal from '@/components/common/ReportModal';
+import BlockButton from '@/components/common/BlockButton';
+import { BanBadge } from '@/components/common/BanBadge';
+import { formatSmartDate } from '@/utils/dateUtils';
+import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 const SNS_LAST_TWEET_ID_KEY = 'sns-last-tweet-id';
 interface TweetCardProps {
   id: string; // 댓글ID 또는 트윗ID
@@ -27,10 +30,15 @@ interface TweetCardProps {
   createdAt?: string;
   stats: TweetStats;
   onDeleted?: (id: string) => void;
+  deletedAt?: string | null;
   dimmed?: boolean;
   onUnlike?: (id: string) => void;
   liked?: boolean;
+  onClick?: (id: string) => void;
+  onAvatarClick?: (username: string) => void;
+  disableInteractions?: boolean;
 }
+
 export default function TweetCard({
   id,
   tweetId,
@@ -41,8 +49,12 @@ export default function TweetCard({
   timestamp,
   stats,
   onDeleted,
+  deletedAt,
   dimmed = false,
   liked: initialLiked,
+  onClick,
+  onAvatarClick,
+  disableInteractions = false,
 }: TweetCardProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -60,6 +72,7 @@ export default function TweetCard({
   const [direction, setDirection] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
   const [modalIndex, setModalIndex] = useState(0);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [translated, setTranslated] = useState<string>('');
   const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
   const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
@@ -73,17 +86,23 @@ export default function TweetCard({
   const contentRef = useRef<HTMLDivElement>(null);
   // prop 으로 온 image(string | string[]) → 배열로 정규화
   const propImages = Array.isArray(image) ? image : image ? [image] : [];
+  
+  const isSoftDeleted = !!deletedAt;
+
   // 최종 슬라이드에 사용할 이미지 목록 (prop 우선, 없으면 content에서 추출한 것)
-  const allImages = propImages.length > 0 ? propImages : contentImages;
+  // Soft delete 되면 이미지는 숨김
+  const allImages = isSoftDeleted ? [] : (propImages.length > 0 ? propImages : contentImages);
   const [isDraggingText, setIsDraggingText] = useState(false);
   const dragInfo = useRef({
     startX: 0,
     startY: 0,
     moved: false,
   });
-  const [isBlocked, setIsBlocked] = useState(false);
   // 본문에서는 img 태그는 제거 (슬라이드에서만 보여줌)
-  const safeContent = DOMPurify.sanitize(content, {
+  // Soft Delete 되면 Placeholder 사용
+  const displayContent = isSoftDeleted ? '관리자에 의해 삭제된 메시지입니다.' : content;
+  
+  const safeContent = DOMPurify.sanitize(displayContent, {
     FORBID_TAGS: ['img'],
   });
   /** 로그인한 프로필 ID 로드 (트윗 삭제/좋아요용) */
@@ -152,6 +171,7 @@ export default function TweetCard({
   /** 트윗 작성자 국적 / 국기 + 작성자 profileId 로드 */
   useEffect(() => {
     const fetchAuthorCountry = async () => {
+      if (!user.username || user.username === 'undefined') return;
       try {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -253,6 +273,7 @@ export default function TweetCard({
   /** 좋아요 토글 (user_id = profiles.id 사용 + 알림 생성) */
   const handleLikeToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (disableInteractions) return;
     if (!authUser) {
       toast.error(t('auth.login_needed'));
       return;
@@ -360,17 +381,28 @@ export default function TweetCard({
   };
 
   const handleCardClick = () => {
+    if (onClick) {
+      onClick(id);
+      return;
+    }
+
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, type === 'reply' ? tweetId! : id);
     }
     const target = type === 'reply' ? `/sns/${tweetId}?highlight=${id}` : `/sns/${id}`;
     safeNavigate(target);
   };
-  const isDeleted = user.username === 'anonymous';
+  const isDeletedUser = user.username === 'anonymous';
 
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isDeleted) return;
+    if (isDeletedUser) return;
+    
+    if (onAvatarClick) {
+      onAvatarClick(user.username);
+      return;
+    }
+
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, id);
     }
@@ -412,26 +444,36 @@ export default function TweetCard({
       onClick={handleCardClickSafe}
     >
       {/* Refactored Layout: Header Row (Avatar+Meta) + Full Width Content */}
-      <div className="flex items-start gap-3 mb-1">
+      <div className="flex items-center gap-3 mb-1">
         {/* Avatar */}
-        <div onClick={handleAvatarClick} className={`w-10 h-10 flex-shrink-0 ${isDeleted ? 'cursor-default' : 'cursor-pointer'}`}>
+        <div onClick={handleAvatarClick} className={`w-10 h-10 flex-shrink-0 relative ${isDeletedUser ? 'cursor-default' : 'cursor-pointer'}`}>
           <Avatar className="w-10 h-10">
-            <AvatarImage src={user.avatar || '/default-avatar.svg'} alt={isDeleted ? t('deleted_user') : user.name} />
-            <AvatarFallback>{isDeleted ? '?' : user.name.charAt(0).toUpperCase()}</AvatarFallback>
+            <AvatarImage src={user.avatar || '/default-avatar.svg'} alt={isDeletedUser ? t('deleted_user') : user.name} />
+            <AvatarFallback>{isDeletedUser ? '?' : user.name.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
         </div>
 
         {/* User Info & Menu */}
-        <div className="flex-1 min-w-0 flex items-start justify-between pt-0.5 relative">
+        <div className="flex-1 min-w-0 flex items-center justify-between pt-0.5 relative">
           <div className="flex items-center flex-wrap mr-1">
-            <span 
-              className={isDeleted ? 'font-bold text-gray-500 cursor-default' : nameClass} 
-              onClick={isDeleted ? undefined : handleAvatarClick}
-            >
-              {isDeleted ? t('deleted_user') : user.name}
-            </span>
-            {authorCountryFlagUrl && !isDeleted && (
-              <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 ml-2 h-5">
+            <div className="relative inline-flex items-center">
+              <span 
+                className={isDeletedUser ? 'font-bold text-gray-500 cursor-default' : nameClass} 
+                onClick={isDeletedUser ? undefined : handleAvatarClick}
+              >
+                {isDeletedUser ? t('deleted_user') : user.name}
+              </span>
+              {!isDeletedUser && (
+                <OnlineIndicator 
+                  userId={user.username} 
+                  size="sm" 
+                  className="absolute -top-0.5 -right-2.5 z-20 border-white dark:border-background border shadow-none"
+                />
+              )}
+            </div>
+            <BanBadge bannedUntil={user.banned_until ?? null} size="xs" />
+            {authorCountryFlagUrl && !isDeletedUser && (
+              <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 ml-4 h-5">
                 <img
                   src={authorCountryFlagUrl}
                   alt={authorCountryName ?? '국가'}
@@ -445,7 +487,7 @@ export default function TweetCard({
             {!authorCountryFlagUrl && authorCountryName && (
               <Badge
                 variant="secondary"
-                className="flex items-center px-1 py-0.5 ml-2"
+                className="flex items-center px-1 py-0.5 ml-4"
                 title={authorCountryName}
               >
                 <span className="text-xs">🌐</span>
@@ -453,43 +495,7 @@ export default function TweetCard({
             )}
             <span className={`${metaClass} mx-1`}>·</span>
             <span className={`${metaClass} flex-shrink-0`}>
-              {(() => {
-                if (!timestamp) return '';
-                try {
-                  const date = new Date(timestamp);
-                  if (isNaN(date.getTime())) return timestamp; // 원본 반환 (ISO string 등)
-                  const now = new Date();
-                  const diff = now.getTime() - date.getTime();
-                    
-                  // 언어 설정 확인 (i18n.language가 없으면 기본값 'ko')
-                  const currentLang = i18n.language || 'ko';
-                  
-                  // 오늘 날짜인지 확인 (년, 월, 일이 모두 같은지)
-                  const isToday = date.getFullYear() === now.getFullYear() &&
-                                  date.getMonth() === now.getMonth() &&
-                                  date.getDate() === now.getDate();
-                    
-                  // 오늘 기록은 시간만 표시
-                  if (isToday) {
-                    return new Intl.DateTimeFormat(currentLang, { 
-                      hour: 'numeric', 
-                      minute: 'numeric', 
-                      hour12: true 
-                    }).format(date);
-                  }
-                  // 이전 날짜는 날짜 + 시간 표시
-                  return new Intl.DateTimeFormat(currentLang, { 
-                    month: 'short', 
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: true
-                  }).format(date);
-                } catch (e) {
-                  console.error('Date formatting error:', e);
-                  return timestamp;
-                }
-              })()}
+              {formatSmartDate(timestamp)}
             </span>
           </div>
 
@@ -522,14 +528,23 @@ export default function TweetCard({
                   </>
                 ) : (
                   <>
-                    
-                    <ReportButton onClose={() => setShowMenu(false)} />
-                    <BlockButton
-                      username={user.name}
-                      isBlocked={isBlocked}
-                      onToggle={() => setIsBlocked(prev => !prev)}
-                      onClose={() => setShowMenu(false)}
-                    />
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setShowReportModal(true);
+                        setShowMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                    >
+                      <i className="ri-alarm-warning-line" />
+                      <span>{t('report.action', '신고하기')}</span>
+                    </button>
+                    {authorProfileId && (
+                      <BlockButton
+                        targetProfileId={authorProfileId}
+                        onClose={() => setShowMenu(false)}
+                      />
+                    )}
                   </>
                 )}
               </div>
@@ -546,7 +561,7 @@ export default function TweetCard({
               ref={contentRef}
               className={`${contentClass} transition-all ${
                 expanded ? 'max-h-none' : 'overflow-hidden'
-              }`}
+              } ${isSoftDeleted ? 'italic text-gray-500 opacity-60' : ''}`}
               style={!expanded ? { maxHeight: '60px' } : undefined} // 약 3줄
               dangerouslySetInnerHTML={{ __html: safeContent }}
               // 드래그 시작
@@ -690,8 +705,12 @@ export default function TweetCard({
             >
             {/* 댓글 버튼 (클릭 시 상세 이동) */}
             <button
-              className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400 group p-2 -ml-2 rounded-full transition-colors"
+              className={`flex items-center space-x-2 group p-2 -ml-2 rounded-full transition-colors ${disableInteractions ? 'cursor-default' : 'hover:text-blue-500 dark:hover:text-blue-400'}`}
               onClick={e => {
+                if (disableInteractions) {
+                    e.stopPropagation();
+                    return;
+                }
                 // 부모 div의 클릭과 겹치지 않게 하기 위해 stopPropagation 할 수도 있지만, 
                 // 어차피 상세 이동이므로 버블링되어도 상관없음.
                 // 하지만 명시적으로 여기서 이동 처리.
@@ -699,7 +718,7 @@ export default function TweetCard({
                 handleCardClick();
               }}
             >
-              <div className="group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 p-2 rounded-full transition-colors relative">
+              <div className={`p-2 rounded-full transition-colors relative ${disableInteractions ? '' : 'group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20'}`}>
                   <i className="ri-chat-3-line text-lg" />
               </div>
               <span className="text-sm">{replyCount}</span>
@@ -707,24 +726,28 @@ export default function TweetCard({
             {/* 좋아요 버튼 */}
             <button
               className={`flex items-center space-x-2 group p-2 rounded-full transition-colors ${
-                liked ? 'text-red-500' : 'hover:text-red-500'
-              }`}
+                liked ? 'text-red-500' : (disableInteractions ? '' : 'hover:text-red-500')
+              } ${disableInteractions ? 'cursor-default' : ''}`}
               onClick={handleLikeToggle}
             >
-              <div className="group-hover:bg-red-50 dark:group-hover:bg-red-900/20 p-2 rounded-full transition-colors">
+              <div className={`p-2 rounded-full transition-colors ${disableInteractions ? '' : 'group-hover:bg-red-50 dark:group-hover:bg-red-900/20'}`}>
                  <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg`} />
               </div>
               <span className="text-sm">{likeCount}</span>
             </button>
             {/* 조회수 (클릭 시 상세 이동) */}
             <button 
-                className="flex items-center space-x-2 hover:text-green-500 dark:hover:text-green-400 group p-2 rounded-full transition-colors"
+                className={`flex items-center space-x-2 group p-2 rounded-full transition-colors ${disableInteractions ? 'cursor-default' : 'hover:text-green-500 dark:hover:text-green-400'}`}
                 onClick={(e) => {
+                    if (disableInteractions) {
+                        e.stopPropagation();
+                        return;
+                    }
                     e.stopPropagation();
                     handleCardClick();
                 }}
             >
-              <div className="group-hover:bg-green-50 dark:group-hover:bg-green-900/20 p-2 rounded-full transition-colors">
+              <div className={`p-2 rounded-full transition-colors ${disableInteractions ? '' : 'group-hover:bg-green-50 dark:group-hover:bg-green-900/20'}`}>
                   <i className="ri-eye-line text-lg" />
               </div>
               <span className="text-sm">{viewCount}</span>
@@ -760,6 +783,22 @@ export default function TweetCard({
             </div>
           </div>
         </div>
+      )}
+      {showReportModal && (
+        <ReportModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          targetType={type as any} // 'tweet' | 'reply' | 'post'
+          targetId={id}
+          contentSnapshot={{
+            id,
+            user,
+            content,
+            image: allImages,
+            timestamp,
+            stats,
+          }}
+        />
       )}
     </div>
   );

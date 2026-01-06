@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import imageCompression from 'browser-image-compression';
 import type { UIReply } from '@/types/sns';
+import { getBanMessage } from '@/utils/banUtils';
 
 type EditorMode = 'tweet' | 'reply';
 
@@ -13,6 +14,7 @@ type EditorMode = 'tweet' | 'reply';
 export type EditorCreatedTweet = {
   id: string;
   user: {
+    id: string; // profiles.id
     name: string;
     username: string;
     avatar: string;
@@ -59,7 +61,7 @@ export interface SnsInlineEditorHandle {
 const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>((props, ref) => {
   const { t } = useTranslation();
   const { mode } = props;
-  const { user } = useAuth();
+  const { user, isBanned, bannedUntil } = useAuth();
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [profileNickname, setProfileNickname] = useState<string>('');
@@ -192,6 +194,12 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
       return;
     }
 
+    // 제재 중인 사용자는 작성 불가
+    if (isBanned && bannedUntil) {
+      toast.error(getBanMessage(bannedUntil));
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       let finalContent = value.trim();
@@ -238,6 +246,7 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
            parent_reply_id: null, // 대댓글인 경우 분기 필요하지만 현재 SnsInlineEditor는 1 depth 댓글만 가정하는듯? (확인 필요) -> 일단 null
            root_reply_id: null,
            user: {
+               id: profileId,
                name: profileNickname || 'Unknown',
                username: profileUserId || user.id,
                avatar: profileAvatar ?? '/default-avatar.svg'
@@ -298,6 +307,7 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
         const uiTweet: EditorCreatedTweet = {
           id: inserted.id,
           user: {
+            id: profileId,
             name: profileNickname || 'Unknown',
             username: profileUserId || user.id,
             avatar: profileAvatar ?? '/default-avatar.svg',

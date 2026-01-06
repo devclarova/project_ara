@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 
 interface Notification {
   id: string;
-  type: 'comment' | 'like' | 'mention';
+  type: 'comment' | 'like' | 'mention' | 'follow' | 'reply' | 'system' | 'repost' | 'like_comment' | 'like_feed';
   content: string;
   is_read: boolean;
   created_at: string;
@@ -26,6 +26,7 @@ export default function HNotificationsPage() {
   const [profileId, setProfileId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'like' | 'comment' | 'follow' | 'system' | 'updates'>('like');
 
   // 삭제 모달 상태
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -59,7 +60,8 @@ export default function HNotificationsPage() {
           `
           id, type, content, is_read, created_at, tweet_id, comment_id,
           sender:sender_id (nickname, user_id, avatar_url),
-          tweet:tweets (content)
+          tweet:tweets (content),
+          reply:tweet_replies (content)
         `,
         )
         .eq('receiver_id', profileId)
@@ -72,10 +74,14 @@ export default function HNotificationsPage() {
 
       setNotifications(
         (data ?? []).map((n: any) => {
-          // 피드 좋아요인 경우, 알림 자체 content가 비어있으면 원본 트윗 내용을 보여줌
+          // 피드 좋아요 혹은 멘션인 경우, 알림 자체 content가 비어있으면 원본 트윗 내용을 보여줌
           let contentToUse = n.content;
-          if (n.type === 'like' && !n.comment_id && n.tweet?.content) {
+          if ((n.type === 'like' || n.type === 'mention') && !n.comment_id && n.tweet?.content && !contentToUse) {
              contentToUse = n.tweet.content;
+          }
+          // 대댓글 알림인 경우
+          if (n.type === 'reply' && n.comment_id && n.reply?.content && !contentToUse) {
+             contentToUse = n.reply.content;
           }
 
           return {
@@ -123,9 +129,9 @@ export default function HNotificationsPage() {
             .eq('id', newItem.sender_id)
             .maybeSingle();
 
-          // 피드 좋아요인 경우 트윗 내용 추가 fetch
+          // 피드 좋아요 혹은 멘션인 경우 트윗 내용 추가 fetch
           let contentToUse = newItem.content;
-          if (newItem.type === 'like' && newItem.tweet_id && !newItem.comment_id) {
+          if ((newItem.type === 'like' || newItem.type === 'mention') && newItem.tweet_id && !newItem.comment_id && !contentToUse) {
              const { data: tweetData } = await supabase
                .from('tweets')
                .select('content')
@@ -134,6 +140,17 @@ export default function HNotificationsPage() {
              if (tweetData?.content) {
                contentToUse = tweetData.content;
              }
+          }
+          // 대댓글 알림인 경우
+          if (newItem.type === 'reply' && newItem.comment_id && !contentToUse) {
+            const { data: replyData } = await supabase
+              .from('tweet_replies')
+              .select('content')
+              .eq('id', newItem.comment_id)
+              .maybeSingle();
+            if (replyData?.content) {
+              contentToUse = replyData.content;
+            }
           }
 
           const uiItem: Notification = {
@@ -289,29 +306,86 @@ export default function HNotificationsPage() {
           )}
         </div>
 
+        {/* 알림 탭 */}
+        <div className="sticky top-[49px] bg-white dark:bg-background border-b border-gray-200 dark:border-gray-700 z-10">
+          <div className="flex">
+            {[
+              { key: 'like' as const, label: t('notification.tab_likes') },
+              { key: 'comment' as const, label: t('notification.tab_comments') },
+              { key: 'follow' as const, label: t('notification.tab_follow') },
+              { key: 'updates' as const, label: t('notification.tab_updates') },
+              { key: 'system' as const, label: t('notification.tab_system', '시스템') },
+            ].map(tab => {
+              const isCommentsTab = tab.key === 'comment';
+              const isLikesTab = tab.key === 'like';
+              
+              const filteredForCount = notifications.filter(n => {
+                if (isCommentsTab) return (['comment', 'reply', 'mention'] as string[]).includes(n.type);
+                if (isLikesTab) return (['like', 'like_comment', 'like_feed'] as string[]).includes(n.type);
+                return n.type === tab.key;
+              });
+              
+              const unreadCount = filteredForCount.filter(n => !n.is_read).length;
+              
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`flex-1 py-3 text-sm font-medium transition-all relative ${
+                    activeTab === tab.key
+                      ? 'text-primary'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  }`}
+                >
+                  <span className="flex items-center justify-center gap-1.5">
+                    {tab.label}
+                    {unreadCount > 0 && (
+                      <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs font-bold text-white bg-primary rounded-full">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
+                  </span>
+                  {activeTab === tab.key && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#00dbaa] to-[#009e89]" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* 알림 리스트 */}
         <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-900">
-          {notifications.length > 0 ? (
+          {(() => {
+            const filteredNotifications = notifications.filter(n => {
+              if (activeTab === 'comment') return (['comment', 'reply', 'mention'] as string[]).includes(n.type);
+              if (activeTab === 'like') return (['like', 'like_comment', 'like_feed'] as string[]).includes(n.type);
+              return n.type === activeTab;
+            });
+            
+            return filteredNotifications.length > 0 ? (
             <>
-              {notifications.map(n => (
+              {filteredNotifications.map(n => (
                 <NotificationCard
                   key={n.id}
                   notification={{
                     id: n.id,
-                    type: n.type,
+                    type: n.type as any, // Alignment with card props
                     user: {
                       name: n.sender?.name || 'Unknown',
                       username: n.sender?.username || 'anonymous',
                       avatar: n.sender?.avatar || '/default-avatar.svg',
                     },
                     action:
-                      n.type === 'comment'
+                      n.type === 'comment' || n.type === 'reply' || n.type === 'mention'
                         ? t('notification.action_comment')
-                        : n.type === 'like'
+                        : n.type === 'like' || n.type === 'like_comment' || n.type === 'like_feed'
                           ? n.comment_id
                             ? t('notification.action_like_comment')
                             : t('notification.action_like_feed')
-                          : n.content,
+                          : n.type === 'system'
+                            ? t('notification.system_notice', '시스템 알림')
+                            : n.content,
                     content: n.content,
                     timestamp: n.created_at,
                     isRead: n.is_read,
@@ -348,7 +422,8 @@ export default function HNotificationsPage() {
               <i className="ri-notification-3-line text-3xl mb-2" />
               {t('notification.no_notifications')}
             </div>
-          )}
+          );
+          })()}
         </div>
       </div>
 

@@ -1,18 +1,16 @@
-import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 
 interface ReportButtonProps {
-  onClose: () => void;
+  onClick: () => void;
 }
 
-export default function ReportButton({ onClose }: ReportButtonProps) {
+export default function ReportButton({ onClick }: ReportButtonProps) {
   const { t } = useTranslation();
   return (
     <button
-      onClick={e => {
+      onClick={(e) => {
         e.stopPropagation();
-        toast.success(t('common.success_report'));
-        onClose();
+        onClick();
       }}
       className="w-full text-left px-4 py-3 hover:bg-gray-100 
         dark:hover:bg-white/10 flex items-center gap-2 text-gray-800 dark:text-gray-200"
