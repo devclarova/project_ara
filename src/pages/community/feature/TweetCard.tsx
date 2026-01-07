@@ -40,6 +40,7 @@ interface TweetCardProps {
   image?: string | string[];
   timestamp: string;
   createdAt?: string;
+  updatedAt?: string;
   stats: TweetStats;
   onDeleted?: (id: string) => void;
   deletedAt?: string | null;
@@ -60,6 +61,8 @@ export default function TweetCard({
   content,
   image,
   timestamp,
+  createdAt,
+  updatedAt,
   stats,
   onDeleted,
   deletedAt,
@@ -116,6 +119,7 @@ export default function TweetCard({
   // 글 수정
   const [isEditing, setIsEditing] = useState(false);
   const [currentContent, setCurrentContent] = useState(content); // 화면에 보여줄 값
+  const [currentUpdatedAt, setCurrentUpdatedAt] = useState<string | undefined>(updatedAt);
   const [editText, setEditText] = useState('');
   const [editImages, setEditImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -293,6 +297,21 @@ export default function TweetCard({
       setIsLong(true);
     }
   }, [safeContent]);
+
+  // content 바뀌면 동기화
+  useEffect(() => {
+    if (skipNextPropSync.current) {
+      skipNextPropSync.current = false;
+      return;
+    }
+    if (isEditing) return;
+    setCurrentContent(content);
+  }, [content, isEditing]);
+
+  useEffect(() => {
+    setCurrentUpdatedAt(updatedAt);
+  }, [updatedAt]);
+
   // 이미지 모달 스크롤 잠금은 ModalImageSlider의 useBodyScrollLock hook에서 처리
   /** 좋아요 토글 (user_id = profiles.id 사용 + 알림 생성) */
   const handleLikeToggle = async (e: React.MouseEvent) => {
@@ -410,11 +429,17 @@ export default function TweetCard({
 
   /** 수정 저장 */
   const saveEdit = async () => {
-      if (!profileId) return;
+      if (!profileId) {
+        toast.error(t('common.error_profile_missing'));
+        return;
+      }
+
       if (!editText.trim() && editImages.length === 0) {
           toast.error(t('tweets.error_empty', '내용을 입력해주세요'));
           return;
       }
+
+      const nowIso = new Date().toISOString();
 
       try {
           // 이미지 태그 생성
@@ -428,7 +453,7 @@ export default function TweetCard({
           const table = type === 'reply' ? 'tweet_replies' : 'tweets';
           const { error } = await supabase
               .from(table)
-              .update({ content: finalContent })
+              .update({ content: finalContent, updated_at: nowIso })
               .eq('id', id)
               .eq('author_id', profileId);
 
@@ -437,13 +462,19 @@ export default function TweetCard({
           toast.success(t('common.success_edit', '수정되었습니다'));
           setIsEditing(false);
           setCurrentContent(finalContent);
+          setCurrentUpdatedAt(nowIso);
+          
+          // 다음 prop sync 1회 막기 (저장 직후 원복 방지)
+          skipNextPropSync.current = true;
           
           // 상위 컴포넌트 알림
+          const storeKey = type === 'reply' ? (tweetId ?? id) : id;
           if (onUpdated) {
-             onUpdated(id, { content: finalContent });
+             onUpdated(storeKey, { content: finalContent, updatedAt: nowIso });
           }
-           // SnsStore 업데이트 (선택)
-          // SnsStore.updateTweet(id, { content: finalContent }); 
+          // SnsStore 업데이트
+          SnsStore.updateTweet(storeKey, { content: finalContent, updatedAt: nowIso });
+          setShowMenu(false);
 
       } catch (err: any) {
           console.error('수정 실패:', err);
@@ -602,6 +633,12 @@ export default function TweetCard({
               <span className={`${metaClass} mx-1`}>·</span>
               <span className={`${metaClass} flex-shrink-0`}>
                 {formatSmartDate(timestamp)}
+                {(() => {
+                  const created = createdAt ?? timestamp;
+                  const edited = currentUpdatedAt;
+                  const isEdited = edited && new Date(edited).getTime() > new Date(created).getTime();
+                  return isEdited ? <span className="ml-1 text-xs text-gray-400">수정됨</span> : null;
+                })()}
               </span>
             </div>
 

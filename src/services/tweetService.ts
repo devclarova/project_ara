@@ -294,7 +294,7 @@ export const tweetService = {
       .from('tweets')
       .select(
         `
-        id, content, image_url, created_at, deleted_at,
+        id, content, image_url, created_at, updated_at, deleted_at,
         reply_count, repost_count, like_count, bookmark_count, view_count,
         profiles (id, nickname, user_id, avatar_url, banned_until)
       `
@@ -325,6 +325,7 @@ export const tweetService = {
 
       timestamp: tweet.created_at,
       createdAt,
+      updatedAt: (tweet as any).updated_at ?? undefined,
       stats: {
         replies: tweet.reply_count ?? 0,
         retweets: tweet.repost_count ?? 0,

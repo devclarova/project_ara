@@ -108,7 +108,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
         const { data: feedData, error } = await supabase
           .from('tweets')
           .select(`
-            id, content, image_url, created_at, deleted_at,
+            id, content, image_url, created_at, updated_at, deleted_at,
             reply_count, repost_count, like_count, bookmark_count, view_count,
             profiles:author_id ( id, nickname, user_id, avatar_url, banned_until )
           `)
@@ -134,6 +134,8 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
         content: t.content,
         image: t.image_url || undefined,
         timestamp: t.created_at || new Date().toISOString(),
+        createdAt: t.created_at || undefined,
+        updatedAt: (t as any).updated_at || undefined,
         deleted_at: t.deleted_at,
         stats: {
           replies: t.reply_count ?? 0,
@@ -406,6 +408,10 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
                     {...t}
                     dimmed={false}
                     onDeleted={tweetId => setTweets(prev => prev.filter(i => i.id !== tweetId))}
+                    onUpdated={(id, updates) => {
+                        setTweets(prev => prev.map(t => (t.id === id ? { ...t, ...updates } : t)));
+                        SnsStore.updateTweet(id, updates);
+                    }}
                 />
             ))
         )}

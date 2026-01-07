@@ -556,7 +556,7 @@ export default function SignUpStep2Form({
         _lang: lang,
       } as any);
 
-      console.log('nickname_exists result:', { data, error });
+      // console.log('nickname_exists result:', { data, error });
 
       if (error) {
         console.error('nickname_exists rpc error', error);

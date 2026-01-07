@@ -69,6 +69,7 @@ export interface BaseFeedItem {
   image?: string | string[];
   timestamp: string;
   createdAt?: string;
+  updatedAt?: string; // Edit timestamp tracking
   stats: TweetStats;
   liked?: boolean;
   liked_at?: string; // For 'likes' tab sorting
