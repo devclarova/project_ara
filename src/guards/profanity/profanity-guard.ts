@@ -2,7 +2,7 @@ import { checkMessage, initProfanity } from "@/utils/safety";
 
 // 필요시 콘솔 디버깅
 const DEBUG = false;
-const log = (...a: any[]) => { if (DEBUG) console.log('[profanity-guard]', ...a); };
+const log = (...a: any[]) => { /* DEBUG disabled */ };
 
 // StrictMode 중복 실행 방지
 declare global { interface Window { __profanityGuardBound?: boolean } }
