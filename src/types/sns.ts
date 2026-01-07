@@ -1,7 +1,9 @@
 export type TweetUser = {
+  id: string; // profiles.id (UUID)
   name: string;
   username: string;
   avatar: string;
+  banned_until?: string | null;
 };
 
 // DB Row Types (Manual definition since database.ts is incomplete)
@@ -17,16 +19,17 @@ export interface TweetQueryResponse {
   content: string;
   image_url: string | null;
   created_at: string;
-  updated_at?: string | null;
   reply_count: number;
   like_count: number;
   view_count: number;
   repost_count?: number;
   bookmark_count?: number;
   profiles: {
+    id: string;
     nickname: string;
     user_id: string;
     avatar_url: string | null;
+    banned_until?: string | null;
   } | null;
 }
 
@@ -35,18 +38,20 @@ export interface ReplyQueryResponse {
   content: string;
   created_at: string;
   tweet_id: string;
+  parent_reply_id?: string | null;
+  root_reply_id?: string | null;
   profiles: {
+    id: string;
     nickname: string;
     user_id: string;
     avatar_url: string | null;
+    banned_until?: string | null;
   } | null;
   tweet_replies_likes?: { count: number }[];
   tweets?: {
     content: string;
     author_id: string;
   } | null;
-  parent_reply_id?: string | null;
-  root_reply_id?: string | null;
 }
 
 export type TweetStats = {
@@ -63,11 +68,13 @@ export interface BaseFeedItem {
   content: string;
   image?: string | string[];
   timestamp: string;
-  updatedAt?: string;
   createdAt?: string;
+  updatedAt?: string; // Edit timestamp tracking
   stats: TweetStats;
   liked?: boolean;
   liked_at?: string; // For 'likes' tab sorting
+  deleted_at?: string | null; // Soft delete timestamp
+  // 10-zzeon compatibility
   parent_reply_id?: string | null;
   root_reply_id?: string | null;
 }

@@ -80,6 +80,7 @@ interface DirectChatContextType {
   // 정방향 무한 스크롤 (더 최신 메시지 로드)
   hasNewerMessages: boolean;
   loadNewerMessages: () => Promise<number>;
+  blockedUserIds: Set<string>;
 }
 
 const DirectChatContext = createContext<DirectChatContextType | null>(null);
@@ -97,6 +98,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
   const [loading, setLoading] = useState(false);
   const [userSearchLoading, setUserSearchLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [blockedUserIds, setBlockedUserIds] = useState<Set<string>>(new Set()); // 차단한 사용자 ID 목록
 
   // 무한 스크롤 상태
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
@@ -108,19 +110,73 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
   const currentUserId = user?.id;
   const { setUnreadCount } = useNewChatNotification();
 
+  // 차단 목록 로드
+  const loadBlockedUsers = useCallback(async () => {
+      if (!currentUserId) return;
+      // 1. 내 프로필 ID 먼저 확인
+      let myProfId = '';
+      if (currentUserProfileRef.current) {
+        myProfId = currentUserProfileRef.current.id;
+      } else {
+        const { data: pData } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', currentUserId)
+          .single();
+        if (pData) myProfId = pData.id;
+      }
+
+      if (!myProfId) return;
+
+      const { data } = await supabase
+          .from('user_blocks')
+          .select('blocked_id')
+          .eq('blocker_id', myProfId)
+          .is('ended_at', null);
+      
+      if (data) {
+          setBlockedUserIds(new Set(data.map(b => b.blocked_id)));
+      }
+  }, [currentUserId]);
+
+  useEffect(() => {
+      loadBlockedUsers();
+      
+      const handleRefresh = () => {
+        loadBlockedUsers();
+        loadChats(); // ✅ 차단/해제 시 채팅 목록도 즉시 갱신 (차단한 유저 채팅방 실시간 제거)
+      };
+      window.addEventListener('REFRESH_BLOCKED_USERS', handleRefresh);
+      
+      return () => {
+          window.removeEventListener('REFRESH_BLOCKED_USERS', handleRefresh);
+      };
+  }, [loadBlockedUsers]);
+
   // 프로필 캐시 & 조회 함수 (Realtime 업데이트용 - 상단 이동)
   const profileCache = useRef<Map<string, ChatUser>>(new Map());
+  const currentUserProfileRef = useRef<ChatUser | null>(null);
 
   const fetchProfileByAuthId = useCallback(async (authUserId: string): Promise<ChatUser> => {
+    if (!authUserId || authUserId === 'undefined') {
+      return {
+        id: 'unknown',
+        email: '',
+        nickname: 'Unknown User',
+        username: 'unknown',
+        avatar_url: null,
+      };
+    }
+    // 1. 내 정보이고, Ref에 있으면 반환 (가장 빠름)
+    if (user && authUserId === user.id && currentUserProfileRef.current) {
+        return currentUserProfileRef.current;
+    }
+
+    // 2. 캐시 확인
     const cached = profileCache.current.get(authUserId);
     if (cached) return cached;
 
-    // 내 정보라면 즉시 반환 가능
-    if (authUserId === user?.id && user) {
-      // ... (user 객체 활용은 useCallback 의존성 걸리므로 아래 supabase 로직 태우거나, 여기서 user ref를 쓰거나)
-      // 그냥 supabase 조회로 통일 (캐싱되므로 2번째부턴 빠름)
-    }
-
+    // 3. DB 조회
     const { data, error } = await supabase
       .from('profiles')
       .select('id, nickname, avatar_url, username')
@@ -141,9 +197,24 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           nickname: `User ${authUserId.slice(0, 8)}`,
           avatar_url: null,
         };
+    
+    // 캐시 저장
     profileCache.current.set(authUserId, userInfo);
+    
+    // 내 정보면 Ref에도 저장
+    if (user && authUserId === user.id) {
+        currentUserProfileRef.current = userInfo;
+    }
+    
     return userInfo;
-  }, []);
+  }, [user]);
+
+  // 내 프로필 미리 로드 (앱 시작/로그인 시)
+  useEffect(() => {
+    if (user?.id) {
+        fetchProfileByAuthId(user.id);
+    }
+  }, [user?.id, fetchProfileByAuthId]);
 
   // chats를 ref로 관리 (의존성 배열에서 제거하기 위함)
   const chatsRef = useRef<ChatListItem[]>([]);
@@ -182,7 +253,11 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         if (response.success && response.data) {
           setChats(response.data);
           const unreadChatsCount = response.data.filter(
-            chat => (chat.unread_count || 0) > 0,
+            chat => {
+              // 차단한 유저의 채팅방이면 미읽음 개수를 0으로 간주
+              if (blockedUserIds.has(chat.other_user.id)) return false;
+              return (chat.unread_count || 0) > 0;
+            }
           ).length;
           setUnreadCount(unreadChatsCount);
         } else {
@@ -194,7 +269,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         isLoadingChatsRef.current = false;
       }
     }, 200);
-  }, []); // 의존성 제거
+  }, [blockedUserIds, setUnreadCount, handleError]);
 
   const clearNewChatNotificationHandler = useCallback(async (chatId: string): Promise<boolean> => {
     try {
@@ -217,6 +292,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     async (chatId: string, targetId?: string) => {
       try {
         currentChatId.current = chatId;
+        setError(null); // 에러 초기화 (다시 시도 시 중요)
         setMessages([]); // 초기화
         setHasMoreMessages(false);
 
@@ -247,7 +323,11 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           // Service delivers DESC by default (unless targetId is used).
           // We need ASC (Oldest -> Newest) for correct Chat Room rendering & Infinite Scroll logic.
           const incoming = response.data.messages;
-          const sorted = targetId ? incoming : [...incoming].reverse(); // targetId logic in service is already ASC.
+
+          // Shadow Block: 차단한 유저의 메시지 필터링
+          const filteredIncoming = incoming.filter(m => !blockedUserIds.has(m.sender_id));
+
+          const sorted = targetId ? filteredIncoming : [...filteredIncoming].reverse(); // targetId logic in service is already ASC.
 
           // De-duplicate by ID (Critical for safety/re-rendering)
           const unique = Array.from(new Map(sorted.map(m => [m.id, m])).values());
@@ -305,18 +385,9 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           setMessages(prev => {
             const combined = [...sortedOlder, ...prev];
             
-            // Optimized: Only deduplicate if there's potential overlap
-            // Check if last old message overlaps with first new message
-            const needsDedup = sortedOlder.length > 0 && prev.length > 0 &&
-              sortedOlder[sortedOlder.length - 1].id === prev[0].id;
-            
-            if (!needsDedup) {
-              // No overlap, skip expensive deduplication
-              return combined;
-            }
-            
-            // De-duplicate by ID (only when needed)
+            // Always deduplicate to prevent duplicate key warnings
             const unique = Array.from(new Map(combined.map(m => [m.id, m])).values());
+            
             // Sort by created_at ASC (Oldest -> Newest)
             unique.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
             return unique;
@@ -357,16 +428,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           setMessages(prev => {
             const combined = [...prev, ...newerMessages];
             
-            // Optimized: Only deduplicate if there's potential overlap
-            const needsDedup = prev.length > 0 && newerMessages.length > 0 &&
-              prev[prev.length - 1].id === newerMessages[0].id;
-            
-            if (!needsDedup) {
-              // No overlap, skip expensive deduplication
-              return combined;
-            }
-            
-            // De-duplicate by ID (only when needed)
+            // Always deduplicate - same fix as loadMoreMessages
             const unique = Array.from(new Map(combined.map(m => [m.id, m])).values());
             // Sort by created_at ASC (Oldest -> Newest)
             unique.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
@@ -478,6 +540,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
 
                 return {
                   ...sent,
+                  sender: (sent.sender || msg.sender || myProfile || undefined) as ChatUser, // 🔥 Critical: Preserve sender info
                   attachments:
                     sent.attachments && sent.attachments.length > 0
                       ? sent.attachments
@@ -617,8 +680,35 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     async (chatId: string): Promise<boolean> => {
       try {
         setLoading(true);
+
+        // 1. 해당 채팅방의 정보 조회 (상대방 ID 확인용)
+        const targetChat = chatsRef.current.find(c => c.id === chatId);
+        const otherProfileId = targetChat?.other_user?.id;
+        const myProfileId = currentUserProfileRef.current?.id;
+
+        // 2. 채팅방 나가기 (is_active = false)
         const response = await exitDirectChat(chatId);
+        
         if (response.success) {
+          // 3. 메시지 모두 읽음 처리
+          // 내가 보낸게 아닌(상대방이 보낸) 이 채팅방의 미읽음 메시지들
+          await supabase
+            .from('direct_messages')
+            .update({ is_read: true, read_at: new Date().toISOString() })
+            .eq('chat_id', chatId)
+            .neq('sender_id', currentUserId)
+            .eq('is_read', false);
+
+          // 4. 해당 유저로부터 온 일반 알림(좋아요, 댓글 등)도 모두 읽음 처리 (유저 요청)
+          if (otherProfileId && myProfileId) {
+            await supabase
+              .from('notifications')
+              .update({ is_read: true })
+              .eq('sender_id', otherProfileId)
+              .eq('receiver_id', myProfileId)
+              .eq('is_read', false);
+          }
+
           await loadChats();
           if (currentChatId.current === chatId) {
             resetCurrentChat();
@@ -716,21 +806,41 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       let newMessage = payload.new;
       const chatId = newMessage.chat_id;
 
+      // Shadow Block: 차단한 유저의 메시지는 무시
+      if (blockedUserIds.has(newMessage.sender_id)) {
+        return;
+      }
+
       // Realtime Payload에는 Relation 데이터(attachments 등)가 포함되지 않음.
       // 따라서 첨부파일이 있는 메시지일 경우, 별도로 전체 데이터를 조회해야 함.
       // content가 없고 attachments가 있어야 하는 경우(이미지/영상 등) 필수.
-      try {
-         const { data: fullMessage } = await supabase
-            .from('direct_messages')
-            .select(`*, attachments:direct_message_attachments(*)`)
-            .eq('id', newMessage.id)
-            .single();
-         
-         if (fullMessage) {
-            newMessage = fullMessage;
-         }
-      } catch (e) {
-         console.warn('Realtime message fetch failed, using payload', e);
+      const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+      // Retry up to 3 times to fetch attachments (race condition handling)
+      let fetchSuccess = false;
+      for (let i = 0; i < 3; i++) {
+        try {
+           const { data: fullMessage } = await supabase
+              .from('direct_messages')
+              .select(`*, attachments:direct_message_attachments(*)`)
+              .eq('id', newMessage.id)
+              .single();
+           
+           if (fullMessage) {
+              // Check if attachments are expected but missing? 
+              // Hard to know if expected, but if we found a message, use it.
+              // If we found attachments, definitely break.
+              newMessage = fullMessage;
+              if (fullMessage.attachments && fullMessage.attachments.length > 0) {
+                  fetchSuccess = true;
+                  break;
+              }
+           }
+        } catch (e) {
+           console.warn(`Realtime fetch attempt ${i + 1} failed`, e);
+        }
+        // Wait before next retry if not successful (and if it's not the last try)
+        if (i < 2) await delay(500);
       }
 
       // 1. 현재 보고 있는 채팅방이면 메시지 추가
@@ -843,10 +953,59 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       .channel(`direct_chat_unified_${currentUserId}`)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'direct_messages' },
-        handleNewMessage,
+        { event: '*', schema: 'public', table: 'direct_messages' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            handleNewMessage(payload);
+          } else if (payload.eventType === 'UPDATE') {
+             const updatedMsg = payload.new;
+             const chatId = updatedMsg.chat_id;
+             // Robust check: includes ensures we catch it even if there are whitespace diffs
+             const isDeleted = !!updatedMsg.deleted_at || (updatedMsg.content && updatedMsg.content.includes('관리자에 의해 삭제된 메시지입니다'));
+             
+             // update messages in current chat
+             if (currentChatId.current === chatId) {
+                 setMessages(prev => prev.map(msg => {
+                     if (msg.id === updatedMsg.id) {
+                         return { 
+                             ...msg, 
+                             content: updatedMsg.content,
+                             deleted_at: isDeleted ? (updatedMsg.deleted_at || new Date().toISOString()) : updatedMsg.deleted_at,
+                             attachments: isDeleted ? [] : msg.attachments
+                         };
+                     }
+                     return msg;
+                 }));
+             }
+             
+             // update last message in chat list
+             setChats(prev => prev.map(chat => {
+                 if (chat.id === chatId) {
+                     // Check if it's the last message
+                     if (chat.last_message && (chat.last_message.created_at === updatedMsg.created_at || (chat.last_message as any).id === updatedMsg.id)) {
+                          return {
+                              ...chat,
+                              last_message: {
+                                  ...chat.last_message,
+                                  content: updatedMsg.content,
+                                  attachments: isDeleted ? [] : chat.last_message.attachments
+                              }
+                          };
+                     }
+                 }
+                 return chat;
+             }));
+          }
+        }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+            // Realtime connected
+        }
+        if (status === 'CHANNEL_ERROR') {
+            // Realtime connection error
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -863,8 +1022,12 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
   }, [currentUserId, loadChats]);
 
   const hasNewChatNotification = useMemo(
-    () => chats.some(chat => (chat.unread_count || 0) > 0),
-    [chats],
+    () => chats.some(chat => {
+      // 차단한 유저의 채팅방이면 무시
+      if (blockedUserIds.has(chat.other_user.id)) return false;
+      return (chat.unread_count || 0) > 0;
+    }),
+    [chats, blockedUserIds]
   );
 
   const clearSearchResults = useCallback(() => {
@@ -903,6 +1066,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       hasNewerMessages,
       loadNewerMessages,
       searchMessagesInChat,
+      blockedUserIds,
     }),
     [
       chats,
@@ -934,12 +1098,13 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       loadMoreMessages,
       hasNewerMessages,
       loadNewerMessages,
+      blockedUserIds,
     ],
   );
 
   // Moved fetchProfileByAuthId to top
 
-  /* 1) 유저가 바뀌면(로그아웃/로그인 전환 포함) 상태 리셋 + 목록 재로딩 */
+  // 1) 유저가 바뀌면(로그아웃/로그인 전환 포함) 상태 리셋 + 목록 재로딩 
   useEffect(() => {
     if (!currentUserId) return;
     // 초기화
@@ -953,6 +1118,85 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     // 새 사용자 기준으로 로드
     loadChats();
   }, [currentUserId, loadChats]);
+
+  /* 2) profiles 테이블 실시간 구독: 닉네임, 제재 상태 반영 (새로고침 없이 반영 핵심) */
+  useEffect(() => {
+    const channel = supabase
+      .channel('global-profile-updates')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles' },
+        (payload) => {
+          const updated = payload.new as any;
+          if (!updated) return;
+
+          // 1. 캐시 보정
+          const authId = updated.user_id;
+          if (authId && profileCache.current.has(authId)) {
+             const existing = profileCache.current.get(authId)!;
+             profileCache.current.set(authId, {
+               ...existing,
+               nickname: updated.nickname ?? existing.nickname,
+               avatar_url: updated.avatar_url ?? existing.avatar_url,
+               banned_until: updated.banned_until,
+             });
+          }
+
+          // 2. 채팅 목록(chats) 실시간 동기화
+          setChats(prev => prev.map(chat => {
+            if (chat.other_user?.id === updated.id) {
+              return {
+                ...chat,
+                other_user: {
+                  ...chat.other_user,
+                  nickname: updated.nickname ?? chat.other_user.nickname,
+                  avatar_url: updated.avatar_url ?? chat.other_user.avatar_url,
+                  banned_until: updated.banned_until,
+                }
+              };
+            }
+            return chat;
+          }));
+
+          // 3. 현재 열려있는 채팅방(currentChat) 실시간 동기화
+          setCurrentChat(prev => {
+            if (prev && prev.other_user?.id === updated.id) {
+              return {
+                ...prev,
+                other_user: {
+                  ...prev.other_user,
+                  nickname: updated.nickname ?? prev.other_user.nickname,
+                  avatar_url: updated.avatar_url ?? prev.other_user.avatar_url,
+                  banned_until: updated.banned_until,
+                }
+              };
+            }
+            return prev;
+          });
+
+          // 4. 메시지 목록 내 발신자 정보 실시간 동기화
+          setMessages(prev => prev.map(msg => {
+            if (msg.sender?.id === updated.id || msg.sender_id === updated.user_id) {
+              return {
+                ...msg,
+                sender: {
+                  ...(msg.sender || {}),
+                  nickname: updated.nickname ?? msg.sender?.nickname,
+                  avatar_url: updated.avatar_url ?? msg.sender?.avatar_url,
+                  banned_until: updated.banned_until,
+                } as ChatUser
+              };
+            }
+            return msg;
+          }));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   /* 2) 인증 세션 이벤트가 바뀌어도 안전하게 초기화 */
 

@@ -130,13 +130,7 @@ const AdminStudyUpload = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({
-      uploadType,
-      basicInfo,
-      videoInfo,
-      cultureNotes,
-      words
-    });
+    // Admin Study Upload Logic
     toast.success(t('admin.study_uploaded'));
   };
 

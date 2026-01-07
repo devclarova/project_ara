@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,9 +7,11 @@ import ProfileHeader from './components/ProfileHeader';
 import ProfileTabs, { type ProfileTabKey } from './components/ProfileTabs';
 import ProfileTweets from './components/ProfileTweets';
 import EditProfileModal from './components/EditProfileModal';
-import ReportButton from '@/components/common/ReportButton';
+import ReportModal from '@/components/common/ReportModal';
 import BlockButton from '@/components/common/BlockButton';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
+import { formatBanPeriod, isBanned } from '@/utils/banUtils';
+import { addYears } from 'date-fns';
 export interface UserProfile {
   id: string;
   user_id: string;
@@ -27,14 +29,20 @@ export interface UserProfile {
   countryFlagUrl?: string | null;
   nickname_updated_at?: string | null;
   country_updated_at?: string | null;
+  gender?: string | null;
+  age?: number | null;
+  banned_until?: string | null;
 }
 export default function ProfileAsap() {
   const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState<ProfileTabKey>('posts');
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [banStartDate, setBanStartDate] = useState<string | null>(null);
+  const [banCount, setBanCount] = useState<number>(0);
   const menuRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -42,92 +50,134 @@ export default function ProfileAsap() {
   const { username } = useParams<{ username: string }>();
   const decodedUsername = username ? decodeURIComponent(username) : '';
   const isOwnProfile = user && userProfile ? user.id === userProfile.user_id : false;
-  useEffect(() => {
-    if (!decodedUsername && !user) return;
-    const fetchProfile = async () => {
-      try {
-        // 1) 프로필만 먼저 가져오기
-        let baseQuery = supabase.from('profiles').select(
-          `
-        id,
-        user_id,
-        nickname,
-        avatar_url,
-        banner_url,
-        banner_position_y,
-        bio,
-        country,
-        followers_count,
-        following_count,
-        created_at,
-        nickname_updated_at,
-        country_updated_at
-      `,
-        );
-        if (!decodedUsername && user) {
-          baseQuery = baseQuery.eq('user_id', user.id);
-        } else {
-          // UUID 형식 체크
-          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedUsername);
-          
-          if (isUuid) {
-            baseQuery = baseQuery.eq('id', decodedUsername);
-          } else {
-            baseQuery = baseQuery.eq('nickname', decodedUsername);
-          }
-        }
-        const { data: profile, error: profileError } = await baseQuery.single();
-        if (profileError || !profile) throw profileError;
-        // 2) country 값이 "countries.id" 라고 가정하고 조회
-        let countryName: string | null = null;
-        let countryFlagUrl: string | null = null;
-        if (profile.country) {
-          // profile.country가 숫자든 문자열이든 eq에서 캐스팅해줌
-          const { data: countryRow, error: countryError } = await supabase
-            .from('countries')
-            .select('id, name, flag_url')
-            .eq('id', profile.country) // 여기: iso_code가 아니라 id로 조회
-            .maybeSingle();
-          if (!countryError && countryRow) {
-            countryName = countryRow.name ?? null;
-            countryFlagUrl = countryRow.flag_url ?? null;
-          }
-        }
-        // 디버깅용으로 한 번 확인해보고 싶으면 잠깐 켜두셔도 됨
-        // console.log('ProfileAsap userProfile:', {
-        //   profile,
-        //   countryName,
-        //   countryFlagUrl,
-        // });
-        // 3) 최종 상태 세팅
-        setUserProfile({
-          id: profile.id,
-          user_id: profile.user_id,
-          name: profile.nickname ?? 'Unknown',
-          username: profile.user_id,
-          avatar: profile.avatar_url ?? '/default-avatar.svg',
-          bio: profile.bio ?? t('profile.no_bio_placeholder', 'No bio yet.'),
-          country: countryName, // 화면에 보여줄 국가명
-          countryFlagUrl: countryFlagUrl, // 국기 URL
-          joinDate: new Date(profile.created_at).toLocaleDateString(i18n.language, {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          }),
-          following: profile.following_count ?? 0,
-          followers: profile.followers_count ?? 0,
-          banner: profile.banner_url ?? null,
-          bannerPositionY: profile.banner_position_y ?? 50,
-          nickname_updated_at: profile.nickname_updated_at,
-          country_updated_at: profile.country_updated_at,
-        });
-      } catch (err) {
-        console.error('프로필 불러오기 실패:', err);
-        setUserProfile(null);
+
+  // Real-time listener for profile updates (bans)
+
+  const fetchBanDetails = async (authId: string) => {
+      // Get start date of current ban
+      const { data: sanctionData } = await supabase
+        .from('sanction_history')
+        .select('created_at')
+        .eq('target_user_id', authId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (sanctionData) {
+        setBanStartDate(sanctionData.created_at);
       }
-    };
+      
+      // Get Count
+      const { count } = await supabase
+        .from('sanction_history')
+        .select('*', { count: 'exact', head: true })
+        .eq('target_user_id', authId)
+        .in('sanction_type', ['ban', 'permanent_ban']);
+        
+      setBanCount(count || 0);
+  };
+
+  // 현재 프로필 정보를 추정하는 Ref (실시간 구독자 클로저 문제 해결용)
+  const targetProfileIdRef = useRef<string | null>(null);
+  const targetAuthIdRef = useRef<string | null>(null);
+  const latestFetchProfile = useRef<() => Promise<void>>();
+
+  const fetchProfile = useCallback(async () => {
+    if (!decodedUsername && !user) return;
+    try {
+      let baseQuery = supabase.from('profiles').select(`
+        id, user_id, nickname, avatar_url, banner_url, banner_position_y,
+        bio, country, followers_count, following_count, created_at,
+        nickname_updated_at, country_updated_at, banned_until
+      `);
+      
+      if (!decodedUsername && user) {
+        baseQuery = baseQuery.eq('user_id', user.id);
+      } else {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedUsername) || 
+                       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedUsername);
+        if (isUuid) baseQuery = baseQuery.eq('id', decodedUsername);
+        else baseQuery = baseQuery.eq('nickname', decodedUsername);
+      }
+      
+      const { data: profile, error: profileError } = await baseQuery.single();
+      if (profileError || !profile) throw profileError;
+
+      targetProfileIdRef.current = profile.id;
+      targetAuthIdRef.current = profile.user_id;
+
+      let countryName: string | null = null;
+      let countryFlagUrl: string | null = null;
+      if (profile.country) {
+        const { data: countryRow } = await supabase
+          .from('countries')
+          .select('id, name, flag_url')
+          .eq('id', profile.country)
+          .maybeSingle();
+        if (countryRow) {
+          countryName = countryRow.name ?? null;
+          countryFlagUrl = countryRow.flag_url ?? null;
+        }
+      }
+
+      setUserProfile({
+        id: profile.id,
+        user_id: profile.user_id,
+        name: profile.nickname ?? 'Unknown',
+        username: profile.user_id,
+        avatar: profile.avatar_url ?? '/default-avatar.svg',
+        bio: profile.bio ?? t('profile.no_bio_placeholder', 'No bio yet.'),
+        country: countryName,
+        countryFlagUrl: countryFlagUrl,
+        joinDate: new Date(profile.created_at).toLocaleDateString(i18n.language, {
+          year: 'numeric', month: 'long', day: 'numeric',
+        }),
+        following: profile.following_count ?? 0,
+        followers: profile.followers_count ?? 0,
+        banner: profile.banner_url ?? null,
+        bannerPositionY: profile.banner_position_y ?? 50,
+        nickname_updated_at: profile.nickname_updated_at,
+        country_updated_at: profile.country_updated_at,
+        banned_until: profile.banned_until ?? null,
+      });
+      
+      if (profile.banned_until) fetchBanDetails(profile.user_id);
+    } catch (err) {
+      setUserProfile(null);
+    }
+  }, [decodedUsername, user, i18n.language, t]);
+
+  useEffect(() => {
+    latestFetchProfile.current = fetchProfile;
+  }, [fetchProfile]);
+
+  // 1) 데이터 로딩
+  useEffect(() => {
     fetchProfile();
-  }, [decodedUsername, user, i18n.language]);
+  }, [fetchProfile]);
+
+  // 2) 실시간 구독 (단 1회 구독, Ref 기반 동적 처리)
+  useEffect(() => {
+    const channel = supabase.channel(`profile-page-realtime-${Math.random().toString(36).slice(2)}`)
+      .on('postgres_changes', { 
+        event: 'UPDATE', schema: 'public', table: 'profiles' 
+      }, (payload) => {
+        const updated = payload.new as any;
+        const isMatch = updated && (
+          String(updated.id) === String(targetProfileIdRef.current) || 
+          String(updated.user_id) === String(targetAuthIdRef.current)
+        );
+
+        if (isMatch) {
+          latestFetchProfile.current?.();
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []); // Mount 시 1회 고정
   // 외부 클릭 시 메뉴 닫기
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -193,14 +243,25 @@ export default function ProfileAsap() {
                     <i className="ri-more-fill text-gray-500 dark:text-gray-400 text-lg" />
                   </button>
                   {showMenu && (
-                    <div className="absolute right-0 top-10 w-36 bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg py-2 z-50">
-                      <ReportButton onClose={() => setShowMenu(false)} />
-                      <BlockButton
-                        username={userProfile.name}
-                        isBlocked={isBlocked}
-                        onToggle={() => setIsBlocked(prev => !prev)}
-                        onClose={() => setShowMenu(false)}
-                      />
+                    <div className="absolute right-0 top-10 w-36 bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg py-2 z-50 overflow-hidden">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowMenu(false);
+                          setShowReportModal(true);
+                        }}
+                        className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 flex items-center gap-2 text-gray-800 dark:text-gray-200 text-sm"
+                      >
+                         <i className="ri-flag-line" />
+                         {t('common.report')}
+                      </button>
+                      
+                      {userProfile?.id && (
+                        <BlockButton
+                          targetProfileId={userProfile.id}
+                          onClose={() => setShowMenu(false)}
+                        />
+                      )}
                     </div>
                   )}
                 </div>
@@ -210,9 +271,81 @@ export default function ProfileAsap() {
           {/* 프로필 헤더 (배너, 아바타, 팔로워 수 등) */}
           <ProfileHeader
             userProfile={userProfile}
+            isOwnProfile={isOwnProfile}
             onProfileUpdated={updated => setUserProfile(updated)}
             onEditClick={() => setIsEditModalOpen(true)}
           />
+          
+          {userProfile.banned_until && isBanned(userProfile.banned_until) && (() => {
+            const banInfo = banStartDate 
+              ? formatBanPeriod(banStartDate, userProfile.banned_until)
+              : null;
+            const isPermanent = new Date(userProfile.banned_until) > addYears(new Date(), 50);
+            
+            return (
+              <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-y border-red-200 dark:border-red-800/50 px-4 sm:px-6 py-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center">
+                      <i className="ri-error-warning-fill text-xl text-red-600 dark:text-red-400" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-bold text-red-700 dark:text-red-300 mb-2 flex flex-wrap items-center gap-2">
+                      {isPermanent ? (
+                        <>
+                           <span>🚫 이 사용자는 영구 이용 제재되었습니다</span>
+                           <span className="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">Permanent Ban</span>
+                        </>
+                      ) : (
+                         <span>🚫 이 사용자는 현재 이용 제한 중입니다</span>
+                      )}
+                    </h3>
+                    {!isPermanent && (
+                      <>
+                        {banInfo ? (
+                          <div className="space-y-1.5">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                              <span className="font-semibold text-red-600 dark:text-red-400">
+                                이용제한 기간({banInfo.duration}):
+                              </span>
+                              <span className="text-red-700 dark:text-red-300 font-mono text-[11px] bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded">
+                                {banInfo.startFormatted}
+                              </span>
+                              <span className="text-red-600 dark:text-red-400">~</span>
+                              <span className="text-red-700 dark:text-red-300 font-mono text-[11px] bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded">
+                                {banInfo.endFormatted}
+                              </span>
+                              {banCount > 0 && (
+                                <span className="font-bold text-red-700 dark:text-red-300 ml-1">
+                                  ({banCount}번째 이용제한)
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-red-600/80 dark:text-red-400/80">
+                              • 남은 기간: <span className="font-semibold">{banInfo.daysRemaining}일</span>
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-red-600 dark:text-red-400">
+                            이용 제한 종료: {new Date(userProfile.banned_until!).toLocaleString('ko-KR', {
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: false
+                            }).replace(/\. /g, '.').replace(/\.$/, '')}
+                          </p>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+          
           {/* 탭 (게시물 / 답글 / 좋아요) */}
           <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
           {/* 탭에 따른 트윗 리스트 */}
@@ -223,6 +356,13 @@ export default function ProfileAsap() {
             onClose={() => setIsEditModalOpen(false)}
             userProfile={userProfile}
             onSave={handleSaveProfile}
+          />
+          
+          <ReportModal 
+             isOpen={showReportModal}
+             onClose={() => setShowReportModal(false)}
+             targetType="user"
+             targetId={userProfile.id}
           />
         </div>
       </div>

@@ -67,7 +67,7 @@ export default function HeroSection({ onSignup }: HeroProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             role="note"
-            aria-label="플랫폼 간단 소개"
+            aria-label={t('landing.aria_badge', '플랫폼 간단 소개')}
           >
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             {t('landing.badge')}
@@ -107,7 +107,7 @@ export default function HeroSection({ onSignup }: HeroProps) {
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
             <button
               onClick={handleClick}
-              aria-label="바로 시작하기"
+              aria-label={t('landing.aria_start', '바로 시작하기')}
               className="inline-flex items-center justify-center rounded-[10px] bg-primary px-7 py-3 text-sm sm:text-base font-semibold text-white shadow-md shadow-primary/30 transition hover:-translate-y-[1px] hover:bg-primary/90"
             >
               {t('landing.cta_start')}
@@ -115,7 +115,7 @@ export default function HeroSection({ onSignup }: HeroProps) {
             <button
               type="button"
               onClick={() => navigate('/studylist')}
-              aria-label="콘텐츠 둘러보기"
+              aria-label={t('landing.aria_explore', '콘텐츠 둘러보기')}
               className="inline-flex items-center justify-center rounded-[10px] border border-primary/20 bg-white/80 dark:bg-secondary/80 px-6 py-3 text-xs sm:text-sm font-medium text-primary shadow-sm backdrop-blur transition hover:bg-primary/5 dark:hover:bg-primary/10"
             >
               {t('landing.cta_explore')}

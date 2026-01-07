@@ -63,7 +63,6 @@ export default function CheckboxSquare({
         className="w-5 h-5 rounded-[6px] border grid place-items-center
                    bg-[var(--ara-checkbox-bg)] border-[var(--ara-checkbox-border)]
                    pointer-events-none
-                   peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--ara-checkbox-ring)]
                    dark:bg-gray-700 dark:border-gray-500 dark:[--ara-checkbox-check:#ffffff]"
         role="presentation"
         aria-hidden="true"

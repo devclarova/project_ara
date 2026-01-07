@@ -102,7 +102,7 @@ const StudyPage = () => {
   const displayScene = formatValue('scene', study?.scene);
 
   // 음악 카테고리 여부 (제목 표시 및 에피소드 노출 여부에 사용)
-  const isMusic = study?.categories?.includes('음악') || study?.categories?.includes('Music');
+  const isMusic = study?.categories?.includes('음악') || study?.categories?.includes('Music') || study?.categories?.includes(t('study.category.music'));
 
   let displayTitle = effectiveTitle || t('study.no_title');
 
@@ -133,11 +133,13 @@ const StudyPage = () => {
     ? `${displayTitle} ${displayEpisode} ${displayScene} | ARA`
     : `Study | ARA`;
 
-  const descriptionOriginal = study
-    ? `K-콘텐츠 장면으로 한국어 공부하기: ${study.contents ?? ''}${
-        study.episode ? ` ${study.episode}` : ''
-      }${study.scene ? ` - Scene ${study.scene}` : ''}`
-    : 'ARA에서 K-콘텐츠로 즐겁게 한국어를 공부해보세요.';
+  const metaDescription = study
+    ? t('study.meta_desc_scene', {
+        contents: study.contents ?? '',
+        episode: study.episode ?? '',
+        scene: study.scene ?? '',
+      })
+    : t('study.meta_desc_default');
 
   const description = study
     ? `${t('study.share_text_prefix')} ${displayTitle} ${displayEpisode} ${displayScene}`
@@ -396,7 +398,7 @@ const StudyPage = () => {
             ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10'
             : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white dark:hover:bg-gray-600'
         }`}
-                      title={study?.categories ?? '카테고리'}
+                      title={study?.categories ?? t('study.category.all')}
                     >
                       <i className="ri-folder-2-line text-base opacity-70 group-hover:opacity-100 shrink-0 dark:text-gray-100 mr-1" />
                       <span className="font-medium hidden sm:block dark:text-gray-100 leading-[0.9]">
@@ -414,7 +416,7 @@ const StudyPage = () => {
                           ? {
                               pathname: '/studylist',
                               search: `?category=${encodeURIComponent(
-                                study?.categories ?? '전체',
+                                study?.categories ?? t('study.category.all'),
                               )}&content=${encodeURIComponent(String(study.contents))}`,
                             }
                           : '/studylist'
@@ -445,7 +447,7 @@ const StudyPage = () => {
                           ? {
                               pathname: '/studylist',
                               search: `?category=${encodeURIComponent(
-                                study?.categories ?? '전체',
+                                study?.categories ?? t('study.category.all'),
                               )}&content=${encodeURIComponent(
                                 String(study.contents),
                               )}&episode=${encodeURIComponent(study.episode)}`,
@@ -480,7 +482,7 @@ const StudyPage = () => {
                   <button
                     onClick={handlePrevPage}
                     className="group shrink-0 flex justify-center items-center py-2 rounded-lg transition-all duration-200 text-gray-700 hover:text-primary dark:text-gray-100"
-                    aria-label="Previous Episode"
+                    aria-label={t('study.aria_prev_episode')}
                   >
                     <i className="ri-arrow-drop-left-line text-4xl sm:text-5xl transition-transform duration-200 group-hover:-translate-x-1" />
                   </button>
@@ -518,7 +520,7 @@ const StudyPage = () => {
                   <button
                     onClick={handleNextPage}
                     className="group shrink-0 flex justify-center items-center py-2 rounded-lg transition-all duration-200 text-gray-700 hover:text-primary dark:text-gray-100"
-                    aria-label="Next Episode"
+                    aria-label={t('study.aria_next_episode')}
                   >
                     <i className="ri-arrow-drop-right-line text-4xl sm:text-5xl transition-transform duration-200 group-hover:translate-x-1" />
                   </button>

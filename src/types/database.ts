@@ -731,6 +731,7 @@ export type Database = {
           updated_at: string;
           user_id: string;
           username: string | null;
+          banned_until: string | null;
         };
         Insert: {
           age_confirmed?: boolean;
@@ -761,6 +762,7 @@ export type Database = {
           updated_at?: string;
           user_id: string;
           username?: string | null;
+          banned_until?: string | null;
         };
         Update: {
           age_confirmed?: boolean;
@@ -791,6 +793,7 @@ export type Database = {
           updated_at?: string;
           user_id?: string;
           username?: string | null;
+          banned_until?: string | null;
         };
         Relationships: [];
       };
@@ -1265,6 +1268,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      user_follows: {
+        Row: {
+          id: string;
+          follower_id: string;
+          following_id: string;
+          created_at: string;
+          ended_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          follower_id: string;
+          following_id: string;
+          created_at?: string;
+          ended_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          follower_id?: string;
+          following_id?: string;
+          created_at?: string;
+          ended_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'user_follows_follower_id_fkey';
+            columns: ['follower_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'user_follows_following_id_fkey';
+            columns: ['following_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       user_reports: {
         Row: {
           created_at: string;
@@ -1520,6 +1562,107 @@ export type Database = {
           user_id?: string | null;
         };
         Relationships: [];
+      };
+      tweet_replies_likes: {
+        Row: {
+          created_at: string;
+          id: string;
+          reply_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          reply_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          reply_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tweet_replies_likes_reply_id_fkey';
+            columns: ['reply_id'];
+            isOneToOne: false;
+            referencedRelation: 'tweet_replies';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tweet_replies_likes_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      notifications: {
+        Row: {
+          id: string;
+          receiver_id: string;
+          sender_id: string | null;
+          type: string;
+          content: string | null;
+          is_read: boolean;
+          tweet_id: string | null;
+          comment_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          receiver_id: string;
+          sender_id?: string | null;
+          type: string;
+          content?: string | null;
+          is_read?: boolean;
+          tweet_id?: string | null;
+          comment_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          receiver_id?: string;
+          sender_id?: string | null;
+          type?: string;
+          content?: string | null;
+          is_read?: boolean;
+          tweet_id?: string | null;
+          comment_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'notifications_receiver_id_fkey';
+            columns: ['receiver_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notifications_sender_id_fkey';
+            columns: ['sender_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notifications_tweet_id_fkey';
+            columns: ['tweet_id'];
+            isOneToOne: false;
+            referencedRelation: 'tweets';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notifications_comment_id_fkey';
+            columns: ['comment_id'];
+            isOneToOne: false;
+            referencedRelation: 'tweet_replies';
+            referencedColumns: ['id'];
+          },
+        ];
       };
     };
     Views: {

@@ -7,6 +7,9 @@ import { useEffect, useRef, useState, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDirectChat } from '../../../contexts/DirectChatContext';
 import { checkMessage, initProfanity } from '@/utils/safety';
+import { useAuth } from '@/contexts/AuthContext';
+import { getBanMessage } from '@/utils/banUtils';
+import { toast } from 'sonner';
 
 interface MessageInputProps {
   chatId: string;
@@ -21,6 +24,7 @@ type Attachment = {
 const MessageInput = memo(({ chatId }: MessageInputProps) => {
   const { t } = useTranslation();
   const { sendMessage } = useDirectChat();
+  const { isBanned, bannedUntil } = useAuth();
 
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -91,6 +95,13 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
       (e as any).preventDefault?.();
 
       if (isComposing || sending) return;
+      
+      // 제재 중인 사용자는 메시지 전송 불가
+      if (isBanned && bannedUntil) {
+        toast.error(getBanMessage(bannedUntil, '메시지를 전송'));
+        return;
+      }
+      
       const raw = message;
       const text = raw.trim();
       if (!text && attachments.length === 0) return;

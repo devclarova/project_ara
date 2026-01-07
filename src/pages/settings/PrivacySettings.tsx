@@ -8,7 +8,9 @@ import PasswordChange from './PasswordChange';
 import SNSConnect from './SNSConnect';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+
 import { supabase } from '@/lib/supabase';
+import BlockedUsersList from './components/BlockedUsersList';
 
 interface PrivacySettingsProps {
   onBackToMenu?: () => void;
@@ -251,6 +253,7 @@ export default function PrivacySettings({ onBackToMenu, searchQuery }: PrivacySe
         <div className="space-y-2">
           <Row label={t('settings.change_password')} onClick={() => open('password')} searchQuery={searchQuery} />
           <Row label={t('settings.connect_sns')} onClick={() => open('sns')} searchQuery={searchQuery} />
+          <Row label={t('settings.blocked_users', '차단된 사용자')} onClick={() => open('blocked_users')} searchQuery={searchQuery} />
         </div>
 
         {/* 하단 탈퇴 버튼 */}
@@ -272,6 +275,8 @@ export default function PrivacySettings({ onBackToMenu, searchQuery }: PrivacySe
         {active === 'password' && <PasswordChange onDone={close} onClose={close} />}
 
         {active === 'sns' && <SNSConnect onClose={close} />}
+        
+        {active === 'blocked_users' && <BlockedUsersList />}
 
         {/* 탈퇴 모달 */}
         {active === 'withdraw' && (

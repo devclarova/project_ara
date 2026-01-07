@@ -54,7 +54,6 @@ const AdminAuthCallback = () => {
         toast.success(t('admin.login_success'));
         navigate('/admin');
       } catch (error: any) {
-        console.error('Auth callback error:', error);
         toast.error(t('auth.auth_failed'));
         navigate('/admin/login');
       }

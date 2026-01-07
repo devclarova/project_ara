@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback, memo, useLayoutEffect } from 'react';
+import { useBlock } from '@/hooks/useBlock';
 import { useDirectChat } from '../../../contexts/DirectChatContext';
 import { getMediaInChat } from '@/services/chat/directChatService';
 import type { DirectMessage } from '../../../types/ChatType';
@@ -15,7 +16,10 @@ import HighlightText from '../../common/HighlightText';
 import MediaGalleryModal from './MediaGalleryModal';
 import MediaViewer, { type MediaItem } from './MediaViewer';
 import Modal from '@/components/common/Modal';
+import ReportModal from '@/components/common/ReportModal';
 import { formatMessageTime, formatDividerDate } from '@/utils/dateUtils';
+import { BanBadge } from '@/components/common/BanBadge';
+import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 // HMR Trigger
 interface MessageGroup {
   [date: string]: DirectMessage[];
@@ -125,7 +129,7 @@ const CachedAvatar = memo(
   },
 );
 CachedAvatar.displayName = 'CachedAvatar';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 // 메시지 아이템 최적화
 const MessageItem = memo(
@@ -138,6 +142,10 @@ const MessageItem = memo(
     searchQuery,
     onImageLoad,
     onViewMedia, // 미디어(이미지/동영상) 크게보기 핸들러
+    onReport,
+    isSelectionMode,
+    isSelected,
+    onToggleSelection,
   }: {
     message: DirectMessage;
     currentUserId: string;
@@ -147,6 +155,10 @@ const MessageItem = memo(
     searchQuery?: string;
     onImageLoad?: () => void;
     onViewMedia?: (url: string) => void;
+    onReport?: (messageId: string) => void;
+    isSelectionMode?: boolean;
+    isSelected?: boolean;
+    onToggleSelection?: (messageId: string) => void;
   }) => {
     const isMyMessage = message.sender_id === currentUserId;
     const isSystemMessage =
@@ -176,6 +188,14 @@ const MessageItem = memo(
         : 'message-highlight'
       : '';
     const flashClass = isFlashing ? styles['message-highlight-flash'] : '';
+
+    // Selection Mode Click Handler
+    const handleSelectionClick = useCallback((e: React.MouseEvent) => {
+        if (isSelectionMode && onToggleSelection) {
+            e.stopPropagation();
+            onToggleSelection(message.id);
+        }
+    }, [isSelectionMode, onToggleSelection, message.id]);
     if (isSystemMessage) {
       return (
         <div key={message.id} className="system-message" id={`msg-${message.id}`}>
@@ -184,26 +204,49 @@ const MessageItem = memo(
       );
     }
 
-    const hasText = typeof message.content === 'string' && message.content.replace(/\u200B/g, '').trim().length > 0;
-    const hasImages = message.attachments && message.attachments.length > 0;
+    // Check Content Existence (Moved from above, logic refined)
+    // Use includes for robustness against whitespace
+    const isDeleted = !!message.deleted_at || (typeof message.content === 'string' && message.content.includes('관리자에 의해 삭제된 메시지입니다'));
+    
+    // Force hide attachments if deleted
+    const hasImages = !isDeleted && message.attachments && message.attachments.length > 0;
+    
+    // Text should be shown if:
+    // 1. It is a normal message with text
+    // 2. It is a deleted message (content replaced by placeholder)
+    const hasText = isDeleted || (typeof message.content === 'string' && message.content.replace(/\u200B/g, '').trim().length > 0);
 
     if (!hasText && !hasImages) {
       return null;
     }
 
+    const canSelect = isSelectionMode && !isMyMessage;
+
     return (
       <div
         key={message.id}
         id={`msg-${message.id}`}
-        className={`message-item ${isMyMessage ? 'my-message' : 'other-message'} ${highlightClass} ${flashClass}`}
+        className={`message-item ${isMyMessage ? 'my-message' : 'other-message'} ${highlightClass} ${flashClass} 
+          ${canSelect ? 'cursor-pointer select-none' : ''} 
+          ${isSelected ? 'bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-500/50 rounded-xl my-1 py-1' : ''}`}
+        onClick={canSelect ? handleSelectionClick : undefined}
       >
+        {canSelect && (
+             <div className="flex items-center justify-center mx-2 z-10 shrink-0">
+                 {isSelected ? (
+                     <i className="ri-checkbox-circle-fill text-primary text-2xl" />
+                 ) : (
+                     <i className="ri-checkbox-blank-circle-line text-gray-300 dark:text-gray-600 text-2xl" />
+                 )}
+             </div>
+        )}
         {isMyMessage ? (
           <>
             <div className="message-bubble">
               {/* 첨부파일 (이미지/동영상/파일) */}
-              {message.attachments?.length ? (
+              {hasImages ? (
                 <div className="mb-2 flex flex-col gap-2">
-                  {message.attachments.map(att => {
+                  {message.attachments!.map(att => {
                     if (att.type === 'video') {
                       return (
                         <div key={`${message.id}-${att.url}`} className="relative group max-w-[240px]">
@@ -269,10 +312,10 @@ const MessageItem = memo(
               ) : null}
 
               {/* 텍스트 */}
-              {typeof message.content === 'string' && message.content.replace(/\u200B/g, '').trim().length > 0 && (
-                <div className="message-text whitespace-pre-wrap break-words break-all">
+              {hasText && (
+                <div className={`message-text whitespace-pre-wrap break-words break-all ${isDeleted ? 'italic opacity-60 text-gray-500' : ''}`}>
                   <HighlightText
-                    text={message.content}
+                    text={isDeleted ? '관리자에 의해 삭제된 메시지입니다.' : message.content || ''}
                     query={searchQuery}
                     className="bg-white/90 text-primary font-medium"
                   />
@@ -303,11 +346,24 @@ const MessageItem = memo(
                 nickname={message.sender?.nickname || '?'}
               />
             </div>
-            <div className="message-bubble relative px-3 py-2">
+            <div className="message-bubble relative px-3 py-2 group">
+              {/* Report Button (Hover only) - Other user messages only */}
+              {!isMyMessage && onReport && !isDeleted && (
+                 <button 
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onReport(message.id);
+                    }}
+                    className="absolute -top-6 right-0 p-1 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 bg-white/50 dark:bg-black/50 rounded-full"
+                    title="신고하기"
+                 >
+                    <i className="ri-alarm-warning-line" />
+                 </button>
+              )}
               {/* 첨부파일 (이미지/동영상/파일) */}
-              {message.attachments?.length ? (
+              {hasImages ? (
                 <div className="mb-2 flex flex-col gap-2">
-                  {message.attachments.map(att => {
+                  {message.attachments!.map(att => { // ! asserts existence because hasImages is true
                     if (att.type === 'video') {
                       return (
                          <div key={`${message.id}-${att.url}`} className="relative group max-w-[240px]">
@@ -372,12 +428,12 @@ const MessageItem = memo(
               ) : null}
 
               {/* 텍스트 + 번역 */}
-              {typeof message.content === 'string' && message.content.replace(/\u200B/g, '').trim().length > 0 && (
+              {hasText && (
                 <div className="flex items-center gap-2">
-                  <div className="message-text whitespace-pre-line break-words">
-                    <HighlightText text={message.content} query={searchQuery} />
+                  <div className={`message-text whitespace-pre-line break-words ${isDeleted ? 'italic opacity-60 text-gray-500' : ''}`}>
+                    <HighlightText text={isDeleted ? '관리자에 의해 삭제된 메시지입니다.' : message.content || ''} query={searchQuery} />
                   </div>
-                  {typeof message.content === 'string' && (
+                  {typeof message.content === 'string' && !isDeleted && (
                     <TranslateButton
                       text={message.content}
                       contentId={`dm_${message.id}`}
@@ -403,19 +459,7 @@ const MessageItem = memo(
         )}
       </div>
     );
-  },
-  (prev, next) => {
-    // Optimized: Use stable message properties instead of deep object comparison
-    // message.id + created_at is unique and stable, avatar changes are rare
-    return (
-      prev.message.id === next.message.id &&
-      prev.message.created_at === next.message.created_at &&
-      prev.isHighlighted === next.isHighlighted &&
-      prev.isFlashing === next.isFlashing &&
-      prev.isCurrent === next.isCurrent &&
-      prev.searchQuery === next.searchQuery
-    );
-  },
+  }
 );
 MessageItem.displayName = 'MessageItem';
 const DirectChatRoom = ({
@@ -446,6 +490,61 @@ const DirectChatRoom = ({
   const [currentResultIndex, setCurrentResultIndex] = useState(0);
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  
+  // Report Mode State
+  const location = useLocation();
+  const [isReportMode, setIsReportMode] = useState(false);
+  const [selectedMessages, setSelectedMessages] = useState<Set<string>>(new Set());
+  const [reportPreview, setReportPreview] = useState<string>('');
+
+  useEffect(() => {
+      if (location.state?.report) {
+          setIsReportMode(true);
+          // Clean up state references if possible to avoid sticking
+          window.history.replaceState({}, document.title);
+      }
+  }, [location.state]);
+
+  const toggleSelection = useCallback((msgId: string) => {
+      setSelectedMessages(prev => {
+          const next = new Set(prev);
+          if (next.has(msgId)) next.delete(msgId);
+          else next.add(msgId);
+          return next;
+      });
+  }, []);
+
+  const initiateReport = () => {
+      if (selectedMessages.size === 0) {
+          toast.error(t('report.select_messages', '신고할 메시지를 선택해주세요.'));
+          return;
+      }
+      
+      // Collect message contents
+      const selectedContent: string[] = [];
+      
+      // Iterate over messageGroups to find messages
+      // This is inefficient but functional for reasonable chat sizes.
+      // Better: Create a map or lookup if needed, but array iteration is fine for client side list.
+      // We only have messages in `messageGroups`.
+      // Iterate over messages
+      (messages || []).forEach(msg => {
+          if (selectedMessages.has(msg.id)) {
+              const content = typeof msg.content === 'string' ? msg.content : '(Media/File)';
+              const date = formatMessageTime(msg.created_at);
+              const sender = msg.sender?.nickname || 'Unknown';
+              selectedContent.push(`[${date}] ${sender}: ${content}`);
+          }
+      });
+
+      const formattedPreview = selectedContent.join('\n');
+      setReportPreview(formattedPreview);
+      
+      // Open Modal - target is Room (Chat ID), type 'chat'
+      // Additional info will be passed to modal
+      setReportTarget({ type: 'chat', id: chatId });
+      setIsReportModalOpen(true);
+  };
 
   // 10-zzeon: 신고 취소 메뉴 State
   const [showMenu, setShowMenu] = useState(false);
@@ -453,6 +552,15 @@ const DirectChatRoom = ({
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [viewingMediaUrl, setViewingMediaUrl] = useState<string | null>(null); // 통합 미디어 뷰어 상태
+
+  // Report Modal State
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportTarget, setReportTarget] = useState<{ type: 'user' | 'chat', id: string } | null>(null);
+
+  const handleReport = useCallback((targetId: string, type: 'chat' | 'user') => {
+    setReportTarget({ id: targetId, type });
+    setIsReportModalOpen(true);
+  }, []);
 
   // 현재 로드된 메시지에서 미디어 추출 (Memoized)
   const allCurrentMedia = useMemo(() => {
@@ -492,6 +600,12 @@ const DirectChatRoom = ({
     });
     return media;
   }, [messages]);
+
+  // Calculate content snapshot for reporting
+  const contentSnapshot = useMemo(() => {
+      if (!isReportMode || selectedMessages.size === 0) return null;
+      return messages.filter(m => selectedMessages.has(m.id));
+  }, [messages, selectedMessages, isReportMode]);
 
   // 전체 미디어 목록 (무한 스크롤 너머의 데이터 포함)
   const [fullMediaList, setFullMediaList] = useState<MediaItem[]>([]);
@@ -661,10 +775,24 @@ const DirectChatRoom = ({
         } else {
           // 아니면 "새 메시지" 버튼 표시
           if (!isMyMessage) {
+            let content = typeof lastMessage.content === 'string' ? lastMessage.content : '';
+            
+            if (lastMessage.attachments && lastMessage.attachments.length > 0) {
+              const types = lastMessage.attachments.map(a => a.type);
+              let prefix = '';
+              if (types.includes('video')) prefix = `[${t('notification.media_video', '동영상')}] `;
+              else if (types.includes('file')) prefix = `[${t('notification.media_file', '파일')}] `;
+              else if (types.includes('image')) prefix = `[${t('notification.media_photo', '사진')}] `;
+              
+              content = `${prefix}${content}`.trim();
+            }
+
+            if (!content) content = t('chat.image_message', '사진');
+
             setNewMessageToast({
               id: lastMessage.id,
               sender: lastMessage.sender?.nickname || 'Unknown',
-              content: typeof lastMessage.content === 'string' ? lastMessage.content : (t('chat.image_message') || '사진'),
+              content: content,
               avatar: lastMessage.sender?.avatar_url
             });
           }
@@ -885,6 +1013,7 @@ const DirectChatRoom = ({
   const messageGroups = useMemo(() => {
     const groups: MessageGroup = {};
     if (messages && Array.isArray(messages)) {
+      // Temporarily removed deduplication to test if it's causing display issues
       messages.forEach(message => {
         const date = new Date(message.created_at).toDateString();
         (groups[date] ||= []).push(message);
@@ -1020,7 +1149,21 @@ const DirectChatRoom = ({
                 ←
               </button>
             )}
-            <h3>{currentChat?.other_user?.nickname || t('chat.loading')}</h3>
+            <h3 className="flex items-center gap-2">
+              <div className="relative inline-flex items-center pr-2.5 shrink-0">
+                <span className="truncate max-w-[150px] sm:max-w-[200px]">
+                  {currentChat?.other_user?.nickname || t('chat.loading')}
+                </span>
+                {currentChat?.other_user?.id && (
+                  <OnlineIndicator 
+                    userId={currentChat.other_user.id} 
+                    size="sm" 
+                    className="absolute top-0.5 right-0 z-10 border-white dark:border-secondary border shadow-none" 
+                  />
+                )}
+              </div>
+              <BanBadge bannedUntil={currentChat?.other_user?.banned_until ?? null} size="sm" />
+            </h3>
           </div>
         </div>
         <div className="chat-room-actions">
@@ -1045,6 +1188,7 @@ const DirectChatRoom = ({
             >
               <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
             </button>
+
             {showMenu && (
               <div className="absolute right-0 top-12 w-auto min-w-[144px] bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg py-2 z-50">
                 <button
@@ -1058,13 +1202,18 @@ const DirectChatRoom = ({
                   {t('chat.media_gallery', '미디어')}
                 </button>
                 <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" />
-                <ReportButton onClose={() => setShowMenu(false)} />
-                <BlockButton
-                  username={currentChat?.other_user?.nickname || '이 사용자'}
-                  isBlocked={isBlocked}
-                  onToggle={() => setIsBlocked(prev => !prev)}
-                  onClose={() => setShowMenu(false)}
-                />
+                <ReportButton onClick={() => {
+                   setShowMenu(false);
+                   setIsReportMode(true);
+                   toast.info(t('report.guide_select', '신고할 메시지를 선택해주세요.'));
+                }} />
+                {currentChat?.other_user?.id && (
+                  <BlockButton
+                    targetProfileId={currentChat.other_user.id}
+                    onClose={() => setShowMenu(false)}
+                    onBlock={() => onBackToList?.()}
+                  />
+                )}
                 <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" />
                 <button
                   className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-500 flex items-center gap-2 whitespace-nowrap"
@@ -1081,6 +1230,63 @@ const DirectChatRoom = ({
           </div>
         </div>
       </div>
+      {/* Selection Mode Bottom Bar */}
+      {isReportMode && (
+          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 p-4 z-50 flex items-center justify-between shadow-lg safe-area-bottom">
+              <span className="text-sm font-medium">
+                  {selectedMessages.size} {t('report.selected_count', '개 선택됨')}
+              </span>
+              <div className="flex gap-3">
+                  <button 
+                      onClick={() => {
+                          setIsReportMode(false);
+                          setSelectedMessages(new Set());
+                      }}
+                      className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-sm font-medium"
+                  >
+                      {t('common.cancel', '취소')}
+                  </button>
+                  <button 
+                      onClick={initiateReport}
+                      className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 disabled:opacity-50"
+                      disabled={selectedMessages.size === 0}
+                  >
+                      {t('report.submit', '신고하기')}
+                  </button>
+              </div>
+          </div>
+      )}
+
+      {/* Report Modal */}
+      {reportTarget && (
+        <ReportModal
+          isOpen={isReportModalOpen}
+          onSuccess={() => {
+              setIsReportMode(false);
+              setSelectedMessages(new Set());
+          }}
+          metadata={{ reported_message_ids: Array.from(selectedMessages) }}
+          contentSnapshot={contentSnapshot}
+          onClose={() => {
+            setIsReportModalOpen(false);
+            setReportTarget(null);
+            // If submitted/closed, exit report mode too?
+            // Usually yes if success, but modal onClose might be cancel.
+            // If success, we should exit. But ReportModal doesn't tell distinction easily.
+            // We can leave mode on for retry, or exit.
+            // Let's keep mode on unless user cancels.
+          }}
+          targetType={reportTarget.type}
+          targetId={reportTarget.id}
+          additionalInfo={`[Reported Messages]\n${reportPreview}`}
+          previewContent={
+              <div className="whitespace-pre-wrap text-xs">
+                  {reportPreview}
+              </div>
+          }
+        />
+      )}
+      
       {showSearch && (
         <div className="chat-room-search-bar">
           <div className="chat-room-search-inner">
@@ -1154,7 +1360,7 @@ const DirectChatRoom = ({
                 return (
                   <div key={date} className="message-group">
                     <div className="date-divider">
-                      <span>{formatDividerDate((dateMessages[0] as DirectMessage).created_at)}</span>
+                      <span>{formatDividerDate(date)}</span>
                     </div>
                     <div className="message-group-container">
                       {dateMessages.map((message: DirectMessage) => {
@@ -1178,6 +1384,9 @@ const DirectChatRoom = ({
                             searchQuery={searchQuery}
                             onImageLoad={handleImageLoad}
                             onViewMedia={setViewingMediaUrl} // 통합 미디어 핸들러
+                            isSelectionMode={isReportMode}
+                            isSelected={selectedMessages.has(message.id)}
+                            onToggleSelection={toggleSelection}
                           />
                         );
                       })}
@@ -1277,6 +1486,7 @@ const DirectChatRoom = ({
             </div>
           </div>
         </Modal>
+
 
       <MessageInput chatId={chatId} />
     </div>

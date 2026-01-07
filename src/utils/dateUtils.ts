@@ -168,17 +168,58 @@ export const formatChatListDate = (dateString: string): string => {
 };
 
 /**
- * Formats date divider in chat room (e.g., "2024년 10월 5일 월요일").
+ * Numeric-only date format: "YY. MM. DD."
+ * Example: "25. 12. 31."
+ * Kept from jh-93
+ */
+export const formatNumericDate = (dateString: string): string => {
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    
+    // The user wants: '25. 12. 31.'
+    return format(date, 'yy. MM. dd.');
+  } catch (err) {
+    console.error('Numeric date formatting error:', err);
+    return '';
+  }
+};
+
+/**
+ * Enhanced formatter for notifications/tweets:
+ * - Today: "오후 3:00" / "3:00 PM"
+ * - Past: "25. 12. 31. 15:00"
+ * Kept from jh-93
+ */
+export const formatSmartDate = (dateString: string): string => {
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    
+    // We can enhance this to start with "Today at..." if current date, basically combining logic
+    // But sticking to the jh-93 definition for consistency with recent fixes:
+    return format(date, 'yy. MM. dd. HH:mm');
+  } catch {
+    return dateString;
+  }
+};
+
+/**
+ * Formats date for visual dividers (e.g. "Today", "October 5th, Monday")
+ * Merged from main logic (visual preference) but kept function signature
  */
 export const formatDividerDate = (dateString: string): string => {
   if (!dateString) return '';
   try {
     const date = new Date(dateString);
-    const now = new Date();
+    if (isNaN(date.getTime())) return '';
+    
     const locale = getLocale();
 
     if (isToday(date)) {
-      return locale === ko ? '오늘' : 'Today'; // Optional: Just Date is often better
+      return locale === ko ? '오늘' : 'Today';
     }
 
     // PPP: Oct 5th, 2024 / 2024년 10월 5일
@@ -189,6 +230,10 @@ export const formatDividerDate = (dateString: string): string => {
   }
 };
 
+/**
+ * Formats time specifically for TweetCards (from main)
+ * Supports TweetCard.tsx which might expect this specific logic
+ */
 export function formatTweetCardTime(timestamp: string, lang: string = 'ko') {
   if (!timestamp) return '';
   try {
@@ -211,7 +256,7 @@ export function formatTweetCardTime(timestamp: string, lang: string = 'ko') {
       }).format(date);
     }
 
-    // 이전 날짜는 날짜 + 시간 표시 (TweetCard 그대로)
+    // 이전 날짜는 날짜 + 시간 표시
     return new Intl.DateTimeFormat(lang, {
       month: 'short',
       day: 'numeric',

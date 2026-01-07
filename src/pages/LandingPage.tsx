@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Helmet } from 'react-helmet-async';
 
 import { isGuideModalDismissed } from '@/components/common/GuideModal';
 import CTASection from '@/components/landing/CTASection';
@@ -37,6 +39,7 @@ const sectionOrder: SectionId[] = [
 ];
 
 const LandingPage = ({ onSignup }: HomeProps) => {
+  const { t } = useTranslation();
   const [showGuide, setShowGuide] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState<SectionId>('hero');
@@ -221,6 +224,10 @@ const LandingPage = ({ onSignup }: HomeProps) => {
 
   return (
     <main className="relative min-h-screen bg-white dark:bg-background text-slate-900 dark:text-gray-100">
+      <Helmet>
+        <title>{t('study.meta_title')}</title>
+        <meta name="description" content={t('landing.description')} />
+      </Helmet>
       {/* 상단 진행 바 */}
       <div className="fixed left-0 top-0 z-40 w-full h-0.5 bg-transparent">
         <div
@@ -232,13 +239,13 @@ const LandingPage = ({ onSignup }: HomeProps) => {
       {/* 오른쪽 미니 내비 (xl부터 표시) */}
       <div className="fixed right-4 top-1/2 z-30 -translate-y-1/2 hidden xl:flex flex-col gap-3">
         {[
-          { id: 'hero' as SectionId, label: 'Top' },
-          { id: 'how-it-works' as SectionId, label: 'How' },
-          { id: 'problems' as SectionId, label: 'Problems' },
-          { id: 'features' as SectionId, label: 'Features' },
-          { id: 'contents' as SectionId, label: 'Contents' },
-          { id: 'testimonials' as SectionId, label: 'Stories' },
-          { id: 'cta' as SectionId, label: 'Start' },
+          { id: 'hero' as SectionId, label: t('landing.nav_top', 'Top') },
+          { id: 'how-it-works' as SectionId, label: t('landing.nav_how', 'How') },
+          { id: 'problems' as SectionId, label: t('landing.nav_problems', 'Problems') },
+          { id: 'features' as SectionId, label: t('landing.nav_features', 'Features') },
+          { id: 'contents' as SectionId, label: t('landing.nav_contents', 'Contents') },
+          { id: 'testimonials' as SectionId, label: t('landing.nav_stories', 'Stories') },
+          { id: 'cta' as SectionId, label: t('landing.nav_start', 'Start') },
         ].map(({ id, label }) => {
           const isActive = activeSection === id;
           return (

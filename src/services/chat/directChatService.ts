@@ -281,7 +281,7 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
     if (otherUserIds.length > 0) {
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
-        .select('id, nickname, avatar_url, username')
+        .select('id, nickname, avatar_url, username, banned_until')
         .in('id', otherUserIds);
 
       if (!profileError && profiles) {
@@ -292,6 +292,7 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
             nickname: p.nickname,
             username: p.username,
             avatar_url: p.avatar_url,
+            banned_until: p.banned_until,
           });
         });
       }
@@ -407,7 +408,7 @@ export async function getDirectChat(chatId: string): Promise<ChatApiResponse<Cha
     // 상대방 프로필 조회
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, nickname, avatar_url, username')
+      .select('id, nickname, avatar_url, username, banned_until')
       .eq('id', otherUserId)
       .single();
 
@@ -418,6 +419,7 @@ export async function getDirectChat(chatId: string): Promise<ChatApiResponse<Cha
           nickname: profile.nickname,
           username: profile.username,
           avatar_url: profile.avatar_url,
+          banned_until: profile.banned_until,
         }
       : {
           id: otherUserId,
@@ -550,27 +552,56 @@ export async function sendMessage(
       return { success: false, error: '채팅방을 찾을 수 없습니다.' };
     }
 
-    // 상대방의 active 상태를 true로 변경하고 알림 설정 (메시지를 보내면 상대방에게도 채팅방이 표시되어야 함)
-    const isCurrentUserUser1 = chat.user1_id === currentUser.profileId;
-    const otherUserActiveField = isCurrentUserUser1 ? 'user2_active' : 'user1_active';
-    const otherUserNotifiedField = isCurrentUserUser1 ? 'user2_notified' : 'user1_notified';
+    // 상대방 ID 식별
+    const otherUserId = chat.user1_id === currentUser.profileId ? chat.user2_id : chat.user1_id;
 
-    // 상대방이 나간 상태에서 메시지를 받으면 알림 설정
-    if (!chat[otherUserActiveField]) {
-      const updateData = {
-        [otherUserActiveField]: true,
-        [otherUserNotifiedField]: true, // 새 메시지 알림 설정
-      };
+    // 2. 상대방이 나를 차단했는지
+    let isBlockedByOther = false;
 
-      const { error: activateError } = await supabase
-        .from('direct_chats')
-        .update(updateData)
-        .eq('id', messageData.chat_id);
+    if (otherUserId) {
+        // active block only (ended_at is null)
+        const { data: blockData } = await supabase
+            .from('user_blocks')
+            .select('id, blocker_id')
+            .or(`and(blocker_id.eq.${currentUser.profileId},blocked_id.eq.${otherUserId}),and(blocker_id.eq.${otherUserId},blocked_id.eq.${currentUser.profileId})`)
+            .is('ended_at', null)
+            .maybeSingle();
 
-      if (activateError) {
-        console.error('상대방 활성화 및 알림 설정 오류:', activateError);
-        // 오류가 있어도 메시지 전송은 계속 진행
-      }
+        if (blockData) {
+            // Case 1: 내가 상대를 차단함 -> 전송 불가 (에러)
+            if (blockData.blocker_id === currentUser.profileId) {
+                return { success: false, error: '차단한 사용자에게는 메시지를 보낼 수 없습니다.' };
+            } 
+            // Case 2: 상대가 나를 차단함 -> 전송 성공 처리하되, 알림은 가지 않음 (Shadow Block)
+            else {
+                isBlockedByOther = true;
+            }
+        }
+    }
+
+    // 상대방의 active 상태를 true로 변경하고 알림 설정
+    // 단, 상대방이 나를 차단했다면 알림/활성화를 강제하지 않음 (Shadow Block)
+    if (!isBlockedByOther) {
+        const isCurrentUserUser1 = chat.user1_id === currentUser.profileId;
+        const otherUserActiveField = isCurrentUserUser1 ? 'user2_active' : 'user1_active';
+        const otherUserNotifiedField = isCurrentUserUser1 ? 'user2_notified' : 'user1_notified';
+
+        // 상대방이 나간 상태에서 메시지를 받으면 알림 설정
+        if (!chat[otherUserActiveField]) {
+            const updateData = {
+                [otherUserActiveField]: true,
+                [otherUserNotifiedField]: true, // 새 메시지 알림 설정
+            };
+
+            const { error: activateError } = await supabase
+                .from('direct_chats')
+                .update(updateData)
+                .eq('id', messageData.chat_id);
+
+            if (activateError) {
+                console.error('상대방 활성화 및 알림 설정 오류:', activateError);
+            }
+        }
     }
 
     // 1단계: 메시지 저장
@@ -578,9 +609,10 @@ export async function sendMessage(
       .from('direct_messages')
       .insert({
         chat_id: messageData.chat_id,
-        sender_id: currentUser.id, // auth.users.id 사용
+        sender_id: currentUser.id,
         content: messageData.content,
-        is_read: false,
+        is_read: isBlockedByOther,
+        read_at: isBlockedByOther ? new Date().toISOString() : null,
       })
       .select()
       .single();
@@ -797,6 +829,8 @@ export async function getMessages(
     // 역방향 스크롤 (beforeAt) 또는 최신순 조회 (기본)
     else {
       if (beforeAt) {
+        // Use lte instead of lt to handle messages with identical timestamps
+        // We'll rely on deduplication in the context layer to handle any overlap
         query = query.lt('created_at', beforeAt);
       }
       query = query
@@ -987,7 +1021,7 @@ export async function searchMessagesGlobal(
     if (senderIds.length > 0) {
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
-        .select('id, nickname, avatar_url, user_id')
+        .select('id, nickname, avatar_url, user_id, banned_until')
         .in('user_id', senderIds); // user_id 컬럼으로 검색 (auth.uid와 매핑)
 
       if (!profileError && profiles) {
@@ -1014,6 +1048,7 @@ export async function searchMessagesGlobal(
               id: profile.id,
               nickname: profile.nickname,
               avatar_url: profile.avatar_url,
+              banned_until: profile.banned_until,
               email: '',
             }
           : {
@@ -1076,7 +1111,7 @@ export async function searchUsers(searchTerm: string): Promise<ChatApiResponse<C
     // 사용자 검색 (profiles 테이블에서 검색, 현재 사용자와 이미 채팅 중인 사용자 제외)
     const { data: profiles, error: searchError } = await supabase
       .from('profiles')
-      .select('id, nickname, avatar_url, created_at')
+      .select('id, nickname, avatar_url, created_at, banned_until')
       .ilike('nickname', `%${searchTerm}%`)
       .neq('user_id', currentUser.id) // user_id로 현재 사용자 제외
       .limit(20);
@@ -1102,6 +1137,7 @@ export async function searchUsers(searchTerm: string): Promise<ChatApiResponse<C
       email: `user-${profile.id}@example.com`, // email 필드가 없으므로 기본값 사용
       nickname: profile.nickname,
       avatar_url: profile.avatar_url,
+      banned_until: profile.banned_until,
     }));
 
     return { success: true, data: chatUsers };

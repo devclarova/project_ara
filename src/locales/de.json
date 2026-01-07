@@ -33,8 +33,37 @@
     "no_notifications": "Es gibt noch keine neuen Benachrichtigungen.",
     "delete_confirm_title": "Benachrichtigung löschen",
     "delete_confirm_desc": "Möchten Sie diese Benachrichtigung löschen?",
-    "action_mention": "mentioned you.",
-    "action_repost": "reposted your post."
+    "action_mention": "hat dich erwähnt",
+    "action_repost": "hat deinen Beitrag geteilt",
+    "tab_all": "Alle",
+    "tab_likes": "Likes",
+    "tab_comments": "Kommentare",
+    "tab_follow": "Folgen",
+    "tab_updates": "Neuigkeiten",
+    "media_photo": "[Foto]",
+    "media_video": "[Video]",
+    "media_file": "[Datei]",
+    "follow_you": "folgt dir",
+    "follow_request": "hat dir eine Folgeanfrage gesendet",
+    "tab_system": "System",
+    "system_notice": "System-Benachrichtigung",
+    "system": {
+      "ban_title": "[ARA-Team] Hinweis zur Nutzungseinschränkung",
+      "ban_prefix": "Hallo, hier ist das ARA-Team.<br/>Wir informieren Sie, dass gegen Ihr Konto Nutzungseinschränkungen verhängt wurden.",
+      "ban_reason": "<strong>• Grund der Einschränkung:</strong> {{reason}}",
+      "ban_duration": "<strong>• Dauer der Einschränkung:</strong> {{duration}}",
+      "ban_until": "<strong>• Aufhebungsdatum:</strong> {{until}}",
+      "ban_features": "<strong>• Einschränkungen:</strong> Alle Community-Aktivitäten (Posten, Kommentieren, Liken, Folgen, Chatten)",
+      "ban_footer": "Dies ist eine Maßnahme zur Schaffung einer angenehmen Community-Umgebung. Wir bitten um Ihr Verständnis.",
+      "unban_title": "[ARA-Team] Hinweis zur Aufhebung der Einschränkung",
+      "unban_message": "Der Zeitraum der Einschränkung ist abgelaufen. Sie können den Dienst wieder normal nutzen.<br/>Bitte beteiligen Sie sich weiterhin an einer gesunden Community-Kultur.",
+      "reporter_title": "[ARA-Team] Meldung erfolgreich bearbeitet",
+      "reporter_prefix": "Bezüglich Ihrer Meldung wurden entsprechende Maßnahmen ergriffen.<br/>Vielen Dank, dass Sie uns helfen, eine gesunde Community-Umgebung aufrechtzuerhalten.<br/><br/>",
+      "reporter_target": "<strong>• Gemeldetes Ziel:</strong> {{target}}",
+      "reporter_reason": "<strong>• Grund:</strong> {{reason}}",
+      "reporter_action": "<strong>• Ergriffene Maßnahme:</strong> {{action}}",
+      "reporter_footer": "<br/>Vielen Dank für Ihr Interesse."
+    }
   },
   "study": {
     "studylist": "Lernliste",
@@ -152,11 +181,18 @@
     "agree_and_close": "Zustimmen und schließen"
   },
   "common": {
+    "ara_team": "ARA-Team",
+    "online": "Online",
+    "offline": "Offline",
     "save": "Speichern",
     "saving": "Speichern...",
     "apply": "Anwenden",
     "cancel": "Abbrechen",
     "delete": "Löschen",
+    "ban": "Einschränkung",
+    "content_deleted": "Inhalt gelöscht",
+    "permanent": "Dauerhaft",
+    "days": "Tage",
     "edit": "Bearbeiten",
     "my_profile": "Mein Profil",
     "my_account": "Mein Konto",
@@ -185,6 +221,10 @@
     "block": "Blockieren",
     "unblock": "Entblocken",
     "report": "Melden",
+    "reason": "Meldegrund",
+    "status": {
+      "dismissed": "Meldung abgelehnt"
+    },
     "edit_mode": "Wechseln in den Bearbeitungsmodus.",
     "block_success": "{{name}} blockiert.",
     "unblock_success": "{{name}} entblockt.",
@@ -199,7 +239,6 @@
       "dark": "Dunkel",
       "system": "System"
     },
-    "system": "System",
     "language": "Sprache",
     "theme": "Design",
     "notifications": "Benachrichtigungen",
@@ -278,8 +317,6 @@
   },
   "profile": {
     "edit_profile": "Profil bearbeiten",
-    "following": "Folge ich",
-    "followers": "Follower",
     "joined": "Beigetreten {{date}}",
     "tabs": {
       "posts": "Beiträge",
@@ -302,7 +339,18 @@
     "nickname_change_forbidden": "Der Spitzname kann nicht erneut geändert werden.",
     "country_change_warning": "⚠️ Du kannst dein Land nur einmal ändern.",
     "country_disabled_reason": "Das Land wurde bereits einmal geändert.",
-    "country_change_forbidden": "Das Land kann nicht erneut geändert werden."
+    "country_change_forbidden": "Das Land kann nicht erneut geändert werden.",
+    "follow": "Folgen",
+    "following": "Folge ich",
+    "unfollow": "Entfolgen",
+    "followers_list": "Follower-Liste",
+    "following_list": "Folge-ich-Liste",
+    "no_followers": "Noch keine Follower",
+    "no_following": "Folgst noch niemandem",
+    "search_users": "Benutzer suchen...",
+    "follow_feature_coming_soon": "Folgen-Funktion kommt bald",
+    "turn_on_notifications": "Benachrichtigungen einschalten",
+    "turn_off_notifications": "Benachrichtigungen ausschalten"
   },
   "tweets": {
     "placeholder_tweet": "Was gibt's Neues?",
@@ -355,9 +403,9 @@
     "room_title": "Direct Chat",
     "loading": "Lädt...",
     "me": "Ich",
-    "unknown": "Unknown",
-    "today": "Today",
-    "exit": "Exit",
+    "unknown": "Unbekannt",
+    "today": "Heute",
+    "exit": "Verlassen",
     "search_placeholder": "Nachrichten suchen",
     "search_btn": "Suchen",
     "search_hint": "Nachrichteninhalt suchen.",
@@ -402,9 +450,9 @@
     "attach_image": "Foto",
     "attach_video": "Video",
     "attach_file": "Datei",
-    "confirm_exit_title": "Leave Chat?",
-    "confirm_exit_desc": "You will be returned to the chat list.",
-    "exit_success": "Left chat room."
+    "confirm_exit_title": "Chat verlassen?",
+    "confirm_exit_desc": "Sie werden zur Chatliste zurückgekehrt",
+    "exit_success": "Chatraum verlassen"
   },
   "footer": {
     "brand": {
@@ -507,12 +555,24 @@
     "login_required": "Bitte melden Sie sich an, um die Übersetzungsfunktion zu nutzen.",
     "guest_limit_reached": "Sie haben alle kostenlosen Übersetzungen aufgebraucht. Melden Sie sich an, um fortzufahren."
   },
+  "report": {
+    "reason": "Grund der Meldung",
+    "reasons": {
+      "spam": "Spam / Werbung",
+      "abuse": "Beleidigung / Abwertung",
+      "harmful": "Schädliche Inhalte",
+      "inappropriate": "Unangemessene Inhalte",
+      "other": "Sonstiges (Direkteingabe)"
+    }
+  },
   "admin": {
     "report_processed": "Meldung bearbeitet.",
     "report_rejected": "Meldung abgelehnt.",
     "no_permission": "Keine Administratorrechte.",
     "login_success": "Admin-Login erfolgreich.",
     "study_deleted": "Lerninhalt gelöscht.",
+    "reason": "Grund des Administrators",
+    "review_comment": "Prüfkommentar des Administrators",
     "study_uploaded": "Lerninhalt erfolgreich hochgeladen!",
     "goods_registered": "Produkt erfolgreich registriert!",
     "goods_deleted": "Produkt gelöscht.",

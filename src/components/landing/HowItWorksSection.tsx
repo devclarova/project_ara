@@ -2,20 +2,22 @@ import { motion } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import 'swiper/css';
 import 'swiper/css/pagination';
 
 const GUIDE_SLIDES = [
-  { id: 1, image: '/images/landing_guide_1.png', alt: 'ARA 가이드 1' },
-  { id: 2, image: '/images/landing_guide_2.png', alt: 'ARA 가이드 2' },
-  { id: 3, image: '/images/landing_guide_3.png', alt: 'ARA 가이드 3' },
-  { id: 4, image: '/images/landing_guide_4.gif', alt: 'ARA 가이드 4' },
-  { id: 5, image: '/images/landing_guide_5.gif', alt: 'ARA 가이드 5' },
-  { id: 6, image: '/images/landing_guide_6.png', alt: 'ARA 가이드 6' },
+  { id: 1, image: '/images/landing_guide_1.png' },
+  { id: 2, image: '/images/landing_guide_2.png' },
+  { id: 3, image: '/images/landing_guide_3.png' },
+  { id: 4, image: '/images/landing_guide_4.gif' },
+  { id: 5, image: '/images/landing_guide_5.gif' },
+  { id: 6, image: '/images/landing_guide_6.png' },
 ];
 
 export default function HowItWorksSection() {
+  const { t } = useTranslation();
   const swiperRef = useRef<any>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
 
@@ -55,10 +57,10 @@ export default function HowItWorksSection() {
       <div className="w-full max-w-screen-xl mx-auto px-6 pt-8 pb-12 md:pt-10 md:pb-14 lg:pt-12 lg:pb-16">
         <div className="text-center mb-10 md:mb-14">
           <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
-            HOW IT WORKS
+            {t('landing.how_it_works_badge')}
           </p>
           <h2 className="mt-2 text-2xl md:text-3xl font-bold text-slate-900 dark:text-gray-100 break-keep">
-            ARA 학습 흐름이 이렇게 진행돼요
+            {t('landing.how_it_works_title')}
           </h2>
         </div>
 
@@ -83,7 +85,7 @@ export default function HowItWorksSection() {
                 <div className="inline-flex items-center justify-center rounded-3xl bg-white/95 dark:bg-secondary/80 shadow-md border border-slate-200 dark:border-slate-700 p-3 sm:p-4">
                   <img
                     src={slide.image}
-                    alt={slide.alt}
+                    alt={t('landing.guide_alt', { index: slide.id })}
                     className="block h-auto max-h-[520px] max-w-[80vw] sm:max-w-[560px] object-contain dark:brightness-90"
                     draggable={false}
                   />

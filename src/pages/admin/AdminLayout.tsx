@@ -88,7 +88,11 @@ const AdminLayout = () => {
       >
         <div className="h-full flex flex-col">
           <div className="h-16 flex items-center px-6 border-b border-gray-300 dark:border-gray-600">
-            <Link to="/admin" className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-emerald-600">
+            <Link 
+              to="/admin" 
+              className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-emerald-600"
+              onClick={() => setSidebarOpen(false)}
+            >
               ARA Admin
             </Link>
             <button 
@@ -101,22 +105,22 @@ const AdminLayout = () => {
 
 
           <div className="flex-1 min-h-0 overflow-y-auto py-4 px-3 space-y-1">
-            <NavItem to="/admin" icon={Home} label="대시보드" end />
+            <NavItem to="/admin" icon={Home} label="대시보드" end onClick={() => setSidebarOpen(false)} />
             
             <div className="pt-4 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">콘텐츠 관리</div>
-            <NavItem to="/admin/study/upload" icon={Video} label="학습 영상 업로드" />
-            <NavItem to="/admin/study/manage" icon={Video} label="학습 관리" />
-            <NavItem to="/admin/goods/new" icon={Package} label="상품 등록" />
-            <NavItem to="/admin/goods/manage" icon={Package} label="상품 관리" />
-            <NavItem to="/admin/content" icon={ShieldAlert} label="콘텐츠 중재" />
+            <NavItem to="/admin/study/upload" icon={Video} label="학습 영상 업로드" onClick={() => setSidebarOpen(false)} />
+            <NavItem to="/admin/study/manage" icon={Video} label="학습 관리" onClick={() => setSidebarOpen(false)} />
+            <NavItem to="/admin/goods/new" icon={Package} label="상품 등록" onClick={() => setSidebarOpen(false)} />
+            <NavItem to="/admin/goods/manage" icon={Package} label="상품 관리" onClick={() => setSidebarOpen(false)} />
+            <NavItem to="/admin/content" icon={ShieldAlert} label="게시물 및 댓글 관리" onClick={() => setSidebarOpen(false)} />
             
             <div className="pt-4 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">운영 지원</div>
-            <NavItem to="/admin/reports" icon={AlertTriangle} label="신고 및 문의" />
-            <NavItem to="/admin/analytics" icon={PieChart} label="통계 및 분석" />
-            <NavItem to="/admin/users" icon={Users} label="사용자 관리" />
+            <NavItem to="/admin/reports" icon={AlertTriangle} label="신고 및 문의" onClick={() => setSidebarOpen(false)} />
+            <NavItem to="/admin/analytics" icon={PieChart} label="통계 및 분석" onClick={() => setSidebarOpen(false)} />
+            <NavItem to="/admin/users" icon={Users} label="사용자 관리" onClick={() => setSidebarOpen(false)} />
             
              <div className="pt-4 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">설정</div>
-            <NavItem to="/admin/settings" icon={Settings} label="설정" />
+            <NavItem to="/admin/settings" icon={Settings} label="설정" onClick={() => setSidebarOpen(false)} />
           </div>
 
           <div className="p-4 border-t border-gray-300 dark:border-gray-600 shrink-0">
@@ -199,7 +203,7 @@ const AdminLayout = () => {
         </header>
 
         {/* Dynamic Content Area */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-0 sm:p-4 md:p-6 lg:p-8 bg-background w-full max-w-full box-border">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 sm:p-4 md:p-6 lg:p-8 bg-background w-full max-w-full box-border">
             <Outlet />
         </main>
       </div>
@@ -216,14 +220,17 @@ const AdminLayout = () => {
 };
 
 // Subcomponent for nav items
-function NavItem({ icon: Icon, label, to, end }: { icon: any, label: string, to: string, end?: boolean }) {
+function NavItem({ icon: Icon, label, to, end, onClick }: { icon: any, label: string, to: string, end?: boolean, onClick?: () => void }) {
   const location = useLocation();
   const isActive = end 
     ? location.pathname === to 
     : location.pathname.startsWith(to);
   
   return (
-    <Link to={to} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors mb-1 ${
+    <Link 
+      to={to} 
+      onClick={onClick}
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors mb-1 ${
       isActive 
         ? 'bg-primary/10 text-primary font-medium' 
         : 'text-muted-foreground hover:text-foreground hover:bg-muted'

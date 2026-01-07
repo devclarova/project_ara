@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
+import { useBlockedUsers } from '@/hooks/useBlockedUsers';
 import TweetCard from '@/pages/community/feature/TweetCard';
 import { ReplyCard } from '@/pages/community/tweet/components/ReplyCard';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
@@ -13,9 +15,14 @@ interface ProfileTweetsProps {
     username: string;
     avatar: string;
   };
+  onItemClick?: (item: FeedItem) => void;
+  onProfileClick?: (username: string) => void;
+  disableInteractions?: boolean;
 }
 const PAGE_SIZE = 10;
-export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsProps) {
+export default function ProfileTweets({ activeTab, userProfile, onItemClick, onProfileClick, disableInteractions = false }: ProfileTweetsProps) {
+  const { t } = useTranslation();
+  const { blockedIds } = useBlockedUsers(); // 차단 목록 가져오기
   const [tweets, setTweets] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -37,7 +44,7 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
     // 데이터 로드
     fetchTweets(true); 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, userProfile.id]);
+  }, [activeTab, userProfile.id, blockedIds]); // blockedIds 추가
   const fetchTweets = async (reset = false) => {
     const currentTab = activeTabRef.current;
     
@@ -52,25 +59,29 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
       let newData: FeedItem[] = [];
       // 1) 내가 쓴 게시글
       if (currentTab === 'posts') {
-        newData = await tweetService.getPosts(userProfile.id, pageToLoad);
+        newData = await tweetService.getPosts(userProfile.id, pageToLoad, blockedIds);
       } 
       // 2) 내가 쓴 댓글
       else if (currentTab === 'replies') {
-        newData = await tweetService.getReplies(userProfile.id, pageToLoad);
+        newData = await tweetService.getReplies(userProfile.id, pageToLoad, blockedIds);
       } 
       // 3) 좋아요한 글
       else if (currentTab === 'likes') {
         const { items, allLikedItems } = await tweetService.getLikedItems(
           userProfile.id, 
           pageToLoad, 
-          likedItemsRef.current // 캐싱된 전체 리스트 전달
+          // 첫 페이지가 아니면 캐시된 리스트 사용
+          pageToLoad === 0 ? undefined : likedItemsRef.current
         );
         
+        // 좋아요 목록에서 차단된 사용자 글 필터링
+        const filteredItems = items.filter(item => !blockedIds.includes(item.user.username)); 
+        
         // 첫 로드(또는 갱신) 시 전체 리스트를 받아와 캐시 업데이트
-        if (allLikedItems && allLikedItems.length > 0) {
+        if (pageToLoad === 0 && allLikedItems) {
            likedItemsRef.current = allLikedItems;
         }
-        newData = items;
+        newData = filteredItems;
       }
       // 요청 완료 후 탭이 바뀌었으면(사용자가 그새 다른 탭 클릭) 결과 버림
       if (activeTabRef.current !== currentTab) return;
@@ -102,7 +113,7 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
          pageRef.current += 1;
       }
     } catch (error) {
-      console.error('Error fetching tweets:', error);
+      // 에러 로깅 생략
     } finally {
       // 탭이 여전히 같을 때만 로딩 해제
       if (activeTabRef.current === currentTab) {
@@ -119,12 +130,13 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
     hasMore,
     loading // 세 번째 필수 인자 전달
   );
-  // 실시간 업데이트 (좋아요/댓글 수 등 stats 반영)
+  // 실시간 업데이트 (stats 및 제재 상태 반영)
   useEffect(() => {
     if (!userProfile?.id) return;
-    // channel 변수명을 일관되게 유지 (cleanup 함수와의 호환성)
-    const channel = supabase
-      .channel(`profile-realtime-${userProfile.id}`)
+    
+    // 1. 게시글 실시간 통계 업데이트
+    const tweetChannel = supabase
+      .channel(`profile-tweets-realtime-${userProfile.id}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tweets' }, payload => {
         const updated = payload.new as any;
         setTweets(prev => prev.map(t => 
@@ -134,8 +146,29 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
         ));
       })
       .subscribe();
+
+    // 2. 작성자 프로필 실시간 동기화 (제재 뱃지용)
+    const profileChannel = supabase
+      .channel(`profile-authors-sync-${userProfile.id}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
+        const updated = payload.new as any;
+        if (updated.banned_until !== undefined) {
+          setTweets(prev => prev.map(t => {
+            if (String(t.user.username) === String(updated.user_id) || String((t as any).author_id) === String(updated.id)) {
+              return {
+                ...t,
+                user: { ...t.user, banned_until: updated.banned_until }
+              };
+            }
+            return t;
+          }));
+        }
+      })
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(tweetChannel);
+      supabase.removeChannel(profileChannel);
     };
   }, [userProfile.id]);
   if (loading && tweets.length === 0) {
@@ -155,7 +188,8 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
     );
   }
   return (
-    <div className="flex flex-col gap-4 pb-10">
+    <div className="">
+      <div className="flex flex-col gap-4 pb-10">
       {tweets.map(item =>
         item.type === 'reply' ? (
           <ReplyCard
@@ -163,11 +197,13 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
             reply={item}
             highlight={false}
             onUnlike={(id: string) => {
-               // 좋아요 탭에서는 좋아요 취소 시 목록에서 즉시 제거
                if (activeTab === 'likes') {
                  setTweets(prev => prev.filter(t => t.id !== id));
                }
             }}
+            onClick={(id, tweetId) => onItemClick?.(item)}
+            onAvatarClick={onProfileClick}
+            disableInteractions={disableInteractions}
           />
         ) : (
           <TweetCard
@@ -178,6 +214,9 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
                  setTweets(prev => prev.filter(t => t.id !== id));
                }
             }}
+            onClick={(id) => onItemClick?.(item)}
+            onAvatarClick={onProfileClick}
+            disableInteractions={disableInteractions}
           />
         ),
       )}
@@ -187,6 +226,7 @@ export default function ProfileTweets({ activeTab, userProfile }: ProfileTweetsP
         {loading && tweets.length > 0 && (
            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
         )}
+      </div>
       </div>
     </div>
   );

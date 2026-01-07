@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
+import { isBanned as checkIsBanned } from '@/utils/banUtils';
 
 type AuthContextType = {
   session: Session | null;
@@ -18,6 +19,8 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<{ error?: string }>;
   signInWithKakao: () => Promise<{ error?: string }>;
+  bannedUntil: string | null;
+  isBanned: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -95,7 +98,7 @@ async function createProfileFromDraftIfMissing(u: User) {
 }
 
 import RestoreAccountModal from '@/components/auth/RestoreAccountModal';
-import { differenceInDays, parseISO } from 'date-fns';
+import { differenceInDays, parseISO, addYears } from 'date-fns';
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
@@ -106,12 +109,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
   // 복구 대상 유저 상태 (deleted_at이 있는 유저)
   // { id: string, deletedAt: string } 형태
   const [restoreUser, setRestoreUser] = useState<{ id: string; deletedAt: string } | null>(null);
+  
+  // 제재 상태
+  const [bannedUntil, setBannedUntil] = useState<string | null>(null);
+  const [isBannedState, setIsBannedState] = useState(false);
 
   // 계정 삭제 상태 확인 함수
   const checkAccountStatus = async (userId: string) => {
     const { data, error } = await supabase
       .from('profiles')
-      .select('deleted_at')
+      .select('deleted_at, banned_until')
       .eq('user_id', userId)
       .single();
 
@@ -121,8 +128,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
       const deletedAt = new Date(data.deleted_at);
       const now = new Date();
       const diff = differenceInDays(now, deletedAt);
-
-      // console.log('Account deletion check:', { deletedAt, now, diff });
 
       if (diff > 7) {
          // 7일 경과 시 -> 강제 로그아웃 (복구 불가)
@@ -134,6 +139,28 @@ export function AuthProvider({ children }: PropsWithChildren) {
          // 7일 이내 -> 복구 모달 표시
          setRestoreUser({ id: userId, deletedAt: data.deleted_at });
       }
+    }
+    
+    // 제재 상태 확인
+    if (data.banned_until) {
+      const bannedDate = new Date(data.banned_until);
+      const now = new Date();
+      // 영구 제재 기준 (50년)
+      const isPermanent = bannedDate > addYears(now, 50);
+
+      if (isPermanent) {
+        alert(t('auth.permanent_ban_alert', '해당 계정은 영구 정지되었습니다.'));
+        await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+        return;
+      }
+
+      setBannedUntil(data.banned_until);
+      setIsBannedState(checkIsBanned(data.banned_until));
+    } else {
+      setBannedUntil(null);
+      setIsBannedState(false);
     }
   };
 
@@ -157,11 +184,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (!mounted) return;
       setSession(newSession);
-      setUser(newSession?.user ?? null);
+      const u = newSession?.user ?? null;
+      setUser(u);
       setLoading(false);
 
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-        const u = newSession?.user;
         if (u) {
           // 로그인 시 게스트 번역 카운트 초기화
           if (event === 'SIGNED_IN') {
@@ -181,11 +208,45 @@ export function AuthProvider({ children }: PropsWithChildren) {
       }
     });
 
+    // 3) 실시간 프로필 변동 구독 (제재 상태 실시간 반영용)
+    const userIdRefForSub = { current: user?.id };
+    let profileSub: any = null;
+
+    if (user?.id) {
+      profileSub = supabase
+        .channel(`auth-user-sync-${user.id}-${Date.now()}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            // 필터 제거: 때로는 ID 타입 매칭 문제로 필터링된 이벤트가 오지 않을 수 있음
+          },
+          (payload: any) => {
+            const updated = payload.new;
+            if (updated && String(updated.user_id) === String(userIdRefForSub.current)) {
+              if ('banned_until' in updated) {
+                const newBannedUntil = updated.banned_until;
+                setBannedUntil(newBannedUntil);
+                setIsBannedState(checkIsBanned(newBannedUntil));
+              }
+            }
+          }
+        )
+        .subscribe();
+    }
+
     return () => {
       mounted = false;
       sub.subscription.unsubscribe();
+      if (profileSub) {
+        supabase.removeChannel(profileSub);
+      }
     };
-  }, []);
+  }, [user?.id]);
+
+
 
   const signIn: AuthContextType['signIn'] = async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -220,6 +281,24 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const signOut: AuthContextType['signOut'] = async () => {
     const timeout = (ms: number) =>
       new Promise<never>((_, reject) => setTimeout(() => reject(new Error('signOut:timeout')), ms));
+
+    // 로그아웃 전 명시적으로 오프라인 상태 설정 (실시간 반영 위함)
+    if (user) {
+      try {
+        await supabase
+          .from('profiles')
+          .update({ 
+            is_online: false,
+            last_active_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+        
+        // Give a small moment for the DB update to propagate (though await should be enough)
+      } catch (err) {
+        console.error('Logout status update failed:', err);
+      }
+    }
+
     try {
       await Promise.race([supabase.auth.signOut(), timeout(3500)]);
     } catch {
@@ -264,7 +343,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   return (
     <AuthContext.Provider
-      value={{ session, user, loading, signIn, signUp, signOut, signInWithGoogle, signInWithKakao }}
+      value={{ session, user, loading, signIn, signUp, signOut, signInWithGoogle, signInWithKakao, bannedUntil, isBanned: isBannedState }}
     >
       {children}
       {/* 계정 복구 모달: restoreUser 상태가 있을 때만 노출 */}

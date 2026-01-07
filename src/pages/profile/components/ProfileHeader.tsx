@@ -8,19 +8,31 @@ import { toast } from 'sonner';
 import type { UserProfile } from '../ProfileAsap';
 import { useTranslation } from 'react-i18next';
 import TranslateButton from '@/components/common/TranslateButton';
+import FollowersModal from './FollowersModal';
+import { useFollow } from '@/hooks/useFollow';
+import { BanBadge } from '@/components/common/BanBadge';
+import { getBanMessage } from '@/utils/banUtils';
+import { OnlineIndicator } from '@/components/common/OnlineIndicator';
+
 interface ProfileHeaderProps {
   userProfile: UserProfile;
+  isOwnProfile: boolean;
   onProfileUpdated?: (updated: UserProfile) => void;
   onEditClick?: () => void;
+  hideFollowButton?: boolean;
+  showPersonalDetails?: boolean;
 }
+
 export default function ProfileHeader({
   userProfile,
+  isOwnProfile,
   onProfileUpdated,
   onEditClick,
+  hideFollowButton = false,
+  showPersonalDetails = false,
 }: ProfileHeaderProps) {
   const { t } = useTranslation();
-  const { user } = useAuth();
-  const isOwnProfile = user && user.id === userProfile.user_id;
+  const { user, isBanned, bannedUntil } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [previewAvatar, setPreviewAvatar] = useState(userProfile.avatar);
   const [previewBanner, setPreviewBanner] = useState(userProfile.banner ?? null);
@@ -30,10 +42,28 @@ export default function ProfileHeader({
   const startPosRef = useRef(bannerPosY);
   const bannerPosYRef = useRef(bannerPosY);
   const [translated, setTranslated] = useState<string>('');
+  const [showFollowersModal, setShowFollowersModal] = useState(false);
+  const [followersModalTab, setFollowersModalTab] = useState<'followers' | 'following'>('followers');
+  const [showFollowMenu, setShowFollowMenu] = useState(false);
+  const [followNotificationsEnabled, setFollowNotificationsEnabled] = useState(true);
+  const followMenuRef = useRef<HTMLDivElement>(null);
+  
+  // Real follow hook integration
+  // IMPORTANT: Use profile.id (not user_id) for foreign key relations
+  const { 
+    isFollowing, 
+    isLoading: followLoading, 
+    followersCount, 
+    followingCount, 
+    toggleFollow, 
+    refreshCounts 
+  } = useFollow(userProfile.id);  // ✅ Use profile.id for DB relations
+
   // 프로필 바뀌면 동기화
   useEffect(() => {
     setBannerPosY(userProfile.bannerPositionY ?? 50);
   }, [userProfile.bannerPositionY]);
+
   // 배너 위치 이동
   useEffect(() => {
     if (!isDragging) return;
@@ -55,22 +85,27 @@ export default function ProfileHeader({
       window.removeEventListener('mouseleave', stopDragging);
     };
   }, [isDragging]);
+
   // 최신 위치 보존
   useEffect(() => {
     bannerPosYRef.current = bannerPosY;
   }, [bannerPosY]);
+
   useEffect(() => {
     setPreviewAvatar(userProfile.avatar);
     setPreviewBanner(userProfile.banner ?? null);
   }, [userProfile.avatar, userProfile.banner]);
+
   const handleFileChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
     type: 'avatar' | 'banner',
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     const previewUrl = URL.createObjectURL(file);
     type === 'avatar' ? setPreviewAvatar(previewUrl) : setPreviewBanner(previewUrl);
+
     try {
       setUploading(true);
       const imageUrl = await uploadProfileImage(
@@ -78,11 +113,14 @@ export default function ProfileHeader({
         file,
         type === 'avatar' ? 'avatars' : 'banners',
       );
+
       const { error } = await supabase
         .from('profiles')
         .update(type === 'avatar' ? { avatar_url: imageUrl } : { banner_url: imageUrl })
         .eq('user_id', userProfile.user_id);
+
       if (error) throw error;
+
       onProfileUpdated?.({
         ...userProfile,
         banner: type === 'banner' ? imageUrl : userProfile.banner,
@@ -105,6 +143,7 @@ export default function ProfileHeader({
       setUploading(false);
     }
   };
+
   const saveBannerPosition = async (pos: number) => {
     const { error } = await supabase
       .from('profiles')
@@ -112,6 +151,7 @@ export default function ProfileHeader({
         banner_position_y: Math.round(pos),
       })
       .eq('user_id', userProfile.user_id);
+
     if (error) {
       toast.error(t('common.save_failed', '저장 실패'));
     } else {
@@ -121,6 +161,54 @@ export default function ProfileHeader({
       });
     }
   };
+
+  const handleFollowToggle = async () => {
+    if (isBanned && bannedUntil) {
+       // '팔로우' directly or use t('profile.action_follow') if created, but user seemed ok with hardcoded for now or I stick to Korean as primary.
+       // The banUtils uses Korean hardcoded, so '팔로우' is consistent.
+      toast.error(getBanMessage(bannedUntil, '팔로우'));
+      return;
+    }
+    await toggleFollow();
+  };
+  
+  const handleFollowersClick = () => {
+    setFollowersModalTab('followers');
+    setShowFollowersModal(true);
+  };
+  
+  const handleFollowingClick = () => {
+    setFollowersModalTab('following');
+    setShowFollowersModal(true);
+  };
+  
+  // 팔로우 메뉴 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (followMenuRef.current && !followMenuRef.current.contains(event.target as Node)) {
+        setShowFollowMenu(false);
+      }
+    };
+
+    if (showFollowMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showFollowMenu]);
+  
+  const handleUnfollow = async () => {
+    setShowFollowMenu(false);
+    await toggleFollow();
+  };
+  
+  const handleToggleNotifications = () => {
+    setFollowNotificationsEnabled(!followNotificationsEnabled);
+    toast.info(t('profile.notifications_updated', '알림 설정이 변경되었습니다'));
+  };
+  
   return (
     <div className="relative bg-white dark:bg-background">
       {/* 배너 */}
@@ -195,11 +283,11 @@ export default function ProfileHeader({
         </div>
         {uploading && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20">
-            <span className="text-white text-sm">Update...</span>
+              <span className="text-sm text-muted-foreground">{followersCount.toLocaleString()}</span>
           </div>
         )}
         {/* 내 프로필일 때만 “프로필 편집” 버튼 */}
-        {isOwnProfile && (
+        {isOwnProfile ? (
           <div className="flex justify-end mb-4 -mt-8 relative z-">
             <Button
               variant="outline"
@@ -209,12 +297,73 @@ export default function ProfileHeader({
               {t('profile.edit_profile')}
             </Button>
           </div>
-        )}
+        ) : !hideFollowButton ? (
+          <div className="flex justify-end mb-4 -mt-8 relative z-10" ref={followMenuRef}>
+            {isFollowing ? (
+              <div className="relative">
+                <Button
+                  onClick={() => setShowFollowMenu(!showFollowMenu)}
+                  className="rounded-full px-6 font-medium transition-all group min-w-[120px] border-2 border-gray-300 dark:border-gray-600 bg-transparent text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary hover:bg-primary/5 dark:hover:bg-primary/10"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <i className="ri-user-follow-line" />
+                    {t('profile.following')}
+                    <i className={`ri-arrow-down-s-line transition-transform ${showFollowMenu ? 'rotate-180' : ''}`} />
+                  </span>
+                </Button>
+                
+                {showFollowMenu && (
+                  <div className="absolute top-full right-0 mt-2 min-w-[120px] rounded-xl border border-gray-100/80 bg-white/95 shadow-lg shadow-black/5 backdrop-blur-sm z-[200] dark:bg-secondary/95 dark:border-gray-700/70 overflow-hidden">
+                    <div className="py-1">
+                      <button
+                        onClick={handleUnfollow}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-100 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                      >
+                        <i className="ri-user-unfollow-line text-base" />
+                        <span>{t('profile.unfollow')}</span>
+                      </button>
+                      <button
+                        onClick={handleToggleNotifications}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-100 hover:bg-primary/5 dark:hover:bg-primary/20 transition-colors"
+                      >
+                        <i className={`text-base ${followNotificationsEnabled ? 'ri-notification-off-line' : 'ri-notification-line'}`} />
+                        <span>
+                          {followNotificationsEnabled 
+                            ? t('profile.turn_off_notifications') 
+                            : t('profile.turn_on_notifications')}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Button
+                onClick={handleFollowToggle}
+                className="rounded-full px-6 font-medium transition-all group min-w-[120px] bg-gradient-to-r from-[#00dbaa] to-[#009e89] text-white border-transparent hover:opacity-90"
+              >
+                <span className="flex items-center gap-1.5">
+                  <i className="ri-user-add-line" />
+                  {t('profile.follow')}
+                </span>
+              </Button>
+            )}
+          </div>
+        ) : null}
         {/* 사용자 정보 */}
         <div className="space-y-3">
           {/* 이름 */}
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {userProfile.name}
+          {/* 이름 */}
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center flex-wrap gap-2">
+            <div className="relative inline-flex items-center pr-2.5">
+              <span>{userProfile.name}</span>
+              <OnlineIndicator 
+                userId={userProfile.user_id} 
+                size="md" 
+                className="absolute top-0.5 right-0 z-10 border-white dark:border-gray-900 border-2"
+              />
+            </div>
+            <BanBadge bannedUntil={userProfile.banned_until} size="md" />
           </h1>
           {/* 자기소개 */}
           {userProfile.bio ? (
@@ -246,8 +395,35 @@ export default function ProfileHeader({
             <p className="opacity-0 select-none">.</p>
           )}
 
-          {/* 원래 location 들어가던 자리 → 국적 + 국기 */}
-          <div className="flex flex-wrap gap-3 text-gray-500 dark:text-gray-400 text-sm mt-2">
+          {/* 팔로워/팔로잉 카운트 */}
+          <div className="flex items-center gap-4 text-sm mt-2">
+            <button
+              onClick={handleFollowersClick}
+              className="flex items-center gap-1.5 hover:underline transition-all group"
+            >
+              <span className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary">
+                {followersCount}
+              </span>
+              <span className="text-gray-600 dark:text-gray-400 group-hover:text-primary">
+                {t('profile.followers')}
+              </span>
+            </button>
+            <button
+              onClick={handleFollowingClick}
+              className="flex items-center gap-1.5 hover:underline transition-all group"
+            >
+              <span className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary">
+                {followingCount}
+              </span>
+              <span className="text-gray-600 dark:text-gray-400 group-hover:text-primary">
+                {t('profile.following')}
+              </span>
+            </button>
+          </div>
+
+          {/* 국적 + 성별 + 나이 + 가입일 */}
+          <div className="flex flex-wrap gap-4 text-gray-500 dark:text-gray-400 text-sm mt-2 items-center">
+            {/* Country */}
             {(userProfile.country || userProfile.countryFlagUrl) && (
               <span className="flex items-center gap-2">
                 {userProfile.countryFlagUrl && (
@@ -262,6 +438,25 @@ export default function ProfileHeader({
                 <span>{userProfile.country}</span>
               </span>
             )}
+            
+            {/* Gender & Age (Specific for Report Details e.g.) */}
+            {showPersonalDetails && (
+                <>
+                {userProfile.gender && (
+                    <span className="flex items-center gap-1">
+                        <i className={`ri-${userProfile.gender === 'Male' ? 'men' : 'women'}-line`} />
+                        <span>{userProfile.gender === 'Male' ? t('signup.gender_male', '남성') : t('signup.gender_female', '여성')}</span>
+                    </span>
+                )}
+                {userProfile.age && (
+                    <span className="flex items-center gap-1">
+                        <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-medium">
+                            {userProfile.age}세
+                        </span>
+                    </span>
+                 )}
+                 </>
+            )}
             <span className="flex items-center gap-1">
               <i className="ri-calendar-line" />
               {t('profile.joined', { date: userProfile.joinDate })}
@@ -269,6 +464,15 @@ export default function ProfileHeader({
           </div>
         </div>
       </div>
+      
+      {/* 팔로워/팔로잉 모달 */}
+      <FollowersModal
+        isOpen={showFollowersModal}
+        onClose={() => setShowFollowersModal(false)}
+        initialTab={followersModalTab}
+        followers={[]} // Mock data - will be populated with real data later
+        following={[]} // Mock data - will be populated with real data later
+      />
     </div>
   );
 }

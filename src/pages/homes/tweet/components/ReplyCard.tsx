@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import DOMPurify from 'dompurify';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,7 +12,9 @@ import { useTranslation } from 'react-i18next';
 import BlockButton from '@/components/common/BlockButton';
 import ReportButton from '@/components/common/ReportButton';
 import ModalImageSlider from './ModalImageSlider';
-import { formatRelativeTime } from '@/utils/dateUtils';
+import { formatRelativeTime, formatSmartDate } from '@/utils/dateUtils';
+import { useBlockedUsers } from '@/hooks/useBlockedUsers';
+import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 function stripImagesAndEmptyLines(html: string) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   // img 제거
@@ -25,6 +28,9 @@ function stripImagesAndEmptyLines(html: string) {
   });
   return doc.body.innerHTML.trim();
 }
+const baseCardClasses =
+  'border-b border-gray-200 dark:border-gray-700 px-4 py-3 hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors';
+
 interface ReplyCardProps {
   reply: UIReply;
   onDeleted?: (replyId: string) => void;
@@ -56,6 +62,10 @@ export function ReplyCard({
   const [showImageModal, setShowImageModal] = useState(false);
   const [contentImages, setContentImages] = useState<string[]>([]);
   const contentRef = useRef<HTMLDivElement>(null);
+  const { blockedIds, isLoading: isBlockedLoading } = useBlockedUsers();
+  const [isUnmasked, setIsUnmasked] = useState(false);
+  const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
+  const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
   // Sync likeCount with props
   useEffect(() => {
     setLikeCount(reply.stats?.likes ?? 0);
@@ -63,7 +73,7 @@ export function ReplyCard({
   
   // 하이라이트 상태 (잠깐 색 들어왔다 빠지는 용도)
   const [isHighlighted, setIsHighlighted] = useState(false);
-  const [isBlocked, setIsBlocked] = useState(false);
+  const [authorProfileId, setAuthorProfileId] = useState<string | null>(null);
   // reply.content could be undefined in some types, fallback
   const rawContent = reply.content ?? '';
   const safeContent = DOMPurify.sanitize(rawContent, {
@@ -73,13 +83,12 @@ export function ReplyCard({
   const visibleCount = 3;
   const [startIndex, setStartIndex] = useState(0);
   const visibleImages = contentImages.slice(startIndex, startIndex + visibleCount);
-  // highlight prop이 true일 때 잠깐 하이라이트
+  // highlight prop이 true일 때 CSS 애니메이션 클래스 적용
   useEffect(() => {
     if (highlight) {
       setIsHighlighted(true);
-      const timer = setTimeout(() => {
-        setIsHighlighted(false);
-      }, 1200);
+      // CSS 애니메이션 지속 시간인 3초 후에 다시 원복 (상태 초기화 목적)
+      const timer = setTimeout(() => setIsHighlighted(false), 3000);
       return () => clearTimeout(timer);
     } else {
       setIsHighlighted(false);
@@ -113,7 +122,7 @@ export function ReplyCard({
           setLiked(true);
         }
       } catch (err) {
-        console.error('댓글 좋아요 상태 조회 실패:', err);
+        // Error handled silently
       }
     };
     loadLiked();
@@ -148,6 +157,55 @@ export function ReplyCard({
       .filter(Boolean);
     setContentImages(imgs);
   }, [rawContent]);
+
+  // Load reply author's profile ID
+  useEffect(() => {
+    const fetchAuthorProfile = async () => {
+      if (!reply.user.username || reply.user.username === 'anonymous') {
+        setAuthorProfileId(null);
+        return;
+      }
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', reply.user.username)
+        .maybeSingle();
+      
+      if (data) setAuthorProfileId(data.id);
+    };
+    
+    fetchAuthorProfile();
+  }, [reply.user.username]);
+
+  /** 트윗 작성자 국적 / 국기 로드 */
+  useEffect(() => {
+    const fetchAuthorCountry = async () => {
+      try {
+        if (!reply.user.id) return;
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, country')
+          .eq('user_id', reply.user.username)
+          .maybeSingle();
+        if (profileError || !profile || !profile.country) return;
+
+        const { data: country, error: countryError } = await supabase
+          .from('countries')
+          .select('name, flag_url')
+          .eq('id', profile.country)
+          .maybeSingle();
+        if (countryError || !country) return;
+
+        setAuthorCountryFlagUrl(country.flag_url ?? null);
+        setAuthorCountryName(country.name ?? null);
+      } catch (err) {
+        // Error handled silently
+      }
+    };
+    fetchAuthorCountry();
+  }, [reply.user.username]);
+
   // 댓글 삭제
   const handleDelete = async () => {
     if (!profileId) {
@@ -166,7 +224,6 @@ export function ReplyCard({
       setShowMenu(false);
       onDeleted?.(reply.id);
     } catch (err: any) {
-      console.error('댓글 삭제 실패:', err.message);
       toast.error(t('common.error_delete'));
     }
   };
@@ -235,20 +292,21 @@ export function ReplyCard({
               .maybeSingle();
 
             if (!existingNoti) {
-              await supabase.from('notifications').insert({
+              const payload = {
                 receiver_id: receiverProfile.id,
                 sender_id: profileId,
                 type: 'like',
                 content: reply.content || rawContent,
                 tweet_id: reply.tweetId,
                 comment_id: reply.id,
-              });
+                is_read: false,
+              };
+              await supabase.from('notifications').insert(payload);
             }
           }
         }
       }
     } catch (err: any) {
-      console.error('좋아요 처리 실패:', err.message);
       toast.error(t('common.error_like'));
       // Rollback
       setLiked(!nextLiked);
@@ -267,11 +325,15 @@ export function ReplyCard({
   // 본인 댓글 여부
   const isMyReply = authUser?.id === reply.user.username;
   const isChildReply = Boolean(reply.parent_reply_id);
-  // 배경 빼고 공통 카드 스타일만
-  const baseCardClasses =
-    'border-b border-gray-200 dark:border-gray-700 px-4 py-3 hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors';
+  // Loading state during block check to prevent flicker
+  if (isBlockedLoading) {
+    return <div className={baseCardClasses + " animate-pulse h-24 bg-gray-50 dark:bg-gray-900/10"} />;
+  }
+
   const containerClasses = `${baseCardClasses} ${
-    isHighlighted ? 'bg-primary/15 dark:bg-primary/25' : 'bg-white dark:bg-background'
+    isHighlighted 
+      ? 'animate-highlight-blink' 
+      : 'bg-white dark:bg-background'
   }`;
   // 텍스트만 추출 (번역용)
   const plainTextContent = stripImagesAndEmptyLines(safeContent);
@@ -279,6 +341,50 @@ export function ReplyCard({
     ADD_TAGS: ['iframe', 'video', 'source'],
     ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
   });
+
+  const isAuthorBlocked = blockedIds.includes(reply.user.id);
+  const showMask = isAuthorBlocked && !isUnmasked;
+
+  if (showMask) {
+    return (
+      <div className={`${baseCardClasses} bg-gray-50 dark:bg-gray-900/40 relative overflow-hidden group/mask min-h-[100px] flex flex-col justify-center`}>
+        <div className="flex items-center justify-between py-2">
+          <div className="flex items-center space-x-3 opacity-60 grayscale">
+            <div className="relative">
+              <Avatar className="w-10 h-10 border-2 border-white/50 dark:border-black/20">
+                <AvatarImage src="/default-avatar.svg" />
+                <AvatarFallback>?</AvatarFallback>
+              </Avatar>
+              <div className="absolute -bottom-1 -right-1 bg-gray-200 dark:bg-gray-700 rounded-full p-0.5">
+                <i className="ri-user-forbid-line text-[10px] text-gray-500" />
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                {t('common.blocked_comment_msg', '차단한 상대의 댓글입니다')}
+              </span>
+              <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider font-bold">
+                Blocked Content
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsUnmasked(true);
+            }}
+            className="text-xs font-bold text-primary hover:text-white bg-primary/10 hover:bg-primary px-4 py-2 rounded-full transition-all active:scale-95 shadow-sm"
+          >
+            {t('common.view_content', '내용보기')}
+          </button>
+        </div>
+        
+        {/* Subtle glass effect pattern */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.05] dark:opacity-[0.1] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:20px_20px]" />
+      </div>
+    );
+  }
+
   return (
     <div
       id={`reply-${reply.id}`}
@@ -301,7 +407,7 @@ export function ReplyCard({
       }}
     >
       <div className="flex space-x-3">
-        <div onClick={handleAvatarClick} className={`cursor-pointer ${isDeleted ? 'cursor-default' : ''}`}>
+        <div onClick={handleAvatarClick} className={`cursor-pointer relative ${isDeleted ? 'cursor-default' : ''}`}>
           <Avatar>
             <AvatarImage src={reply.user.avatar || '/default-avatar.svg'} alt={isDeleted ? t('deleted_user') : reply.user.name} />
             <AvatarFallback>{isDeleted ? '?' : reply.user.name.charAt(0)}</AvatarFallback>
@@ -309,29 +415,74 @@ export function ReplyCard({
         </div>
         <div className="flex-1 min-w-0">
           {/* 상단 + 더보기 버튼 */}
-          <div className="flex items-start justify-between relative" ref={menuRef}>
-            <div className="flex items-center space-x-1 flex-wrap">
-              <span
-                className={`font-bold text-gray-900 dark:text-gray-100 truncate ${isDeleted ? 'cursor-default text-gray-500' : 'hover:underline cursor-pointer'}`}
-                onClick={handleAvatarClick}
-              >
-                {isDeleted ? t('deleted_user') : reply.user.name}
-              </span>
-              <span className="text-gray-500 dark:text-gray-400">·</span>
-              <span className="text-gray-500 dark:text-gray-400 flex-shrink-0">
-                {formatRelativeTime(reply.timestamp)}
+          <div className="flex items-center justify-between relative" ref={menuRef}>
+            <div className="flex items-center flex-wrap gap-x-1">
+              <div className="relative inline-flex items-center pr-2.5">
+                <span 
+                  className={`font-bold text-gray-900 dark:text-gray-100 truncate ${isDeleted ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
+                  onClick={handleAvatarClick}
+                >
+                  {isDeleted ? t('deleted_user') : reply.user.name}
+                </span>
+                {!isDeleted && (
+                  <OnlineIndicator 
+                    userId={reply.user.username} 
+                    size="sm" 
+                    className="absolute -top-1 right-0 z-20 border-white dark:border-background border shadow-none"
+                  />
+                )}
+              </div>
+
+              {authorCountryFlagUrl && !isDeleted && (
+                <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 h-5 ml-1.5">
+                  <img
+                    src={authorCountryFlagUrl}
+                    alt={authorCountryName ?? '국가'}
+                    title={authorCountryName ?? ''}
+                    className="w-5 h-3.5 rounded-[2px] object-cover"
+                  />
+                </Badge>
+              )}
+
+              {!authorCountryFlagUrl && authorCountryName && (
+                <Badge
+                  variant="secondary"
+                  className="flex items-center px-1 py-0.5 ml-1.5"
+                  title={authorCountryName}
+                >
+                  <span className="text-xs">🌐</span>
+                </Badge>
+              )}
+
+              <span className="mx-1 text-gray-500 dark:text-gray-400">·</span>
+              <span className="text-gray-500 dark:text-gray-400 text-sm">
+                {formatSmartDate(reply.timestamp)}
               </span>
             </div>
-            {/* 더보기 버튼 */}
-            <button
-              onClick={e => {
-                e.stopPropagation();
-                setShowMenu(prev => !prev);
-              }}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition"
-            >
-              <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
-            </button>
+
+            <div className="flex items-center text-gray-400">
+              {isAuthorBlocked && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsUnmasked(false);
+                  }}
+                  className="mr-2 text-[10px] font-bold text-gray-400 hover:text-red-500 bg-gray-100 dark:bg-white/5 px-2 py-1 rounded transition-all flex items-center gap-1 group/remask active:scale-95"
+                >
+                  <i className="ri-eye-off-line" />
+                  <span>{t('common.hide_content', '다시 숨기기')}</span>
+                </button>
+              )}
+              <button
+                onClick={e => {
+                  e.stopPropagation();
+                  setShowMenu(prev => !prev);
+                }}
+                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition"
+              >
+                <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
+              </button>
+            </div>
             {/* 더보기 메뉴 */}
             {showMenu && (
               <div className="absolute right-0 top-8 min-w-[9rem] whitespace-nowrap bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
@@ -348,13 +499,13 @@ export function ReplyCard({
                   </button>
                 ) : (
                   <>
-                    <ReportButton onClose={() => setShowMenu(false)} />
-                    <BlockButton
-                      username={reply.user.name}
-                      isBlocked={isBlocked}
-                      onToggle={() => setIsBlocked(prev => !prev)}
-                      onClose={() => setShowMenu(false)}
-                    />
+                    <ReportButton onClick={() => setShowMenu(false)} />
+                    {authorProfileId && (
+                      <BlockButton
+                        targetProfileId={authorProfileId}
+                        onClose={() => setShowMenu(false)}
+                      />
+                    )}
                   </>
                 )}
               </div>
