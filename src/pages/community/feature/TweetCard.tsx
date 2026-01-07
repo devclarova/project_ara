@@ -27,6 +27,7 @@ interface TweetCardProps {
   image?: string | string[];
   timestamp: string;
   createdAt?: string;
+  updatedAt?: string;
   stats: TweetStats;
   onDeleted?: (id: string) => void;
   dimmed?: boolean;
@@ -42,6 +43,8 @@ export default function TweetCard({
   content,
   image,
   timestamp,
+  createdAt,
+  updatedAt,
   stats,
   onDeleted,
   dimmed = false,
@@ -91,6 +94,7 @@ export default function TweetCard({
   const [isEditing, setIsEditing] = useState(false);
   // const [draft, setDraft] = useState(content); // 에디터에 넣을 초깃값
   const [currentContent, setCurrentContent] = useState(content); // 화면에 보여줄 값
+  const [currentUpdatedAt, setCurrentUpdatedAt] = useState<string | undefined>(updatedAt);
   const [editText, setEditText] = useState('');
   const [editImages, setEditImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -385,6 +389,10 @@ export default function TweetCard({
     setCurrentContent(content);
   }, [content, isEditing]);
 
+  useEffect(() => {
+    setCurrentUpdatedAt(updatedAt);
+  }, [updatedAt]);
+
   // 이미지 모달 스크롤 잠금은 ModalImageSlider의 useBodyScrollLock hook에서 처리
   /** 좋아요 토글 (user_id = profiles.id 사용 + 알림 생성) */
   const handleLikeToggle = async (e: React.MouseEvent) => {
@@ -542,6 +550,8 @@ export default function TweetCard({
     return tmp.textContent || tmp.innerText || '';
   })();
 
+  const nowIso = new Date().toISOString();
+
   // 편집 저장
   const saveEdit = async () => {
     if (!profileId) {
@@ -549,8 +559,9 @@ export default function TweetCard({
       return;
     }
 
-    const textHtml = plainTextToHtml(editText.trim());
+    const nowIso = new Date().toISOString();
 
+    const textHtml = plainTextToHtml(editText.trim());
     if (!textHtml && editImages.length === 0) {
       toast.error(t('tweets.error_empty'));
       return;
@@ -558,8 +569,16 @@ export default function TweetCard({
 
     const finalHtml = buildHtmlWithImages(textHtml, editImages);
 
+    const storeKey = type === 'reply' ? (tweetId ?? id) : id;
+
+    SnsStore.updateTweet(storeKey, { content: finalHtml, updatedAt: nowIso });
+    onUpdated?.(storeKey, { content: finalHtml, updatedAt: nowIso });
+
     const table = type === 'reply' ? 'tweet_replies' : 'tweets';
-    const { error } = await supabase.from(table).update({ content: finalHtml }).eq('id', id);
+    const { error } = await supabase
+      .from(table)
+      .update({ content: finalHtml, updated_at: nowIso })
+      .eq('id', id);
 
     if (error) {
       console.error('편집 실패:', error.message);
@@ -568,14 +587,9 @@ export default function TweetCard({
     }
 
     setCurrentContent(finalHtml);
+    setCurrentUpdatedAt(nowIso);
     // 다음 prop sync 1회 막기 (저장 직후 원복 방지)
     skipNextPropSync.current = true;
-
-    // 리스트(피드) state 업데이트 트리거
-    onUpdated?.(id, { content: finalHtml });
-
-    // 캐시도 같이 업데이트 (뒤로가기/복원용)
-    SnsStore.updateTweet(id, { content: finalHtml });
 
     setIsEditing(false);
     setShowMenu(false);
@@ -589,6 +603,10 @@ export default function TweetCard({
     doc.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
     return (doc.body.textContent ?? '').trim();
   };
+
+  const created = createdAt ?? timestamp;
+  const edited = currentUpdatedAt;
+  const isEdited = edited && new Date(edited).getTime() > new Date(created).getTime();
 
   return (
     <div
@@ -645,6 +663,7 @@ export default function TweetCard({
             <span className={`${metaClass} mx-1`}>·</span>
             <span className={`${metaClass} flex-shrink-0`}>
               {formatTweetCardTime(timestamp, i18n.language || 'ko')}
+              {isEdited && <span className="ml-1 text-xs text-gray-400"> 수정됨</span>}
             </span>
           </div>
 
@@ -724,7 +743,7 @@ export default function TweetCard({
                     e.preventDefault();
                     setIsEditing(false);
                     // 원래 내용으로 되돌리기 (텍스트/이미지 분리해서)
-                    setEditText(stripImgTags(currentContent));
+                    setEditText(htmlToPlainText(currentContent));
                     setEditImages(extractImageSrcs(currentContent));
                   }
                 }}

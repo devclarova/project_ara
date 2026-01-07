@@ -142,6 +142,7 @@ export default function TweetDetail() {
             if (!prev) return null;
             return {
               ...prev,
+              updatedAt: newTweet.updated_at ?? prev.updatedAt,
               stats: {
                 ...prev.stats,
                 likes: newTweet.like_count ?? 0,
@@ -362,6 +363,7 @@ export default function TweetDetail() {
             // }),
             timestamp: newReply.created_at ?? new Date().toISOString(),
             createdAt: newReply.created_at ?? new Date().toISOString(),
+            updatedAt: newReply.updated_at,
             stats: { replies: 0, retweets: 0, likes: newReply.like_count ?? 0, views: 0 },
             liked: false,
           } as UIReply;

@@ -17,6 +17,7 @@ export interface TweetQueryResponse {
   content: string;
   image_url: string | null;
   created_at: string;
+  updated_at?: string | null;
   reply_count: number;
   like_count: number;
   view_count: number;
@@ -62,11 +63,11 @@ export interface BaseFeedItem {
   content: string;
   image?: string | string[];
   timestamp: string;
+  updatedAt?: string;
   createdAt?: string;
   stats: TweetStats;
   liked?: boolean;
   liked_at?: string; // For 'likes' tab sorting
-  // 10-zzeon compatibility
   parent_reply_id?: string | null;
   root_reply_id?: string | null;
 }

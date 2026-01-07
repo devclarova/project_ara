@@ -49,12 +49,13 @@ export default function TweetDetailCard({
   const [modalIndex, setModalIndex] = useState(0);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [currentImage, setCurrentImage] = useState(0);
+  const [currentUpdatedAt, setCurrentUpdatedAt] = useState<string | undefined>(tweet.updatedAt);
+
   const [translated, setTranslated] = useState<string>('');
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [isBlocked, setIsBlocked] = useState(false);
 
-  // Merged States
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [authorProfileId, setAuthorProfileId] = useState<string | null>(null);
 
@@ -63,9 +64,79 @@ export default function TweetDetailCard({
 
   // 게시글 수정
   const [isEditing, setIsEditing] = useState(false);
-  const [draft, setDraft] = useState(tweet.content);
   const [currentContent, setCurrentContent] = useState(tweet.content);
   const [isComposing, setIsComposing] = useState(false);
+
+  const [editText, setEditText] = useState('');
+  const [editImages, setEditImages] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  // 저장 직후 prop sync로 롤백되는 것 방지
+  const skipNextPropSync = useRef(false);
+
+  const safeFileName = (name: string) => {
+    const parts = name.split('.');
+    const ext = parts.length > 1 ? parts.pop() || 'jpg' : 'jpg';
+    const base = parts.join('.');
+
+    const cleanedBase = base
+      .replace(/\s+/g, '_')
+      .replace(/[^\w\-_.]/g, '_')
+      .replace(/_+/g, '_');
+
+    return `${cleanedBase.slice(0, 50)}.${ext}`;
+  };
+
+  const handleEditFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!authUser) {
+      toast.error(t('auth.login_needed'));
+      return;
+    }
+    if (!e.target.files || e.target.files.length === 0) return;
+
+    setIsUploading(true);
+
+    try {
+      const selected = Array.from(e.target.files);
+      const uploadedUrls: string[] = [];
+
+      for (let i = 0; i < selected.length; i++) {
+        const file = selected[i];
+        if (!file.type.startsWith('image/')) continue;
+
+        const timestamp = Date.now() + i;
+        const fileName = `${authUser.id}_${timestamp}_${safeFileName(file.name)}`;
+
+        const filePath = `tweet_images/${authUser.id}/${tweet.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('tweet_media')
+          .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+        if (uploadError) {
+          console.error('이미지 업로드 실패:', uploadError.message);
+          continue; // 일부 실패해도 계속
+        }
+
+        const { data: urlData } = supabase.storage.from('tweet_media').getPublicUrl(filePath);
+        if (urlData?.publicUrl) uploadedUrls.push(urlData.publicUrl);
+      }
+
+      if (uploadedUrls.length > 0) {
+        setEditImages(prev => [...prev, ...uploadedUrls]);
+        toast.success('이미지 추가 완료!');
+      } else {
+        toast.error('이미지 업로드 실패');
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error('이미지 업로드 실패');
+    } finally {
+      setIsUploading(false);
+      // 같은 파일 다시 선택 가능하게 초기화
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   const handleBackClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -86,6 +157,49 @@ export default function TweetDetailCard({
     e.stopPropagation();
     if (isDeleted) return;
     navigate(`/profile/${encodeURIComponent(tweet.user.name)}`);
+  };
+
+  const extractImageSrcs = (html: string) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return Array.from(doc.querySelectorAll('img'))
+      .map(img => img.getAttribute('src'))
+      .filter(Boolean) as string[];
+  };
+
+  const stripImgTags = (html: string) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    doc.querySelectorAll('img').forEach(img => img.remove());
+    return doc.body.innerHTML;
+  };
+
+  const htmlToPlainText = (html: string) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    doc.querySelectorAll('img').forEach(img => img.remove());
+    doc.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+    return (doc.body.textContent ?? '').trim();
+  };
+
+  const plainTextToHtml = (text: string) => {
+    const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return escaped.replace(/\n/g, '<br />');
+  };
+
+  const buildHtmlWithImages = (html: string, imgs: string[]) => {
+    if (imgs.length === 0) return html;
+    const imageHtml = imgs
+      .map(src => `<div class="tweet-img"><img src="${src}" alt="tweet image" /></div>`)
+      .join('');
+    return `${html}${imageHtml}`;
+  };
+
+  const startEdit = () => {
+    const imgs = extractImageSrcs(currentContent);
+    const onlyText = htmlToPlainText(currentContent);
+
+    setEditImages(imgs);
+    setEditText(onlyText);
+    setShowImageModal(false);
+    setIsEditing(true);
   };
 
   // replies 는 외부에서 받은 값 우선 사용
@@ -174,24 +288,34 @@ export default function TweetDetailCard({
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(currentContent, 'text/html');
-
+    const doc = new DOMParser().parseFromString(currentContent, 'text/html');
     const imgs = Array.from(doc.querySelectorAll('img'))
-      .map(img => img.src)
-      .filter(Boolean);
+      .map(img => img.getAttribute('src') || img.src)
+      .filter(Boolean) as string[];
 
     setContentImages(imgs);
   }, [currentContent]);
 
+  // tweet.content가 바뀌면 동기화
   useEffect(() => {
+    if (skipNextPropSync.current) {
+      skipNextPropSync.current = false;
+      return;
+    }
+    if (isEditing) return;
     setCurrentContent(tweet.content);
-    setDraft(tweet.content);
-  }, [tweet.content]);
+  }, [tweet.content, isEditing]);
 
+  // tweet.updatedAt 바뀌면 동기화
+  useEffect(() => {
+    setCurrentUpdatedAt(tweet.updatedAt);
+  }, [tweet.updatedAt]);
+
+  // 이미지 우선순위: prop image > contentImages
   const propImages = Array.isArray(tweet.image) ? tweet.image : tweet.image ? [tweet.image] : [];
   const allImages = propImages.length > 0 ? propImages : contentImages;
 
+  // 본문에서 img는 제거 (이미지는 슬라이더에서만)
   const safeContent = DOMPurify.sanitize(currentContent, {
     ADD_TAGS: ['iframe', 'video', 'source'],
     ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
@@ -305,6 +429,11 @@ export default function TweetDetailCard({
     }
   };
 
+  // tweet이 바뀔 때 동기화
+  useEffect(() => {
+    setCurrentUpdatedAt(tweet.updatedAt);
+  }, [tweet.updatedAt]);
+
   // 트윗 삭제 Handle (Combined Logic)
   const handleDeleteTweet = async () => {
     if (!profileId) {
@@ -365,23 +494,56 @@ export default function TweetDetailCard({
       return;
     }
 
-    const next = draft.trim();
-    if (!next) return;
+    const textHtml = plainTextToHtml(editText.trim());
+    if (!textHtml && editImages.length === 0) return;
 
-    const { error } = await supabase.from('tweets').update({ content: next }).eq('id', tweet.id);
+    const finalHtml = buildHtmlWithImages(textHtml, editImages);
+    const nowIso = new Date().toISOString();
+
+    const storeKey = tweet.id;
+    SnsStore.updateTweet(storeKey, { content: finalHtml, updatedAt: nowIso });
+
+    const { error } = await supabase
+      .from('tweets')
+      .update({ content: finalHtml, updated_at: nowIso })
+      .eq('id', tweet.id);
 
     if (error) {
       toast.error(t('common.error_edit'));
       return;
     }
+    // prop sync로 롤백 방지
+    skipNextPropSync.current = true;
 
-    setCurrentContent(next);
+    setCurrentContent(finalHtml);
+    setCurrentUpdatedAt(nowIso);
     setIsEditing(false);
     toast.success(t('common.success_edit'));
 
-    // 캐시 반영 (있으면)
-    (SnsStore as any)?.updateContent?.(tweet.id, next);
+    SnsStore.updateTweet(tweet.id, { content: finalHtml, updatedAt: nowIso });
   };
+
+  const toMs = (v: any) => {
+    if (!v) return null;
+    const ms = new Date(v).getTime();
+    return Number.isFinite(ms) ? ms : null;
+  };
+
+  const created =
+    (tweet as any).createdAt ||
+    (tweet as any).created_at ||
+    (tweet as any).inserted_at ||
+    (tweet as any).insertedAt ||
+    tweet.timestamp;
+
+  const edited = currentUpdatedAt || (tweet as any).updatedAt || (tweet as any).updated_at;
+
+  const createdMs2 = toMs(created);
+  const editedMs2 = toMs(edited);
+  const isEdited =
+    createdMs2 != null && editedMs2 != null
+      ? editedMs2 > createdMs2 + 1000
+      : !!created && !!edited && String(created) !== String(edited);
 
   return (
     <div className="relative border-b border-gray-200 dark:border-gray-700 px-4 py-6 bg-white dark:bg-background">
@@ -439,7 +601,8 @@ export default function TweetDetailCard({
 
             <span className="mx-1 text-gray-500 dark:text-gray-400">·</span>
             <span className="text-gray-500 dark:text-gray-400 text-sm">
-              {formatTweetCardTime(tweet.createdAt || tweet.timestamp, i18n.language || 'ko')}
+              {formatTweetCardTime(created, i18n.language || 'ko')}
+              {isEdited && <span className="ml-1 text-xs text-gray-400"> 수정됨</span>}
             </span>
           </div>
         </div>
@@ -460,8 +623,8 @@ export default function TweetDetailCard({
                 <>
                   <EditButton
                     onEdit={() => {
-                      setDraft(currentContent);
-                      setIsEditing(true);
+                      startEdit();
+                      setShowMenu(false);
                     }}
                     onClose={() => setShowMenu(false)}
                   />
@@ -533,8 +696,8 @@ export default function TweetDetailCard({
             {isEditing ? (
               <div className="w-full" onClick={e => e.stopPropagation()}>
                 <textarea
-                  value={draft}
-                  onChange={e => setDraft(e.target.value)}
+                  value={editText}
+                  onChange={e => setEditText(e.target.value)}
                   rows={6}
                   className="
         w-full resize-none rounded-2xl border border-gray-300 dark:border-gray-700
@@ -545,29 +708,207 @@ export default function TweetDetailCard({
                   onKeyDown={e => {
                     if (isComposing) return;
 
-                    // ESC = 취소
-                    if (e.key === 'Escape') {
-                      e.preventDefault();
-                      setDraft(currentContent);
-                      setIsEditing(false);
-                      return;
-                    }
-
-                    // Enter 단독 = 저장
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
                       saveEdit();
-                      return;
+                    }
+                    if (e.key === 'Escape') {
+                      e.preventDefault();
+                      setIsEditing(false);
+                      // 원래 내용으로 되돌리기 (텍스트/이미지 분리해서)
+                      setEditText(htmlToPlainText(currentContent));
+                      setEditImages(extractImageSrcs(currentContent));
                     }
                   }}
                 />
+                {/* 편집 중 이미지 관리 */}
+                {isEditing ? (
+                  <div className="w-full" onClick={e => e.stopPropagation()}>
+                    <textarea
+                      value={editText}
+                      onChange={e => setEditText(e.target.value)}
+                      rows={6}
+                      className="
+        w-full resize-none rounded-2xl border border-gray-300 dark:border-gray-700
+        bg-gray-50 dark:bg-background px-3 py-2 text-base
+        text-gray-900 dark:text-gray-100
+        focus:outline-none focus:ring-2 focus:ring-primary/60
+      "
+                      onCompositionStart={() => setIsComposing(true)}
+                      onCompositionEnd={() => setIsComposing(false)}
+                      onKeyDown={e => {
+                        if (isComposing) return;
 
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          saveEdit();
+                          return;
+                        }
+
+                        if (e.key === 'Escape') {
+                          e.preventDefault();
+                          setIsEditing(false);
+                          setEditText(htmlToPlainText(currentContent));
+                          setEditImages(extractImageSrcs(currentContent));
+                          return;
+                        }
+                      }}
+                    />
+
+                    {/* hidden file input: 1개만 */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleEditFiles}
+                    />
+
+                    {/* 이미지 미리보기 + 삭제 (1개만 유지) */}
+                    {editImages.length > 0 && (
+                      <div className="mt-3 grid grid-cols-3 gap-2">
+                        {editImages.map((src, idx) => (
+                          <div
+                            key={`${src}-${idx}`}
+                            className="relative aspect-square overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700"
+                          >
+                            <img
+                              src={src}
+                              alt=""
+                              className="w-full h-full object-cover"
+                              draggable={false}
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setEditImages(prev => prev.filter((_, i) => i !== idx))
+                              }
+                              className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center"
+                              title="삭제"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="mt-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isUploading}
+                          className="px-3 py-2 rounded-full border text-sm hover:bg-gray-100 dark:hover:bg-white/10 disabled:opacity-50"
+                        >
+                          {isUploading ? '업로드 중...' : '이미지 추가'}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const url = prompt('이미지 URL을 입력하세요');
+                            if (!url) return;
+                            setEditImages(prev => [...prev, url]);
+                          }}
+                          className="px-3 py-2 rounded-full border text-sm hover:bg-gray-100 dark:hover:bg-white/10"
+                        >
+                          URL 추가
+                        </button>
+
+                        {editImages.length > 0 && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            이미지 {editImages.length}개
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          className="text-sm text-gray-500 hover:underline"
+                          onClick={() => {
+                            setIsEditing(false);
+                            setEditText(htmlToPlainText(currentContent));
+                            setEditImages(extractImageSrcs(currentContent));
+                          }}
+                        >
+                          취소
+                        </button>
+                        <button
+                          type="button"
+                          onClick={saveEdit}
+                          className="px-4 py-2 rounded-full bg-primary text-white hover:bg-primary/80"
+                        >
+                          저장
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className="text-gray-900 dark:text-gray-100 text-xl leading-relaxed break-words whitespace-pre-line"
+                    dangerouslySetInnerHTML={{ __html: safeContent }}
+                  />
+                )}
+
+                <div className="mt-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                      className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 hover:underline disabled:opacity-50"
+                    >
+                      <i className="ri-image-add-line" />
+                      <span>{isUploading ? '업로드 중...' : '사진 추가'}</span>
+                    </button>
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleEditFiles}
+                    />
+
+                    {editImages.length > 0 && (
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        이미지 {editImages.length}개
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* 이미지 미리보기 + 삭제 */}
+                {editImages.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {editImages.map((src, idx) => (
+                      <div
+                        key={src + idx}
+                        className="relative w-24 h-24 rounded-xl overflow-hidden border"
+                      >
+                        <img src={src} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center"
+                          onClick={() => setEditImages(prev => prev.filter((_, i) => i !== idx))}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="mt-3 flex justify-end gap-2">
                   <button
                     className="text-sm text-gray-500 hover:underline"
                     onClick={() => {
-                      setDraft(currentContent);
                       setIsEditing(false);
+                      setEditText(htmlToPlainText(currentContent));
+                      setEditImages(extractImageSrcs(currentContent));
                     }}
                   >
                     취소
@@ -607,7 +948,7 @@ export default function TweetDetailCard({
         )}
 
         {/* 이미지 슬라이더 (Import path needs verification in actual project structure, assumed ../tweet/components as standard) */}
-        {allImages.length > 0 && (
+        {!isEditing && allImages.length > 0 && (
           <ImageSlider
             allImages={allImages}
             currentImage={currentImage}
@@ -621,7 +962,7 @@ export default function TweetDetailCard({
           />
         )}
 
-        {showImageModal && (
+        {!isEditing && showImageModal && (
           <ModalImageSlider
             allImages={allImages}
             modalIndex={modalIndex}

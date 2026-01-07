@@ -95,9 +95,12 @@ export function ReplyCard({
 
   // 댓글 수정
   const [isEditing, setIsEditing] = useState(false);
-  const [draft, setDraft] = useState(rawContent); // 편집중 값
+  const [draftText, setDraftText] = useState('');
   const [currentContent, setCurrentContent] = useState(rawContent); // 화면 표시용
   const [isComposing, setIsComposing] = useState(false);
+
+  const [editImages, setEditImages] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const safeContent = DOMPurify.sanitize(currentContent, {
     ADD_TAGS: ['iframe', 'video', 'source', 'img'],
@@ -191,7 +194,7 @@ export function ReplyCard({
 
   useEffect(() => {
     setCurrentContent(rawContent);
-    setDraft(rawContent);
+    setDraftText(htmlToPlainText(rawContent));
   }, [rawContent]);
 
   useEffect(() => {
@@ -361,12 +364,20 @@ export function ReplyCard({
       return;
     }
 
-    const next = draft.trim();
-    if (!next) return;
+    const nextText = draftText.trim();
+    if (!nextText) return;
+
+    const imgs = extractImageSrcs(currentContent);
+    const textHtml = plainTextToHtml(nextText);
+
+    const finalHtml =
+      imgs.length === 0
+        ? textHtml
+        : `${textHtml}${imgs.map(src => `<div class="tweet-img"><img src="${src}" alt="" /></div>`).join('')}`;
 
     const { error } = await supabase
       .from('tweet_replies')
-      .update({ content: next })
+      .update({ content: finalHtml })
       .eq('id', reply.id)
       .eq('author_id', profileId);
 
@@ -376,13 +387,32 @@ export function ReplyCard({
       return;
     }
 
-    setCurrentContent(next);
+    setCurrentContent(nextText);
     setIsEditing(false);
     setShowMenu(false);
     toast.success(t('common.success_edit'));
 
     // 부모가 리스트 캐시를 가지고 있으면 알려주기(선택)
     // onEdited?.(reply.id, next) 같은 콜백을 나중에 추가해도 됨
+  };
+
+  const extractImageSrcs = (html: string) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return Array.from(doc.querySelectorAll('img'))
+      .map(img => img.getAttribute('src'))
+      .filter(Boolean) as string[];
+  };
+
+  const htmlToPlainText = (html: string) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    doc.querySelectorAll('img').forEach(img => img.remove());
+    doc.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+    return (doc.body.textContent ?? '').trim();
+  };
+
+  const plainTextToHtml = (text: string) => {
+    const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return escaped.replace(/\n/g, '<br />');
   };
 
   return (
@@ -454,7 +484,8 @@ export function ReplyCard({
                   <>
                     <EditButton
                       onEdit={() => {
-                        setDraft(currentContent);
+                        setDraftText(htmlToPlainText(currentContent));
+                        setEditImages(extractImageSrcs(currentContent));
                         setIsEditing(true);
                       }}
                       onClose={() => setShowMenu(false)}
@@ -490,8 +521,8 @@ export function ReplyCard({
             {isEditing ? (
               <div className="w-full" onClick={e => e.stopPropagation()}>
                 <textarea
-                  value={draft}
-                  onChange={e => setDraft(e.target.value)}
+                  value={draftText}
+                  onChange={e => setDraftText(e.target.value)}
                   rows={5}
                   className="
           w-full resize-none rounded-2xl border border-gray-300 dark:border-gray-700
@@ -505,7 +536,7 @@ export function ReplyCard({
                     // ESC = 취소
                     if (e.key === 'Escape') {
                       e.preventDefault();
-                      setDraft(currentContent);
+                      setDraftText(htmlToPlainText(currentContent));
                       setIsEditing(false);
                       return;
                     }
@@ -522,7 +553,7 @@ export function ReplyCard({
                   <button
                     className="text-sm text-gray-500 hover:underline"
                     onClick={() => {
-                      setDraft(currentContent);
+                      setDraftText(htmlToPlainText(currentContent));
                       setIsEditing(false);
                     }}
                   >

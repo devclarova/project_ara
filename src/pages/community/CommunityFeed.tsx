@@ -105,7 +105,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
             .from('tweets')
             .select(
               `
-            id, content, image_url, created_at,
+            id, content, image_url, created_at, updated_at,
             reply_count, repost_count, like_count, bookmark_count, view_count,
             profiles:author_id ( nickname, user_id, avatar_url )
           `,
@@ -130,6 +130,8 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
           content: t.content,
           image: t.image_url || undefined,
           timestamp: t.created_at || new Date().toISOString(),
+          createdAt: t.created_at || undefined,
+          updatedAt: (t as any).updated_at || undefined,
           stats: {
             replies: t.reply_count ?? 0,
             retweets: t.repost_count ?? 0,
@@ -392,7 +394,8 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
               dimmed={false}
               onDeleted={tweetId => setTweets(prev => prev.filter(i => i.id !== tweetId))}
               onUpdated={(id, updates) => {
-                setTweets(prev => prev.map(x => (x.id === id ? { ...x, ...updates } : x)));
+                setTweets(prev => prev.map(t => (t.id === id ? { ...t, ...updates } : t)));
+                SnsStore.updateTweet(id, updates);
               }}
             />
           ))

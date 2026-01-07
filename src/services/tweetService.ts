@@ -281,7 +281,7 @@ export const tweetService = {
       .from('tweets')
       .select(
         `
-        id, content, image_url, created_at,
+        id, content, image_url,  created_at, updated_at,
         reply_count, repost_count, like_count, bookmark_count, view_count,
         profiles (nickname, user_id, avatar_url)
       `,
@@ -310,6 +310,7 @@ export const tweetService = {
       content: tweet.content,
       image: tweet.image_url,
       createdAt,
+      updatedAt: tweet.updated_at ?? undefined,
       timestamp: createdAt,
       // timestamp: new Date(tweet.created_at).toLocaleString('ko-KR', {
       //   hour: '2-digit',
