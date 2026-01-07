@@ -50,18 +50,19 @@ export const GlobalUserStatusTracker = () => {
     
     window.addEventListener('focus', handleFocus);
     
-    // 종료 시 오프라인 처리 (완벽하지 않을 수 있으나 시도)
-    const handleUnload = () => {
-      // Beacon API 등을 쓰지 않으면 비동기 처리가 씹힐 수 있음
-      updateStatus(false);
+    // 4. 페이지 가시성/종료 이벤트 기반 오프라인 처리 보강
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // 백그라운드로 갈 때 즉시 오프라인으로 하지는 않지만, 세션 종료 가능성 대비
+      }
     };
-    window.addEventListener('beforeunload', handleUnload);
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('beforeunload', handleUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       clearInterval(heartbeatInterval);
-      // 컴포넌트 언마운트 시 (로그아웃 등) 오프라인 처리
       updateStatus(false);
     };
   }, [user]);

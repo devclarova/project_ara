@@ -184,11 +184,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (!mounted) return;
       setSession(newSession);
-      setUser(newSession?.user ?? null);
+      const u = newSession?.user ?? null;
+      setUser(u);
       setLoading(false);
 
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-        const u = newSession?.user;
         if (u) {
           // 로그인 시 게스트 번역 카운트 초기화
           if (event === 'SIGNED_IN') {
@@ -208,11 +208,45 @@ export function AuthProvider({ children }: PropsWithChildren) {
       }
     });
 
+    // 3) 실시간 프로필 변동 구독 (제재 상태 실시간 반영용)
+    const userIdRefForSub = { current: user?.id };
+    let profileSub: any = null;
+
+    if (user?.id) {
+      profileSub = supabase
+        .channel(`auth-user-sync-${user.id}-${Date.now()}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            // 필터 제거: 때로는 ID 타입 매칭 문제로 필터링된 이벤트가 오지 않을 수 있음
+          },
+          (payload: any) => {
+            const updated = payload.new;
+            if (updated && String(updated.user_id) === String(userIdRefForSub.current)) {
+              if ('banned_until' in updated) {
+                const newBannedUntil = updated.banned_until;
+                setBannedUntil(newBannedUntil);
+                setIsBannedState(checkIsBanned(newBannedUntil));
+              }
+            }
+          }
+        )
+        .subscribe();
+    }
+
     return () => {
       mounted = false;
       sub.subscription.unsubscribe();
+      if (profileSub) {
+        supabase.removeChannel(profileSub);
+      }
     };
-  }, []);
+  }, [user?.id]);
+
+
 
   const signIn: AuthContextType['signIn'] = async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });

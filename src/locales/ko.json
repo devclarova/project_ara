@@ -31,7 +31,9 @@
     "study_hidden": "학습 콘텐츠를 숨겼습니다",
     "study_visible": "학습 콘텐츠를 표시했습니다",
     "logged_out": "로그아웃되었습니다",
-    "logout_error": "로그아웃 중 오류가 발생했습니다"
+    "logout_error": "로그아웃 중 오류가 발생했습니다",
+    "reason": "운영팀 사유",
+    "review_comment": "운영팀 검토 의견"
   },
   "notification": {
     "like_feed": "님이 회원님의 게시물을 좋아합니다.",
@@ -69,9 +71,25 @@
     "follow_request": "님이 팔로우 요청을 보냈습니다",
     "accept": "수락",
     "decline": "거절",
-    "no_content_available": "내용을 불러올 수 없습니다",
     "tab_system": "시스템",
-    "system_notice": "시스템 알림"
+    "system_notice": "시스템 알림",
+    "system": {
+      "ban_title": "[ARA 운영팀] 서비스 이용 제한 안내",
+      "ban_prefix": "안녕하세요, ARA 운영팀입니다.<br/>회원님의 계정에 대한 이용 제한 조치가 적용되어 안내드립니다.",
+      "ban_reason": "<strong>• 제한 사유:</strong> {{reason}}",
+      "ban_duration": "<strong>• 제한 기간:</strong> {{duration}}",
+      "ban_until": "<strong>• 제한 해제 일시:</strong> {{until}}",
+      "ban_features": "<strong>• 제한 사항:</strong> 커뮤니티 활동 전체(게시글 및 댓글 작성, 좋아요, 팔로우, 채팅 발송)",
+      "ban_footer": "쾌적한 커뮤니티 환경 조성을 위한 조치이오니 양해 부탁드립니다.",
+      "unban_title": "[ARA 운영팀] 서비스 이용 제한 해제 안내",
+      "unban_message": "이용 제한 기간이 종료되어 다시 서비스를 정상적으로 이용하실 수 있습니다.<br/>앞으로도 건전한 커뮤니티 문화 형성에 동참해 주시길 부탁드립니다.",
+      "reporter_title": "[ARA 운영팀] 신고 처리 완료 안내",
+      "reporter_prefix": "회원님께서 신고하신 내용에 대해 조치가 완료되었습니다.<br/>더욱 쾌적한 커뮤니티 환경을 위해 제보해 주셔서 감사합니다.<br/><br/>",
+      "reporter_target": "<strong>• 신고 대상:</strong> {{target}}",
+      "reporter_reason": "<strong>• 신고 사유:</strong> {{reason}}",
+      "reporter_action": "<strong>• 조치 내용:</strong> {{action}}",
+      "reporter_footer": "<br/>앞으로도 많은 관심 부탁드립니다."
+    }
   },
   "study": {
     "studylist": "학습 목록",
@@ -143,7 +161,6 @@
     "email_verification_failed": "이메일 인증에 실패했습니다",
     "verify_before_login": "로그인 전 이메일 인증을 완료해주세요",
     "invalid_credentials": "아이디 또는 비밀번호가 잘못되었습니다",
-    "session_expired": "세션이 만료되었습니다",
     "avatar_upload_failed": "프로필 이미지 업로드 실패",
     "profile_save_failed": "프로필 저장 실패",
     "network_error": "네트워크 오류가 발생했습니다",
@@ -232,6 +249,7 @@
     "agree_and_close": "동의하고 닫기"
   },
   "common": {
+    "ara_team": "ARA 운영팀",
     "online": "온라인",
     "offline": "오프라인",
     "save": "저장",
@@ -239,6 +257,10 @@
     "apply": "적용하기",
     "cancel": "취소",
     "delete": "삭제",
+    "ban": "이용 제한",
+    "content_deleted": "콘텐츠 삭제",
+    "permanent": "영구",
+    "days": "일",
     "edit": "수정",
     "my_profile": "내 프로필",
     "my_account": "내 계정",
@@ -292,7 +314,6 @@
     "block_modal_notice_3": "커뮤니티에서 상대방의 게시글이 숨겨집니다.",
     "block_modal_notice_4": "상대방의 댓글이 마스킹 처리되어 표시됩니다.",
     "block_modal_warning": "차단 정보는 '설정 > 차단된 사용자'에서 관리할 수 있습니다.",
-    "unknown": "알 수 없음",
     "anonymous": "익명"
   },
   "settings": {
@@ -493,11 +514,6 @@
     "loading": "로딩 중...",
     "me": "나",
     "unknown": "알 수 없음",
-    "common": {
-      "back": "뒤로",
-      "cancel": "취소 (로그아웃)",
-      "search_placeholder": "Search..."
-    },
     "search_btn": "검색",
     "search_hint": "메시지 내용을 검색하세요.",
     "no_result": "결과가 없습니다.",
@@ -893,7 +909,11 @@
     "guest_limit_reached": "무료 번역 횟수를 모두 사용하셨습니다. 로그인하여 계속 이용하세요."
   },
   "report": {
-    "title": "신고하기",
+    "report": "신고",
+    "reason": "신고 사유",
+    "status": {
+      "dismissed": "신고 기각"
+    },
     "desc": "신고 사유를 선택해 주세요. 타당한 사유가 없을 경우 처리가 지연될 수 있습니다.",
     "reason_label": "사유 선택",
     "description_label": "상세 내용",

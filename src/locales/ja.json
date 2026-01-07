@@ -50,7 +50,24 @@
     "decline": "拒否",
     "no_content_available": "内容を読み込めません",
     "tab_system": "システム",
-    "system_notice": "システム通知"
+    "system_notice": "システム通知",
+    "system": {
+      "ban_title": "[ARA運営チーム] サービス利用制限のご案内",
+      "ban_prefix": "こんにちは、ARA運営チームです。<br/>お客様のアカウントに対して利用制限措置が適用されましたので、ご案内申し上げます。",
+      "ban_reason": "<strong>• 制限理由:</strong> {{reason}}",
+      "ban_duration": "<strong>• 制限期間:</strong> {{duration}}",
+      "ban_until": "<strong>• 制限解除日時:</strong> {{until}}",
+      "ban_features": "<strong>• 制限事項:</strong> コミュニティ活動全般（投稿およびコメントの作成、いいね、フォロー、チャットの送信）",
+      "ban_footer": "快適なコミュニティ環境づくりのための措置ですので、ご理解のほどよろしくお願いいたします。",
+      "unban_title": "[ARA運営チーム] サービス利用制限解除のご案内",
+      "unban_message": "利用制限期間が終了しましたので、再びサービスを正常にご利用いただけるようになりました。<br/>今後とも健全なコミュニティ文化の形成にご協力をお願いいたします。",
+      "reporter_title": "[ARA運営チーム] 通報処理完了のご案内",
+      "reporter_prefix": "お客様が通報された内容につきましてお知らせいたします。措置が完了しました。<br/>より快適なコミュニティ環境のためにご協力いただき、誠にありがとうございます。<br/><br/>",
+      "reporter_target": "<strong>• 通報対象:</strong> {{target}}",
+      "reporter_reason": "<strong>• 通報理由:</strong> {{reason}}",
+      "reporter_action": "<strong>• 処置内容:</strong> {{action}}",
+      "reporter_footer": "<br/>今後ともよろしくお願いいたします。"
+    }
   },
   "study": {
     "studylist": "学習リスト",
@@ -265,6 +282,7 @@
     }
   },
   "common": {
+    "ara_team": "ARA運営チーム",
     "online": "オンライン",
     "offline": "オフライン",
     "save": "保存する",
@@ -272,6 +290,10 @@
     "apply": "適用する",
     "cancel": "キャンセル",
     "delete": "削除する",
+    "ban": "利用制限",
+    "content_deleted": "コンテンツ削除",
+    "permanent": "永久",
+    "days": "日",
     "edit": "編集する",
     "my_profile": "マイプロフィール",
     "my_account": "マイアカウント",
@@ -300,6 +322,10 @@
     "block": "ブロック",
     "unblock": "ブロック解除",
     "report": "通報",
+    "reason": "通報理由",
+    "status": {
+      "dismissed": "通報却下"
+    },
     "edit_mode": "編集モードに切り替えます。",
     "block_success": "{{name}}さんをブロックしました。",
     "unblock_success": "{{name}}さんのブロックを解除しました。",
@@ -778,11 +804,24 @@
     "login_required": "ログイン後に翻訳機能をご利用いただけます。",
     "guest_limit_reached": "無料翻訳の回数を使い切りました。ログインして続けてください。"
   },
+  "report": {
+    "reason": "通報理由",
+    "reasons": {
+      "spam": "スパム / 不適切な宣伝",
+      "abuse": "悪口 / 誹謗중상",
+      "harmful": "有害なコンテンツ",
+      "inappropriate": "不適切な内容",
+      "other": "その他 (直接入力)"
+    }
+  },
   "admin": {
     "report_processed": "通報が処理されました。",
     "report_rejected": "通報が却下されました。",
     "no_permission": "管理者権限がありません。",
     "login_success": "管理者ログイン成功。",
+    "signin": "ログイン",
+    "reason": "運営チームの理由",
+    "review_comment": "運営チームの審査意見",
     "study_deleted": "学習コンテンツが削除されました。",
     "study_uploaded": "学習コンテンツのアップロードに成功しました！",
     "goods_registered": "商品が正常に登録されました！",

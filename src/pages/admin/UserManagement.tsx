@@ -26,6 +26,8 @@ import {
   ShieldAlert,
   Loader2
 } from 'lucide-react';
+import { usePresence } from '@/contexts/PresenceContext';
+import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -80,6 +82,7 @@ const UserManagement = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const { onlineUsers } = usePresence();
 
   // Ban Dialog State
   const [showBanDialog, setShowBanDialog] = useState(false);
@@ -199,7 +202,7 @@ const UserManagement = () => {
                   last_active_at: payload.new.last_active_at || u.last_active_at,
                   nickname: payload.new.nickname || u.nickname,
                   avatar_url: payload.new.avatar_url || u.avatar_url,
-                  banned_until: payload.new.banned_until || u.banned_until,
+                  banned_until: 'banned_until' in payload.new ? payload.new.banned_until : u.banned_until,
                   is_admin: payload.new.is_admin !== undefined ? payload.new.is_admin : u.is_admin
                 };
               }
@@ -711,9 +714,13 @@ const UserManagement = () => {
                       </span>
 
                       <div className="flex items-center gap-1.5">
-                        <div className={`w-2 h-2 rounded-full ${user.is_online ? 'bg-emerald-500' : 'bg-zinc-300'}`} />
+                        <OnlineIndicator 
+                          userId={user.profile_id} 
+                          isOnlineOverride={user.is_online || onlineUsers.has(user.id)}
+                          size="sm"
+                        />
                         <span className="text-[10px] font-bold text-zinc-500 uppercase">
-                          {user.is_online ? '온라인' : '오프라인'}
+                          {(user.is_online || onlineUsers.has(user.id)) ? '온라인' : '오프라인'}
                         </span>
                       </div>
                     </div>

@@ -42,7 +42,26 @@
     "tab_updates": "Päivitykset",
     "media_photo": "[Kuva]",
     "media_video": "[Video]",
-    "media_file": "[Tiedosto]"
+    "media_file": "[Tiedosto]",
+    "tab_system": "Järjestelmä",
+    "system_notice": "Järjestelmäilmoitus",
+    "system": {
+      "ban_title": "[ARA-tiimi] Ilmoitus palvelun käytön rajoittamisesta",
+      "ban_prefix": "Hei, täällä ARA-tiimi.<br/>Ilmoitamme, että tilillesi on asetettu käytön rajoituksia.",
+      "ban_reason": "<strong>• Rajoituksen syy:</strong> {{reason}}",
+      "ban_duration": "<strong>• Rajoituksen kesto:</strong> {{duration}}",
+      "ban_until": "<strong>• Päättymisajankohta:</strong> {{until}}",
+      "ban_features": "<strong>• Rajoitukset:</strong> Kaikki yhteisötoiminnot (julkaisut, kommentit, tykkäykset, seuraaminen, viestit)",
+      "ban_footer": "Tämä on toimenpide viihtyisän yhteisöympäristön luomiseksi. Kiitos ymmärryksestänne.",
+      "unban_title": "[ARA-tiimi] Ilmoitus rajoituksen päättymisestä",
+      "unban_message": "Rajoituskausi on päättynyt. Voit taas käyttää palvelua normaalisti.<br/>Kiitos panoksestasi terveemmän yhteisökulttuurin puolesta.",
+      "reporter_title": "[ARA-tiimi] Ilmoitus ilmiannon käsittelyn valmistumisesta",
+      "reporter_prefix": "Tekemäsi ilmianto on käsitelty ja toimenpiteet suoritettu.<br/>Kiitos avustasi terveemmän yhteisöympäristön ylläpitämisessä.<br/><br/>",
+      "reporter_target": "<strong>• Ilmiannon kohde:</strong> {{target}}",
+      "reporter_reason": "<strong>• Syy:</strong> {{reason}}",
+      "reporter_action": "<strong>• Toimenpide:</strong> {{action}}",
+      "reporter_footer": "<br/>Kiitos jatkuvasta mielenkiinnostasi."
+    }
   },
   "study": {
     "studylist": "Opiskelulista",
@@ -196,6 +215,7 @@
     "agree_and_close": "Hyväksy ja sulje"
   },
   "common": {
+    "ara_team": "ARA-tiimi",
     "online": "Paikalla",
     "offline": "Poissa",
     "save": "Tallenna",
@@ -203,6 +223,10 @@
     "apply": "Käytä",
     "cancel": "Peruuta",
     "delete": "Poista",
+    "ban": "Rajoitus",
+    "content_deleted": "Sisältö poistettu",
+    "permanent": "Pysyvä",
+    "days": "päivää",
     "edit": "Muokkaa",
     "my_profile": "Oma profiili",
     "my_account": "Oma tili",
@@ -233,6 +257,10 @@
     "block": "Estä",
     "unblock": "Poista esto",
     "report": "Ilmianna",
+    "reason": "Ilmiannon syy",
+    "status": {
+      "dismissed": "Ilmianto hylätty"
+    },
     "cancel_like": "En tykkää enää",
     "success_like": "Tykkään"
   },
@@ -561,12 +589,24 @@
     "login_required": "Kirjaudu sisään käyttääksesi käännöstoimintoa.",
     "guest_limit_reached": "Olet käyttänyt kaikki ilmaiset käännökset. Kirjaudu sisään jatkaaksesi."
   },
+  "report": {
+    "reason": "Ilmiannon syy",
+    "reasons": {
+      "spam": "Roskaposti / Mainonta",
+      "abuse": "Solvaus / Herjaus",
+      "harmful": "Haitallinen sisältö",
+      "inappropriate": "Sopimaton sisältö",
+      "other": "Muu (Suora syöttö)"
+    }
+  },
   "admin": {
     "report_processed": "Ilmoitus käsitelty.",
     "report_rejected": "Ilmoitus hylätty.",
     "no_permission": "Ei järjestelmänvalvojan oikeuksia.",
     "login_success": "Järjestelmänvalvojan kirjautuminen onnistui.",
-    "study_deleted": "Opiskelusisältö poistettu.",
+    "study_deleted": "Opintosisältö poistettu",
+    "reason": "Ylläpitäjän syy",
+    "review_comment": "Ylläpitäjän tarkistuskommentti",
     "study_uploaded": "Opiskelusisältö ladattu onnistuneesti!",
     "goods_registered": "Tuote rekisteröity onnistuneesti!",
     "goods_deleted": "Tuote poistettu.",

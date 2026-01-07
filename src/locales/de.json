@@ -44,7 +44,26 @@
     "media_video": "[Video]",
     "media_file": "[Datei]",
     "follow_you": "folgt dir",
-    "follow_request": "hat dir eine Folgeanfrage gesendet"
+    "follow_request": "hat dir eine Folgeanfrage gesendet",
+    "tab_system": "System",
+    "system_notice": "System-Benachrichtigung",
+    "system": {
+      "ban_title": "[ARA-Team] Hinweis zur Nutzungseinschränkung",
+      "ban_prefix": "Hallo, hier ist das ARA-Team.<br/>Wir informieren Sie, dass gegen Ihr Konto Nutzungseinschränkungen verhängt wurden.",
+      "ban_reason": "<strong>• Grund der Einschränkung:</strong> {{reason}}",
+      "ban_duration": "<strong>• Dauer der Einschränkung:</strong> {{duration}}",
+      "ban_until": "<strong>• Aufhebungsdatum:</strong> {{until}}",
+      "ban_features": "<strong>• Einschränkungen:</strong> Alle Community-Aktivitäten (Posten, Kommentieren, Liken, Folgen, Chatten)",
+      "ban_footer": "Dies ist eine Maßnahme zur Schaffung einer angenehmen Community-Umgebung. Wir bitten um Ihr Verständnis.",
+      "unban_title": "[ARA-Team] Hinweis zur Aufhebung der Einschränkung",
+      "unban_message": "Der Zeitraum der Einschränkung ist abgelaufen. Sie können den Dienst wieder normal nutzen.<br/>Bitte beteiligen Sie sich weiterhin an einer gesunden Community-Kultur.",
+      "reporter_title": "[ARA-Team] Meldung erfolgreich bearbeitet",
+      "reporter_prefix": "Bezüglich Ihrer Meldung wurden entsprechende Maßnahmen ergriffen.<br/>Vielen Dank, dass Sie uns helfen, eine gesunde Community-Umgebung aufrechtzuerhalten.<br/><br/>",
+      "reporter_target": "<strong>• Gemeldetes Ziel:</strong> {{target}}",
+      "reporter_reason": "<strong>• Grund:</strong> {{reason}}",
+      "reporter_action": "<strong>• Ergriffene Maßnahme:</strong> {{action}}",
+      "reporter_footer": "<br/>Vielen Dank für Ihr Interesse."
+    }
   },
   "study": {
     "studylist": "Lernliste",
@@ -162,6 +181,7 @@
     "agree_and_close": "Zustimmen und schließen"
   },
   "common": {
+    "ara_team": "ARA-Team",
     "online": "Online",
     "offline": "Offline",
     "save": "Speichern",
@@ -169,6 +189,10 @@
     "apply": "Anwenden",
     "cancel": "Abbrechen",
     "delete": "Löschen",
+    "ban": "Einschränkung",
+    "content_deleted": "Inhalt gelöscht",
+    "permanent": "Dauerhaft",
+    "days": "Tage",
     "edit": "Bearbeiten",
     "my_profile": "Mein Profil",
     "my_account": "Mein Konto",
@@ -197,6 +221,10 @@
     "block": "Blockieren",
     "unblock": "Entblocken",
     "report": "Melden",
+    "reason": "Meldegrund",
+    "status": {
+      "dismissed": "Meldung abgelehnt"
+    },
     "edit_mode": "Wechseln in den Bearbeitungsmodus.",
     "block_success": "{{name}} blockiert.",
     "unblock_success": "{{name}} entblockt.",
@@ -211,7 +239,6 @@
       "dark": "Dunkel",
       "system": "System"
     },
-    "system": "System",
     "language": "Sprache",
     "theme": "Design",
     "notifications": "Benachrichtigungen",
@@ -290,8 +317,6 @@
   },
   "profile": {
     "edit_profile": "Profil bearbeiten",
-    "following": "Folge ich",
-    "followers": "Follower",
     "joined": "Beigetreten {{date}}",
     "tabs": {
       "posts": "Beiträge",
@@ -318,7 +343,6 @@
     "follow": "Folgen",
     "following": "Folge ich",
     "unfollow": "Entfolgen",
-    "followers": "Follower",
     "followers_list": "Follower-Liste",
     "following_list": "Folge-ich-Liste",
     "no_followers": "Noch keine Follower",
@@ -531,12 +555,24 @@
     "login_required": "Bitte melden Sie sich an, um die Übersetzungsfunktion zu nutzen.",
     "guest_limit_reached": "Sie haben alle kostenlosen Übersetzungen aufgebraucht. Melden Sie sich an, um fortzufahren."
   },
+  "report": {
+    "reason": "Grund der Meldung",
+    "reasons": {
+      "spam": "Spam / Werbung",
+      "abuse": "Beleidigung / Abwertung",
+      "harmful": "Schädliche Inhalte",
+      "inappropriate": "Unangemessene Inhalte",
+      "other": "Sonstiges (Direkteingabe)"
+    }
+  },
   "admin": {
     "report_processed": "Meldung bearbeitet.",
     "report_rejected": "Meldung abgelehnt.",
     "no_permission": "Keine Administratorrechte.",
     "login_success": "Admin-Login erfolgreich.",
     "study_deleted": "Lerninhalt gelöscht.",
+    "reason": "Grund des Administrators",
+    "review_comment": "Prüfkommentar des Administrators",
     "study_uploaded": "Lerninhalt erfolgreich hochgeladen!",
     "goods_registered": "Produkt erfolgreich registriert!",
     "goods_deleted": "Produkt gelöscht.",

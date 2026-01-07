@@ -226,7 +226,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
           const fetchedReplies = await tweetService.getRepliesByTweetId(topItem.id, 0, true);
           setReplies(fetchedReplies);
         } catch (error) {
-          console.error('Error fetching replies for detail stack:', error);
+          // Error handled silently
           // Only show error if we are still on this tweet
           const currentTop = detailStack[detailStack.length - 1];
           if (currentTop?.id === topItem.id) {
@@ -407,7 +407,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
         setTargetData((prev: any) => ({ ...prev, countryName, countryFlagUrl }));
       }
     } catch (error) {
-      console.error('Error fetching target data:', error);
+       // Error handled silently
       toast.error('상세 정보를 불러올 수 없습니다.');
     } finally {
       setLoading(false);
@@ -452,7 +452,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
 
       setDetailStack(prev => [...prev, feedItem]);
     } catch (error) {
-      console.error('Error loading parent tweet:', error);
+       // Error handled silently
       toast.error('게시글 로드 실패');
     }
   };
@@ -488,12 +488,24 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
           if (report.reporter?.user_id) {
             const { data: reporterProfile } = await supabase.from('profiles').select('id').eq('user_id', report.reporter.user_id).maybeSingle();
             if (reporterProfile) {
-                await supabase.from('notifications').insert({
+                const targetName = targetData?.nickname || targetData?.profiles?.nickname || targetData?.sender?.nickname || 'Unknown';
+                const reportReasonKey = report.reason ? `report.reasons.${report.reason}` : 'report.reasons.other';
+                const reporterPayload = {
+                    type: 'system_reporter_feedback',
+                    data: {
+                        target: targetName,
+                        reasonKey: reportReasonKey,
+                        actionType: 'dismiss'
+                    }
+                };
+
+                const payload = {
                     type: 'system',
-                    content: '귀하의 신고가 검토 결과 기각되었습니다.',
+                    content: JSON.stringify(reporterPayload),
                     receiver_id: reporterProfile.id,
                     is_read: false
-                });
+                };
+                await supabase.from('notifications').insert(payload);
             }
           }
 
@@ -501,7 +513,6 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
           onResolve();
           onClose();
       } catch (e) {
-          console.error(e);
           toast.error('작업 수행 실패');
       } finally {
           setShowDismissDialog(false);
@@ -536,13 +547,38 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
         if (report.reporter?.user_id) {
             const { data: reporterProfile } = await supabase.from('profiles').select('id').eq('user_id', report.reporter.user_id).maybeSingle();
             if (reporterProfile) {
-                await supabase.from('notifications').insert({
+                const targetName = targetData?.nickname || targetData?.profiles?.nickname || targetData?.sender?.nickname || 'Unknown';
+                const reportReasonKey = report.reason ? `report.reasons.${report.reason}` : 'report.reasons.other';
+                const reporterPayload = {
+                    type: 'system_reporter_feedback',
+                    data: {
+                        target: targetName,
+                        reasonKey: reportReasonKey,
+                        actionType: 'delete'
+                    }
+                };
+
+                const payload = {
                     type: 'system',
-                    content: '귀하의 신고가 검토 완료되어 해당 콘텐츠가 조치되었습니다.',
+                    content: JSON.stringify(reporterPayload),
                     receiver_id: reporterProfile.id,
                     is_read: false
-                });
+                };
+                await supabase.from('notifications').insert(payload);
             }
+        }
+
+        // Notify Target User (Content Author)
+        // targetData contains profiles info for the reported content
+        const targetProfile = targetData?.profiles || targetData?.sender;
+        if (targetProfile?.id) {
+            const payload = {
+                type: 'system',
+                content: `귀하의 ${report.target_type === 'tweet' ? '게시글' : '댓글'}이 운영 정책 위반으로 인해 삭제되었습니다.`,
+                receiver_id: targetProfile.id,
+                is_read: false
+            };
+            await supabase.from('notifications').insert(payload);
         }
 
         toast.success('콘텐츠 삭제 및 신고 처리가 완료되었습니다.');
@@ -561,7 +597,6 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
         if (reportedMessages) setReportedMessages((prev: any) => updateDeletedState(prev));
 
       } catch (e) {
-          console.error(e);
           toast.error('작업 수행 실패');
       }
   };
@@ -577,7 +612,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
         onResolve();
         onClose();
     } catch (e) {
-        console.error('Error resolving report after sanction:', e);
+        // Error handled silently
         toast.error('신고 상태를 업데이트하지 못했습니다.');
     }
   };
@@ -614,7 +649,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      console.error('Download failed:', error);
+      // Error handled silently
       window.open(url, '_blank');
     }
   };
@@ -654,7 +689,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
           } as any]);
           toast.dismiss(toastId);
       } catch (e) {
-          console.error(e);
+          // Error handled silently
           toast.error('히스토리 로딩 실패');
       }
   };
@@ -696,7 +731,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
       }
       toast.dismiss(toastId);
     } catch (e) {
-      console.error(e);
+      // Error handled silently
       toast.error('채팅 내역 로딩 실패');
     }
   };
@@ -1752,7 +1787,7 @@ export const HistoryReportDetailView = ({ report, onViewChatHistory, onItemClick
                      setContent({ chat_id: report.target_id, type: 'chat', created_at: report.created_at });
                 }
             } catch (e) {
-                console.error(e);
+                // Error handled silently
             }
             setLoading(false);
         };

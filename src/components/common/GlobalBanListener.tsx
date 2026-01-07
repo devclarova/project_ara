@@ -5,10 +5,17 @@ import { addYears } from 'date-fns';
 import { toast } from 'sonner';
 
 export const GlobalBanListener: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, bannedUntil: initialBannedUntil } = useAuth();
+  const lastNotifiedBanRef = React.useRef<string | null>(initialBannedUntil);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+       lastNotifiedBanRef.current = null;
+       return;
+    }
+    
+    // 유저가 바뀌었을 때 (로그인 등) 초기화
+    lastNotifiedBanRef.current = initialBannedUntil;
 
     const channel = supabase
       .channel(`ban-listener-${user.id}`)
@@ -23,11 +30,19 @@ export const GlobalBanListener: React.FC = () => {
         async (payload: any) => {
           const newProfile = payload.new;
           if (newProfile && newProfile.banned_until) {
+            // 이미 동일한 제재 건으로 알림을 보냈거나 새로고침 했다면 스킵
+            if (lastNotifiedBanRef.current === newProfile.banned_until) return;
+
             const bannedUntil = new Date(newProfile.banned_until);
             const now = new Date();
             
             // If ban is expired, ignore
-            if (bannedUntil <= now) return;
+            if (bannedUntil <= now) {
+               lastNotifiedBanRef.current = newProfile.banned_until;
+               return;
+            }
+
+            lastNotifiedBanRef.current = newProfile.banned_until;
 
             // Check for Permanent Ban (> 50 years)
             const permanentThreshold = addYears(now, 50);

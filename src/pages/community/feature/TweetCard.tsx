@@ -562,7 +562,7 @@ export default function TweetCard({
           {/* User Info & Menu */}
           <div className="flex-1 min-w-0 flex items-center justify-between pt-0.5 relative">
             <div className="flex items-center flex-wrap mr-1">
-              <div className="relative inline-flex items-center">
+              <div className="relative inline-flex items-center pr-1.5">
                 <span
                   className={isDeletedUser ? 'font-bold text-gray-500 cursor-default' : nameClass}
                   onClick={isDeletedUser ? undefined : handleAvatarClick}
@@ -573,13 +573,13 @@ export default function TweetCard({
                   <OnlineIndicator
                     userId={user.username}
                     size="sm"
-                    className="absolute -top-0.5 -right-2.5 z-20 border-white dark:border-background border shadow-none"
+                    className="absolute top-0.5 right-0 z-20 border-white dark:border-background border shadow-none"
                   />
                 )}
               </div>
-              <BanBadge bannedUntil={user.banned_until ?? null} size="xs" />
+              <BanBadge bannedUntil={user.banned_until ?? null} size="xs" className="ml-1" />
               {authorCountryFlagUrl && !isDeletedUser && (
-                <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 ml-4 h-5">
+                <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 ml-1 h-5">
                   <img
                     src={authorCountryFlagUrl}
                     alt={authorCountryName ?? '국가'}

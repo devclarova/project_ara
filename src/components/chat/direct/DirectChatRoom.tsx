@@ -17,7 +17,7 @@ import MediaGalleryModal from './MediaGalleryModal';
 import MediaViewer, { type MediaItem } from './MediaViewer';
 import Modal from '@/components/common/Modal';
 import ReportModal from '@/components/common/ReportModal';
-import { formatMessageTime, formatSmartDate } from '@/utils/dateUtils';
+import { formatMessageTime, formatDividerDate } from '@/utils/dateUtils';
 import { BanBadge } from '@/components/common/BanBadge';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 // HMR Trigger
@@ -1149,20 +1149,20 @@ const DirectChatRoom = ({
                 ←
               </button>
             )}
-            <h3>
-              <div className="relative inline-flex items-center gap-2">
-                <span className="flex items-center gap-2">
+            <h3 className="flex items-center gap-2">
+              <div className="relative inline-flex items-center pr-2.5 shrink-0">
+                <span className="truncate max-w-[150px] sm:max-w-[200px]">
                   {currentChat?.other_user?.nickname || t('chat.loading')}
-                  <BanBadge bannedUntil={currentChat?.other_user?.banned_until ?? null} size="sm" />
                 </span>
                 {currentChat?.other_user?.id && (
                   <OnlineIndicator 
                     userId={currentChat.other_user.id} 
                     size="sm" 
-                    className="absolute -top-0.5 -right-2.5 z-10 border-white dark:border-secondary border shadow-none" 
+                    className="absolute top-0.5 right-0 z-10 border-white dark:border-secondary border shadow-none" 
                   />
                 )}
               </div>
+              <BanBadge bannedUntil={currentChat?.other_user?.banned_until ?? null} size="sm" />
             </h3>
           </div>
         </div>
@@ -1359,8 +1359,8 @@ const DirectChatRoom = ({
                 const dateMessages = messageGroups[date];
                 return (
                   <div key={date} className="message-group">
-                    <div className="chat-divider">
-                      <span>{formatSmartDate(date)}</span>
+                    <div className="date-divider">
+                      <span>{formatDividerDate(date)}</span>
                     </div>
                     <div className="message-group-container">
                       {dateMessages.map((message: DirectMessage) => {

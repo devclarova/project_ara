@@ -42,7 +42,26 @@
     "tab_updates": "Novidades",
     "media_photo": "[Foto]",
     "media_video": "[Vídeo]",
-    "media_file": "[Arquivo]"
+    "media_file": "[Arquivo]",
+    "tab_system": "Sistema",
+    "system_notice": "Notificação do sistema",
+    "system": {
+      "ban_title": "[Equipe ARA] Aviso de restrição de uso do serviço",
+      "ban_prefix": "Olá, somos a equipe ARA.<br/>Informamos que foram aplicadas restrições de uso à sua conta.",
+      "ban_reason": "<strong>• Motivo da restrição:</strong> {{reason}}",
+      "ban_duration": "<strong>• Duração della restrição:</strong> {{duration}}",
+      "ban_until": "<strong>• Data de levantamento:</strong> {{until}}",
+      "ban_features": "<strong>• Restrições:</strong> Todas as atividades da comunidade (Postar, Comentar, Curtir, Seguir, Enviar mensagens)",
+      "ban_footer": "Esta é uma medida tomada para criar um ambiente comunitário agradável. Agradecemos sua compreensão.",
+      "unban_title": "[Equipe ARA] Aviso de levantamento de restrição",
+      "unban_message": "O período de restrição terminou. Você já pode voltar a utilizar o serviço normalmente.<br/>Obrigado por continuar a participar de uma cultura comunitária saudável.",
+      "reporter_title": "[Equipe ARA] Aviso de conclusão do processamento de denúncia",
+      "reporter_prefix": "Foram tomadas medidas em relação à denúncia que você apresentou.<br/>Obrigado por nos ajudar a manter um ambiente comunitário saudável.<br/><br/>",
+      "reporter_target": "<strong>• Alvo da denúncia:</strong> {{target}}",
+      "reporter_reason": "<strong>• Motivo:</strong> {{reason}}",
+      "reporter_action": "<strong>• Medida tomada:</strong> {{action}}",
+      "reporter_footer": "<br/>Obrigado pelo seu interesse constante."
+    }
   },
   "study": {
     "studylist": "Lista de Estudo",
@@ -196,6 +215,7 @@
     "agree_and_close": "Concordar e fechar"
   },
   "common": {
+    "ara_team": "Equipe ARA",
     "online": "Online",
     "offline": "Offline",
     "save": "Salvar",
@@ -203,6 +223,10 @@
     "apply": "Aplicar",
     "cancel": "Cancelar",
     "delete": "Excluir",
+    "ban": "Restrição",
+    "content_deleted": "Conteúdo excluído",
+    "permanent": "Permanente",
+    "days": "dias",
     "edit": "Editar",
     "my_profile": "Meu Perfil",
     "my_account": "Minha Conta",
@@ -231,6 +255,10 @@
     "block": "Bloquear",
     "unblock": "Desbloquear",
     "report": "Denunciar",
+    "reason": "Motivo da denúncia",
+    "status": {
+      "dismissed": "Denúncia rejeitada"
+    },
     "edit_mode": "Alternar para modo de edição.",
     "block_success": "{{name}} bloqueado.",
     "unblock_success": "{{name}} desbloqueado.",
@@ -245,7 +273,6 @@
       "dark": "Escuro",
       "system": "Sistema"
     },
-    "system": "Sistema",
     "language": "Idioma",
     "theme": "Tema",
     "notifications": "Notificações",
@@ -324,8 +351,6 @@
   },
   "profile": {
     "edit_profile": "Editar perfil",
-    "following": "Seguindo",
-    "followers": "Seguidores",
     "joined": "Entrou em {{date}}",
     "tabs": {
       "posts": "Publicações",
@@ -352,7 +377,6 @@
     "follow": "Seguir",
     "following": "Seguindo",
     "unfollow": "Deixar de seguir",
-    "followers": "Seguidores",
     "followers_list": "Lista de seguidores",
     "following_list": "Lista de seguindo",
     "no_followers": "Sem seguidores ainda",
@@ -564,12 +588,24 @@
     "login_required": "Por favor, faça login para usar a função de tradução.",
     "guest_limit_reached": "Você usou todas as traduções gratuitas. Faça login para continuar."
   },
+  "report": {
+    "reason": "Motivo da denúncia",
+    "reasons": {
+      "spam": "Spam / Promoção",
+      "abuse": "Abuso / Depreciativo",
+      "harmful": "Conteúdo nocivo",
+      "inappropriate": "Conteúdo inapropriado",
+      "other": "Outro (Entrada direta)"
+    }
+  },
   "admin": {
     "report_processed": "Denúncia processada.",
     "report_rejected": "Denúncia rejeitada.",
     "no_permission": "Sem permissão de administrador.",
     "login_success": "Login de administrador realizado com sucesso.",
-    "study_deleted": "Conteúdo de estudo excluído.",
+    "study_deleted": "Conteúdo de estudo excluído",
+    "reason": "Motivo do administrador",
+    "review_comment": "Comentário de revisão do administrador",
     "study_uploaded": "Conteúdo de estudo carregado com sucesso!",
     "goods_registered": "Produto registrado com sucesso!",
     "goods_deleted": "Produto excluído.",

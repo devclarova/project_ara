@@ -1,11 +1,24 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { format } from 'date-fns';
+import { ko, enUS, ja, zhCN, fr, de, es, pt, ptBR, ru, fi, vi, th, hi, bn, arSA } from 'date-fns/locale';
+import { 
+  Heart, 
+  MessageCircle, 
+  UserPlus, 
+  Repeat2, 
+  AtSign, 
+  ShieldCheck,
+  MoreVertical,
+  Trash2
+} from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import DOMPurify from 'dompurify';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { formatSmartDate } from '@/utils/dateUtils';
+import { useAutoTranslation } from '@/hooks/useAutoTranslation';
 
 
 
@@ -39,6 +52,25 @@ export default function NotificationCard({
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Extract adminComment for auto-translation if it's a system notification
+  const getAdminComment = (contentJson: string | null) => {
+    if (!contentJson) return null;
+    try {
+      const payload = JSON.parse(contentJson);
+      return payload?.data?.adminComment || null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const adminComment = notification.type === 'system' ? getAdminComment(notification.content) : null;
+  const { translatedText: translatedAdminComment, isLoading: isTranslating } = useAutoTranslation(
+    adminComment || '',
+    `admin_comment_${notification.id}`,
+    i18n.language
+  );
+
   const FEED_LIKE_MESSAGE = t('notification.like_feed');
 
   const getInteractionIcon = (type: string) => {
@@ -57,6 +89,89 @@ export default function NotificationCard({
         return '📢';
       default:
         return '📢';
+    }
+  };
+
+  const getSystemNotificationContent = (contentJson: string | null) => {
+    if (!contentJson) return '';
+    try {
+      const payload = JSON.parse(contentJson);
+      if (!payload.type || !payload.data) return contentJson;
+
+      const { type, data } = payload;
+      
+      const localeMap: Record<string, any> = {
+        'ko': ko, 'en': enUS, 'ja': ja, 'zh': zhCN, 'fr': fr, 'de': de, 
+        'es': es, 'pt': pt, 'pt-br': ptBR, 'ru': ru, 'fi': fi,
+        'vi': vi, 'th': th, 'hi': hi, 'bn': bn, 'ar': arSA
+      };
+      const currentLang = i18n.language.toLowerCase();
+      const baseLang = currentLang.split('-')[0];
+      const currentDateLocale = localeMap[currentLang] || localeMap[baseLang] || enUS;
+
+      const formatBanUntil = (until: string | null) => {
+        if (!until) return t('common.permanent', '영구');
+        return format(new Date(until), 'yyyy. MM. dd. HH:mm', { locale: currentDateLocale });
+      };
+
+      const formatBanDuration = (duration: any, days: number | null) => {
+        if (duration === 'permanent') return t('common.permanent', '영구');
+        return `${days}${t('common.days', '일')}`;
+      };
+
+      const reportReason = data.reportReasonKey ? t(data.reportReasonKey) : t('report.reasons.other');
+      const durationStr = formatBanDuration(data.duration, data.durationDays);
+      const untilStr = formatBanUntil(data.until);
+
+      const getDisplayedComment = (original: string) => {
+        if (translatedAdminComment) return translatedAdminComment;
+        return original;
+      };
+
+      if (type === 'system_ban_report') {
+        return `<strong>${t('notification.system.ban_title')}</strong><br/><br/>` +
+               `${t('notification.system.ban_prefix')}<br/><br/>` +
+               `<strong>[${t('report.reason', '신고 사유')}]</strong>: ${reportReason}<br/>` +
+               `<strong>[${t('admin.review_comment', '운영팀 검토 의견')}]</strong>: ${getDisplayedComment(data.adminComment)}<br/><br/>` +
+               `${t('notification.system.ban_duration', { duration: durationStr })}<br/>` +
+               `${t('notification.system.ban_until', { until: untilStr })}<br/>` +
+               `${t('notification.system.ban_features')}<br/><br/>` +
+               `${t('notification.system.ban_footer')}`;
+      }
+
+      if (type === 'system_ban_direct') {
+        return `<strong>${t('notification.system.ban_title')}</strong><br/><br/>` +
+               `${t('notification.system.ban_prefix')}<br/><br/>` +
+               `<strong>[${t('admin.reason', '운영팀 사유')}]</strong>: ${getDisplayedComment(data.adminComment)}<br/><br/>` +
+               `${t('notification.system.ban_duration', { duration: durationStr })}<br/>` +
+               `${t('notification.system.ban_until', { until: untilStr })}<br/>` +
+               `${t('notification.system.ban_features')}<br/><br/>` +
+               `${t('notification.system.ban_footer')}`;
+      }
+
+      if (type === 'system_unban') {
+        return `<strong>${t('notification.system.unban_title')}</strong><br/><br/>` +
+               `${t('notification.system.unban_message')}`;
+      }
+
+      if (type === 'system_reporter_feedback') {
+        let actionStr = '';
+        if (data.actionType === 'ban') actionStr = `${durationStr} ${t('common.ban', '이용 제한')}`;
+        else if (data.actionType === 'delete') actionStr = t('common.content_deleted', '콘텐츠 삭제');
+        else if (data.actionType === 'dismiss') actionStr = t('report.status.dismissed', '신고 기각');
+
+        const reasonKeyToUse = (data.reasonKey && data.reasonKey !== 'undefined') ? data.reasonKey : (data.reportReasonKey || 'report.reasons.other');
+        return `<strong>${t('notification.system.reporter_title')}</strong><br/><br/>` +
+               `${t('notification.system.reporter_prefix')}` +
+               `${t('notification.system.reporter_target', { target: data.target })}<br/>` +
+               `${t('notification.system.reporter_reason', { reason: t(reasonKeyToUse) })}<br/>` +
+               `${t('notification.system.reporter_action', { action: actionStr })}<br/>` +
+               `${t('notification.system.reporter_footer')}`;
+      }
+
+      return payload ? contentJson : contentJson; // Fallback
+    } catch (e) {
+      return contentJson;
     }
   };
 
@@ -111,12 +226,17 @@ export default function NotificationCard({
   
   // 어떤 타입에 대해 내용 박스를 보여줄지 결정
   const shouldShowPreview =
-    (notification.type === 'comment' || notification.type === 'like' || notification.type === 'mention' || notification.type === 'reply') 
+    (notification.type === 'comment' || notification.type === 'like' || notification.type === 'mention' || notification.type === 'reply' || notification.type === 'system') 
     && (!!contentText || !!imageUrl || isCommentLikeWithoutContent);
 
   const unreadClasses = !notification.isRead
-    ? 'relative bg-primary/10 dark:bg-primary/20 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary'
+    ? 'bg-primary/10 dark:bg-primary/20'
     : '';
+
+  // 알림 유형/상태에 따른 왼쪽 바 색상 결정
+  const sideBarClasses = !notification.isRead
+      ? 'border-l-4 border-l-primary'
+      : 'border-l-4 border-l-transparent';
 
   // "삭제된 댓글"로 취급해야 하는 알림인지 판별
   // type === 'comment' 이면서 replyId 없음 → 원래 댓글 알림인데 댓글이 삭제된 케이스
@@ -130,6 +250,9 @@ export default function NotificationCard({
     if (!notification.isRead && onMarkAsRead) {
       onMarkAsRead(notification.id);
     }
+
+    // 시스템 알림은 이동 로직 없이 읽음 처리만 함
+    if (notification.type === 'system') return;
 
     const targetProfile = `/profile/${encodeURIComponent(notification.user.username)}`;
     const targetSns = `/sns/${notification.tweetId}`;
@@ -203,7 +326,7 @@ export default function NotificationCard({
   };
 
   const handleAvatarClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+    if (notification.type === 'system') return; // 시스템 계정은 프로필 페이지 없음
     const targetProfile = `/profile/${encodeURIComponent(notification.user.username)}`;
     if (location.pathname !== targetProfile) {
       navigate(targetProfile);
@@ -214,12 +337,19 @@ export default function NotificationCard({
     <div
       onClick={handleClick}
       className={`
+        relative overflow-hidden
         p-4 cursor-pointer transition-all duration-200
-        bg-white dark:bg-secondary
+        bg-white dark:bg-zinc-900/50
         hover:bg-primary/5 dark:hover:bg-primary/10
-        ${unreadClasses}
+        ${!notification.isRead ? 'bg-primary/5 dark:bg-primary/5' : ''}
       `}
     >
+      {/* ARA Style Side Bar */}
+      {!notification.isRead && (
+        <div 
+          className="absolute left-0 top-0 bottom-0 w-1 bg-primary transition-colors duration-300"
+        />
+      )}
       <div className="flex items-start space-x-3">
         {/* Avatar */}
         <div onClick={handleAvatarClick} className="cursor-pointer flex-shrink-0 relative">
@@ -229,14 +359,16 @@ export default function NotificationCard({
               alt={notification.user.name}
             />
             <AvatarFallback>
-              {notification.user.name ? notification.user.name.charAt(0).toUpperCase() : 'U'}
+              {notification.type === 'system' ? '📢' : (notification.user.name ? notification.user.name.charAt(0).toUpperCase() : 'U')}
             </AvatarFallback>
           </Avatar>
-          <OnlineIndicator 
-            userId={notification.user.username} 
-            size="sm" 
-            className="absolute -bottom-0.5 -right-0.5 z-10 border-white dark:border-secondary border-2"
-          />
+          {notification.type !== 'system' && (
+            <OnlineIndicator 
+              userId={notification.user.username} 
+              size="sm" 
+              className="absolute -bottom-0.5 -right-0.5 z-10 border-white dark:border-secondary border-2"
+            />
+          )}
         </div>
 
         {/* 본문 */}
@@ -283,14 +415,22 @@ export default function NotificationCard({
             </div>
           </div>
 
-          {/* 댓글/좋아요/멘션/답글 알림일 때 내용 미리보기 */}
+          {/* 댓글/좋아요/멘션/답글/시스템 알림일 때 내용 미리보기 */}
           {shouldShowPreview && (
             <div className="mt-2 sm:mt-3 p-2.5 sm:p-3 bg-gray-50/50 dark:bg-zinc-800/50 rounded-xl border border-gray-200/60 dark:border-gray-700/60 flex flex-row items-center gap-2 sm:gap-3">
-              <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-200 line-clamp-2 whitespace-pre-wrap break-words flex-1 leading-relaxed w-full">
+              <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-200 whitespace-pre-wrap break-words flex-1 leading-relaxed w-full">
                 {isCommentLikeWithoutContent 
                   ? t('notification.no_content_available', '내용을 불러올 수 없습니다')
-                  : contentText}
-              </p>
+                  : notification.type === 'system' 
+                    ? <div 
+                        className="text-sm text-gray-800 dark:text-gray-200 break-words leading-relaxed"
+                        dangerouslySetInnerHTML={{ 
+                          __html: DOMPurify.sanitize(getSystemNotificationContent(notification.content)) 
+                        }} 
+                      />
+                    : <span className="line-clamp-2">{contentText}</span>
+                }
+              </div>
               {imageUrl && (
                 <img 
                   src={imageUrl} 

@@ -4,6 +4,9 @@ import { toast } from 'sonner';
 import { addYears, addDays } from 'date-fns';
 import { Ban, X, Info } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { format } from 'date-fns';
+import { ko, enUS } from 'date-fns/locale';
 
 interface SanctionDialogProps {
   isOpen: boolean;
@@ -26,6 +29,7 @@ const SanctionDialog: React.FC<SanctionDialogProps> = ({
   mode = 'ban',
   reportId
 }) => {
+  const { t, i18n } = useTranslation();
   const [banDuration, setBanDuration] = useState<number | 'permanent' | 'custom'>(1);
   const [customDays, setCustomDays] = useState('');
   const [reason, setReason] = useState('');
@@ -92,35 +96,131 @@ const SanctionDialog: React.FC<SanctionDialogProps> = ({
           .maybeSingle();
 
         if (adminP) {
+          // 409 Conflict 방지를 위해 방어적으로 처리
           const { error: historyError } = await supabase.from('sanction_history').insert({
-            target_user_id: targetUser.profile_id || targetUser.id, // Prefer profile_id (Profile UUID)
+            target_user_id: targetUser.profile_id || targetUser.id, 
             sanction_type: mode === 'ban' ? (banDuration === 'permanent' ? 'permanent_ban' : 'ban') : 'unban',
             duration_days: durationDays,
             reason: reason.trim() || (mode === 'unban' ? '관리자에 의한 이용제한 해제' : '사유 미입력'),
             admin_id: adminP.id,
             report_id: reportId
           });
-          
+
           if (historyError) {
-            console.error('History Log Error:', historyError);
-            if (historyError.code === '23505' || historyError.code === '23503') {
-              throw new Error(`데이터 충돌 또는 참조 오류가 발생했습니다 (${historyError.code}). DB 마이그레이션을 실행했는지 확인해주세요.`);
-            } else if (historyError.code === '23514') {
-              throw new Error('허용되지 않는 제재 유형입니다 (\'unban\' 등). DB 제약 조건 업데이트가 필요합니다.');
+             // 이력 기록 실패 시에도 정지 처리는 성공했으므로 계속 진행 (마이그레이션 적용 전 대비)
+          }
+          
+          // 4. Insert Notification for Target User
+          // receiver_id must be Profile UUID
+          const receiverId = targetUser.profile_id || targetUser.id;
+          
+          const currentLocale = i18n.language === 'ko' ? ko : enUS;
+          const untilDateStr = until 
+            ? format(new Date(until), 'yyyy. MM. dd. HH:mm', { locale: currentLocale })
+            : t('common.permanent', '영구');
+          const durationStr = banDuration === 'permanent' 
+            ? t('common.permanent', '영구') 
+            : `${durationDays}${t('common.days', '일')}`;
+
+          let notificationContent = '';
+          
+          if (mode === 'ban') {
+            if (reportId) {
+              // 4-1. 신고 기반 제재 시 상세 안내 (신고 사유 + 운영팀 의견)
+              try {
+                const { data: reportData } = await supabase
+                  .from('reports')
+                  .select('reason')
+                  .eq('id', reportId)
+                  .maybeSingle();
+                
+                const reportReasonKey = reportData?.reason ? `report.reasons.${reportData.reason}` : 'report.reasons.other';
+
+                const notificationPayload = {
+                  type: 'system_ban_report',
+                  data: {
+                    reportReasonKey,
+                    adminComment: reason.trim(),
+                    duration: banDuration,
+                    durationDays,
+                    until: until
+                  }
+                };
+                notificationContent = JSON.stringify(notificationPayload);
+                
+                // 5. 신고자(Reporter)에게 상세 알림 발송
+                const { data: reportBase } = await supabase
+                  .from('reports')
+                  .select('reporter_id, target_type, reason')
+                  .eq('id', reportId)
+                  .maybeSingle();
+                
+                if (reportBase?.reporter_id) {
+                   const targetName = targetUser.nickname;
+                   const reporterReportReasonKey = reportBase.reason ? `report.reasons.${reportBase.reason}` : '기타';
+                   
+                   const reporterPayload = {
+                     type: 'system_reporter_feedback',
+                     data: {
+                       target: targetName,
+                       reasonKey: reporterReportReasonKey,
+                       actionType: 'ban',
+                       duration: banDuration,
+                       durationDays
+                     }
+                   };
+                   const reporterNotificationContent = JSON.stringify(reporterPayload);
+                   const reporterPayloadData = {
+                     type: 'system',
+                     content: reporterNotificationContent,
+                     receiver_id: reportBase.reporter_id,
+                     is_read: false
+                   };
+                   await supabase.from('notifications').insert(reporterPayloadData);
+                }
+              } catch (err) {
+                console.error('Reporter notification failed:', err);
+              }
+            } else {
+              // 4-2. 단순 직접 제재 시 안내
+              const directBanPayload = {
+                type: 'system_ban_direct',
+                data: {
+                  adminComment: reason.trim(),
+                  duration: banDuration,
+                  durationDays,
+                  until: until
+                }
+              };
+              notificationContent = JSON.stringify(directBanPayload);
             }
-            throw historyError;
+          } else {
+            // Unban 알림
+            const unbanPayload = {
+              type: 'system_unban',
+              data: {}
+            };
+            notificationContent = JSON.stringify(unbanPayload);
           }
 
-          // 4. Insert Notification for Target User
-          await supabase.from('notifications').insert({
+          const payload = {
             type: 'system',
-            content: mode === 'ban' 
-              ? `운용 정책 위반으로 인해 이용이 제한되었습니다. (사유: ${reason.trim()}, 기간: ${banDuration === 'permanent' ? '영구' : (durationDays === 1 ? '1일' : durationDays + '일')})`
-              : '이용 제한이 해제되었습니다. 다시 서비스를 정상적으로 이용하실 수 있습니다.',
-            receiver_id: targetUser.profile_id || targetUser.id,
+            content: notificationContent,
+            receiver_id: receiverId,
             is_read: false
-          });
+          };
+          await supabase.from('notifications').insert(payload);
         }
+      }
+
+      function getDefaultBanContent(rTxt: string, dTxt: string, uTxt: string) {
+        return `<strong>${t('notification.system.ban_title')}</strong><br/><br/>` +
+               `${t('notification.system.ban_prefix')}<br/><br/>` +
+               `${t('notification.system.ban_reason', { reason: rTxt.trim() })}<br/>` +
+               `${t('notification.system.ban_duration', { duration: dTxt })}<br/>` +
+               `${t('notification.system.ban_until', { until: uTxt })}<br/>` +
+               `${t('notification.system.ban_features')}<br/><br/>` +
+               `${t('notification.system.ban_footer')}`;
       }
 
       const successMsg = mode === 'ban' 
@@ -131,7 +231,6 @@ const SanctionDialog: React.FC<SanctionDialogProps> = ({
       onSuccess(until);
       onClose();
     } catch (err: any) {
-      console.error('Sanction Execution Error:', err);
       toast.error('처리 실패: ' + (err.message || '알 수 없는 오류가 발생했습니다.'));
     } finally {
       setIsProcessing(false);

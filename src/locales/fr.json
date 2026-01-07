@@ -44,7 +44,26 @@
     "media_video": "[Vidéo]",
     "media_file": "[Fichier]",
     "follow_you": "vous a suivi",
-    "follow_request": "vous a envoyé une demande d'abonnement"
+    "follow_request": "vous a envoyé une demande d'abonnement",
+    "tab_system": "Système",
+    "system_notice": "Notification Système",
+    "system": {
+      "ban_title": "[Équipe ARA] Avis de restriction d'utilisation du service",
+      "ban_prefix": "Bonjour, c'est l'équipe ARA.<br/>Nous vous informons que des restrictions d'utilisation ont été appliquées à votre compte.",
+      "ban_reason": "<strong>• Raison de la restriction :</strong> {{reason}}",
+      "ban_duration": "<strong>• Durée de la restriction :</strong> {{duration}}",
+      "ban_until": "<strong>• Date de levée :</strong> {{until}}",
+      "ban_features": "<strong>• Restrictions :</strong> Toutes les activités de la communauté (Publication, Commentaires, J'aime, Suivre, Envoi de messages)",
+      "ban_footer": "C'est une mesure prise pour créer un environnement communautaire agréable. Merci de votre compréhension.",
+      "unban_title": "[Équipe ARA] Avis de levée de restriction",
+      "unban_message": "La période de restriction est terminée. Vous pouvez à nouveau utiliser le service normalement.<br/>Merci de continuer à participer à une culture communautaire saine.",
+      "reporter_title": "[Équipe ARA] Avis de traitement de signalement terminé",
+      "reporter_prefix": "Des mesures ont été prises concernant le signalement que vous avez soumis.<br/>Merci de nous aider à maintenir un environnement communautaire sain.<br/><br/>",
+      "reporter_target": "<strong>• Cible du signalement :</strong> {{target}}",
+      "reporter_reason": "<strong>• Raison :</strong> {{reason}}",
+      "reporter_action": "<strong>• Action prise :</strong> {{action}}",
+      "reporter_footer": "<br/>Merci de votre intérêt constant."
+    }
   },
   "study": {
     "studylist": "Liste d'étude",
@@ -162,6 +181,7 @@
     "agree_and_close": "Accepter et fermer"
   },
   "common": {
+    "ara_team": "Équipe ARA",
     "online": "En ligne",
     "offline": "Hors ligne",
     "save": "Enregistrer",
@@ -169,6 +189,10 @@
     "apply": "Appliquer",
     "cancel": "Annuler",
     "delete": "Supprimer",
+    "ban": "Restriction",
+    "content_deleted": "Contenu supprimé",
+    "permanent": "Permanent",
+    "days": "jours",
     "edit": "Modifier",
     "my_profile": "Mon Profil",
     "my_account": "Mon Compte",
@@ -197,6 +221,10 @@
     "block": "Bloquer",
     "unblock": "Débloquer",
     "report": "Signaler",
+    "reason": "Raison du signalement",
+    "status": {
+      "dismissed": "Signalement rejeté"
+    },
     "edit_mode": "Passage en mode édition.",
     "block_success": "{{name}} a été bloqué(e).",
     "unblock_success": "{{name}} a été débloqué(e).",
@@ -211,7 +239,6 @@
       "dark": "Sombre",
       "system": "Système"
     },
-    "system": "Système",
     "language": "Langue",
     "theme": "Thème",
     "notifications": "Notifications",
@@ -529,12 +556,24 @@
     "login_required": "Veuillez vous connecter pour utiliser la fonction de traduction.",
     "guest_limit_reached": "Vous avez utilisé toutes vos traductions gratuites. Connectez-vous pour continuer."
   },
+  "report": {
+    "reason": "Raison du signalement",
+    "reasons": {
+      "spam": "Spam / Promotion",
+      "abuse": "Abus / Invectives",
+      "harmful": "Contenu nuisible",
+      "inappropriate": "Contenu inapproprié",
+      "other": "Autre (Saisie directe)"
+    }
+  },
   "admin": {
     "report_processed": "Signalement traité.",
     "report_rejected": "Signalement rejeté.",
     "no_permission": "Aucune permission d'administrateur.",
     "login_success": "Connexion administrateur réussie.",
     "study_deleted": "Contenu d'étude supprimé.",
+    "reason": "Raison de l'administrateur",
+    "review_comment": "Commentaire d'examen de l'administrateur",
     "study_uploaded": "Contenu d'étude téléchargé avec succès !",
     "goods_registered": "Produit enregistré avec succès !",
     "goods_deleted": "Produit supprimé.",

@@ -135,22 +135,22 @@ export function ReplyInput({
 
         if (mentionedProfiles && mentionedProfiles.length > 0) {
           // notifications insert
-          await supabase.from('notifications').insert(
-            mentionedProfiles
-              .filter(p => p.id !== profileId) // 혹시 동일인 방지(안전)
-              .map(p => ({
-                receiver_id: p.id,
-                sender_id: profileId,
-                type: 'mention',
-                content: content.trim(),
-                tweet_id: target.tweetId,
-                comment_id: data.id, // 방금 생성된 reply id
-              })),
-          );
+          const payloads = mentionedProfiles
+            .filter(p => p.id !== profileId) // 혹시 동일인 방지(안전)
+            .map(p => ({
+              receiver_id: p.id,
+              sender_id: profileId,
+              type: 'mention',
+              content: content.trim(),
+              tweet_id: target.tweetId,
+              comment_id: data.id, // 방금 생성된 reply id
+              is_read: false,
+            }));
+          await supabase.from('notifications').insert(payloads);
         }
       }
     } catch (e) {
-      console.error('멘션 알림 생성 실패:', e);
+      // Error handled silently
     }
 
     onAdded({

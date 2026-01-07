@@ -36,6 +36,8 @@ function ReplyTree({
   onCloseReply,
   highlightId,
   disableInteractions = false,
+  isLastChild = false,
+  ancestorsLast = [],
 }: {
   node: ReplyNode;
   depth: number;
@@ -46,58 +48,90 @@ function ReplyTree({
   onCloseReply?: () => void;
   highlightId?: string | null;
   disableInteractions?: boolean;
+  isLastChild?: boolean;
+  ancestorsLast?: boolean[];
 }) {
   const isReplying = openReplyId === node.id;
 
   return (
-    <div className={depth > 0 ? 'ml-10' : ''}>
+    <div className="w-full">
       <ReplyCard
         reply={{
           ...node,
           stats: {
             ...node.stats,
-            replies: node.children.length, // Show children count
+            replies: node.children.length,
           },
         }}
         onDeleted={onDeleted}
         onReply={!disableInteractions ? () => onCommentClick?.(node.id) : undefined}
         highlight={node.id === highlightId}
         disableInteractions={disableInteractions}
+        depth={depth}
+        isLastChild={isLastChild}
+        ancestorsLast={ancestorsLast}
+        hasChildren={node.children.length > 0}
       />
 
-      {/* 답글 입력창 */}
+      {/* 답글 입력창 - Indented via padding for full-width bg */}
       {isReplying && !disableInteractions && (
-        <div className="ml-4 my-2 pr-4 animate-in fade-in slide-in-from-top-2 duration-200">
-           <SnsInlineEditor
-              mode="reply"
-              tweetId={String(node.tweetId)}
-              parentReplyId={node.id}
-              onReplyCreated={(newReply) => {
-                  onAddedReply?.(newReply);
-              }}
-              onCancel={() => {
-                  onCloseReply?.();
-              }}
-              ref={(r) => r && r.focus()}
-           />
+        <div 
+          className="w-full relative py-4 bg-primary/[0.02] dark:bg-primary/[0.01] border-b border-gray-100 dark:border-gray-800 transition-all duration-300"
+          style={{ paddingLeft: 16 + (depth + 1) * 40 }}
+        >
+          {/* Thread continuity lines for editor - Draw active ancestors only */}
+          {Array.from({ length: depth + 1 }).map((_, i) => {
+             // Don't draw line if this ancestor level has already finished
+             if (i < depth && ancestorsLast[i]) return null;
+             
+             return (
+              <div 
+                key={`editor-line-${i}`}
+                className="absolute top-0 bottom-0 w-[1px] bg-gray-300 dark:bg-gray-700"
+                style={{ left: 16 + 20 + i * 40 }}
+              />
+            );
+          })}
+
+           <div className="pr-4">
+             <SnsInlineEditor
+                mode="reply"
+                tweetId={String(node.tweetId)}
+                parentReplyId={node.id}
+                onReplyCreated={(newReply) => {
+                    onAddedReply?.(newReply);
+                }}
+                onCancel={() => {
+                    onCloseReply?.();
+                }}
+                ref={(r) => r && r.focus()}
+             />
+           </div>
         </div>
       )}
 
-      {/* 자식(대댓글/손자댓글...) 재귀 렌더 */}
-      {node.children.map(child => (
-        <ReplyTree
-          key={child.id}
-          node={child}
-          depth={depth + 1}
-          onDeleted={onDeleted}
-          onCommentClick={onCommentClick}
-          openReplyId={openReplyId}
-          onAddedReply={onAddedReply}
-          onCloseReply={onCloseReply}
-          highlightId={highlightId}
-          disableInteractions={disableInteractions}
-        />
-      ))}
+      {/* 자식 재귀 렌더: FLAT DOM structure */}
+      {node.children.length > 0 && (
+        <div className="w-full">
+          {node.children.map((child, idx) => (
+            <ReplyTree
+              key={child.id}
+              node={child}
+              depth={depth + 1}
+              onDeleted={onDeleted}
+              onCommentClick={onCommentClick}
+              openReplyId={openReplyId}
+              onAddedReply={onAddedReply}
+              onCloseReply={onCloseReply}
+              highlightId={highlightId}
+              disableInteractions={disableInteractions}
+              isLastChild={idx === node.children.length - 1}
+              ancestorsLast={depth === 0 ? ancestorsLast : [...ancestorsLast, isLastChild]}
+            />
+          ))}
+        </div>
+      )}
+      
     </div>
   );
 }

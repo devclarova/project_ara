@@ -68,16 +68,19 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // DB 실시간 상태 구독 (is_online 필드 변경 감지)
   useEffect(() => {
     const channel = supabase
-      .channel('profile-status-updates')
+      .channel('global-is-online-sync')
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'profiles' },
         (payload) => {
-          if (payload.new.id) {
-            setDbOnlineUsers(prev => ({
-              ...prev,
-              [payload.new.id]: payload.new.is_online
-            }));
+          const updated = payload.new as any;
+          if (updated.is_online !== undefined) {
+             setDbOnlineUsers(prev => {
+               const next = { ...prev };
+               if (updated.id) next[updated.id] = updated.is_online;
+               if (updated.user_id) next[updated.user_id] = updated.is_online;
+               return next;
+             });
           }
         }
       )

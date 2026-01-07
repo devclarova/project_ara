@@ -134,7 +134,6 @@ export default function TweetDetailCard({
           .maybeSingle();
 
         if (profileError) {
-          console.error('작성자 프로필(country) 로드 실패:', profileError.message);
           return;
         }
 
@@ -155,7 +154,6 @@ export default function TweetDetailCard({
           .maybeSingle();
 
         if (countryError) {
-          console.error('작성자 국가 정보 로드 실패:', countryError.message);
           return;
         }
 
@@ -168,7 +166,7 @@ export default function TweetDetailCard({
         setAuthorCountryFlagUrl(country.flag_url ?? null);
         setAuthorCountryName(country.name ?? null);
       } catch (err) {
-        console.error('작성자 국기 정보 로드 중 예외:', err);
+        // Error handled silently
       }
     };
 
@@ -234,7 +232,7 @@ export default function TweetDetailCard({
           setLiked(true);
         }
       } catch (err) {
-        console.error('트윗 좋아요 상태 조회 실패:', err);
+        // Error handled silently
       }
     };
 
@@ -261,7 +259,7 @@ export default function TweetDetailCard({
         .maybeSingle();
 
       if (existingError) {
-        console.error('트윗 좋아요 조회 실패:', existingError.message);
+        // Error handled silently
       }
 
       if (existing) {
@@ -307,7 +305,6 @@ export default function TweetDetailCard({
         likes: (tweet.stats.likes || 0) + 1,
       });
     } catch (err: any) {
-      console.error('트윗 좋아요 처리 실패:', err.message);
       toast.error(t('common.error_like'));
     }
   };
@@ -349,7 +346,6 @@ export default function TweetDetailCard({
         navigate('/sns');
       }
     } catch (err: any) {
-      console.error('트윗 삭제 실패:', err.message);
       toast.error(t('tweet.delete_failed', '삭제 중 오류가 발생했습니다.'));
     }
   };

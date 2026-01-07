@@ -17,9 +17,12 @@
     "report_processed": "Report processed.",
     "report_rejected": "Report rejected.",
     "no_permission": "No admin permission.",
+    "reason": "Admin Reason",
+    "review_comment": "Admin Review Comment",
+    "report_reason_title": "Report Reason",
     "login_success": "Admin login successful",
     "permission_check_error": "Error checking permissions.",
-    "study_deleted": "Study content deleted",
+    "study_deleted": "Study content deleted.",
     "study_uploaded": "Study content uploaded successfully!",
     "goods_registered": "Product registered successfully!",
     "option_group_delete_wip": "Option group deletion (WIP)",
@@ -70,7 +73,24 @@
     "decline": "Decline",
     "no_content_available": "Content not available",
     "tab_system": "System",
-    "system_notice": "System Notice"
+    "system_notice": "System Notice",
+    "system": {
+      "ban_title": "[ARA Operations] Service Restriction Notice",
+      "ban_prefix": "Hello, this is the ARA Operations Team.<br/>We are notifying you that restriction measures have been applied to your account.",
+      "ban_reason": "<strong>• Reason:</strong> {{reason}}",
+      "ban_duration": "<strong>• Duration:</strong> {{duration}}",
+      "ban_until": "<strong>• Expires at:</strong> {{until}}",
+      "ban_features": "<strong>• Restrictions:</strong> All community activities (Posting, Commenting, Liking, Following, Sending messages)",
+      "ban_footer": "Please understand this is a measure to create a healthy community environment.",
+      "unban_title": "[ARA Operations] Service Restriction Lifted",
+      "unban_message": "The restriction period has ended, and you can now use the service normally again.<br/>Please continue to help us build a healthy community culture.",
+      "reporter_title": "[ARA Operations] Report Processed",
+      "reporter_prefix": "Action has been taken regarding the report you submitted.<br/>Thank you for helping us maintain a healthy community environment.<br/><br/>",
+      "reporter_target": "<strong>• Reported Target:</strong> {{target}}",
+      "reporter_reason": "<strong>• Reason:</strong> {{reason}}",
+      "reporter_action": "<strong>• Action Taken:</strong> {{action}}",
+      "reporter_footer": "<br/>Thank you for your cooperation."
+    }
   },
   "study": {
     "studylist": "Study List",
@@ -165,6 +185,7 @@
     "signin": "Sign In"
   },
   "common": {
+    "ara_team": "ARA Team",
     "online": "Online",
     "offline": "Offline",
     "save": "Save",
@@ -172,6 +193,10 @@
     "apply": "Apply",
     "cancel": "Cancel",
     "delete": "Delete",
+    "ban": "Service Restriction",
+    "content_deleted": "Content Deleted",
+    "permanent": "Permanent",
+    "days": "days",
     "edit": "Edit",
     "my_profile": "My Profile",
     "my_account": "My Account",
@@ -864,7 +889,11 @@
   },
   "report": {
     "title": "Report",
-    "desc": "Please select a reason for reporting. Processing may be delayed if there is no valid reason.",
+    "reason": "Report Reason",
+    "status": {
+      "dismissed": "Report dismissed"
+    },
+    "desc": "Please select a reason for the report. Processing may be delayed if there is no valid reason.",
     "reason_label": "Select Reason",
     "description_label": "Details",
     "description_placeholder": "Please describe the reason for reporting in detail.",
