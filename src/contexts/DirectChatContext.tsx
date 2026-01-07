@@ -1104,7 +1104,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
 
   // Moved fetchProfileByAuthId to top
 
-  /* 1) 유저가 바뀌면(로그아웃/로그인 전환 포함) 상태 리셋 + 목록 재로딩 */
+  // 1) 유저가 바뀌면(로그아웃/로그인 전환 포함) 상태 리셋 + 목록 재로딩 
   useEffect(() => {
     if (!currentUserId) return;
     // 초기화
@@ -1118,6 +1118,85 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     // 새 사용자 기준으로 로드
     loadChats();
   }, [currentUserId, loadChats]);
+
+  /* 2) profiles 테이블 실시간 구독: 닉네임, 제재 상태 반영 (새로고침 없이 반영 핵심) */
+  useEffect(() => {
+    const channel = supabase
+      .channel('global-profile-updates')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles' },
+        (payload) => {
+          const updated = payload.new as any;
+          if (!updated) return;
+
+          // 1. 캐시 보정
+          const authId = updated.user_id;
+          if (authId && profileCache.current.has(authId)) {
+             const existing = profileCache.current.get(authId)!;
+             profileCache.current.set(authId, {
+               ...existing,
+               nickname: updated.nickname ?? existing.nickname,
+               avatar_url: updated.avatar_url ?? existing.avatar_url,
+               banned_until: updated.banned_until,
+             });
+          }
+
+          // 2. 채팅 목록(chats) 실시간 동기화
+          setChats(prev => prev.map(chat => {
+            if (chat.other_user?.id === updated.id) {
+              return {
+                ...chat,
+                other_user: {
+                  ...chat.other_user,
+                  nickname: updated.nickname ?? chat.other_user.nickname,
+                  avatar_url: updated.avatar_url ?? chat.other_user.avatar_url,
+                  banned_until: updated.banned_until,
+                }
+              };
+            }
+            return chat;
+          }));
+
+          // 3. 현재 열려있는 채팅방(currentChat) 실시간 동기화
+          setCurrentChat(prev => {
+            if (prev && prev.other_user?.id === updated.id) {
+              return {
+                ...prev,
+                other_user: {
+                  ...prev.other_user,
+                  nickname: updated.nickname ?? prev.other_user.nickname,
+                  avatar_url: updated.avatar_url ?? prev.other_user.avatar_url,
+                  banned_until: updated.banned_until,
+                }
+              };
+            }
+            return prev;
+          });
+
+          // 4. 메시지 목록 내 발신자 정보 실시간 동기화
+          setMessages(prev => prev.map(msg => {
+            if (msg.sender?.id === updated.id || msg.sender_id === updated.user_id) {
+              return {
+                ...msg,
+                sender: {
+                  ...(msg.sender || {}),
+                  nickname: updated.nickname ?? msg.sender?.nickname,
+                  avatar_url: updated.avatar_url ?? msg.sender?.avatar_url,
+                  banned_until: updated.banned_until,
+                } as ChatUser
+              };
+            }
+            return msg;
+          }));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   /* 2) 인증 세션 이벤트가 바뀌어도 안전하게 초기화 */
 

@@ -355,12 +355,12 @@ export default function ProfileHeader({
           {/* 이름 */}
           {/* 이름 */}
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center flex-wrap gap-2">
-            <div className="relative inline-flex items-center">
+            <div className="relative inline-flex items-center pr-2.5">
               <span>{userProfile.name}</span>
               <OnlineIndicator 
                 userId={userProfile.user_id} 
                 size="md" 
-                className="absolute -top-1 -right-3 z-10 border-white dark:border-gray-900 border-2"
+                className="absolute top-0.5 right-0 z-10 border-white dark:border-gray-900 border-2"
               />
             </div>
             <BanBadge bannedUntil={userProfile.banned_until} size="md" />

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -52,83 +52,13 @@ export default function ProfileAsap() {
   const isOwnProfile = user && userProfile ? user.id === userProfile.user_id : false;
 
   // Real-time listener for profile updates (bans)
-  useEffect(() => {
-    if (!userProfile?.user_id) return;
-    
-    // Initial fetch of ban details if banned
-    if (userProfile.banned_until) {
-      fetchBanDetails(userProfile.id);
-    }
 
-    const channel = supabase
-      .channel(`profile-ban-${userProfile.user_id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles',
-          filter: `id=eq.${userProfile.id}`,
-        },
-        async (payload) => {
-          const newProfile = payload.new as any;
-          if (newProfile) {
-            // country가 변경되었는지 확인
-            let countryName = userProfile.country;
-            let countryFlagUrl = userProfile.countryFlagUrl;
-            
-            if (newProfile.country && String(newProfile.country) !== String(userProfile.country)) {
-               // Re-fetch country info if it changed (rare but possible)
-               const { data: countryRow } = await supabase
-                .from('countries')
-                .select('name, flag_url')
-                .eq('id', newProfile.country)
-                .maybeSingle();
-              if (countryRow) {
-                countryName = countryRow.name ?? null;
-                countryFlagUrl = countryRow.flag_url ?? null;
-              }
-            }
-
-            setUserProfile(prev => {
-              if (!prev) return null;
-              return {
-                ...prev,
-                name: newProfile.nickname ?? prev.name,
-                avatar: newProfile.avatar_url ?? prev.avatar,
-                banner: newProfile.banner_url ?? prev.banner,
-                bannerPositionY: newProfile.banner_position_y ?? prev.bannerPositionY,
-                bio: newProfile.bio ?? prev.bio,
-                country: countryName,
-                countryFlagUrl: countryFlagUrl,
-                followers: newProfile.followers_count ?? prev.followers,
-                following: newProfile.following_count ?? prev.following,
-                banned_until: newProfile.banned_until ?? prev.banned_until,
-                nickname_updated_at: newProfile.nickname_updated_at ?? prev.nickname_updated_at,
-                country_updated_at: newProfile.country_updated_at ?? prev.country_updated_at,
-              };
-            });
-
-            // If ban status changed to banned, fetch details
-            if (newProfile.banned_until) {
-               fetchBanDetails(userProfile.id);
-            }
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userProfile?.id, userProfile?.user_id]);
-
-  const fetchBanDetails = async (profileId: string) => {
+  const fetchBanDetails = async (authId: string) => {
       // Get start date of current ban
       const { data: sanctionData } = await supabase
         .from('sanction_history')
         .select('created_at')
-        .eq('target_user_id', profileId)
+        .eq('target_user_id', authId)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -141,100 +71,113 @@ export default function ProfileAsap() {
       const { count } = await supabase
         .from('sanction_history')
         .select('*', { count: 'exact', head: true })
-        .eq('target_user_id', profileId)
+        .eq('target_user_id', authId)
         .in('sanction_type', ['ban', 'permanent_ban']);
         
       setBanCount(count || 0);
   };
 
-  useEffect(() => {
-    if (!decodedUsername && !user) return;
-    const fetchProfile = async () => {
-      try {
-        // 1) 프로필만 먼저 가져오기
-        let baseQuery = supabase.from('profiles').select(
-          `
-        id,
-        user_id,
-        nickname,
-        avatar_url,
-        banner_url,
-        banner_position_y,
-        bio,
-        country,
-        followers_count,
-        following_count,
-        created_at,
-        nickname_updated_at,
-        country_updated_at,
-        banned_until
-      `,
-        );
-        if (!decodedUsername && user) {
-          baseQuery = baseQuery.eq('user_id', user.id);
-        } else {
-          // UUID 형식 체크
-          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedUsername);
-          
-          if (isUuid) {
-            baseQuery = baseQuery.eq('id', decodedUsername);
-          } else {
-            baseQuery = baseQuery.eq('nickname', decodedUsername);
-          }
-        }
-        const { data: profile, error: profileError } = await baseQuery.single();
-        if (profileError || !profile) throw profileError;
-        // 2) country 값이 "countries.id" 라고 가정하고 조회
-        let countryName: string | null = null;
-        let countryFlagUrl: string | null = null;
-        if (profile.country) {
-          // profile.country가 숫자든 문자열이든 eq에서 캐스팅해줌
-          const { data: countryRow, error: countryError } = await supabase
-            .from('countries')
-            .select('id, name, flag_url')
-            .eq('id', profile.country) // 여기: iso_code가 아니라 id로 조회
-            .maybeSingle();
-          if (!countryError && countryRow) {
-            countryName = countryRow.name ?? null;
-            countryFlagUrl = countryRow.flag_url ?? null;
-          }
-        }
-        // 3) 최종 상태 세팅
-        setUserProfile({
-          id: profile.id,
-          user_id: profile.user_id,
-          name: profile.nickname ?? 'Unknown',
-          username: profile.user_id,
-          avatar: profile.avatar_url ?? '/default-avatar.svg',
-          bio: profile.bio ?? t('profile.no_bio_placeholder', 'No bio yet.'),
-          country: countryName, // 화면에 보여줄 국가명
-          countryFlagUrl: countryFlagUrl, // 국기 URL
-          joinDate: new Date(profile.created_at).toLocaleDateString(i18n.language, {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          }),
-          following: profile.following_count ?? 0,
-          followers: profile.followers_count ?? 0,
-          banner: profile.banner_url ?? null,
-          bannerPositionY: profile.banner_position_y ?? 50,
-          nickname_updated_at: profile.nickname_updated_at,
-          country_updated_at: profile.country_updated_at,
-          banned_until: profile.banned_until ?? null,
-        });
-        
-        // Fetch ban details if initially banned
-        if (profile.banned_until) {
-             fetchBanDetails(profile.id);
-        }
+  // 현재 프로필 정보를 추정하는 Ref (실시간 구독자 클로저 문제 해결용)
+  const targetProfileIdRef = useRef<string | null>(null);
+  const targetAuthIdRef = useRef<string | null>(null);
+  const latestFetchProfile = useRef<() => Promise<void>>();
 
-      } catch (err) {
-        console.error('프로필 불러오기 실패:', err);
-        setUserProfile(null);
+  const fetchProfile = useCallback(async () => {
+    if (!decodedUsername && !user) return;
+    try {
+      let baseQuery = supabase.from('profiles').select(`
+        id, user_id, nickname, avatar_url, banner_url, banner_position_y,
+        bio, country, followers_count, following_count, created_at,
+        nickname_updated_at, country_updated_at, banned_until
+      `);
+      
+      if (!decodedUsername && user) {
+        baseQuery = baseQuery.eq('user_id', user.id);
+      } else {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedUsername) || 
+                       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedUsername);
+        if (isUuid) baseQuery = baseQuery.eq('id', decodedUsername);
+        else baseQuery = baseQuery.eq('nickname', decodedUsername);
       }
-    };
+      
+      const { data: profile, error: profileError } = await baseQuery.single();
+      if (profileError || !profile) throw profileError;
+
+      targetProfileIdRef.current = profile.id;
+      targetAuthIdRef.current = profile.user_id;
+
+      let countryName: string | null = null;
+      let countryFlagUrl: string | null = null;
+      if (profile.country) {
+        const { data: countryRow } = await supabase
+          .from('countries')
+          .select('id, name, flag_url')
+          .eq('id', profile.country)
+          .maybeSingle();
+        if (countryRow) {
+          countryName = countryRow.name ?? null;
+          countryFlagUrl = countryRow.flag_url ?? null;
+        }
+      }
+
+      setUserProfile({
+        id: profile.id,
+        user_id: profile.user_id,
+        name: profile.nickname ?? 'Unknown',
+        username: profile.user_id,
+        avatar: profile.avatar_url ?? '/default-avatar.svg',
+        bio: profile.bio ?? t('profile.no_bio_placeholder', 'No bio yet.'),
+        country: countryName,
+        countryFlagUrl: countryFlagUrl,
+        joinDate: new Date(profile.created_at).toLocaleDateString(i18n.language, {
+          year: 'numeric', month: 'long', day: 'numeric',
+        }),
+        following: profile.following_count ?? 0,
+        followers: profile.followers_count ?? 0,
+        banner: profile.banner_url ?? null,
+        bannerPositionY: profile.banner_position_y ?? 50,
+        nickname_updated_at: profile.nickname_updated_at,
+        country_updated_at: profile.country_updated_at,
+        banned_until: profile.banned_until ?? null,
+      });
+      
+      if (profile.banned_until) fetchBanDetails(profile.user_id);
+    } catch (err) {
+      setUserProfile(null);
+    }
+  }, [decodedUsername, user, i18n.language, t]);
+
+  useEffect(() => {
+    latestFetchProfile.current = fetchProfile;
+  }, [fetchProfile]);
+
+  // 1) 데이터 로딩
+  useEffect(() => {
     fetchProfile();
-  }, [decodedUsername, user, i18n.language]);
+  }, [fetchProfile]);
+
+  // 2) 실시간 구독 (단 1회 구독, Ref 기반 동적 처리)
+  useEffect(() => {
+    const channel = supabase.channel(`profile-page-realtime-${Math.random().toString(36).slice(2)}`)
+      .on('postgres_changes', { 
+        event: 'UPDATE', schema: 'public', table: 'profiles' 
+      }, (payload) => {
+        const updated = payload.new as any;
+        const isMatch = updated && (
+          String(updated.id) === String(targetProfileIdRef.current) || 
+          String(updated.user_id) === String(targetAuthIdRef.current)
+        );
+
+        if (isMatch) {
+          latestFetchProfile.current?.();
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []); // Mount 시 1회 고정
   // 외부 클릭 시 메뉴 닫기
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {

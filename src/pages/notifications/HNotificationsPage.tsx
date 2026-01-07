@@ -128,11 +128,13 @@ export default function HNotificationsPage() {
         async payload => {
           const newItem = payload.new as any;
 
-          const { data: sender } = await supabase
-            .from('profiles')
-            .select('nickname, user_id, avatar_url')
-            .eq('id', newItem.sender_id)
-            .maybeSingle();
+          const { data: sender } = newItem.sender_id 
+            ? await supabase
+                .from('profiles')
+                .select('nickname, user_id, avatar_url')
+                .eq('id', newItem.sender_id)
+                .maybeSingle()
+            : { data: null };
 
           let contentToUse = newItem.content;
 
@@ -194,6 +196,10 @@ export default function HNotificationsPage() {
 
   // 읽음 처리
   const markAsRead = async (id: string) => {
+    const target = notifications.find(n => n.id === id);
+    if (target && !target.is_read) {
+      window.dispatchEvent(new Event('notification:deleted-one'));
+    }
     setNotifications(prev => prev.map(n => (n.id === id ? { ...n, is_read: true } : n)));
     await supabase.from('notifications').update({ is_read: true }).eq('id', id);
   };
@@ -285,11 +291,11 @@ export default function HNotificationsPage() {
         <div
           className="
             shrink-0 
-            sticky top-0 
+            sticky top-[57px] sm:top-[73px] lg:top-[81px] xl:top-[97px]
             bg-white/80 dark:bg-background/80 
             backdrop-blur-md 
             border-b border-gray-200 dark:border-gray-700 
-            px-4 py-3 z-10
+            px-4 py-3 z-30
             flex items-center justify-between
           "
         >
@@ -312,7 +318,7 @@ export default function HNotificationsPage() {
         </div>
 
         {/* 알림 탭 */}
-        <div className="sticky top-[49px] bg-white dark:bg-background border-b border-gray-200 dark:border-gray-700 z-10">
+        <div className="sticky top-[110px] sm:top-[126px] lg:top-[134px] xl:top-[150px] bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 z-20">
           <div className="flex">
             {[
               { key: 'like' as const, label: t('notification.tab_likes') },
@@ -360,7 +366,7 @@ export default function HNotificationsPage() {
         </div>
 
         {/* 알림 리스트 */}
-        <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-900">
+        <div className="flex-1 divide-y divide-gray-100 dark:divide-gray-900">
           {(() => {
             const filteredNotifications = notifications.filter(n => {
               if (activeTab === 'comment') return (['comment', 'reply', 'mention'] as string[]).includes(n.type);
@@ -377,9 +383,9 @@ export default function HNotificationsPage() {
                     id: n.id,
                     type: n.type as any, // Alignment with card props
                     user: {
-                      name: n.sender?.name || 'Unknown',
-                      username: n.sender?.username || 'anonymous',
-                      avatar: n.sender?.avatar || '/default-avatar.svg',
+                      name: n.type === 'system' ? t('common.ara_team') : (n.sender?.name || 'Unknown'),
+                      username: n.type === 'system' ? 'ara_admin' : (n.sender?.username || 'anonymous'),
+                      avatar: n.type === 'system' ? '/images/sample_font_logo.png' : (n.sender?.avatar || '/default-avatar.svg'),
                     },
                     action:
                       n.type === 'comment' || n.type === 'reply' || n.type === 'mention'
@@ -389,7 +395,7 @@ export default function HNotificationsPage() {
                             ? t('notification.action_like_comment')
                             : t('notification.action_like_feed')
                           : n.type === 'system'
-                            ? t('notification.system_notice', '시스템 알림')
+                            ? '' // 시스템 알림은 본문이 길어서 action 칸은 비웁니다
                             : n.content,
                     content: n.content,
                     timestamp: n.created_at,

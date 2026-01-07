@@ -47,7 +47,26 @@
     "follow_request": "向你发送了关注请求",
     "accept": "接受",
     "decline": "拒绝",
-    "no_content_available": "无法加载内容"
+    "no_content_available": "无法加载内容",
+    "tab_system": "系统",
+    "system_notice": "系统通知",
+    "system": {
+      "ban_title": "[ARA运营团队] 服务利用限制通知",
+      "ban_prefix": "您好，这里是ARA运营团队。<br/>您的账号已被采取利用限制措施，特此通知。",
+      "ban_reason": "<strong>• 限制原因：</strong> {{reason}}",
+      "ban_duration": "<strong>• 限制期限：</strong> {{duration}}",
+      "ban_until": "<strong>• 限制解除时间：</strong> {{until}}",
+      "ban_features": "<strong>• 限制事项：</strong> 所有社区活动（发布文章及评论、点赞、关注、发送聊天消息）",
+      "ban_footer": "这是为了营造舒适的社区环境而采取的措施，敬请谅解。",
+      "unban_title": "[ARA运营团队] 服务利用限制解除通知",
+      "unban_message": "利用限制期限已结束，您可以再次正常使用服务。<br/>请继续支持建设健康的社区文化。",
+      "reporter_title": "[ARA运营团队] 举报处理完成通知",
+      "reporter_prefix": "关于您举报的内容，处理已完成。<br/>感谢您为营造更好的社区环境所做的贡献。<br/><br/>",
+      "reporter_target": "<strong>• 举报对象：</strong> {{target}}",
+      "reporter_reason": "<strong>• 举报原因：</strong> {{reason}}",
+      "reporter_action": "<strong>• 处理内容：</strong> {{action}}",
+      "reporter_footer": "<br/>感谢您的支持。"
+    }
   },
   "study": {
     "studylist": "学习列表",
@@ -208,6 +227,7 @@
     }
   },
   "common": {
+    "ara_team": "ARA运营团队",
     "online": "在线",
     "offline": "离线",
     "save": "保存",
@@ -215,6 +235,10 @@
     "apply": "应用",
     "cancel": "取消",
     "delete": "删除",
+    "ban": "利用限制",
+    "content_deleted": "内容已删除",
+    "permanent": "永久",
+    "days": "天",
     "edit": "编辑",
     "my_profile": "我的资料",
     "my_account": "我的账户",
@@ -243,7 +267,11 @@
     "block": "屏蔽",
     "unblock": "解除屏蔽",
     "report": "举报",
-    "edit_mode": "正在切换到编辑模式。",
+    "reason": "举报原因",
+    "status": {
+      "dismissed": "举报已驳回"
+    },
+    "edit_mode": "切换到编辑模式。",
     "block_success": "已屏蔽 {{name}}。",
     "unblock_success": "已解除对 {{name}} 的屏蔽。",
     "cancel_like": "取消点赞",
@@ -257,7 +285,6 @@
       "dark": "暗色",
       "system": "系统"
     },
-    "system": "系统设置",
     "language": "语言",
     "theme": "主题",
     "notifications": "通知设置",
@@ -718,24 +745,27 @@
     "login_required": "登录后可使用翻译功能。",
     "guest_limit_reached": "您已用完所有免费翻译次数。请登录继续使用。"
   },
+  "report": {
+    "reason": "举报原因",
+    "reasons": {
+      "spam": "垃圾内容 / 广告",
+      "abuse": "辱骂 / 贬低性言论",
+      "harmful": "有害内容",
+      "inappropriate": "不当内容",
+      "other": "其他 (直接输入)"
+    }
+  },
   "admin": {
     "report_processed": "举报已处理。",
+    "reason": "运营团队理由",
+    "review_comment": "运营团队审核意见",
     "report_rejected": "举报已驳回。",
     "no_permission": "没有管理员权限。",
     "login_success": "管理员登录成功。",
     "study_deleted": "学习内容已删除。",
     "study_uploaded": "学习内容上传成功！",
     "goods_registered": "商品注册成功！",
-    "goods_deleted": "商品已删除。",
-    "goods_hidden": "商品已隐藏",
-    "goods_visible": "商品已显示",
-    "study_hidden": "学习内容已隐藏",
-    "study_visible": "学习内容已显示",
-    "permission_check_error": "Error checking permissions.",
     "option_group_delete_wip": "Option group deletion (WIP)",
-    "option_group_add_wip": "Option group addition (WIP)",
-    "content_deleted": "{{type}} (ID: {{id}}) deleted.",
-    "logged_out": "Logged out",
-    "logout_error": "Error during logout"
+    "permission_check_error": "Error checking permissions."
   }
 }

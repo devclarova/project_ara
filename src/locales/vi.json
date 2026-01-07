@@ -42,7 +42,26 @@
     "tab_updates": "Cập nhật",
     "media_photo": "[Ảnh]",
     "media_video": "[Video]",
-    "media_file": "[Tệp]"
+    "media_file": "[Tệp]",
+    "tab_system": "Hệ thống",
+    "system_notice": "Thông báo hệ thống",
+    "system": {
+      "ban_title": "[ARA Team] Thông báo hạn chế sử dụng dịch vụ",
+      "ban_prefix": "Xin chào, đây là đội ngũ ARA.<br/>Chúng tôi thông báo rằng tài khoản của bạn đã bị áp dụng các biện pháp hạn chế sử dụng.",
+      "ban_reason": "<strong>• Lý do hạn chế:</strong> {{reason}}",
+      "ban_duration": "<strong>• Thời gian hạn chế:</strong> {{duration}}",
+      "ban_until": "<strong>• Thời điểm gỡ bỏ:</strong> {{until}}",
+      "ban_features": "<strong>• Các tính năng bị hạn chế:</strong> Tất cả hoạt động cộng đồng (Đăng bài, Bình luận, Thích, Theo dõi, Nhắn tin)",
+      "ban_footer": "Đây là biện pháp cần thiết để xây dựng môi trường cộng đồng lành mạnh. Rất mong bạn thông cảm.",
+      "unban_title": "[ARA Team] Thông báo gỡ bỏ hạn chế",
+      "unban_message": "Thời gian hạn chế đã kết thúc. Bây giờ bạn có thể sử dụng dịch vụ bình thường.<br/>Cảm ơn bạn đã đóng góp cho văn hóa cộng đồng lành mạnh.",
+      "reporter_title": "[ARA Team] Thông báo hoàn tất xử lý báo cáo",
+      "reporter_prefix": "Chúng tôi đã thực hiện các biện pháp xử lý đối với báo cáo mà bạn gửi.<br/>Cảm ơn bạn đã giúp chúng tôi duy trì môi trường cộng đồng lành mạnh.<br/><br/>",
+      "reporter_target": "<strong>• Đối tượng bị báo cáo:</strong> {{target}}",
+      "reporter_reason": "<strong>• Lý do báo cáo:</strong> {{reason}}",
+      "reporter_action": "<strong>• Biện pháp xử lý:</strong> {{action}}",
+      "reporter_footer": "<br/>Cảm ơn bạn đã luôn quan tâm."
+    }
   },
   "study": {
     "studylist": "Danh sách học",
@@ -196,6 +215,7 @@
     "agree_and_close": "Đồng ý và đóng"
   },
   "common": {
+    "ara_team": "Đội ngũ ARA",
     "online": "Trực tuyến",
     "offline": "Ngoại tuyến",
     "save": "Lưu",
@@ -203,6 +223,10 @@
     "apply": "Áp dụng",
     "cancel": "Hủy",
     "delete": "Xóa",
+    "ban": "Hạn chế",
+    "content_deleted": "Nội dung đã bị xóa",
+    "permanent": "Vĩnh viễn",
+    "days": "ngày",
     "edit": "Sửa",
     "my_profile": "Hồ sơ của tôi",
     "my_account": "Tài khoản",
@@ -233,6 +257,10 @@
     "block": "Chặn",
     "unblock": "Bỏ chặn",
     "report": "Báo cáo",
+    "reason": "Lý do báo cáo",
+    "status": {
+      "dismissed": "Báo cáo bị bác bỏ"
+    },
     "cancel_like": "Bỏ thích",
     "success_like": "Đã thích"
   },
@@ -562,12 +590,24 @@
     "login_required": "Vui lòng đăng nhập để sử dụng tính năng dịch.",
     "guest_limit_reached": "Bạn đã sử dụng hết bản dịch miễn phí. Đăng nhập để tiếp tục."
   },
+  "report": {
+    "reason": "Lý do báo cáo",
+    "reasons": {
+      "spam": "Spam / Quảng cáo",
+      "abuse": "Xúc phạm / Phỉ báng",
+      "harmful": "Nội dung độc hại",
+      "inappropriate": "Nội dung không phù hợp",
+      "other": "Khác (Nhập trực tiếp)"
+    }
+  },
   "admin": {
     "report_processed": "Báo cáo đã được xử lý.",
     "report_rejected": "Báo cáo đã bị từ chối.",
     "no_permission": "Không có quyền quản trị.",
     "login_success": "Đăng nhập quản trị thành công.",
-    "study_deleted": "Nội dung học tập đã bị xóa.",
+    "study_deleted": "Nội dung học tập đã bị xóa",
+    "reason": "Lý do quản trị viên",
+    "review_comment": "Ý kiến đánh giá của quản trị viên",
     "study_uploaded": "Tải lên nội dung học tập thành công!",
     "goods_registered": "Đăng ký sản phẩm thành công!",
     "goods_deleted": "Sản phẩm đã bị xóa.",

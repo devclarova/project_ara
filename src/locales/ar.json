@@ -44,7 +44,26 @@
     "media_video": "[فيديو]",
     "media_file": "[ملف]",
     "follow_you": "بدأ بمتابعتك",
-    "follow_request": "أرسل طلب متابعة"
+    "follow_request": "أرسل طلب متابعة",
+    "tab_system": "النظام",
+    "system_notice": "إشعار النظام",
+    "system": {
+      "ban_title": "[ARA فريق] إشعار بتقييد استخدام الخدمة",
+      "ban_prefix": "مرحباً، نحن فريق ARA.<br/>نحيطكم علماً بأنه تم تطبيق قيود على استخدام حسابكم.",
+      "ban_reason": "<strong>• سبب التقييد:</strong> {{reason}}",
+      "ban_duration": "<strong>• مدة التقييد:</strong> {{duration}}",
+      "ban_until": "<strong>• موعد رفع التقييد:</strong> {{until}}",
+      "ban_features": "<strong>• الميزات المقيدة:</strong> جميع أنشطة المجتمع (نشر، تعليق، إعجاب، متابعة، رسائل)",
+      "ban_footer": "تم اتخاذ هذا الإجراء لخلق بيئة مجتمعية مريحة. نشكركم على تفهمكم.",
+      "unban_title": "[ARA فريق] إشعار برفع التقييد",
+      "unban_message": "انتهت فترة التقييد. يمكنك الآن استخدام الخدمة بشكل طبيعي.<br/>نشكركم على مساهمتكم في ثقافة مجتمعية صحية.",
+      "reporter_title": "[ARA فريق] إشعار باكتمال معالجة البلاغ",
+      "reporter_prefix": "تم اتخاذ إجراءات بناءً على البلاغ الذي قدمته.<br/>نشكركم على مساعدتنا في الحفاظ على بيئة مجتمعية صحية.<br/><br/>",
+      "reporter_target": "<strong>• هدف البلاغ:</strong> {{target}}",
+      "reporter_reason": "<strong>• السبب:</strong> {{reason}}",
+      "reporter_action": "<strong>• الإجراء المتخذ:</strong> {{action}}",
+      "reporter_footer": "<br/>نشكركم على اهتمامكم الدائم."
+    }
   },
   "study": {
     "studylist": "قائمة الدراسة",
@@ -198,6 +217,7 @@
     "agree_and_close": "موافق وإغلاق"
   },
   "common": {
+    "ara_team": "فريق ARA",
     "online": "متصل",
     "offline": "غير متصل",
     "save": "حفظ",
@@ -205,6 +225,10 @@
     "apply": "تطبيق",
     "cancel": "إلغاء",
     "delete": "حذف",
+    "ban": "تقييد",
+    "content_deleted": "تم حذف المحتوى",
+    "permanent": "دائم",
+    "days": "أيام",
     "edit": "تعديل",
     "my_profile": "ملفي",
     "my_account": "حسابي",
@@ -235,6 +259,10 @@
     "block": "حظر",
     "unblock": "إلغاء الحظر",
     "report": "إبلاغ",
+    "reason": "سبب الإبلاغ",
+    "status": {
+      "dismissed": "تم رفض البلاغ"
+    },
     "cancel_like": "ألغيت الإعجاب",
     "success_like": "أعجبني"
   },
@@ -564,12 +592,24 @@
     "login_required": "يرجى تسجيل الدخول لاستخدام ميزة الترجمة.",
     "guest_limit_reached": "لقد استخدمت جميع الترجمات المجانية. قم بتسجيل الدخول للمتابعة."
   },
+  "report": {
+    "reason": "سبب الإبلاغ",
+    "reasons": {
+      "spam": "سبام / ترويج",
+      "abuse": "إساءة / إهانة",
+      "harmful": "محتوى ضار",
+      "inappropriate": "محتوى غير لائق",
+      "other": "أخرى (إدخال مباشر)"
+    }
+  },
   "admin": {
     "report_processed": "تم معالجة البلاغ.",
     "report_rejected": "تم رفض البلاغ.",
     "no_permission": "ليس لديك صلاحية المسؤول.",
     "login_success": "تم تسجيل الدخول كمسؤول بنجاح.",
-    "study_deleted": "تم حذف محتوى الدراسة.",
+    "study_deleted": "تم حذف المحتوى الدراسي",
+    "reason": "سبب المسؤول",
+    "review_comment": "تعليق مراجعة المسؤول",
     "study_uploaded": "تم تحميل محتوى الدراسة بنجاح!",
     "goods_registered": "تم تسجيل المنتج بنجاح!",
     "goods_deleted": "تم حذف المنتج.",

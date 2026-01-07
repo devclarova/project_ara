@@ -122,7 +122,7 @@ export function ReplyCard({
           setLiked(true);
         }
       } catch (err) {
-        console.error('댓글 좋아요 상태 조회 실패:', err);
+        // Error handled silently
       }
     };
     loadLiked();
@@ -200,7 +200,7 @@ export function ReplyCard({
         setAuthorCountryFlagUrl(country.flag_url ?? null);
         setAuthorCountryName(country.name ?? null);
       } catch (err) {
-        console.error('작성자 국기 정보 로드 중 예외:', err);
+        // Error handled silently
       }
     };
     fetchAuthorCountry();
@@ -224,7 +224,6 @@ export function ReplyCard({
       setShowMenu(false);
       onDeleted?.(reply.id);
     } catch (err: any) {
-      console.error('댓글 삭제 실패:', err.message);
       toast.error(t('common.error_delete'));
     }
   };
@@ -293,20 +292,21 @@ export function ReplyCard({
               .maybeSingle();
 
             if (!existingNoti) {
-              await supabase.from('notifications').insert({
+              const payload = {
                 receiver_id: receiverProfile.id,
                 sender_id: profileId,
                 type: 'like',
                 content: reply.content || rawContent,
                 tweet_id: reply.tweetId,
                 comment_id: reply.id,
-              });
+                is_read: false,
+              };
+              await supabase.from('notifications').insert(payload);
             }
           }
         }
       }
     } catch (err: any) {
-      console.error('좋아요 처리 실패:', err.message);
       toast.error(t('common.error_like'));
       // Rollback
       setLiked(!nextLiked);

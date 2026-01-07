@@ -145,11 +145,12 @@ export default function TweetDetail() {
     };
   }, [id]);
 
-  // 트윗 정보(좋아요, 조회수 등) 실시간 업데이트
+  // 트윗 정보 및 작성자 프로필 실시간 업데이트
   useEffect(() => {
     if (!id) return;
 
-    const channel = supabase
+    // 1. 트윗 내용 및 통계 업데이트
+    const tweetChannel = supabase
       .channel(`tweet-${id}-updates`)
       .on(
         'postgres_changes',
@@ -174,7 +175,6 @@ export default function TweetDetail() {
             };
           });
           
-          // SnsStore 동기화
           SnsStore.updateStats(id, {
             likes: newTweet.like_count ?? 0,
             views: newTweet.view_count ?? 0,
@@ -198,8 +198,39 @@ export default function TweetDetail() {
       )
       .subscribe();
 
+    // 2. 작성자 프로필 업데이트 (제재 상태 실시간 반영)
+    const profileChannel = supabase.channel(`tweet-${id}-profiles-sync`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
+        const updated = payload.new as any;
+        if (updated.banned_until === undefined) return;
+
+        // 본문 작성자 체크
+        setTweet(prev => {
+          if (prev && (String(prev.user.id) === String(updated.id) || String(prev.user.username) === String(updated.user_id))) {
+            return {
+              ...prev,
+              user: { ...prev.user, banned_until: updated.banned_until }
+            };
+          }
+          return prev;
+        });
+
+        // 댓글 작성자들 체크
+        setReplies(prev => prev.map(r => {
+          if (String(r.user.username) === String(updated.user_id) || String((r as any).author_id) === String(updated.id)) {
+            return {
+              ...r,
+              user: { ...r.user, banned_until: updated.banned_until }
+            };
+          }
+          return r;
+        }));
+      })
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(tweetChannel);
+      supabase.removeChannel(profileChannel);
     };
   }, [id]);
 
@@ -275,7 +306,7 @@ export default function TweetDetail() {
       });
 
       if (error) {
-        console.error('조회수 RPC 실패:', error.message);
+        // 에러 로깅 생략
       }
       
     } catch (err) {

@@ -51,7 +51,7 @@ function stripImagesAndEmptyLines(html: string) {
 }
 
 const baseCardClasses =
-  'border-b border-gray-200 dark:border-gray-700 px-4 py-3 hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors';
+  'px-4 py-2 hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors';
 
 interface ReplyCardProps {
   reply: UIReply;
@@ -64,6 +64,10 @@ interface ReplyCardProps {
   onAvatarClick?: (username: string) => void;
   disableInteractions?: boolean;
   isAdminView?: boolean;
+  depth?: number;
+  isLastChild?: boolean;
+  ancestorsLast?: boolean[]; // Track if ancestors were the last children
+  hasChildren?: boolean; // Explicit flag to force-draw the descendant line
 }
 
 export function ReplyCard({
@@ -76,6 +80,10 @@ export function ReplyCard({
   onAvatarClick,
   disableInteractions = false,
   isAdminView = false,
+  depth = 0,
+  isLastChild = false,
+  ancestorsLast = [],
+  hasChildren = false,
 }: ReplyCardProps) {
   const navigate = useNavigate();
   const params = useParams();
@@ -124,7 +132,7 @@ export function ReplyCard({
         setAuthorCountryFlagUrl(country.flag_url ?? null);
         setAuthorCountryName(country.name ?? null);
       } catch (err) {
-        console.error('작성자 국기 정보 로드 중 예외:', err);
+        // Error handled silently
       }
     };
     fetchAuthorCountry();
@@ -190,7 +198,7 @@ export function ReplyCard({
           setLiked(true);
         }
       } catch (err) {
-        console.error('댓글 좋아요 상태 조회 실패:', err);
+        // Error handled silently
       }
     };
     loadLiked();
@@ -249,7 +257,6 @@ export function ReplyCard({
       setShowMenu(false);
       onDeleted?.(reply.id);
     } catch (err: any) {
-      console.error('댓글 삭제 실패:', err.message);
       toast.error(t('common.error_delete'));
     }
   };
@@ -425,7 +432,15 @@ export function ReplyCard({
   return (
     <div
       id={`reply-${reply.id}`}
-      className={`${containerClasses} ${isChildReply ? 'ml-10 border-l-2 border-gray-200 dark:border-gray-700 pl-4' : ''} cursor-pointer`}
+      className={`
+        ${containerClasses} 
+        group relative cursor-pointer outline-none transition-all duration-300 w-full
+        ${depth > 0 ? 'bg-secondary/[0.02] dark:bg-primary/[0.01]' : 'bg-white dark:bg-background'}
+        hover:bg-primary/[0.06] dark:hover:bg-primary/[0.08]
+      `}
+      style={{ 
+        paddingLeft: 16 + depth * 40 // Base 16px + Depth Offset
+      }}
       onClick={e => {
         e.stopPropagation();
         
@@ -456,9 +471,93 @@ export function ReplyCard({
         });
       }}
     >
-      <div className="flex space-x-3">
-        <div onClick={handleAvatarClick} className={`cursor-pointer relative ${isDeletedUser ? 'cursor-default' : ''}`}>
-          <Avatar>
+      {/* 
+          Atomic Thread Gutter: 
+          Each card is responsible for its own part of the lines.
+      */}
+      <div className="absolute left-0 top-0 bottom-0 pointer-events-none z-0">
+        {/* 
+          1. Ancestor Pass-through Lines
+          Draw lines for all active ancestors except the one branching to this node (depth-1).
+        */}
+        {ancestorsLast.map((isParentLast, i) => {
+          if (i === depth - 1) return null; // This is the Branch Line, handled specifically below
+          if (isParentLast) return null; // Ancestor ended, no line
+
+          return (
+            <div 
+              key={`ancestor-${i}`}
+              className="absolute top-0 bottom-0 w-[1px] bg-gray-300 dark:bg-gray-700 transition-colors duration-300 group-hover:bg-primary/40"
+              style={{ 
+                left: 16 + 20 + (i * 40),
+                top: -1,
+                bottom: -1
+              }} 
+            />
+          );
+        })}
+
+        {/* 
+          2. The Branch Line (Connection to Parent)
+          Simplified Logic for Robust Connection:
+          - Vertical Backbone: 
+            If NOT last child, draw full height (connecting to siblings).
+            If last child, draw only Top to Curve Start (0-12px).
+          - L-Curve: Always draw the turn (12-32px).
+        */}
+        {/* 
+          2. The Branch Line (Connection to Parent)
+          Simplified Logic for Robust Connection:
+          - Vertical Backbone: 
+            If NOT last child, draw full height (connecting to siblings).
+            If last child, draw only Top to Curve Start (0-12px).
+          - L-Curve: Always draw the turn (12-32px).
+        */}
+        {depth > 0 && (
+          <>
+            {/* Vertical Backbone */}
+            <div 
+              className="absolute w-[1px] bg-gray-300 dark:bg-gray-700 transition-colors duration-300 group-hover:bg-primary/40"
+              style={{ 
+                left: 16 + 20 + (depth - 1) * 40,
+                top: -1, // Overlap previous card
+                bottom: isLastChild ? undefined : -1, // Overlap next card
+                height: isLastChild ? 10 : undefined, // -1 to 9 (overlaps curve starting at 8)
+              }} 
+            />
+
+            {/* The L-Curve (Branch) */}
+            <div 
+              className="absolute border-l border-b border-gray-300 dark:border-gray-700 rounded-bl-[20px] transition-all duration-300 group-hover:border-primary/60" 
+              style={{ 
+                left: 16 + 20 + (depth - 1) * 40,
+                top: 8, // Derived from py-2 (8px)
+                width: 40,
+                height: 20, // 8px to 28px (Avatar Center)
+              }}
+            />
+          </>
+        )}
+
+        {/* 
+          3. Descendant Line (Tail)
+          Drawn ONLY if this comment has replies or children.
+        */}
+        {(hasChildren || reply.stats.replies > 0) && (
+          <div 
+            className="absolute bottom-0 w-[1px] bg-gray-300 dark:bg-gray-700 transition-colors duration-300 group-hover:bg-primary/40"
+            style={{ 
+              left: 16 + 20 + depth * 40,
+              top: 28 + 20, // Starts 20px below avatar center (28px)
+              bottom: -1 // Overlap next card
+            }} 
+          />
+        )}
+      </div>
+
+      <div className="flex space-x-3 relative z-10">
+        <div onClick={handleAvatarClick} className={`cursor-pointer transition-transform duration-200 active:scale-95 z-20 ${isDeletedUser ? 'cursor-default' : ''}`}>
+          <Avatar className="w-10 h-10 border-2 border-transparent group-hover:border-primary/20 shadow-sm transition-all duration-300 group-hover:shadow-md">
             <AvatarImage src={reply.user.avatar || '/default-avatar.svg'} alt={isDeletedUser ? t('deleted_user') : reply.user.name} />
             <AvatarFallback>{isDeletedUser ? '?' : reply.user.name.charAt(0)}</AvatarFallback>
           </Avatar>
@@ -467,8 +566,8 @@ export function ReplyCard({
         <div className="flex-1 min-w-0">
           {/* 상단 + 더보기 버튼 */}
           <div className="flex items-center justify-between relative" ref={menuRef}>
-            <div className="flex items-center flex-wrap gap-x-1">
-            <div className="relative inline-flex items-center pr-2.5">
+            <div className="flex items-center flex-wrap">
+            <div className="relative inline-flex items-center pr-1.5">
               <span 
                 className={`font-bold text-gray-900 dark:text-gray-100 truncate ${isDeletedUser ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
                 onClick={handleAvatarClick}
@@ -479,16 +578,15 @@ export function ReplyCard({
                 <OnlineIndicator 
                   userId={reply.user.username} 
                   size="sm" 
-                  className="absolute -top-1 right-0 z-20 border-white dark:border-background border shadow-none"
+                  className="absolute top-0.5 right-0 z-20 border-white dark:border-background border shadow-none"
                 />
               )}
             </div>
-            
-            <BanBadge bannedUntil={reply.user.banned_until ?? null} size="xs" />
+            <BanBadge bannedUntil={reply.user.banned_until ?? null} size="xs" className="ml-1" />
 
             {/* 작성자 국가 표시 (국기 또는 지구본) */}
             {authorCountryFlagUrl && !isDeletedUser && (
-              <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 h-5 ml-1.5">
+              <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 h-5 ml-1">
                 <img
                   src={authorCountryFlagUrl}
                   alt={authorCountryName ?? '국가'}
@@ -510,7 +608,7 @@ export function ReplyCard({
 
             <span className="mx-1 text-gray-500 dark:text-gray-400">·</span>
             <span className="text-gray-500 dark:text-gray-400 text-sm">
-              {formatSmartDate(reply.timestamp)}
+              {formatSmartDate(reply.timestamp || reply.createdAt || (reply as any).created_at || new Date().toISOString())}
             </span>
           </div>
 
@@ -682,10 +780,10 @@ export function ReplyCard({
           )}
 
           {/* 액션 버튼 */}
-          <div className="flex items-center justify-start gap-7 max-w-md mt-3 text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-start gap-4 max-w-md mt-2 text-gray-500 dark:text-gray-400">
             {/* Reply */}
             <button
-              className={`flex items-center space-x-2 transition-colors group ${disableInteractions ? 'cursor-default' : 'hover:text-blue-500 dark:hover:text-blue-400'}`}
+              className={`flex items-center gap-1 group transition-colors ${disableInteractions ? 'cursor-default' : 'hover:text-blue-500 dark:hover:text-blue-400'}`}
               onClick={e => {
                 if (disableInteractions) {
                     e.stopPropagation();
@@ -695,21 +793,21 @@ export function ReplyCard({
                 onReply?.(reply); // 부모로 “이 댓글에 답글” 전달
               }}
             >
-              <div className={`p-2 rounded-full transition-colors ${disableInteractions ? '' : 'group-hover:bg-blue-50 dark:group-hover:bg-primary/10'}`}>
+              <div className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${disableInteractions ? '' : 'group-hover:bg-blue-50 dark:group-hover:bg-primary/10'}`}>
                 <i className="ri-chat-3-line text-lg" />
               </div>
-              <span className="text-sm">{reply.stats.replies}</span>
+              <span className="text-xs font-medium">{reply.stats.replies > 0 ? reply.stats.replies : ''}</span>
             </button>
 
             {/* Like */}
             <button
-              className={`flex items-center space-x-2 transition-colors group ${liked ? 'text-red-500' : (disableInteractions ? '' : 'hover:text-red-500')} ${disableInteractions ? 'cursor-default' : ''}`}
+              className={`flex items-center gap-1 group transition-colors ${liked ? 'text-red-500' : (disableInteractions ? '' : 'hover:text-red-500')} ${disableInteractions ? 'cursor-default' : ''}`}
               onClick={toggleLike}
             >
-              <div className={`p-2 rounded-full transition-colors ${disableInteractions ? '' : 'group-hover:bg-red-50 dark:group-hover:bg-primary/10'}`}>
-                <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg`} />
+              <div className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${disableInteractions ? '' : 'group-hover:bg-red-50 dark:group-hover:bg-primary/10'}`}>
+                <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg`}></i>
               </div>
-              <span className="text-sm">{likeCount}</span>
+              {likeCount > 0 && <span className="text-xs font-medium">{likeCount}</span>}
             </button>
           </div>
         </div>

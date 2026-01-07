@@ -44,7 +44,26 @@
     "media_video": "[Video]",
     "media_file": "[Archivo]",
     "follow_you": "te siguió",
-    "follow_request": "te envió una solicitud de seguimiento"
+    "follow_request": "te envió una solicitud de seguimiento",
+    "tab_system": "Sistema",
+    "system_notice": "Notificación del sistema",
+    "system": {
+      "ban_title": "[Equipo ARA] Aviso de restricción de uso del servicio",
+      "ban_prefix": "Hola, somos el equipo de ARA.<br/>Le informamos que se han aplicado restricciones de uso a su cuenta.",
+      "ban_reason": "<strong>• Motivo de la restricción:</strong> {{reason}}",
+      "ban_duration": "<strong>• Duración de la restricción:</strong> {{duration}}",
+      "ban_until": "<strong>• Fecha de levantamiento:</strong> {{until}}",
+      "ban_features": "<strong>• Restricciones:</strong> Todas las actividades de la comunidad (Publicar, Comentar, Me gusta, Seguir, Enviar mensajes)",
+      "ban_footer": "Esta es una medida tomada para crear un entorno comunitario agradable. Agradecemos su comprensión.",
+      "unban_title": "[Equipo ARA] Aviso de levantamiento de restricción",
+      "unban_message": "El período de restricción ha terminado. Ya puede volver a utilizar el servicio con normalidad.<br/>Gracias por seguir participando en una cultura comunitaria saludable.",
+      "reporter_title": "[Equipo ARA] Aviso de finalización del trámite de denuncia",
+      "reporter_prefix": "Se han tomado medidas respecto a la denuncia que presentó.<br/>Gracias por ayudarnos a mantener un entorno comunitario saludable.<br/><br/>",
+      "reporter_target": "<strong>• Objetivo de la denuncia:</strong> {{target}}",
+      "reporter_reason": "<strong>• Motivo:</strong> {{reason}}",
+      "reporter_action": "<strong>• Medida tomada:</strong> {{action}}",
+      "reporter_footer": "<br/>Gracias por su constante interés."
+    }
   },
   "study": {
     "studylist": "Lista de estudio",
@@ -162,6 +181,7 @@
     "agree_and_close": "Aceptar y cerrar"
   },
   "common": {
+    "ara_team": "Equipo ARA",
     "online": "En línea",
     "offline": "Desconectado",
     "save": "Guardar",
@@ -169,6 +189,10 @@
     "apply": "Aplicar",
     "cancel": "Cancelar",
     "delete": "Eliminar",
+    "ban": "Restricción",
+    "content_deleted": "Contenido eliminado",
+    "permanent": "Permanente",
+    "days": "días",
     "edit": "Editar",
     "my_profile": "Mi Perfil",
     "my_account": "Mi Cuenta",
@@ -199,6 +223,17 @@
     "block": "Bloquear",
     "unblock": "Desbloquear",
     "report": "Reportar",
+    "reason": "Razón del reporte",
+    "reasons": {
+      "spam": "Spam / Promoción",
+      "abuse": "Abuso / Despectivo",
+      "harmful": "Contenido dañino",
+      "inappropriate": "Contenido inapropiado",
+      "other": "Otro (Entrada directa)"
+    },
+    "status": {
+      "dismissed": "Denuncia rechazada"
+    },
     "cancel_like": "Ya no me gusta",
     "success_like": "Me gusta"
   },
@@ -535,6 +570,8 @@
     "no_permission": "Sin permiso de administrador.",
     "login_success": "Inicio de sesión de administrador exitoso.",
     "study_deleted": "Contenido de estudio eliminado.",
+    "reason": "Razón del administrador",
+    "review_comment": "Comentario de revisión del administrador",
     "study_uploaded": "¡Contenido de estudio subido con éxito!",
     "goods_registered": "¡Producto registrado con éxito!",
     "goods_deleted": "Producto eliminado.",

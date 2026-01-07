@@ -113,7 +113,7 @@ export default function ProfileTweets({ activeTab, userProfile, onItemClick, onP
          pageRef.current += 1;
       }
     } catch (error) {
-      console.error('Error fetching tweets:', error);
+      // 에러 로깅 생략
     } finally {
       // 탭이 여전히 같을 때만 로딩 해제
       if (activeTabRef.current === currentTab) {
@@ -130,12 +130,13 @@ export default function ProfileTweets({ activeTab, userProfile, onItemClick, onP
     hasMore,
     loading // 세 번째 필수 인자 전달
   );
-  // 실시간 업데이트 (좋아요/댓글 수 등 stats 반영)
+  // 실시간 업데이트 (stats 및 제재 상태 반영)
   useEffect(() => {
     if (!userProfile?.id) return;
-    // channel 변수명을 일관되게 유지 (cleanup 함수와의 호환성)
-    const channel = supabase
-      .channel(`profile-realtime-${userProfile.id}`)
+    
+    // 1. 게시글 실시간 통계 업데이트
+    const tweetChannel = supabase
+      .channel(`profile-tweets-realtime-${userProfile.id}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tweets' }, payload => {
         const updated = payload.new as any;
         setTweets(prev => prev.map(t => 
@@ -145,8 +146,29 @@ export default function ProfileTweets({ activeTab, userProfile, onItemClick, onP
         ));
       })
       .subscribe();
+
+    // 2. 작성자 프로필 실시간 동기화 (제재 뱃지용)
+    const profileChannel = supabase
+      .channel(`profile-authors-sync-${userProfile.id}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
+        const updated = payload.new as any;
+        if (updated.banned_until !== undefined) {
+          setTweets(prev => prev.map(t => {
+            if (String(t.user.username) === String(updated.user_id) || String((t as any).author_id) === String(updated.id)) {
+              return {
+                ...t,
+                user: { ...t.user, banned_until: updated.banned_until }
+              };
+            }
+            return t;
+          }));
+        }
+      })
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(tweetChannel);
+      supabase.removeChannel(profileChannel);
     };
   }, [userProfile.id]);
   if (loading && tweets.length === 0) {

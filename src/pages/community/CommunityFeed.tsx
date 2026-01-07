@@ -159,7 +159,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
           pageRef.current += 1;
         }
     } catch (err) {
-      console.error('Error fetching tweets:', err);
+      // 오류 발생 시 로깅 생략
     } finally {
       setLoading(false);
       loadingRef.current = false;
@@ -283,16 +283,11 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
   }, [tweets, hasMore, isSearching]);
   // 8. 실시간 업데이트
   useEffect(() => {
-      const channel = supabase.channel('home-feed-realtime')
+    // 8-1. 트윗 변경 (INSERT/UPDATE/DELETE)
+    const tweetChannel = supabase.channel('home-feed-realtime')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tweets' }, async payload => {
-          // deleted_at might be missing in generated types
           const newTweet = payload.new as Database['public']['Tables']['tweets']['Row'] & { deleted_at?: string | null };
           
-          // 이미 리스트에 있는지 확인 (낙관적 업데이트 등으로)
-          // setTweets 안에서 확인해야 최신 state 반영 가능하지만, 
-          // async fetch가 필요하므로 여기서 1차 필터링은 어려움.
-          // 일단 fetch 진행.
-
           const { data: profile } = await supabase
             .from('profiles')
             .select('id, nickname, user_id, avatar_url, banned_until')
@@ -322,7 +317,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
           };
 
           setTweets(prev => {
-              if (blockedIds.includes(formattedTweet.user.id)) return prev; // 차단 필터링
+              if (blockedIds.includes(formattedTweet.user.id)) return prev;
               if (prev.some(t => t.id === formattedTweet.id)) return prev;
               return [formattedTweet, ...prev];
           });
@@ -344,16 +339,36 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
           setTweets(prev => prev.filter(t => t.id !== payload.old.id));
       })
       .subscribe();
-      return () => {
-          supabase.removeChannel(channel);
-      };
-  }, [blockedIds]); // blockedIds 의존성 추가
+
+    // 8-2. 작성자 프로필 변경 (제재 상태 실시간 반영)
+    const profileChannel = supabase.channel('home-feed-author-sync')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
+          const updated = payload.new as any;
+          if (updated.banned_until !== undefined) {
+            setTweets(prev => prev.map(t => {
+              // 프로필 PK(id) 또는 인증 ID(user_id)로 매칭
+              if (String(t.user.id) === String(updated.id) || String(t.user.username) === String(updated.user_id)) {
+                return {
+                  ...t,
+                  user: { ...t.user, banned_until: updated.banned_until }
+                };
+              }
+              return t;
+            }));
+          }
+      })
+      .subscribe();
+
+    return () => {
+        supabase.removeChannel(tweetChannel);
+        supabase.removeChannel(profileChannel);
+    };
+  }, [blockedIds]);
   // 9. 안전장치: 로딩이 너무 오래 걸리면 강제 종료 (Main 브랜치 기능 통합)
   useEffect(() => {
     if (loading) {
       const timer = setTimeout(() => {
         if (loading) {
-           console.warn('Tweet loading timed out - forcing loading off');
            setLoading(false);
            loadingRef.current = false;
         }
