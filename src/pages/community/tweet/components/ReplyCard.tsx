@@ -148,7 +148,15 @@ export function ReplyCard({
   const isSoftDeleted = !!reply.deleted_at;
   const rawContent = (isSoftDeleted && !isAdminView) ? '관리자에 의해 삭제된 메시지입니다.' : (reply.content ?? '');
   
-  const safeContent = DOMPurify.sanitize(rawContent, {
+  // 댓글 수정 기능
+  const [isEditing, setIsEditing] = useState(false);
+  const [draftText, setDraftText] = useState('');
+  const [currentContent, setCurrentContent] = useState(rawContent);
+  const [isComposing, setIsComposing] = useState(false);
+  const [editImages, setEditImages] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const safeContent = DOMPurify.sanitize(isEditing ? currentContent : rawContent, {
     ADD_TAGS: ['iframe', 'video', 'source', 'img'],
     ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
   });
@@ -237,6 +245,21 @@ export function ReplyCard({
     setContentImages(imgs);
   }, [rawContent]);
 
+  // content 동기화
+  useEffect(() => {
+    setCurrentContent(rawContent);
+    setDraftText(htmlToPlainText(rawContent));
+  }, [rawContent]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(currentContent, 'text/html');
+    const imgs = Array.from(doc.querySelectorAll('img'))
+      .map(img => img.src)
+      .filter(Boolean);
+    setContentImages(imgs);
+  }, [currentContent]);
 
   // 댓글 삭제
   const handleDelete = async () => {
@@ -373,6 +396,62 @@ export function ReplyCard({
     ADD_TAGS: ['iframe', 'video', 'source', 'a', 'span'],
     ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls', 'href', 'target', 'class', 'data-mention'],
   });
+
+  // Helper 함수
+  const extractImageSrcs = (html: string) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return Array.from(doc.querySelectorAll('img'))
+      .map(img => img.getAttribute('src'))
+      .filter(Boolean) as string[];
+  };
+
+  const htmlToPlainText = (html: string) => {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    doc.querySelectorAll('img').forEach(img => img.remove());
+    doc.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+    return (doc.body.textContent ?? '').trim();
+  };
+
+  const plainTextToHtml = (text: string) => {
+    const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return escaped.replace(/\n/g, '<br />');
+  };
+
+  // 댓글 수정 저장
+  const saveEdit = async () => {
+    if (!profileId) {
+      toast.error(t('common.error_profile_missing'));
+      return;
+    }
+
+    const nextText = draftText.trim();
+    if (!nextText) return;
+
+    const imgs = extractImageSrcs(currentContent);
+    const textHtml = plainTextToHtml(nextText);
+
+    const finalHtml =
+      imgs.length === 0
+        ? textHtml
+        : `${textHtml}${imgs.map(src => `<div class="tweet-img"><img src="${src}" alt="" /></div>`).join('')}`;
+
+    const { error } = await supabase
+      .from('tweet_replies')
+      .update({ content: finalHtml })
+      .eq('id', reply.id)
+      .eq('author_id', profileId);
+
+    if (error) {
+      console.error('댓글 편집 실패:', error.message);
+      toast.error(t('common.error_edit'));
+      return;
+    }
+
+    setCurrentContent(finalHtml);
+    setIsEditing(false);
+    setShowMenu(false);
+    toast.success(t('common.success_edit'));
+  };
 
   // 본인 댓글 여부
   const isMyReply = authUser?.id === reply.user.username;
@@ -640,16 +719,31 @@ export function ReplyCard({
             {showMenu && (
               <div className="absolute right-0 top-8 min-w-[9rem] whitespace-nowrap bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
                 {isMyReply ? (
-                  <button
-                    onClick={e => {
-                      e.stopPropagation();
-                      setShowDialog(true);
-                    }}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
-                  >
-                    <i className="ri-delete-bin-line" />
-                    <span>{t('common.delete')}</span>
-                  </button>
+                  <>
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setDraftText(htmlToPlainText(currentContent));
+                        setEditImages(extractImageSrcs(currentContent));
+                        setIsEditing(true);
+                        setShowMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 flex items-center gap-2 text-gray-800 dark:text-gray-200"
+                    >
+                      <i className="ri-edit-line" />
+                      <span>{t('common.edit', '수정')}</span>
+                    </button>
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setShowDialog(true);
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
+                    >
+                      <i className="ri-delete-bin-line" />
+                      <span>{t('common.delete')}</span>
+                    </button>
+                  </>
                 ) : (
                   <>
                     <button
@@ -691,18 +785,81 @@ export function ReplyCard({
           />
 
             <div className={`flex items-center gap-2 mt-1 ${isSoftDeleted ? 'italic text-gray-500 opacity-60' : ''}`}>
-              <div
-                className="text-gray-900 dark:text-gray-100 whitespace-normal break-words leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: safeContentWithoutImages }}
-              />
-              {/* 번역 버튼 */}
-              {!isSoftDeleted && plainTextContent.trim().length > 0 && (
-                <TranslateButton
-                  text={plainTextContent}
-                  contentId={`reply_${reply.id}`}
-                  setTranslated={setTranslated}
-                  size="sm"
-                />
+              {isEditing ? (
+                <div className="w-full" onClick={e => e.stopPropagation()}>
+                  <textarea
+                    value={draftText}
+                    onChange={e => setDraftText(e.target.value)}
+                    rows={5}
+                    className="
+                      w-full resize-none rounded-2xl border border-gray-300 dark:border-gray-700
+                      bg-gray-50 dark:bg-background px-3 py-2 text-sm
+                      text-gray-900 dark:text-gray-100
+                      focus:outline-none focus:ring-2 focus:ring-primary/60
+                    "
+                    onCompositionStart={() => setIsComposing(true)}
+                    onCompositionEnd={() => setIsComposing(false)}
+                    onKeyDown={e => {
+                      if (isComposing) return;
+
+                      if (e.key === 'Escape') {
+                        e.preventDefault();
+                        setDraftText(htmlToPlainText(currentContent));
+                        setIsEditing(false);
+                        return;
+                      }
+
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        saveEdit();
+                        return;
+                      }
+                    }}
+                  />
+
+                  <div className="mt-3 flex justify-end gap-2">
+                    <button
+                      className="text-sm text-gray-500 hover:underline"
+                      onClick={() => {
+                        setDraftText(htmlToPlainText(currentContent));
+                        setIsEditing(false);
+                      }}
+                    >
+                      취소
+                    </button>
+                    <button
+                      onClick={saveEdit}
+                      className="px-4 py-2 rounded-full bg-primary text-white hover:bg-primary/80"
+                    >
+                      저장
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div
+                    className="text-gray-900 dark:text-gray-100 whitespace-normal break-words leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: safeContentWithoutImages }}
+                    onClick={e => {
+                      const el = (e.target as HTMLElement)?.closest?.(
+                        '.mention-link',
+                      ) as HTMLElement | null;
+                      if (!el) return;
+                      const username = el.dataset.mention;
+                      if (!username) return;
+                      navigate(`/profile/${encodeURIComponent(username)}`);
+                    }}
+                  />
+                  {/* 번역 버튼 */}
+                  {!isSoftDeleted && plainTextContent.trim().length > 0 && (
+                    <TranslateButton
+                      text={plainTextContent}
+                      contentId={`reply_${reply.id}`}
+                      setTranslated={setTranslated}
+                      size="sm"
+                    />
+                  )}
+                </>
               )}
             </div>
 
