@@ -122,7 +122,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           .from('profiles')
           .select('id')
           .eq('user_id', currentUserId)
-          .single();
+          .maybeSingle();
         if (pData) myProfId = pData.id;
       }
 
@@ -181,7 +181,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       .from('profiles')
       .select('id, nickname, avatar_url, username')
       .eq('user_id', authUserId)
-      .single();
+      .maybeSingle();
 
     const userInfo: ChatUser = data
       ? {
@@ -263,7 +263,8 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         } else {
           handleError(response.error || '채팅방 목록을 불러올 수 없습니다.');
         }
-      } catch (err) {
+      } catch (err: any) {
+        if (err.message === '사용자가 로그인되지 않았습니다.') return;
         handleError('채팅방 목록 로드 중 오류가 발생했습니다.');
       } finally {
         isLoadingChatsRef.current = false;
@@ -737,12 +738,21 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       } else {
         handleError(response.error || '비활성화된 채팅방 목록을 불러올 수 없습니다.');
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (err.message === '사용자가 로그인되지 않았습니다.') return;
       handleError('비활성화된 채팅방 목록 로딩 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
   }, []);
+
+  // ✅ 채팅 목록 초기 로드 (앱 시작/로그인 시) - 함수 정의 이후에 배치
+  useEffect(() => {
+    if (user?.id) {
+      loadChats();
+      loadInactiveChats();
+    }
+  }, [user?.id, loadChats, loadInactiveChats]);
 
   const restoreDirectChatHandler = useCallback(
     async (chatId: string): Promise<boolean> => {

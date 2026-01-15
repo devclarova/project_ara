@@ -4,6 +4,8 @@ import { v4 as uuid } from 'uuid';
 import { supabase } from '../../lib/supabase';
 import type { ConsentResult } from '@/types/consent';
 import { useTranslation } from 'react-i18next';
+import { hashRecoveryAnswer } from '@/utils/recovery';
+import type { RecoveryQuestion } from '@/types/signup';
 
 type ProfileDraft = {
   bio: string;
@@ -24,6 +26,10 @@ type Props = {
   draft: ProfileDraft;
   onChangeDraft: React.Dispatch<React.SetStateAction<ProfileDraft>>;
   signupKind: 'email' | 'social';
+  // Recovery 정보
+  recoveryQuestion: RecoveryQuestion | '';
+  recoveryAnswer: string;
+  recoveryEmail: string;
 };
 
 const DRAFT_KEY = 'signup-profile-draft';
@@ -60,6 +66,9 @@ export default function SignUpStep3Profile(props: Props) {
     draft,
     onChangeDraft,
     signupKind,
+    recoveryQuestion,
+    recoveryAnswer,
+    recoveryEmail,
   } = props;
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -170,6 +179,9 @@ export default function SignUpStep3Profile(props: Props) {
             pendingAvatarUrl = pub?.publicUrl ?? null;
           }
         }
+      } else if (draft.preview && draft.preview.startsWith('http')) {
+        // 파일이 없지만 preview가 있으면(소셜 연동된 기존 URL), 그대로 사용
+        finalAvatarUrl = draft.preview;
       }
 
       // ─────────────────────────────────────────
@@ -190,6 +202,9 @@ export default function SignUpStep3Profile(props: Props) {
         }
 
         // 2-A) 이메일: 프로필 드래프트를 저장 (인증 후 로그인 시 프로필 생성 로직이 이 값을 사용)
+        // Recovery 정보도 함께 저장 (답변 해싱)
+        const recoveryAnswerHash = recoveryAnswer ? await hashRecoveryAnswer(recoveryAnswer) : '';
+        
         localStorage.setItem(
           DRAFT_KEY,
           JSON.stringify({
@@ -204,6 +219,10 @@ export default function SignUpStep3Profile(props: Props) {
             privacy_agreed: !!consents?.privacy,
             age_confirmed: !!consents?.age,
             marketing_opt_in: !!consents?.marketing,
+            // Recovery 정보
+            recovery_question: recoveryQuestion,
+            recovery_answer_hash: recoveryAnswerHash,
+            recovery_email: recoveryEmail.trim() || null,
           }),
         );
 
@@ -242,6 +261,9 @@ export default function SignUpStep3Profile(props: Props) {
         return;
       }
 
+      // Recovery 답변 해싱
+      const recoveryAnswerHash = recoveryAnswer ? await hashRecoveryAnswer(recoveryAnswer) : '';
+
       const { error: upErr } = await supabase.from('profiles').upsert(
         {
           user_id: uid,
@@ -258,6 +280,10 @@ export default function SignUpStep3Profile(props: Props) {
           is_onboarded: true,
           is_public: true,
           updated_at: new Date().toISOString(),
+          // Recovery 정보
+          recovery_question: recoveryQuestion || null,
+          recovery_answer_hash: recoveryAnswerHash || null,
+          recovery_email: recoveryEmail.trim() || null,
         },
         { onConflict: 'user_id' },
       );
@@ -344,12 +370,12 @@ export default function SignUpStep3Profile(props: Props) {
         </p>
       )}
 
-      <div className="flex justify-between sm:justify-end gap-2 sm:gap-3 mt-6">
+      <div className="flex justify-between sm:justify-end gap-2 sm:gap-3 mt-6 xs:mt-4">
         <button
           type="button"
           onClick={onBack}
           disabled={loading}
-          className="bg-gray-100 dark:bg-neutral-500 text-gray-800 dark:text-gray-100 font-semibold py-2 px-4 rounded-lg hover:opacity-80 transition disabled:opacity-50"
+          className="bg-gray-100 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:opacity-80 transition-colors dark:bg-neutral-500 dark:text-gray-100 xs:text-[14px] xs:py-1.5 disabled:opacity-50"
         >
           {t('auth.previous')}
         </button>
@@ -357,7 +383,7 @@ export default function SignUpStep3Profile(props: Props) {
           type="button"
           disabled={loading}
           onClick={handleSubmit}
-          className="bg-[var(--ara-primary)] text-white font-semibold py-2 px-4 rounded-lg hover:opacity-85 transition disabled:opacity-50"
+          className="bg-[var(--ara-primary)] text-white font-semibold py-2 px-4 rounded-lg hover:opacity-85 transition-colors disabled:opacity-50 disabled:cursor-not-allowed xs:text-[14px] xs:py-1.5"
         >
           {loading ? t('auth.signing_up') : t('auth.signup_complete')}
         </button>

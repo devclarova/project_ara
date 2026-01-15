@@ -185,15 +185,15 @@ export default function BirthInput({
           aria-haspopup="dialog"
           aria-expanded={open}
           aria-controls="birth-popover"
-          className={`peer w-full px-3 py-3 border rounded-[14px] bg-white text-black text-sm dark:bg-secondary dark:text-gray-300 ${
+          className={`peer w-full h-12 xs:h-11 px-4 xs:px-3 pr-16 xs:pr-[3.5rem] py-3 border rounded-[14px] bg-white text-black text-sm xs:text-[13px] dark:bg-secondary dark:text-gray-300 ${
             error
               ? 'ara-focus--error border-red-500'
               : 'ara-focus border-gray-300 dark:border-[#D1D5DB]'
           }`}
         />
         <label
-          className={`absolute left-3 transition-all text-gray-400 bg-white/95 rounded dark:bg-secondary
-      ${inputValue ? '-top-2 text-xs' : 'top-3 text-sm'}
+          className={`absolute left-3 transition-all text-gray-400 bg-white/95 rounded dark:bg-secondary pointer-events-none
+      ${inputValue ? '-top-2 text-xs' : 'top-3 xs:top-2.5 text-sm xs:text-[14px]'}
       peer-focus:-top-2 peer-focus:text-xs peer-focus:text-primary`}
         >
           {t('signup.label_birth')}
@@ -204,16 +204,16 @@ export default function BirthInput({
             setMode(prev => (open ? prev : selectedDate ? 'day' : 'month'));
             setOpen(o => !o);
           }}
-          className="absolute right-8 top-1/2 -translate-y-1/2 px-1 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white/90"
+          className="absolute right-8 xs:right-7 top-1/2 -translate-y-1/2 px-1 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white/90"
           aria-label="Toggle calendar"
         >
-          <img src="/images/calendar.png" alt={t('signup.calendar_alt')} className="w-5" />
+          <img src="/images/calendar.png" alt={t('signup.calendar_alt')} className="w-5 xs:w-4" />
         </button>
         {inputValue && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-2 top-1/2 -translate-y-1/2 px-1 text-secondary hover:text-secondary hover:opacity-75"
+            className="absolute right-2 xs:right-1.5 top-1/2 -translate-y-1/2 px-1 text-secondary hover:text-secondary hover:opacity-75"
             aria-label="Clear date"
           >
             ✖
@@ -227,7 +227,7 @@ export default function BirthInput({
         <div
           id="birth-popover"
           role="dialog"
-          className="absolute left-0 bottom-full mb-4 w-72 bg-white dark:bg-secondary dark:text-gray-300 border border-gray-300 dark:border-[#D1D5DB] rounded-[14px] shadow-lg z-50 max-h-80 overflow-auto"
+          className="absolute left-0 bottom-full mb-4 w-72 xs:w-full bg-white dark:bg-secondary dark:text-gray-300 border border-gray-300 dark:border-[#D1D5DB] rounded-[14px] shadow-lg z-50 max-h-80 overflow-auto"
           onMouseDown={e => {
             e.preventDefault();
             e.stopPropagation();

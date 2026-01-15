@@ -4,6 +4,7 @@ import { useTheme } from '@/components/theme-provider';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { LANGUAGES } from '@/lib/i18n';
+import { supabase } from '@/lib/supabase';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +16,28 @@ import TermsView from '@/components/settings/TermsView';
 import PrivacyPolicyView from '@/components/settings/PrivacyPolicyView';
 import CustomerCenterView from '@/components/settings/CustomerCenterView';
 import { type ConsentKey } from '@/components/auth/consent/consentContent';
+
+// Language code to ISO code mapping
+const LANG_TO_ISO: Record<string, string> = {
+  ko: 'KR', en: 'US', ja: 'JP', zh: 'CN',
+  ru: 'RU', vi: 'VN', bn: 'BD', ar: 'SA',
+  hi: 'IN', th: 'TH', es: 'ES', fr: 'FR',
+  pt: 'PT', 'pt-br': 'BR', de: 'DE', fi: 'FI',
+};
+
+// Fallback emoji flags
+const EMOJI_FLAGS: Record<string, string> = {
+  ko: '🇰🇷', en: '🇺🇸', ja: '🇯🇵', zh: '🇨🇳',
+  ru: '🇷🇺', vi: '🇻🇳', bn: '🇧🇩', ar: '🇸🇦',
+  hi: '🇮🇳', th: '🇹🇭', es: '🇪🇸', fr: '🇫🇷',
+  pt: '🇵🇹', 'pt-br': '🇧🇷', de: '🇩🇪', fi: '🇫🇮',
+};
+
+interface CountryWithFlag {
+  iso_code: string | null;
+  flag_url: string | null;
+}
+
 /**
  * Polished Aesthetic Footer
  * - SNS 순서 변경: YouTube -> Instagram -> Threads -> X -> Facebook
@@ -34,9 +57,46 @@ export default function Footer() {
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
   const [policyModalOpen, setPolicyModalOpen] = useState<ConsentKey | 'support' | null>(null);
   const currentLang = LANGUAGES.find(l => l.code === i18n.language)?.label || 'English (US)';
+  
+  // Flag state management
+  const [flagMap, setFlagMap] = useState<Record<string, string>>({});
+  const [loadingFlags, setLoadingFlags] = useState(true);
+  
   // Hydration mismatch 방지
   useEffect(() => {
     setMounted(true);
+  }, []);
+  
+  // Load flag images from database
+  useEffect(() => {
+    async function loadFlags() {
+      const { data, error } = await supabase
+        .from('countries')
+        .select('iso_code, flag_url')
+        .not('iso_code', 'is', null)
+        .not('flag_url', 'is', null);
+
+      if (error) {
+        setLoadingFlags(false);
+        return;
+      }
+
+      if (data) {
+        const map: Record<string, string> = {};
+        
+        data.forEach((country: CountryWithFlag) => {
+          if (country.iso_code && country.flag_url) {
+            const isoUpper = country.iso_code.toUpperCase();
+            map[isoUpper] = country.flag_url;
+          }
+        });
+        
+        setFlagMap(map);
+      }
+      setLoadingFlags(false);
+    }
+
+    loadFlags();
   }, []);
   const handleLinkClick = (e: React.MouseEvent, type: 'impl' | 'unimpl' | 'policy', value?: string) => {
     e.preventDefault();
@@ -184,7 +244,35 @@ export default function Footer() {
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <button type="button" className="group flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-zinc-800 hover:border-primary/30 bg-white dark:bg-zinc-900 transition-all text-xs font-medium text-muted-foreground hover:text-foreground shadow-sm animate-in fade-in zoom-in duration-300 outline-none">
-                    <Globe className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    {/* Current language flag */}
+                    {(() => {
+                      const currentIso = LANG_TO_ISO[i18n.language];
+                      const currentFlagUrl = currentIso ? flagMap[currentIso] : null;
+                      const currentEmoji = EMOJI_FLAGS[i18n.language];
+
+                      if (currentFlagUrl) {
+                        const isChina = currentIso === 'CN';
+                        
+                        return (
+                          <div className="relative w-4 h-4 rounded-full shadow-md overflow-hidden group-hover:scale-110 transition-transform duration-300">
+                            <img 
+                              src={currentFlagUrl} 
+                              alt="Current Language" 
+                              className={`w-full h-full object-cover ${isChina ? 'object-left' : 'object-center'}`}
+                            />
+                            {/* Glossy Effect */}
+                            <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-black/10 via-transparent to-white/50 pointer-events-none ring-1 ring-inset ring-black/5 dark:ring-white/10" />
+                            <div className="absolute inset-0 rounded-full shadow-[inset_0_2px_4px_rgba(255,255,255,0.4)] pointer-events-none" />
+                          </div>
+                        );
+                      }
+                      
+                      if (currentEmoji) {
+                        return <span className="text-base">{currentEmoji}</span>;
+                      }
+
+                      return <Globe className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />;
+                    })()}
                     <span>{currentLang}</span>
                     <ChevronDown className="w-3 h-3 ml-0.5 opacity-50" />
                   </button>

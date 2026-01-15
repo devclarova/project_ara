@@ -57,7 +57,7 @@ export async function getUserProfile(userId: string): Promise<ChatApiResponse<Ch
       .from('profiles')
       .select('id, nickname, avatar_url, username')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (profileError || !profileData) {
       return {

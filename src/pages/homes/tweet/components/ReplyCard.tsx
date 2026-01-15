@@ -182,7 +182,7 @@ export function ReplyCard({
   useEffect(() => {
     const fetchAuthorCountry = async () => {
       try {
-        if (!reply.user.id) return;
+        if (!reply.user.username || reply.user.username === 'anonymous') return;
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('id, country')

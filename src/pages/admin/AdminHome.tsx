@@ -64,19 +64,18 @@ const AdminHome = () => {
 
   // Helper to determine real-time online status
   const isUserOnline = (user: any) => {
-    // 1. Check real-time DB updates first (Profile ID based - Ensures sync without Replica Identity Full)
-    if (user.profile_id && user.profile_id in dbOnlineUsers) {
-      return dbOnlineUsers[user.profile_id];
-    }
-    // 2. Check real-time DB updates (Auth ID based - Fallback)
-    if (user.id in dbOnlineUsers) {
-      return dbOnlineUsers[user.id];
-    }
-    // 3. Check presence channel (active connection)
-    if (onlineUsers.has(user.id)) {
-      return true;
-    }
-    // 4. Fallback to initial fetched data if no real-time info yet
+    // 1. Check real-time DB updates first (Most authoritative for explicit changes)
+    if (user.profile_id && user.profile_id in dbOnlineUsers) return dbOnlineUsers[user.profile_id];
+    if (user.id in dbOnlineUsers) return dbOnlineUsers[user.id];
+
+    // 2. Check presence channel (Active connection)
+    if (onlineUsers.has(user.id)) return true;
+
+    // 3. ✨ CRITICAL FIX: If Presence is active (we have >0 users) but this user is NOT in it,
+    //    they are OFFLINE. Ignore stale 'user.is_online' from initial load.
+    if (onlineUsers.size > 0) return false;
+
+    // 4. Fallback to initial DB data ONLY if Presence system isn't monitoring anyone yet (e.g. init)
     return user.is_online;
   };
 
@@ -179,7 +178,7 @@ const AdminHome = () => {
   ];
 
   return (
-    <div className="w-full min-w-[300px] space-y-3 sm:space-y-4 md:space-y-6 lg:space-y-8 animate-in fade-in zoom-in-95 duration-500">
+    <div className="w-full space-y-3 sm:space-y-4 md:space-y-6 lg:space-y-8 animate-in fade-in zoom-in-95 duration-500">
       
       {/* Title Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -190,20 +189,20 @@ const AdminHome = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 min-[350px]:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         {summaryStats.map((stat, i) => (
           <motion.div 
             key={i} 
             layout
-            className="bg-secondary p-6 rounded-2xl border border-gray-300 dark:border-gray-500 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group"
+            className="bg-secondary p-3 sm:p-4 md:p-6 rounded-2xl border border-gray-300 dark:border-gray-500 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group flex flex-col justify-between min-h-[110px] sm:min-h-[140px]"
           >
-            <div className="flex items-start justify-between mb-4">
-              <div className={`p-3 rounded-xl ${stat.bg} ${stat.color}`}>
-                <stat.icon size={20} />
+            <div className="flex items-start justify-between mb-2 sm:mb-4 relative">
+              <div className={`p-2 sm:p-3 rounded-xl ${stat.bg} ${stat.color} shrink-0`}>
+                <stat.icon size={16} className="sm:w-5 sm:h-5" />
               </div>
               
               {stat.change !== undefined && (
-                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                <span className={`text-[9px] sm:text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
                   stat.change >= 0 
                   ? 'bg-green-100 dark:bg-green-900/40 text-green-600' 
                   : 'bg-red-100 dark:bg-red-900/40 text-red-600'
@@ -213,8 +212,8 @@ const AdminHome = () => {
               )}
 
               {stat.isRevenue && (
-                <div className="flex items-center gap-2 ml-auto">
-                  <div className="flex bg-muted p-1 rounded-lg border border-gray-300 dark:border-gray-600 scale-90 origin-right transition-all">
+                <div className="absolute right-0 top-0 flex flex-col items-end gap-1">
+                  <div className="flex bg-muted p-0.5 rounded-lg border border-gray-300 dark:border-gray-600 scale-90 origin-top-right transition-all flex-wrap justify-end gap-0.5 max-w-[120px] sm:max-w-none">
                     {(['total', 'subscription', 'shop'] as const).map((type) => (
                       <button
                         key={type}
@@ -222,9 +221,9 @@ const AdminHome = () => {
                           e.stopPropagation();
                           setRevenueType(type);
                         }}
-                        className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${
+                        className={`px-2 py-1 sm:px-3 sm:py-1 text-[9px] sm:text-[10px] font-bold rounded-md transition-all ${
                           revenueType === type 
-                          ? 'bg-primary text-primary-foreground shadow-md scale-105' 
+                          ? 'bg-primary text-primary-foreground shadow-md' 
                           : 'text-muted-foreground hover:text-foreground hover:bg-muted-foreground/10'
                         }`}
                       >
@@ -232,37 +231,36 @@ const AdminHome = () => {
                       </button>
                     ))}
                   </div>
-                  <button className="p-1.5 hover:bg-accent rounded-lg text-muted-foreground transition-all" title="수익 데이터 내보내기">
-                    <MoreVertical size={16} />
-                  </button>
                 </div>
               )}
             </div>
 
-            <AnimatePresence mode="wait">
-              <motion.h3 
-                key={stat.value}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                className="text-2xl sm:text-3xl font-bold text-foreground mb-1 truncate"
-              >
-                {stat.value}
-              </motion.h3>
-            </AnimatePresence>
-            <p className="text-sm text-muted-foreground">{stat.title}</p>
+            <div>
+              <AnimatePresence mode="wait">
+                <motion.h3 
+                  key={stat.value}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="text-lg sm:text-2xl md:text-3xl font-bold text-foreground mb-0.5 sm:mb-1 truncate leading-tight"
+                >
+                  {stat.value}
+                </motion.h3>
+              </AnimatePresence>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">{stat.title}</p>
+            </div>
           </motion.div>
         ))}
       </div>
 
       {/* Chart & Activity Section (Grid) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:gap-8 min-w-0">
         {/* Main Chart Area */}
-        <div className="lg:col-span-2 bg-secondary rounded-2xl border border-gray-300 dark:border-gray-500 shadow-sm p-3 sm:p-4 md:p-6 lg:h-[450px] flex flex-col">
-          <div className="flex items-center justify-between mb-8 shrink-0">
+        <div className="lg:col-span-2 bg-secondary rounded-2xl border border-gray-300 dark:border-gray-500 shadow-sm p-3 sm:p-4 md:p-6 lg:h-[380px] flex flex-col min-w-0">
+          <div className="flex items-center justify-between mb-4 sm:mb-8 shrink-0">
             <div>
-              <h2 className="text-lg font-bold text-foreground">사용자 가입 추이 (최근 7일)</h2>
-              <p className="text-xs text-muted-foreground mt-1">막대 그래프 및 트렌드 라인 분석</p>
+              <h2 className="text-base sm:text-lg font-bold text-foreground truncate">사용자 가입 추이 (최근 7일)</h2>
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">막대 그래프 및 트렌드 라인 분석</p>
             </div>
             <button 
               className="p-2 hover:bg-accent rounded-lg text-muted-foreground transition-all group"
@@ -354,39 +352,39 @@ const AdminHome = () => {
         </div>
 
         {/* Recent Users List */}
-        <div className="bg-secondary rounded-2xl border border-gray-300 dark:border-gray-500 shadow-sm p-3 sm:p-4 md:p-6 flex flex-col lg:h-[450px]">
-          <h2 className="text-lg font-bold text-foreground mb-6 shrink-0">최근 접속 사용자</h2>
-          <div className="space-y-5 flex-1 overflow-hidden">
+        <div className="bg-secondary rounded-2xl border border-gray-300 dark:border-gray-500 shadow-sm p-3 sm:p-4 md:p-6 flex flex-col lg:h-[380px] min-w-0">
+          <h2 className="text-base sm:text-lg font-bold text-foreground mb-4 sm:mb-6 shrink-0 truncate">최근 접속 사용자</h2>
+          <div className="space-y-3 sm:space-y-5 flex-1 overflow-hidden">
             {stats?.recent_users.map((user, i) => {
               const isOnline = isUserOnline(user);
               return (
               <div 
                 key={i} 
-                className="flex items-center gap-3 group cursor-pointer hover:bg-muted/30 p-2.5 rounded-2xl transition-all" 
+                className="flex items-center gap-2 sm:gap-3 group cursor-pointer hover:bg-muted/30 p-2 sm:p-2.5 rounded-2xl transition-all" 
                 onClick={() => {
                   setSelectedUser(user);
                   setShowProfileModal(true);
                 }}
               >
-                <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:border-primary transition-all overflow-hidden shrink-0 shadow-sm">
+                <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:border-primary transition-all overflow-hidden shrink-0 shadow-sm">
                   {user.avatar_url ? (
                     <img src={user.avatar_url} alt={user.nickname} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-primary font-bold text-sm">{user.nickname.charAt(0)}</span>
+                    <span className="text-primary font-bold text-xs sm:text-sm">{user.nickname.charAt(0)}</span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">
+                    <p className="text-xs sm:text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">
                       {user.nickname}
                     </p>
                     {isOnline && (
-                      <span className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                      <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
                     )}
                   </div>
-                  <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+                  <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">{user.email}</p>
                 </div>
-                <span className={`text-[10px] font-bold px-2 py-1.5 rounded-lg whitespace-nowrap ${
+                <span className={`text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-1 sm:py-1.5 rounded-lg whitespace-nowrap ${
                   isOnline 
                     ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' 
                     : 'bg-muted/50 text-muted-foreground'
@@ -404,7 +402,7 @@ const AdminHome = () => {
           </div>
           <button 
             onClick={() => navigate('/admin/users')}
-            className="w-full mt-6 py-3 text-sm text-center text-primary-600 dark:text-primary-400 hover:bg-primary/10 font-bold border-2 border-primary/10 hover:border-primary/30 rounded-2xl transition-all shrink-0"
+            className="w-full mt-4 sm:mt-6 py-2 sm:py-3 text-xs sm:text-sm text-center text-primary-600 dark:text-primary-400 hover:bg-primary/10 font-bold border-2 border-primary/10 hover:border-primary/30 rounded-xl sm:rounded-2xl transition-all shrink-0"
           >
             전체 사용자 목록 보기
           </button>

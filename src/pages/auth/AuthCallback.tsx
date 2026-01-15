@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { Timer as TimerIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 const DRAFT_KEY = 'signup-profile-draft';
 
@@ -81,12 +82,16 @@ async function ensureProfileFromDraft(uid: string, email?: string | null) {
   }
 }
 
-async function createProfileShellIfMissing(uid: string) {
+async function createProfileShellIfMissing(user: any) {
+  const uid = user.id;
   const { count, error: exErr } = await supabase
     .from('profiles')
     .select('user_id', { count: 'exact', head: true })
     .eq('user_id', uid);
   if (!exErr && (count ?? 0) > 0) return;
+
+  // 메타데이터에서 아바타 URL 추출
+  const avatarUrl = user.user_metadata?.avatar_url || user.app_metadata?.avatar_url || null;
 
   // 스키마 제약( NOT NULL / CHECK ) 을 통과할 최소 기본값
   const payload = {
@@ -96,7 +101,7 @@ async function createProfileShellIfMissing(uid: string) {
     birthday: '2000-01-01', // YYYY-MM-DD
     country: 'Unknown',
     bio: null,
-    avatar_url: null,
+    avatar_url: avatarUrl,
     tos_agreed: false,
     privacy_agreed: false,
     age_confirmed: false,
@@ -111,6 +116,12 @@ async function createProfileShellIfMissing(uid: string) {
 }
 
 export default function AuthCallback() {
+  const { session: ctxSession } = useAuth();
+  const ctxSessionRef = useRef(ctxSession);
+  useEffect(() => {
+    ctxSessionRef.current = ctxSession;
+  }, [ctxSession]);
+
   const navigate = useNavigate();
   const [msg, setMsg] = useState('인증 처리 중 ...');
 
@@ -134,8 +145,20 @@ export default function AuthCallback() {
 
     (async () => {
       const href = window.location.href;
-
-      const hasCode = href.includes('code=');
+      const urlObj = new URL(href);
+      
+      // Parse params from both Query and Hash
+      const queryParams = urlObj.searchParams;
+      const hashParams = new URLSearchParams(urlObj.hash.replace(/^#/, ''));
+      
+      // Helper to get param from either source (Query takes precedence, or Hash?)
+      // Supabase usually sends code in Query for PKCE, but Hash for Implicit.
+      const getParam = (key: string) => queryParams.get(key) || hashParams.get(key);
+      
+      const type = getParam('type');
+      const code = getParam('code');
+      
+      const hasCode = !!code;
       const hasHashToken = href.includes('#access_token=');
       const hasTokenHash = href.includes('token_hash=');
 
@@ -145,42 +168,74 @@ export default function AuthCallback() {
         return;
       }
 
-      // 세션 대기 (최대 2초)
-      for (let i = 0; i < 20; i++) {
+      // 세션 대기 (최대 4초)
+      for (let i = 0; i < 40; i++) {
         const { data } = await supabase.auth.getSession();
         if (data.session) break;
         await new Promise(r => setTimeout(r, 100));
       }
 
-      const { data } = await supabase.auth.getSession();
-      const u = data.session?.user;
+      // 최종 세션 확인
+      let { data: { session } } = await supabase.auth.getSession();
+      
+      // 세션이 없고 code 파라미터가 있다면 수동 교환 시도
+      if (!session && hasCode && code) {
+        try {
+          const { data: exData, error: exErr } = await supabase.auth.exchangeCodeForSession(code);
+          if (!exErr && exData.session) {
+            session = exData.session;
+          }
+        } catch (e: any) {
+          // ignore error
+        }
+      }
 
-      // 세션 없으면 무조건 /signin (이메일 인증 완료 케이스)
+      const u = session?.user;
+
+      // 여전히 세션 없으면 에러 화면 표시 대신 로그인 페이지로 이동
       if (!u) {
-        navigate('/signin', { replace: true, state: { emailVerified: true } });
+        navigate('/signin', { replace: true });
         return;
       }
 
-      const provider = (u.app_metadata?.provider as string | undefined) ?? 'email';
+      // -----------------------------------------------------------------
+      // 분기 로직 수정: Hybrid Check
+      // 1. 소셜 계정 포함 여부 확인 (identities)
+      // 2. URL type=signup 여부 확인
+      // -> 소셜 아이디가 있으면 type=signup이 있어도 소셜 로그인으로 처리 (강제 로그아웃 방지)
+      // -----------------------------------------------------------------
+      const identities = u.identities ?? [];
+      const hasSocial = identities.some(id => id.provider && id.provider !== 'email');
+      
+      // 이메일 가입 흐름으로 간주하려면: type이 signup이고 && 소셜 계정이 없어야 함
+      const isEmailSignup = (type === 'signup') && !hasSocial;
 
-      if (provider === 'email') {
-        // 이메일: 프로필 생성 → 로그아웃 → /signin
+      if (isEmailSignup) {
+        // [이메일 가입 흐름]
+        // 1. 드래프트 기반 프로필 생성
         try {
           await ensureProfileFromDraft(u.id, u.email);
         } catch (e) {
-          console.warn('[AuthCallback] ensureProfileFromDraft error', e);
+          // console.warn('[AuthCallback] ensureProfileFromDraft error', e);
         }
 
+        // 2. 로그아웃 (이메일 인증만 마치고 다시 로그인 유도)
         try {
           await supabase.auth.signOut();
         } catch {}
 
-        // 즉시 signin으로 이동 (finalhome 거치지 않음)
+        // 3. 로그인 페이지로
         navigate('/signin', { replace: true, state: { emailVerified: true } });
         return;
       }
 
-      // 소셜: 프로필 셸 생성 전/후 온보딩 여부 체크
+      // [소셜 로그인 / 그 외 흐름]
+      // Context가 동기화될 때까지 대기 (RequireAuth 통과 위해) - 최대 4초
+      for (let i = 0; i < 40; i++) {
+        if (ctxSessionRef.current) break;
+        await new Promise(r => setTimeout(r, 100));
+      }
+
       // 1. 이미 프로필이 있는지 확인
       const { data: existingProfile } = await supabase
         .from('profiles')
@@ -189,19 +244,19 @@ export default function AuthCallback() {
         .maybeSingle();
 
       if (existingProfile?.is_onboarded) {
-        // 이미 온보딩 완료된 유저 → 메인으로 직행 (깜빡임 방지)
+        // 이미 온보딩 완료된 유저 → 메인으로
         navigate('/sns', { replace: true });
         return;
       }
 
       // 2. 프로필 없거나 온보딩 미완료 → 셸 생성 시도 후 위자드로
       try {
-        // 이미 존재하면 내부에서 skip하므로 안전
-        await createProfileShellIfMissing(u.id);
+        await createProfileShellIfMissing(u);
       } catch (e) {
         console.warn('[AuthCallback] createProfileShellIfMissing error', e);
       }
 
+      // 소셜 전용 회원가입(추가 정보 입력) 페이지로 이동
       navigate('/signup/social', { replace: true, state: { from: 'oauth' } });
     })();
   }, [navigate]);
@@ -212,7 +267,7 @@ export default function AuthCallback() {
         <TimerIcon className="w-6 h-6 animate-pulse" aria-hidden />
       </div>
       <h2 className="text-xl font-semibold mb-2">인증 페이지</h2>
-      <div className="text-gray-600">{msg}</div>
+      <div className="text-gray-600 whitespace-pre-wrap px-4">{msg}</div>
     </div>
   );
 }

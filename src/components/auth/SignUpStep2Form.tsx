@@ -7,6 +7,8 @@ import InputField from './InputField';
 import { useTranslation } from 'react-i18next';
 import { useNicknameValidator } from '@/hooks/useNicknameValidator';
 import NicknameInputField from '@/components/common/NicknameInputField';
+import { RECOVERY_QUESTIONS, type RecoveryQuestion } from '@/types/signup';
+import SelectField from './SelectField';
 
 const EMAIL_ASCII_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 const NON_ASCII_RE = /[^\x00-\x7F]/;
@@ -87,6 +89,10 @@ export type FormData = {
   birth: Date | null;
   birthYmd?: string | null;
   country: string;
+  // Recovery 정보 (필수)
+  recoveryQuestion: RecoveryQuestion | '';
+  recoveryAnswer: string;
+  recoveryEmail: string; // 임시 이메일 (입력은 선택이지만 빈 문자열로라도 저장)
 };
 
 export default function SignUpStep2Form({
@@ -115,6 +121,9 @@ export default function SignUpStep2Form({
     value?.birth ? toYMDLocal(value.birth) : (value?.birthYmd ?? null),
   );
   const [country, setCountry] = useState(value?.country ?? '');
+  const [recoveryQuestion, setRecoveryQuestion] = useState<RecoveryQuestion | ''>(value?.recoveryQuestion ?? '');
+  const [recoveryAnswer, setRecoveryAnswer] = useState(value?.recoveryAnswer ?? '');
+  const [recoveryEmail, setRecoveryEmail] = useState(value?.recoveryEmail ?? '');
 
   useEffect(() => {
     if (!value) return;
@@ -126,6 +135,9 @@ export default function SignUpStep2Form({
     setBirth(value.birth ?? null);
     setBirthYmd(value.birth ? toYMDLocal(value.birth) : (value.birthYmd ?? null));
     setCountry(value.country ?? '');
+    setRecoveryQuestion(value.recoveryQuestion ?? '');
+    setRecoveryAnswer(value.recoveryAnswer ?? '');
+    setRecoveryEmail(value.recoveryEmail ?? '');
     
     // Initialize validator state for existing nickname
     if (value.nickname) {
@@ -160,6 +172,9 @@ export default function SignUpStep2Form({
         birth,
         birthYmd,
         country,
+        recoveryQuestion,
+        recoveryAnswer,
+        recoveryEmail,
       });
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -192,13 +207,15 @@ export default function SignUpStep2Form({
   }, [submitAttempted]);
 
   const snapshot: FormData = useMemo(
-    () => ({ email, pw, confirmPw, nickname, gender, birth, birthYmd, country }),
-    [email, pw, confirmPw, nickname, gender, birth, birthYmd, country],
+    () => ({ email, pw, confirmPw, nickname, gender, birth, birthYmd, country, recoveryQuestion, recoveryAnswer, recoveryEmail }),
+    [email, pw, confirmPw, nickname, gender, birth, birthYmd, country, recoveryQuestion, recoveryAnswer, recoveryEmail],
   );
 
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [emailChecking, setEmailChecking] = useState(false);
   const [emailCheckResult, setEmailCheckResult] = useState<'available' | 'taken' | ''>('');
+  const [recoveryEmailChecking, setRecoveryEmailChecking] = useState(false);
+  const [recoveryEmailCheckResult, setRecoveryEmailCheckResult] = useState<'available' | 'taken' | '' | 'same_as_primary'>('');
   
   // Nickname checking and result are managed by hook basically, but we need to integrate with form submission flow logic
 
@@ -233,6 +250,24 @@ export default function SignUpStep2Form({
       newErr.birth = t('validation.age_restriction');
     }
     if (!country) newErr.country = t('validation.country_select');
+
+    // Recovery 정보 검증
+    if (!recoveryQuestion) newErr.recoveryQuestion = t('validation.recovery_question_required');
+    if (!recoveryAnswer.trim()) {
+      newErr.recoveryAnswer = t('validation.recovery_answer_required');
+    } else if (recoveryAnswer.trim().length < 2) {
+      newErr.recoveryAnswer = t('validation.recovery_answer_too_short');
+    }
+    // Recovery Email 검증 (필출)
+    if (!recoveryEmail.trim()) {
+      newErr.recoveryEmail = t('validation.recovery_email_invalid'); // 또는 새로운 required 키
+    } else {
+      const tempEmailMsg = validateEmailField(recoveryEmail, t);
+      if (tempEmailMsg) newErr.recoveryEmail = t('validation.recovery_email_invalid');
+      if (!tempEmailMsg && recoveryEmail === email) {
+        newErr.recoveryEmail = t('validation.recovery_email_same_as_primary');
+      }
+    }
 
     if (withDupHints) {
       // 이메일 중복 힌트는 이메일 가입에서만
@@ -303,6 +338,43 @@ export default function SignUpStep2Form({
       onDupChecked('nickname', nickname, true);
     }
   };
+
+  const checkRecoveryEmailStrict = async (): Promise<'available' | 'taken' | 'error' | 'same_as_primary'> => {
+    // Basic format check
+    const tempEmailMsg = validateEmailField(recoveryEmail, t);
+    if (tempEmailMsg) {
+       setErrors(prev => ({ ...prev, recoveryEmail: tempEmailMsg }));
+       return 'error';
+    }
+    if (recoveryEmail === email) {
+       setErrors(prev => ({ ...prev, recoveryEmail: t('validation.recovery_email_same_as_primary') }));
+       return 'same_as_primary';
+    }
+    try {
+      setRecoveryEmailChecking(true);
+      const { data, error } = await supabase.rpc('check_email_exists_strict', { _email: recoveryEmail.trim() });
+      setRecoveryEmailChecking(false);
+      
+      if (error) return 'error';
+      return data === true ? 'taken' : 'available';
+    } catch {
+      setRecoveryEmailChecking(false);
+      return 'error';
+    }
+  };
+
+  const handleRecoveryEmailCheck = async () => {
+    const res = await checkRecoveryEmailStrict();
+    if (res === 'taken') {
+       setRecoveryEmailCheckResult('taken');
+       setErrors(prev => ({ ...prev, recoveryEmail: t('signup.error_email_taken') }));
+    } else if (res === 'available') {
+       setRecoveryEmailCheckResult('available');
+       setErrors(prev => ({ ...prev, recoveryEmail: undefined }));
+    } else {
+       setRecoveryEmailCheckResult('');
+    }
+  };
   
   // Hook에서 에러 발생 시 Form 에러 업데이트
   useEffect(() => {
@@ -340,6 +412,16 @@ export default function SignUpStep2Form({
       setEmailCheckResult(eRes === 'available' ? 'available' : eRes === 'taken' ? 'taken' : '');
       // nRes is boolean (true if available)
 
+      // Recovery Email Dup Check (Strict: Check against both Primary and Recovery)
+      let rEmailRes = recoveryEmailCheckResult;
+      
+      if (!rEmailRes && recoveryEmail.trim()) {
+         const directRes = await checkRecoveryEmailStrict();
+         if (directRes === 'taken') rEmailRes = 'taken';
+         else if (directRes === 'same_as_primary') rEmailRes = 'same_as_primary';
+         else if (directRes === 'available') rEmailRes = 'available';
+      }
+
       if (eRes === 'taken') {
         setErrors(prev => ({ ...prev, email: t('signup.error_email_taken') }));
         return;
@@ -347,6 +429,15 @@ export default function SignUpStep2Form({
       if (eRes === 'error') {
         setErrors(prev => ({ ...prev, email: t('signup.error_email_check_retry') }));
         return;
+      }
+      // NEW: Block if recovery email starts with existing primary email
+      if (rEmailRes === 'taken') {
+        setErrors(prev => ({ ...prev, recoveryEmail: t('validation.email_taken') }));
+        return;
+      }
+      if (rEmailRes === 'same_as_primary') {
+         // Error is already set by checkRecoveryEmailStrict
+         return;
       }
       
       if (!nRes) {
@@ -363,8 +454,11 @@ export default function SignUpStep2Form({
   };
 
   return (
-    <section className="bg-white p-4 sm:p-6 md:p-8 shadow dark:bg-secondary">
-      <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-5 dark:text-gray-100">
+    <section className="bg-white p-4 xs:p-5 sm:p-6 md:p-8 shadow dark:bg-secondary rounded-2xl">
+      <h2 
+        className="text-xl xs:text-[19px] sm:text-2xl font-bold text-gray-800 mb-5 xs:mb-3 dark:text-gray-100"
+        style={{ overflowWrap: 'break-word' }}
+      >
         {t('signup.step2_title')}
       </h2>
 
@@ -389,20 +483,18 @@ export default function SignUpStep2Form({
             signupKind === 'social'
               ? {
                   readOnly: true,
-                  tabIndex: -1, // 탭 포커스 차단
-                  onFocus: e => e.currentTarget.blur(), // 포커스 들어와도 즉시 해제
-                  onMouseDown: e => e.preventDefault(), // 마우스 포커스 차단
-                  onKeyDown: e => e.preventDefault(), // 키입력 방지
-                  // 크기 유지: 클래스는 안 건드리고 색상만 인라인 스타일로
+                  tabIndex: -1,
+                  onFocus: e => e.currentTarget.blur(),
+                  onMouseDown: e => e.preventDefault(),
+                  onKeyDown: e => e.preventDefault(),
                   style: {
-                    backgroundColor: 'rgb(243 244 246)', // bg-gray-100
-                    color: 'rgb(107 114 128)', // text-gray-500
-                    // 필요하면 포커스 테두리만 제거(크기 영향 없음)
+                    backgroundColor: 'rgb(243 244 246)',
+                    color: 'rgb(107 114 128)',
                     outline: 'none',
                     cursor: 'default',
                   },
                 }
-              : undefined
+              : { placeholder: ' ' }
           }
         />
 
@@ -422,20 +514,18 @@ export default function SignUpStep2Form({
             signupKind === 'social'
               ? {
                   readOnly: true,
-                  tabIndex: -1, // 탭 포커스 차단
-                  onFocus: e => e.currentTarget.blur(), // 포커스 들어와도 즉시 해제
-                  onMouseDown: e => e.preventDefault(), // 마우스 포커스 차단
-                  onKeyDown: e => e.preventDefault(), // 키입력 방지
-                  // 크기 유지: 클래스는 안 건드리고 색상만 인라인 스타일로
+                  tabIndex: -1,
+                  onFocus: e => e.currentTarget.blur(),
+                  onMouseDown: e => e.preventDefault(),
+                  onKeyDown: e => e.preventDefault(),
                   style: {
-                    backgroundColor: 'rgb(243 244 246)', // bg-gray-100
-                    color: 'rgb(107 114 128)', // text-gray-500
-                    // 필요하면 포커스 테두리만 제거(크기 영향 없음)
+                    backgroundColor: 'rgb(243 244 246)',
+                    color: 'rgb(107 114 128)',
                     outline: 'none',
                     cursor: 'default',
                   },
                 }
-              : undefined
+              : { placeholder: ' ' }
           }
         />
 
@@ -455,20 +545,18 @@ export default function SignUpStep2Form({
             signupKind === 'social'
               ? {
                   readOnly: true,
-                  tabIndex: -1, // 탭 포커스 차단
-                  onFocus: e => e.currentTarget.blur(), // 포커스 들어와도 즉시 해제
-                  onMouseDown: e => e.preventDefault(), // 마우스 포커스 차단
-                  onKeyDown: e => e.preventDefault(), // 키입력 방지
-                  // 크기 유지: 클래스는 안 건드리고 색상만 인라인 스타일로
+                  tabIndex: -1,
+                  onFocus: e => e.currentTarget.blur(),
+                  onMouseDown: e => e.preventDefault(),
+                  onKeyDown: e => e.preventDefault(),
                   style: {
-                    backgroundColor: 'rgb(243 244 246)', // bg-gray-100
-                    color: 'rgb(107 114 128)', // text-gray-500
-                    // 필요하면 포커스 테두리만 제거(크기 영향 없음)
+                    backgroundColor: 'rgb(243 244 246)',
+                    color: 'rgb(107 114 128)',
                     outline: 'none',
                     cursor: 'default',
                   },
                 }
-              : undefined
+              : { placeholder: ' ' }
           }
         />
 
@@ -538,13 +626,86 @@ export default function SignUpStep2Form({
           }}
           error={!!errors.country}
         />
+
+        {/* 이메일 찾기 섹션 */}
+        <div className="mt-6 xs:mt-4 pt-6 xs:pt-4 border-t border-gray-200 dark:border-gray-700">
+          <h3 
+            className="text-lg xs:text-[17px] font-semibold text-gray-800 dark:text-gray-100 mb-1"
+          >
+            {t('recovery.section_title')}
+          </h3>
+          <p 
+            className="text-sm xs:text-[13px] text-gray-500 dark:text-gray-400 mb-4 xs:mb-3"
+            style={{ overflowWrap: 'break-word' }}
+          >
+            {t('recovery.section_description')}
+          </p>
+
+          <div className="flex flex-col gap-4 xs:gap-3">
+            {/* 질문 선택 */}
+            <SelectField
+              id="recovery-question"
+              label={t('recovery.question_label')}
+              value={recoveryQuestion}
+              onChange={v => {
+                setRecoveryQuestion(v as RecoveryQuestion);
+                setErrors(prev => ({ ...prev, recoveryQuestion: undefined }));
+                emit({ ...snapshot, recoveryQuestion: v as RecoveryQuestion });
+              }}
+              options={RECOVERY_QUESTIONS.map(q => ({ value: q, label: t(q) }))}
+              error={errors.recoveryQuestion}
+            />
+
+            {/* 답변 입력 */}
+            <InputField
+              id="recovery-answer"
+              label={t('recovery.answer_label')}
+              value={recoveryAnswer}
+              onChange={v => {
+                setRecoveryAnswer(v);
+                setErrors(prev => ({ ...prev, recoveryAnswer: undefined }));
+                emit({ ...snapshot, recoveryAnswer: v });
+              }}
+              error={errors.recoveryAnswer}
+              inputProps={{
+                placeholder: ' '
+              }}
+            />
+
+            {/* 보조 이메일 */}
+            <div>
+              <InputField
+                id="recovery-email"
+                label={t('recovery.temp_email_label')}
+                type="email"
+                value={recoveryEmail}
+                onChange={v => {
+                  setRecoveryEmail(v);
+                  setErrors(prev => ({ ...prev, recoveryEmail: undefined }));
+                  setRecoveryEmailCheckResult('');
+                  emit({ ...snapshot, recoveryEmail: v });
+                }}
+                isChecking={recoveryEmailChecking}
+                checkResult={recoveryEmailCheckResult}
+                onCheck={handleRecoveryEmailCheck}
+                error={errors.recoveryEmail}
+                inputProps={{
+                  placeholder: ' '
+                }}
+              />
+              <p className="mt-1.5 text-[11px] xs:text-[10.5px] text-gray-500 dark:text-gray-400 ml-3">
+                {t('recovery.temp_email_description')}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="flex justify-between sm:justify-end gap-2 sm:gap-3 mt-6">
+      <div className="flex justify-between sm:justify-end gap-2 sm:gap-3 mt-6 xs:mt-4">
         <button
           type="button"
           onClick={onBack}
-          className="bg-gray-100 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:opacity-80 transition-colors dark:bg-neutral-500 dark:text-gray-100"
+          className="bg-gray-100 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:opacity-80 transition-colors dark:bg-neutral-500 dark:text-gray-100 xs:text-[14px] xs:py-1.5"
         >
           {t('signup.btn_previous')}
         </button>
@@ -552,7 +713,7 @@ export default function SignUpStep2Form({
           type="button"
           onClick={handleNext}
           disabled={emailChecking || nickValidator.checking}
-          className="bg-[var(--ara-primary)] text-white font-semibold py-2 px-4 rounded-lg hover:opacity-85 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-[var(--ara-primary)] text-white font-semibold py-2 px-4 rounded-lg hover:opacity-85 transition-colors disabled:opacity-50 disabled:cursor-not-allowed xs:text-[14px] xs:py-1.5"
         >
           {t('signup.btn_next_step')}
         </button>

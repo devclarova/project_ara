@@ -120,7 +120,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       .from('profiles')
       .select('deleted_at, banned_until')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (error || !data) return;
 

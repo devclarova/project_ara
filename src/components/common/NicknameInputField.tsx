@@ -76,7 +76,7 @@ export default function NicknameInputField({
         {...inputFieldProps}
       />
       {value && (
-        <p className="text-[11px] text-gray-500 mt-1 ml-3">
+        <p className="text-[11px] xs:text-[10.5px] text-gray-500 mt-1 ml-3">
           {t('signup.nickname_detected_lang')}{' '}
           <span className="font-medium">{langLabel(detectedLang) || t('signup.nickname_lang_unknown')}</span>
           {detectedLang ? ` · ${t('signup.nickname_hint', { min: minLen, max: maxLen })}` : ''}

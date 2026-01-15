@@ -796,8 +796,18 @@ hr {
 
 /* ===== React Quill Styles ===== */
 /* 텍스트 정렬 */
+
 .ql-align-center {
   text-align: center !important;
+}
+
+/* ===== Scrollbar Hide Utility ===== */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
 }
 .ql-align-right {
   text-align: right !important;

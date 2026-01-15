@@ -65,15 +65,21 @@ export default function SignUpStep1Consent({ onNext, value, onChange }: Props) {
   };
 
   return (
-    <section className="bg-white p-4 sm:p-6 md:p-8 shadow overflow-x-hidden dark:bg-secondary">
-      <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1 dark:text-gray-100">
+    <section className="bg-white p-4 xs:p-3 sm:p-6 md:p-8 shadow dark:bg-secondary">
+      <h2 
+        className="text-xl xs:text-[19px] sm:text-2xl font-bold text-gray-800 mb-1 dark:text-gray-100"
+        style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}
+      >
         {t('signup.step1_title')}
       </h2>
-      <p className="text-gray-500 mb-4 sm:mb-5 dark:text-gray-400">
+      <p 
+        className="text-gray-500 xs:text-[13px] mb-4 xs:mb-3 sm:mb-5 dark:text-gray-400"
+        style={{ overflowWrap: 'break-word' }}
+      >
         {t('signup.step1_desc')}
       </p>
 
-      <div className="grid grid-cols-[1fr,auto] gap-x-4">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 xs:gap-x-1">
         <AgreeRow label={t('signup.agree_all')} checked={allSelected} onChange={handleAll} />
         {/* 인디케이터 표현은 CheckboxSquare 내부 visualState로 처리해도 됨 */}
         <div className="col-span-2 h-px bg-gray-100 dark:bg-gray-700 my-1" />
@@ -118,7 +124,7 @@ export default function SignUpStep1Consent({ onNext, value, onChange }: Props) {
         />
       </div>
 
-      <div className="mt-6 flex w-full justify-end">
+      <div className="mt-6 xs:mt-4 flex w-full justify-end">
         <button
           disabled={!allRequired}
           onClick={() => {
@@ -127,6 +133,7 @@ export default function SignUpStep1Consent({ onNext, value, onChange }: Props) {
           }}
           className={[
             'bg-[var(--ara-primary)] text-white font-semibold rounded-lg px-4 py-2 sm:px-5 sm:py-2.5 transition-opacity',
+            'text-sm xs:text-[14px] sm:text-base',
             'max-w-full',
             !allRequired ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-85',
           ].join(' ')}
