@@ -8,19 +8,21 @@ type Props = {
   current: Step;
   onStepChange?: (next: Step) => void;
   guard?: (from: Step, to: Step) => boolean | Promise<boolean>;
-  onBeforeChange?: (from: Step, to: Step) => void | Promise<void>;
 };
 
-// 경유 애니메이션을 위한 시퀀스 상태
 type AnimSeq = {
-  path: number[]; // 지나갈 커넥터 인덱스들: [0] = 1-2, [1] = 2-3
+  path: number[];
   dir: 'forward' | 'backward';
-  step: number; // 지금 재생 중인 path 인덱스
-  tick: number; // 키 리셋용
+  step: number;
+  tick: number;
 } | null;
 
-export default function SignUpStepper({ current, onStepChange, guard, onBeforeChange }: Props) {
+const STEP_SIZE = 28;
+const STEP_COL = 'minmax(48px, auto)';
+
+export default function SignUpStepper({ current, onStepChange, guard }: Props) {
   const { t } = useTranslation();
+
   const steps = [
     { n: 1 as Step, label: t('signup.step_agreement') },
     { n: 2 as Step, label: t('signup.step_info') },
@@ -31,14 +33,14 @@ export default function SignUpStepper({ current, onStepChange, guard, onBeforeCh
   const [anim, setAnim] = useState<AnimSeq>(null);
   const [pendingTarget, setPendingTarget] = useState<Step | null>(null);
 
-  // prev→current 이동 시, 지나갈 커넥터 경로 계산
   useEffect(() => {
     const prev = prevRef.current;
     if (prev === current) return;
-    const dir: 'forward' | 'backward' = current > prev ? 'forward' : 'backward';
 
+    const dir = current > prev ? 'forward' : 'backward';
     const from = Math.min(prev, current);
     const to = Math.max(prev, current);
+
     const forwardPath = Array.from({ length: to - from }, (_, i) => from - 1 + i);
     const path = dir === 'forward' ? forwardPath : [...forwardPath].reverse();
 
@@ -46,43 +48,34 @@ export default function SignUpStepper({ current, onStepChange, guard, onBeforeCh
     prevRef.current = current;
   }, [current]);
 
-  // 버튼 클릭 처리 (1↔3 점프 시 2를 실제 경유)
   const go = async (next: Step) => {
     if (next === current) return;
 
-    const tryMove = async (from: Step, to: Step) => {
+    const canMove = async (from: Step, to: Step) => {
       const ok = (await guard?.(from, to)) ?? true;
-      if (!ok) return false;
-      onStepChange?.(to);
-      return true;
+      if (ok) onStepChange?.(to);
+      return ok;
     };
 
-    // 1↔3 점프 → 2 경유
     if (Math.abs(next - current) === 2) {
       setPendingTarget(next);
-      await tryMove(current, 2);
+      await canMove(current, 2);
       return;
     }
 
-    // 인접 이동
-    await tryMove(current, next);
+    await canMove(current, next);
   };
 
-  // 커넥터 하나의 애니메이션이 끝났을 때
   const handleConnectorDone = async () => {
     setAnim(prev => {
       if (!prev) return null;
       const nextStep = prev.step + 1;
-      if (nextStep >= prev.path.length) return null; // 시퀀스 종료
+      if (nextStep >= prev.path.length) return null;
       return { ...prev, step: nextStep, tick: Date.now() + nextStep };
     });
 
-    const a = anim;
-    if (!a) return;
-    const finished = a.step + 1 >= a.path.length;
-
-    // 전체 경로가 끝났고 pending이 있으면 최종 목적지로 이동
-    if (finished && pendingTarget != null) {
+    if (!anim) return;
+    if (anim.step + 1 >= anim.path.length && pendingTarget) {
       const target = pendingTarget;
       setPendingTarget(null);
       const ok = (await guard?.(2, target)) ?? true;
@@ -91,82 +84,77 @@ export default function SignUpStepper({ current, onStepChange, guard, onBeforeCh
   };
 
   return (
-    <div
-      aria-label={t('signup.stepper_aria')}
-      className="grid grid-cols-[auto_1fr_auto_1fr_auto] items-center w-full mb-4 sm:mb-6"
-    >
-      {steps.map((s, i) => {
-        const isActive = current === s.n;
-        const isDone = current > s.n;
-        const isLast = i === steps.length - 1;
+    <div className="w-full max-w-[380px] mx-auto mt-4 mb-2 p-1">
+      <div
+        className="grid items-start"
+        style={{
+          gridTemplateColumns: `${STEP_COL} 1fr ${STEP_COL} 1fr ${STEP_COL}`,
+        }}
+      >
+        {steps.map((s, i) => {
+          const isActive = current === s.n;
+          const isDone = current > s.n;
+          const isLast = i === steps.length - 1;
 
-        return (
-          <div key={s.n} className="contents">
-            {/* 버튼 */}
-            <button
-              type="button"
-              onClick={() => void go(s.n)}
-              className={[
-                'group flex items-center gap-2 sm:gap-3 select-none focus:outline-none',
-                isLast ? 'justify-self-end text-right' : '',
-                isActive
-                  ? 'text-black dark:text-white'
-                  : isDone
-                    ? 'text-gray-800 dark:text-gray-200'
-                    : 'text-gray-500 dark:text-gray-400',
-              ].join(' ')}
-              aria-current={isActive ? 'step' : undefined}
-            >
-              <span
-                className={[
-                  'grid place-items-center w-7 h-7 sm:w-8 sm:h-8 rounded-md border',
-                  'font-semibold text-xs sm:text-sm transition-all',
-                  isActive
-                    ? 'border-[var(--ara-primary)] text-[var(--ara-primary)] ring-2 ring-[var(--ara-ring)] bg-white dark:bg-neutral-900'
-                    : isDone
-                      ? 'border-gray-400 bg-gray-50 dark:bg-neutral-800 text-gray-900 dark:text-gray-100'
-                      : 'border-gray-300 bg-white dark:bg-neutral-900 text-gray-500',
-                ].join(' ')}
-              >
-                {s.n}
-              </span>
+          return (
+            <div key={s.n} className="contents">
+              {/* Step */}
+              <div className="flex flex-col items-center pb-1">
+                <button
+                  type="button"
+                  onClick={() => void go(s.n)}
+                  className="flex flex-col items-center"
+                >
+                  <span
+                    className={[
+                      'grid place-items-center w-6 h-6 rounded-md border text-xs font-semibold',
+                      'ring-offset-2',
+                      isActive
+                        ? 'border-[var(--ara-primary)] text-[var(--ara-primary)] ring-2 ring-[var(--ara-ring)]'
+                        : isDone
+                        ? 'border-gray-400 bg-gray-50 text-gray-900'
+                        : 'border-gray-300 bg-white text-gray-500',
+                    ].join(' ')}
+                  >
+                    {s.n}
+                  </span>
 
-              <span
-                className={[
-                  'font-medium text-sm sm:text-base transition-colors truncate',
-                  isActive ? 'text-gray-900 dark:text-white' : '',
-                ].join(' ')}
-              >
-                {s.label}
-              </span>
-            </button>
+                  <span className="mt-2 text-[11px] text-center leading-tight text-gray-500">
+                    {s.label}
+                  </span>
+                </button>
+              </div>
 
-            {/* 커넥터 */}
-            {!isLast && (
-              <Connector
-                index={i}
-                done={current > i + 1}
-                anim={
-                  anim && anim.path[anim.step] === i ? { dir: anim.dir, tick: anim.tick } : null
-                }
-                onDone={handleConnectorDone}
-              />
-            )}
-          </div>
-        );
-      })}
+              {/* Connector */}
+              {!isLast && (
+                <div className="flex items-center h-6 px-1">
+                  <Connector
+                    done={current > i + 1}
+                    anim={
+                      anim && anim.path[anim.step] === i
+                        ? { dir: anim.dir, tick: anim.tick }
+                        : null
+                    }
+                    onDone={handleConnectorDone}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-/** 커넥터(구분선) */
+/* ================= Connector ================= */
+
+
 function Connector({
-  index,
   done,
   anim,
   onDone,
 }: {
-  index: number;
   done: boolean;
   anim: { dir: 'forward' | 'backward'; tick: number } | null;
   onDone: () => void | Promise<void>;
@@ -174,20 +162,21 @@ function Connector({
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [trackW, setTrackW] = useState(0);
 
-  // ✅ 선 색상 동일
-  const trackColor = useMemo(() => (done ? 'var(--ara-primary)' : 'rgba(107,114,128,0.7)'), [done]);
+  const trackColor = useMemo(
+    () => (done ? 'var(--ara-primary)' : 'rgba(107,114,128,0.5)'),
+    [done]
+  );
 
-  // ✅ 화면 너비에 따라 화살표/이동량만 살짝 조절
-  const [sizes, setSizes] = useState({ head: 16, lift: 8, shorten: 2 });
+  const [sizes, setSizes] = useState({ head: 16 });
   useEffect(() => {
     const update = () => {
       const w = window.innerWidth;
       if (w >= 768) {
-        setSizes({ head: 16, lift: 8, shorten: 2 }); // md 이상: 기존 값
+        setSizes({ head: 16 });
       } else if (w >= 640) {
-        setSizes({ head: 14, lift: 7, shorten: 2 }); // sm~md: 약간 축소
+        setSizes({ head: 14 });
       } else {
-        setSizes({ head: 12, lift: 6, shorten: 1 }); // <sm: 조금 더 축소
+        setSizes({ head: 12 });
       }
     };
     update();
@@ -196,7 +185,27 @@ function Connector({
   }, []);
 
   const headPx = sizes.head;
-  const liftPx = sizes.lift;
+  // SVG viewBox is 0..12.
+  // Forward: Tip at 9, Tail at 3.
+  // Backward: Tip at 3, Tail at 9.
+  // We want visual tip/tail to touch 0 or trackW.
+  // Scale factor = headPx / 12.
+  // Visual offset = 3 * (headPx / 12) = 0.25 * headPx.
+  // Visual width = (9-3) * scale = 0.5 * headPx.
+  //
+  // Forward (>):
+  // Start: Tail at 0. x + 0.25*h = 0 => x = -0.25*h
+  // End: Tip at W. x + 0.75*h = W => x = W - 0.75*h
+  //
+  // Backward (<):
+  // Start: Tail at W. x + 0.75*h = W => x = W - 0.75*h
+  // End: Tip at 0. x + 0.25*h = 0 => x = -0.25*h
+
+  const offsetStart = -0.25 * headPx;
+  const offsetEnd = trackW - 0.75 * headPx;
+
+  const startX = anim?.dir === 'forward' ? offsetStart : offsetEnd;
+  const endX = anim?.dir === 'forward' ? offsetEnd : offsetStart;
 
   useEffect(() => {
     const el = trackRef.current;
@@ -205,54 +214,33 @@ function Connector({
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
-    window.addEventListener('resize', update);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener('resize', update);
-    };
+    return () => ro.disconnect();
   }, []);
 
-  const [show, setShow] = useState(false);
-  useEffect(() => {
-    if (!anim) return;
-    setShow(true);
-  }, [anim?.tick]);
-
-  const startX = anim?.dir === 'forward' ? -headPx / 2 : trackW - headPx / 2;
-  const endX =
-    anim?.dir === 'forward' ? trackW - headPx / 2 - sizes.shorten : -headPx / 2 + sizes.shorten;
-
   return (
-    <div className="relative w-[60px] sm:w-[70px] md:w-[105px] justify-self-center">
+    <div className="relative w-full h-[1.5px]">
       <div
         ref={trackRef}
-        className="h-[2px] rounded w-full"
+        className="absolute inset-0 top-1/2 -translate-y-1/2"
         style={{ backgroundColor: trackColor }}
-      />
-      <AnimatePresence>
-        {anim && show && trackW > 0 && (
-          <motion.div
-            key={`${index}-${anim.tick}`}
-            className="absolute left-0 w-full pointer-events-none"
-            style={{ top: `calc(50% - ${liftPx}px)` }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-          >
+      >
+        <AnimatePresence>
+          {anim && trackW > 0 && (
             <motion.span
-              className="absolute inline-flex items-center justify-center"
-              style={{ width: headPx, height: headPx, color: trackColor }}
+              key={anim.tick}
+              className="absolute inline-flex items-center justify-center pointer-events-none"
+              style={{
+                width: headPx,
+                height: headPx,
+                color: trackColor,
+                top: `calc(50% - ${headPx / 2}px)`, // center vert
+              }}
               initial={{ x: startX }}
               animate={{ x: endX }}
-              transition={{ duration: 0.55, ease: 'easeInOut' }}
-              onAnimationComplete={() => {
-                setShow(false);
-                void onDone();
-              }}
-              aria-hidden
+              transition={{ duration: 0.45, ease: 'easeInOut' }}
+              onAnimationComplete={() => void onDone()}
             >
-              {anim?.dir === 'forward' ? (
+              {anim.dir === 'forward' ? (
                 <svg width={headPx} height={headPx} viewBox="0 0 12 12" fill="none">
                   <polyline
                     points="3,2 9,6 3,10"
@@ -274,9 +262,9 @@ function Connector({
                 </svg>
               )}
             </motion.span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

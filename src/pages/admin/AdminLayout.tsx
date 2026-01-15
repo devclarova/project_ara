@@ -64,6 +64,31 @@ const AdminLayout = () => {
     };
 
     fetchAdminProfile();
+
+    // Realtime Check for Admin Status Revocation
+    const channel = supabase
+      .channel(`admin_check_${user!.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `user_id=eq.${user!.id}`,
+        },
+        async (payload) => {
+          const newProfile = payload.new as { is_admin: boolean | null };
+          if (!newProfile.is_admin) {
+            toast.error(t('admin.permission_revoked', '관리자 권한이 해제되었습니다.'));
+            await handleLogout();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const handleLogout = async () => {
@@ -166,7 +191,7 @@ const AdminLayout = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden md:ml-64">
         {/* Header */}
-        <header className="h-14 sm:h-16 bg-secondary/80 backdrop-blur border-b border-gray-300 dark:border-gray-600 flex items-center justify-between px-2 sm:px-4 md:px-6 sticky top-0 z-40">
+        <header className="h-14 sm:h-16 bg-secondary/80 backdrop-blur border-b border-gray-300 dark:border-gray-600 flex items-center justify-between px-3 sm:px-4 md:px-6 sticky top-0 z-40">
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-1">
             <button 
               className="md:hidden text-muted-foreground hover:text-foreground p-1 flex-shrink-0"
@@ -203,7 +228,7 @@ const AdminLayout = () => {
         </header>
 
         {/* Dynamic Content Area */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 sm:p-4 md:p-6 lg:p-8 bg-background w-full max-w-full box-border">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 sm:px-4 sm:py-6 md:p-6 lg:p-8 bg-background w-full max-w-full box-border">
             <Outlet />
         </main>
       </div>

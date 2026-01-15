@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
+import { Home, X } from 'lucide-react';
 
 import SignUpStep1Consent from '@/components/auth/SignUpStep1Consent';
 import SignUpStep2Form, { type FormData } from '@/components/auth/SignUpStep2Form';
@@ -92,7 +93,7 @@ export default function SignUpPage() {
   const back = () => goTo(step === 3 ? 2 : 1);
 
   // 레이아웃 마진/패딩
-  const wrapperPad = 'pt-6 sm:pt-8 pb-6';
+  const wrapperPad = 'pt-6 max-[449px]:pt-4 sm:pt-8 pb-6 max-[449px]:pb-4';
 
   const title = signupKind === 'social' ? t('signup.title_social') : t('signup.title_email');
 
@@ -101,45 +102,53 @@ export default function SignUpPage() {
       className={`min-h-auto mt- md:min-h-auto w-full bg-white dark:bg-background
                      flex justify-center items-start ${wrapperPad} overflow-y-auto`}
     >
-      <div className="w-full max-w-md sm:max-w-lg md:max-w-2xl px-4 sm:px-6 md:px-8">
-        <div className="mb-3 sm:mb-4 grid grid-cols-3 items-center">
-          <div className="col-start-2 justify-self-center">
-            <h1 className="text-2xl pb-4 sm:text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-gray-100">
+      <div className="w-full max-w-md sm:max-w-lg md:max-w-2xl px-4 xs:px-2.5 sm:px-6 md:px-8">
+        <div className="relative mb-3 xs:mb-2 sm:mb-4 flex items-center justify-center min-h-[40px] sm:min-h-[48px]">
+          {/* 중앙 타이틀 (절대 위치로 중앙 고정) - Title flows naturally but constrained */}
+          <div className="relative z-0 px-12 xs:px-10 text-center mx-auto max-w-full">
+            <h1 
+              className="text-2xl xs:text-[20px] sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100"
+              style={{ wordBreak: 'keep-all', overflowWrap: 'break-word' }}
+            >
               {title}
             </h1>
           </div>
 
-          {/* 오른쪽: 액션 버튼 */}
-          <div className="col-start-3 justify-self-end">
+          {/* 오른쪽: 액션 버튼 (절대 위치) */}
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 z-10">
             {signupKind === 'social' ? (
               <button
                 type="button"
                 onClick={handleSkipSocial}
-                className="inline-flex items-center gap-1.5 rounded-2xl px-3.5 py-1.5 text-sm font-medium
+                className="inline-flex items-center gap-1.5 max-[449px]:gap-1 rounded-2xl max-[449px]:rounded-xl px-3.5 max-[449px]:px-2.5 py-1.5 text-sm max-[449px]:text-xs font-medium
                    border border-black/10 dark:border-white/10
                    text-gray-800 dark:text-gray-200
                    bg-primary/30 dark:bg-primary/70 backdrop-blur
                    shadow-sm hover:shadow transition-all duration-200
                    hover:bg-primary/50 hover:dark:bg-primary/80 hover:from-sky-400/10 hover:to-indigo-500/10
-                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-0"
+                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-0
+                   whitespace-nowrap"
                  aria-label="다음에 하기"
               >
-                {t('signup.later')}
+                <X size={16} className="xs:w-4 xs:h-4 sm:w-5 sm:h-5" />
+                <span className="xs:hidden">{t('signup.later')}</span>
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleGoHome}
-                className="inline-flex items-center gap-1.5 rounded-2xl px-3.5 py-1.5 text-sm font-medium
+                className="inline-flex items-center gap-1.5 max-[449px]:gap-1 rounded-2xl max-[449px]:rounded-xl px-3.5 max-[449px]:px-2.5 py-1.5 text-sm max-[449px]:text-xs font-medium
                    border border-black/10 dark:border-white/10
                    text-gray-800 dark:text-gray-200
                    bg-gray-300/30 dark:bg-gray-300/10 backdrop-blur
                    shadow-sm hover:shadow transition-all duration-200
                    hover:bg-gray-300/50 hover:dark:bg-gray-300/30 hover:from-sky-400/10 hover:to-indigo-500/10
-                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-0"
+                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-0
+                   whitespace-nowrap"
                 aria-label="홈으로"
               >
-                {t('signup.go_home')}
+                <Home size={16} className="xs:w-4 xs:h-4 sm:w-5 sm:h-5" />
+                <span className="xs:hidden">{t('signup.go_home')}</span>
               </button>
             )}
           </div>
@@ -219,6 +228,9 @@ export default function SignUpPage() {
                       birth={form.birth}
                       country={form.country}
                       consents={consents ?? undefined}
+                      recoveryQuestion={form.recoveryQuestion || ''}
+                      recoveryAnswer={form.recoveryAnswer || ''}
+                      recoveryEmail={form.recoveryEmail || ''}
                       onBack={back}
                       onDone={() => {
                         /* 후속 처리 훅/라우팅 등 추가 지점 */

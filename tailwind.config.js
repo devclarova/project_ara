@@ -6,6 +6,8 @@ export default {
     extend: {
       // ✅ 여기만 새로 추가
       screens: {
+        xs: { max: '449px' }, // 450px 미만 구간
+        desktop: { min: '450px' }, // 450px 이상 구간 (데스크톱/태블릿)
         mid: { min: '767px', max: '1023px' }, // 767~1023px 구간
       },
 

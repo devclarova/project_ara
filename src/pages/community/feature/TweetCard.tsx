@@ -199,7 +199,7 @@ export default function TweetCard({
   /** 트윗 작성자 국적 / 국기 + 작성자 profileId 로드 */
   useEffect(() => {
     const fetchAuthorCountry = async () => {
-      if (!user.username || user.username === 'undefined') return;
+      if (!user.username || user.username === 'undefined' || user.username === 'anonymous') return;
       try {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')

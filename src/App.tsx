@@ -227,8 +227,9 @@ function AppInner() {
               <Route path="/signin" element={<SignInPage />} />
             </Route>
 
+            <Route path="/signup/social" element={<SignUpWizard mode="social" />} />
+
             <Route element={<RequireAuth />}>
-              <Route path="/signup/social" element={<SignUpWizard mode="social" />} />
               <Route element={<OnboardingWall />}>
                 <Route path="/study/:contents/:episode/:scene?" element={<StudyPage />} />
                 <Route path="/settings" element={<ProfileSettings />} />

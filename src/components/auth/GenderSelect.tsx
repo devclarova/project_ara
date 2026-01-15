@@ -53,10 +53,12 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
             ? '#D1D5DB' // 🌙 다크 모드 보더-gray-300
             : '#D1D5DB'; // ☀️ 기존 라이트 동일(혹은 '#E5E7EB' 써도 됨)
 
+      const isXs = typeof window !== 'undefined' && window.innerWidth < 450;
+
       return {
         ...provided,
-        minHeight: 48,
-        height: 48,
+        minHeight: isXs ? 44 : 48,
+        height: isXs ? 44 : 48,
         borderRadius: 14,
         border: `1px solid ${baseBorderColor}`,
         outline: 'none',
@@ -77,13 +79,16 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
       };
     },
 
-    valueContainer: (provided: any) => ({
-      ...provided,
-      height: 48,
-      padding: 0,
-      display: 'flex',
-      alignItems: 'center',
-    }),
+    valueContainer: (provided: any) => {
+      const isXs = typeof window !== 'undefined' && window.innerWidth < 450;
+      return {
+        ...provided,
+        height: isXs ? 44 : 48,
+        padding: 0,
+        display: 'flex',
+        alignItems: 'center',
+      };
+    },
     input: (provided: any) => ({
       ...provided,
       margin: 0,
@@ -94,10 +99,13 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
       ...provided,
       color: isDark ? '#F3F4F6' : '#111827',
     }),
-    indicatorsContainer: (provided: any) => ({
-      ...provided,
-      height: 48,
-    }),
+    indicatorsContainer: (provided: any) => {
+      const isXs = typeof window !== 'undefined' && window.innerWidth < 450;
+      return {
+        ...provided,
+        height: isXs ? 44 : 48,
+      };
+    },
     dropdownIndicator: (provided: any) => ({
       ...provided,
       marginLeft: 8,
@@ -156,13 +164,13 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
         openMenuOnFocus
       />
       <label
-        className={`absolute left-3 px-1 bg-white/95 rounded transition-all dark:bg-secondary
+        className={`absolute left-3 px-1 bg-white/95 rounded transition-all dark:bg-secondary pointer-events-none
     ${
       isFocused
         ? '-top-2 text-xs text-primary'
         : value
           ? '-top-2 text-xs text-gray-400'
-          : 'top-3 text-sm text-gray-400'
+          : 'top-3 xs:top-2.5 text-sm xs:text-[14px] text-gray-400'
     }
   `}
       >

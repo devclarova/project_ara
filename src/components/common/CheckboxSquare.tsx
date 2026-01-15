@@ -42,7 +42,7 @@ export default function CheckboxSquare({
     <label
       htmlFor={inputId}
       className={[
-        'flex items-center gap-3 cursor-pointer select-none text-gray-800 dark:text-gray-100',
+        'flex items-start gap-3 xs:gap-1.5 cursor-pointer select-none text-gray-800 dark:text-gray-100', 
         className,
       ].join(' ')}
       style={vars}
@@ -60,7 +60,7 @@ export default function CheckboxSquare({
              ✅ 포커스 링은 peer-focus-visible로 그림
              ✅ aria-hidden으로 스크린리더 숨김 (이제 포커스 불가라 안전) */}
       <span
-        className="w-5 h-5 rounded-[6px] border grid place-items-center
+        className="mt-0.5 w-5 h-5 xs:w-[18px] xs:h-[18px] rounded-[6px] border grid place-items-center flex-shrink-0
                    bg-[var(--ara-checkbox-bg)] border-[var(--ara-checkbox-border)]
                    pointer-events-none
                    dark:bg-gray-700 dark:border-gray-500 dark:[--ara-checkbox-check:#ffffff]"
@@ -68,7 +68,7 @@ export default function CheckboxSquare({
         aria-hidden="true"
       >
         {state === 'checked' && (
-          <svg className="w-4 h-4 opacity-100" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <svg className="w-4 h-4 xs:w-3.5 xs:h-3.5 opacity-100" viewBox="0 0 20 20" fill="none" aria-hidden="true">
             <path
               d="M5 10.5l3 3 7-7"
               stroke="var(--ara-checkbox-check)"
@@ -79,7 +79,7 @@ export default function CheckboxSquare({
           </svg>
         )}
         {state === 'indeterminate' && (
-          <svg className="w-4 h-4 opacity-100" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <svg className="w-4 h-4 xs:w-3.5 xs:h-3.5 opacity-100" viewBox="0 0 20 20" fill="none" aria-hidden="true">
             <path
               d="M5 10h10"
               stroke="var(--ara-checkbox-check)"
@@ -89,14 +89,14 @@ export default function CheckboxSquare({
           </svg>
         )}
         {state === 'unchecked' && (
-          <svg className="w-4 h-4 opacity-0" viewBox="0 0 20 20" aria-hidden="true" />
+          <svg className="w-4 h-4 xs:w-3.5 xs:h-3.5 opacity-0" viewBox="0 0 20 20" aria-hidden="true" />
         )}
       </span>
 
-      <span className="font-semibold">
+      <span className="font-semibold text-base xs:text-[14px] min-w-0 flex-1" style={{ overflowWrap: 'break-word' }}>
         {label}{' '}
         {required && (
-          <em className="not-italic text-red-600 dark:text-red-400 ml-1 whitespace-nowrap">
+          <em className="not-italic text-red-600 dark:text-red-400 ml-1 xs:ml-0.5 whitespace-nowrap text-xs">
             {t('signup.required_mark')}
           </em>
         )}
