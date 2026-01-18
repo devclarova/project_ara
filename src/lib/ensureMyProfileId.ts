@@ -37,28 +37,50 @@ export async function ensureMyProfileId(): Promise<string> {
     return prof.id as string;
   }
 
-  // 3️⃣ 없으면 새 프로필 생성
-  //    id를 authId로 넣을지 여부는 스키마에 따라 다르지만,
-  //    id 컬럼이 UUID이면 그대로 authId로 넣는 게 제일 깔끔합니다.
+  // 3️⃣ 없으면 새 프로필 생성 (Race condition 방지를 위해 Upsert or Retry)
+  const randomNickname = `user_${authId.slice(0, 8)}`;
   const insertRow = {
     id: authId,
     user_id: authId,
-    nickname: '사용자',
+    nickname: randomNickname,
     avatar_url: null,
+    gender: 'Male',
+    birthday: '2000-01-01',
+    country: 'Unknown',
   };
 
+  // Trigger 충돌 방지를 위해, INSERT 실패시 무시하고 재조회
   const { data: created, error: insErr } = await supabase
     .from('profiles')
-    .insert([insertRow])
+    .upsert(insertRow, { onConflict: 'user_id', ignoreDuplicates: true })
     .select('id')
-    .single();
+    .maybeSingle(); // .single() 대신 maybeSingle 사용
 
-  if (insErr) throw insErr;
-  if (!created?.id) throw new Error('프로필 생성 실패');
+  if (insErr) {
+    // 409 Conflict 등 에러 발생 시, 단순히 다시 조회 시도
+    console.warn('[ensureMyProfileId] Upsert error (likely race condition), retrying fetch...', insErr);
+  }
 
-  // 캐시 업데이트
-  cachedAuthId = authId;
-  cachedProfileId = created.id;
+  // 생성 후 또는 무시 후 다시 조회 (확실한 ID 확보)
+  if (created?.id) {
+    cachedAuthId = authId;
+    cachedProfileId = created.id;
+    return created.id;
+  }
 
-  return created.id as string;
+  // 재조회
+  const { data: retryProf } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('user_id', authId)
+    .maybeSingle();
+
+  if (retryProf?.id) {
+    cachedAuthId = authId;
+    cachedProfileId = retryProf.id;
+    return retryProf.id;
+  }
+  
+  throw new Error('프로필을 불러오거나 생성할 수 없습니다.');
+
 }

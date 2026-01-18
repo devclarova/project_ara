@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Check } from 'lucide-react';
 
-type CheckResult = 'available' | 'taken' | '';
+type CheckResult = 'available' | 'taken' | '' | 'same_as_primary';
 
 export type InputFieldProps = {
   id: string;
@@ -44,7 +45,7 @@ const InputField: React.FC<InputFieldProps> = ({
   return (
     <div className={`relative ${className ?? ''}`}>
       {/* 인풋 전용 고정 높이 래퍼 */}
-      <div className="relative h-12">
+      <div className="relative h-12 xs:h-11">
         <input
           id={id}
           type={type}
@@ -53,7 +54,9 @@ const InputField: React.FC<InputFieldProps> = ({
           onBlur={onBlur}
           disabled={disabled}
           placeholder=" "
-          className={`peer w-full h-12 px-4 pr-20 border text-gray-900 text-sm dark:text-gray-100
+          className={`peer w-full h-12 xs:h-11 px-4 
+            ${hasCheck ? 'pr-24' : 'pr-4'} 
+            border text-sm xs:text-[14px] text-gray-900 dark:text-gray-100
             ${error ? 'ara-focus--error' : 'ara-focus'} ara-rounded ${error ? '' : 'border-gray-300'}
             ${disabled 
               ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 border-gray-200 cursor-default' 
@@ -69,10 +72,10 @@ const InputField: React.FC<InputFieldProps> = ({
           htmlFor={id}
           className={`
             pointer-events-none absolute left-3 sm:left-4 px-1 rounded transition-all duration-150
-            ${value ? '-top-2 text-xs' : 'top-3 text-sm'}
+            ${value ? '-top-2 text-xs max-w-full' : `top-3 xs:top-3 text-sm xs:text-[11.5px] ${hasCheck ? 'max-w-[calc(100%-6.5rem)]' : 'max-w-[calc(100%-2rem)]'} truncate`}
             ${disabled
               ? 'bg-white dark:bg-secondary text-gray-400'
-              : 'bg-white/95 dark:bg-secondary text-gray-400 peer-focus:-top-2 peer-focus:text-xs peer-focus:text-primary'
+              : 'bg-white/95 dark:bg-secondary text-gray-400 peer-focus:-top-2 peer-focus:text-xs peer-focus:text-primary peer-focus:max-w-full'
             }
           `}
         >
@@ -86,8 +89,8 @@ const InputField: React.FC<InputFieldProps> = ({
             onClick={onCheck}
             disabled={isChecking || disabled}
             className={`absolute right-2 top-1/2 -translate-y-1/2
-              text-xs sm:text-sm font-medium rounded-lg px-2 py-1
-              transition-colors
+              text-xs xs:text-[10px] sm:text-sm font-medium rounded-lg px-1.5 py-1 xs:py-0.5
+              transition-colors whitespace-nowrap
               ${disabled
                 ? 'text-gray-400 border border-gray-300 pointer-events-none bg-gray-100 dark:bg-gray-800 dark:border-gray-700'
                 : 'text-primary border border-primary hover:bg-primary hover:text-white cursor-pointer'

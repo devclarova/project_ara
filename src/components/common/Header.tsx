@@ -624,7 +624,13 @@ function Header() {
         >
           <Avatar className="w-8 h-8">
             <AvatarImage src={headerAvatar} alt={displayNickname} />
-            <AvatarFallback>{displayNickname.charAt(0).toUpperCase()}</AvatarFallback>
+            <AvatarFallback>
+              {user ? (
+                displayNickname.charAt(0).toUpperCase()
+              ) : (
+                <User className="w-4 h-4 text-gray-400" />
+              )}
+            </AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <div className="relative inline-flex items-center">

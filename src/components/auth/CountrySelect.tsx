@@ -76,10 +76,11 @@ export default function CountrySelect({ value, onChange, error = false, isDisabl
           : isDark
             ? '#D1D5DB' // 다크: gray-300
             : '#D1D5DB'; // 라이트: 기존 톤 유지
+      const isXs = typeof window !== 'undefined' && window.innerWidth < 450;
       return {
         ...provided,
-        minHeight: 48,
-        height: 48,
+        minHeight: isXs ? 44 : 48,
+        height: isXs ? 44 : 48,
         padding: '0 12px',
         borderRadius: 14,
         border: `1px solid ${baseBorder}`,
@@ -103,13 +104,16 @@ export default function CountrySelect({ value, onChange, error = false, isDisabl
         },
       };
     },
-    valueContainer: provided => ({
-      ...provided,
-      height: 48,
-      padding: 0,
-      display: 'flex',
-      alignItems: 'center',
-    }),
+    valueContainer: provided => {
+      // const isXs = typeof window !== 'undefined' && window.innerWidth < 450;
+      return {
+        ...provided,
+        // height: isXs ? 44 : 48, // Remove fixed height causing misalignment
+        padding: '0 4px', // Adjust padding slightly
+        // display: 'flex', // Remove flex
+        // alignItems: 'center', // Remove alignment
+      };
+    },
     input: provided => ({
       ...provided,
       margin: 0,
@@ -120,11 +124,14 @@ export default function CountrySelect({ value, onChange, error = false, isDisabl
       ...provided,
       color: isDark ? '#9CA3AF' : '#111827', // 다크: gray-400
     }),
-    indicatorsContainer: provided => ({
-      ...provided,
-      height: 48,
-      color: isDark ? '#9CA3AF' : provided.color,
-    }),
+    indicatorsContainer: provided => {
+      const isXs = typeof window !== 'undefined' && window.innerWidth < 450;
+      return {
+        ...provided,
+        height: isXs ? 44 : 48,
+        color: isDark ? '#9CA3AF' : provided.color,
+      };
+    },
     dropdownIndicator: provided => ({
       ...provided,
       marginLeft: 8,
@@ -201,7 +208,7 @@ export default function CountrySelect({ value, onChange, error = false, isDisabl
         className="w-full"
         classNamePrefix="react-select"
         placeholder=" "
-        menuPlacement="top"
+        menuPlacement="auto"
         menuPosition="fixed"
         menuPortalTarget={typeof window !== 'undefined' ? document.body : null}
         menuShouldScrollIntoView
@@ -210,13 +217,13 @@ export default function CountrySelect({ value, onChange, error = false, isDisabl
       />
 
       <label
-        className={`absolute left-3 px-1 bg-white/95 rounded transition-all dark:bg-secondary
+        className={`absolute left-3 px-1 bg-white/95 rounded transition-all dark:bg-secondary pointer-events-none
           ${
             isFocused
               ? '-top-2 text-xs text-primary'
               : value
                 ? '-top-2 text-xs text-gray-400'
-                : 'top-3 text-sm text-gray-400'
+                : 'top-3 xs:top-2.5 text-sm xs:text-[14px] text-gray-400'
           }
         `}
       >

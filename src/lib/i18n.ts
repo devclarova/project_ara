@@ -66,12 +66,13 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: 'en',
+    // lng: 'ko', // Remove explicit language setting to allow detection
+    fallbackLng: 'ko',
     interpolation: {
       escapeValue: false, // react already safes from xss
     },
     detection: {
-      order: ['localStorage', 'navigator'],
+      order: ['localStorage', 'navigator'], // Use localStorage first, then browser language
       caches: ['localStorage'],
     },
   });

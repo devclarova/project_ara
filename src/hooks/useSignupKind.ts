@@ -11,7 +11,9 @@ export function useSignupKind() {
       try {
         const { data } = await supabase.auth.getSession();
         const provider = data.session?.user?.app_metadata?.provider ?? 'email';
-        if (mounted) setSignupKind(provider === 'email' ? 'email' : 'social');
+        const identities = data.session?.user?.identities ?? [];
+        const isSocial = provider !== 'email' || identities.some(id => id.provider !== 'email');
+        if (mounted) setSignupKind(isSocial ? 'social' : 'email');
       } catch {
         if (mounted) setSignupKind('email');
       }

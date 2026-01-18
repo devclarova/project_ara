@@ -29,10 +29,62 @@ export default function SignUpWizard({ mode = 'social' }: { mode?: 'social' }) {
       }
       const { data: prof } = await supabase
         .from('profiles')
-        .select('is_onboarded')
+        .select('is_onboarded, avatar_url')
         .eq('user_id', u.id)
         .maybeSingle();
-      if (prof?.is_onboarded) navigate('/studyList', { replace: true });
+
+      if (prof?.is_onboarded) {
+        navigate('/studyList', { replace: true });
+        return;
+      }
+
+      // 1순위: DB에 저장된 아바타
+      let initialAvatar = prof?.avatar_url;
+
+      // 2순위: 세션 메타데이터 (DB 트리거가 아직 안 돌았거나 실패했을 경우 대비)
+      if (!initialAvatar) {
+        const meta = u.user_metadata || {};
+        initialAvatar =
+          meta.avatar_url ||
+          meta.picture ||
+          meta.avatar ||
+          meta.profile_image_url ||
+          u.app_metadata?.avatar_url ||
+          null;
+      }
+
+      // 프리뷰 설정
+      if (initialAvatar) {
+        setProfileDraft(prev => ({ ...prev, preview: initialAvatar }));
+      }
+
+      // 소셜 닉네임 가져오기 (메타데이터 or auth 정보)
+      const meta = u.user_metadata || {};
+      const socialNick =
+        meta.nickname ||
+        meta.name ||
+        meta.full_name ||
+        meta.user_name ||
+        prof?.nickname ||
+        '';
+
+      if (socialNick) {
+        // Form 초기값 세팅 (닉네임만)
+        setForm(prev => ({
+          ...prev!, // prev가 null일 수도 있지만, 아래에서 초기화하므로 덮어씌움
+          // 기존 form이 없으면 기본 구조 생성
+          email: u.email || '',
+          pw: '',
+          confirmPw: '',
+          nickname: socialNick,
+          gender: '',
+          birth: null,
+          country: '',
+          recoveryQuestion: '',
+          recoveryAnswer: '',
+          recoveryEmail: '',
+        }));
+      }
     })();
   }, [navigate]);
 
@@ -197,6 +249,9 @@ export default function SignUpWizard({ mode = 'social' }: { mode?: 'social' }) {
                     birth={form.birth}
                     country={form.country}
                     consents={consents ?? undefined}
+                    recoveryQuestion={form.recoveryQuestion}
+                    recoveryAnswer={form.recoveryAnswer}
+                    recoveryEmail={form.recoveryEmail}
                     onBack={back}
                     onDone={() => {
                       /* 완료 시 행동은 컴포넌트 내에서 navigate 처리 */
