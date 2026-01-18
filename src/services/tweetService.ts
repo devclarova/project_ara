@@ -22,7 +22,7 @@ export const tweetService = {
       .select(
         `id, content, image_url, created_at, deleted_at,
         reply_count, like_count, view_count,
-        profiles:author_id (id, nickname, user_id, avatar_url, banned_until)`
+        profiles:author_id (id, nickname, user_id, avatar_url, banned_until)`,
       )
       .eq('author_id', userId)
       .order('created_at', { ascending: false })
@@ -35,32 +35,36 @@ export const tweetService = {
     return tweets
       .filter(t => !blockedUserIds.includes(t.profiles?.id ?? '')) // 필터링 (UUID 기준)
       .map(t => ({
-      type: 'post',
-      id: t.id,
-      user: {
-        id: t.profiles?.id ?? '00000000-0000-0000-0000-000000000000',
-        name: t.profiles?.nickname ?? 'Unknown',
-        username: t.profiles?.user_id ?? 'anonymous',
-        avatar: t.profiles?.avatar_url ?? '/default-avatar.svg',
-        banned_until: t.profiles?.banned_until ?? null,
-      },
-      content: t.content,
-      image: t.image_url || undefined,
-      timestamp: t.created_at,
-      deleted_at: (t as any).deleted_at,
-      stats: {
-        replies: t.reply_count ?? 0,
-        likes: t.like_count ?? 0,
-        views: t.view_count ?? 0,
-        retweets: 0,
-      },
-    }));
+        type: 'post',
+        id: t.id,
+        user: {
+          id: t.profiles?.id ?? '00000000-0000-0000-0000-000000000000',
+          name: t.profiles?.nickname ?? 'Unknown',
+          username: t.profiles?.user_id ?? 'anonymous',
+          avatar: t.profiles?.avatar_url ?? '/default-avatar.svg',
+          banned_until: t.profiles?.banned_until ?? null,
+        },
+        content: t.content,
+        image: t.image_url || undefined,
+        timestamp: t.created_at,
+        deleted_at: (t as any).deleted_at,
+        stats: {
+          replies: t.reply_count ?? 0,
+          likes: t.like_count ?? 0,
+          views: t.view_count ?? 0,
+          retweets: 0,
+        },
+      }));
   },
 
   /**
    * Fetch replies authored by a specific user
    */
-  async getReplies(userId: string, page: number, blockedUserIds: string[] = []): Promise<UIReply[]> {
+  async getReplies(
+    userId: string,
+    page: number,
+    blockedUserIds: string[] = [],
+  ): Promise<UIReply[]> {
     const from = page * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
@@ -70,6 +74,7 @@ export const tweetService = {
         `id,
         content,
         created_at,
+        updated_at,
         deleted_at,
         tweet_id,
         parent_reply_id,
@@ -91,31 +96,37 @@ export const tweetService = {
 
     return replies
       .filter(r => !blockedUserIds.includes(r.profiles?.id ?? '')) // 필터링 (UUID 기준)
-      .map(r => ({
-      type: 'reply',
-      id: r.id,
-      tweetId: r.tweet_id,
-      parent_reply_id: r.parent_reply_id ?? null,
-      root_reply_id: r.root_reply_id ?? null,
-      user: {
-        id: r.profiles?.id ?? '00000000-0000-0000-0000-000000000000',
-        name: r.profiles?.nickname ?? 'Unknown',
-        username: r.profiles?.user_id ?? 'anonymous',
-        avatar: r.profiles?.avatar_url ?? '/default-avatar.svg',
-        banned_until: r.profiles?.banned_until ?? null,
-      },
-      content: r.content,
-      parentTweet: r.tweets?.content, // for display context if needed
-      timestamp: r.created_at,
-      createdAt: r.created_at,
-      deleted_at: (r as any).deleted_at,
-      stats: {
-        replies: 0,
-        likes: Array.isArray(r.tweet_replies_likes) ? (r.tweet_replies_likes[0]?.count ?? 0) : 0,
-        views: 0,
-        retweets: 0,
-      },
-    } as UIReply));
+      .map(
+        r =>
+          ({
+            type: 'reply',
+            id: r.id,
+            tweetId: r.tweet_id,
+            parent_reply_id: r.parent_reply_id ?? null,
+            root_reply_id: r.root_reply_id ?? null,
+            user: {
+              id: r.profiles?.id ?? '00000000-0000-0000-0000-000000000000',
+              name: r.profiles?.nickname ?? 'Unknown',
+              username: r.profiles?.user_id ?? 'anonymous',
+              avatar: r.profiles?.avatar_url ?? '/default-avatar.svg',
+              banned_until: r.profiles?.banned_until ?? null,
+            },
+            content: r.content,
+            parentTweet: r.tweets?.content, // for display context if needed
+            timestamp: r.created_at,
+            createdAt: r.created_at,
+            updatedAt: r.updated_at ?? undefined,
+            deleted_at: (r as any).deleted_at,
+            stats: {
+              replies: 0,
+              likes: Array.isArray(r.tweet_replies_likes)
+                ? (r.tweet_replies_likes[0]?.count ?? 0)
+                : 0,
+              views: 0,
+              retweets: 0,
+            },
+          }) as UIReply,
+      );
   },
 
   /**
@@ -184,23 +195,33 @@ export const tweetService = {
     // Parallel fetch details
     const queries = [];
     if (postIds.length > 0) {
-        queries.push(
-        supabase.from('tweets').select(`
+      queries.push(
+        supabase
+          .from('tweets')
+          .select(
+            `
             id, content, image_url, created_at, deleted_at,
             reply_count, like_count, view_count,
             profiles(id, nickname, user_id, avatar_url, banned_until)
-        `).in('id', postIds)
-        );
+        `,
+          )
+          .in('id', postIds),
+      );
     }
     if (replyIds.length > 0) {
-        queries.push(
-        supabase.from('tweet_replies').select(`
-            id, content, created_at, tweet_id, deleted_at, parent_reply_id, root_reply_id,
+      queries.push(
+        supabase
+          .from('tweet_replies')
+          .select(
+            `
+            id, content, created_at, updated_at, tweet_id, deleted_at, parent_reply_id, root_reply_id,
             profiles(id, nickname, user_id, avatar_url, banned_until),
             tweet_replies_likes(count),
             tweets(content, author_id)
-        `).in('id', replyIds)
-        );
+        `,
+          )
+          .in('id', replyIds),
+      );
     }
 
     const results = await Promise.all(queries);
@@ -231,11 +252,11 @@ export const tweetService = {
             id: p.id,
             liked_at: item.likedAt,
             user: {
-            id: p.profiles?.id ?? '00000000-0000-0000-0000-000000000000',
-            name: p.profiles?.nickname ?? 'Unknown',
-            username: p.profiles?.user_id ?? 'anonymous',
-            avatar: p.profiles?.avatar_url ?? '/default-avatar.svg',
-            banned_until: p.profiles?.banned_until ?? null,
+              id: p.profiles?.id ?? '00000000-0000-0000-0000-000000000000',
+              name: p.profiles?.nickname ?? 'Unknown',
+              username: p.profiles?.user_id ?? 'anonymous',
+              avatar: p.profiles?.avatar_url ?? '/default-avatar.svg',
+              banned_until: p.profiles?.banned_until ?? null,
             },
             content: p.content,
             image: p.image_url,
@@ -260,17 +281,18 @@ export const tweetService = {
             root_reply_id: r.root_reply_id ?? null,
             liked_at: item.likedAt,
             user: {
-            id: r.profiles?.id ?? '00000000-0000-0000-0000-000000000000',
-            name: r.profiles?.nickname ?? 'Unknown',
-            username: r.profiles?.user_id ?? 'anonymous',
-            avatar: r.profiles?.avatar_url ?? '/default-avatar.svg',
-            banned_until: r.profiles?.banned_until ?? null,
+              id: r.profiles?.id ?? '00000000-0000-0000-0000-000000000000',
+              name: r.profiles?.nickname ?? 'Unknown',
+              username: r.profiles?.user_id ?? 'anonymous',
+              avatar: r.profiles?.avatar_url ?? '/default-avatar.svg',
+              banned_until: r.profiles?.banned_until ?? null,
             },
             content: r.content,
             parentTweet: r.tweets?.content,
             timestamp: r.created_at,
             createdAt: r.created_at,
             deleted_at: (r as any).deleted_at,
+            updatedAt: r.updated_at ?? undefined,
             stats: {
               replies: 0,
               likes: r.tweet_replies_likes?.[0]?.count ?? 0,
@@ -297,7 +319,7 @@ export const tweetService = {
         id, content, image_url, created_at, updated_at, deleted_at,
         reply_count, repost_count, like_count, bookmark_count, view_count,
         profiles (id, nickname, user_id, avatar_url, banned_until)
-      `
+      `,
       )
       .eq('id', tweetId)
       .single();
@@ -344,7 +366,7 @@ export const tweetService = {
     let query = supabase
       .from('tweet_replies')
       .select(
-        `id, content, created_at, deleted_at, parent_reply_id, root_reply_id, profiles:author_id (id, nickname, user_id, avatar_url, banned_until), tweet_replies_likes (count)`,
+        `id, content, created_at, updated_at, deleted_at, parent_reply_id, root_reply_id, profiles:author_id (id, nickname, user_id, avatar_url, banned_until), tweet_replies_likes (count)`,
       )
       .eq('tweet_id', tweetId)
       .order('created_at', { ascending: true });
@@ -380,9 +402,9 @@ export const tweetService = {
           },
           content: r.content,
           deleted_at: (r as any).deleted_at,
-
           timestamp: r.created_at,
           createdAt: r.created_at, // for sorting
+          updatedAt: r.updated_at ?? undefined,
           stats: {
             replies: 0,
             retweets: 0,
@@ -403,7 +425,7 @@ export const tweetService = {
     const { data, error } = await supabase
       .from('tweet_replies')
       .select(
-        `id, content, created_at, tweet_id, deleted_at, parent_reply_id, root_reply_id, profiles:author_id (id, nickname, user_id, avatar_url, banned_until), tweet_replies_likes (count)`,
+        `id, content, created_at, tweet_id, deleted_at, parent_reply_id, root_reply_id, profiles:author_id (id, nickname, user_id, avatar_url, banned_until), tweet_replies_likes (count), updated_at`,
       )
       .eq('parent_reply_id', parentId)
       .order('created_at', { ascending: true });
@@ -412,30 +434,36 @@ export const tweetService = {
 
     const replies = (data as unknown as ReplyQueryResponse[]) ?? [];
 
-    return replies.map(r => ({
-      type: 'reply',
-      id: r.id,
-      tweetId: r.tweet_id,
-      parent_reply_id: r.parent_reply_id ?? null,
-      root_reply_id: r.root_reply_id ?? null,
-      user: {
-        id: r.profiles?.id ?? '00000000-0000-0000-0000-000000000000',
-        name: r.profiles?.nickname ?? 'Unknown',
-        username: r.profiles?.user_id ?? 'anonymous',
-        avatar: r.profiles?.avatar_url ?? '/default-avatar.svg',
-        banned_until: r.profiles?.banned_until ?? null,
-      },
-      content: r.content,
-      deleted_at: (r as any).deleted_at,
+    return replies.map(
+      r =>
+        ({
+          type: 'reply',
+          id: r.id,
+          tweetId: r.tweet_id,
+          parent_reply_id: r.parent_reply_id ?? null,
+          root_reply_id: r.root_reply_id ?? null,
+          user: {
+            id: r.profiles?.id ?? '00000000-0000-0000-0000-000000000000',
+            name: r.profiles?.nickname ?? 'Unknown',
+            username: r.profiles?.user_id ?? 'anonymous',
+            avatar: r.profiles?.avatar_url ?? '/default-avatar.svg',
+            banned_until: r.profiles?.banned_until ?? null,
+          },
+          content: r.content,
+          deleted_at: (r as any).deleted_at,
 
-      timestamp: r.created_at,
-      createdAt: r.created_at,
-      stats: {
-        replies: 0,
-        retweets: 0,
-        likes: Array.isArray(r.tweet_replies_likes) ? (r.tweet_replies_likes[0]?.count ?? 0) : 0,
-        views: 0,
-      },
-    } as UIReply));
-  }
+          timestamp: r.created_at,
+          createdAt: r.created_at,
+          stats: {
+            replies: 0,
+            retweets: 0,
+            likes: Array.isArray(r.tweet_replies_likes)
+              ? (r.tweet_replies_likes[0]?.count ?? 0)
+              : 0,
+            views: 0,
+          },
+          updatedAt: r.updated_at,
+        }) as UIReply,
+    );
+  },
 };

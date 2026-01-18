@@ -1,22 +1,22 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import DOMPurify from 'dompurify';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
-import type { UIReply } from '@/types/sns';
-import TranslateButton from '@/components/common/TranslateButton';
-import { useTranslation } from 'react-i18next';
 import BlockButton from '@/components/common/BlockButton';
+import TranslateButton from '@/components/common/TranslateButton';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
+import type { UIReply } from '@/types/sns';
+import DOMPurify from 'dompurify';
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 // import ReportButton from '@/components/common/ReportButton'; // Unused
-import ReportModal from '@/components/common/ReportModal';
-import ModalImageSlider from './ModalImageSlider';
-import { formatRelativeTime, formatSmartDate } from '@/utils/dateUtils';
 import { BanBadge } from '@/components/common/BanBadge';
-import { useBlockedUsers } from '@/hooks/useBlockedUsers';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
+import ReportModal from '@/components/common/ReportModal';
+import { useBlockedUsers } from '@/hooks/useBlockedUsers';
+import { formatSmartDate } from '@/utils/dateUtils';
+import ModalImageSlider from './ModalImageSlider';
 
 function linkifyMentions(html: string) {
   if (/<a\b[^>]*>/.test(html)) return html;
@@ -50,8 +50,7 @@ function stripImagesAndEmptyLines(html: string) {
   return doc.body.innerHTML.trim();
 }
 
-const baseCardClasses =
-  'px-4 py-2 hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors';
+const baseCardClasses = 'px-4 py-2 hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors';
 
 interface ReplyCardProps {
   reply: UIReply;
@@ -138,28 +137,56 @@ export function ReplyCard({
     fetchAuthorCountry();
   }, [reply.user.username]);
 
-
   // Sync likeCount with props
   useEffect(() => {
     setLikeCount(reply.stats?.likes ?? 0);
   }, [reply.stats?.likes]);
 
-  // reply.content could be undefined in some types, fallback
-  const isSoftDeleted = !!reply.deleted_at;
-  const rawContent = (isSoftDeleted && !isAdminView) ? '관리자에 의해 삭제된 메시지입니다.' : (reply.content ?? '');
-  
   // 댓글 수정 기능
   const [isEditing, setIsEditing] = useState(false);
   const [draftText, setDraftText] = useState('');
-  const [currentContent, setCurrentContent] = useState(rawContent);
+
   const [isComposing, setIsComposing] = useState(false);
   const [editImages, setEditImages] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const safeContent = DOMPurify.sanitize(isEditing ? currentContent : rawContent, {
+
+  const isSoftDeleted = !!reply.deleted_at;
+
+  // rawContent는 초기값/동기화용으로만 두고
+  const rawContent =
+    isSoftDeleted && !isAdminView ? '관리자에 의해 삭제된 메시지입니다.' : (reply.content ?? '');
+
+  const [currentContent, setCurrentContent] = useState(rawContent);
+
+  // 실제 화면에 표시할 건 currentContent를 쓰기
+  const displayContent =
+    isSoftDeleted && !isAdminView ? '관리자에 의해 삭제된 메시지입니다.' : currentContent;
+
+  const safeContent = DOMPurify.sanitize(displayContent, {
     ADD_TAGS: ['iframe', 'video', 'source', 'img'],
     ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
   });
+
+  const safeFileName = (name: string) => {
+    const parts = name.split('.');
+    const ext = parts.length > 1 ? parts.pop() || 'jpg' : 'jpg';
+    const base = parts.join('.');
+    const cleanedBase = base
+      .replace(/\s+/g, '_')
+      .replace(/[^\w\-_.]/g, '_')
+      .replace(/_+/g, '_');
+    return `${cleanedBase.slice(0, 50)}.${ext}`;
+  };
+
+  const buildHtmlWithImages = (html: string, imgs: string[]) => {
+    const base = html || '';
+    if (imgs.length === 0) return base;
+    const imageHtml = imgs
+      .map(src => `<div class="tweet-img"><img src="${src}" alt="reply image" /></div>`)
+      .join('');
+    return `${base}${imageHtml}`;
+  };
 
   const visibleCount = 3;
   const [startIndex, setStartIndex] = useState(0);
@@ -306,7 +333,7 @@ export function ReplyCard({
     // Toggle optimistic
     const nextLiked = !liked;
     const nextCount = nextLiked ? likeCount + 1 : Math.max(0, likeCount - 1);
-    
+
     setLiked(nextLiked);
     setLikeCount(nextCount);
     onLike?.(reply.id, nextLiked ? 1 : -1);
@@ -320,7 +347,7 @@ export function ReplyCard({
           .eq('reply_id', reply.id)
           .eq('user_id', profileId);
         if (deleteError) throw deleteError;
-        
+
         toast.info(t('common.cancel_like', '좋아요를 취소했습니다'));
       } else {
         // 좋아요 추가
@@ -329,10 +356,10 @@ export function ReplyCard({
           user_id: profileId,
         });
         if (insertError) throw insertError;
-        
+
         // 토스트 메시지 (간단하게)
         toast.success(t('common.success_like'));
-        
+
         // 알림 생성 (본인 댓글이 아닐 때만)
         if (reply.user.username !== authUser.id) {
           const { data: receiverProfile, error: receiverError } = await supabase
@@ -381,7 +408,7 @@ export function ReplyCard({
   const handleAvatarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isDeletedUser) return;
-    
+
     if (onAvatarClick) {
       onAvatarClick(reply.user.username);
       return;
@@ -394,7 +421,18 @@ export function ReplyCard({
   const plainTextContent = stripImagesAndEmptyLines(safeContent);
   const safeContentWithoutImages = DOMPurify.sanitize(linkifyMentions(plainTextContent), {
     ADD_TAGS: ['iframe', 'video', 'source', 'a', 'span'],
-    ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls', 'href', 'target', 'class', 'data-mention'],
+    ADD_ATTR: [
+      'allow',
+      'allowfullscreen',
+      'frameborder',
+      'scrolling',
+      'src',
+      'controls',
+      'href',
+      'target',
+      'class',
+      'data-mention',
+    ],
   });
 
   // Helper 함수
@@ -424,32 +462,35 @@ export function ReplyCard({
       return;
     }
 
-    const nextText = draftText.trim();
-    if (!nextText) return;
+    const hasText = draftText.trim().length > 0;
+    const hasImages = editImages.length > 0;
 
-    const imgs = extractImageSrcs(currentContent);
-    const textHtml = plainTextToHtml(nextText);
-
-    const finalHtml =
-      imgs.length === 0
-        ? textHtml
-        : `${textHtml}${imgs.map(src => `<div class="tweet-img"><img src="${src}" alt="" /></div>`).join('')}`;
-
-    const { error } = await supabase
-      .from('tweet_replies')
-      .update({ content: finalHtml })
-      .eq('id', reply.id)
-      .eq('author_id', profileId);
-
-    if (error) {
-      console.error('댓글 편집 실패:', error.message);
-      toast.error(t('common.error_edit'));
+    if (!hasText && !hasImages) {
+      setShowDialog(true);
+      setShowMenu(false);
       return;
     }
 
-    setCurrentContent(finalHtml);
+    const textHtml = plainTextToHtml(draftText.trim());
+    const finalHtml = buildHtmlWithImages(textHtml, editImages);
+    const nowIso = new Date().toISOString();
+
+    const { data, error } = await supabase
+      .from('tweet_replies')
+      .update({ content: finalHtml, updated_at: nowIso })
+      .eq('id', reply.id)
+      .eq('author_id', profileId)
+      .select('content, updated_at')
+      .maybeSingle();
+
+    if (error) {
+      toast.error(error.message ?? t('common.error_edit'));
+      return;
+    }
+
+    setCurrentContent(data?.content ?? finalHtml);
+    setLocalUpdatedAt(data?.updated_at ?? nowIso);
     setIsEditing(false);
-    setShowMenu(false);
     toast.success(t('common.success_edit'));
   };
 
@@ -457,20 +498,102 @@ export function ReplyCard({
   const isMyReply = authUser?.id === reply.user.username;
   const isChildReply = Boolean(reply.parent_reply_id);
 
+  const createdAt =
+    reply.timestamp ||
+    (reply as any).created_at ||
+    (reply as any).createdAt ||
+    new Date().toISOString();
+
+  const incomingUpdatedAt = (reply as any).updated_at || (reply as any).updatedAt || null;
+
+  const [localUpdatedAt, setLocalUpdatedAt] = useState<string | null>(incomingUpdatedAt);
+
+  useEffect(() => {
+    setLocalUpdatedAt(incomingUpdatedAt);
+  }, [reply.id, incomingUpdatedAt]);
+
+  const toMs = (v: any) => {
+    if (!v) return null;
+    const ms = new Date(v).getTime();
+    return Number.isFinite(ms) ? ms : null;
+  };
+
+  const created = (reply as any).created_at || (reply as any).createdAt || reply.timestamp || null;
+  const edited = (reply as any).updated_at || (reply as any).updatedAt || localUpdatedAt || null;
+
+  const createdMs = toMs(created);
+  const editedMs = toMs(edited);
+
+  const isEdited = createdMs != null && editedMs != null && editedMs > createdMs + 1000;
+
   // Loading state during block check to prevent flicker
   if (isBlockedLoading) {
-    return <div className={baseCardClasses + " animate-pulse h-24 bg-gray-50 dark:bg-gray-900/10"} />;
+    return (
+      <div className={baseCardClasses + ' animate-pulse h-24 bg-gray-50 dark:bg-gray-900/10'} />
+    );
   }
 
   const containerClasses = `${baseCardClasses} ${
-    isHighlighted 
-      ? 'animate-highlight-blink' 
-      : 'bg-white dark:bg-background'
+    isHighlighted ? 'animate-highlight-blink' : 'bg-white dark:bg-background'
   }`;
+
+  const handleEditFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    if (!authUser) {
+      toast.error(t('auth.login_needed'));
+      return;
+    }
+    if (!e.target.files || e.target.files.length === 0) return;
+
+    setIsUploading(true);
+
+    try {
+      const selected = Array.from(e.target.files);
+      const uploadedUrls: string[] = [];
+
+      for (let i = 0; i < selected.length; i++) {
+        const file = selected[i];
+        if (!file.type.startsWith('image/')) continue;
+
+        const timestamp = Date.now() + i;
+        const fileName = `${authUser.id}_${timestamp}_${safeFileName(file.name)}`;
+        const filePath = `reply_images/${authUser.id}/${reply.tweetId}/${reply.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('tweet_media')
+          .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+        if (uploadError) {
+          console.error('댓글 이미지 업로드 실패:', uploadError.message);
+          continue;
+        }
+
+        const { data: urlData } = supabase.storage.from('tweet_media').getPublicUrl(filePath);
+        if (urlData?.publicUrl) uploadedUrls.push(urlData.publicUrl);
+      }
+
+      if (uploadedUrls.length > 0) {
+        setEditImages(prev => [...prev, ...uploadedUrls]);
+        toast.success('이미지 추가 완료!');
+      } else {
+        toast.error('이미지 업로드 실패');
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error('이미지 업로드 실패');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const isSaveDisabled = isUploading || (!draftText.trim() && editImages.length === 0);
 
   if (showMask) {
     return (
-      <div className={`${baseCardClasses} bg-gray-50 dark:bg-gray-900/40 relative overflow-hidden group/mask min-h-[100px] flex flex-col justify-center`}>
+      <div
+        className={`${baseCardClasses} bg-gray-50 dark:bg-gray-900/40 relative overflow-hidden group/mask min-h-[100px] flex flex-col justify-center`}
+      >
         <div className="flex items-center justify-between py-2">
           <div className="flex items-center space-x-3 opacity-60 grayscale">
             <div className="relative">
@@ -492,7 +615,7 @@ export function ReplyCard({
             </div>
           </div>
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               setIsUnmasked(true);
             }}
@@ -501,7 +624,7 @@ export function ReplyCard({
             {t('common.view_content', '내용보기')}
           </button>
         </div>
-        
+
         {/* Subtle glass effect pattern */}
         <div className="absolute inset-0 pointer-events-none opacity-[0.05] dark:opacity-[0.1] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:20px_20px]" />
       </div>
@@ -517,12 +640,12 @@ export function ReplyCard({
         ${depth > 0 ? 'bg-secondary/[0.02] dark:bg-primary/[0.01]' : 'bg-white dark:bg-background'}
         hover:bg-primary/[0.06] dark:hover:bg-primary/[0.08]
       `}
-      style={{ 
-        paddingLeft: 16 + depth * 40 // Base 16px + Depth Offset
+      style={{
+        paddingLeft: 16 + depth * 40, // Base 16px + Depth Offset
       }}
       onClick={e => {
         e.stopPropagation();
-        
+
         if (onClick) {
           onClick(reply.id, String(reply.tweetId));
           return;
@@ -564,14 +687,14 @@ export function ReplyCard({
           if (isParentLast) return null; // Ancestor ended, no line
 
           return (
-            <div 
+            <div
               key={`ancestor-${i}`}
               className="absolute top-0 bottom-0 w-[1px] bg-gray-300 dark:bg-gray-700 transition-colors duration-300 group-hover:bg-primary/40"
-              style={{ 
-                left: 16 + 20 + (i * 40),
+              style={{
+                left: 16 + 20 + i * 40,
                 top: -1,
-                bottom: -1
-              }} 
+                bottom: -1,
+              }}
             />
           );
         })}
@@ -595,20 +718,20 @@ export function ReplyCard({
         {depth > 0 && (
           <>
             {/* Vertical Backbone */}
-            <div 
+            <div
               className="absolute w-[1px] bg-gray-300 dark:bg-gray-700 transition-colors duration-300 group-hover:bg-primary/40"
-              style={{ 
+              style={{
                 left: 16 + 20 + (depth - 1) * 40,
                 top: -1, // Overlap previous card
                 bottom: isLastChild ? undefined : -1, // Overlap next card
                 height: isLastChild ? 10 : undefined, // -1 to 9 (overlaps curve starting at 8)
-              }} 
+              }}
             />
 
             {/* The L-Curve (Branch) */}
-            <div 
-              className="absolute border-l border-b border-gray-300 dark:border-gray-700 rounded-bl-[20px] transition-all duration-300 group-hover:border-primary/60" 
-              style={{ 
+            <div
+              className="absolute border-l border-b border-gray-300 dark:border-gray-700 rounded-bl-[20px] transition-all duration-300 group-hover:border-primary/60"
+              style={{
                 left: 16 + 20 + (depth - 1) * 40,
                 top: 8, // Derived from py-2 (8px)
                 width: 40,
@@ -623,21 +746,27 @@ export function ReplyCard({
           Drawn ONLY if this comment has replies or children.
         */}
         {(hasChildren || reply.stats.replies > 0) && (
-          <div 
+          <div
             className="absolute bottom-0 w-[1px] bg-gray-300 dark:bg-gray-700 transition-colors duration-300 group-hover:bg-primary/40"
-            style={{ 
+            style={{
               left: 16 + 20 + depth * 40,
               top: 28 + 20, // Starts 20px below avatar center (28px)
-              bottom: -1 // Overlap next card
-            }} 
+              bottom: -1, // Overlap next card
+            }}
           />
         )}
       </div>
 
       <div className="flex space-x-3 relative z-10">
-        <div onClick={handleAvatarClick} className={`cursor-pointer transition-transform duration-200 active:scale-95 z-20 ${isDeletedUser ? 'cursor-default' : ''}`}>
+        <div
+          onClick={handleAvatarClick}
+          className={`cursor-pointer transition-transform duration-200 active:scale-95 z-20 ${isDeletedUser ? 'cursor-default' : ''}`}
+        >
           <Avatar className="w-10 h-10 border-2 border-transparent group-hover:border-primary/20 shadow-sm transition-all duration-300 group-hover:shadow-md">
-            <AvatarImage src={reply.user.avatar || '/default-avatar.svg'} alt={isDeletedUser ? t('deleted_user') : reply.user.name} />
+            <AvatarImage
+              src={reply.user.avatar || '/default-avatar.svg'}
+              alt={isDeletedUser ? t('deleted_user') : reply.user.name}
+            />
             <AvatarFallback>{isDeletedUser ? '?' : reply.user.name.charAt(0)}</AvatarFallback>
           </Avatar>
         </div>
@@ -646,55 +775,56 @@ export function ReplyCard({
           {/* 상단 + 더보기 버튼 */}
           <div className="flex items-center justify-between relative" ref={menuRef}>
             <div className="flex items-center flex-wrap">
-            <div className="relative inline-flex items-center pr-1.5">
-              <span 
-                className={`font-bold text-gray-900 dark:text-gray-100 truncate ${isDeletedUser ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
-                onClick={handleAvatarClick}
-              >
-                {isDeletedUser ? t('deleted_user') : reply.user.name}
-              </span>
-              {!isDeletedUser && (
-                <OnlineIndicator 
-                  userId={reply.user.username} 
-                  size="sm" 
-                  className="absolute top-0.5 right-0 z-20 border-white dark:border-background border shadow-none"
-                />
+              <div className="relative inline-flex items-center pr-1.5">
+                <span
+                  className={`font-bold text-gray-900 dark:text-gray-100 truncate ${isDeletedUser ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
+                  onClick={handleAvatarClick}
+                >
+                  {isDeletedUser ? t('deleted_user') : reply.user.name}
+                </span>
+                {!isDeletedUser && (
+                  <OnlineIndicator
+                    userId={reply.user.username}
+                    size="sm"
+                    className="absolute top-0.5 right-0 z-20 border-white dark:border-background border shadow-none"
+                  />
+                )}
+              </div>
+              <BanBadge bannedUntil={reply.user.banned_until ?? null} size="xs" className="ml-1" />
+
+              {/* 작성자 국가 표시 (국기 또는 지구본) */}
+              {authorCountryFlagUrl && !isDeletedUser && (
+                <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 h-5 ml-1">
+                  <img
+                    src={authorCountryFlagUrl}
+                    alt={authorCountryName ?? '국가'}
+                    title={authorCountryName ?? ''}
+                    className="w-5 h-3.5 rounded-[2px] object-cover"
+                  />
+                </Badge>
               )}
+
+              {!authorCountryFlagUrl && authorCountryName && (
+                <Badge
+                  variant="secondary"
+                  className="flex items-center px-1 py-0.5 ml-1.5"
+                  title={authorCountryName}
+                >
+                  <span className="text-xs">🌐</span>
+                </Badge>
+              )}
+
+              <span className="mx-1 text-gray-500 dark:text-gray-400">·</span>
+              <span className="text-gray-500 dark:text-gray-400 text-sm">
+                {formatSmartDate(createdAt)}
+                {isEdited ? <span className="ml-1 text-xs text-gray-400">수정됨</span> : null}
+              </span>
             </div>
-            <BanBadge bannedUntil={reply.user.banned_until ?? null} size="xs" className="ml-1" />
-
-            {/* 작성자 국가 표시 (국기 또는 지구본) */}
-            {authorCountryFlagUrl && !isDeletedUser && (
-              <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 h-5 ml-1">
-                <img
-                  src={authorCountryFlagUrl}
-                  alt={authorCountryName ?? '국가'}
-                  title={authorCountryName ?? ''}
-                  className="w-5 h-3.5 rounded-[2px] object-cover"
-                />
-              </Badge>
-            )}
-
-            {!authorCountryFlagUrl && authorCountryName && (
-              <Badge
-                variant="secondary"
-                className="flex items-center px-1 py-0.5 ml-1.5"
-                title={authorCountryName}
-              >
-                <span className="text-xs">🌐</span>
-              </Badge>
-            )}
-
-            <span className="mx-1 text-gray-500 dark:text-gray-400">·</span>
-            <span className="text-gray-500 dark:text-gray-400 text-sm">
-              {formatSmartDate(reply.timestamp || reply.createdAt || (reply as any).created_at || new Date().toISOString())}
-            </span>
-          </div>
 
             <div className="flex items-center">
               {isAuthorBlocked && (
                 <button
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation();
                     setIsUnmasked(false);
                   }}
@@ -723,8 +853,12 @@ export function ReplyCard({
                     <button
                       onClick={e => {
                         e.stopPropagation();
+
+                        // 편집 시작 시점에 현재 content에서 이미지 + 텍스트를 분리해서 state에 넣기
+                        const imgs = extractImageSrcs(currentContent);
+                        setEditImages(imgs);
+
                         setDraftText(htmlToPlainText(currentContent));
-                        setEditImages(extractImageSrcs(currentContent));
                         setIsEditing(true);
                         setShowMenu(false);
                       }}
@@ -737,6 +871,7 @@ export function ReplyCard({
                       onClick={e => {
                         e.stopPropagation();
                         setShowDialog(true);
+                        setShowMenu(false);
                       }}
                       className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
                     >
@@ -766,102 +901,172 @@ export function ReplyCard({
               </div>
             )}
           </div>
-          
+
           {/* Report Modal */}
           <ReportModal
-             isOpen={showReportModal}
-             onClose={() => setShowReportModal(false)}
-             targetType="reply"
-             targetId={reply.id}
-             contentSnapshot={{
-               ...reply,
-               // Ensure essential fields are present in snapshot
-               id: reply.id,
-               content: reply.content,
-               user: reply.user,
-               timestamp: reply.timestamp,
-               stats: reply.stats,
-             }}
+            isOpen={showReportModal}
+            onClose={() => setShowReportModal(false)}
+            targetType="reply"
+            targetId={reply.id}
+            contentSnapshot={{
+              ...reply,
+              // Ensure essential fields are present in snapshot
+              id: reply.id,
+              content: reply.content,
+              user: reply.user,
+              timestamp: reply.timestamp,
+              stats: reply.stats,
+            }}
           />
 
-            <div className={`flex items-center gap-2 mt-1 ${isSoftDeleted ? 'italic text-gray-500 opacity-60' : ''}`}>
-              {isEditing ? (
-                <div className="w-full" onClick={e => e.stopPropagation()}>
-                  <textarea
-                    value={draftText}
-                    onChange={e => setDraftText(e.target.value)}
-                    rows={5}
-                    className="
+          <div
+            className={`flex items-center gap-2 mt-1 ${isSoftDeleted ? 'italic text-gray-500 opacity-60' : ''}`}
+          >
+            {isEditing ? (
+              <div className="w-full" onClick={e => e.stopPropagation()}>
+                <textarea
+                  value={draftText}
+                  onChange={e => setDraftText(e.target.value)}
+                  rows={5}
+                  className="
                       w-full resize-none rounded-2xl border border-gray-300 dark:border-gray-700
                       bg-gray-50 dark:bg-background px-3 py-2 text-sm
                       text-gray-900 dark:text-gray-100
                       focus:outline-none focus:ring-2 focus:ring-primary/60
                     "
-                    onCompositionStart={() => setIsComposing(true)}
-                    onCompositionEnd={() => setIsComposing(false)}
-                    onKeyDown={e => {
-                      if (isComposing) return;
+                  onCompositionStart={() => setIsComposing(true)}
+                  onCompositionEnd={() => setIsComposing(false)}
+                  onKeyDown={e => {
+                    if (isComposing) return;
 
-                      if (e.key === 'Escape') {
-                        e.preventDefault();
-                        setDraftText(htmlToPlainText(currentContent));
-                        setIsEditing(false);
-                        return;
-                      }
+                    if (e.key === 'Escape') {
+                      e.preventDefault();
+                      setDraftText(htmlToPlainText(currentContent));
+                      setIsEditing(false);
+                      return;
+                    }
 
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        saveEdit();
-                        return;
-                      }
-                    }}
-                  />
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      saveEdit();
+                      return;
+                    }
+                  }}
+                />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleEditFiles}
+                />
 
-                  <div className="mt-3 flex justify-end gap-2">
+                {editImages.length > 0 && (
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    {editImages.map((src, idx) => (
+                      <div
+                        key={`${src}-${idx}`}
+                        className="relative aspect-square overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700"
+                      >
+                        <img
+                          src={src}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          draggable={false}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setEditImages(prev => prev.filter((_, i) => i !== idx))}
+                          className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center"
+                          title="삭제"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="mt-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
                     <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                      className="px-3 py-2 rounded-full border text-sm hover:bg-gray-100 dark:hover:bg-white/10 disabled:opacity-50"
+                    >
+                      {isUploading ? '업로드 중...' : '이미지 추가'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = prompt('이미지 URL을 입력하세요');
+                        if (url) setEditImages(prev => [...prev, url]);
+                      }}
+                      className="px-3 py-2 rounded-full border text-sm hover:bg-gray-100 dark:hover:bg-white/10"
+                    >
+                      URL 추가
+                    </button>
+
+                    {editImages.length > 0 && (
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        이미지 {editImages.length}개
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
                       className="text-sm text-gray-500 hover:underline"
                       onClick={() => {
-                        setDraftText(htmlToPlainText(currentContent));
                         setIsEditing(false);
+                        setDraftText(htmlToPlainText(currentContent));
+                        setEditImages(extractImageSrcs(currentContent));
                       }}
                     >
                       취소
                     </button>
                     <button
+                      type="button"
                       onClick={saveEdit}
+                      disabled={isSaveDisabled}
                       className="px-4 py-2 rounded-full bg-primary text-white hover:bg-primary/80"
                     >
                       저장
                     </button>
                   </div>
                 </div>
-              ) : (
-                <>
-                  <div
-                    className="text-gray-900 dark:text-gray-100 whitespace-normal break-words leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: safeContentWithoutImages }}
-                    onClick={e => {
-                      const el = (e.target as HTMLElement)?.closest?.(
-                        '.mention-link',
-                      ) as HTMLElement | null;
-                      if (!el) return;
-                      const username = el.dataset.mention;
-                      if (!username) return;
-                      navigate(`/profile/${encodeURIComponent(username)}`);
-                    }}
+              </div>
+            ) : (
+              <>
+                <div
+                  className="text-gray-900 dark:text-gray-100 whitespace-normal break-words leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: safeContentWithoutImages }}
+                  onClick={e => {
+                    const el = (e.target as HTMLElement)?.closest?.(
+                      '.mention-link',
+                    ) as HTMLElement | null;
+                    if (!el) return;
+                    const username = el.dataset.mention;
+                    if (!username) return;
+                    navigate(`/profile/${encodeURIComponent(username)}`);
+                  }}
+                />
+                {/* 번역 버튼 */}
+                {!isSoftDeleted && plainTextContent.trim().length > 0 && (
+                  <TranslateButton
+                    text={plainTextContent}
+                    contentId={`reply_${reply.id}`}
+                    setTranslated={setTranslated}
+                    size="sm"
                   />
-                  {/* 번역 버튼 */}
-                  {!isSoftDeleted && plainTextContent.trim().length > 0 && (
-                    <TranslateButton
-                      text={plainTextContent}
-                      contentId={`reply_${reply.id}`}
-                      setTranslated={setTranslated}
-                      size="sm"
-                    />
-                  )}
-                </>
-              )}
-            </div>
+                )}
+              </>
+            )}
+          </div>
 
           {/* 번역 결과 */}
           {translated && (
@@ -871,58 +1076,61 @@ export function ReplyCard({
           )}
 
           {/* 이미지 미리보기 */}
-          {!showMask && (!isSoftDeleted || isAdminView) && contentImages.length > 0 && (
-            <div className="relative group mt-2">
-              <div className="grid grid-cols-3 gap-2">
-                {visibleImages.map((src, idx) => (
+          {!isEditing &&
+            !showMask &&
+            (!isSoftDeleted || isAdminView) &&
+            contentImages.length > 0 && (
+              <div className="relative group mt-2">
+                <div className="grid grid-cols-3 gap-2">
+                  {visibleImages.map((src, idx) => (
+                    <button
+                      key={src}
+                      onClick={e => {
+                        e.stopPropagation();
+                        setModalIndex(startIndex + idx);
+                        setShowImageModal(true);
+                      }}
+                      className="relative aspect-square overflow-hidden rounded-lg bg-gray-100 border border-gray-200 dark:border-gray-700"
+                    >
+                      <img
+                        src={src}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        draggable={false}
+                      />
+                    </button>
+                  ))}
+                </div>
+
+                {/* 왼쪽 버튼 */}
+                {startIndex > 0 && (
                   <button
-                    key={src}
                     onClick={e => {
                       e.stopPropagation();
-                      setModalIndex(startIndex + idx);
-                      setShowImageModal(true);
+                      setStartIndex(i => Math.max(i - 3, 0));
                     }}
-                    className="relative aspect-square overflow-hidden rounded-lg bg-gray-100 border border-gray-200 dark:border-gray-700"
+                    className="absolute left-1 top-1/2 -translate-y-1/2 bg-black/40 text-white text-xl rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity z-10"
                   >
-                    <img
-                      src={src}
-                      alt=""
-                      className="w-full h-full object-cover"
-                      draggable={false}
-                    />
+                    ‹
                   </button>
-                ))}
+                )}
+
+                {/* 오른쪽 버튼 */}
+                {startIndex + 3 < contentImages.length && (
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      setStartIndex(i => i + 3);
+                    }}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 bg-black/40 text-white text-xl rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity z-10"
+                  >
+                    ›
+                  </button>
+                )}
               </div>
+            )}
 
-              {/* 왼쪽 버튼 */}
-              {startIndex > 0 && (
-                <button
-                  onClick={e => {
-                    e.stopPropagation();
-                    setStartIndex(i => Math.max(i - 3, 0));
-                  }}
-                  className="absolute left-1 top-1/2 -translate-y-1/2 bg-black/40 text-white text-xl rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity z-10"
-                >
-                  ‹
-                </button>
-              )}
-
-              {/* 오른쪽 버튼 */}
-              {startIndex + 3 < contentImages.length && (
-                <button
-                  onClick={e => {
-                    e.stopPropagation();
-                    setStartIndex(i => i + 3);
-                  }}
-                  className="absolute right-1 top-1/2 -translate-y-1/2 bg-black/40 text-white text-xl rounded-full w-7 h-7 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity z-10"
-                >
-                  ›
-                </button>
-              )}
-            </div>
-          )}
-
-          {showImageModal && contentImages.length > 0 && (
+          {!isEditing && showImageModal && contentImages.length > 0 && (
             <div
               className="fixed inset-0 bg-black/80 z-[2000] flex items-center justify-center"
               onClick={e => e.stopPropagation()}
@@ -937,36 +1145,58 @@ export function ReplyCard({
           )}
 
           {/* 액션 버튼 */}
-          <div className="flex items-center justify-start gap-4 max-w-md mt-2 text-gray-500 dark:text-gray-400">
-            {/* Reply */}
-            <button
-              className={`flex items-center gap-1 group transition-colors ${disableInteractions ? 'cursor-default' : 'hover:text-blue-500 dark:hover:text-blue-400'}`}
-              onClick={e => {
-                if (disableInteractions) {
+          {!isEditing && (
+            <div className="flex items-center justify-start gap-4 max-w-md mt-2 text-gray-500 dark:text-gray-400">
+              {/* Reply */}
+              <button
+                className={`flex items-center gap-1 group transition-colors ${
+                  disableInteractions
+                    ? 'cursor-default'
+                    : 'hover:text-blue-500 dark:hover:text-blue-400'
+                }`}
+                onClick={e => {
+                  if (disableInteractions) {
                     e.stopPropagation();
                     return;
-                }
-                e.stopPropagation();
-                onReply?.(reply); // 부모로 “이 댓글에 답글” 전달
-              }}
-            >
-              <div className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${disableInteractions ? '' : 'group-hover:bg-blue-50 dark:group-hover:bg-primary/10'}`}>
-                <i className="ri-chat-3-line text-lg" />
-              </div>
-              <span className="text-xs font-medium">{reply.stats.replies > 0 ? reply.stats.replies : ''}</span>
-            </button>
+                  }
+                  e.stopPropagation();
+                  onReply?.(reply);
+                }}
+              >
+                <div
+                  className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                    disableInteractions
+                      ? ''
+                      : 'group-hover:bg-blue-50 dark:group-hover:bg-primary/10'
+                  }`}
+                >
+                  <i className="ri-chat-3-line text-lg" />
+                </div>
+                <span className="text-xs font-medium">
+                  {reply.stats.replies > 0 ? reply.stats.replies : ''}
+                </span>
+              </button>
 
-            {/* Like */}
-            <button
-              className={`flex items-center gap-1 group transition-colors ${liked ? 'text-red-500' : (disableInteractions ? '' : 'hover:text-red-500')} ${disableInteractions ? 'cursor-default' : ''}`}
-              onClick={toggleLike}
-            >
-              <div className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${disableInteractions ? '' : 'group-hover:bg-red-50 dark:group-hover:bg-primary/10'}`}>
-                <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg`}></i>
-              </div>
-              {likeCount > 0 && <span className="text-xs font-medium">{likeCount}</span>}
-            </button>
-          </div>
+              {/* Like */}
+              <button
+                className={`flex items-center gap-1 group transition-colors ${
+                  liked ? 'text-red-500' : disableInteractions ? '' : 'hover:text-red-500'
+                } ${disableInteractions ? 'cursor-default' : ''}`}
+                onClick={toggleLike}
+              >
+                <div
+                  className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                    disableInteractions
+                      ? ''
+                      : 'group-hover:bg-red-50 dark:group-hover:bg-primary/10'
+                  }`}
+                >
+                  <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg`} />
+                </div>
+                {likeCount > 0 && <span className="text-xs font-medium">{likeCount}</span>}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

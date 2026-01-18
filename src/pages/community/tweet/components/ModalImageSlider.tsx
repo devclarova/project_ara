@@ -1,5 +1,5 @@
-import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { motion, useAnimationControls, type PanInfo } from 'framer-motion';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 type ModalImageSliderProps = {
@@ -15,37 +15,101 @@ export default function ModalImageSlider({
   setModalIndex,
   onClose,
 }: ModalImageSliderProps) {
-  // 이동 방향 상태
   const [direction, setDirection] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [blockClick, setBlockClick] = useState(false);
 
-  // 스크롤 잠금 Hook
-  useBodyScrollLock(true); // 항상 열려있으므로 true
+  // 트랙용
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+  const controls = useAnimationControls();
 
-  // ESC 로 모달 닫기
+  const spring = { type: 'spring', stiffness: 320, damping: 34, mass: 0.9, bounce: 0 } as const;
+
+  const clamp = (n: number) => Math.max(0, Math.min(allImages.length - 1, n));
+
+  // ±1장만 드래그 가능하게 제한
+  const leftBound = width ? -Math.min(modalIndex + 1, allImages.length - 1) * width : 0;
+  const rightBound = width ? -Math.max(modalIndex - 1, 0) * width : 0;
+
+  useBodyScrollLock(true);
+
+  // ESC 닫기
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+      if (e.key === 'Escape') onClose();
+      // 키보드 좌우 이동
+      // if (e.key === 'ArrowRight') setModalIndex(i => clamp(i + 1));
+      // if (e.key === 'ArrowLeft') setModalIndex(i => clamp(i - 1));
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
+  // viewport width 측정
+  useLayoutEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+
+    const update = () => setWidth(el.getBoundingClientRect().width);
+    update();
+
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // index 변경 시 트랙 위치 애니메이션 (width 변경 때는 set만)
+  const prevWidthRef = useRef(0);
+  useEffect(() => {
+    if (!width) return;
+
+    if (prevWidthRef.current !== width) {
+      controls.set({ x: -modalIndex * width });
+      prevWidthRef.current = width;
+      return;
+    }
+
+    controls.start({ x: -modalIndex * width, transition: spring });
+  }, [modalIndex, width, controls]);
+
+  // 다음/이전 미리 로드
+  useEffect(() => {
+    const preload = (src?: string) => {
+      if (!src) return;
+      const img = new Image();
+      img.src = src;
+    };
+    preload(allImages[modalIndex + 1]);
+    preload(allImages[modalIndex - 1]);
+  }, [allImages, modalIndex]);
+
+  const snapTo = (nextIndex: number) => {
+    const next = clamp(nextIndex);
+
+    if (!width) return;
+
+    // 먼저 트랙 이동
+    controls.start({ x: -next * width, transition: spring });
+
+    // 같은 인덱스면 제자리로만 스냅
+    if (next === modalIndex) {
+      if (width) controls.start({ x: -modalIndex * width, transition: spring });
+      return;
+    }
+
+    setDirection(next > modalIndex ? 1 : -1);
+    setModalIndex(next);
+  };
+
   return (
-    // 모달 바깥 overlay 클릭하시 닫힘
     <div
       className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] cursor-default"
       onClick={e => {
-        if (isDragging) return; // 드래그 중 → 닫힘 금지
-        if (blockClick) return; // 드래그 직후 click 버블 → 닫힘 금지
-
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
+        if (isDragging) return;
+        if (blockClick) return;
+        if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
@@ -65,60 +129,64 @@ export default function ModalImageSlider({
 
         {/* 이미지 wrapper */}
         <div
-          className="relative w-full h-full max-w-6xl flex flex-col items-center justify-center p-4 z-[10000] overscroll-contain"
+          className="relative w-full h-full max-w-6xl flex flex-col items-center justify-center p-4 z-10 overscroll-contain"
           onClick={e => e.stopPropagation()}
           data-scroll-lock-scrollable=""
         >
-          {/* 이미지 안 카운터 */}
+          {/* 카운터 */}
           {allImages.length > 1 && (
             <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/60 backdrop-blur-sm text-gray-900 dark:text-white text-xs px-3 py-1 rounded-full z-40">
               {modalIndex + 1} / {allImages.length}
             </div>
           )}
 
-          {/* 메인 이미지 */}
-          <AnimatePresence mode="wait" initial={false} custom={direction}>
-            <motion.img
-              key={allImages[modalIndex]}
-              src={allImages[modalIndex]}
-              draggable={false}
-              className="max-h-full max-w-full object-contain z-10"
-              custom={direction}
-              variants={{
-                enter: d => ({ x: d > 0 ? 60 : -60, opacity: 0 }),
-                center: { x: 0, opacity: 1 },
-                exit: d => ({ x: d > 0 ? -60 : 60, opacity: 0 }),
-              }}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-              // 드래그 가능
+          {/* viewport */}
+          <div ref={viewportRef} className="relative w-full h-full overflow-hidden">
+            {/* 트랙 */}
+            <motion.div
+              className="flex w-full h-full"
+              style={{ touchAction: 'pan-y' }}
               drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.25}
+              dragElastic={0.12}
+              dragMomentum={false}
+              dragConstraints={{ left: leftBound, right: rightBound }}
+              animate={controls}
               onDragStart={() => {
                 setIsDragging(true);
                 setBlockClick(true);
               }}
-              onDragEnd={(e, info) => {
+              onDragEnd={(_, info: PanInfo) => {
                 setIsDragging(false);
-                setTimeout(() => setBlockClick(false), 100);
+                setTimeout(() => setBlockClick(false), 120);
 
-                const threshold = 80;
-                // 오른쪽 → 왼쪽 swipe (다음 이미지)
-                if (info.offset.x < -threshold && modalIndex < allImages.length - 1) {
-                  setDirection(1);
-                  setModalIndex(prev => prev + 1);
-                }
-                // 왼쪽 → 오른쪽 swipe (이전 이미지)
-                else if (info.offset.x > threshold && modalIndex > 0) {
-                  setDirection(-1);
-                  setModalIndex(prev => prev - 1);
-                }
+                if (!width) return;
+
+                const threshold = width * 0.35;
+                let next = modalIndex;
+
+                if (info.offset.x < -threshold || info.velocity.x < -800) next = modalIndex + 1;
+                else if (info.offset.x > threshold || info.velocity.x > 800) next = modalIndex - 1;
+
+                snapTo(next);
               }}
-            />
-          </AnimatePresence>
+            >
+              {allImages.map((src, i) => (
+                <div
+                  key={`${src}-${i}`}
+                  className="shrink-0 w-full h-full flex items-center justify-center"
+                >
+                  <img
+                    src={src}
+                    draggable={false}
+                    className="max-h-full max-w-full object-contain"
+                    loading={i === modalIndex ? 'eager' : 'lazy'}
+                    decoding="async"
+                    alt=""
+                  />
+                </div>
+              ))}
+            </motion.div>
+          </div>
         </div>
 
         {/* 왼쪽 버튼 */}
@@ -126,10 +194,9 @@ export default function ModalImageSlider({
           <button
             onClick={e => {
               e.stopPropagation();
-              setDirection(-1);
-              setModalIndex(prev => prev - 1);
+              snapTo(modalIndex - 1);
             }}
-            className="absolute left-5 top-1/2 -translate-y-1/2 bg-white/70 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 text-gray-700 dark:text-white text-4xl w-8 h-8 rounded-full flex justify-center items-center z-30"
+            className="hidden md:flex absolute left-5 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white text-4xl rounded-full w-8 h-8 flex items-center justify-center z-50"
           >
             <span className="absolute -translate-y-1 -translate-x-0.7">‹</span>
           </button>
@@ -140,28 +207,23 @@ export default function ModalImageSlider({
           <button
             onClick={e => {
               e.stopPropagation();
-              setDirection(1);
-              setModalIndex(prev => prev + 1);
+              snapTo(modalIndex + 1);
             }}
-            className="absolute right-5 top-1/2 -translate-y-1/2 bg-white/70 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 text-gray-700 dark:text-white text-4xl w-8 h-8 rounded-full flex justify-center items-center z-30"
+            className="hidden md:flex absolute right-5 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white text-4xl w-8 h-8 rounded-full flex items-center justify-center z-50"
           >
             <span className="absolute -translate-y-1 -translate-x-0.7">›</span>
           </button>
         )}
 
-        {/* 하단 점 인디케이터 */}
+        {/* 하단 점 */}
         {allImages.length > 1 && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-30">
+          <div className="hidden md:flex absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-30">
             {allImages.map((_, i) => (
               <button
                 key={i}
                 onClick={e => {
                   e.stopPropagation();
-
-                  if (i === modalIndex) return;
-
-                  setDirection(i > modalIndex ? 1 : -1);
-                  setModalIndex(i);
+                  snapTo(i);
                 }}
                 className={`w-2.5 h-2.5 rounded-full transition-all ${
                   i === modalIndex
