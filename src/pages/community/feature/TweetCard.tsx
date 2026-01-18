@@ -103,19 +103,19 @@ export default function TweetCard({
   const contentRef = useRef<HTMLDivElement>(null);
   // prop 으로 온 image(string | string[]) → 배열로 정규화
   const propImages = Array.isArray(image) ? image : image ? [image] : [];
-  
+
   const isSoftDeleted = !!deletedAt;
 
   // 최종 슬라이드에 사용할 이미지 목록 (prop 우선, 없으면 content에서 추출한 것)
   // Soft delete 되면 이미지는 숨김
-  const allImages = isSoftDeleted ? [] : (propImages.length > 0 ? propImages : contentImages);
+  const allImages = isSoftDeleted ? [] : propImages.length > 0 ? propImages : contentImages;
   const [isDraggingText, setIsDraggingText] = useState(false);
   const dragInfo = useRef({
     startX: 0,
     startY: 0,
     moved: false,
   });
-  
+
   // 글 수정
   const [isEditing, setIsEditing] = useState(false);
   const [currentContent, setCurrentContent] = useState(content); // 화면에 보여줄 값
@@ -129,7 +129,7 @@ export default function TweetCard({
   // 본문에서는 img 태그는 제거 (슬라이드에서만 보여줌)
   // Soft Delete 되면 Placeholder 사용
   const displayContent = isSoftDeleted ? '관리자에 의해 삭제된 메시지입니다.' : currentContent;
-  
+
   const safeContent = DOMPurify.sanitize(displayContent, {
     FORBID_TAGS: ['img'],
   });
@@ -197,53 +197,69 @@ export default function TweetCard({
     setCurrentImage(0);
   }, [content]);
   /** 트윗 작성자 국적 / 국기 + 작성자 profileId 로드 */
+  const isValidUUID = (v: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+
   useEffect(() => {
     const fetchAuthorCountry = async () => {
-      if (!user.username || user.username === 'undefined') return;
+      const authorUserId = user.username;
+
+      // 삭제유저/값없음/uuid아님 => 조회 스킵 + 상태 초기화
+      if (!authorUserId || authorUserId === 'anonymous' || !isValidUUID(authorUserId)) {
+        setAuthorCountryFlagUrl(null);
+        setAuthorCountryName(null);
+        setAuthorProfileId(null);
+        return;
+      }
+
       try {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('id, country')
-          .eq('user_id', user.username)
+          .eq('user_id', authorUserId)
           .maybeSingle();
+
         if (profileError) {
           console.error('작성자 프로필(country) 로드 실패:', profileError.message);
           return;
         }
+
         if (!profile) {
           setAuthorCountryFlagUrl(null);
           setAuthorCountryName(null);
           setAuthorProfileId(null);
           return;
         }
+
         setAuthorProfileId(profile.id);
+
         if (!profile.country) {
           setAuthorCountryFlagUrl(null);
           setAuthorCountryName(null);
           return;
         }
+
         const { data: country, error: countryError } = await supabase
           .from('countries')
           .select('name, flag_url')
           .eq('id', profile.country)
           .maybeSingle();
+
         if (countryError) {
           console.error('작성자 국가 정보 로드 실패:', countryError.message);
           return;
         }
-        if (!country) {
-          setAuthorCountryFlagUrl(null);
-          setAuthorCountryName(null);
-          return;
-        }
-        setAuthorCountryFlagUrl(country.flag_url ?? null);
-        setAuthorCountryName(country.name ?? null);
+
+        setAuthorCountryFlagUrl(country?.flag_url ?? null);
+        setAuthorCountryName(country?.name ?? null);
       } catch (err) {
         console.error('작성자 국기 정보 로드 중 예외:', err);
       }
     };
+
     fetchAuthorCountry();
   }, [user.username]);
+
   // props가 바뀔 때 동기화
   useEffect(() => {
     setReplyCount(stats.replies ?? 0);
@@ -341,16 +357,16 @@ export default function TweetCard({
           .insert([{ tweet_id: id, user_id: likeUserId }]);
         // 이미 눌렀던 경우(UNIQUE 충돌)만 조용히 무시
         if (likeError && likeError.code !== '23505') throw likeError;
-        
+
         // 토스트 메시지 (간단하게)
         toast.success(t('common.success_like'));
-        
+
         // 2) 알림 추가 (자기 글 좋아요면 알림 안 보냄, 작성자 프로필 없으면 스킵)
         if (authorProfileId && authorProfileId !== likeUserId) {
           const { error: notiError } = await supabase.from('notifications').insert([
             {
               type: 'like',
-              content: content || safeContent,  // 실제 게시글 내용
+              content: content || safeContent, // 실제 게시글 내용
               is_read: false,
               tweet_id: id,
               comment_id: null,
@@ -370,7 +386,7 @@ export default function TweetCard({
           .eq('tweet_id', id)
           .eq('user_id', likeUserId);
         if (error) throw error;
-        
+
         toast.info(t('common.cancel_like'));
         // 알림은 취소해도 남겨두는 정책이므로 건드리지 않음
       }
@@ -387,7 +403,7 @@ export default function TweetCard({
     // SnsStore 동기화 (리스트 페이지 캐시 업데이트)
     // SnsStore가 없거나 로드되지 않았을 수도 있으니 안전하게 호출
     SnsStore.updateStats(id, {
-      likes: optimisticLiked ? likeCount + 1 : Math.max(0, likeCount - 1)
+      likes: optimisticLiked ? likeCount + 1 : Math.max(0, likeCount - 1),
     });
   };
 
@@ -395,33 +411,33 @@ export default function TweetCard({
   const handleEditFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
     const files = Array.from(e.target.files);
-    
+
     // 업로드 시작
     setIsUploading(true);
-    
+
     (async () => {
       const newImages: string[] = [];
-      
+
       for (const file of files) {
         try {
-           const fileExt = file.name.split('.').pop();
-           const fileName = `${authUser?.id}_${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-           const filePath = `tweet_images/${authUser?.id}/${fileName}`;
-           
-           const { error: uploadError } = await supabase.storage
-             .from('tweet_media')
-             .upload(filePath, file);
-             
-           if (uploadError) throw uploadError;
-           
-           const { data } = supabase.storage.from('tweet_media').getPublicUrl(filePath);
-           newImages.push(data.publicUrl);
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${authUser?.id}_${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+          const filePath = `tweet_images/${authUser?.id}/${fileName}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('tweet_media')
+            .upload(filePath, file);
+
+          if (uploadError) throw uploadError;
+
+          const { data } = supabase.storage.from('tweet_media').getPublicUrl(filePath);
+          newImages.push(data.publicUrl);
         } catch (err) {
-           console.error('이미지 업로드 실패:', err);
-           toast.error('일부 이미지 업로드에 실패했습니다.');
+          console.error('이미지 업로드 실패:', err);
+          toast.error('일부 이미지 업로드에 실패했습니다.');
         }
       }
-      
+
       setEditImages(prev => [...prev, ...newImages]);
       setIsUploading(false);
     })();
@@ -429,60 +445,58 @@ export default function TweetCard({
 
   /** 수정 저장 */
   const saveEdit = async () => {
-      if (!profileId) {
-        toast.error(t('common.error_profile_missing'));
-        return;
+    if (!profileId) {
+      toast.error(t('common.error_profile_missing'));
+      return;
+    }
+
+    if (!editText.trim() && editImages.length === 0) {
+      toast.error(t('tweets.error_empty', '내용을 입력해주세요'));
+      return;
+    }
+
+    const nowIso = new Date().toISOString();
+
+    try {
+      // 이미지 태그 생성
+      const imgTags = editImages.map(src => `<img src="${src}" alt="uploaded" />`).join('<br />');
+      let finalContent = editText.trim();
+      if (imgTags) {
+        if (finalContent) finalContent += '<br />' + imgTags;
+        else finalContent = imgTags;
       }
 
-      if (!editText.trim() && editImages.length === 0) {
-          toast.error(t('tweets.error_empty', '내용을 입력해주세요'));
-          return;
+      const table = type === 'reply' ? 'tweet_replies' : 'tweets';
+      const { error } = await supabase
+        .from(table)
+        .update({ content: finalContent, updated_at: nowIso })
+        .eq('id', id)
+        .eq('author_id', profileId);
+
+      if (error) throw error;
+
+      toast.success(t('common.success_edit', '수정되었습니다'));
+      setIsEditing(false);
+      setCurrentContent(finalContent);
+      setCurrentUpdatedAt(nowIso);
+
+      // 다음 prop sync 1회 막기 (저장 직후 원복 방지)
+      skipNextPropSync.current = true;
+
+      // 상위 컴포넌트 알림
+      const storeKey = type === 'reply' ? (tweetId ?? id) : id;
+      if (onUpdated) {
+        onUpdated(storeKey, { content: finalContent, updatedAt: nowIso });
       }
-
-      const nowIso = new Date().toISOString();
-
-      try {
-          // 이미지 태그 생성
-          const imgTags = editImages.map(src => `<img src="${src}" alt="uploaded" />`).join('<br />');
-          let finalContent = editText.trim();
-          if (imgTags) {
-              if (finalContent) finalContent += '<br />' + imgTags;
-              else finalContent = imgTags;
-          }
-
-          const table = type === 'reply' ? 'tweet_replies' : 'tweets';
-          const { error } = await supabase
-              .from(table)
-              .update({ content: finalContent, updated_at: nowIso })
-              .eq('id', id)
-              .eq('author_id', profileId);
-
-          if (error) throw error;
-
-          toast.success(t('common.success_edit', '수정되었습니다'));
-          setIsEditing(false);
-          setCurrentContent(finalContent);
-          setCurrentUpdatedAt(nowIso);
-          
-          // 다음 prop sync 1회 막기 (저장 직후 원복 방지)
-          skipNextPropSync.current = true;
-          
-          // 상위 컴포넌트 알림
-          const storeKey = type === 'reply' ? (tweetId ?? id) : id;
-          if (onUpdated) {
-             onUpdated(storeKey, { content: finalContent, updatedAt: nowIso });
-          }
-          // SnsStore 업데이트
-          SnsStore.updateTweet(storeKey, { content: finalContent, updatedAt: nowIso });
-          setShowMenu(false);
-
-      } catch (err: any) {
-          console.error('수정 실패:', err);
-          toast.error(t('common.error_edit', '수정에 실패했습니다'));
-      }
+      // SnsStore 업데이트
+      SnsStore.updateTweet(storeKey, { content: finalContent, updatedAt: nowIso });
+      setShowMenu(false);
+    } catch (err: any) {
+      console.error('수정 실패:', err);
+      toast.error(t('common.error_edit', '수정에 실패했습니다'));
+    }
   };
 
-  /** 트윗 삭제 */
   /** 트윗 삭제 */
   const handleDelete = async () => {
     if (!profileId) return;
@@ -501,502 +515,516 @@ export default function TweetCard({
       toast.error(t('tweet.delete_failed'));
     }
   };
-    const isNavigatingRef = useRef(false);
+  const isNavigatingRef = useRef(false);
 
-    const safeNavigate = (path: string) => {
-      if (isNavigatingRef.current) return;
-      // 현재 경로와 동일하면 이동 안 함
-      if (location.pathname + location.search === path) return;
+  const safeNavigate = (path: string) => {
+    if (isNavigatingRef.current) return;
+    // 현재 경로와 동일하면 이동 안 함
+    if (location.pathname + location.search === path) return;
 
-      isNavigatingRef.current = true;
-      navigate(path);
+    isNavigatingRef.current = true;
+    navigate(path);
 
-      // 만약 이동이 일어나지 않거나(같은 페이지 등), 뒤로가기로 돌아왔을 때를 대비해 타임아웃으로 해제
-      setTimeout(() => {
-        isNavigatingRef.current = false;
-      }, 2000);
-    };
+    // 만약 이동이 일어나지 않거나(같은 페이지 등), 뒤로가기로 돌아왔을 때를 대비해 타임아웃으로 해제
+    setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 2000);
+  };
 
-    const handleCardClick = () => {
-      if (onClick) {
-        onClick(id);
-        return;
-      }
+  const handleCardClick = () => {
+    if (onClick) {
+      onClick(id);
+      return;
+    }
 
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, type === 'reply' ? tweetId! : id);
-      }
-      const target = type === 'reply' ? `/sns/${tweetId}?highlight=${id}` : `/sns/${id}`;
-      safeNavigate(target);
-    };
-    const isDeletedUser = user.username === 'anonymous';
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, type === 'reply' ? tweetId! : id);
+    }
+    const target = type === 'reply' ? `/sns/${tweetId}?highlight=${id}` : `/sns/${id}`;
+    safeNavigate(target);
+  };
+  const isDeletedUser = user.username === 'anonymous';
 
-    const handleAvatarClick = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (isDeletedUser) return;
+  const handleAvatarClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isDeletedUser) return;
 
-      if (onAvatarClick) {
-        onAvatarClick(user.username);
-        return;
-      }
+    if (onAvatarClick) {
+      onAvatarClick(user.username);
+      return;
+    }
 
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, id);
-      }
-      const target = `/profile/${encodeURIComponent(user.name)}`;
-      safeNavigate(target);
-    };
-    const isMyTweet = authUser?.id === user.username;
-    const nameClass = `
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, id);
+    }
+    const target = `/profile/${encodeURIComponent(user.name)}`;
+    safeNavigate(target);
+  };
+  const isMyTweet = authUser?.id === user.username;
+  const nameClass = `
     font-bold cursor-pointer hover:underline
     ${dimmed ? 'text-gray-800 dark:text-gray-200' : 'text-gray-900 dark:text-gray-100'}
   `;
-    const metaClass = `
+  const metaClass = `
     text-gray-500 dark:text-gray-400
     ${dimmed ? 'opacity-80' : ''}
   `;
-    const contentClass = `
+  const contentClass = `
     mt-1 text-[15px] leading-snug whitespace-pre-line break-words
     ${dimmed ? 'text-gray-800 dark:text-gray-200 opacity-90' : 'text-gray-900 dark:text-gray-100'}
   `;
-    const handleCardClickSafe = () => {
-      // 텍스트 선택 확인은 content onClick에서 처리, 여기는 카드 배경 클릭
-      if (showImageModal) return;
+  const handleCardClickSafe = () => {
+    // 텍스트 선택 확인은 content onClick에서 처리, 여기는 카드 배경 클릭
+    if (showImageModal) return;
 
-      // 혹시라도 배경에서 선택이 일어나고 있었을 수 있으니 체크
-      const selection = window.getSelection();
-      if (selection && selection.toString().length > 0) return;
-      handleCardClick();
-    };
-    // 택스트만 번역
-    const plainTextContent = (() => {
-      const tmp = document.createElement('div');
-      tmp.innerHTML = safeContent;
-      return tmp.textContent || tmp.innerText || '';
-    })();
-    return (
-      <div
-        data-tweet-id={id}
-        className="relative px-4 py-3 cursor-pointer transition-colors border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-background hover:bg-gray-50/50 dark:hover:bg-primary/10"
-        onClick={handleCardClickSafe}
-      >
-        {/* Refactored Layout: Header Row (Avatar+Meta) + Full Width Content */}
-        <div className="flex items-center gap-3 mb-1">
-          {/* Avatar */}
-          <div onClick={handleAvatarClick} className={`w-10 h-10 flex-shrink-0 relative ${isDeletedUser ? 'cursor-default' : 'cursor-pointer'}`}>
-            <Avatar className="w-10 h-10">
-              <AvatarImage src={user.avatar || '/default-avatar.svg'} alt={isDeletedUser ? t('deleted_user') : user.name} />
-              <AvatarFallback>{isDeletedUser ? '?' : user.name.charAt(0).toUpperCase()}</AvatarFallback>
-            </Avatar>
-          </div>
-
-          {/* User Info & Menu */}
-          <div className="flex-1 min-w-0 flex items-center justify-between pt-0.5 relative">
-            <div className="flex items-center flex-wrap mr-1">
-              <div className="relative inline-flex items-center pr-1.5">
-                <span
-                  className={isDeletedUser ? 'font-bold text-gray-500 cursor-default' : nameClass}
-                  onClick={isDeletedUser ? undefined : handleAvatarClick}
-                >
-                  {isDeletedUser ? t('deleted_user') : user.name}
-                </span>
-                {!isDeletedUser && (
-                  <OnlineIndicator
-                    userId={user.username}
-                    size="sm"
-                    className="absolute top-0.5 right-0 z-20 border-white dark:border-background border shadow-none"
-                  />
-                )}
-              </div>
-              <BanBadge bannedUntil={user.banned_until ?? null} size="xs" className="ml-1" />
-              {authorCountryFlagUrl && !isDeletedUser && (
-                <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 ml-1 h-5">
-                  <img
-                    src={authorCountryFlagUrl}
-                    alt={authorCountryName ?? '국가'}
-                    title={authorCountryName ?? ''}
-                    className="w-5 h-3.5 rounded-[2px] object-cover"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </Badge>
-              )}
-              {!authorCountryFlagUrl && authorCountryName && (
-                <Badge
-                  variant="secondary"
-                  className="flex items-center px-1 py-0.5 ml-4"
-                  title={authorCountryName}
-                >
-                  <span className="text-xs">🌐</span>
-                </Badge>
-              )}
-              <span className={`${metaClass} mx-1`}>·</span>
-              <span className={`${metaClass} flex-shrink-0`}>
-                {formatSmartDate(timestamp)}
-                {(() => {
-                  const created = createdAt ?? timestamp;
-                  const edited = currentUpdatedAt;
-                  const isEdited = edited && new Date(edited).getTime() > new Date(created).getTime();
-                  return isEdited ? <span className="ml-1 text-xs text-gray-400">수정됨</span> : null;
-                })()}
-              </span>
-            </div>
-
-            {/* Menu Button */}
-            <div className="relative" ref={menuRef}>
-              <button
-                onClick={e => {
-                  e.stopPropagation();
-                  setShowMenu(prev => !prev);
-                }}
-                className="p-2 -mr-2 -mt-2 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition"
-              >
-                <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
-              </button>
-              {showMenu && (
-                <div className="absolute right-0 top-8 min-w-[9rem] whitespace-nowrap bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
-                  {isMyTweet ? (
-                    <>
-                      <EditButton onClose={() => setShowMenu(false)} />
-                      <button
-                        onClick={e => {
-                          e.stopPropagation();
-                          setShowDialog(true);
-                        }}
-                        className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
-                      >
-                        <i className="ri-delete-bin-line" />
-                        <span>{t('common.delete')}</span>
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        onClick={e => {
-                          e.stopPropagation();
-                          setShowReportModal(true);
-                          setShowMenu(false);
-                        }}
-                        className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 flex items-center gap-2"
-                      >
-                        <i className="ri-alarm-warning-line" />
-                        <span>{t('report.action', '신고하기')}</span>
-                      </button>
-                      {authorProfileId && (
-                        <BlockButton
-                          targetProfileId={authorProfileId}
-                          onClose={() => setShowMenu(false)}
-                        />
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+    // 혹시라도 배경에서 선택이 일어나고 있었을 수 있으니 체크
+    const selection = window.getSelection();
+    if (selection && selection.toString().length > 0) return;
+    handleCardClick();
+  };
+  // 택스트만 번역
+  const plainTextContent = (() => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = safeContent;
+    return tmp.textContent || tmp.innerText || '';
+  })();
+  return (
+    <div
+      data-tweet-id={id}
+      className="relative px-4 py-3 cursor-pointer transition-colors border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-background hover:bg-gray-50/50 dark:hover:bg-primary/10"
+      onClick={handleCardClickSafe}
+    >
+      {/* Refactored Layout: Header Row (Avatar+Meta) + Full Width Content */}
+      <div className="flex items-center gap-3 mb-1">
+        {/* Avatar */}
+        <div
+          onClick={handleAvatarClick}
+          className={`w-10 h-10 flex-shrink-0 relative ${isDeletedUser ? 'cursor-default' : 'cursor-pointer'}`}
+        >
+          <Avatar className="w-10 h-10">
+            <AvatarImage
+              src={user.avatar || '/default-avatar.svg'}
+              alt={isDeletedUser ? t('deleted_user') : user.name}
+            />
+            <AvatarFallback>
+              {isDeletedUser ? '?' : user.name.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
         </div>
 
-        {/* Full Width Content & Actions */}
-        <div className="w-full">
-          {/* 텍스트 + 번역 버튼 */}
-          <div className="flex items-center gap-2">
-            {isEditing ? (
-              <div className="w-full" onClick={e => e.stopPropagation()}>
-                <textarea
-                  value={editText}
-                  onChange={e => setEditText(e.target.value)}
-                  rows={4}
-                  className="
+        {/* User Info & Menu */}
+        <div className="flex-1 min-w-0 flex items-center justify-between pt-0.5 relative">
+          <div className="flex items-center flex-wrap mr-1">
+            <div className="relative inline-flex items-center pr-1.5">
+              <span
+                className={isDeletedUser ? 'font-bold text-gray-500 cursor-default' : nameClass}
+                onClick={isDeletedUser ? undefined : handleAvatarClick}
+              >
+                {isDeletedUser ? t('deleted_user') : user.name}
+              </span>
+              {!isDeletedUser && (
+                <OnlineIndicator
+                  userId={user.username}
+                  size="sm"
+                  className="absolute top-0.5 right-0 z-20 border-white dark:border-background border shadow-none"
+                />
+              )}
+            </div>
+            <BanBadge bannedUntil={user.banned_until ?? null} size="xs" className="ml-1" />
+            {authorCountryFlagUrl && !isDeletedUser && (
+              <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 ml-1 h-5">
+                <img
+                  src={authorCountryFlagUrl}
+                  alt={authorCountryName ?? '국가'}
+                  title={authorCountryName ?? ''}
+                  className="w-5 h-3.5 rounded-[2px] object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </Badge>
+            )}
+            {!authorCountryFlagUrl && authorCountryName && (
+              <Badge
+                variant="secondary"
+                className="flex items-center px-1 py-0.5 ml-4"
+                title={authorCountryName}
+              >
+                <span className="text-xs">🌐</span>
+              </Badge>
+            )}
+            <span className={`${metaClass} mx-1`}>·</span>
+            <span className={`${metaClass} flex-shrink-0`}>
+              {formatSmartDate(timestamp)}
+              {(() => {
+                const created = createdAt ?? timestamp;
+                const edited = currentUpdatedAt;
+                const isEdited = edited && new Date(edited).getTime() > new Date(created).getTime();
+                return isEdited ? <span className="ml-1 text-xs text-gray-400">수정됨</span> : null;
+              })()}
+            </span>
+          </div>
+
+          {/* Menu Button */}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={e => {
+                e.stopPropagation();
+                setShowMenu(prev => !prev);
+              }}
+              className="p-2 -mr-2 -mt-2 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition"
+            >
+              <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-8 min-w-[9rem] whitespace-nowrap bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
+                {isMyTweet ? (
+                  <>
+                    <EditButton onClose={() => setShowMenu(false)} />
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setShowDialog(true);
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
+                    >
+                      <i className="ri-delete-bin-line" />
+                      <span>{t('common.delete')}</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setShowReportModal(true);
+                        setShowMenu(false);
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                    >
+                      <i className="ri-alarm-warning-line" />
+                      <span>{t('report.action', '신고하기')}</span>
+                    </button>
+                    {authorProfileId && (
+                      <BlockButton
+                        targetProfileId={authorProfileId}
+                        onClose={() => setShowMenu(false)}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Full Width Content & Actions */}
+      <div className="w-full">
+        {/* 텍스트 + 번역 버튼 */}
+        <div className="flex items-center gap-2">
+          {isEditing ? (
+            <div className="w-full" onClick={e => e.stopPropagation()}>
+              <textarea
+                value={editText}
+                onChange={e => setEditText(e.target.value)}
+                rows={4}
+                className="
                     w-full resize-none rounded-2xl border border-gray-300 dark:border-gray-700
                     bg-gray-50 dark:bg-background px-3 py-2 text-sm
                     text-gray-900 dark:text-gray-100
                     focus:outline-none focus:ring-2 focus:ring-primary/60
                   "
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      saveEdit();
-                    }
-                    if (e.key === 'Escape') {
-                      e.preventDefault();
-                      setIsEditing(false);
-                      // 원래 내용으로 되돌리기 (텍스트/이미지 분리해서)
-                      setEditText(stripImgTags(currentContent));
-                      setEditImages(extractImageSrcs(currentContent));
-                    }
-                  }}
-                />
-                <div className="mt-2 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploading}
-                      className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 hover:underline disabled:opacity-50"
-                    >
-                      <i className="ri-image-add-line" />
-                      <span>{isUploading ? '업로드 중...' : '사진 추가'}</span>
-                    </button>
-
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      className="hidden"
-                      onChange={handleEditFiles}
-                    />
-
-                    {editImages.length > 0 && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        이미지 {editImages.length}개
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* 이미지 미리보기 + 삭제 */}
-                {editImages.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {editImages.map((src, idx) => (
-                      <div
-                        key={src + idx}
-                        className="relative w-24 h-24 rounded-xl overflow-hidden border"
-                      >
-                        <img src={src} className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center"
-                          onClick={() => setEditImages(prev => prev.filter((_, i) => i !== idx))}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="mt-2 flex justify-end gap-2">
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    saveEdit();
+                  }
+                  if (e.key === 'Escape') {
+                    e.preventDefault();
+                    setIsEditing(false);
+                    // 원래 내용으로 되돌리기 (텍스트/이미지 분리해서)
+                    setEditText(stripImgTags(currentContent));
+                    setEditImages(extractImageSrcs(currentContent));
+                  }
+                }}
+              />
+              <div className="mt-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
                   <button
-                    className="text-sm text-gray-500 hover:underline"
-                    onClick={() => {
-                      setIsEditing(false);
-                      setEditText(stripImgTags(currentContent));
-                      setEditImages(extractImageSrcs(currentContent));
-                    }}
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 hover:underline disabled:opacity-50"
                   >
-                    취소
+                    <i className="ri-image-add-line" />
+                    <span>{isUploading ? '업로드 중...' : '사진 추가'}</span>
                   </button>
 
-                  <button
-                    className="px-4 py-1.5 rounded-full text-sm font-semibold bg-primary text-white hover:bg-primary/80"
-                    onClick={saveEdit}
-                  >
-                    저장
-                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleEditFiles}
+                  />
+
+                  {editImages.length > 0 && (
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      이미지 {editImages.length}개
+                    </span>
+                  )}
                 </div>
               </div>
-            ) : (
-              <>
-                <div
-                  ref={contentRef}
-                  className={`${contentClass} transition-all ${
-                    expanded ? 'max-h-none' : 'overflow-hidden'
-                  } ${isSoftDeleted ? 'italic text-gray-500 opacity-60' : ''}`}
-                  style={!expanded ? { maxHeight: '60px' } : undefined} // 약 3줄
-                  dangerouslySetInnerHTML={{ __html: safeContent }}
-                  // 드래그 시작
-                  onMouseDown={e => {
-                    dragInfo.current.startX = e.clientX;
-                    dragInfo.current.startY = e.clientY;
-                    dragInfo.current.moved = false;
-                  }}
-                  // 드래그 중 감지
-                  onMouseMove={e => {
-                    // 이미 움직임으로 판명났으면 계산 불필요
-                    if (dragInfo.current.moved) return;
-                    const dx = Math.abs(e.clientX - dragInfo.current.startX);
-                    const dy = Math.abs(e.clientY - dragInfo.current.startY);
-                    // 5px 이상 움직이면 드래그(텍스트 선택)로 판단
-                    if (dx > 5 || dy > 5) {
-                      dragInfo.current.moved = true;
-                      setIsDraggingText(true);
-                    }
-                  }}
-                  // 드래그 종료 시
-                  onMouseUp={() => {
-                    // 드래그가 끝났으면 잠시 후 상태 해제 (Click 이벤트가 돌고 나서 false가 되도록)
-                    if (isDraggingText) {
-                      setTimeout(() => setIsDraggingText(false), 50);
-                    }
-                  }}
-                  onClick={e => {
-                    // 텍스트 선택(드래그)이 아니었을 때만 카드 클릭 처리
-                    if (!dragInfo.current.moved) {
-                      e.stopPropagation(); // 👈 부모로 버블링 방지 (부모도 navigate를 호출하므로 중복 방지)
-                      handleCardClick();
-                    }
-                  }}
-                />
-                {/* 번역 버튼 - 더보기가 없거나 expanded일 때만 표시 */}
-                {plainTextContent.trim().length > 0 && (!isLong || expanded) && (
-                  <TranslateButton
-                    text={plainTextContent}
-                    contentId={`tweet_${id}`}
-                    setTranslated={setTranslated}
-                    size="sm"
-                  />
-                )}
-              </>
-            )}
-          </div>
-          {/* 더보기 버튼 */}
-          {isLong && (
-            <button
-              className="mt-1 text-gray-400 text-sm font-medium hover:underline"
-              onClick={e => {
-                e.stopPropagation();
 
-                // 접기 동작일 때만 스크롤 이동
-                if (expanded) {
-                  const cardElement = e.currentTarget.closest('[data-tweet-id]'); // 부모 카드 찾기
-                  if (cardElement) {
-                    const rect = cardElement.getBoundingClientRect();
-                    const absoluteTop = window.scrollY + rect.top;
-                    const offset = 100; // 헤더 높이 여유분
+              {/* 이미지 미리보기 + 삭제 */}
+              {editImages.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {editImages.map((src, idx) => (
+                    <div
+                      key={src + idx}
+                      className="relative w-24 h-24 rounded-xl overflow-hidden border"
+                    >
+                      <img src={src} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center"
+                        onClick={() => setEditImages(prev => prev.filter((_, i) => i !== idx))}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-                    window.scrollTo({
-                      top: absoluteTop - offset,
-                      behavior: 'smooth'
-                    });
-                  }
-                }
+              <div className="mt-2 flex justify-end gap-2">
+                <button
+                  className="text-sm text-gray-500 hover:underline"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditText(stripImgTags(currentContent));
+                    setEditImages(extractImageSrcs(currentContent));
+                  }}
+                >
+                  취소
+                </button>
 
-                setExpanded(prev => !prev);
-              }}
-            >
-              {expanded ? '접기' : '더보기'}
-            </button>
-          )}
-
-          {/* 번역 결과 */}
-          {translated && (
-            <div
-              className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 rounded-lg text-sm whitespace-pre-line break-words"
-              // 드래그 시작
-              onMouseDown={e => {
-                dragInfo.current.startX = e.clientX;
-                dragInfo.current.startY = e.clientY;
-                dragInfo.current.moved = false;
-              }}
-              // 드래그 중 감지
-              onMouseMove={e => {
-                if (dragInfo.current.moved) return;
-                const dx = Math.abs(e.clientX - dragInfo.current.startX);
-                const dy = Math.abs(e.clientY - dragInfo.current.startY);
-                if (dx > 5 || dy > 5) {
-                  dragInfo.current.moved = true;
-                  setIsDraggingText(true);
-                }
-              }}
-              // 드래그 종료 시
-              onMouseUp={() => {
-                if (isDraggingText) {
-                  setTimeout(() => setIsDraggingText(false), 50);
-                }
-              }}
-              onClick={e => {
-                if (!dragInfo.current.moved) {
-                  e.stopPropagation();
-                  handleCardClick();
-                }
-              }}
-            >
-              {translated}
+                <button
+                  className="px-4 py-1.5 rounded-full text-sm font-semibold bg-primary text-white hover:bg-primary/80"
+                  onClick={saveEdit}
+                >
+                  저장
+                </button>
+              </div>
             </div>
+          ) : (
+            <>
+              <div
+                ref={contentRef}
+                className={`${contentClass} transition-all ${
+                  expanded ? 'max-h-none' : 'overflow-hidden'
+                } ${isSoftDeleted ? 'italic text-gray-500 opacity-60' : ''}`}
+                style={!expanded ? { maxHeight: '60px' } : undefined} // 약 3줄
+                dangerouslySetInnerHTML={{ __html: safeContent }}
+                // 드래그 시작
+                onMouseDown={e => {
+                  dragInfo.current.startX = e.clientX;
+                  dragInfo.current.startY = e.clientY;
+                  dragInfo.current.moved = false;
+                }}
+                // 드래그 중 감지
+                onMouseMove={e => {
+                  // 이미 움직임으로 판명났으면 계산 불필요
+                  if (dragInfo.current.moved) return;
+                  const dx = Math.abs(e.clientX - dragInfo.current.startX);
+                  const dy = Math.abs(e.clientY - dragInfo.current.startY);
+                  // 5px 이상 움직이면 드래그(텍스트 선택)로 판단
+                  if (dx > 5 || dy > 5) {
+                    dragInfo.current.moved = true;
+                    setIsDraggingText(true);
+                  }
+                }}
+                // 드래그 종료 시
+                onMouseUp={() => {
+                  // 드래그가 끝났으면 잠시 후 상태 해제 (Click 이벤트가 돌고 나서 false가 되도록)
+                  if (isDraggingText) {
+                    setTimeout(() => setIsDraggingText(false), 50);
+                  }
+                }}
+                onClick={e => {
+                  // 텍스트 선택(드래그)이 아니었을 때만 카드 클릭 처리
+                  if (!dragInfo.current.moved) {
+                    e.stopPropagation(); // 👈 부모로 버블링 방지 (부모도 navigate를 호출하므로 중복 방지)
+                    handleCardClick();
+                  }
+                }}
+              />
+              {/* 번역 버튼 - 더보기가 없거나 expanded일 때만 표시 */}
+              {plainTextContent.trim().length > 0 && (!isLong || expanded) && (
+                <TranslateButton
+                  text={plainTextContent}
+                  contentId={`tweet_${id}`}
+                  setTranslated={setTranslated}
+                  size="sm"
+                />
+              )}
+            </>
           )}
-          {/* 이미지 슬라이드 */}
-          {!isEditing && allImages.length > 0 && (
-            <ImageSlider
-              allImages={allImages}
-              currentImage={currentImage}
-              setCurrentImage={setCurrentImage}
-              setDirection={setDirection}
-              direction={direction}
-              onOpen={index => {
-                setModalIndex(index);
-                setShowImageModal(true);
-              }}
-            />
-          )}
-          {!isEditing && showImageModal && (
-            <ModalImageSlider
-              allImages={allImages}
-              modalIndex={modalIndex}
-              setModalIndex={setModalIndex}
-              onClose={() => setShowImageModal(false)}
-            />
-          )}
+        </div>
+        {/* 더보기 버튼 */}
+        {isLong && (
+          <button
+            className="mt-1 text-gray-400 text-sm font-medium hover:underline"
+            onClick={e => {
+              e.stopPropagation();
+
+              // 접기 동작일 때만 스크롤 이동
+              if (expanded) {
+                const cardElement = e.currentTarget.closest('[data-tweet-id]'); // 부모 카드 찾기
+                if (cardElement) {
+                  const rect = cardElement.getBoundingClientRect();
+                  const absoluteTop = window.scrollY + rect.top;
+                  const offset = 100; // 헤더 높이 여유분
+
+                  window.scrollTo({
+                    top: absoluteTop - offset,
+                    behavior: 'smooth',
+                  });
+                }
+              }
+
+              setExpanded(prev => !prev);
+            }}
+          >
+            {expanded ? '접기' : '더보기'}
+          </button>
+        )}
+
+        {/* 번역 결과 */}
+        {translated && (
           <div
-            className="flex items-center justify-between max-w-md mt-3 text-gray-500 dark:text-gray-400 cursor-pointer"
-            onClick={(e) => {
-              // 버튼 사이 빈 공간 클릭 시 이동
-              if (e.target === e.currentTarget) {
+            className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 rounded-lg text-sm whitespace-pre-line break-words"
+            // 드래그 시작
+            onMouseDown={e => {
+              dragInfo.current.startX = e.clientX;
+              dragInfo.current.startY = e.clientY;
+              dragInfo.current.moved = false;
+            }}
+            // 드래그 중 감지
+            onMouseMove={e => {
+              if (dragInfo.current.moved) return;
+              const dx = Math.abs(e.clientX - dragInfo.current.startX);
+              const dy = Math.abs(e.clientY - dragInfo.current.startY);
+              if (dx > 5 || dy > 5) {
+                dragInfo.current.moved = true;
+                setIsDraggingText(true);
+              }
+            }}
+            // 드래그 종료 시
+            onMouseUp={() => {
+              if (isDraggingText) {
+                setTimeout(() => setIsDraggingText(false), 50);
+              }
+            }}
+            onClick={e => {
+              if (!dragInfo.current.moved) {
+                e.stopPropagation();
                 handleCardClick();
               }
             }}
           >
-            {/* 댓글 버튼 (클릭 시 상세 이동) */}
-            <button
-              className={`flex items-center space-x-2 group p-2 -ml-2 rounded-full transition-colors ${disableInteractions ? 'cursor-default' : 'hover:text-blue-500 dark:hover:text-blue-400'}`}
-              onClick={e => {
-                if (disableInteractions) {
-                  e.stopPropagation();
-                  return;
-                }
-                // 부모 div의 클릭과 겹치지 않게 하기 위해 stopPropagation 할 수도 있지만,
-                // 어차피 상세 이동이므로 버블링되어도 상관없음.
-                // 하지만 명시적으로 여기서 이동 처리.
-                e.stopPropagation();
-                handleCardClick();
-              }}
-            >
-              <div className={`p-2 rounded-full transition-colors relative ${disableInteractions ? '' : 'group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20'}`}>
-                <i className="ri-chat-3-line text-lg" />
-              </div>
-              <span className="text-sm">{replyCount}</span>
-            </button>
-            {/* 좋아요 버튼 */}
-            <button
-              className={`flex items-center space-x-2 group p-2 rounded-full transition-colors ${
-                liked ? 'text-red-500' : (disableInteractions ? '' : 'hover:text-red-500')
-              } ${disableInteractions ? 'cursor-default' : ''}`}
-              onClick={handleLikeToggle}
-            >
-              <div className={`p-2 rounded-full transition-colors ${disableInteractions ? '' : 'group-hover:bg-red-50 dark:group-hover:bg-red-900/20'}`}>
-                <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg`} />
-              </div>
-              <span className="text-sm">{likeCount}</span>
-            </button>
-            {/* 조회수 (클릭 시 상세 이동) */}
-            <button
-              className={`flex items-center space-x-2 group p-2 rounded-full transition-colors ${disableInteractions ? 'cursor-default' : 'hover:text-green-500 dark:hover:text-green-400'}`}
-              onClick={(e) => {
-                if (disableInteractions) {
-                  e.stopPropagation();
-                  return;
-                }
-                e.stopPropagation();
-                handleCardClick();
-              }}
-            >
-              <div className={`p-2 rounded-full transition-colors ${disableInteractions ? '' : 'group-hover:bg-green-50 dark:group-hover:bg-green-900/20'}`}>
-                <i className="ri-eye-line text-lg" />
-              </div>
-              <span className="text-sm">{viewCount}</span>
-            </button>
+            {translated}
           </div>
+        )}
+        {/* 이미지 슬라이드 */}
+        {!isEditing && allImages.length > 0 && (
+          <ImageSlider
+            allImages={allImages}
+            currentImage={currentImage}
+            setCurrentImage={setCurrentImage}
+            setDirection={setDirection}
+            direction={direction}
+            onOpen={index => {
+              setModalIndex(index);
+              setShowImageModal(true);
+            }}
+          />
+        )}
+        {!isEditing && showImageModal && (
+          <ModalImageSlider
+            allImages={allImages}
+            modalIndex={modalIndex}
+            setModalIndex={setModalIndex}
+            onClose={() => setShowImageModal(false)}
+          />
+        )}
+        <div
+          className="flex items-center justify-between max-w-md mt-3 text-gray-500 dark:text-gray-400 cursor-pointer"
+          onClick={e => {
+            // 버튼 사이 빈 공간 클릭 시 이동
+            if (e.target === e.currentTarget) {
+              handleCardClick();
+            }
+          }}
+        >
+          {/* 댓글 버튼 (클릭 시 상세 이동) */}
+          <button
+            className={`flex items-center space-x-2 group p-2 -ml-2 rounded-full transition-colors ${disableInteractions ? 'cursor-default' : 'hover:text-blue-500 dark:hover:text-blue-400'}`}
+            onClick={e => {
+              if (disableInteractions) {
+                e.stopPropagation();
+                return;
+              }
+              // 부모 div의 클릭과 겹치지 않게 하기 위해 stopPropagation 할 수도 있지만,
+              // 어차피 상세 이동이므로 버블링되어도 상관없음.
+              // 하지만 명시적으로 여기서 이동 처리.
+              e.stopPropagation();
+              handleCardClick();
+            }}
+          >
+            <div
+              className={`p-2 rounded-full transition-colors relative ${disableInteractions ? '' : 'group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20'}`}
+            >
+              <i className="ri-chat-3-line text-lg" />
+            </div>
+            <span className="text-sm">{replyCount}</span>
+          </button>
+          {/* 좋아요 버튼 */}
+          <button
+            className={`flex items-center space-x-2 group p-2 rounded-full transition-colors ${
+              liked ? 'text-red-500' : disableInteractions ? '' : 'hover:text-red-500'
+            } ${disableInteractions ? 'cursor-default' : ''}`}
+            onClick={handleLikeToggle}
+          >
+            <div
+              className={`p-2 rounded-full transition-colors ${disableInteractions ? '' : 'group-hover:bg-red-50 dark:group-hover:bg-red-900/20'}`}
+            >
+              <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg`} />
+            </div>
+            <span className="text-sm">{likeCount}</span>
+          </button>
+          {/* 조회수 (클릭 시 상세 이동) */}
+          <button
+            className={`flex items-center space-x-2 group p-2 rounded-full transition-colors ${disableInteractions ? 'cursor-default' : 'hover:text-green-500 dark:hover:text-green-400'}`}
+            onClick={e => {
+              if (disableInteractions) {
+                e.stopPropagation();
+                return;
+              }
+              e.stopPropagation();
+              handleCardClick();
+            }}
+          >
+            <div
+              className={`p-2 rounded-full transition-colors ${disableInteractions ? '' : 'group-hover:bg-green-50 dark:group-hover:bg-green-900/20'}`}
+            >
+              <i className="ri-eye-line text-lg" />
+            </div>
+            <span className="text-sm">{viewCount}</span>
+          </button>
         </div>
+      </div>
       {showDialog && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[1000]">
           <div

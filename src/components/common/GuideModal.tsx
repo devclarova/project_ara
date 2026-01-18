@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef } from 'react';
-import { AnimatePresence, motion, type PanInfo } from 'framer-motion';
+import { useEffect, useState, useRef, useLayoutEffect } from 'react';
+import { AnimatePresence, motion, type PanInfo, useAnimationControls } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 type GuideSlide = {
@@ -53,7 +53,7 @@ export default function GuideModal({
   neverShowLabel,
 }: GuideModalProps) {
   const { t } = useTranslation();
-  
+
   const finalPrevLabel = prevLabel ?? t('study.guide.prev');
   const finalNextLabel = nextLabel ?? t('study.guide.next');
   const finalCompleteLabel = completeLabel ?? t('study.guide.start');
@@ -61,7 +61,7 @@ export default function GuideModal({
   const finalNeverShowLabel = neverShowLabel ?? t('study.guide.never_show');
 
   const [index, setIndex] = useState(0);
-  const [direction, setDirection] = useState(0); // ✅ 이동 방향: -1(이전), 1(다음)
+  const [direction, setDirection] = useState(0);
   const modalContentRef = useRef<HTMLDivElement>(null);
 
   const total = slides.length;
@@ -69,21 +69,24 @@ export default function GuideModal({
   const isLast = index === total - 1;
   const primaryLabel = isLast ? finalCompleteLabel : finalNextLabel;
 
+  // 트랙용
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+  const controls = useAnimationControls();
+  const spring = { type: 'spring', stiffness: 320, damping: 34, mass: 0.9, bounce: 0 } as const;
+
+  // 열릴 때 초기화 + 스크롤 차단(기존 그대로)
   useEffect(() => {
     if (isOpen) {
       setIndex(0);
-      setDirection(0); // 처음 열릴 때는 방향 0
+      setDirection(0);
 
-      // 바깥 스크롤 차단
       const body = document.body;
       const originalOverflow = body.style.overflow;
       const originalTouchAction = (body.style as any).touchAction;
 
       const preventScroll = (e: Event) => {
-        // 모달 내부 요소에서 발생한 이벤트는 허용
-        if (modalContentRef.current && modalContentRef.current.contains(e.target as Node)) {
-          return;
-        }
+        if (modalContentRef.current && modalContentRef.current.contains(e.target as Node)) return;
         e.preventDefault();
       };
 
@@ -103,26 +106,68 @@ export default function GuideModal({
     }
   }, [isOpen]);
 
-  const handlePrev = () => {
-    if (isFirst) return;
-    setDirection(-1); // ✅ 왼쪽(이전)으로 이동
-    setIndex(prev => prev - 1);
-  };
+  // viewport width 측정
+  useLayoutEffect(() => {
+    if (!isOpen) return;
 
-  const handleNext = () => {
-    if (isLast) {
-      onClose();
-      return;
+    const el = viewportRef.current;
+    if (!el) return;
+
+    const update = () => setWidth(el.offsetWidth); // getBoundingClientRect() X
+
+    const raf = requestAnimationFrame(update);
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, [isOpen]);
+
+  // index 변경 시 자연스럽게 스냅
+  useEffect(() => {
+    if (!isOpen || !width) return;
+    controls.set({ x: -index * width }); // 열릴 때/리사이즈 때만 즉시 맞춤
+  }, [isOpen, width]);
+
+  // ±1장만 드래그 가능(현재 기준)
+  const leftBound = width ? -Math.min(index + 1, total - 1) * width : 0;
+  const rightBound = width ? -Math.max(index - 1, 0) * width : 0;
+
+  const indexRef = useRef(0);
+  useEffect(() => {
+    indexRef.current = index;
+  }, [index]);
+
+  const snapTo = (nextIndex: number) => {
+    if (!width) return;
+
+    const current = indexRef.current;
+    const next = Math.max(0, Math.min(total - 1, nextIndex));
+    const targetX = -next * width;
+
+    controls.stop(); // 이전 애니메이션 끊기
+
+    if (next !== current) {
+      setDirection(next > current ? 1 : -1);
+      setIndex(next);
+      indexRef.current = next;
     }
-    setDirection(1); // ✅ 오른쪽(다음)으로 이동
-    setIndex(prev => prev + 1);
+
+    controls.start({ x: targetX, transition: spring }).then(() => {
+      controls.set({ x: targetX }); // 픽셀 고정
+    });
   };
 
-  const handleDotClick = (i: number) => {
-    if (i === index) return;
-    setDirection(i > index ? 1 : -1); // ✅ 점프할 때도 방향 계산
-    setIndex(i);
+  const handlePrev = () => {
+    if (!isFirst) void snapTo(index - 1);
   };
+  const handleNext = () => {
+    if (isLast) return onClose();
+    void snapTo(index + 1);
+  };
+  const handleDotClick = (i: number) => void snapTo(i);
 
   const handleNeverShow = () => {
     try {
@@ -133,26 +178,20 @@ export default function GuideModal({
     onClose();
   };
 
-  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const swipeThreshold = 60;
-    if (info.offset.x < -swipeThreshold && !isLast) {
-      // 왼쪽으로 스와이프 = 다음
-      setDirection(1);
-      handleNext();
-    } else if (info.offset.x > swipeThreshold && !isFirst) {
-      // 오른쪽으로 스와이프 = 이전
-      setDirection(-1);
-      handlePrev();
-    }
-  };
+  const handleDragEnd = (_: any, info: PanInfo) => {
+    if (!width) return;
+    const threshold = width * 0.35;
 
-  const currentSlide = slides[index];
+    if (info.offset.x < -threshold && !isLast) void snapTo(index + 1);
+    else if (info.offset.x > threshold && !isFirst) void snapTo(index - 1);
+    else void snapTo(index);
+  };
 
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+          className="flex w-full h-full fixed inset-0 z-[300] items-center justify-center bg-black/60 backdrop-blur-sm px-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -161,11 +200,8 @@ export default function GuideModal({
         >
           <motion.div
             ref={modalContentRef}
-            className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/20 dark:border-white/10 bg-white dark:bg-neutral-900 inline-flex flex-col"
-            style={{
-              width: 'min(90vw, 640px)',
-              maxHeight: '90vh',
-            }}
+            className="flex w-full relative rounded-3xl overflow-hidden shadow-2xl border border-white/20 dark:border-white/10 bg-white dark:bg-neutral-900 inline-flex flex-col"
+            style={{ width: 'min(90vw, 640px)', maxHeight: '90vh' }}
             initial={{ scale: 0.96, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.98, opacity: 0 }}
@@ -175,13 +211,13 @@ export default function GuideModal({
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-3 right-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/5 dark:bg-white/5 text-gray-500 dark:text-gray-300 hover:bg-black/10 dark:hover:bg-white/10 transition"
+              className="absolute top-3 right-3 z-50 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/5 dark:bg-white/5 text-gray-500 dark:text-gray-300 hover:bg-black/10 dark:hover:bg-white/10 transition"
               aria-label="닫기"
             >
               <X size={18} />
             </button>
 
-            {/* 이미지 뷰포트 */}
+            {/* 이미지 뷰포트(트랙 방식) */}
             <div
               onMouseDown={e => e.preventDefault()}
               className="
@@ -192,36 +228,31 @@ export default function GuideModal({
                 select-none
               "
             >
-              <div className="relative w-full flex items-center justify-center">
-                {/* ✅ direction을 custom으로 넘겨서 항상 올바른 방향으로 슬라이드 */}
-                <AnimatePresence mode="wait" initial={false} custom={direction}>
-                  <motion.img
-                    key={currentSlide.id}
-                    src={currentSlide.image}
-                    alt={currentSlide.alt}
-                    draggable={false}
-                    className="
-                      block
-                      max-w-full
-                      max-h-[60vh]
-                      object-contain
-                      select-none
-                    "
-                    custom={direction}
-                    variants={slideVariants}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={{
-                      duration: 0.22,
-                      ease: 'easeInOut',
-                    }}
-                    drag="x"
-                    dragElastic={0.12}
-                    dragConstraints={{ left: 0, right: 0 }}
-                    onDragEnd={handleDragEnd}
-                  />
-                </AnimatePresence>
+              <div ref={viewportRef} className="relative w-full overflow-hidden">
+                <motion.div
+                  className="flex w-full h-full"
+                  style={{ touchAction: 'pan-y' }}
+                  drag="x"
+                  dragElastic={0.12}
+                  dragMomentum={false}
+                  dragConstraints={{ left: leftBound, right: rightBound }}
+                  animate={controls}
+                  onDragEnd={handleDragEnd}
+                >
+                  {slides.map(slide => (
+                    <div
+                      key={slide.id}
+                      className="shrink-0 w-full flex items-center justify-center"
+                    >
+                      <img
+                        src={slide.image}
+                        alt={slide.alt}
+                        draggable={false}
+                        className="block max-w-full max-h-[60vh] object-contain select-none"
+                      />
+                    </div>
+                  ))}
+                </motion.div>
               </div>
 
               {/* 좌우 버튼 */}
@@ -251,7 +282,7 @@ export default function GuideModal({
               )}
             </div>
 
-            {/* 하단 컨트롤 */}
+            {/* 하단 컨트롤(기존 그대로) */}
             <div className="w-full bg-white dark:bg-neutral-900 px-3.5 sm:px-4 md:px-5 py-2.5 sm:py-3 flex flex-col gap-2">
               <div className="flex justify-center gap-1.5 mb-0.5">
                 {slides.map((slide, i) => (

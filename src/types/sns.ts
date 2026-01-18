@@ -52,6 +52,7 @@ export interface ReplyQueryResponse {
     content: string;
     author_id: string;
   } | null;
+  updated_at?: string;
 }
 
 export type TweetStats = {
@@ -89,6 +90,7 @@ export interface UIReply extends BaseFeedItem {
   parentTweet?: string;
   parent_reply_id?: string | null;
   root_reply_id?: string | null;
+  updatedAt?: string;
 }
 
 export type FeedItem = UIPost | UIReply;

@@ -110,18 +110,26 @@ const StudyListPage = () => {
   const { translatedTexts: trDescs } = useBatchAutoTranslation(descs, descKeys, targetLang);
 
   const durations = clips.map(c => {
-    const v = Array.isArray(c.video) ? c.video[0] : c.video as any; // Safe cast or check
+    const v = Array.isArray(c.video) ? c.video[0] : (c.video as any); // Safe cast or check
     return typeof v?.runtime_bucket === 'string' ? v.runtime_bucket : '';
   });
   const durationKeys = clips.map(c => `study_duration_${c.id}`);
-  const { translatedTexts: trDurations } = useBatchAutoTranslation(durations, durationKeys, targetLang);
+  const { translatedTexts: trDurations } = useBatchAutoTranslation(
+    durations,
+    durationKeys,
+    targetLang,
+  );
 
   const episodes = clips.map(c => {
-    const v = Array.isArray(c.video) ? c.video[0] : c.video as any;
+    const v = Array.isArray(c.video) ? c.video[0] : (c.video as any);
     return v?.episode || '';
   });
   const episodeKeys = clips.map(c => `study_episode_${c.id}`);
-  const { translatedTexts: trEpisodes } = useBatchAutoTranslation(episodes, episodeKeys, targetLang);
+  const { translatedTexts: trEpisodes } = useBatchAutoTranslation(
+    episodes,
+    episodeKeys,
+    targetLang,
+  );
 
   // 데이터 불러오기
   useEffect(() => {
@@ -157,11 +165,11 @@ const StudyListPage = () => {
       // keyword 검색은 클라이언트 사이드에서 처리 (번역 대응)
       // keyword가 있을 때는 전체 데이터를 가져와서 클라이언트에서 필터링
       const hasKeyword = keyword.trim().length > 0;
-      
-      const { data, count, error } = hasKeyword 
+
+      const { data, count, error } = hasKeyword
         ? await query // 검색 시: 전체 데이터 가져오기
         : await query.range(from, to); // 검색 없을 때: 페이지네이션
-        
+
       if (ignore) return;
 
       if (error) {
@@ -169,7 +177,7 @@ const StudyListPage = () => {
         return;
       }
       setClips((data ?? []) as Study[]);
-      
+
       // keyword 없을 때만 DB count 사용 (검색 시는 필터링 후 count)
       if (!hasKeyword) {
         setTotal(count ?? 0);
@@ -188,7 +196,7 @@ const StudyListPage = () => {
     if (!keyword.trim()) return clips;
 
     const lowerKeyword = keyword.toLowerCase();
-    
+
     return clips.filter((clip, idx) => {
       const originalTitle = clip.title?.toLowerCase() || '';
       const translatedTitle = (trTitles[idx] || '').toLowerCase();
@@ -279,7 +287,7 @@ const StudyListPage = () => {
     const checkScrollable = () => {
       const scrollContainer = categoryScrollRef.current;
       if (!scrollContainer) return;
-      
+
       const hasOverflow = scrollContainer.scrollWidth > scrollContainer.clientWidth;
       setIsScrollable(hasOverflow);
     };
@@ -302,7 +310,7 @@ const StudyListPage = () => {
     const handleMouseDown = (e: MouseEvent) => {
       // 스크롤 가능할 때만 드래그 활성화
       if (scrollContainer.scrollWidth <= scrollContainer.clientWidth) return;
-      
+
       isDown = true;
       hasMoved = false; // Reset on new drag
       scrollContainer.style.cursor = 'grabbing';
@@ -322,7 +330,7 @@ const StudyListPage = () => {
       if (scrollContainer.scrollWidth > scrollContainer.clientWidth) {
         scrollContainer.style.cursor = 'grab';
       }
-      
+
       // Prevent click if user dragged
       if (hasMoved) {
         setTimeout(() => {
@@ -336,12 +344,12 @@ const StudyListPage = () => {
       e.preventDefault();
       const x = e.pageX - scrollContainer.offsetLeft;
       const walk = (x - startX) * 2; // Scroll speed multiplier
-      
+
       // If moved more than 5px, consider it a drag
       if (Math.abs(walk) > 5) {
         hasMoved = true;
       }
-      
+
       scrollContainer.scrollLeft = scrollLeft - walk;
     };
 
@@ -359,7 +367,7 @@ const StudyListPage = () => {
     } else {
       scrollContainer.style.cursor = 'default';
     }
-    
+
     scrollContainer.addEventListener('mousedown', handleMouseDown);
     scrollContainer.addEventListener('mouseleave', handleMouseLeave);
     scrollContainer.addEventListener('mouseup', handleMouseUp);
@@ -395,6 +403,10 @@ const StudyListPage = () => {
     }
     setSearchParams(nextParams, { replace: true });
   }, [page]);
+
+  useEffect(() => {
+    setShowGuide(true);
+  }, []);
 
   const handleKeywordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setKeyword(e.target.value);
@@ -489,17 +501,27 @@ const StudyListPage = () => {
             {/* 탭 + 검색 */}
             <div className="flex flex-row justify-between items-center gap-1 md:gap-3 bg-white dark:bg-background sticky top-0 z-20 pb-2 pl-6 pt-8 pr-2">
               {/* 왼쪽: 카테고리 탭 (스크롤 가능) */}
-              <div className={`flex-1 min-w-0 overflow-x-auto no-scrollbar ${isScrollable ? 'mask-gradient' : ''}`} ref={categoryScrollRef}>
-                <CategoryTabs 
-                  active={displayCategory} 
-                  onChange={handleCategoryChange} 
+              <div
+                className={`flex-1 min-w-0 overflow-x-auto no-scrollbar ${isScrollable ? 'mask-gradient' : ''}`}
+                ref={categoryScrollRef}
+              >
+                <CategoryTabs
+                  active={displayCategory}
+                  onChange={handleCategoryChange}
                   categories={ALL_CATEGORIES.map(c => ({
                     value: c,
-                    label: c === '전체' ? t('study.category.all') :
-                           c === '드라마' ? t('study.category.drama') :
-                           c === '영화' ? t('study.category.movie') :
-                           c === '예능' ? t('study.category.entertainment') :
-                           c === '음악' ? t('study.category.music') : c
+                    label:
+                      c === '전체'
+                        ? t('study.category.all')
+                        : c === '드라마'
+                          ? t('study.category.drama')
+                          : c === '영화'
+                            ? t('study.category.movie')
+                            : c === '예능'
+                              ? t('study.category.entertainment')
+                              : c === '음악'
+                                ? t('study.category.music')
+                                : c,
                   }))}
                 />
               </div>
@@ -508,14 +530,14 @@ const StudyListPage = () => {
               <div className="flex items-center gap-1 flex-shrink-0">
                 {/* 필터는 항상 표시 */}
                 <div className="flex items-center h-11">
-                  <FilterDropdown 
-                    value={levelFilter} 
-                    onApply={applyLevel} 
+                  <FilterDropdown
+                    value={levelFilter}
+                    onApply={applyLevel}
                     labelMap={{
                       '': t('study.level.all'),
-                      '초급': t('study.level.beginner'),
-                      '중급': t('study.level.intermediate'),
-                      '고급': t('study.level.advanced')
+                      초급: t('study.level.beginner'),
+                      중급: t('study.level.intermediate'),
+                      고급: t('study.level.advanced'),
                     }}
                   />
                 </div>
@@ -528,7 +550,7 @@ const StudyListPage = () => {
                 >
                   <i className="ri-search-line text-[20px] sm:text-[24px] text-gray-600 dark:text-gray-200" />
                 </button>
-                
+
                 {/* 검색바는 1024px 이상에서만 표시 */}
                 <div className="hidden desktop-search-900 items-center h-11">
                   <SearchBar
@@ -581,7 +603,7 @@ const StudyListPage = () => {
               {/* 카드 그리드 */}
               <div className="grid gap-6 sm:gap-8 px-0 grid-cols-1 sm:grid-cols-2 lg:[grid-template-columns:repeat(3,minmax(260px,1fr))] bg-white dark:bg-background">
                 {paginatedList.length > 0 ? (
-                  paginatedList.map((study) => {
+                  paginatedList.map(study => {
                     // 원본 clips 배열에서 인덱스 찾기 (번역 데이터 매칭용)
                     const originalIndex = clips.findIndex(c => c.id === study.id);
                     const [v] = study.video ?? [];
@@ -604,8 +626,12 @@ const StudyListPage = () => {
                         categories={v?.categories || null}
                         translatedTitleProp={originalIndex >= 0 ? trTitles[originalIndex] : null}
                         translatedDescProp={originalIndex >= 0 ? trDescs[originalIndex] : null}
-                        translatedDurationProp={originalIndex >= 0 ? trDurations[originalIndex] : null}
-                        translatedEpisodeProp={originalIndex >= 0 ? trEpisodes[originalIndex] : null}
+                        translatedDurationProp={
+                          originalIndex >= 0 ? trDurations[originalIndex] : null
+                        }
+                        translatedEpisodeProp={
+                          originalIndex >= 0 ? trEpisodes[originalIndex] : null
+                        }
                       />
                     );
                   })
