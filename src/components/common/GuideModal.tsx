@@ -156,7 +156,7 @@ export default function GuideModal({
     }
 
     controls.start({ x: targetX, transition: spring }).then(() => {
-      controls.set({ x: targetX }); // 픽셀 고정
+      controls.set({ x: targetX }); // 픽셀 고정.
     });
   };
 
