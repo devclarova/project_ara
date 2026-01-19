@@ -14,9 +14,11 @@ interface Notification {
   tweet_id: string | null;
   comment_id: string | null;
   sender: {
+    id: string;
     name: string;
     username: string;
     avatar: string | null;
+    bio?: string | null;
   } | null;
 }
 
@@ -55,7 +57,7 @@ export default function HNotificationsPage() {
         .select(
           `
           id, type, content, is_read, created_at, tweet_id, comment_id,
-          sender:sender_id (nickname, user_id, avatar_url),
+          sender:sender_id (id, nickname, user_id, avatar_url, username, bio),
           tweet:tweets (content),
           reply:tweet_replies (content)
         `,
@@ -99,9 +101,11 @@ export default function HNotificationsPage() {
             comment_id: n.comment_id,
             sender: n.sender
               ? {
+                  id: n.sender.id,
                   name: n.sender.nickname,
-                  username: n.sender.nickname,
+                  username: n.sender.username || n.sender.nickname,
                   avatar: n.sender.avatar_url,
+                  bio: n.sender.bio
                 }
               : null,
           };
@@ -131,7 +135,7 @@ export default function HNotificationsPage() {
           const { data: sender } = newItem.sender_id 
             ? await supabase
                 .from('profiles')
-                .select('nickname, user_id, avatar_url')
+                .select('id, nickname, user_id, avatar_url, username, bio')
                 .eq('id', newItem.sender_id)
                 .maybeSingle()
             : { data: null };
@@ -177,14 +181,19 @@ export default function HNotificationsPage() {
             comment_id: newItem.comment_id,
             sender: sender
               ? {
+                  id: sender.id,
                   name: sender.nickname,
-                  username: sender.nickname,
+                  username: sender.username || sender.nickname,
                   avatar: sender.avatar_url,
+                  bio: sender.bio
                 }
               : null,
           };
 
-          setNotifications(prev => [uiItem, ...prev]);
+          setNotifications(prev => {
+            if (prev.some(n => n.id === uiItem.id)) return prev;
+            return [uiItem, ...prev];
+          });
         },
       )
       .subscribe();
@@ -383,9 +392,11 @@ export default function HNotificationsPage() {
                     id: n.id,
                     type: n.type as any, // Alignment with card props
                     user: {
+                      id: n.sender?.id || '',
                       name: n.type === 'system' ? t('common.ara_team') : (n.sender?.name || 'Unknown'),
                       username: n.type === 'system' ? 'ara_admin' : (n.sender?.username || 'anonymous'),
                       avatar: n.type === 'system' ? '/images/sample_font_logo.png' : (n.sender?.avatar || '/default-avatar.svg'),
+                      bio: n.sender?.bio
                     },
                     action:
                       n.type === 'comment' || n.type === 'reply' || n.type === 'mention'

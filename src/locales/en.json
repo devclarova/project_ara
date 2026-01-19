@@ -376,7 +376,9 @@
     "search_users": "Search users...",
     "follow_feature_coming_soon": "Follow feature coming soon",
     "turn_on_notifications": "Turn on notifications",
-    "turn_off_notifications": "Turn off notifications"
+    "turn_off_notifications": "Turn off notifications",
+    "followed": "Followed",
+    "unfollowed": "Unfollowed"
   },
   "tweets": {
     "placeholder_tweet": "What are you thinking about?",
