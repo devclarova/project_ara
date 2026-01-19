@@ -19,25 +19,27 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { formatSmartDate } from '@/utils/dateUtils';
 import { useAutoTranslation } from '@/hooks/useAutoTranslation';
+import { useFollow } from '@/hooks/useFollow';
 
 
-
-interface NotificationCardProps {
-  notification: {
-    id: string;
-    type: 'like' | 'comment' | 'repost' | 'mention' | 'follow' | 'reply' | 'system' | 'like_comment' | 'like_feed';
-    user: {
-      name: string;
-      username: string;
-      avatar: string;
-    };
-    action: string;
-    content: string | null;
-    timestamp: string;
-    isRead: boolean;
-    tweetId: string | null;
-    replyId?: string | null;
-  };
+ interface NotificationCardProps {
+   notification: {
+     id: string;
+     type: 'like' | 'comment' | 'repost' | 'mention' | 'follow' | 'reply' | 'system' | 'like_comment' | 'like_feed';
+     user: {
+       id: string;
+       name: string;
+       username: string;
+       avatar: string;
+       bio?: string | null;
+     };
+     action: string;
+     content: string | null;
+     timestamp: string;
+     isRead: boolean;
+     tweetId: string | null;
+     replyId?: string | null;
+   };
   onMarkAsRead?: (id: string) => void;
   onDelete?: (id: string) => void;
   onSilentDelete?: (id: string) => void;
@@ -326,12 +328,16 @@ export default function NotificationCard({
   };
 
   const handleAvatarClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (notification.type === 'system') return; // 시스템 계정은 프로필 페이지 없음
     const targetProfile = `/profile/${encodeURIComponent(notification.user.username)}`;
     if (location.pathname !== targetProfile) {
       navigate(targetProfile);
     }
   };
+
+  // 맞팔로우(Follow Back) 기능 연동
+  const { isFollowing, isLoading: followLoading, toggleFollow } = useFollow(notification.user.id);
 
   return (
     <div
@@ -441,12 +447,43 @@ export default function NotificationCard({
             </div>
           )}
 
-          {!notification.isRead && (
-            <div className="flex items-center mt-2">
-              <div className="w-2 h-2 bg-primary rounded-full mr-2" />
-              <span className="text-xs text-primary font-medium">{t('notification.new')}</span>
+          {/* 팔로우 타입일 때 맞팔 버튼 노출 */}
+          <div className="flex items-center justify-between mt-2">
+            <div className="flex items-center">
+              {!notification.isRead && (
+                <div className="flex items-center">
+                  <div className="w-2 h-2 bg-primary rounded-full mr-2" />
+                  <span className="text-xs text-primary font-medium">{t('notification.new')}</span>
+                </div>
+              )}
             </div>
-          )}
+
+            {notification.type === 'follow' && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFollow();
+                }}
+                disabled={followLoading}
+                className={`
+                  text-xs font-semibold py-1.5 px-3 rounded-full transition-all
+                  ${isFollowing 
+                    ? 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-700' 
+                    : 'bg-primary text-white hover:bg-primary/90'
+                  }
+                  ${followLoading ? 'opacity-50 cursor-not-allowed' : ''}
+                `}
+              >
+                {followLoading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : isFollowing ? (
+                  t('profile.unfollow', '언팔로우')
+                ) : (
+                  t('profile.follow', '팔로우')
+                )}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

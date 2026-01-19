@@ -80,7 +80,7 @@ export const GlobalNotificationListener: React.FC = () => {
 
               const { data: senderProfile } = await supabase
                 .from('profiles')
-                .select('nickname, avatar_url')
+                .select('id, nickname, avatar_url, username, bio')
                 .eq('id', newNotif.sender_id)
                 .maybeSingle();
 

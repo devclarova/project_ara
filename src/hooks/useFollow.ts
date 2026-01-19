@@ -43,6 +43,17 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
     loadProfile();
   }, [user]);
 
+  // Sync follow status across different components/cards
+  useEffect(() => {
+    const handleStatusChange = (e: any) => {
+      if (e.detail.targetProfileId === targetProfileId) {
+        setIsFollowing(e.detail.isFollowing);
+      }
+    };
+    window.addEventListener('followStatusChanged', handleStatusChange);
+    return () => window.removeEventListener('followStatusChanged', handleStatusChange);
+  }, [targetProfileId]);
+
   // Check follow status
   const checkFollowStatus = useCallback(async () => {
     if (!myProfileId || !targetProfileId || myProfileId === targetProfileId) {
@@ -120,8 +131,11 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
         if (error) throw error;
 
         setIsFollowing(false);
+        window.dispatchEvent(new CustomEvent('followStatusChanged', { 
+          detail: { targetProfileId, isFollowing: false } 
+        }));
         setFollowersCount(prev => Math.max(0, prev - 1));
-        toast.success(t('profile.unfollowed', '팔로우 취소'));
+        toast.success(t('profile.unfollowed', '언팔로우'));
       } else {
         // Follow: Check if soft-deleted row exists first
         const { data: existing } = await supabase
@@ -157,12 +171,28 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
         }
 
         if (error) throw error;
+        
+        // Add follow notification
+        const notificationPayload = {
+          type: 'follow',
+          content: '당신을 팔로우했습니다.',
+          is_read: false,
+          sender_id: myProfileId,
+          receiver_id: targetProfileId,
+          tweet_id: null,
+          comment_id: null,
+        };
+        
+        await supabase
+          .from('notifications')
+          .insert(notificationPayload);
 
         setIsFollowing(true);
+        window.dispatchEvent(new CustomEvent('followStatusChanged', { 
+          detail: { targetProfileId, isFollowing: true } 
+        }));
         setFollowersCount(prev => prev + 1);
-        toast.success(t('profile.followed', '팔로우 완료'));
-
-        // TODO: Add follow notification in Phase 4 (System Notifications)
+        toast.success(t('profile.followed', '팔로우'));
       }
     } catch (error) {
       console.error('Follow toggle error:', error);
