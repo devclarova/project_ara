@@ -105,11 +105,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { t } = useTranslation();
-  
+
   // 복구 대상 유저 상태 (deleted_at이 있는 유저)
   // { id: string, deletedAt: string } 형태
   const [restoreUser, setRestoreUser] = useState<{ id: string; deletedAt: string } | null>(null);
-  
+
   // 제재 상태
   const [bannedUntil, setBannedUntil] = useState<string | null>(null);
   const [isBannedState, setIsBannedState] = useState(false);
@@ -130,17 +130,22 @@ export function AuthProvider({ children }: PropsWithChildren) {
       const diff = differenceInDays(now, deletedAt);
 
       if (diff > 7) {
-         // 7일 경과 시 -> 강제 로그아웃 (복구 불가)
-         alert(t('auth.account_restore_expired', '탈퇴 신청 후 7일이 경과하여 계정을 복구할 수 없습니다.'));
-         await supabase.auth.signOut();
-         setSession(null);
-         setUser(null);
+        // 7일 경과 시 -> 강제 로그아웃 (복구 불가)
+        alert(
+          t(
+            'auth.account_restore_expired',
+            '탈퇴 신청 후 7일이 경과하여 계정을 복구할 수 없습니다.',
+          ),
+        );
+        await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
       } else {
-         // 7일 이내 -> 복구 모달 표시
-         setRestoreUser({ id: userId, deletedAt: data.deleted_at });
+        // 7일 이내 -> 복구 모달 표시
+        setRestoreUser({ id: userId, deletedAt: data.deleted_at });
       }
     }
-    
+
     // 제재 상태 확인
     if (data.banned_until) {
       const bannedDate = new Date(data.banned_until);
@@ -173,7 +178,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setSession(data.session ?? null);
       setUser(data.session?.user ?? null);
       setLoading(false);
-      
+
       // 초기 진입 시 삭제 여부 체크
       if (data.session?.user) {
         checkAccountStatus(data.session.user.id);
@@ -232,7 +237,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
                 setIsBannedState(checkIsBanned(newBannedUntil));
               }
             }
-          }
+          },
         )
         .subscribe();
     }
@@ -245,8 +250,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
       }
     };
   }, [user?.id]);
-
-
 
   const signIn: AuthContextType['signIn'] = async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -287,12 +290,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
       try {
         await supabase
           .from('profiles')
-          .update({ 
+          .update({
             is_online: false,
-            last_active_at: new Date().toISOString()
+            last_active_at: new Date().toISOString(),
           })
           .eq('user_id', user.id);
-        
+
         // Give a small moment for the DB update to propagate (though await should be enough)
       } catch (err) {
         console.error('Logout status update failed:', err);
@@ -317,7 +320,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   // 계정 복구 처리 함수
   const handleRestore = async () => {
     if (!restoreUser) return;
-    
+
     // 복구 로직: deleted_at을 NULL로 초기화
     const { error } = await supabase
       .from('profiles')
@@ -343,7 +346,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   return (
     <AuthContext.Provider
-      value={{ session, user, loading, signIn, signUp, signOut, signInWithGoogle, signInWithKakao, bannedUntil, isBanned: isBannedState }}
+      value={{
+        session,
+        user,
+        loading,
+        signIn,
+        signUp,
+        signOut,
+        signInWithGoogle,
+        signInWithKakao,
+        bannedUntil,
+        isBanned: isBannedState,
+      }}
     >
       {children}
       {/* 계정 복구 모달: restoreUser 상태가 있을 때만 노출 */}
@@ -351,7 +365,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
         isOpen={!!restoreUser}
         onRestore={handleRestore}
         onCancel={handleCancelRestore}
-        daysRemaining={restoreUser ? 7 - differenceInDays(new Date(), parseISO(restoreUser.deletedAt)) : 0}
+        daysRemaining={
+          restoreUser ? 7 - differenceInDays(new Date(), parseISO(restoreUser.deletedAt)) : 0
+        }
       />
     </AuthContext.Provider>
   );

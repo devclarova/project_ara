@@ -1,20 +1,20 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import DOMPurify from 'dompurify';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
-import type { UIReply } from '@/types/sns';
-import TranslateButton from '@/components/common/TranslateButton';
-import { useTranslation } from 'react-i18next';
 import BlockButton from '@/components/common/BlockButton';
-import ReportButton from '@/components/common/ReportButton';
-import ModalImageSlider from './ModalImageSlider';
-import { formatRelativeTime, formatSmartDate } from '@/utils/dateUtils';
-import { useBlockedUsers } from '@/hooks/useBlockedUsers';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
+import ReportButton from '@/components/common/ReportButton';
+import TranslateButton from '@/components/common/TranslateButton';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
+import { useBlockedUsers } from '@/hooks/useBlockedUsers';
+import { supabase } from '@/lib/supabase';
+import type { UIReply } from '@/types/sns';
+import { formatSmartDate } from '@/utils/dateUtils';
+import DOMPurify from 'dompurify';
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
+import ModalImageSlider from './ModalImageSlider';
 function stripImagesAndEmptyLines(html: string) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   // img 제거
@@ -49,7 +49,7 @@ export function ReplyCard({
   const navigate = useNavigate();
   const params = useParams();
   const { user: authUser } = useAuth();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [liked, setLiked] = useState(reply.liked ?? false);
   const [likeCount, setLikeCount] = useState(reply.stats?.likes ?? 0);
   const [showMenu, setShowMenu] = useState(false);
@@ -70,7 +70,7 @@ export function ReplyCard({
   useEffect(() => {
     setLikeCount(reply.stats?.likes ?? 0);
   }, [reply.stats?.likes]);
-  
+
   // 하이라이트 상태 (잠깐 색 들어왔다 빠지는 용도)
   const [isHighlighted, setIsHighlighted] = useState(false);
   const [authorProfileId, setAuthorProfileId] = useState<string | null>(null);
@@ -165,16 +165,16 @@ export function ReplyCard({
         setAuthorProfileId(null);
         return;
       }
-      
+
       const { data } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', reply.user.username)
         .maybeSingle();
-      
+
       if (data) setAuthorProfileId(data.id);
     };
-    
+
     fetchAuthorProfile();
   }, [reply.user.username]);
 
@@ -248,7 +248,7 @@ export function ReplyCard({
     // Toggle optimistic
     const nextLiked = !liked;
     const nextCount = nextLiked ? likeCount + 1 : Math.max(0, likeCount - 1);
-    
+
     setLiked(nextLiked);
     setLikeCount(nextCount);
     onLike?.(reply.id, nextLiked ? 1 : -1);
@@ -261,7 +261,7 @@ export function ReplyCard({
           .eq('reply_id', reply.id)
           .eq('user_id', profileId);
         if (deleteError) throw deleteError;
-        
+
         toast.info(t('common.cancel_like', '좋아요를 취소했습니다'));
       } else {
         // 좋아요 추가
@@ -270,10 +270,10 @@ export function ReplyCard({
           user_id: profileId,
         });
         if (insertError) throw insertError;
-        
+
         // 토스트 메시지 (간단하게)
         toast.success(t('common.success_like', '좋아요했습니다'));
-        
+
         // 알림 생성 (본인 댓글이 아닐 때만)
         if (reply.user.username !== authUser.id) {
           const { data: receiverProfile, error: receiverError } = await supabase
@@ -327,13 +327,13 @@ export function ReplyCard({
   const isChildReply = Boolean(reply.parent_reply_id);
   // Loading state during block check to prevent flicker
   if (isBlockedLoading) {
-    return <div className={baseCardClasses + " animate-pulse h-24 bg-gray-50 dark:bg-gray-900/10"} />;
+    return (
+      <div className={baseCardClasses + ' animate-pulse h-24 bg-gray-50 dark:bg-gray-900/10'} />
+    );
   }
 
   const containerClasses = `${baseCardClasses} ${
-    isHighlighted 
-      ? 'animate-highlight-blink' 
-      : 'bg-white dark:bg-background'
+    isHighlighted ? 'animate-highlight-blink' : 'bg-white dark:bg-background'
   }`;
   // 텍스트만 추출 (번역용)
   const plainTextContent = stripImagesAndEmptyLines(safeContent);
@@ -347,7 +347,9 @@ export function ReplyCard({
 
   if (showMask) {
     return (
-      <div className={`${baseCardClasses} bg-gray-50 dark:bg-gray-900/40 relative overflow-hidden group/mask min-h-[100px] flex flex-col justify-center`}>
+      <div
+        className={`${baseCardClasses} bg-gray-50 dark:bg-gray-900/40 relative overflow-hidden group/mask min-h-[100px] flex flex-col justify-center`}
+      >
         <div className="flex items-center justify-between py-2">
           <div className="flex items-center space-x-3 opacity-60 grayscale">
             <div className="relative">
@@ -369,7 +371,7 @@ export function ReplyCard({
             </div>
           </div>
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               setIsUnmasked(true);
             }}
@@ -378,7 +380,7 @@ export function ReplyCard({
             {t('common.view_content', '내용보기')}
           </button>
         </div>
-        
+
         {/* Subtle glass effect pattern */}
         <div className="absolute inset-0 pointer-events-none opacity-[0.05] dark:opacity-[0.1] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:20px_20px]" />
       </div>
@@ -407,9 +409,15 @@ export function ReplyCard({
       }}
     >
       <div className="flex space-x-3">
-        <div onClick={handleAvatarClick} className={`cursor-pointer relative ${isDeleted ? 'cursor-default' : ''}`}>
+        <div
+          onClick={handleAvatarClick}
+          className={`cursor-pointer relative ${isDeleted ? 'cursor-default' : ''}`}
+        >
           <Avatar>
-            <AvatarImage src={reply.user.avatar || '/default-avatar.svg'} alt={isDeleted ? t('deleted_user') : reply.user.name} />
+            <AvatarImage
+              src={reply.user.avatar || '/default-avatar.svg'}
+              alt={isDeleted ? t('deleted_user') : reply.user.name}
+            />
             <AvatarFallback>{isDeleted ? '?' : reply.user.name.charAt(0)}</AvatarFallback>
           </Avatar>
         </div>
@@ -418,16 +426,16 @@ export function ReplyCard({
           <div className="flex items-center justify-between relative" ref={menuRef}>
             <div className="flex items-center flex-wrap gap-x-1">
               <div className="relative inline-flex items-center pr-2.5">
-                <span 
+                <span
                   className={`font-bold text-gray-900 dark:text-gray-100 truncate ${isDeleted ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
                   onClick={handleAvatarClick}
                 >
                   {isDeleted ? t('deleted_user') : reply.user.name}
                 </span>
                 {!isDeleted && (
-                  <OnlineIndicator 
-                    userId={reply.user.username} 
-                    size="sm" 
+                  <OnlineIndicator
+                    userId={reply.user.username}
+                    size="sm"
                     className="absolute -top-1 right-0 z-20 border-white dark:border-background border shadow-none"
                   />
                 )}
@@ -463,7 +471,7 @@ export function ReplyCard({
             <div className="flex items-center text-gray-400">
               {isAuthorBlocked && (
                 <button
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation();
                     setIsUnmasked(false);
                   }}

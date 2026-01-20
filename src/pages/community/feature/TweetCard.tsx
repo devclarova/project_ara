@@ -1,34 +1,49 @@
+import { BanBadge } from '@/components/common/BanBadge';
+import BlockButton from '@/components/common/BlockButton';
+import { OnlineIndicator } from '@/components/common/OnlineIndicator';
+import ReportModal from '@/components/common/ReportModal';
+import TranslateButton from '@/components/common/TranslateButton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
+import { SnsStore } from '@/lib/snsState';
 import { supabase } from '@/lib/supabase';
+import { type TweetStats, type TweetUser, type UITweet } from '@/types/sns';
+import { formatSmartDate } from '@/utils/dateUtils';
 import DOMPurify from 'dompurify';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import ImageSlider from '../tweet/components/ImageSlider';
 import ModalImageSlider from '../tweet/components/ModalImageSlider';
-import TranslateButton from '@/components/common/TranslateButton';
-import { useTranslation } from 'react-i18next';
-import { type UITweet, type TweetStats, type TweetUser } from '@/types/sns';
-import { SnsStore } from '@/lib/snsState';
-import EditButton from '@/components/common/EditButton';
-import ReportModal from '@/components/common/ReportModal';
-import BlockButton from '@/components/common/BlockButton';
-import { BanBadge } from '@/components/common/BanBadge';
-import { formatSmartDate } from '@/utils/dateUtils';
-import { OnlineIndicator } from '@/components/common/OnlineIndicator';
+import EditTweetModal from '@/components/common/EditTweetModal';
+
 const SNS_LAST_TWEET_ID_KEY = 'sns-last-tweet-id';
 
-function stripImgTags(html: string) {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
+function htmlToEditorText(html: string) {
+  const doc = new DOMParser().parseFromString(html || '', 'text/html');
   doc.querySelectorAll('img').forEach(img => img.remove());
-  return doc.body.innerHTML;
+  doc.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+  return doc.body.textContent ?? '';
 }
 
 function extractImageSrcs(html: string) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   return Array.from(doc.querySelectorAll('img')).map(img => img.src);
+}
+
+function escapeHtml(text: string) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function editorTextToHtml(text: string) {
+  return escapeHtml(text).replace(/\n/g, '<br />');
 }
 
 interface TweetCardProps {
@@ -76,7 +91,7 @@ export default function TweetCard({
   const navigate = useNavigate();
   const location = useLocation();
   const { user: authUser } = useAuth();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [liked, setLiked] = useState(initialLiked ?? false);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [showMenu, setShowMenu] = useState(false);
@@ -116,15 +131,18 @@ export default function TweetCard({
     moved: false,
   });
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   // 글 수정
-  const [isEditing, setIsEditing] = useState(false);
   const [currentContent, setCurrentContent] = useState(content); // 화면에 보여줄 값
   const [currentUpdatedAt, setCurrentUpdatedAt] = useState<string | undefined>(updatedAt);
+
   const [editText, setEditText] = useState('');
   const [editImages, setEditImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const skipNextPropSync = useRef(false);
+
+  const editScrollYRef = useRef(0);
 
   // 본문에서는 img 태그는 제거 (슬라이드에서만 보여줌)
   // Soft Delete 되면 Placeholder 사용
@@ -133,6 +151,7 @@ export default function TweetCard({
   const safeContent = DOMPurify.sanitize(displayContent, {
     FORBID_TAGS: ['img'],
   });
+
   /** 로그인한 프로필 ID 로드 (트윗 삭제/좋아요용) */
   useEffect(() => {
     const loadProfile = async () => {
@@ -188,14 +207,16 @@ export default function TweetCard({
     if (showDialog) document.addEventListener('mousedown', handleOutside);
     return () => document.removeEventListener('mousedown', handleOutside);
   }, [showDialog]);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
+    const doc = parser.parseFromString(currentContent, 'text/html'); // currentContent 기준
     const imgs = Array.from(doc.querySelectorAll('img')).map(img => img.src);
     setContentImages(imgs);
     setCurrentImage(0);
-  }, [content]);
+  }, [currentContent]);
+
   /** 트윗 작성자 국적 / 국기 + 작성자 profileId 로드 */
   const isValidUUID = (v: string) =>
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
@@ -315,14 +336,14 @@ export default function TweetCard({
   }, [safeContent]);
 
   // content 바뀌면 동기화
-  useEffect(() => {
-    if (skipNextPropSync.current) {
-      skipNextPropSync.current = false;
-      return;
-    }
-    if (isEditing) return;
-    setCurrentContent(content);
-  }, [content, isEditing]);
+  // useEffect(() => {
+  //   if (skipNextPropSync.current) {
+  //     skipNextPropSync.current = false;
+  //     return;
+  //   }
+  //   if (isEditing) return;
+  //   setCurrentContent(content);
+  // }, [content, isEditing]);
 
   useEffect(() => {
     setCurrentUpdatedAt(updatedAt);
@@ -460,7 +481,7 @@ export default function TweetCard({
     try {
       // 이미지 태그 생성
       const imgTags = editImages.map(src => `<img src="${src}" alt="uploaded" />`).join('<br />');
-      let finalContent = editText.trim();
+      let finalContent = editorTextToHtml(editText.trim());
       if (imgTags) {
         if (finalContent) finalContent += '<br />' + imgTags;
         else finalContent = imgTags;
@@ -476,20 +497,22 @@ export default function TweetCard({
       if (error) throw error;
 
       toast.success(t('common.success_edit', '수정되었습니다'));
-      setIsEditing(false);
+
+      // 모달 닫기
+      closeEditModal();
+
+      // 화면 내용 갱신
       setCurrentContent(finalContent);
       setCurrentUpdatedAt(nowIso);
 
-      // 다음 prop sync 1회 막기 (저장 직후 원복 방지)
+      // 다음 prop sync 1회 막기
       skipNextPropSync.current = true;
 
-      // 상위 컴포넌트 알림
+      // 상위 컴포넌트/스토어 갱신
       const storeKey = type === 'reply' ? (tweetId ?? id) : id;
-      if (onUpdated) {
-        onUpdated(storeKey, { content: finalContent, updatedAt: nowIso });
-      }
-      // SnsStore 업데이트
+      onUpdated?.(storeKey, { content: finalContent, updatedAt: nowIso });
       SnsStore.updateTweet(storeKey, { content: finalContent, updatedAt: nowIso });
+
       setShowMenu(false);
     } catch (err: any) {
       console.error('수정 실패:', err);
@@ -574,7 +597,9 @@ export default function TweetCard({
     ${dimmed ? 'text-gray-800 dark:text-gray-200 opacity-90' : 'text-gray-900 dark:text-gray-100'}
   `;
   const handleCardClickSafe = () => {
-    // 텍스트 선택 확인은 content onClick에서 처리, 여기는 카드 배경 클릭
+    if (showMenu) return;
+    if (showDialog) return;
+    if (isEditModalOpen) return;
     if (showImageModal) return;
 
     // 혹시라도 배경에서 선택이 일어나고 있었을 수 있으니 체크
@@ -588,6 +613,25 @@ export default function TweetCard({
     tmp.innerHTML = safeContent;
     return tmp.textContent || tmp.innerText || '';
   })();
+
+  const openEditModal = () => {
+    // 현재 스크롤 위치 저장
+    editScrollYRef.current = window.scrollY;
+    setEditText(htmlToEditorText(currentContent)); // 텍스트만
+    // 이미지: propImages 우선, 없으면 currentContent에서 추출
+    const initialImages = propImages.length > 0 ? propImages : extractImageSrcs(currentContent);
+    setEditImages(initialImages);
+
+    setIsUploading(false);
+    setIsEditModalOpen(true);
+    setShowMenu(false);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setIsUploading(false);
+  };
+
   return (
     <div
       data-tweet-id={id}
@@ -667,6 +711,7 @@ export default function TweetCard({
           {/* Menu Button */}
           <div className="relative" ref={menuRef}>
             <button
+              type="button"
               onClick={e => {
                 e.stopPropagation();
                 setShowMenu(prev => !prev);
@@ -679,8 +724,29 @@ export default function TweetCard({
               <div className="absolute right-0 top-8 min-w-[9rem] whitespace-nowrap bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
                 {isMyTweet ? (
                   <>
-                    <EditButton onClose={() => setShowMenu(false)} />
                     <button
+                      type="button"
+                      onMouseDown={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onClick={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openEditModal();
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                    >
+                      <i className="ri-edit-2-line" />
+                      <span>{t('common.edit', '수정')}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onMouseDown={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
                       onClick={e => {
                         e.stopPropagation();
                         setShowDialog(true);
@@ -688,7 +754,7 @@ export default function TweetCard({
                       className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
                     >
                       <i className="ri-delete-bin-line" />
-                      <span>{t('common.delete')}</span>
+                      <span>{t('common.delete', '삭제')}</span>
                     </button>
                   </>
                 ) : (
@@ -722,155 +788,57 @@ export default function TweetCard({
       <div className="w-full">
         {/* 텍스트 + 번역 버튼 */}
         <div className="flex items-center gap-2">
-          {isEditing ? (
-            <div className="w-full" onClick={e => e.stopPropagation()}>
-              <textarea
-                value={editText}
-                onChange={e => setEditText(e.target.value)}
-                rows={4}
-                className="
-                    w-full resize-none rounded-2xl border border-gray-300 dark:border-gray-700
-                    bg-gray-50 dark:bg-background px-3 py-2 text-sm
-                    text-gray-900 dark:text-gray-100
-                    focus:outline-none focus:ring-2 focus:ring-primary/60
-                  "
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    saveEdit();
-                  }
-                  if (e.key === 'Escape') {
-                    e.preventDefault();
-                    setIsEditing(false);
-                    // 원래 내용으로 되돌리기 (텍스트/이미지 분리해서)
-                    setEditText(stripImgTags(currentContent));
-                    setEditImages(extractImageSrcs(currentContent));
-                  }
-                }}
+          <>
+            <div
+              ref={contentRef}
+              className={`${contentClass} transition-all ${
+                expanded ? 'max-h-none' : 'overflow-hidden'
+              } ${isSoftDeleted ? 'italic text-gray-500 opacity-60' : ''}`}
+              style={!expanded ? { maxHeight: '60px' } : undefined} // 약 3줄
+              dangerouslySetInnerHTML={{ __html: safeContent }}
+              // 드래그 시작
+              onMouseDown={e => {
+                dragInfo.current.startX = e.clientX;
+                dragInfo.current.startY = e.clientY;
+                dragInfo.current.moved = false;
+              }}
+              // 드래그 중 감지
+              onMouseMove={e => {
+                // 이미 움직임으로 판명났으면 계산 불필요
+                if (dragInfo.current.moved) return;
+                const dx = Math.abs(e.clientX - dragInfo.current.startX);
+                const dy = Math.abs(e.clientY - dragInfo.current.startY);
+                // 5px 이상 움직이면 드래그(텍스트 선택)로 판단
+                if (dx > 5 || dy > 5) {
+                  dragInfo.current.moved = true;
+                  setIsDraggingText(true);
+                }
+              }}
+              // 드래그 종료 시
+              onMouseUp={() => {
+                // 드래그가 끝났으면 잠시 후 상태 해제 (Click 이벤트가 돌고 나서 false가 되도록)
+                if (isDraggingText) {
+                  setTimeout(() => setIsDraggingText(false), 50);
+                }
+              }}
+              onClick={e => {
+                // 텍스트 선택(드래그)이 아니었을 때만 카드 클릭 처리
+                if (!dragInfo.current.moved) {
+                  e.stopPropagation();
+                  handleCardClick();
+                }
+              }}
+            />
+            {/* 번역 버튼 - 더보기가 없거나 expanded일 때만 표시 */}
+            {plainTextContent.trim().length > 0 && (!isLong || expanded) && (
+              <TranslateButton
+                text={plainTextContent}
+                contentId={`tweet_${id}`}
+                setTranslated={setTranslated}
+                size="sm"
               />
-              <div className="mt-2 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 hover:underline disabled:opacity-50"
-                  >
-                    <i className="ri-image-add-line" />
-                    <span>{isUploading ? '업로드 중...' : '사진 추가'}</span>
-                  </button>
-
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    onChange={handleEditFiles}
-                  />
-
-                  {editImages.length > 0 && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      이미지 {editImages.length}개
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* 이미지 미리보기 + 삭제 */}
-              {editImages.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {editImages.map((src, idx) => (
-                    <div
-                      key={src + idx}
-                      className="relative w-24 h-24 rounded-xl overflow-hidden border"
-                    >
-                      <img src={src} className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center"
-                        onClick={() => setEditImages(prev => prev.filter((_, i) => i !== idx))}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="mt-2 flex justify-end gap-2">
-                <button
-                  className="text-sm text-gray-500 hover:underline"
-                  onClick={() => {
-                    setIsEditing(false);
-                    setEditText(stripImgTags(currentContent));
-                    setEditImages(extractImageSrcs(currentContent));
-                  }}
-                >
-                  취소
-                </button>
-
-                <button
-                  className="px-4 py-1.5 rounded-full text-sm font-semibold bg-primary text-white hover:bg-primary/80"
-                  onClick={saveEdit}
-                >
-                  저장
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div
-                ref={contentRef}
-                className={`${contentClass} transition-all ${
-                  expanded ? 'max-h-none' : 'overflow-hidden'
-                } ${isSoftDeleted ? 'italic text-gray-500 opacity-60' : ''}`}
-                style={!expanded ? { maxHeight: '60px' } : undefined} // 약 3줄
-                dangerouslySetInnerHTML={{ __html: safeContent }}
-                // 드래그 시작
-                onMouseDown={e => {
-                  dragInfo.current.startX = e.clientX;
-                  dragInfo.current.startY = e.clientY;
-                  dragInfo.current.moved = false;
-                }}
-                // 드래그 중 감지
-                onMouseMove={e => {
-                  // 이미 움직임으로 판명났으면 계산 불필요
-                  if (dragInfo.current.moved) return;
-                  const dx = Math.abs(e.clientX - dragInfo.current.startX);
-                  const dy = Math.abs(e.clientY - dragInfo.current.startY);
-                  // 5px 이상 움직이면 드래그(텍스트 선택)로 판단
-                  if (dx > 5 || dy > 5) {
-                    dragInfo.current.moved = true;
-                    setIsDraggingText(true);
-                  }
-                }}
-                // 드래그 종료 시
-                onMouseUp={() => {
-                  // 드래그가 끝났으면 잠시 후 상태 해제 (Click 이벤트가 돌고 나서 false가 되도록)
-                  if (isDraggingText) {
-                    setTimeout(() => setIsDraggingText(false), 50);
-                  }
-                }}
-                onClick={e => {
-                  // 텍스트 선택(드래그)이 아니었을 때만 카드 클릭 처리
-                  if (!dragInfo.current.moved) {
-                    e.stopPropagation(); // 👈 부모로 버블링 방지 (부모도 navigate를 호출하므로 중복 방지)
-                    handleCardClick();
-                  }
-                }}
-              />
-              {/* 번역 버튼 - 더보기가 없거나 expanded일 때만 표시 */}
-              {plainTextContent.trim().length > 0 && (!isLong || expanded) && (
-                <TranslateButton
-                  text={plainTextContent}
-                  contentId={`tweet_${id}`}
-                  setTranslated={setTranslated}
-                  size="sm"
-                />
-              )}
-            </>
-          )}
+            )}
+          </>
         </div>
         {/* 더보기 버튼 */}
         {isLong && (
@@ -938,7 +906,7 @@ export default function TweetCard({
           </div>
         )}
         {/* 이미지 슬라이드 */}
-        {!isEditing && allImages.length > 0 && (
+        {allImages.length > 0 && (
           <ImageSlider
             allImages={allImages}
             currentImage={currentImage}
@@ -951,7 +919,7 @@ export default function TweetCard({
             }}
           />
         )}
-        {!isEditing && showImageModal && (
+        {showImageModal && (
           <ModalImageSlider
             allImages={allImages}
             modalIndex={modalIndex}
@@ -1071,6 +1039,24 @@ export default function TweetCard({
           }}
         />
       )}
+      <EditTweetModal
+        open={isEditModalOpen}
+        title="게시글 수정"
+        editText={editText}
+        setEditText={setEditText}
+        editImages={editImages}
+        setEditImages={setEditImages}
+        isUploading={isUploading}
+        onFileChange={handleEditFiles}
+        onClose={() => {
+          // 취소 시 초기화하고 닫기(원하면 초기화 안 해도 됨)
+          setEditText('');
+          setEditImages([]);
+          closeEditModal();
+        }}
+        onSave={saveEdit}
+        disableSave={!editText.trim() && editImages.length === 0}
+      />
     </div>
   );
 }

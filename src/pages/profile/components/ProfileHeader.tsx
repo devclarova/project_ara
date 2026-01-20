@@ -21,6 +21,8 @@ interface ProfileHeaderProps {
   onEditClick?: () => void;
   hideFollowButton?: boolean;
   showPersonalDetails?: boolean;
+  onMessageClick?: () => void;
+  hideMessageButton?: boolean;
 }
 
 export default function ProfileHeader({
@@ -30,6 +32,8 @@ export default function ProfileHeader({
   onEditClick,
   hideFollowButton = false,
   showPersonalDetails = false,
+  onMessageClick,
+  hideMessageButton = false,
 }: ProfileHeaderProps) {
   const { t } = useTranslation();
   const { user, isBanned, bannedUntil } = useAuth();
@@ -43,21 +47,24 @@ export default function ProfileHeader({
   const bannerPosYRef = useRef(bannerPosY);
   const [translated, setTranslated] = useState<string>('');
   const [showFollowersModal, setShowFollowersModal] = useState(false);
-  const [followersModalTab, setFollowersModalTab] = useState<'followers' | 'following'>('followers');
+  const [followersModalTab, setFollowersModalTab] = useState<'followers' | 'following'>(
+    'followers',
+  );
   const [showFollowMenu, setShowFollowMenu] = useState(false);
   const [followNotificationsEnabled, setFollowNotificationsEnabled] = useState(true);
   const followMenuRef = useRef<HTMLDivElement>(null);
-  
+  const [showMessageModal, setShowMessageModal] = useState(false);
+
   // Real follow hook integration
   // IMPORTANT: Use profile.id (not user_id) for foreign key relations
-  const { 
-    isFollowing, 
-    isLoading: followLoading, 
-    followersCount, 
-    followingCount, 
-    toggleFollow, 
-    refreshCounts 
-  } = useFollow(userProfile.id);  // ✅ Use profile.id for DB relations
+  const {
+    isFollowing,
+    isLoading: followLoading,
+    followersCount,
+    followingCount,
+    toggleFollow,
+    refreshCounts,
+  } = useFollow(userProfile.id); // Use profile.id for DB relations
 
   // 프로필 바뀌면 동기화
   useEffect(() => {
@@ -128,12 +135,14 @@ export default function ProfileHeader({
 
       // Dispatch event for Header update if it's avatar
       if (type === 'avatar') {
-        window.dispatchEvent(new CustomEvent('profile:updated', {
-          detail: {
-             nickname: userProfile.name, // keep existing nickname
-             avatar_url: imageUrl
-          }
-        }));
+        window.dispatchEvent(
+          new CustomEvent('profile:updated', {
+            detail: {
+              nickname: userProfile.name, // keep existing nickname
+              avatar_url: imageUrl,
+            },
+          }),
+        );
       }
       toast.success(t('common.image_updated', '이미지가 업데이트되었습니다.'));
     } catch (err) {
@@ -164,24 +173,24 @@ export default function ProfileHeader({
 
   const handleFollowToggle = async () => {
     if (isBanned && bannedUntil) {
-       // '팔로우' directly or use t('profile.action_follow') if created, but user seemed ok with hardcoded for now or I stick to Korean as primary.
-       // The banUtils uses Korean hardcoded, so '팔로우' is consistent.
+      // '팔로우' directly or use t('profile.action_follow') if created, but user seemed ok with hardcoded for now or I stick to Korean as primary.
+      // The banUtils uses Korean hardcoded, so '팔로우' is consistent.
       toast.error(getBanMessage(bannedUntil, '팔로우'));
       return;
     }
     await toggleFollow();
   };
-  
+
   const handleFollowersClick = () => {
     setFollowersModalTab('followers');
     setShowFollowersModal(true);
   };
-  
+
   const handleFollowingClick = () => {
     setFollowersModalTab('following');
     setShowFollowersModal(true);
   };
-  
+
   // 팔로우 메뉴 외부 클릭 감지
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -198,17 +207,17 @@ export default function ProfileHeader({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showFollowMenu]);
-  
+
   const handleUnfollow = async () => {
     setShowFollowMenu(false);
     await toggleFollow();
   };
-  
+
   const handleToggleNotifications = () => {
     setFollowNotificationsEnabled(!followNotificationsEnabled);
     toast.info(t('profile.notifications_updated', '알림 설정이 변경되었습니다'));
   };
-  
+
   return (
     <div className="relative bg-white dark:bg-background">
       {/* 배너 */}
@@ -283,12 +292,12 @@ export default function ProfileHeader({
         </div>
         {uploading && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20">
-              <span className="text-sm text-muted-foreground">{followersCount.toLocaleString()}</span>
+            <span className="text-sm text-muted-foreground">{followersCount.toLocaleString()}</span>
           </div>
         )}
         {/* 내 프로필일 때만 “프로필 편집” 버튼 */}
         {isOwnProfile ? (
-          <div className="flex justify-end mb-4 -mt-8 relative z-">
+          <div className="flex justify-end mb-4 -mt-8 relative z-10">
             <Button
               variant="outline"
               onClick={onEditClick}
@@ -297,59 +306,94 @@ export default function ProfileHeader({
               {t('profile.edit_profile')}
             </Button>
           </div>
-        ) : !hideFollowButton ? (
+        ) : (
           <div className="flex justify-end mb-4 -mt-8 relative z-10" ref={followMenuRef}>
-            {isFollowing ? (
-              <div className="relative">
+            <div className="flex items-center gap-2">
+              {/* 메시지 버튼 (유저프로필에서만) */}
+              {!hideMessageButton && (
                 <Button
-                  onClick={() => setShowFollowMenu(!showFollowMenu)}
-                  className="rounded-full px-6 font-medium transition-all group min-w-[120px] border-2 border-gray-300 dark:border-gray-600 bg-transparent text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary hover:bg-primary/5 dark:hover:bg-primary/10"
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowFollowMenu(false);
+                    onMessageClick?.(); // 외부에서 처리하고 싶으면 여기로
+                    setShowMessageModal(true); // 내부 모달 UI 쓸거면 이거
+                  }}
+                  className="rounded-full px-5 font-medium border-2 border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-secondary/60 text-gray-800 dark:text-gray-100 hover:bg-primary/5 dark:hover:bg-primary/10"
                 >
-                  <span className="flex items-center gap-1.5">
-                    <i className="ri-user-follow-line" />
-                    {t('profile.following')}
-                    <i className={`ri-arrow-down-s-line transition-transform ${showFollowMenu ? 'rotate-180' : ''}`} />
+                  <span className="flex items-center gap-2">
+                    <i className="ri-chat-3-line" />
+                    {t('message.message', '메시지')}
                   </span>
                 </Button>
-                
-                {showFollowMenu && (
-                  <div className="absolute top-full right-0 mt-2 min-w-[120px] rounded-xl border border-gray-100/80 bg-white/95 shadow-lg shadow-black/5 backdrop-blur-sm z-[200] dark:bg-secondary/95 dark:border-gray-700/70 overflow-hidden">
-                    <div className="py-1">
-                      <button
-                        onClick={handleUnfollow}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-100 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                      >
-                        <i className="ri-user-unfollow-line text-base" />
-                        <span>{t('profile.unfollow')}</span>
-                      </button>
-                      <button
-                        onClick={handleToggleNotifications}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-100 hover:bg-primary/5 dark:hover:bg-primary/20 transition-colors"
-                      >
-                        <i className={`text-base ${followNotificationsEnabled ? 'ri-notification-off-line' : 'ri-notification-line'}`} />
-                        <span>
-                          {followNotificationsEnabled 
-                            ? t('profile.turn_off_notifications') 
-                            : t('profile.turn_on_notifications')}
-                        </span>
-                      </button>
-                    </div>
+              )}
+
+              {/* 팔로우 버튼 */}
+              {!hideFollowButton ? (
+                isFollowing ? (
+                  <div className="relative">
+                    <Button
+                      onClick={() => setShowFollowMenu(!showFollowMenu)}
+                      className="rounded-full px-6 font-medium transition-all group min-w-[120px] border-2 border-gray-300 dark:border-gray-600 bg-transparent text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary hover:bg-primary/5 dark:hover:bg-primary/10"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <i className="ri-user-follow-line" />
+                        {t('profile.following')}
+                        <i
+                          className={`ri-arrow-down-s-line transition-transform ${
+                            showFollowMenu ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </span>
+                    </Button>
+
+                    {showFollowMenu && (
+                      <div className="absolute top-full right-0 mt-2 min-w-[120px] rounded-xl border border-gray-100/80 bg-white/95 shadow-lg shadow-black/5 backdrop-blur-sm z-[200] dark:bg-secondary/95 dark:border-gray-700/70 overflow-hidden">
+                        <div className="py-1">
+                          <button
+                            onClick={handleUnfollow}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-100 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                          >
+                            <i className="ri-user-unfollow-line text-base" />
+                            <span>{t('profile.unfollow')}</span>
+                          </button>
+                          <button
+                            onClick={handleToggleNotifications}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-100 hover:bg-primary/5 dark:hover:bg-primary/20 transition-colors"
+                          >
+                            <i
+                              className={`text-base ${
+                                followNotificationsEnabled
+                                  ? 'ri-notification-off-line'
+                                  : 'ri-notification-line'
+                              }`}
+                            />
+                            <span>
+                              {followNotificationsEnabled
+                                ? t('profile.turn_off_notifications')
+                                : t('profile.turn_on_notifications')}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ) : (
-              <Button
-                onClick={handleFollowToggle}
-                className="rounded-full px-6 font-medium transition-all group min-w-[120px] bg-gradient-to-r from-[#00dbaa] to-[#009e89] text-white border-transparent hover:opacity-90"
-              >
-                <span className="flex items-center gap-1.5">
-                  <i className="ri-user-add-line" />
-                  {t('profile.follow')}
-                </span>
-              </Button>
-            )}
+                ) : (
+                  <Button
+                    onClick={handleFollowToggle}
+                    className="rounded-full px-6 font-medium transition-all group min-w-[120px] bg-gradient-to-r from-[#00dbaa] to-[#009e89] text-white border-transparent hover:opacity-90"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <i className="ri-user-add-line" />
+                      {t('profile.follow')}
+                    </span>
+                  </Button>
+                )
+              ) : null}
+            </div>
           </div>
-        ) : null}
+        )}
+
         {/* 사용자 정보 */}
         <div className="space-y-3">
           {/* 이름 */}
@@ -357,9 +401,9 @@ export default function ProfileHeader({
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center flex-wrap gap-2">
             <div className="relative inline-flex items-center pr-2.5">
               <span>{userProfile.name}</span>
-              <OnlineIndicator 
-                userId={userProfile.user_id} 
-                size="md" 
+              <OnlineIndicator
+                userId={userProfile.user_id}
+                size="md"
                 className="absolute top-0.5 right-0 z-10 border-white dark:border-gray-900 border-2"
               />
             </div>
@@ -438,24 +482,28 @@ export default function ProfileHeader({
                 <span>{userProfile.country}</span>
               </span>
             )}
-            
+
             {/* Gender & Age (Specific for Report Details e.g.) */}
             {showPersonalDetails && (
-                <>
+              <>
                 {userProfile.gender && (
-                    <span className="flex items-center gap-1">
-                        <i className={`ri-${userProfile.gender === 'Male' ? 'men' : 'women'}-line`} />
-                        <span>{userProfile.gender === 'Male' ? t('signup.gender_male', '남성') : t('signup.gender_female', '여성')}</span>
+                  <span className="flex items-center gap-1">
+                    <i className={`ri-${userProfile.gender === 'Male' ? 'men' : 'women'}-line`} />
+                    <span>
+                      {userProfile.gender === 'Male'
+                        ? t('signup.gender_male', '남성')
+                        : t('signup.gender_female', '여성')}
                     </span>
+                  </span>
                 )}
                 {userProfile.age && (
-                    <span className="flex items-center gap-1">
-                        <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-medium">
-                            {userProfile.age}세
-                        </span>
+                  <span className="flex items-center gap-1">
+                    <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-medium">
+                      {userProfile.age}세
                     </span>
-                 )}
-                 </>
+                  </span>
+                )}
+              </>
             )}
             <span className="flex items-center gap-1">
               <i className="ri-calendar-line" />
@@ -464,7 +512,7 @@ export default function ProfileHeader({
           </div>
         </div>
       </div>
-      
+
       {/* 팔로워/팔로잉 모달 */}
       <FollowersModal
         isOpen={showFollowersModal}
