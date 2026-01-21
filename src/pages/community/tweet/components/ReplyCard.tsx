@@ -67,6 +67,8 @@ interface ReplyCardProps {
   isLastChild?: boolean;
   ancestorsLast?: boolean[]; // Track if ancestors were the last children
   hasChildren?: boolean; // Explicit flag to force-draw the descendant line
+  editingReplyId: string | null;
+  setEditingReplyId: (id: string | null) => void;
 }
 
 export function ReplyCard({
@@ -83,11 +85,13 @@ export function ReplyCard({
   isLastChild = false,
   ancestorsLast = [],
   hasChildren = false,
+  editingReplyId,
+  setEditingReplyId,
 }: ReplyCardProps) {
   const navigate = useNavigate();
   const params = useParams();
   const { user: authUser } = useAuth();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [liked, setLiked] = useState(reply.liked ?? false);
   const [likeCount, setLikeCount] = useState(reply.stats?.likes ?? 0);
   const [showMenu, setShowMenu] = useState(false);
@@ -143,7 +147,11 @@ export function ReplyCard({
   }, [reply.stats?.likes]);
 
   // 댓글 수정 기능
-  const [isEditing, setIsEditing] = useState(false);
+  const isEditing = editingReplyId === reply.id;
+
+  const openEdit = () => setEditingReplyId(reply.id);
+  const closeEdit = () => setEditingReplyId(null);
+
   const [draftText, setDraftText] = useState('');
 
   const [isComposing, setIsComposing] = useState(false);
@@ -288,6 +296,12 @@ export function ReplyCard({
     setContentImages(imgs);
   }, [currentContent]);
 
+  useEffect(() => {
+    if (!isEditing) return; // 내가 편집 대상일 때만
+    setDraftText(htmlToPlainText(currentContent));
+    setEditImages(extractImageSrcs(currentContent));
+  }, [isEditing, currentContent]);
+
   // 댓글 삭제
   const handleDelete = async () => {
     if (!profileId) {
@@ -316,6 +330,7 @@ export function ReplyCard({
   // 댓글 좋아요 토글
   const toggleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    closeInteractions();
     if (disableInteractions) return;
     if (isLikeProcessing) return;
 
@@ -409,6 +424,8 @@ export function ReplyCard({
     e.stopPropagation();
     if (isDeletedUser) return;
 
+    closeInteractions();
+
     if (onAvatarClick) {
       onAvatarClick(reply.user.username);
       return;
@@ -436,18 +453,33 @@ export function ReplyCard({
   });
 
   // Helper 함수
-  const extractImageSrcs = (html: string) => {
+  function extractImageSrcs(html: string) {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     return Array.from(doc.querySelectorAll('img'))
       .map(img => img.getAttribute('src'))
       .filter(Boolean) as string[];
-  };
+  }
 
-  const htmlToPlainText = (html: string) => {
+  function htmlToPlainText(html: string) {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     doc.querySelectorAll('img').forEach(img => img.remove());
     doc.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
     return (doc.body.textContent ?? '').trim();
+  }
+
+  const closeEditIfNeeded = () => {
+    if (!isEditing) return;
+    closeEdit();
+    setDraftText(htmlToPlainText(currentContent));
+    setEditImages(extractImageSrcs(currentContent));
+  };
+
+  const closeMenu = () => setShowMenu(false);
+
+  // 카드 내부에서 어떤 동작 이벤트가 일어나면 이걸 호출
+  const closeInteractions = () => {
+    closeMenu();
+    closeEditIfNeeded();
   };
 
   const plainTextToHtml = (text: string) => {
@@ -490,7 +522,7 @@ export function ReplyCard({
 
     setCurrentContent(data?.content ?? finalHtml);
     setLocalUpdatedAt(data?.updated_at ?? nowIso);
-    setIsEditing(false);
+    closeEdit();
     toast.success(t('common.success_edit'));
   };
 
@@ -647,6 +679,7 @@ export function ReplyCard({
         e.stopPropagation();
 
         if (onClick) {
+          closeInteractions();
           onClick(reply.id, String(reply.tweetId));
           return;
         }
@@ -655,6 +688,7 @@ export function ReplyCard({
         if (disableInteractions) {
           return;
         }
+        closeInteractions();
 
         // useParams로 가져온 id(문자열)와 reply.tweetId(문자열 or 숫자) 비교
         const currentTweetId = params.id;
@@ -837,7 +871,8 @@ export function ReplyCard({
               <button
                 onClick={e => {
                   e.stopPropagation();
-                  setShowMenu(prev => !prev);
+                  closeEditIfNeeded();
+                  setShowMenu(v => !v);
                 }}
                 className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition"
               >
@@ -859,7 +894,7 @@ export function ReplyCard({
                         setEditImages(imgs);
 
                         setDraftText(htmlToPlainText(currentContent));
-                        setIsEditing(true);
+                        openEdit();
                         setShowMenu(false);
                       }}
                       className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 flex items-center gap-2 text-gray-800 dark:text-gray-200"
@@ -942,7 +977,7 @@ export function ReplyCard({
                     if (e.key === 'Escape') {
                       e.preventDefault();
                       setDraftText(htmlToPlainText(currentContent));
-                      setIsEditing(false);
+                      closeEdit();
                       return;
                     }
 
@@ -1022,7 +1057,7 @@ export function ReplyCard({
                       type="button"
                       className="text-sm text-gray-500 hover:underline"
                       onClick={() => {
-                        setIsEditing(false);
+                        closeEdit();
                         setDraftText(htmlToPlainText(currentContent));
                         setEditImages(extractImageSrcs(currentContent));
                       }}
@@ -1052,6 +1087,9 @@ export function ReplyCard({
                     if (!el) return;
                     const username = el.dataset.mention;
                     if (!username) return;
+
+                    e.stopPropagation();
+                    closeInteractions();
                     navigate(`/profile/${encodeURIComponent(username)}`);
                   }}
                 />
@@ -1160,6 +1198,7 @@ export function ReplyCard({
                     return;
                   }
                   e.stopPropagation();
+                  closeInteractions();
                   onReply?.(reply);
                 }}
               >

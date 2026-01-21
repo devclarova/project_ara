@@ -20,6 +20,7 @@ import { formatSmartDate } from '@/utils/dateUtils';
 import { BanBadge } from '@/components/common/BanBadge';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import EditButton from '@/components/common/EditButton';
+import EditTweetModal from '@/components/common/EditTweetModal';
 
 interface TweetDetailCardProps {
   tweet: UIPost;
@@ -64,16 +65,13 @@ export default function TweetDetailCard({
   const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
   const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
 
-  // 게시글 수정
-  const [isEditing, setIsEditing] = useState(false);
   const [currentContent, setCurrentContent] = useState(tweet.content);
   const [currentUpdatedAt, setCurrentUpdatedAt] = useState<string | undefined>(tweet.updatedAt);
-  const [isComposing, setIsComposing] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const [editText, setEditText] = useState('');
   const [editImages, setEditImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const skipNextPropSync = useRef(false);
 
   const handleBackClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -125,10 +123,10 @@ export default function TweetDetailCard({
   // Load Author's Country & Profile ID (Merged Logic)
   useEffect(() => {
     if (isDeletedUser) {
-       setAuthorProfileId(null);
-       setAuthorCountryFlagUrl(null);
-       setAuthorCountryName(null);
-       return;
+      setAuthorProfileId(null);
+      setAuthorCountryFlagUrl(null);
+      setAuthorCountryName(null);
+      return;
     }
     const fetchAuthorCountry = async () => {
       try {
@@ -198,18 +196,19 @@ export default function TweetDetailCard({
       skipNextPropSync.current = false;
       return;
     }
-    if (isEditing) return;
     setCurrentContent(tweet.content);
-  }, [tweet.content, isEditing]);
+  }, [tweet.content]);
 
   useEffect(() => {
     setCurrentUpdatedAt(tweet.updatedAt);
   }, [tweet.updatedAt]);
 
   const propImages = Array.isArray(tweet.image) ? tweet.image : tweet.image ? [tweet.image] : [];
-  const allImages = (isSoftDeleted && !isAdminView) ? [] : (propImages.length > 0 ? propImages : contentImages);
+  const allImages =
+    isSoftDeleted && !isAdminView ? [] : propImages.length > 0 ? propImages : contentImages;
 
-  const displayContent = (isSoftDeleted && !isAdminView) ? '관리자에 의해 삭제된 메시지입니다.' : currentContent;
+  const displayContent =
+    isSoftDeleted && !isAdminView ? '관리자에 의해 삭제된 메시지입니다.' : currentContent;
 
   const safeContent = DOMPurify.sanitize(displayContent, {
     ADD_TAGS: ['iframe', 'video', 'source'],
@@ -466,17 +465,7 @@ export default function TweetDetailCard({
       toast.error('이미지 업로드 실패');
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
-  };
-
-  const startEdit = () => {
-    const imgs = extractImageSrcs(currentContent);
-    const onlyText = htmlToPlainText(currentContent);
-    setEditImages(imgs);
-    setEditText(onlyText);
-    setShowImageModal(false);
-    setIsEditing(true);
   };
 
   const saveEdit = async () => {
@@ -507,10 +496,21 @@ export default function TweetDetailCard({
     skipNextPropSync.current = true;
     setCurrentContent(finalHtml);
     setCurrentUpdatedAt(nowIso);
-    setIsEditing(false);
     toast.success(t('common.success_edit'));
 
     SnsStore.updateTweet(tweet.id, { content: finalHtml, updatedAt: nowIso });
+  };
+
+  const openEditModal = () => {
+    setEditText(htmlToPlainText(currentContent));
+    setEditImages(extractImageSrcs(currentContent));
+    setIsUploading(false);
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setIsUploading(false);
   };
 
   return (
@@ -524,10 +524,18 @@ export default function TweetDetailCard({
           <i className="ri-arrow-left-line text-lg text-gray-700 dark:text-gray-100" />
         </button>
 
-        <div onClick={handleAvatarClick} className={`cursor-pointer flex-shrink-0 relative ${isDeletedUser ? 'cursor-default' : ''}`}>
+        <div
+          onClick={handleAvatarClick}
+          className={`cursor-pointer flex-shrink-0 relative ${isDeletedUser ? 'cursor-default' : ''}`}
+        >
           <Avatar>
-            <AvatarImage src={tweet.user.avatar || '/default-avatar.svg'} alt={isDeletedUser ? t('deleted_user') : tweet.user.name} />
-            <AvatarFallback>{isDeletedUser ? '?' : tweet.user.name.charAt(0).toUpperCase()}</AvatarFallback>
+            <AvatarImage
+              src={tweet.user.avatar || '/default-avatar.svg'}
+              alt={isDeletedUser ? t('deleted_user') : tweet.user.name}
+            />
+            <AvatarFallback>
+              {isDeletedUser ? '?' : tweet.user.name.charAt(0).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
         </div>
 
@@ -541,9 +549,9 @@ export default function TweetDetailCard({
                 {isDeletedUser ? t('deleted_user') : tweet.user.name}
               </span>
               {!isDeletedUser && (
-                <OnlineIndicator 
-                  userId={tweet.user.username} 
-                  size="sm" 
+                <OnlineIndicator
+                  userId={tweet.user.username}
+                  size="sm"
                   className="absolute -top-0.5 right-0 z-20 border-white dark:border-background border shadow-none"
                 />
               )}
@@ -580,11 +588,13 @@ export default function TweetDetailCard({
                   const ms = new Date(v).getTime();
                   return Number.isFinite(ms) ? ms : null;
                 };
-                const created = (tweet as any).createdAt || (tweet as any).created_at || tweet.timestamp;
+                const created =
+                  (tweet as any).createdAt || (tweet as any).created_at || tweet.timestamp;
                 const edited = currentUpdatedAt || (tweet as any).updatedAt;
                 const createdMs = toMs(created);
                 const editedMs = toMs(edited);
-                const isEdited = createdMs != null && editedMs != null && editedMs > createdMs + 1000;
+                const isEdited =
+                  createdMs != null && editedMs != null && editedMs > createdMs + 1000;
                 return isEdited ? <span className="ml-1 text-xs text-gray-400">수정됨</span> : null;
               })()}
             </span>
@@ -607,7 +617,7 @@ export default function TweetDetailCard({
                 <>
                   <EditButton
                     onEdit={() => {
-                      startEdit();
+                      openEditModal();
                       setShowMenu(false);
                     }}
                     onClose={() => setShowMenu(false)}
@@ -677,60 +687,14 @@ export default function TweetDetailCard({
         {/* 텍스트 + 번역 버튼 */}
         {hasText && (
           <div className="flex items-center gap-2">
-            {isEditing ? (
-              <div className="w-full" onClick={e => e.stopPropagation()}>
-                <textarea
-                  value={editText}
-                  onChange={e => setEditText(e.target.value)}
-                  rows={6}
-                  className="w-full resize-none rounded-2xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-background px-3 py-2 text-base text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/60"
-                  onCompositionStart={() => setIsComposing(true)}
-                  onCompositionEnd={() => setIsComposing(false)}
-                  onKeyDown={e => {
-                    if (isComposing) return;
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      saveEdit();
-                    }
-                    if (e.key === 'Escape') {
-                      e.preventDefault();
-                      setIsEditing(false);
-                      setEditText(htmlToPlainText(currentContent));
-                      setEditImages(extractImageSrcs(currentContent));
-                    }
-                  }}
-                />
-                <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleEditFiles} />
-                {editImages.length > 0 && (
-                  <div className="mt-3 grid grid-cols-3 gap-2">
-                    {editImages.map((src, idx) => (
-                      <div key={`${src}-${idx}`} className="relative aspect-square overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
-                        <img src={src} alt="" className="w-full h-full object-cover" draggable={false} />
-                        <button type="button" onClick={() => setEditImages(prev => prev.filter((_, i) => i !== idx))} className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center" title="삭제">×</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <div className="mt-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="px-3 py-2 rounded-full border text-sm hover:bg-gray-100 dark:hover:bg-white/10 disabled:opacity-50">{isUploading ? '업로드 중...' : '이미지 추가'}</button>
-                    <button type="button" onClick={() => { const url = prompt('이미지 URL을 입력하세요'); if (url) setEditImages(prev => [...prev, url]); }} className="px-3 py-2 rounded-full border text-sm hover:bg-gray-100 dark:hover:bg-white/10">URL 추가</button>
-                    {editImages.length > 0 && <span className="text-xs text-gray-500 dark:text-gray-400">이미지 {editImages.length}개</span>}
-                  </div>
-                  <div className="flex gap-2">
-                    <button type="button" className="text-sm text-gray-500 hover:underline" onClick={() => { setIsEditing(false); setEditText(htmlToPlainText(currentContent)); setEditImages(extractImageSrcs(currentContent)); }}>취소</button>
-                    <button type="button" onClick={saveEdit} className="px-4 py-2 rounded-full bg-primary text-white hover:bg-primary/80">저장</button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-                <div className={`text-xl leading-relaxed break-words whitespace-pre-line ${isSoftDeleted ? 'italic text-gray-500 opacity-60' : 'text-gray-900 dark:text-gray-100'}`}>
-                    <div dangerouslySetInnerHTML={{ __html: safeContent }} />
-                </div>
-            )}
-            
+            <div
+              className={`text-xl leading-relaxed break-words whitespace-pre-line ${isSoftDeleted ? 'italic text-gray-500 opacity-60' : 'text-gray-900 dark:text-gray-100'}`}
+            >
+              <div dangerouslySetInnerHTML={{ __html: safeContent }} />
+            </div>
+
             {/* 번역 버튼 */}
-            {!isSoftDeleted && !isEditing && plainTextContent.trim().length > 0 && (
+            {!isSoftDeleted && plainTextContent.trim().length > 0 && (
               <TranslateButton
                 text={plainTextContent}
                 contentId={`tweet_${tweet.id}`}
@@ -749,7 +713,7 @@ export default function TweetDetailCard({
         )}
 
         {/* 이미지 슬라이더 */}
-        {allImages.length > 0 && !isEditing && (
+        {allImages.length > 0 && (
           <ImageSlider
             allImages={allImages}
             currentImage={currentImage}
@@ -812,6 +776,27 @@ export default function TweetDetailCard({
           </div>
         </div>
       </div>
+      <EditTweetModal
+        open={isEditModalOpen}
+        title="게시글 수정"
+        editText={editText}
+        setEditText={setEditText}
+        editImages={editImages}
+        setEditImages={setEditImages}
+        isUploading={isUploading}
+        onFileChange={handleEditFiles} // 기존 함수 그대로 사용 가능
+        onClose={() => {
+          // 취소하면 원복해두고 닫기(선택)
+          setEditText(htmlToPlainText(currentContent));
+          setEditImages(extractImageSrcs(currentContent));
+          closeEditModal();
+        }}
+        onSave={async () => {
+          await saveEdit(); // saveEdit 내부에서 currentContent 업데이트 하니까 OK
+          closeEditModal(); // saveEdit 안에서 닫지 않는다면 여기서 닫기
+        }}
+        disableSave={!editText.trim() && editImages.length === 0}
+      />
     </div>
   );
 }

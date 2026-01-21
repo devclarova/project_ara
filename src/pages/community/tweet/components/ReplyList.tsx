@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ReplyCard } from './ReplyCard';
 import SnsInlineEditor from '@/components/common/SnsInlineEditor';
 import type { UIReply } from '@/types/sns';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface ReplyListProps {
   replies: UIReply[];
@@ -38,6 +38,8 @@ function ReplyTree({
   disableInteractions = false,
   isLastChild = false,
   ancestorsLast = [],
+  editingReplyId,
+  setEditingReplyId,
 }: {
   node: ReplyNode;
   depth: number;
@@ -50,6 +52,8 @@ function ReplyTree({
   disableInteractions?: boolean;
   isLastChild?: boolean;
   ancestorsLast?: boolean[];
+  editingReplyId: string | null;
+  setEditingReplyId: (id: string | null) => void;
 }) {
   const isReplying = openReplyId === node.id;
 
@@ -71,21 +75,23 @@ function ReplyTree({
         isLastChild={isLastChild}
         ancestorsLast={ancestorsLast}
         hasChildren={node.children.length > 0}
+        editingReplyId={editingReplyId}
+        setEditingReplyId={setEditingReplyId}
       />
 
       {/* 답글 입력창 - Indented via padding for full-width bg */}
       {isReplying && !disableInteractions && (
-        <div 
+        <div
           className="w-full relative py-4 bg-primary/[0.02] dark:bg-primary/[0.01] border-b border-gray-100 dark:border-gray-800 transition-all duration-300"
           style={{ paddingLeft: 16 + (depth + 1) * 40 }}
         >
           {/* Thread continuity lines for editor - Draw active ancestors only */}
           {Array.from({ length: depth + 1 }).map((_, i) => {
-             // Don't draw line if this ancestor level has already finished
-             if (i < depth && ancestorsLast[i]) return null;
-             
-             return (
-              <div 
+            // Don't draw line if this ancestor level has already finished
+            if (i < depth && ancestorsLast[i]) return null;
+
+            return (
+              <div
                 key={`editor-line-${i}`}
                 className="absolute top-0 bottom-0 w-[1px] bg-gray-300 dark:bg-gray-700"
                 style={{ left: 16 + 20 + i * 40 }}
@@ -93,20 +99,20 @@ function ReplyTree({
             );
           })}
 
-           <div className="pr-4">
-             <SnsInlineEditor
-                mode="reply"
-                tweetId={String(node.tweetId)}
-                parentReplyId={node.id}
-                onReplyCreated={(newReply) => {
-                    onAddedReply?.(newReply);
-                }}
-                onCancel={() => {
-                    onCloseReply?.();
-                }}
-                ref={(r) => r && r.focus()}
-             />
-           </div>
+          <div className="pr-4">
+            <SnsInlineEditor
+              mode="reply"
+              tweetId={String(node.tweetId)}
+              parentReplyId={node.id}
+              onReplyCreated={newReply => {
+                onAddedReply?.(newReply);
+              }}
+              onCancel={() => {
+                onCloseReply?.();
+              }}
+              ref={r => r && r.focus()}
+            />
+          </div>
         </div>
       )}
 
@@ -127,11 +133,12 @@ function ReplyTree({
               disableInteractions={disableInteractions}
               isLastChild={idx === node.children.length - 1}
               ancestorsLast={depth === 0 ? ancestorsLast : [...ancestorsLast, isLastChild]}
+              editingReplyId={editingReplyId}
+              setEditingReplyId={setEditingReplyId}
             />
           ))}
         </div>
       )}
-      
     </div>
   );
 }
@@ -149,6 +156,8 @@ export default function ReplyList({
   disableInteractions = false,
 }: ReplyListProps) {
   const { t } = useTranslation();
+
+  const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
 
   const threaded = useMemo(() => {
     const map = new Map<string, ReplyNode>();
@@ -230,6 +239,8 @@ export default function ReplyList({
           onCloseReply={onCloseReply}
           highlightId={highlightId}
           disableInteractions={disableInteractions}
+          editingReplyId={editingReplyId}
+          setEditingReplyId={setEditingReplyId}
         />
       ))}
     </InfiniteScroll>

@@ -1,4 +1,3 @@
-
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useTranslation } from 'react-i18next';
 import { ReplyCard } from './ReplyCard';
@@ -13,13 +12,13 @@ interface ReplyListProps {
   highlightId?: string | null;
 }
 
-export default function ReplyList({ 
-  replies, 
-  onDeleted, 
-  hasMore, 
-  fetchMore, 
+export default function ReplyList({
+  replies,
+  onDeleted,
+  hasMore,
+  fetchMore,
   onCommentClick,
-  highlightId
+  highlightId,
 }: ReplyListProps) {
   const { t } = useTranslation();
 
@@ -56,8 +55,8 @@ export default function ReplyList({
             reply={reply}
             onDeleted={onDeleted}
             onReply={() => {
-                // Future: wiring for inline replies if needed
-                onCommentClick?.(reply.id);
+              // Future: wiring for inline replies if needed
+              onCommentClick?.(reply.id);
             }}
             highlight={reply.id === highlightId}
           />

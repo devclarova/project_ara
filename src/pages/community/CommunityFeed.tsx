@@ -34,7 +34,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
   const [tweets, setTweets] = useState<UITweet[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  
+
   // Refs
   const pageRef = useRef(0);
   const loadingRef = useRef(false);
@@ -77,80 +77,83 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
     } | null;
   };
 
-  const fetchTweets = useCallback(async (reset = false) => {
-    if (loadingRef.current && !reset) return;
-    if (!hasMore && !reset) return;
-    
-    loadingRef.current = true;
-    
-    // 무한 스크롤 카운트 카드 추가 시 스크롤 위치 저장
-    const savedScrollY = !reset ? window.scrollY : 0;
-    
-    if (reset) {
+  const fetchTweets = useCallback(
+    async (reset = false) => {
+      if (loadingRef.current && !reset) return;
+      if (!hasMore && !reset) return;
+
+      loadingRef.current = true;
+
+      // 무한 스크롤 카운트 카드 추가 시 스크롤 위치 저장
+      const savedScrollY = !reset ? window.scrollY : 0;
+
+      if (reset) {
         setLoading(true);
         pageRef.current = 0;
-    }
-    try {
-      let data: TweetWithProfile[] = [];
-      const currentPage = reset ? 0 : pageRef.current;
-      if (isSearching) {
-        // 검색 모드: RPC 호출
-        const { data: rpcData, error: rpcError } = await supabase.rpc('search_tweets', {
-          keyword: mergedSearchQuery,
-        });
-        if (rpcError) throw rpcError;
-        data = (rpcData as unknown as TweetWithProfile[]) ?? [];
-        setHasMore(false); // 검색은 일단 한번에 다 가져온다고 가정
-      } else {
-        // 일반 피드 모드
-        const from = currentPage * PAGE_SIZE;
-        const to = from + PAGE_SIZE - 1;
-        const { data: feedData, error } = await supabase
-          .from('tweets')
-          .select(`
+      }
+      try {
+        let data: TweetWithProfile[] = [];
+        const currentPage = reset ? 0 : pageRef.current;
+        if (isSearching) {
+          // 검색 모드: RPC 호출
+          const { data: rpcData, error: rpcError } = await supabase.rpc('search_tweets', {
+            keyword: mergedSearchQuery,
+          });
+          if (rpcError) throw rpcError;
+          data = (rpcData as unknown as TweetWithProfile[]) ?? [];
+          setHasMore(false); // 검색은 일단 한번에 다 가져온다고 가정
+        } else {
+          // 일반 피드 모드
+          const from = currentPage * PAGE_SIZE;
+          const to = from + PAGE_SIZE - 1;
+          const { data: feedData, error } = await supabase
+            .from('tweets')
+            .select(
+              `
             id, content, image_url, created_at, updated_at, deleted_at,
             reply_count, repost_count, like_count, bookmark_count, view_count,
             profiles:author_id ( id, nickname, user_id, avatar_url, banned_until )
-          `)
-          .order('created_at', { ascending: false })
-          .range(from, to);
-        if (error) throw error;
-        // Supabase QueryResponse need casting or generic support, usually returns correct shape but here we enforce it
-        data = (feedData as unknown as TweetWithProfile[]) ?? [];
-        
-        // 다음 페이지 검사
-        if (data.length < PAGE_SIZE) setHasMore(false);
-        else setHasMore(true);
-      }
-      const mapped: UITweet[] = data.map((t) => ({
-        id: t.id,
-        user: {
-          id: t.profiles?.id ?? (t as any).author_id ?? '',
-          name: t.nickname ?? t.profiles?.nickname ?? 'Unknown',
-          username: t.user_id ?? t.profiles?.user_id ?? 'anonymous',
-          avatar: t.avatar_url ?? t.profiles?.avatar_url ?? '/default-avatar.svg',
-          banned_until: t.profiles?.banned_until ?? null,
-        },
-        content: t.content,
-        image: t.image_url || undefined,
-        timestamp: t.created_at || new Date().toISOString(),
-        createdAt: t.created_at || undefined,
-        updatedAt: (t as any).updated_at || undefined,
-        deleted_at: t.deleted_at,
-        stats: {
-          replies: t.reply_count ?? 0,
-          retweets: t.repost_count ?? 0,
-          likes: t.like_count ?? 0,
-          bookmarks: t.bookmark_count ?? 0,
-          views: t.view_count ?? 0,
-        },
-      }));
-      // 상태 업데이트
-      setTweets(prev => {
-        const combined = reset ? mapped : [...prev, ...mapped];
-        // 중복 제거 및 차단된 유저 필터링
-        const seen = new Set();
-        return combined.filter(t => {
+          `,
+            )
+            .order('created_at', { ascending: false })
+            .range(from, to);
+          if (error) throw error;
+          // Supabase QueryResponse need casting or generic support, usually returns correct shape but here we enforce it
+          data = (feedData as unknown as TweetWithProfile[]) ?? [];
+
+          // 다음 페이지 검사
+          if (data.length < PAGE_SIZE) setHasMore(false);
+          else setHasMore(true);
+        }
+        const mapped: UITweet[] = data.map(t => ({
+          id: t.id,
+          user: {
+            id: t.profiles?.id ?? (t as any).author_id ?? '',
+            name: t.nickname ?? t.profiles?.nickname ?? 'Unknown',
+            username: t.user_id ?? t.profiles?.user_id ?? 'anonymous',
+            avatar: t.avatar_url ?? t.profiles?.avatar_url ?? '/default-avatar.svg',
+            banned_until: t.profiles?.banned_until ?? null,
+          },
+          content: t.content,
+          image: t.image_url || undefined,
+          timestamp: t.created_at || new Date().toISOString(),
+          createdAt: t.created_at || undefined,
+          updatedAt: (t as any).updated_at || undefined,
+          deleted_at: t.deleted_at,
+          stats: {
+            replies: t.reply_count ?? 0,
+            retweets: t.repost_count ?? 0,
+            likes: t.like_count ?? 0,
+            bookmarks: t.bookmark_count ?? 0,
+            views: t.view_count ?? 0,
+          },
+        }));
+        // 상태 업데이트
+        setTweets(prev => {
+          const combined = reset ? mapped : [...prev, ...mapped];
+          // 중복 제거 및 차단된 유저 필터링
+          const seen = new Set();
+          return combined.filter(t => {
             if (t.user.id && blockedIds.includes(t.user.id)) return false; // 차단 필터링 (profiles.id UUID 기준)
             if (seen.has(t.id)) return false;
             seen.add(t.id);
@@ -160,21 +163,23 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
         if (!isSearching && !reset && data.length > 0) {
           pageRef.current += 1;
         }
-    } catch (err) {
-      // 오류 발생 시 로깅 생략
-    } finally {
-      setLoading(false);
-      loadingRef.current = false;
-      
-      // 무한 스크롤 추가 로드 시 스크롤 위치 복원
-      if (!reset && savedScrollY > 0) {
-        // requestAnimationFrame으로 DOM 렌더링 완료 후 복원
-        requestAnimationFrame(() => {
-          window.scrollTo({ top: savedScrollY, behavior: 'auto' });
-        });
+      } catch (err) {
+        // 오류 발생 시 로깅 생략
+      } finally {
+        setLoading(false);
+        loadingRef.current = false;
+
+        // 무한 스크롤 추가 로드 시 스크롤 위치 복원
+        if (!reset && savedScrollY > 0) {
+          // requestAnimationFrame으로 DOM 렌더링 완료 후 복원
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: savedScrollY, behavior: 'auto' });
+          });
+        }
       }
-    }
-  }, [isSearching, mergedSearchQuery, hasMore, blockedIds]);
+    },
+    [isSearching, mergedSearchQuery, hasMore, blockedIds],
+  );
 
   // blockedIds 변경 시 기존 트윗 목록에서 차단된 유저 제거
   useEffect(() => {
@@ -186,28 +191,32 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
   useEffect(() => {
     // 검색 모드면 무조건 새로 로드
     if (isSearching) {
-        fetchTweets(true);
-        return;
+      fetchTweets(true);
+      return;
     }
     // 일반 모드: 스토어 캐시 확인 + 상세페이지에서 돌아온 경우(restoredRef)가 아니면 로드
     const cachedFeed = SnsStore.getFeed();
     // 상세페이지 갔다온 경우는 useLayoutEffect에서 복원하므로 fetchTweets 스킵(이미 데이터가 있다고 가정하거나 복원 로직이 처리)
     // 하지만 데이터가 비어있다면 로드해야 함.
     if (cachedFeed && cachedFeed.length > 0 && !restoredRef.current) {
-        setTweets(cachedFeed);
-        setHasMore(SnsStore.getHasMore());
-        pageRef.current = SnsStore.getPage();
-        setLoading(false);
+      setTweets(cachedFeed);
+      setHasMore(SnsStore.getHasMore());
+      pageRef.current = SnsStore.getPage();
+      setLoading(false);
     } else {
-        // 캐시가 없거나 검색어 변경시
-        fetchTweets(true);
+      // 캐시가 없거나 검색어 변경시
+      fetchTweets(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSearching, mergedSearchQuery]);
   // 4. 무한 스크롤 연동
-  const loadMoreTriggerRef = useInfiniteScroll(() => {
+  const loadMoreTriggerRef = useInfiniteScroll(
+    () => {
       fetchTweets(false);
-  }, hasMore && !isSearching, loadingRef.current);
+    },
+    hasMore && !isSearching,
+    loadingRef.current,
+  );
   // 5. 새 트윗(InlineEditor) 작성 시 처리
   useEffect(() => {
     if (newTweet) {
@@ -242,54 +251,60 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
     // 2단계: 특정 요소(ID) 기준으로 미세 조정 (정밀함)
     // requestAnimationFrame을 사용하여 DOM 렌더링 후 실행 보장
     requestAnimationFrame(() => {
-        const el = document.querySelector<HTMLElement>(`[data-tweet-id="${lastId}"]`);
-        if (el) {
-          const headerOffset = 100; // 헤더 높이 고려
-          const rect = el.getBoundingClientRect();
-          const absoluteY = window.scrollY + rect.top;
-          
-          window.scrollTo({ 
-            top: Math.max(0, absoluteY - headerOffset), 
-            behavior: 'auto' 
-          });
-          
+      const el = document.querySelector<HTMLElement>(`[data-tweet-id="${lastId}"]`);
+      if (el) {
+        const headerOffset = 100; // 헤더 높이 고려
+        const rect = el.getBoundingClientRect();
+        const absoluteY = window.scrollY + rect.top;
+
+        window.scrollTo({
+          top: Math.max(0, absoluteY - headerOffset),
+          behavior: 'auto',
+        });
+
+        sessionStorage.removeItem(SNS_LAST_TWEET_ID_KEY);
+      } else {
+        // 요소가 늦게 나타날 경우 대비하여 한 번 더 시도
+        setTimeout(() => {
+          const retryEl = document.querySelector<HTMLElement>(`[data-tweet-id="${lastId}"]`);
+          if (retryEl) {
+            const retryRect = retryEl.getBoundingClientRect();
+            const retryAbsoluteY = window.scrollY + retryRect.top;
+            window.scrollTo({
+              top: Math.max(0, retryAbsoluteY - 100),
+              behavior: 'auto',
+            });
+          }
           sessionStorage.removeItem(SNS_LAST_TWEET_ID_KEY);
-        } else {
-            // 요소가 늦게 나타날 경우 대비하여 한 번 더 시도
-            setTimeout(() => {
-                const retryEl = document.querySelector<HTMLElement>(`[data-tweet-id="${lastId}"]`);
-                if (retryEl) {
-                    const retryRect = retryEl.getBoundingClientRect();
-                    const retryAbsoluteY = window.scrollY + retryRect.top;
-                    window.scrollTo({ 
-                        top: Math.max(0, retryAbsoluteY - 100), 
-                        behavior: 'auto' 
-                    });
-                }
-                sessionStorage.removeItem(SNS_LAST_TWEET_ID_KEY);
-            }, 100);
-        }
+        }, 100);
+      }
     });
   }, [tweets.length, loading, navType]);
   // 7. 언마운트 시 캐시 저장 (Main 브랜치 안전장치 포함)
   useEffect(() => {
     return () => {
-        if (!isSearching) {
-            SnsStore.setFeed(tweets);
-            SnsStore.setHasMore(hasMore);
-            SnsStore.setPage(pageRef.current);
-            // 현재 스크롤 위치도 캐시에 저장
-            SnsStore.setScrollY(window.scrollY);
-        }
+      if (!isSearching) {
+        SnsStore.setFeed(tweets);
+        SnsStore.setHasMore(hasMore);
+        SnsStore.setPage(pageRef.current);
+        // 현재 스크롤 위치도 캐시에 저장
+        SnsStore.setScrollY(window.scrollY);
+      }
     };
   }, [tweets, hasMore, isSearching]);
   // 8. 실시간 업데이트
   useEffect(() => {
     // 8-1. 트윗 변경 (INSERT/UPDATE/DELETE)
-    const tweetChannel = supabase.channel('home-feed-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tweets' }, async payload => {
-          const newTweet = payload.new as Database['public']['Tables']['tweets']['Row'] & { deleted_at?: string | null };
-          
+    const tweetChannel = supabase
+      .channel('home-feed-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'tweets' },
+        async payload => {
+          const newTweet = payload.new as Database['public']['Tables']['tweets']['Row'] & {
+            deleted_at?: string | null;
+          };
+
           const { data: profile } = await supabase
             .from('profiles')
             .select('id, nickname, user_id, avatar_url, banned_until')
@@ -297,73 +312,85 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
             .maybeSingle();
 
           const formattedTweet: UITweet = {
-              id: newTweet.id,
-              user: {
-                  id: profile?.id || '00000000-0000-0000-0000-000000000000',
-                  name: profile?.nickname || 'Unknown',
-                  username: profile?.user_id || 'anonymous',
-                  avatar: profile?.avatar_url || '/default-avatar.svg',
-                  banned_until: profile?.banned_until ?? null,
-              },
-              content: newTweet.content,
-              image: newTweet.image_url || undefined,
-              timestamp: newTweet.created_at || new Date().toISOString(),
-              deleted_at: newTweet.deleted_at,
-              stats: {
-                  replies: newTweet.reply_count ?? 0,
-                  retweets: newTweet.repost_count ?? 0,
-                  likes: newTweet.like_count ?? 0,
-                  bookmarks: newTweet.bookmark_count ?? 0,
-                  views: newTweet.view_count ?? 0,
-              },
+            id: newTweet.id,
+            user: {
+              id: profile?.id || '00000000-0000-0000-0000-000000000000',
+              name: profile?.nickname || 'Unknown',
+              username: profile?.user_id || 'anonymous',
+              avatar: profile?.avatar_url || '/default-avatar.svg',
+              banned_until: profile?.banned_until ?? null,
+            },
+            content: newTweet.content,
+            image: newTweet.image_url || undefined,
+            timestamp: newTweet.created_at || new Date().toISOString(),
+            deleted_at: newTweet.deleted_at,
+            stats: {
+              replies: newTweet.reply_count ?? 0,
+              retweets: newTweet.repost_count ?? 0,
+              likes: newTweet.like_count ?? 0,
+              bookmarks: newTweet.bookmark_count ?? 0,
+              views: newTweet.view_count ?? 0,
+            },
           };
 
           setTweets(prev => {
-              if (blockedIds.includes(formattedTweet.user.id)) return prev;
-              if (prev.some(t => t.id === formattedTweet.id)) return prev;
-              return [formattedTweet, ...prev];
+            if (blockedIds.includes(formattedTweet.user.id)) return prev;
+            if (prev.some(t => t.id === formattedTweet.id)) return prev;
+            return [formattedTweet, ...prev];
           });
-      })
+        },
+      )
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tweets' }, payload => {
-          const updated = payload.new as Database['public']['Tables']['tweets']['Row'];
-          setTweets(prev => prev.map(t => 
-             t.id === updated.id 
-             ? { ...t, stats: { 
-                 ...t.stats, 
-                 replies: updated.reply_count ?? 0, 
-                 likes: updated.like_count ?? 0, 
-                 views: updated.view_count ?? 0 
-               } } 
-             : t
-          ));
+        const updated = payload.new as Database['public']['Tables']['tweets']['Row'];
+        setTweets(prev =>
+          prev.map(t =>
+            t.id === updated.id
+              ? {
+                  ...t,
+                  stats: {
+                    ...t.stats,
+                    replies: updated.reply_count ?? 0,
+                    likes: updated.like_count ?? 0,
+                    views: updated.view_count ?? 0,
+                  },
+                }
+              : t,
+          ),
+        );
       })
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'tweets' }, payload => {
-          setTweets(prev => prev.filter(t => t.id !== payload.old.id));
+        setTweets(prev => prev.filter(t => t.id !== payload.old.id));
       })
       .subscribe();
 
     // 8-2. 작성자 프로필 변경 (제재 상태 실시간 반영)
-    const profileChannel = supabase.channel('home-feed-author-sync')
+    const profileChannel = supabase
+      .channel('home-feed-author-sync')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
-          const updated = payload.new as any;
-          if (updated.banned_until !== undefined) {
-            setTweets(prev => prev.map(t => {
+        const updated = payload.new as any;
+        if (updated.banned_until !== undefined) {
+          setTweets(prev =>
+            prev.map(t => {
               // 프로필 PK(id) 또는 인증 ID(user_id)로 매칭
-              if (String(t.user.id) === String(updated.id) || String(t.user.username) === String(updated.user_id)) {
+              if (
+                String(t.user.id) === String(updated.id) ||
+                String(t.user.username) === String(updated.user_id)
+              ) {
                 return {
                   ...t,
-                  user: { ...t.user, banned_until: updated.banned_until }
+                  user: { ...t.user, banned_until: updated.banned_until },
                 };
               }
               return t;
-            }));
-          }
+            }),
+          );
+        }
       })
       .subscribe();
 
     return () => {
-        supabase.removeChannel(tweetChannel);
-        supabase.removeChannel(profileChannel);
+      supabase.removeChannel(tweetChannel);
+      supabase.removeChannel(profileChannel);
     };
   }, [blockedIds]);
   // 9. 안전장치: 로딩이 너무 오래 걸리면 강제 종료 (Main 브랜치 기능 통합)
@@ -371,8 +398,8 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
     if (loading) {
       const timer = setTimeout(() => {
         if (loading) {
-           setLoading(false);
-           loadingRef.current = false;
+          setLoading(false);
+          loadingRef.current = false;
         }
       }, 10000);
       return () => clearTimeout(timer);
@@ -398,32 +425,32 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
       {/* 피드 목록 */}
       <div className="flex flex-col">
         {tweets.length === 0 && !loading ? (
-           <div className="text-center py-20 text-muted-foreground">
-             {isSearching ? '검색 결과가 없습니다.' : '게시글이 없습니다.'}
-           </div>
+          <div className="text-center py-20 text-muted-foreground">
+            {isSearching ? '검색 결과가 없습니다.' : '게시글이 없습니다.'}
+          </div>
         ) : (
-            tweets.map(t => (
-                <TweetCard
-                    key={t.id}
-                    {...t}
-                    dimmed={false}
-                    onDeleted={tweetId => setTweets(prev => prev.filter(i => i.id !== tweetId))}
-                    onUpdated={(id, updates) => {
-                        setTweets(prev => prev.map(t => (t.id === id ? { ...t, ...updates } : t)));
-                        SnsStore.updateTweet(id, updates);
-                    }}
-                />
-            ))
+          tweets.map(t => (
+            <TweetCard
+              key={t.id}
+              {...t}
+              dimmed={false}
+              onDeleted={tweetId => setTweets(prev => prev.filter(i => i.id !== tweetId))}
+              onUpdated={(id, updates) => {
+                setTweets(prev => prev.map(t => (t.id === id ? { ...t, ...updates } : t)));
+                SnsStore.updateTweet(id, updates);
+              }}
+            />
+          ))
         )}
       </div>
       {/* 무한 스크롤 트리거 */}
       <div ref={loadMoreTriggerRef} className="h-10 flex justify-center items-center py-6">
-         {loading && tweets.length > 0 && hasMore && (
-             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-         )}
-         {!hasMore && tweets.length > 0 && (
-             <p className="text-sm text-muted-foreground">모든 소식을 확인했습니다.</p>
-         )}
+        {loading && tweets.length > 0 && hasMore && (
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+        )}
+        {!hasMore && tweets.length > 0 && (
+          <p className="text-sm text-muted-foreground">모든 소식을 확인했습니다.</p>
+        )}
       </div>
     </div>
   );
