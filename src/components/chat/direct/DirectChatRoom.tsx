@@ -1,25 +1,25 @@
-import { useEffect, useMemo, useRef, useState, useCallback, memo, useLayoutEffect } from 'react';
-import { useBlock } from '@/hooks/useBlock';
-import { useDirectChat } from '../../../contexts/DirectChatContext';
-import { getMediaInChat } from '@/services/chat/directChatService';
-import type { DirectMessage } from '../../../types/ChatType';
-import MessageInput from '../common/MessageInput';
-import TranslateButton from '@/components/common/TranslateButton';
-import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/contexts/AuthContext';
-import ReportButton from '@/components/common/ReportButton';
+import { BanBadge } from '@/components/common/BanBadge';
 import BlockButton from '@/components/common/BlockButton';
+import Modal from '@/components/common/Modal';
+import { OnlineIndicator } from '@/components/common/OnlineIndicator';
+import ReportButton from '@/components/common/ReportButton';
+import ReportModal from '@/components/common/ReportModal';
+import TranslateButton from '@/components/common/TranslateButton';
+import { useAuth } from '@/contexts/AuthContext';
+import { getMediaInChat } from '@/services/chat/directChatService';
+import { formatDividerDate, formatMessageTime } from '@/utils/dateUtils';
+import { ArrowDown } from 'lucide-react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ArrowDown, X } from 'lucide-react';
-import styles from '../chat.module.css';
+import { useDirectChat } from '../../../contexts/DirectChatContext';
+import type { DirectMessage } from '../../../types/ChatType';
 import HighlightText from '../../common/HighlightText';
+import styles from '../chat.module.css';
+import MessageInput from '../common/MessageInput';
 import MediaGalleryModal from './MediaGalleryModal';
 import MediaViewer, { type MediaItem } from './MediaViewer';
-import Modal from '@/components/common/Modal';
-import ReportModal from '@/components/common/ReportModal';
-import { formatMessageTime, formatDividerDate } from '@/utils/dateUtils';
-import { BanBadge } from '@/components/common/BanBadge';
-import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 // HMR Trigger
 interface MessageGroup {
   [date: string]: DirectMessage[];
@@ -58,7 +58,19 @@ const loadImage = (url: string): Promise<string> => {
 };
 // LazyImage 최적화
 const LazyImage = memo(
-  ({ src, alt, className, style, onLoad }: { src: string; alt: string; className?: string; style?: React.CSSProperties; onLoad?: () => void }) => {
+  ({
+    src,
+    alt,
+    className,
+    style,
+    onLoad,
+  }: {
+    src: string;
+    alt: string;
+    className?: string;
+    style?: React.CSSProperties;
+    onLoad?: () => void;
+  }) => {
     const [loaded, setLoaded] = useState(() => imageCache.has(src));
     const imgRef = useRef<HTMLImageElement>(null);
 
@@ -129,7 +141,6 @@ const CachedAvatar = memo(
   },
 );
 CachedAvatar.displayName = 'CachedAvatar';
-import { useNavigate, useLocation } from 'react-router-dom';
 
 // 메시지 아이템 최적화
 const MessageItem = memo(
@@ -167,14 +178,17 @@ const MessageItem = memo(
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
 
-    const handleAvatarClick = useCallback((e: React.MouseEvent) => {
-      e.stopPropagation();
-      // username이 있으면 username으로, 없으면 id로 (프로필 페이지 지원 여부에 따라)
-      const target = message.sender?.username || message.sender?.id;
-      if (target) {
-        navigate(`/profile/${target}`);
-      }
-    }, [message.sender, navigate]);
+    const handleAvatarClick = useCallback(
+      (e: React.MouseEvent) => {
+        e.stopPropagation();
+        // username이 있으면 username으로, 없으면 id로 (프로필 페이지 지원 여부에 따라)
+        const target = message.sender?.username || message.sender?.id;
+        if (target) {
+          navigate(`/profile/${target}`);
+        }
+      },
+      [message.sender, navigate],
+    );
 
     const formatTime = useCallback(
       (dateString: string) => {
@@ -190,12 +204,15 @@ const MessageItem = memo(
     const flashClass = isFlashing ? styles['message-highlight-flash'] : '';
 
     // Selection Mode Click Handler
-    const handleSelectionClick = useCallback((e: React.MouseEvent) => {
+    const handleSelectionClick = useCallback(
+      (e: React.MouseEvent) => {
         if (isSelectionMode && onToggleSelection) {
-            e.stopPropagation();
-            onToggleSelection(message.id);
+          e.stopPropagation();
+          onToggleSelection(message.id);
         }
-    }, [isSelectionMode, onToggleSelection, message.id]);
+      },
+      [isSelectionMode, onToggleSelection, message.id],
+    );
     if (isSystemMessage) {
       return (
         <div key={message.id} className="system-message" id={`msg-${message.id}`}>
@@ -206,15 +223,21 @@ const MessageItem = memo(
 
     // Check Content Existence (Moved from above, logic refined)
     // Use includes for robustness against whitespace
-    const isDeleted = !!message.deleted_at || (typeof message.content === 'string' && message.content.includes('관리자에 의해 삭제된 메시지입니다'));
-    
+    const isDeleted =
+      !!message.deleted_at ||
+      (typeof message.content === 'string' &&
+        message.content.includes('관리자에 의해 삭제된 메시지입니다'));
+
     // Force hide attachments if deleted
     const hasImages = !isDeleted && message.attachments && message.attachments.length > 0;
-    
+
     // Text should be shown if:
     // 1. It is a normal message with text
     // 2. It is a deleted message (content replaced by placeholder)
-    const hasText = isDeleted || (typeof message.content === 'string' && message.content.replace(/\u200B/g, '').trim().length > 0);
+    const hasText =
+      isDeleted ||
+      (typeof message.content === 'string' &&
+        message.content.replace(/\u200B/g, '').trim().length > 0);
 
     if (!hasText && !hasImages) {
       return null;
@@ -232,13 +255,13 @@ const MessageItem = memo(
         onClick={canSelect ? handleSelectionClick : undefined}
       >
         {canSelect && (
-             <div className="flex items-center justify-center mx-2 z-10 shrink-0">
-                 {isSelected ? (
-                     <i className="ri-checkbox-circle-fill text-primary text-2xl" />
-                 ) : (
-                     <i className="ri-checkbox-blank-circle-line text-gray-300 dark:text-gray-600 text-2xl" />
-                 )}
-             </div>
+          <div className="flex items-center justify-center mx-2 z-10 shrink-0">
+            {isSelected ? (
+              <i className="ri-checkbox-circle-fill text-primary text-2xl" />
+            ) : (
+              <i className="ri-checkbox-blank-circle-line text-gray-300 dark:text-gray-600 text-2xl" />
+            )}
+          </div>
         )}
         {isMyMessage ? (
           <>
@@ -249,57 +272,66 @@ const MessageItem = memo(
                   {message.attachments!.map(att => {
                     if (att.type === 'video') {
                       return (
-                        <div key={`${message.id}-${att.url}`} className="relative group max-w-[240px]">
-                           <video
-                             src={att.url}
-                             className="rounded-lg w-full h-full object-cover"
-                             controls={false} // 커스텀 컨트롤 사용 위해 네이티브 숨김 or 그냥 썸네일처럼
-                           />
-                           {/* 재생/확대 버튼 오버레이 */}
-                           <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors rounded-lg cursor-pointer"
-                                onClick={() => onViewMedia?.(att.url)}>
-                             <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm hover:bg-black/70 transition">
-                                <i className="ri-play-fill text-white text-xl ml-0.5" />
-                             </div>
-                           </div>
+                        <div
+                          key={`${message.id}-${att.url}`}
+                          className="relative group max-w-[240px]"
+                        >
+                          <video
+                            src={att.url}
+                            className="rounded-lg w-full h-full object-cover"
+                            controls={false} // 커스텀 컨트롤 사용 위해 네이티브 숨김 or 그냥 썸네일처럼
+                          />
+                          {/* 재생/확대 버튼 오버레이 */}
+                          <div
+                            className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors rounded-lg cursor-pointer"
+                            onClick={() => onViewMedia?.(att.url)}
+                          >
+                            <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm hover:bg-black/70 transition">
+                              <i className="ri-play-fill text-white text-xl ml-0.5" />
+                            </div>
+                          </div>
                         </div>
                       );
                     } else if (att.type === 'file') {
                       const fileName = att.name || 'file';
-                      
+
                       return (
                         <button
                           key={`${message.id}-${att.url}`}
                           onClick={() => {
-                             // Force Download
-                             const filename = att.name || 'download';
-                             fetch(att.url)
-                               .then(resp => resp.blob())
-                               .then(blob => {
-                                 const url = window.URL.createObjectURL(blob);
-                                 const a = document.createElement('a');
-                                 a.href = url;
-                                 a.download = filename;
-                                 a.click();
-                                 window.URL.revokeObjectURL(url);
-                               });
+                            // Force Download
+                            const filename = att.name || 'download';
+                            fetch(att.url)
+                              .then(resp => resp.blob())
+                              .then(blob => {
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = filename;
+                                a.click();
+                                window.URL.revokeObjectURL(url);
+                              });
                           }}
                           className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-sm max-w-[280px] hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-primary dark:hover:border-primary transition-all duration-200 w-full text-left group"
                         >
                           <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-700 flex items-center justify-center shrink-0 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600">
-                             <i className="ri-file-text-line text-2xl" />
+                            <i className="ri-file-text-line text-2xl" />
                           </div>
                           <div className="flex flex-col min-w-0 flex-1">
-                             <span className="truncate font-semibold text-gray-800 dark:text-gray-200 text-sm">
-                               {fileName}
-                             </span>
+                            <span className="truncate font-semibold text-gray-800 dark:text-gray-200 text-sm">
+                              {fileName}
+                            </span>
                           </div>
                         </button>
                       );
                     }
                     // Default to image (Make clickable)
                     return (
-                      <div key={`${message.id}-${att.url}`} onClick={() => onViewMedia?.(att.url)} className="cursor-pointer">
+                      <div
+                        key={`${message.id}-${att.url}`}
+                        onClick={() => onViewMedia?.(att.url)}
+                        className="cursor-pointer"
+                      >
                         <LazyImage
                           src={att.url}
                           alt="image"
@@ -313,7 +345,9 @@ const MessageItem = memo(
 
               {/* 텍스트 */}
               {hasText && (
-                <div className={`message-text whitespace-pre-wrap break-words break-all ${isDeleted ? 'italic opacity-60 text-gray-500' : ''}`}>
+                <div
+                  className={`message-text whitespace-pre-wrap break-words break-all ${isDeleted ? 'italic opacity-60 text-gray-500' : ''}`}
+                >
                   <HighlightText
                     text={isDeleted ? '관리자에 의해 삭제된 메시지입니다.' : message.content || ''}
                     query={searchQuery}
@@ -325,10 +359,7 @@ const MessageItem = memo(
               <div className="message-time">{formatTime(message.created_at)}</div>
             </div>
 
-            <div 
-              className="message-avatar cursor-pointer" 
-              onClick={handleAvatarClick}
-            >
+            <div className="message-avatar cursor-pointer" onClick={handleAvatarClick}>
               <CachedAvatar
                 url={message.sender?.avatar_url}
                 nickname={message.sender?.nickname || '나'}
@@ -337,10 +368,7 @@ const MessageItem = memo(
           </>
         ) : (
           <>
-            <div 
-              className="message-avatar cursor-pointer" 
-              onClick={handleAvatarClick}
-            >
+            <div className="message-avatar cursor-pointer" onClick={handleAvatarClick}>
               <CachedAvatar
                 url={message.sender?.avatar_url}
                 nickname={message.sender?.nickname || '?'}
@@ -349,72 +377,82 @@ const MessageItem = memo(
             <div className="message-bubble relative px-3 py-2 group">
               {/* Report Button (Hover only) - Other user messages only */}
               {!isMyMessage && onReport && !isDeleted && (
-                 <button 
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onReport(message.id);
-                    }}
-                    className="absolute -top-6 right-0 p-1 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 bg-white/50 dark:bg-black/50 rounded-full"
-                    title="신고하기"
-                 >
-                    <i className="ri-alarm-warning-line" />
-                 </button>
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    onReport(message.id);
+                  }}
+                  className="absolute -top-6 right-0 p-1 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500 bg-white/50 dark:bg-black/50 rounded-full"
+                  title="신고하기"
+                >
+                  <i className="ri-alarm-warning-line" />
+                </button>
               )}
               {/* 첨부파일 (이미지/동영상/파일) */}
               {hasImages ? (
                 <div className="mb-2 flex flex-col gap-2">
-                  {message.attachments!.map(att => { // ! asserts existence because hasImages is true
+                  {message.attachments!.map(att => {
+                    // ! asserts existence because hasImages is true
                     if (att.type === 'video') {
                       return (
-                         <div key={`${message.id}-${att.url}`} className="relative group max-w-[240px]">
-                           <video
-                             src={att.url}
-                             className="rounded-lg w-full h-full object-cover"
-                             controls={false}
-                           />
-                           {/* 재생/확대 버튼 오버레이 */}
-                           <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors rounded-lg cursor-pointer"
-                                onClick={() => onViewMedia?.(att.url)}>
-                             <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm hover:bg-black/70 transition">
-                                <i className="ri-play-fill text-white text-xl ml-0.5" />
-                             </div>
-                           </div>
+                        <div
+                          key={`${message.id}-${att.url}`}
+                          className="relative group max-w-[240px]"
+                        >
+                          <video
+                            src={att.url}
+                            className="rounded-lg w-full h-full object-cover"
+                            controls={false}
+                          />
+                          {/* 재생/확대 버튼 오버레이 */}
+                          <div
+                            className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors rounded-lg cursor-pointer"
+                            onClick={() => onViewMedia?.(att.url)}
+                          >
+                            <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm hover:bg-black/70 transition">
+                              <i className="ri-play-fill text-white text-xl ml-0.5" />
+                            </div>
+                          </div>
                         </div>
                       );
                     } else if (att.type === 'file') {
                       return (
-                         <button
+                        <button
                           key={`${message.id}-${att.url}`}
                           onClick={() => {
-                             // Force Download
-                             const filename = att.name || 'download';
-                             fetch(att.url)
-                               .then(resp => resp.blob())
-                               .then(blob => {
-                                 const url = window.URL.createObjectURL(blob);
-                                 const a = document.createElement('a');
-                                 a.href = url;
-                                 a.download = filename;
-                                 a.click();
-                                 window.URL.revokeObjectURL(url);
-                               });
+                            // Force Download
+                            const filename = att.name || 'download';
+                            fetch(att.url)
+                              .then(resp => resp.blob())
+                              .then(blob => {
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = filename;
+                                a.click();
+                                window.URL.revokeObjectURL(url);
+                              });
                           }}
                           className="flex items-center gap-2 p-3 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm max-w-[240px] hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors w-full text-left border border-gray-200 dark:border-gray-700"
                         >
-                           <div className="w-8 h-8 rounded-full bg-white dark:bg-gray-600 flex items-center justify-center shrink-0 text-gray-500 dark:text-gray-300">
-                             <i className="ri-file-line" />
-                           </div>
-                           <div className="flex flex-col min-w-0">
-                             <span className="truncate font-medium text-gray-700 dark:text-gray-200 w-full text-left">
-                               {att.name || 'File'}
-                             </span>
-                             <span className="text-xs text-blue-500 text-left">Download</span>
+                          <div className="w-8 h-8 rounded-full bg-white dark:bg-gray-600 flex items-center justify-center shrink-0 text-gray-500 dark:text-gray-300">
+                            <i className="ri-file-line" />
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="truncate font-medium text-gray-700 dark:text-gray-200 w-full text-left">
+                              {att.name || 'File'}
+                            </span>
+                            <span className="text-xs text-blue-500 text-left">Download</span>
                           </div>
                         </button>
                       );
                     }
                     return (
-                      <div key={`${message.id}-${att.url}`} onClick={() => onViewMedia?.(att.url)} className="cursor-pointer">
+                      <div
+                        key={`${message.id}-${att.url}`}
+                        onClick={() => onViewMedia?.(att.url)}
+                        className="cursor-pointer"
+                      >
                         <LazyImage
                           src={att.url}
                           alt="image"
@@ -430,8 +468,15 @@ const MessageItem = memo(
               {/* 텍스트 + 번역 */}
               {hasText && (
                 <div className="flex items-center gap-2">
-                  <div className={`message-text whitespace-pre-line break-words ${isDeleted ? 'italic opacity-60 text-gray-500' : ''}`}>
-                    <HighlightText text={isDeleted ? '관리자에 의해 삭제된 메시지입니다.' : message.content || ''} query={searchQuery} />
+                  <div
+                    className={`message-text whitespace-pre-line break-words ${isDeleted ? 'italic opacity-60 text-gray-500' : ''}`}
+                  >
+                    <HighlightText
+                      text={
+                        isDeleted ? '관리자에 의해 삭제된 메시지입니다.' : message.content || ''
+                      }
+                      query={searchQuery}
+                    />
                   </div>
                   {typeof message.content === 'string' && !isDeleted && (
                     <TranslateButton
@@ -451,15 +496,13 @@ const MessageItem = memo(
                 </div>
               )}
 
-
-
               <div className="message-time mt-1">{formatTime(message.created_at)}</div>
             </div>
           </>
         )}
       </div>
     );
-  }
+  },
 );
 MessageItem.displayName = 'MessageItem';
 const DirectChatRoom = ({
@@ -490,7 +533,7 @@ const DirectChatRoom = ({
   const [currentResultIndex, setCurrentResultIndex] = useState(0);
   const [hasSearched, setHasSearched] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
-  
+
   // Report Mode State
   const location = useLocation();
   const [isReportMode, setIsReportMode] = useState(false);
@@ -498,64 +541,65 @@ const DirectChatRoom = ({
   const [reportPreview, setReportPreview] = useState<string>('');
 
   useEffect(() => {
-      if (location.state?.report) {
-          setIsReportMode(true);
-          // Clean up state references if possible to avoid sticking
-          window.history.replaceState({}, document.title);
-      }
+    if (location.state?.report) {
+      setIsReportMode(true);
+      // Clean up state references if possible to avoid sticking
+      window.history.replaceState({}, document.title);
+    }
   }, [location.state]);
 
   const toggleSelection = useCallback((msgId: string) => {
-      setSelectedMessages(prev => {
-          const next = new Set(prev);
-          if (next.has(msgId)) next.delete(msgId);
-          else next.add(msgId);
-          return next;
-      });
+    setSelectedMessages(prev => {
+      const next = new Set(prev);
+      if (next.has(msgId)) next.delete(msgId);
+      else next.add(msgId);
+      return next;
+    });
   }, []);
 
   const initiateReport = () => {
-      if (selectedMessages.size === 0) {
-          toast.error(t('report.select_messages', '신고할 메시지를 선택해주세요.'));
-          return;
-      }
-      
-      // Collect message contents
-      const selectedContent: string[] = [];
-      
-      // Iterate over messageGroups to find messages
-      // This is inefficient but functional for reasonable chat sizes.
-      // Better: Create a map or lookup if needed, but array iteration is fine for client side list.
-      // We only have messages in `messageGroups`.
-      // Iterate over messages
-      (messages || []).forEach(msg => {
-          if (selectedMessages.has(msg.id)) {
-              const content = typeof msg.content === 'string' ? msg.content : '(Media/File)';
-              const date = formatMessageTime(msg.created_at);
-              const sender = msg.sender?.nickname || 'Unknown';
-              selectedContent.push(`[${date}] ${sender}: ${content}`);
-          }
-      });
+    if (selectedMessages.size === 0) {
+      toast.error(t('report.select_messages', '신고할 메시지를 선택해주세요.'));
+      return;
+    }
 
-      const formattedPreview = selectedContent.join('\n');
-      setReportPreview(formattedPreview);
-      
-      // Open Modal - target is Room (Chat ID), type 'chat'
-      // Additional info will be passed to modal
-      setReportTarget({ type: 'chat', id: chatId });
-      setIsReportModalOpen(true);
+    // Collect message contents
+    const selectedContent: string[] = [];
+
+    // Iterate over messageGroups to find messages
+    // This is inefficient but functional for reasonable chat sizes.
+    // Better: Create a map or lookup if needed, but array iteration is fine for client side list.
+    // We only have messages in `messageGroups`.
+    // Iterate over messages
+    (messages || []).forEach(msg => {
+      if (selectedMessages.has(msg.id)) {
+        const content = typeof msg.content === 'string' ? msg.content : '(Media/File)';
+        const date = formatMessageTime(msg.created_at);
+        const sender = msg.sender?.nickname || 'Unknown';
+        selectedContent.push(`[${date}] ${sender}: ${content}`);
+      }
+    });
+
+    const formattedPreview = selectedContent.join('\n');
+    setReportPreview(formattedPreview);
+
+    // Open Modal - target is Room (Chat ID), type 'chat'
+    // Additional info will be passed to modal
+    setReportTarget({ type: 'chat', id: chatId });
+    setIsReportModalOpen(true);
   };
 
   // 10-zzeon: 신고 취소 메뉴 State
   const [showMenu, setShowMenu] = useState(false);
-  const [isBlocked, setIsBlocked] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [viewingMediaUrl, setViewingMediaUrl] = useState<string | null>(null); // 통합 미디어 뷰어 상태
 
   // Report Modal State
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [reportTarget, setReportTarget] = useState<{ type: 'user' | 'chat', id: string } | null>(null);
+  const [reportTarget, setReportTarget] = useState<{ type: 'user' | 'chat'; id: string } | null>(
+    null,
+  );
 
   const handleReport = useCallback((targetId: string, type: 'chat' | 'user') => {
     setReportTarget({ id: targetId, type });
@@ -565,46 +609,48 @@ const DirectChatRoom = ({
   // 현재 로드된 메시지에서 미디어 추출 (Memoized)
   const allCurrentMedia = useMemo(() => {
     const media: MediaItem[] = [];
-    
+
     // Sort messages by created_at ASC (Chronological) for intuitive gallery navigation
-    const sortedMsgs = [...messages].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    const sortedMsgs = [...messages].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    );
 
     sortedMsgs.forEach(msg => {
-       if (msg.attachments?.length) {
-         msg.attachments.forEach(att => {
-            const type = (att.type || '').toLowerCase();
-            if (type === 'video') {
-              media.push({
-                url: att.url,
-                messageId: msg.id,
-                date: msg.created_at,
-                senderId: msg.sender_id,
-                senderName: msg.sender?.nickname || 'Unknown',
-                senderAvatarUrl: msg.sender?.avatar_url,
-                type: 'video',
-              });
-            } else if (type !== 'file') {
-              // Treat everything else (that renders as image) as 'image'
-              media.push({
-                url: att.url,
-                messageId: msg.id,
-                date: msg.created_at,
-                senderId: msg.sender_id,
-                senderName: msg.sender?.nickname || 'Unknown',
-                senderAvatarUrl: msg.sender?.avatar_url,
-                type: 'image',
-              });
-            }
-         });
-       }
+      if (msg.attachments?.length) {
+        msg.attachments.forEach(att => {
+          const type = (att.type || '').toLowerCase();
+          if (type === 'video') {
+            media.push({
+              url: att.url,
+              messageId: msg.id,
+              date: msg.created_at,
+              senderId: msg.sender_id,
+              senderName: msg.sender?.nickname || 'Unknown',
+              senderAvatarUrl: msg.sender?.avatar_url,
+              type: 'video',
+            });
+          } else if (type !== 'file') {
+            // Treat everything else (that renders as image) as 'image'
+            media.push({
+              url: att.url,
+              messageId: msg.id,
+              date: msg.created_at,
+              senderId: msg.sender_id,
+              senderName: msg.sender?.nickname || 'Unknown',
+              senderAvatarUrl: msg.sender?.avatar_url,
+              type: 'image',
+            });
+          }
+        });
+      }
     });
     return media;
   }, [messages]);
 
   // Calculate content snapshot for reporting
   const contentSnapshot = useMemo(() => {
-      if (!isReportMode || selectedMessages.size === 0) return null;
-      return messages.filter(m => selectedMessages.has(m.id));
+    if (!isReportMode || selectedMessages.size === 0) return null;
+    return messages.filter(m => selectedMessages.has(m.id));
   }, [messages, selectedMessages, isReportMode]);
 
   // 전체 미디어 목록 (무한 스크롤 너머의 데이터 포함)
@@ -622,37 +668,39 @@ const DirectChatRoom = ({
           if (response.success && response.data) {
             const fullList: MediaItem[] = [];
             // Sort by created_at ASC (Oldest to Newest)
-            const sorted = [...response.data].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-            
+            const sorted = [...response.data].sort(
+              (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+            );
+
             sorted.forEach(msg => {
               if (msg.attachments?.length) {
                 msg.attachments.forEach((att: any) => {
-                   const type = (att.type || '').toLowerCase();
-                   if (type === 'video') {
-                     fullList.push({
-                       url: att.url,
-                       messageId: msg.id,
-                       date: msg.created_at,
-                       senderId: msg.sender_id,
-                       senderName: msg.sender?.nickname || 'Unknown',
-                       senderAvatarUrl: msg.sender?.avatar_url,
-                       type: 'video',
-                     });
-                   } else if (type !== 'file') {
-                     fullList.push({
-                       url: att.url,
-                       messageId: msg.id,
-                       date: msg.created_at,
-                       senderId: msg.sender_id,
-                       senderName: msg.sender?.nickname || 'Unknown',
-                       senderAvatarUrl: msg.sender?.avatar_url,
-                       type: 'image',
-                     });
-                   }
+                  const type = (att.type || '').toLowerCase();
+                  if (type === 'video') {
+                    fullList.push({
+                      url: att.url,
+                      messageId: msg.id,
+                      date: msg.created_at,
+                      senderId: msg.sender_id,
+                      senderName: msg.sender?.nickname || 'Unknown',
+                      senderAvatarUrl: msg.sender?.avatar_url,
+                      type: 'video',
+                    });
+                  } else if (type !== 'file') {
+                    fullList.push({
+                      url: att.url,
+                      messageId: msg.id,
+                      date: msg.created_at,
+                      senderId: msg.sender_id,
+                      senderName: msg.sender?.nickname || 'Unknown',
+                      senderAvatarUrl: msg.sender?.avatar_url,
+                      type: 'image',
+                    });
+                  }
                 });
               }
             });
-            
+
             // Remove duplicates just in case
             const uniqueList = Array.from(new Map(fullList.map(item => [item.url, item])).values());
             setFullMediaList(uniqueList);
@@ -663,7 +711,8 @@ const DirectChatRoom = ({
   }, [viewingMediaUrl, chatId]); // Removed allCurrentMedia dependency to avoid infinite fetch loop, logic handled inside
 
   // 뷰어에 전달할 리스트: 전체 리스트가 로드되었으면 그것을, 아니면 현재 리스트 사용
-  const viewerMediaList = fullMediaList.length > allCurrentMedia.length ? fullMediaList : allCurrentMedia;
+  const viewerMediaList =
+    fullMediaList.length > allCurrentMedia.length ? fullMediaList : allCurrentMedia;
 
   // New Message Floating Button State
   const [newMessageToast, setNewMessageToast] = useState<{
@@ -725,7 +774,7 @@ const DirectChatRoom = ({
   const handleImageLoad = useCallback(() => {
     // History Restore 중이면 무시
     if (isRestoringHistoryRef.current) return;
-    
+
     if (isUserNearBottomRef.current) {
       scrollToBottom(true);
     }
@@ -742,16 +791,16 @@ const DirectChatRoom = ({
       const newScrollHeight = containerRef.current.scrollHeight;
       const diff = newScrollHeight - prevScrollHeightRef.current;
       containerRef.current.scrollTop = diff; // 기존 보고 있던 위치 유지
-      
+
       // 상태 및 Ref 초기화
-      prevScrollHeightRef.current = 0; 
+      prevScrollHeightRef.current = 0;
       setIsLoadingMore(false);
 
       // Delay unlock to let layout/resize observers settle (especially for Heavy media/videos)
       setTimeout(() => {
         isRestoringHistoryRef.current = false;
       }, 100);
-      
+
       // Update tracking refs to correct state so next render doesn't misfire
       prevLastMessageId.current = lastMessage.id;
       previousMessageCount.current = messages.length;
@@ -776,14 +825,16 @@ const DirectChatRoom = ({
           // 아니면 "새 메시지" 버튼 표시
           if (!isMyMessage) {
             let content = typeof lastMessage.content === 'string' ? lastMessage.content : '';
-            
+
             if (lastMessage.attachments && lastMessage.attachments.length > 0) {
               const types = lastMessage.attachments.map(a => a.type);
               let prefix = '';
               if (types.includes('video')) prefix = `[${t('notification.media_video', '동영상')}] `;
-              else if (types.includes('file')) prefix = `[${t('notification.media_file', '파일')}] `;
-              else if (types.includes('image')) prefix = `[${t('notification.media_photo', '사진')}] `;
-              
+              else if (types.includes('file'))
+                prefix = `[${t('notification.media_file', '파일')}] `;
+              else if (types.includes('image'))
+                prefix = `[${t('notification.media_photo', '사진')}] `;
+
               content = `${prefix}${content}`.trim();
             }
 
@@ -793,7 +844,7 @@ const DirectChatRoom = ({
               id: lastMessage.id,
               sender: lastMessage.sender?.nickname || 'Unknown',
               content: content,
-              avatar: lastMessage.sender?.avatar_url
+              avatar: lastMessage.sender?.avatar_url,
             });
           }
         }
@@ -814,7 +865,7 @@ const DirectChatRoom = ({
     const handleResize = () => {
       // Locking during history restore
       if (isRestoringHistoryRef.current) return;
-      
+
       // Debounce to batch rapid changes (16ms = one frame)
       if (debounceTimeout) {
         window.clearTimeout(debounceTimeout);
@@ -823,12 +874,12 @@ const DirectChatRoom = ({
       debounceTimeout = window.setTimeout(() => {
         const { scrollHeight, clientHeight, scrollTop } = container;
         const heightChanged = scrollHeight !== prevScrollHeight;
-        
-        // 만약 높이가 변했고, 사용자가 바닥에 있었거나(isUserNearBottomRef), 
+
+        // 만약 높이가 변했고, 사용자가 바닥에 있었거나(isUserNearBottomRef),
         // 혹은 스크롤 위치가 변하지 않았는데 높이만 커진 경우(이미지 로드 등)
         if (heightChanged) {
           const isBottom = prevScrollHeight - (scrollTop + prevClientHeight) < 50;
-          
+
           // 바닥 근처였으면 새 바닥으로 이동
           if (isBottom || isUserNearBottomRef.current) {
             container.scrollTop = scrollHeight;
@@ -902,7 +953,7 @@ const DirectChatRoom = ({
     const { scrollTop, scrollHeight, clientHeight } = container;
     // 바닥에서 100px 이상 떨어지면 버튼 표시
     const isBottom = scrollHeight - scrollTop - clientHeight < 100;
-    
+
     isUserNearBottomRef.current = isBottom; // Ref 업데이트
 
     if (isBottom) {
@@ -1155,10 +1206,10 @@ const DirectChatRoom = ({
                   {currentChat?.other_user?.nickname || t('chat.loading')}
                 </span>
                 {currentChat?.other_user?.id && (
-                  <OnlineIndicator 
-                    userId={currentChat.other_user.id} 
-                    size="sm" 
-                    className="absolute top-0.5 right-0 z-10 border-white dark:border-secondary border shadow-none" 
+                  <OnlineIndicator
+                    userId={currentChat.other_user.id}
+                    size="sm"
+                    className="absolute top-0.5 right-0 z-10 border-white dark:border-secondary border shadow-none"
                   />
                 )}
               </div>
@@ -1202,16 +1253,18 @@ const DirectChatRoom = ({
                   {t('chat.media_gallery', '미디어')}
                 </button>
                 <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" />
-                <ReportButton onClick={() => {
-                   setShowMenu(false);
-                   setIsReportMode(true);
-                   toast.info(t('report.guide_select', '신고할 메시지를 선택해주세요.'));
-                }} />
+                <ReportButton
+                  onClick={() => {
+                    setShowMenu(false);
+                    setIsReportMode(true);
+                    toast.info(t('report.guide_select', '신고할 메시지를 선택해주세요.'));
+                  }}
+                />
                 {currentChat?.other_user?.id && (
                   <BlockButton
-                    targetProfileId={currentChat.other_user.id}
+                    targetProfileId={String(currentChat.other_user.id)}
                     onClose={() => setShowMenu(false)}
-                    onBlock={() => onBackToList?.()}
+                    onChanged={() => onBackToList?.()}
                   />
                 )}
                 <div className="h-px bg-gray-100 dark:bg-gray-700 my-1" />
@@ -1232,29 +1285,29 @@ const DirectChatRoom = ({
       </div>
       {/* Selection Mode Bottom Bar */}
       {isReportMode && (
-          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 p-4 z-50 flex items-center justify-between shadow-lg safe-area-bottom">
-              <span className="text-sm font-medium">
-                  {selectedMessages.size} {t('report.selected_count', '개 선택됨')}
-              </span>
-              <div className="flex gap-3">
-                  <button 
-                      onClick={() => {
-                          setIsReportMode(false);
-                          setSelectedMessages(new Set());
-                      }}
-                      className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-sm font-medium"
-                  >
-                      {t('common.cancel', '취소')}
-                  </button>
-                  <button 
-                      onClick={initiateReport}
-                      className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 disabled:opacity-50"
-                      disabled={selectedMessages.size === 0}
-                  >
-                      {t('report.submit', '신고하기')}
-                  </button>
-              </div>
+        <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 p-4 z-50 flex items-center justify-between shadow-lg safe-area-bottom">
+          <span className="text-sm font-medium">
+            {selectedMessages.size} {t('report.selected_count', '개 선택됨')}
+          </span>
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                setIsReportMode(false);
+                setSelectedMessages(new Set());
+              }}
+              className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-sm font-medium"
+            >
+              {t('common.cancel', '취소')}
+            </button>
+            <button
+              onClick={initiateReport}
+              className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 disabled:opacity-50"
+              disabled={selectedMessages.size === 0}
+            >
+              {t('report.submit', '신고하기')}
+            </button>
           </div>
+        </div>
       )}
 
       {/* Report Modal */}
@@ -1262,8 +1315,8 @@ const DirectChatRoom = ({
         <ReportModal
           isOpen={isReportModalOpen}
           onSuccess={() => {
-              setIsReportMode(false);
-              setSelectedMessages(new Set());
+            setIsReportMode(false);
+            setSelectedMessages(new Set());
           }}
           metadata={{ reported_message_ids: Array.from(selectedMessages) }}
           contentSnapshot={contentSnapshot}
@@ -1279,14 +1332,10 @@ const DirectChatRoom = ({
           targetType={reportTarget.type}
           targetId={reportTarget.id}
           additionalInfo={`[Reported Messages]\n${reportPreview}`}
-          previewContent={
-              <div className="whitespace-pre-wrap text-xs">
-                  {reportPreview}
-              </div>
-          }
+          previewContent={<div className="whitespace-pre-wrap text-xs">{reportPreview}</div>}
         />
       )}
-      
+
       {showSearch && (
         <div className="chat-room-search-bar">
           <div className="chat-room-search-inner">
@@ -1417,9 +1466,13 @@ const DirectChatRoom = ({
             className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-primary/95 text-primary-foreground shadow-lg backdrop-blur-sm rounded-full pl-2 pr-4 py-1.5 flex items-center gap-2 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 transition-all active:scale-95 hover:scale-105 group max-w-[70vw] sm:max-w-[350px]"
           >
             <div className="shrink-0">
-              <CachedAvatar url={newMessageToast.avatar} nickname={newMessageToast.sender} size={24} />
+              <CachedAvatar
+                url={newMessageToast.avatar}
+                nickname={newMessageToast.sender}
+                size={24}
+              />
             </div>
-            
+
             <div className="flex items-center gap-2 min-w-0 flex-1 text-xs sm:text-sm">
               <span className="font-bold whitespace-nowrap shrink-0 max-w-[80px] truncate">
                 {newMessageToast.sender}
@@ -1428,7 +1481,7 @@ const DirectChatRoom = ({
                 {newMessageToast.content}
               </span>
             </div>
-            
+
             <ArrowDown className="w-3.5 h-3.5 animate-bounce shrink-0 opacity-90 ml-0.5" />
           </button>
         )}
@@ -1450,7 +1503,7 @@ const DirectChatRoom = ({
         onClose={() => setShowMediaGallery(false)}
         chatId={chatId}
       />
-      
+
       {/* 통합 미디어 뷰어 (채팅방 내 클릭용) */}
       <MediaViewer
         isOpen={!!viewingMediaUrl}
@@ -1460,33 +1513,32 @@ const DirectChatRoom = ({
       />
 
       {/* 나가기 확인 모달 */}
-        <Modal
-          isOpen={isExitModalOpen}
-          onClose={() => setIsExitModalOpen(false)}
-          title={t('chat.confirm_exit_title')}
-          className="max-w-sm h-auto"
-        >
-          <div className="flex flex-col gap-4">
-            <p className="text-gray-600 dark:text-gray-300 font-medium">
-              {t('chat.confirm_exit_desc')}
-            </p>
-            <div className="flex justify-end gap-2 mt-2">
-              <button
-                onClick={() => setIsExitModalOpen(false)}
-                className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200"
-              >
-                {t('common.cancel', '취소')}
-              </button>
-              <button
-                onClick={confirmExitChat}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500 text-white hover:bg-red-600"
-              >
-                {t('chat.btn_leave', '나가기')}
-              </button>
-            </div>
+      <Modal
+        isOpen={isExitModalOpen}
+        onClose={() => setIsExitModalOpen(false)}
+        title={t('chat.confirm_exit_title')}
+        className="max-w-sm h-auto"
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-gray-600 dark:text-gray-300 font-medium">
+            {t('chat.confirm_exit_desc')}
+          </p>
+          <div className="flex justify-end gap-2 mt-2">
+            <button
+              onClick={() => setIsExitModalOpen(false)}
+              className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200"
+            >
+              {t('common.cancel', '취소')}
+            </button>
+            <button
+              onClick={confirmExitChat}
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500 text-white hover:bg-red-600"
+            >
+              {t('chat.btn_leave', '나가기')}
+            </button>
           </div>
-        </Modal>
-
+        </div>
+      </Modal>
 
       <MessageInput chatId={chatId} />
     </div>

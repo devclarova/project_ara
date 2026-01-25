@@ -12,12 +12,17 @@ import { useTranslation } from 'react-i18next';
 import { useBatchAutoTranslation } from '@/hooks/useBatchAutoTranslation';
 import SignInModal from '../auth/SignInModal';
 
-
-type SwiperStyle = CSSProperties & {
-  '--swiper-pagination-color': string;
-};
-
 export default function PopularContentSection() {
+  const CONTENT_INTRO = {
+    title: '이런 콘텐츠로 배우게 돼요',
+    description:
+      '전래동화와 설화를 바탕으로 한 자체 애니메이션 콘텐츠를 중심으로 학습 흐름이 구성됩니다.',
+  };
+
+  type SwiperStyle = CSSProperties & {
+    '--swiper-pagination-color': string;
+  };
+
   const [items, setItems] = useState<StudyListProps[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -93,13 +98,21 @@ export default function PopularContentSection() {
   const descKeys = items.map(i => `study_desc_${i.id}`);
   const { translatedTexts: trDescs } = useBatchAutoTranslation(descs, descKeys, targetLang);
 
-  const durations = items.map(i => i.duration ?? ''); 
+  const durations = items.map(i => i.duration ?? '');
   const durationKeys = items.map(i => `study_duration_${i.id}`);
-  const { translatedTexts: trDurations } = useBatchAutoTranslation(durations, durationKeys, targetLang);
+  const { translatedTexts: trDurations } = useBatchAutoTranslation(
+    durations,
+    durationKeys,
+    targetLang,
+  );
 
   const episodes = items.map(i => i.episode || '');
   const episodeKeys = items.map(i => `study_episode_${i.id}`);
-  const { translatedTexts: trEpisodes } = useBatchAutoTranslation(episodes, episodeKeys, targetLang);
+  const { translatedTexts: trEpisodes } = useBatchAutoTranslation(
+    episodes,
+    episodeKeys,
+    targetLang,
+  );
   // -------------------------
 
   const swiperStyle: SwiperStyle = {
@@ -124,21 +137,21 @@ export default function PopularContentSection() {
       <div className="pointer-events-none absolute -left-10 -top-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl dark:bg-primary/25" />
       <div className="pointer-events-none absolute -right-10 bottom-0 h-64 w-64 rounded-full bg-sky-200/40 blur-3xl dark:bg-sky-700/40" />
 
-      {/* 🔧 내부 패딩을 다른 섹션과 통일 */}
+      {/* 내부 패딩을 다른 섹션과 통일 */}
       <div className="w-full max-w-screen-xl mx-auto px-6 pt-8 pb-12 md:pt-10 md:pb-14 lg:pt-12 lg:pb-16">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8 md:mb-10">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-gray-100 mb-2 break-keep">
-              이런 콘텐츠로 배우게 돼요
+              {CONTENT_INTRO.title}
             </h2>
             <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base break-keep">
-              실제로 많은 학습자들이 선택한 K-콘텐츠들을 기반으로 학습 플로우가 구성됩니다.
+              {CONTENT_INTRO.description}
             </p>
           </div>
 
-          <span className="inline-flex items-center gap-2 self-start rounded-full bg-white/90 dark:bg-secondary/90 px-3 py-1 text-xs text-gray-500 dark:text-gray-300 border border-sky-100 dark:border-slate-700">
+          {/* <span className="inline-flex items-center gap-2 self-start rounded-full bg-white/90 dark:bg-secondary/90 px-3 py-1 text-xs text-gray-500 dark:text-gray-300 border border-sky-100 dark:border-slate-700">
             오늘 업데이트된 장면 · <span className="font-semibold text-primary">+12</span>
-          </span>
+          </span> */}
         </div>
 
         {/* 로딩 상태 */}

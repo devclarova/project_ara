@@ -42,13 +42,16 @@ const ChatItem = memo(
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
 
-    const handleAvatarClick = useCallback((e: React.MouseEvent) => {
-      e.stopPropagation();
-      const target = chat.other_user.username || chat.other_user.id;
-      if (target) {
-        navigate(`/profile/${target}`);
-      }
-    }, [chat.other_user, navigate]);
+    const handleAvatarClick = useCallback(
+      (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const target = chat.other_user.username || chat.other_user.id;
+        if (target) {
+          navigate(`/profile/${target}`);
+        }
+      },
+      [chat.other_user, navigate],
+    );
 
     // dateUtils를 사용한 날짜 포맷팅
     const formatTime = useCallback(
@@ -59,7 +62,7 @@ const ChatItem = memo(
     );
     // 팀원(10-zzeon)의 새로운 기능(신고/차단 메뉴) State & Hooks 병합
     const [showMenu, setShowMenu] = useState(false);
-    const [isBlocked, setIsBlocked] = useState(false);
+
     const menuRef = useRef<HTMLDivElement>(null);
     // 버튼 클릭 감지
     useEffect(() => {
@@ -80,10 +83,7 @@ const ChatItem = memo(
         className={`chat-item ${isSelected ? 'selected' : ''}`}
         onClick={() => onSelect(chat.id)}
       >
-        <div 
-          className="chat-avatar cursor-pointer" 
-          onClick={handleAvatarClick}
-        >
+        <div className="chat-avatar cursor-pointer" onClick={handleAvatarClick}>
           {chat.other_user.avatar_url ? (
             <img
               src={chat.other_user.avatar_url}
@@ -94,9 +94,9 @@ const ChatItem = memo(
           ) : (
             <div className="avatar-placeholder">{chat.other_user.nickname.charAt(0)}</div>
           )}
-          <OnlineIndicator 
-            userId={chat.other_user.id} 
-            size="sm" 
+          <OnlineIndicator
+            userId={chat.other_user.id}
+            size="sm"
             className="absolute bottom-0 right-0 z-10 border-white dark:border-secondary border-2"
           />
           {chat.unread_count > 0 && <div className="unread-badge">{chat.unread_count}</div>}
@@ -106,7 +106,10 @@ const ChatItem = memo(
             <div className="chat-name-row">
               <div className="chat-name flex items-center gap-1">
                 <span>{chat.other_user.nickname}</span>
-                <BanBadge bannedUntil={chat.other_user.nickname ? chat.other_user.banned_until : null} size="xs" />
+                <BanBadge
+                  bannedUntil={chat.other_user.nickname ? chat.other_user.banned_until : null}
+                  size="xs"
+                />
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -125,11 +128,13 @@ const ChatItem = memo(
                 </button>
                 {showMenu && (
                   <div className="absolute right-0 top-full mt-2 w-36 bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg py-2 z-50">
-                    <ReportButton onClick={() => {
+                    <ReportButton
+                      onClick={() => {
                         setShowMenu(false);
                         // Report Mode (Select Messages)
                         onReport(chat.id, 'chat');
-                    }} />
+                      }}
+                    />
                     {chat.other_user.id && ( // Assuming item.other_profile_id refers to chat.other_user.id
                       <BlockButton
                         targetProfileId={chat.other_user.id}
@@ -159,12 +164,13 @@ const ChatItem = memo(
                 {chat.last_message.sender_id === currentUserId
                   ? t('chat.me')
                   : chat.last_message.sender_nickname || chat.other_user.nickname}{' '}
-                : {(chat.last_message.content === '\u200B' || !chat.last_message.content) 
-                  ? (chat.last_message.attachments?.[0]?.type === 'video' 
-                      ? t('chat.video_preview') 
-                      : (chat.last_message.attachments?.[0]?.type === 'file' 
-                          ? t('chat.file_preview') 
-                          : t('chat.image_preview')))
+                :{' '}
+                {chat.last_message.content === '\u200B' || !chat.last_message.content
+                  ? chat.last_message.attachments?.[0]?.type === 'video'
+                    ? t('chat.video_preview')
+                    : chat.last_message.attachments?.[0]?.type === 'file'
+                      ? t('chat.file_preview')
+                      : t('chat.image_preview')
                   : chat.last_message.content}
               </span>
             ) : (
@@ -220,7 +226,12 @@ const UserItem = memo(
   (prev, next) => prev.user.id === next.user.id && prev.query === next.query,
 );
 UserItem.displayName = 'UserItem';
-const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId, onLeave }: DirectChatListProps) => {
+const DirectChatList = ({
+  onChatSelect,
+  onCreateChat,
+  selectedChatId,
+  onLeave,
+}: DirectChatListProps) => {
   const {
     createDirectChat,
     error,
@@ -243,7 +254,9 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId, onLeave }:
 
   // 10-zzeon: Report Modal State
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [reportTarget, setReportTarget] = useState<{ type: 'user' | 'chat', id: string } | null>(null);
+  const [reportTarget, setReportTarget] = useState<{ type: 'user' | 'chat'; id: string } | null>(
+    null,
+  );
 
   const handleReport = useCallback((targetId: string, type: 'chat' | 'user') => {
     setReportTarget({ id: targetId, type });
@@ -302,7 +315,7 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId, onLeave }:
   // 실제 나가기 실행
   const confirmLeave = useCallback(async () => {
     if (!exitTargetChatId) return;
-    
+
     try {
       const success = await exitDirectChat(exitTargetChatId);
       if (success) {
@@ -321,7 +334,6 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId, onLeave }:
       setExitTargetChatId(null);
     }
   }, [exitTargetChatId, exitDirectChat, navigate, onLeave, selectedChatId, t]);
-
 
   const handleUserSelect = useCallback(
     async (user: ChatUser) => {
@@ -432,7 +444,6 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId, onLeave }:
             <p>{t('chat.start_conversation')}</p>
           </div>
         ) : (
-
           chats.map(chat => (
             <ChatItem
               key={chat.id}
@@ -442,20 +453,19 @@ const DirectChatList = ({ onChatSelect, onCreateChat, selectedChatId, onLeave }:
               currentUserId={user?.id}
               onLeave={handleLeaveChat}
               onReport={(targetId, type) => {
-                  if (type === 'chat') {
-                      // Navigate to chat room in report mode
-                      handleChatSelect(targetId);
-                      navigate('/chat', { state: { roomId: targetId, report: true } });
-                  } else {
-                      handleReport(targetId, type);
-                  }
+                if (type === 'chat') {
+                  // Navigate to chat room in report mode
+                  handleChatSelect(targetId);
+                  navigate('/chat', { state: { roomId: targetId, report: true } });
+                } else {
+                  handleReport(targetId, type);
+                }
               }}
             />
           ))
         )}
       </div>
 
-      
       {/* 나가기 확인 모달 */}
       <Modal
         isOpen={isExitModalOpen}

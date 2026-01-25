@@ -1,6 +1,5 @@
 import { supabase } from '../lib/supabase';
 
-
 export async function chatOpenCreate(currentUserId: string, targetUserId: string) {
   if (!currentUserId || !targetUserId) throw new Error('invalid user ids');
   if (currentUserId === targetUserId) throw new Error('cannot open self chat');
