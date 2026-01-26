@@ -67,8 +67,8 @@ interface ReplyCardProps {
   isLastChild?: boolean;
   ancestorsLast?: boolean[]; // Track if ancestors were the last children
   hasChildren?: boolean; // Explicit flag to force-draw the descendant line
-  editingReplyId: string | null;
-  setEditingReplyId: (id: string | null) => void;
+  editingReplyId?: string | null;
+  setEditingReplyId?: (id: string | null) => void;
 }
 
 export function ReplyCard({
@@ -149,8 +149,8 @@ export function ReplyCard({
   // 댓글 수정 기능
   const isEditing = editingReplyId === reply.id;
 
-  const openEdit = () => setEditingReplyId(reply.id);
-  const closeEdit = () => setEditingReplyId(null);
+  const openEdit = () => setEditingReplyId?.(reply.id);
+  const closeEdit = () => setEditingReplyId?.(null);
 
   const [draftText, setDraftText] = useState('');
 
