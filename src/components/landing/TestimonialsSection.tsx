@@ -4,36 +4,55 @@ import { SwiperSlide } from 'swiper/react';
 import BaseCarousel from './BaseCarousel';
 
 export default function TestimonialsSection() {
+  const LEARNER_INTRO = {
+    title: {
+      line1: 'ARA는 이런 학습자들을',
+      line2: '떠올리며 설계되고 있어요',
+    },
+    description: {
+      intro: '아직 정식 출시 전이지만, ARA는 한 명의 전형적인 학습자를 떠올리기보다',
+      highlight: '여러 타입의 학습자',
+      body: '를 함께 상상하며 만들어지고 있습니다.',
+      detail: [
+        '한국어를 막 시작한 사람부터 워홀·유학을 준비하는 사람,',
+        '일상이나 업무에서 한국어를 써야 하는 직장인까지.',
+        '좋아하는 콘텐츠와 커뮤니티를 함께 사용할 때 학습이 더 오래,',
+        '자연스럽게 이어지도록 플로우를 설계하고 있어요.',
+      ],
+    },
+  };
+
   const reviews = [
     {
       name: 'Sarah Johnson',
       country: '미국 · US',
       persona: '드라마로 한국어를 시작한 초급 학습자',
-      text: '자막만 믿고 보다가 항상 중간에 놓쳤는데, ARA에서는 장면마다 중요한 표현을 딱 집어줘서 “여기서 이 말을 쓰는구나”를 느끼게 돼요. 같은 장면을 두 번, 세 번 보면서 조금씩 자막을 가리는 재미가 생겼습니다.',
+      text: '그동안은 자막에만 의존해서 이야기를 보다 보니 중요한 표현을 자주 놓쳤어요. ARA에서는 한 장면씩 나눠서 핵심 표현을 짚어줘서 “아, 이 상황에서 이 말을 쓰는구나” 하고 이해가 됩니다. 같은 에피소드를 다시 보면서 자막을 하나씩 줄여가는 재미도 생겼어요.',
     },
     {
       name: 'Diego Martínez',
       country: '스페인 · ES',
       persona: '워홀·유학 준비 중인 실전형 학습자',
-      text: '워홀 준비하면서 진짜로 쓰는 말만 골라서 공부하고 싶었어요. 예능/인터뷰 클립에서 나오는 표현들이 상황별로 정리되어 있어서, “이건 친구들끼리”, “이건 회사에서”처럼 바로 적용할 수 있다는 게 제일 좋습니다.',
+      text: '워홀 가기 전에 실제로 쓸 표현 위주로 공부하고 싶었어요. 애니메이션 속 대화가 상황별로 정리되어 있어서, “일상에서 쓰는 말”, “조심해서 써야 하는 표현”을 구분해서 익힐 수 있었던 게 좋았습니다.',
     },
     {
       name: 'Mei Lin',
       country: '싱가포르 · SG',
       persona: '말문을 트이고 싶은 중·고급 학습자',
-      text: '문법책은 다 끝냈는데 말이 안 나오는 타입이었어요. ARA에서 장면을 보고 짧은 리액션 글을 남기면, AI가 자연스럽게 고쳐줘요. 그걸 그대로 DM이나 피드에서 써보면서 “아 이렇게 말하면 되는구나”가 몸에 붙는 느낌입니다.',
+
+      text: '문법이나 단어는 어느 정도 아는데, 말로 풀어내는 게 항상 어려웠어요. ARA에서 이야기를 보고 짧게 감상이나 리액션을 쓰면, 더 자연스러운 표현으로 고쳐줘요. 그 문장을 그대로 피드나 DM에서 써보면서 말하는 감각이 조금씩 살아나는 느낌을 받았습니다.',
     },
     {
       name: 'Alexey Petrov',
       country: '러시아 · RU',
       persona: '비즈니스 표현이 필요한 직장인 학습자',
-      text: '한국 회사와 메일을 주고받을 일이 많아서 비즈니스 표현이 필요했습니다. 드라마 “미생” 같은 장면에서 회의/보고 표현을 배우고, 예문을 제 상황에 맞게 바꿔보는 기능이 특히 인상적이었어요.',
+      text: '한국 파트너와 소통할 일이 많아서 비즈니스 표현이 필요했습니다.  애니메이션 속 어른과 아이, 윗사람과 아랫사람의 말투를 비교해보면서, 상황에 맞는 표현을 자연스럽게 익힐 수 있었어요. 단순 번역이 아니라 맥락을 이해하게 되는 점이 인상적이었습니다.',
     },
     {
       name: 'Hana Ito',
       country: '일본 · JP',
       persona: '루틴이 잘 끊기는 자기계발형 학습자',
-      text: '혼자 교재로만 공부할 때는 3일만 지나도 손이 안 갔어요. 지금은 좋아하는 드라마 클립과 “오늘의 한 문장” 미션 덕분에, 잠깐이라도 들어가서 한 장면만 보고 나오는 루틴이 생겼습니다.',
+      text: '교재로 공부할 때는 며칠만 지나도 흐름이 끊겼어요. ARA에서는 짧은 이야기 한 편만 봐도 학습이 되다 보니 부담이 없어요. “오늘은 이 장면까지만” 하고 들어왔다가, 자연스럽게 매일 접속하는 루틴이 생겼습니다.',
     },
   ];
 
@@ -55,6 +74,13 @@ export default function TestimonialsSection() {
     },
   ];
 
+  const REVIEW_NOTICE = {
+    mobile:
+      '지금 보시는 후기는 ARA가 상정한 학습자 페르소나를 바탕으로 구성한 시나리오형 예시 리뷰입니다.',
+    desktop:
+      '지금 보시는 후기는 실제 사용자 데이터가 아닌, ARA가 타깃으로 삼고 있는 학습자 페르소나를 바탕으로 구성한 시나리오형 리뷰입니다. 정식 런칭 이후에는 실제 학습자들의 이야기와 함께 이 섹션이 계속 업데이트될 예정이에요.',
+  };
+
   return (
     <motion.section
       id="testimonials"
@@ -73,26 +99,32 @@ export default function TestimonialsSection() {
       <div className="pointer-events-none absolute -left-10 -top-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl dark:bg-primary/25" />
       <div className="pointer-events-none absolute -right-10 bottom-0 h-64 w-64 rounded-full bg-sky-200/40 blur-3xl dark:bg-sky-700/40" />
 
-      {/* 🔧 다른 섹션과 패딩/높이 통일 */}
+      {/* 다른 섹션과 패딩/높이 통일 */}
       <div className="w-full max-w-screen-xl mx-auto px-6 pt-8 pb-12 md:pt-10 md:pb-14 lg:pt-12 lg:pb-16">
         <div className="grid gap-10 lg:gap-16 md:grid-cols-2 items-start">
           {/* 왼쪽 영역 */}
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl md:text-3xl font-bold mb-3 text-slate-900 dark:text-gray-100 break-keep">
-                ARA는 이런 학습자들을
+                {LEARNER_INTRO.title.line1}
                 <br className="hidden sm:block" />
-                떠올리며 설계되고 있어요
+                {LEARNER_INTRO.title.line2}
               </h2>
+
               <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base leading-relaxed break-keep">
-                아직 정식 출시 전이지만, ARA는 한 명의 전형적인 학습자가 아니라{' '}
-                <span className="font-semibold">여러 타입의 학습자</span>를 동시에 상상하면서
-                만들어지고 있습니다.
+                {LEARNER_INTRO.description.intro}
+                <br />
+                <span className="font-semibold">{LEARNER_INTRO.description.highlight}</span>
+                {LEARNER_INTRO.description.body}
+                <br />
                 <span className="hidden sm:inline">
-                  {' '}
-                  드라마로 한국어를 시작하는 사람, 워홀·유학을 준비하는 사람, 회사에서 한국어를 써야
-                  하는 직장인까지. 좋아하는 K-콘텐츠와 커뮤니티를 함께 사용할 때 공부가 더 오래,
-                  자연스럽게 이어지도록 플로우를 설계하고 있어요.
+                  {LEARNER_INTRO.description.detail[0]}
+                  <br />
+                  {LEARNER_INTRO.description.detail[1]}
+                  <br />
+                  {LEARNER_INTRO.description.detail[2]}
+                  <br />
+                  {LEARNER_INTRO.description.detail[3]}
                 </span>
               </p>
             </div>
@@ -149,13 +181,10 @@ export default function TestimonialsSection() {
 
             {/* 설명 문구 */}
             <p className="mt-4 text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed break-keep sm:hidden">
-              지금 보시는 후기는 ARA가 상정한 학습자 페르소나를 바탕으로 만든 시나리오형 예시
-              리뷰입니다.
+              {REVIEW_NOTICE.mobile}
             </p>
             <p className="mt-4 text-xs text-gray-500 dark:text-gray-400 leading-relaxed break-keep hidden sm:block">
-              지금 보시는 후기는 실제 사용자 데이터가 아닌, ARA가 타깃으로 삼고 있는 학습자
-              페르소나를 바탕으로 만든 시나리오형 리뷰입니다. 정식 런칭 후에는 실제 학습자들의
-              이야기와 함께 이 섹션이 계속 업데이트될 예정이에요.
+              {REVIEW_NOTICE.desktop}
             </p>
           </div>
         </div>

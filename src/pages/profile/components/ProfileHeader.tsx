@@ -8,11 +8,15 @@ import { toast } from 'sonner';
 import type { UserProfile } from '../ProfileAsap';
 import { useTranslation } from 'react-i18next';
 import TranslateButton from '@/components/common/TranslateButton';
-import FollowersModal from './FollowersModal';
+import FollowersModal, { type FollowUser } from './FollowersModal';
 import { useFollow } from '@/hooks/useFollow';
 import { BanBadge } from '@/components/common/BanBadge';
 import { getBanMessage } from '@/utils/banUtils';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
+import { useNavigate } from 'react-router-dom';
+import { useBlock } from '@/hooks/useBlock';
+import Modal from '@/components/common/Modal';
+import { useDirectChat } from '@/contexts/DirectChatContext';
 
 interface ProfileHeaderProps {
   userProfile: UserProfile;
@@ -51,9 +55,14 @@ export default function ProfileHeader({
     'followers',
   );
   const [showFollowMenu, setShowFollowMenu] = useState(false);
+  const [showUnblockConfirm, setShowUnblockConfirm] = useState(false);
   const [followNotificationsEnabled, setFollowNotificationsEnabled] = useState(true);
   const followMenuRef = useRef<HTMLDivElement>(null);
-  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [followers, setFollowers] = useState<FollowUser[]>([]);
+  const [following, setFollowing] = useState<FollowUser[]>([]);
+  const [myProfileId, setMyProfileId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { createDirectChat } = useDirectChat();
 
   // Real follow hook integration
   // IMPORTANT: Use profile.id (not user_id) for foreign key relations
@@ -64,7 +73,14 @@ export default function ProfileHeader({
     followingCount,
     toggleFollow,
     refreshCounts,
+    refreshStatus,
   } = useFollow(userProfile.id); // Use profile.id for DB relations
+
+  const {
+    isBlocked, // 내가 상대를 차단했는지
+    toggleBlock,
+    isLoading: blockLoading,
+  } = useBlock(userProfile?.id);
 
   // 프로필 바뀌면 동기화
   useEffect(() => {
@@ -102,6 +118,40 @@ export default function ProfileHeader({
     setPreviewAvatar(userProfile.avatar);
     setPreviewBanner(userProfile.banner ?? null);
   }, [userProfile.avatar, userProfile.banner]);
+
+  useEffect(() => {
+    (async () => {
+      const id = await getMyProfileId();
+      setMyProfileId(id);
+    })();
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (isBlocked) setShowFollowMenu(false);
+  }, [isBlocked]);
+
+  useEffect(() => {
+    const handler = () => {
+      refreshStatus();
+      refreshCounts();
+      // 지연 한 번 더 (supabase 반영 딜레이 대비)
+      setTimeout(() => {
+        refreshStatus();
+        refreshCounts();
+      }, 200);
+    };
+
+    window.addEventListener('REFRESH_BLOCKED_USERS', handler);
+    return () => window.removeEventListener('REFRESH_BLOCKED_USERS', handler);
+  }, [refreshStatus, refreshCounts]);
+
+  const ensureMyProfileId = async () => {
+    if (myProfileId) return myProfileId;
+
+    const id = await getMyProfileId();
+    setMyProfileId(id);
+    return id;
+  };
 
   const handleFileChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -171,6 +221,19 @@ export default function ProfileHeader({
     }
   };
 
+  const getMyProfileId = async () => {
+    if (!user) return null;
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (error) return null;
+    return data.id;
+  };
+
   const handleFollowToggle = async () => {
     if (isBanned && bannedUntil) {
       // '팔로우' directly or use t('profile.action_follow') if created, but user seemed ok with hardcoded for now or I stick to Korean as primary.
@@ -181,13 +244,108 @@ export default function ProfileHeader({
     await toggleFollow();
   };
 
-  const handleFollowersClick = () => {
+  const fetchFollowers = async () => {
+    const { data, error } = await supabase
+      .from('user_follows')
+      .select(
+        `
+    follower:profiles!user_follows_follower_id_fkey (
+      id, nickname, username, avatar_url, bio
+    )
+  `,
+      )
+      .eq('following_id', userProfile.id)
+      .is('ended_at', null) // 활성 팔로우만
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error(error);
+      toast.error('팔로워를 불러오지 못했습니다');
+      return;
+    }
+
+    // 내가 팔로우 중인 id 목록
+    const myId = await ensureMyProfileId();
+    if (!myId) return;
+
+    const { data: myFollowing } = await supabase
+      .from('user_follows')
+      .select('following_id')
+      .eq('follower_id', myId)
+      .is('ended_at', null);
+
+    const followingSet = new Set(myFollowing?.map(r => r.following_id));
+
+    setFollowers(
+      data.map((row: any) => ({
+        id: row.follower.id,
+        name: row.follower.nickname,
+        username: row.follower.username,
+        avatar: row.follower.avatar_url,
+        bio: row.follower.bio,
+        isFollowing: followingSet.has(row.follower.id),
+      })),
+    );
+  };
+
+  const fetchFollowing = async () => {
+    const followerProfileId = isOwnProfile ? await ensureMyProfileId() : userProfile.id;
+    if (!followerProfileId) return;
+
+    const { data, error } = await supabase
+      .from('user_follows')
+      .select(
+        `
+      created_at,
+      following:profiles!user_follows_following_id_fkey (
+        id, nickname, username, avatar_url, bio
+      )
+    `,
+      )
+      .eq('follower_id', followerProfileId)
+      .is('ended_at', null)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error(error);
+      toast.error('팔로잉을 불러오지 못했습니다');
+      return;
+    }
+
+    const myId = await ensureMyProfileId();
+    if (!myId) return;
+
+    const { data: myFollowing, error: mfErr } = await supabase
+      .from('user_follows')
+      .select('following_id')
+      .eq('follower_id', myId)
+      .is('ended_at', null); // 누락 수정
+
+    if (mfErr) console.error(mfErr);
+
+    const followingSet = new Set(myFollowing?.map(r => r.following_id));
+
+    setFollowing(
+      (data ?? []).map((row: any) => ({
+        id: row.following.id,
+        name: row.following.nickname,
+        username: row.following.username,
+        avatar: row.following.avatar_url,
+        bio: row.following.bio,
+        isFollowing: followingSet.has(row.following.id),
+      })),
+    );
+  };
+
+  const handleFollowersClick = async () => {
     setFollowersModalTab('followers');
+    await fetchFollowers();
     setShowFollowersModal(true);
   };
 
-  const handleFollowingClick = () => {
+  const handleFollowingClick = async () => {
     setFollowersModalTab('following');
+    await fetchFollowing();
     setShowFollowersModal(true);
   };
 
@@ -216,6 +374,47 @@ export default function ProfileHeader({
   const handleToggleNotifications = () => {
     setFollowNotificationsEnabled(!followNotificationsEnabled);
     toast.info(t('profile.notifications_updated', '알림 설정이 변경되었습니다'));
+  };
+
+  const handleMessageClick = async () => {
+    // 차단 상태면 DM 못 열게(원하면)
+    if (isBlocked) {
+      toast.error(
+        t('common.blocked_cannot_message', '차단한 사용자에게는 메시지를 보낼 수 없어요.'),
+      );
+      return;
+    }
+
+    // 본인/로그인 체크
+    if (!user) return;
+
+    try {
+      // ⭐️ 중요: createDirectChat이 받는 id가 “profile.id”인지 “user_id”인지 통일해야 함
+      // DirectChatList에서 createDirectChat(user.id)를 쓰고 있는데,
+      // 거기 user.id가 "profile id"라면 여기서도 userProfile.id(=profile id)를 넘겨야 함.
+      const chatId = await createDirectChat(userProfile.id);
+
+      if (!chatId) {
+        toast.error(t('message.create_room_failed', '메시지 방 생성 실패'));
+        return;
+      }
+
+      navigate('/chat', { state: { roomId: chatId } });
+    } catch (e) {
+      console.error(e);
+      toast.error(t('message.create_room_failed', '메시지 방 생성 실패'));
+    }
+  };
+
+  const handleToggleBlock = async () => {
+    setShowFollowMenu(false); // 메뉴 닫기
+    await toggleBlock(); // 차단/해제 실행
+    await refreshCounts(); // 카운트 최신화
+  };
+
+  const handleConfirmUnblock = async () => {
+    setShowUnblockConfirm(false);
+    await handleToggleBlock(); // 기존 로직 재사용 (toggleBlock + refreshCounts)
   };
 
   return (
@@ -314,11 +513,7 @@ export default function ProfileHeader({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => {
-                    setShowFollowMenu(false);
-                    onMessageClick?.(); // 외부에서 처리하고 싶으면 여기로
-                    setShowMessageModal(true); // 내부 모달 UI 쓸거면 이거
-                  }}
+                  onClick={handleMessageClick}
                   className="rounded-full px-5 font-medium border-2 border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-secondary/60 text-gray-800 dark:text-gray-100 hover:bg-primary/5 dark:hover:bg-primary/10"
                 >
                   <span className="flex items-center gap-2">
@@ -330,6 +525,24 @@ export default function ProfileHeader({
 
               {/* 팔로우 버튼 */}
               {!hideFollowButton ? (
+                // 1) 차단 상태면 팔로우/팔로잉 대신 "차단됨" 표시
+                isBlocked ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={blockLoading}
+                    onClick={e => {
+                      e.stopPropagation();
+                      setShowUnblockConfirm(true);
+                    }}
+                    className="rounded-full px-6 font-medium min-w-[120px] border-2 border-gray-300 dark:border-gray-600 bg-transparent text-gray-600 dark:text-gray-300"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <i className="ri-forbid-line" />
+                      {t('common.blocked', '차단됨')}
+                    </span>
+                  </Button>
+                ) : // 2) 차단이 아니면 기존 팔로우/팔로잉 UI 그대로
                 isFollowing ? (
                   <div className="relative">
                     <Button
@@ -396,7 +609,6 @@ export default function ProfileHeader({
 
         {/* 사용자 정보 */}
         <div className="space-y-3">
-          {/* 이름 */}
           {/* 이름 */}
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center flex-wrap gap-2">
             <div className="relative inline-flex items-center pr-2.5">
@@ -518,9 +730,112 @@ export default function ProfileHeader({
         isOpen={showFollowersModal}
         onClose={() => setShowFollowersModal(false)}
         initialTab={followersModalTab}
-        followers={[]} // Mock data - will be populated with real data later
-        following={[]} // Mock data - will be populated with real data later
+        followers={followers}
+        following={following}
+        onTabChange={async tab => {
+          if (tab === 'followers') await fetchFollowers();
+          else await fetchFollowing();
+        }}
+        onUnfollow={async targetProfileId => {
+          const myId = await ensureMyProfileId();
+          if (!myId) return;
+
+          const { error } = await supabase
+            .from('user_follows')
+            .update({ ended_at: new Date().toISOString() })
+            .eq('follower_id', myId)
+            .eq('following_id', targetProfileId)
+            .is('ended_at', null);
+
+          if (error) {
+            console.error(error);
+            toast.error('언팔로우 실패');
+            return;
+          }
+
+          await fetchFollowing();
+          await fetchFollowers();
+          await refreshCounts();
+        }}
+        onFollow={async targetProfileId => {
+          // 1) 예전에 언팔했던 row가 있으면 복구
+          const myId = await ensureMyProfileId();
+          if (!myId) return;
+
+          const revive = await supabase
+            .from('user_follows')
+            .update({ ended_at: null })
+            .eq('follower_id', myId)
+            .eq('following_id', targetProfileId)
+            .not('ended_at', 'is', null)
+            .select();
+
+          if (revive.error) {
+            console.error(revive.error);
+            toast.error('팔로우 실패');
+            return;
+          }
+
+          // 2) 복구된 게 없으면 신규 insert
+          if (!revive.data || revive.data.length === 0) {
+            const { error } = await supabase.from('user_follows').insert({
+              follower_id: myId,
+              following_id: targetProfileId,
+              ended_at: null,
+            });
+
+            if (error) {
+              console.error(error);
+              toast.error('팔로우 실패');
+              return;
+            }
+          }
+
+          await fetchFollowing();
+          await fetchFollowers();
+          await refreshCounts();
+        }}
+        myProfileId={myProfileId}
       />
+      {/* 차단해제 */}
+      <Modal
+        isOpen={showUnblockConfirm}
+        onClose={() => setShowUnblockConfirm(false)}
+        title={t('common.unblock_modal_title', '차단을 해제하시겠습니까?')}
+        className="max-w-md h-auto"
+      >
+        <div className="flex flex-col gap-6 py-4 px-6 text-left">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+              <i className="ri-eye-line text-emerald-500 text-2xl" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                {t('common.unblock_notice_title', '프로필과 게시글이 다시 표시돼요')}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {t('common.unblock_notice_desc', '상대가 다시 내 프로필을 볼 수 있어요.')}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowUnblockConfirm(false)}
+              className="flex-1 py-2.5 rounded-xl text-sm bg-gray-100 dark:bg-white/10"
+            >
+              {t('common.cancel', '취소')}
+            </button>
+            <button
+              onClick={handleConfirmUnblock}
+              disabled={blockLoading}
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50"
+            >
+              {blockLoading ? t('common.loading', '처리 중…') : t('common.unblock', '차단 해제')}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

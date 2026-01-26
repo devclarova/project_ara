@@ -133,23 +133,23 @@ function RequireAdmin() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-4">
         <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-full">
-           <AlertTriangle className="w-12 h-12 text-red-500" />
+          <AlertTriangle className="w-12 h-12 text-red-500" />
         </div>
         <h1 className="text-2xl font-bold">Access Denied</h1>
         <p className="text-center text-muted-foreground max-w-md">
           Your account ({session.user.email}) does not have administrator privileges.
-          <br/>
+          <br />
           Please ensure <code>is_admin</code> is set to true in the database.
         </p>
         <div className="flex gap-2 mt-4">
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition"
           >
             Retry Check
           </button>
-          <button 
-            onClick={() => supabase.auth.signOut()} 
+          <button
+            onClick={() => supabase.auth.signOut()}
             className="px-4 py-2 border border-input bg-background hover:bg-accent text-accent-foreground rounded-lg transition"
           >
             Sign Out
@@ -187,11 +187,11 @@ function AppInner() {
         {!hideHeader && <Header />}
 
         {/* 헤더가 있을 때만 상단 여백 주기 (고정 헤더 높이 보정) */}
-          <main
-            className={
-              hideHeader ? 'flex-1' : 'flex-1 pt-[57px] sm:pt-[73px] lg:pt-[81px] xl:pt-[97px]'
-            }
-          >
+        <main
+          className={
+            hideHeader ? 'flex-1' : 'flex-1 pt-[57px] sm:pt-[73px] lg:pt-[81px] xl:pt-[97px]'
+          }
+        >
           <Routes>
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/" element={<LandingPage />} />

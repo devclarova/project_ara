@@ -11,6 +11,7 @@ interface UseFollowReturn {
   followingCount: number;
   toggleFollow: () => Promise<void>;
   refreshCounts: () => Promise<void>;
+  refreshStatus: () => Promise<void>;
 }
 
 /**
@@ -29,17 +30,17 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
   // Get current user's profile ID
   useEffect(() => {
     if (!user) return;
-    
+
     const loadProfile = async () => {
       const { data } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
-      
+
       if (data) setMyProfileId(data.id);
     };
-    
+
     loadProfile();
   }, [user]);
 
@@ -66,24 +67,22 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
       .select('id')
       .eq('follower_id', myProfileId)
       .eq('following_id', targetProfileId)
-      .is('ended_at', null) // Only active follows
+      .is('ended_at', null)
       .maybeSingle();
 
     setIsFollowing(!!data);
   }, [myProfileId, targetProfileId]);
 
-  // Load follow counts (followers/following)
+  // Load follow counts
   const refreshCounts = useCallback(async () => {
     if (!targetProfileId) return;
 
-    // Count followers (people following this profile)
     const { count: followers } = await supabase
       .from('user_follows')
       .select('*', { count: 'exact', head: true })
       .eq('following_id', targetProfileId)
       .is('ended_at', null);
 
-    // Count following (people this profile follows)
     const { count: following } = await supabase
       .from('user_follows')
       .select('*', { count: 'exact', head: true })
@@ -93,6 +92,24 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
     setFollowersCount(followers || 0);
     setFollowingCount(following || 0);
   }, [targetProfileId]);
+
+  // block/unblock 같은 외부 변화가 있을 때 카운트 갱신
+  useEffect(() => {
+    const handler = () => {
+      refreshCounts();
+      setTimeout(refreshCounts, 150);
+      setTimeout(refreshCounts, 400);
+    };
+
+    window.addEventListener('REFRESH_FOLLOW_COUNTS', handler);
+    return () => window.removeEventListener('REFRESH_FOLLOW_COUNTS', handler);
+  }, [refreshCounts]);
+
+  // Initial load
+  useEffect(() => {
+    checkFollowStatus();
+    refreshCounts();
+  }, [checkFollowStatus, refreshCounts]);
 
   // Initial load
   useEffect(() => {
@@ -131,9 +148,11 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
         if (error) throw error;
 
         setIsFollowing(false);
-        window.dispatchEvent(new CustomEvent('followStatusChanged', { 
-          detail: { targetProfileId, isFollowing: false } 
-        }));
+        window.dispatchEvent(
+          new CustomEvent('followStatusChanged', {
+            detail: { targetProfileId, isFollowing: false },
+          }),
+        );
         setFollowersCount(prev => Math.max(0, prev - 1));
         toast.success(t('profile.unfollowed', '언팔로우'));
       } else {
@@ -146,7 +165,7 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
           .maybeSingle();
 
         let error;
-        
+
         if (existing && existing.ended_at !== null) {
           // Reactivate soft-deleted follow
           ({ error } = await supabase
@@ -156,13 +175,11 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
             .eq('following_id', targetProfileId));
         } else if (!existing) {
           // Create new follow
-          ({ error } = await supabase
-            .from('user_follows')
-            .insert({
-              follower_id: myProfileId,
-              following_id: targetProfileId,
-              ended_at: null,
-            }));
+          ({ error } = await supabase.from('user_follows').insert({
+            follower_id: myProfileId,
+            following_id: targetProfileId,
+            ended_at: null,
+          }));
         } else {
           // Already following (ended_at is null)
           toast.info(t('profile.already_following', '이미 팔로우 중입니다'));
@@ -171,7 +188,7 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
         }
 
         if (error) throw error;
-        
+
         // Add follow notification
         const notificationPayload = {
           type: 'follow',
@@ -182,15 +199,15 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
           tweet_id: null,
           comment_id: null,
         };
-        
-        await supabase
-          .from('notifications')
-          .insert(notificationPayload);
+
+        await supabase.from('notifications').insert(notificationPayload);
 
         setIsFollowing(true);
-        window.dispatchEvent(new CustomEvent('followStatusChanged', { 
-          detail: { targetProfileId, isFollowing: true } 
-        }));
+        window.dispatchEvent(
+          new CustomEvent('followStatusChanged', {
+            detail: { targetProfileId, isFollowing: true },
+          }),
+        );
         setFollowersCount(prev => prev + 1);
         toast.success(t('profile.followed', '팔로우'));
       }
@@ -212,5 +229,6 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
     followingCount,
     toggleFollow,
     refreshCounts,
+    refreshStatus: checkFollowStatus,
   };
 }

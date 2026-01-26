@@ -85,6 +85,8 @@ export default function HeroSection({ onSignup }: HeroProps) {
 
           <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base md:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0 break-keep">
             {t('landing.description')}
+            <br />
+            {t('landing.description2')}
           </p>
 
           {/* 핵심 포인트 3개 */}
