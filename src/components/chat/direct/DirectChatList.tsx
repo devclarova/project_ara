@@ -53,7 +53,7 @@ const ChatItem = memo(
       [chat.other_user, navigate],
     );
 
-    // dateUtils를 사용한 날짜 포맷팅
+    // dateUtils를 사용한 날짜 포맷팅.
     const formatTime = useCallback(
       (dateString: string) => {
         return formatChatListDate(dateString);
