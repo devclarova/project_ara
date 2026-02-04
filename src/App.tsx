@@ -1,3 +1,5 @@
+import { AlertTriangle } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import {
   Navigate,
   Outlet,
@@ -6,53 +8,52 @@ import {
   Routes,
   useLocation,
 } from 'react-router-dom';
-import { AlertTriangle } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import ScrollToTop from './components/common/ScrollToTop';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { supabase } from './lib/supabase';
+import { Toaster } from 'sonner';
+import Footer from './components/common/Footer';
+import { GlobalBanListener } from './components/common/GlobalBanListener';
+import { GlobalNotificationListener } from './components/common/GlobalNotificationListener';
+import { GlobalUserStatusTracker } from './components/common/GlobalUserStatusTracker';
 import Header from './components/common/Header';
+import ScrollToTop from './components/common/ScrollToTop';
 import ProfileSettings from './components/profile/ProfileSettings';
+import { ThemeProvider, useTheme } from './components/theme-provider';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DirectChatProvider } from './contexts/DirectChatContext';
 import { NewChatNotificationProvider } from './contexts/NewChatNotificationContext';
 import { PresenceProvider } from './contexts/PresenceContext';
-import AdminLogin from './pages/admin/AdminLogin';
-import AuthCallback from './pages/auth/AuthCallback';
-import DirectChatPage from './pages/chat/DirectChatPage';
-import GoodsDetailPage from './pages/goods/GoodsDetailPage';
-import GoodsPage from './pages/goods/GoodsPage';
-import CommunityFeed from './pages/community/CommunityFeed';
-import CommunityLayout from './pages/community/CommunityLayout';
-import NotFoundPage from './pages/community/NotFoundPage';
-import HNotificationsPage from './pages/notifications/HNotificationsPage';
-import ProfileAsap from './pages/profile/ProfileAsap';
-import LandingPage from './pages/LandingPage';
-import SignInPage from './pages/auth/SignInPage';
-import SignUpPage from './pages/auth/SignUpPage';
-import SignUpWizard from './pages/auth/SignUpWizard';
-import SnsDetailPage from './pages/sns/SnsDetailPage';
-import SnsPage from './pages/sns/SnsPage';
-import StudyListPage from './pages/StudyListPage';
-import StudyPage from './pages/StudyPage';
-import OnboardingWall from './routes/guards/OnboardingWall';
-import { Toaster } from 'sonner';
-import Footer from './components/common/Footer';
-import { ThemeProvider, useTheme } from './components/theme-provider';
-import { GlobalNotificationListener } from './components/common/GlobalNotificationListener';
-import { GlobalBanListener } from './components/common/GlobalBanListener';
+import { supabase } from './lib/supabase';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
+import AdminAuthCallback from './pages/admin/AdminAuthCallback';
 import AdminContentModeration from './pages/admin/AdminContentModeration';
 import AdminGoodsManagement from './pages/admin/AdminGoodsManagement';
 import AdminGoodsUpload from './pages/admin/AdminGoodsUpload';
 import AdminHome from './pages/admin/AdminHome';
 import AdminLayout from './pages/admin/AdminLayout';
+import AdminLogin from './pages/admin/AdminLogin';
 import AdminReports from './pages/admin/AdminReports';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminStudyManagement from './pages/admin/AdminStudyManagement';
 import AdminStudyUpload from './pages/admin/AdminStudyUpload';
 import UserManagement from './pages/admin/UserManagement';
-import AdminAuthCallback from './pages/admin/AdminAuthCallback';
-import { GlobalUserStatusTracker } from './components/common/GlobalUserStatusTracker';
+import AuthCallback from './pages/auth/AuthCallback';
+import SignInPage from './pages/auth/SignInPage';
+import SignUpPage from './pages/auth/SignUpPage';
+import SignUpWizard from './pages/auth/SignUpWizard';
+import DirectChatPage from './pages/chat/DirectChatPage';
+import CommunityFeed from './pages/community/CommunityFeed';
+import CommunityLayout from './pages/community/CommunityLayout';
+import NotFoundPage from './pages/community/NotFoundPage';
+import GoodsDetailPage from './pages/goods/GoodsDetailPage';
+import GoodsPage from './pages/goods/GoodsPage';
+import LandingPage from './pages/LandingPage';
+import HNotificationsPage from './pages/notifications/HNotificationsPage';
+import ProfileAsap from './pages/profile/ProfileAsap';
+import SnsDetailPage from './pages/sns/SnsDetailPage';
+import SnsPage from './pages/sns/SnsPage';
+import VocaPage from './pages/study/VocaPage';
+import StudyListPage from './pages/StudyListPage';
+import StudyPage from './pages/StudyPage';
+import OnboardingWall from './routes/guards/OnboardingWall';
 
 // ---------- 인증 가드 ----------
 function RequireAuth() {
@@ -203,6 +204,7 @@ function AppInner() {
             <Route path="/sns/:id" element={<SnsDetailPage />} />
             <Route path="/goods" element={<GoodsPage />} />
             <Route path="/goods/:id" element={<GoodsDetailPage />} />
+            <Route path="/voca" element={<VocaPage />} />
 
             {/* Admin Routes */}
             <Route path="/admin/login" element={<AdminLogin />} />
