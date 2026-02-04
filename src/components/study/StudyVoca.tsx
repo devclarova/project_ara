@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import StudyVocaItem from './StudyVocaItem';
+import EpisodeVocabModal, { type EpisodeWord } from '@/pages/study/EpisodeVocaModal';
 
 type WordRow = {
   id: number;
@@ -57,6 +58,10 @@ const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: Stu
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = useResponsivePageSize(); // 한번에 보여줄 단어 개수
+
+  // 모달 상태
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [initialWordId, setInitialWordId] = useState<string | undefined>(undefined);
 
   // DB Row -> UI 데이터 매핑
   const mapRow = (row: WordRow): WordItem | null => {
@@ -128,6 +133,21 @@ const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: Stu
     return localWords;
   }, [controlled, words, localWords]);
 
+  // 모달에 넘길 words(EpisodeWord[])로 변환
+  // - 앞면 ko: words(=term)
+  // - 뒷면 en: means(=meaning)  ← 지금 테이블에 이미 번역/의미가 있으니 그대로 사용
+  const modalWords: EpisodeWord[] = useMemo(() => {
+    return data.map(w => ({
+      id: String(w.id ?? `${w.term}-${w.meaning}`),
+      ko: w.term,
+      en: w.meaning,
+      exampleKo: w.example,
+      // ja/zh/예문번역/난이도/이미지는 일단 목업
+      difficulty: 2,
+      imageEmoji: '📌',
+    }));
+  }, [data]);
+
   // pageSize 또는 data가 바뀔 때 현재 페이지를 안전하게 클램프
   useEffect(() => {
     const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
@@ -139,37 +159,41 @@ const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: Stu
   const end = start + pageSize;
   const currentData = data.slice(start, end);
 
-  const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
+  const isLastPage = currentPage * pageSize + pageSize >= data.length;
+  const isFirstPage = currentPage === 0;
 
-  const handleNextPage = () => {
-    setCurrentPage(prevPage => prevPage + 1);
-  };
+  const handleNextPage = () => setCurrentPage(prevPage => prevPage + 1);
+  const handlePrevPage = () => setCurrentPage(prevPage => Math.max(prevPage - 1, 0));
 
-  const handlePrevPage = () => {
-    setCurrentPage(prevPage => Math.max(prevPage - 1, 0));
+  // 단어 클릭 → 모달 오픈 (해당 단어부터 시작)
+  const openModal = (w: WordItem) => {
+    const id = String(w.id ?? `${w.term}-${w.meaning}`);
+    setInitialWordId(id);
+    setIsModalOpen(true);
   };
 
   // 로딩/에러 처리 (자체 fetch 모드일 때만)
-  if (!controlled && loading) {
-    return <p className="p-3 text-sm text-gray-500">보카 불러오는 중…</p>;
-  }
-  if (!controlled && error) {
-    return <p className="p-3 text-sm text-red-600">보카 오류: {error}</p>;
-  }
-
-  if (!currentData || currentData.length === 0) {
+  if (!controlled && loading) return <p className="p-3 text-sm text-gray-500">보카 불러오는 중…</p>;
+  if (!controlled && error) return <p className="p-3 text-sm text-red-600">보카 오류: {error}</p>;
+  if (!currentData || currentData.length === 0)
     return <p className="p-3 text-sm text-gray-500">단어가 없습니다.</p>;
-  }
-
-  // 마지막 페이지 여부 확인
-  const isLastPage = currentPage * pageSize + pageSize >= data.length;
-  const isFirstPage = currentPage === 0;
 
   return (
     <div>
       <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${className ?? ''}`}>
         {currentData.map((w, i) => (
-          <StudyVocaItem key={i} item={w} id={w.id ?? i} />
+          <div
+            key={w.id ?? i}
+            role="button"
+            tabIndex={0}
+            onClick={() => openModal(w)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') openModal(w);
+            }}
+            className="cursor-pointer"
+          >
+            <StudyVocaItem item={w} id={w.id ?? i} />
+          </div>
         ))}
       </div>
 
@@ -178,8 +202,8 @@ const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: Stu
         <div className="flex justify-center mt-4">
           <button
             onClick={handlePrevPage}
-            disabled={currentPage === 0}
-            className="px-4 py-2 rounded disabled:opacity-50 ml-4 cursor-pointer"
+            disabled={isFirstPage}
+            className="px-4 py-2 rounded disabled:opacity-50 ml-4"
             style={{
               pointerEvents: isFirstPage ? 'none' : 'auto',
               cursor: isFirstPage ? 'default' : 'pointer',
@@ -210,10 +234,11 @@ const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: Stu
               </g>
             </svg>
           </button>
+
           <button
             onClick={handleNextPage}
-            disabled={currentPage * pageSize + pageSize >= data.length}
-            className="px-4 py-2 rounded disabled:opacity-50 ml-4 cursor-pointer"
+            disabled={isLastPage}
+            className="px-4 py-2 rounded disabled:opacity-50 ml-4"
             style={{
               pointerEvents: isLastPage ? 'none' : 'auto',
               cursor: isLastPage ? 'default' : 'pointer',
@@ -247,6 +272,15 @@ const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: Stu
           </button>
         </div>
       )}
+
+      {/* 모달 렌더 */}
+      <EpisodeVocabModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        words={modalWords}
+        initialWordId={initialWordId}
+        title="단어 카드"
+      />
     </div>
   );
 };

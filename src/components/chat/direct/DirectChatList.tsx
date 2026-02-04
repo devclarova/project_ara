@@ -45,10 +45,16 @@ const ChatItem = memo(
     const handleAvatarClick = useCallback(
       (e: React.MouseEvent) => {
         e.stopPropagation();
-        const target = chat.other_user.username || chat.other_user.id;
-        if (target) {
-          navigate(`/profile/${target}`);
+
+        const nickname = chat.other_user?.nickname?.trim();
+        if (nickname) {
+          navigate(`/profile/${encodeURIComponent(nickname)}`);
+          return;
         }
+
+        // 보험 (닉네임 없을 때만)
+        const fallback = chat.other_user?.id;
+        if (fallback) navigate(`/profile/${fallback}`);
       },
       [chat.other_user, navigate],
     );
@@ -163,8 +169,8 @@ const ChatItem = memo(
               <span className={chat.unread_count > 0 ? 'unread' : ''}>
                 {chat.last_message.sender_id === currentUserId
                   ? t('chat.me')
-                  : chat.last_message.sender_nickname || chat.other_user.nickname}{' '}
-                :{' '}
+                  : chat.last_message.sender_nickname || chat.other_user.nickname}
+                :
                 {chat.last_message.content === '\u200B' || !chat.last_message.content
                   ? chat.last_message.attachments?.[0]?.type === 'video'
                     ? t('chat.video_preview')
