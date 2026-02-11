@@ -1503,6 +1503,8 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                         highlight={false}
                                         disableInteractions={true}
                                         onClick={(id, tid) => { setDetailStack(prev => [...prev, { ...item, type: 'reply' } as any]); }} 
+                                        editingReplyId={null}
+                                        setEditingReplyId={() => {}}
                                     />
                                     </div>
                                 ) : (
@@ -1534,6 +1536,8 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                                             highlight={false}
                                                             disableInteractions={true}
                                                             onClick={(id, tid) => handleReplyClick(id, tid)}
+                                                            editingReplyId={null}
+                                                            setEditingReplyId={() => {}}
                                                         />
                                                     ))}
                                                 </div>
@@ -1624,6 +1628,8 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                                 highlight={true}
                                                 onClick={(id, tweetId) => handleReplyClick(id, tweetId)}
                                                 disableInteractions={true}
+                                                editingReplyId={null}
+                                                setEditingReplyId={() => {}}
                                                 />
                                             </div>
                                         </div>
@@ -1867,6 +1873,8 @@ export const HistoryReportDetailView = ({ report, onViewChatHistory, onItemClick
                                         onClick={(id, tid) => onItemClick?.({ ...content, type: 'reply', tweetId: tid })}
                                         highlight={true}
                                         disableInteractions={true}
+                                        editingReplyId={null}
+                                        setEditingReplyId={() => {}}
                                     />
                                 </div>
                             )}

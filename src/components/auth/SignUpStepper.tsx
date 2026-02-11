@@ -112,14 +112,14 @@ export default function SignUpStepper({ current, onStepChange, guard }: Props) {
                       isActive
                         ? 'border-[var(--ara-primary)] text-[var(--ara-primary)] ring-2 ring-[var(--ara-ring)]'
                         : isDone
-                        ? 'border-gray-400 bg-gray-50 text-gray-900'
-                        : 'border-gray-300 bg-white text-gray-500',
+                        ? 'border-gray-400 dark:border-gray-500 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+                        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400',
                     ].join(' ')}
                   >
                     {s.n}
                   </span>
 
-                  <span className="mt-2 text-[11px] text-center leading-tight text-gray-500">
+                  <span className="mt-2 text-[11px] text-center leading-tight text-gray-500 dark:text-gray-400">
                     {s.label}
                   </span>
                 </button>

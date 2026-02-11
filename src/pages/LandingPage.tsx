@@ -2,8 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
 
-import { isGuideModalDismissed } from '@/components/common/GuideModal';
+
 import CTASection from '@/components/landing/CTASection';
+import FooterSection from '@/components/landing/FooterSection';
 import HeroSection from '@/components/landing/HeroSection';
 import HowItWorksSection from '@/components/landing/HowItWorksSection';
 import PopularContentSection from '@/components/landing/PopularContentSection';
@@ -15,7 +16,7 @@ type HomeProps = {
   onSignup?: () => void;
 };
 
-const LANDING_GUIDE_KEY = 'ara-landing-guide';
+
 const HEADER_OFFSET = 0;
 const SCROLL_SNAP_BREAKPOINT = 1024; // lg 이상일 때만 스냅
 
@@ -40,19 +41,13 @@ const sectionOrder: SectionId[] = [
 
 const LandingPage = ({ onSignup }: HomeProps) => {
   const { t } = useTranslation();
-  const [showGuide, setShowGuide] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState<SectionId>('hero');
   const isScrollingRef = useRef(false);
   const wheelDeltaYRef = useRef(0);
   const touchStartYRef = useRef<number | null>(null);
 
-  // 가이드 모달
-  useEffect(() => {
-    if (!isGuideModalDismissed(LANDING_GUIDE_KEY)) {
-      setShowGuide(true);
-    }
-  }, []);
+
 
   // 스크롤 진행도 + 현재 섹션 계산
   useEffect(() => {
@@ -228,6 +223,9 @@ const LandingPage = ({ onSignup }: HomeProps) => {
         <title>{t('study.meta_title')}</title>
         <meta name="description" content={t('landing.description')} />
       </Helmet>
+
+
+
       {/* 상단 진행 바 */}
       <div className="fixed left-0 top-0 z-40 w-full h-0.5 bg-transparent">
         <div
@@ -277,6 +275,7 @@ const LandingPage = ({ onSignup }: HomeProps) => {
       <PopularContentSection />
       <TestimonialsSection />
       <CTASection onSignup={onSignup} />
+      <FooterSection />
     </main>
   );
 };

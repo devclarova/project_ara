@@ -19,6 +19,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 
+import AuthBackground from '@/components/auth/AuthBackground';
+
 export default function SignUpPage() {
   const { t } = useTranslation();
   const { step, setStep, prevStepRef, direction, guardedSetStep } = useSignupStepper(1);
@@ -33,7 +35,9 @@ export default function SignUpPage() {
     bio: string;
     file: File | null;
     preview: string | null;
-  }>({ bio: '', file: null, preview: null });
+    coverFile: File | null;
+    coverPreview: string | null;
+  }>({ bio: '', file: null, preview: null, coverFile: null, coverPreview: null });
 
   const [verified, setVerified] = useState<Verified>({
     email: { value: '', ok: false },
@@ -98,10 +102,10 @@ export default function SignUpPage() {
   const title = signupKind === 'social' ? t('signup.title_social') : t('signup.title_email');
 
   return (
-    <div
-      className={`min-h-auto mt- md:min-h-auto w-full bg-white dark:bg-background
-                     flex justify-center items-start ${wrapperPad} overflow-y-auto`}
-    >
+    <AuthBackground>
+      <div
+        className={`w-full flex justify-center items-start ${wrapperPad} overflow-y-auto`}
+      >
       <div className="w-full max-w-md sm:max-w-lg md:max-w-2xl px-4 xs:px-2.5 sm:px-6 md:px-8">
         <div className="relative mb-3 xs:mb-2 sm:mb-4 flex items-center justify-center min-h-[40px] sm:min-h-[48px]">
           {/* 중앙 타이틀 (절대 위치로 중앙 고정) - Title flows naturally but constrained */}
@@ -228,9 +232,6 @@ export default function SignUpPage() {
                       birth={form.birth}
                       country={form.country}
                       consents={consents ?? undefined}
-                      recoveryQuestion={form.recoveryQuestion || ''}
-                      recoveryAnswer={form.recoveryAnswer || ''}
-                      recoveryEmail={form.recoveryEmail || ''}
                       onBack={back}
                       onDone={() => {
                         /* 후속 처리 훅/라우팅 등 추가 지점 */
@@ -246,6 +247,7 @@ export default function SignUpPage() {
           </motion.div>
         </StepCard>
       </div>
-    </div>
+      </div>
+    </AuthBackground>
   );
 }

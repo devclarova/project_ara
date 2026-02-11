@@ -30,6 +30,9 @@ import LandingPage from './pages/LandingPage';
 import SignInPage from './pages/auth/SignInPage';
 import SignUpPage from './pages/auth/SignUpPage';
 import SignUpWizard from './pages/auth/SignUpWizard';
+import FindEmailPage from './pages/auth/FindEmailPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import UpdatePasswordPage from './pages/auth/UpdatePasswordPage';
 import SnsDetailPage from './pages/sns/SnsDetailPage';
 import SnsPage from './pages/sns/SnsPage';
 import StudyListPage from './pages/StudyListPage';
@@ -53,6 +56,7 @@ import AdminStudyUpload from './pages/admin/AdminStudyUpload';
 import UserManagement from './pages/admin/UserManagement';
 import AdminAuthCallback from './pages/admin/AdminAuthCallback';
 import { GlobalUserStatusTracker } from './components/common/GlobalUserStatusTracker';
+import RecoveryReminderModal from './components/auth/RecoveryReminderModal';
 
 // ---------- 인증 가드 ----------
 function RequireAuth() {
@@ -167,7 +171,7 @@ function AppInner() {
   const location = useLocation();
 
   // 헤더를 숨길 경로들
-  const HIDE_HEADER_PATHS = ['/signin', '/signup', '/auth/callback', '/signup/social', '/admin'];
+  const HIDE_HEADER_PATHS = ['/signin', '/signup', '/auth/callback', '/signup/social', '/admin', '/find-email', '/reset-password', '/update-password'];
   const hideHeader = HIDE_HEADER_PATHS.some(path => location.pathname.startsWith(path));
 
   // 푸터를 숨길 경로들 (채팅방, 로그인 등)
@@ -225,7 +229,12 @@ function AppInner() {
             <Route element={<RequireGuest />}>
               <Route path="/signup" element={<SignUpPage />} />
               <Route path="/signin" element={<SignInPage />} />
+              <Route path="/find-email" element={<FindEmailPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
             </Route>
+            
+            {/* Password update - requires session but not full auth */}
+            <Route path="/update-password" element={<UpdatePasswordPage />} />
 
             <Route path="/signup/social" element={<SignUpWizard mode="social" />} />
 
@@ -301,6 +310,7 @@ const App = () => {
                 <GlobalNotificationListener />
                 <GlobalBanListener />
                 <GlobalUserStatusTracker />
+                <RecoveryReminderModal />
                 <AppInner />
               </Router>
             </DirectChatProvider>

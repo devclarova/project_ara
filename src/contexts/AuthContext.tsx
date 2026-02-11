@@ -46,12 +46,14 @@ async function createProfileFromDraftIfMissing(u: User) {
 
   if (exErr || exists) return;
 
-  const draft = readProfileDraftSafe();
+  const localDraft = readProfileDraftSafe();
+  // u.user_metadata와 로컬 드래프트 병합 (서버 메타데이터 우선)
+  const draft = { ...localDraft, ...u.user_metadata };
 
   const nickname = (draft?.nickname ?? u.email?.split('@')[0] ?? 'user').toString().trim();
   const gender = (draft?.gender ?? 'Male').toString().trim();
   const birthday = (draft?.birthday ?? '2000-01-01').toString().trim(); // YYYY-MM-DD
-  const country = (draft?.country ?? 'Unknown').toString().trim();
+  const country = draft?.country ? String(draft.country).trim() : null;
   const bio = (draft?.bio ?? '').toString().trim() || null;
   const avatar = draft?.pendingAvatarUrl ?? null;
 
@@ -259,7 +261,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const signInWithGoogle: AuthContextType['signInWithGoogle'] = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { 
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: { prompt: 'select_account' }
+      },
     });
     return error ? { error: error.message } : {};
   };
@@ -267,7 +272,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const signInWithKakao: AuthContextType['signInWithKakao'] = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { 
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: { prompt: 'login' }
+      },
     });
     return error ? { error: error.message } : {};
   };
@@ -311,8 +319,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     } finally {
       setSession(null);
       setUser(null);
+      setBannedUntil(null);
+      setIsBannedState(false);
       try {
         localStorage.removeItem(DRAFT_KEY);
+        localStorage.removeItem('guest-translation-count');
       } catch {}
     }
   };

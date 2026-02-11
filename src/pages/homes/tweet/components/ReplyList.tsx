@@ -58,6 +58,7 @@ export default function ReplyList({
               // Future: wiring for inline replies if needed
               onCommentClick?.(reply.id);
             }}
+            onCommentClick={onCommentClick}
             highlight={reply.id === highlightId}
           />
         ))}

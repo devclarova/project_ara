@@ -964,6 +964,8 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
                                                     highlight={true}
                                                     disableInteractions={true}
                                                     isAdminView={true}
+                                                    editingReplyId={null}
+                                                    setEditingReplyId={() => {}}
                                                 />
                                             ) : (
                                                 <TweetDetailCard 
@@ -995,6 +997,8 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
                                                     onClick={() => pushToStack(reply)}
                                                     disableInteractions={true}
                                                     isAdminView={true}
+                                                    editingReplyId={null}
+                                                    setEditingReplyId={() => {}}
                                                   />
                                                 ))}
                                               </div>

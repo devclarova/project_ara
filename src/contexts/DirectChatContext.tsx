@@ -39,6 +39,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { useNewChatNotification } from './NewChatNotificationContext';
 import { uploadChatImage } from '@/lib/uploadChatImage';
+import { usePresence } from './PresenceContext';
 
 interface DirectChatContextType {
   chats: ChatListItem[];
@@ -109,6 +110,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
   const { user } = useAuth();
   const currentUserId = user?.id;
   const { setUnreadCount } = useNewChatNotification();
+  const { updateDbStatus } = usePresence();
 
   // 차단 목록 로드
   const loadBlockedUsers = useCallback(async () => {
@@ -151,7 +153,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       return () => {
           window.removeEventListener('REFRESH_BLOCKED_USERS', handleRefresh);
       };
-  }, [loadBlockedUsers]);
+  }, []);
 
   // 프로필 캐시 & 조회 함수 (Realtime 업데이트용 - 상단 이동)
   const profileCache = useRef<Map<string, ChatUser>>(new Map());
@@ -179,7 +181,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     // 3. DB 조회
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, nickname, avatar_url, username')
+      .select('id, nickname, avatar_url, username, is_online')
       .eq('user_id', authUserId)
       .maybeSingle();
 
@@ -190,20 +192,22 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           nickname: data.nickname,
           username: data.username,
           avatar_url: data.avatar_url,
+          is_online: data.is_online,
         }
       : {
           id: authUserId,
           email: `user-${authUserId}@example.com`,
           nickname: `User ${authUserId.slice(0, 8)}`,
           avatar_url: null,
+          is_online: false,
         };
     
     // 캐시 저장
     profileCache.current.set(authUserId, userInfo);
     
-    // 내 정보면 Ref에도 저장
-    if (user && authUserId === user.id) {
-        currentUserProfileRef.current = userInfo;
+
+    if (userInfo.id && userInfo.is_online !== undefined) {
+      updateDbStatus(userInfo.id, userInfo.is_online);
     }
     
     return userInfo;
@@ -260,6 +264,13 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
             }
           ).length;
           setUnreadCount(unreadChatsCount);
+          
+          // 실시간 상태 시딩 (DB에서 가져온 is_online 정보를 PresenceContext에 반영)
+          response.data.forEach(chat => {
+            if (chat.other_user?.id && chat.other_user.is_online !== undefined) {
+              updateDbStatus(chat.other_user.id, chat.other_user.is_online);
+            }
+          });
         } else {
           handleError(response.error || '채팅방 목록을 불러올 수 없습니다.');
         }
@@ -315,6 +326,10 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           setCurrentChat(chatInfo);
           if (chatInfo.is_new_chat) {
             await clearNewChatNotificationHandler(chatId);
+          }
+          // 실시간 상태 시딩
+          if (chatInfo.other_user?.id && chatInfo.other_user.is_online !== undefined) {
+            updateDbStatus(chatInfo.other_user.id, chatInfo.other_user.is_online);
           }
         }
 
@@ -815,7 +830,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     const handleNewMessage = async (payload: any) => {
       let newMessage = payload.new;
       const chatId = newMessage.chat_id;
-
+      
       // Shadow Block: 차단한 유저의 메시지는 무시
       if (blockedUserIds.has(newMessage.sender_id)) {
         return;

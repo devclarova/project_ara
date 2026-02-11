@@ -58,6 +58,7 @@ interface ReplyCardProps {
   onUnlike?: (id: string) => void;
   onLike?: (replyId: string, delta: number) => void;
   onReply?: (reply: UIReply) => void;
+  onCommentClick?: (commentId: string) => void;
   highlight?: boolean;
   onClick?: (id: string, tweetId: string) => void;
   onAvatarClick?: (username: string) => void;
@@ -67,8 +68,8 @@ interface ReplyCardProps {
   isLastChild?: boolean;
   ancestorsLast?: boolean[]; // Track if ancestors were the last children
   hasChildren?: boolean; // Explicit flag to force-draw the descendant line
-  editingReplyId: string | null;
-  setEditingReplyId: (id: string | null) => void;
+  editingReplyId?: string | null;
+  setEditingReplyId?: (id: string | null) => void;
 }
 
 export function ReplyCard({
@@ -76,6 +77,7 @@ export function ReplyCard({
   onDeleted,
   onLike,
   onReply,
+  onCommentClick,
   highlight = false,
   onClick,
   onAvatarClick,
@@ -149,8 +151,8 @@ export function ReplyCard({
   // 댓글 수정 기능
   const isEditing = editingReplyId === reply.id;
 
-  const openEdit = () => setEditingReplyId(reply.id);
-  const closeEdit = () => setEditingReplyId(null);
+  const openEdit = () => setEditingReplyId?.(reply.id);
+  const closeEdit = () => setEditingReplyId?.(null);
 
   const [draftText, setDraftText] = useState('');
 
@@ -693,18 +695,22 @@ export function ReplyCard({
         // useParams로 가져온 id(문자열)와 reply.tweetId(문자열 or 숫자) 비교
         const currentTweetId = params.id;
         const targetTweetId = String(reply.tweetId);
-
-        // 현재 보고 있는 트윗 내에서의 이동(대댓글 등)이면 History 쌓지 않음
         const isSamePage = currentTweetId === targetTweetId;
 
-        const targetPath = `/sns/${targetTweetId}`;
-        navigate(targetPath, {
-          state: {
-            highlightCommentId: reply.id,
-            scrollKey: Date.now(),
-          },
-          replace: isSamePage,
-        });
+        if (isSamePage && onCommentClick) {
+          // 같은 페이지 내부에서는 직접 스크롤만 수행 (리렌더링 방지)
+          onCommentClick(reply.id);
+        } else {
+          // 다른 페이지로 이동할 때만 navigate 사용
+          const targetPath = `/sns/${targetTweetId}`;
+          navigate(targetPath, {
+            state: {
+              highlightCommentId: reply.id,
+              scrollKey: Date.now(),
+            },
+            replace: false,
+          });
+        }
       }}
     >
       {/* 
@@ -733,14 +739,6 @@ export function ReplyCard({
           );
         })}
 
-        {/* 
-          2. The Branch Line (Connection to Parent)
-          Simplified Logic for Robust Connection:
-          - Vertical Backbone: 
-            If NOT last child, draw full height (connecting to siblings).
-            If last child, draw only Top to Curve Start (0-12px).
-          - L-Curve: Always draw the turn (12-32px).
-        */}
         {/* 
           2. The Branch Line (Connection to Parent)
           Simplified Logic for Robust Connection:

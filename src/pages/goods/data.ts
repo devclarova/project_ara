@@ -1,4 +1,4 @@
-export const CATEGORIES = ['all', 'clothing', 'accessories', 'digital', 'stationery'];
+export const CATEGORIES = ['all', 'clothing', 'accessories', 'stationery'];
 
 export const MOCK_PRODUCTS = [
   {
@@ -29,7 +29,7 @@ export const MOCK_PRODUCTS = [
     id: 4,
     itemKey: 'planner',
     price: 9.00,
-    category: 'digital',
+    category: 'stationery',
     image: 'https://lsjozpktmapfqxqyaarw.supabase.co/storage/v1/object/public/avatars/pending/Gemini_Generated_Image_vhtekuvhtekuvhte.png',
     badge: 'new_arrival'
   },

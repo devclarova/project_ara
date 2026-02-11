@@ -44,14 +44,13 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
       const isDark =
         typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
-      // ✅ 라이트 모드는 기존 유지 / 다크 모드만 border-gray-300 적용
       const baseBorderColor = state.isFocused
         ? 'var(--ara-primary)'
         : error
           ? 'red'
           : isDark
-            ? '#D1D5DB' // 🌙 다크 모드 보더-gray-300
-            : '#D1D5DB'; // ☀️ 기존 라이트 동일(혹은 '#E5E7EB' 써도 됨)
+            ? '#4b5563' // 🌙 gray-600
+            : '#D1D5DB';
 
       const isXs = typeof window !== 'undefined' && window.innerWidth < 450;
 
@@ -62,7 +61,7 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
         borderRadius: 14,
         border: `1px solid ${baseBorderColor}`,
         outline: 'none',
-        boxShadow: state.isFocused ? '0 0 0 3px var(--ara-ring)' : 'none',
+        boxShadow: state.isFocused ? '0 0 0 1px var(--ara-ring)' : 'none',
         paddingLeft: 12,
         paddingRight: 12,
         backgroundColor: isDark ? 'hsl(var(--secondary))' : '#FFFFFF',
@@ -73,7 +72,7 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
             : error
               ? 'red'
               : isDark
-                ? '#D1D5DB' // 🌙 다크 hover 도 동일
+                ? '#4b5563'
                 : '#D1D5DB',
         },
       };
@@ -117,9 +116,11 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
       ...provided,
       backgroundColor: isDark ? 'hsl(var(--secondary))' : '#FFFFFF',
       color: isDark ? 'hsl(var(--secondary-foreground))' : '#111827',
-      border: `1px solid ${isDark ? '#D1D5DB' : '#E5E7EB'}`, // ✅ 다크만 회색 보더
+      border: `1px solid ${isDark ? '#4b5563' : '#E5E7EB'}`,
       borderRadius: 12,
       overflow: 'hidden',
+      boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.1)',
+      zIndex: 50,
     }),
     option: (provided: any, state: any) => ({
       ...provided,
@@ -133,8 +134,9 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
             : 'rgba(59,130,246,0.08)'
           : 'transparent',
       color: isDark ? 'hsl(var(--secondary-foreground))' : '#111827',
-      borderBottom: `1px solid ${isDark ? '#D1D5DB' : 'rgba(229,231,235,0.8)'}`,
+      borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(229,231,235,0.8)'}`,
       cursor: 'pointer',
+      padding: '10px 14px',
       '&:last-of-type': { borderBottom: 'none' },
     }),
   };
@@ -164,14 +166,9 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
         openMenuOnFocus
       />
       <label
-        className={`absolute left-3 px-1 bg-white/95 rounded transition-all dark:bg-secondary pointer-events-none
-    ${
-      isFocused
-        ? '-top-2 text-xs text-primary'
-        : value
-          ? '-top-2 text-xs text-gray-400'
-          : 'top-3 xs:top-2.5 text-sm xs:text-[14px] text-gray-400'
-    }
+        className={`absolute left-4 px-1 bg-white transition-all dark:bg-secondary pointer-events-none z-10
+    ${isFocused || value ? '-top-3 text-sm' : 'top-2.5 text-sm xs:text-[14px] text-gray-400'}
+    ${isFocused ? 'text-primary' : 'text-gray-400'}
   `}
       >
         {t('signup.label_gender')}

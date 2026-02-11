@@ -31,21 +31,25 @@ import type {
  * 현재 사용자 정보 가져오기 (profiles.id 포함)
  */
 async function getCurrentUser() {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  if (error || !user) {
-    throw new Error('사용자가 로그인되지 않았습니다.');
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return null;
+    }
+
+    // profiles 테이블의 ID를 가져오기
+    const profileId = await ensureMyProfileId();
+
+    return {
+      ...user,
+      profileId, // profiles.id
+    };
+  } catch (error) {
+    console.warn('getCurrentUser session error:', error);
+    return null;
   }
-
-  // profiles 테이블의 ID를 가져오기
-  const profileId = await ensureMyProfileId();
-
-  return {
-    ...user,
-    profileId, // profiles.id
-  };
 }
 
 /**
@@ -55,7 +59,7 @@ export async function getUserProfile(userId: string): Promise<ChatApiResponse<Ch
   try {
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .select('id, nickname, avatar_url, username')
+      .select('id, nickname, avatar_url, username, is_online')
       .eq('user_id', userId)
       .maybeSingle();
 
@@ -72,6 +76,7 @@ export async function getUserProfile(userId: string): Promise<ChatApiResponse<Ch
       nickname: profileData.nickname,
       username: profileData.username,
       avatar_url: profileData.avatar_url,
+      is_online: profileData.is_online,
     };
 
     return { success: true, data: userInfo };
@@ -97,6 +102,9 @@ export async function findOrCreateDirectChat(
 ): Promise<ChatApiResponse<DirectChat>> {
   try {
     const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: '사용자가 로그인되지 않았습니다.' };
+    }
 
     // 1단계: 기존 채팅방 찾기 (활성/비활성 모두 포함)
     const { data: existingChats, error: findError } = await supabase
@@ -248,6 +256,9 @@ export async function findOrCreateDirectChat(
 export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
   try {
     const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: '사용자가 로그인되지 않았습니다.' };
+    }
 
     // 사용자의 활성화된 채팅방 목록 조회 (최신 메시지 순)
     const { data: chats, error: chatsError } = await supabase
@@ -281,7 +292,7 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
     if (otherUserIds.length > 0) {
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
-        .select('id, nickname, avatar_url, username, banned_until')
+        .select('id, nickname, avatar_url, username, banned_until, is_online')
         .in('id', otherUserIds);
 
       if (!profileError && profiles) {
@@ -293,6 +304,7 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
             username: p.username,
             avatar_url: p.avatar_url,
             banned_until: p.banned_until,
+            is_online: p.is_online,
           });
         });
       }
@@ -390,11 +402,14 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
 export async function getDirectChat(chatId: string): Promise<ChatApiResponse<ChatListItem>> {
   try {
     const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: '사용자가 로그인되지 않았습니다.' };
+    }
 
     // 채팅방 정보 조회
     const { data: chat, error: chatError } = await supabase
       .from('direct_chats')
-      .select('*')
+      .select('*, user1:profiles!user1_id(is_online), user2:profiles!user2_id(is_online)')
       .eq('id', chatId)
       .single();
 
@@ -420,6 +435,7 @@ export async function getDirectChat(chatId: string): Promise<ChatApiResponse<Cha
           username: profile.username,
           avatar_url: profile.avatar_url,
           banned_until: profile.banned_until,
+          is_online: profile.is_online,
         }
       : {
           id: otherUserId,
@@ -539,6 +555,9 @@ export async function sendMessage(
 ): Promise<ChatApiResponse<DirectMessage>> {
   try {
     const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: '사용자가 로그인되지 않았습니다.' };
+    }
 
     // 0단계: 채팅방 존재 여부 확인 및 상대방 정보 조회
     const { data: chat, error: chatError } = await supabase
@@ -698,6 +717,9 @@ export async function getMessages(
 ): Promise<ChatApiResponse<{ messages: DirectMessage[]; hasNext: boolean }>> {
   try {
     const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: '사용자가 로그인되지 않았습니다.' };
+    }
 
     // 0단계: 채팅방 정보 조회 (사용자가 나간 시점 확인)
     const { data: chatInfo, error: chatError } = await supabase

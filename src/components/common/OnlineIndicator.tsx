@@ -24,9 +24,7 @@ export const OnlineIndicator: React.FC<OnlineIndicatorProps> = ({
   const isOnline = isOnlineOverride !== undefined
     ? isOnlineOverride
     : userId 
-      ? (onlineUsers.size > 0 
-          ? onlineUsers.has(userId) 
-          : (dbOnlineUsers[userId] ?? false))
+      ? (onlineUsers.has(userId) || (dbOnlineUsers[userId] ?? false))
       : false;
 
   const sizeClasses = {

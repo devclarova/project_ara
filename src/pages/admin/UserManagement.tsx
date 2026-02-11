@@ -140,8 +140,8 @@ const UserManagement = () => {
     nickname: targetUser.nickname 
   } : null, [targetUser?.id]);
 
-  const fetchUsers = useCallback(async () => {
-    setLoading(true);
+  const fetchUsers = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const { data, error } = await supabase.rpc('get_admin_users_list', {
         page: page,
@@ -176,7 +176,7 @@ const UserManagement = () => {
       console.error('Error fetching users:', error);
       toast.error('사용자 목록을 불러오지 못했습니다.');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [page, searchTerm, filterRole, filterStatus, filterGender, filterOnline, filterCountry, filterBirthday, filterCreatedAt, sortBy]);
 
@@ -191,10 +191,10 @@ const UserManagement = () => {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'profiles' },
-        (payload) => {
+        (payload: any) => {
+          // 1. 개별 사용자 목록 실시간 업데이트
           setUsers(currentUsers =>
             currentUsers.map(u => {
-              // profiles 테이블의 기본 키는 'id'이며, 이는 AdminUser의 'profile_id'와 대응됩니다.
               if (u.profile_id === payload.new.id) {
                 return {
                   ...u,
@@ -209,6 +209,9 @@ const UserManagement = () => {
               return u;
             })
           );
+
+          // 2. 상단 통계 카드 데이터 실시간 동기화를 위해 가벼운 재요청 (백그라운드에서 실행)
+          fetchUsers(true);
         }
       )
       .subscribe();
@@ -216,11 +219,11 @@ const UserManagement = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchUsers]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-    setPage(1); // Reset to page 1 on search
+    setPage(1);
   };
 
   const handleRoleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -364,7 +367,7 @@ const UserManagement = () => {
         </div>
         <div className="flex items-center gap-2">
            <button
-             onClick={fetchUsers}
+             onClick={() => fetchUsers()}
              className="flex items-center gap-2 px-3 py-2 bg-secondary border border-border text-muted-foreground rounded-lg hover:bg-muted transition-colors font-medium text-sm"
              title="새로고침"
            >

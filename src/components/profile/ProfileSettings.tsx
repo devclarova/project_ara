@@ -10,6 +10,7 @@ import SearchBar from '@/components/ui/SearchBar';
 import SettingsContent from './SettingsContent';
 import SettingsLayout from './SettingsLayout';
 import SettingsSidebar from './SettingsSidebar';
+import { useLocation } from 'react-router-dom';
 
 export default function ProfileSettings() {
   const { t } = useTranslation();
@@ -53,11 +54,23 @@ export default function ProfileSettings() {
     },
   ];
 
-  const [activeId, setActiveId] = useState<MenuId>('alarm');
-
   // 데스크톱/모바일 판별 + 모바일에서 어느 화면 보여줄지
   const [isMobile, setIsMobile] = useState(false);
   const [showMenuOnMobile, setShowMenuOnMobile] = useState(true);
+
+  const location = useLocation();
+  const state = location.state as { activeTab?: MenuId; openSetting?: any } | null;
+
+  const [activeId, setActiveId] = useState<MenuId>(state?.activeTab || 'alarm');
+
+  useEffect(() => {
+    if (state?.activeTab) {
+      setActiveId(state.activeTab);
+      if (isMobile) {
+        setShowMenuOnMobile(false);
+      }
+    }
+  }, [state, isMobile]);
 
   // 화면 크기에 따라 모바일 여부 판단 (채팅 페이지랑 동일한 패턴)
   useEffect(() => {
@@ -128,7 +141,11 @@ export default function ProfileSettings() {
       </SettingsContent>
     ) : activeId === 'privacy' ? (
       <SettingsContent>
-        <PrivacySettings onBackToMenu={() => setShowMenuOnMobile(true)} searchQuery={searchQuery} />
+        <PrivacySettings 
+          onBackToMenu={() => setShowMenuOnMobile(true)} 
+          searchQuery={searchQuery} 
+          initialActiveSetting={activeId === 'privacy' ? state?.openSetting : undefined}
+        />
       </SettingsContent>
     ) : activeId === 'system' ? (
       <SettingsContent>

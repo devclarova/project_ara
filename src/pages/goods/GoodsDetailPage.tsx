@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ShoppingBag, Heart, Share2, Star, Truck, ShieldCheck, ThumbsUp, MoreHorizontal } from 'lucide-react';
+import { ChevronLeft, ShoppingBag, Heart, Share2, Star, Truck, ShieldCheck, ThumbsUp, MoreHorizontal, AlertTriangle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
@@ -68,6 +68,14 @@ export default function GoodsDetailPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-gray-100 pb-20">
+      {/* Notice Banner - Brand Color applied */}
+      <div className="bg-primary/10 dark:bg-primary/20 border-b border-primary/20 dark:border-primary/40 py-2.5 relative z-50">
+        <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-2.5 text-primary font-semibold tracking-tight text-[11px] sm:text-xs md:text-sm">
+          <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+          <span className="text-center">공식 굿즈샵 런칭 준비 중입니다. ARA의 새로운 컬렉션을 먼저 만나보세요.</span>
+          <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 hidden sm:block shrink-0 opacity-70" />
+        </div>
+      </div>
       {/* Header */}
       <div className="sticky top-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -104,7 +112,12 @@ export default function GoodsDetailPage() {
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
               {product.badge && (
-                <Badge className="absolute top-4 left-4 bg-black text-white px-3 py-1 text-xs uppercase tracking-widest">
+                <Badge className={`
+                  absolute top-4 left-4 text-white px-3 py-1 text-xs uppercase tracking-widest border-none
+                  ${product.badge === 'new_arrival' ? 'bg-[#00bfa5]' : ''}
+                  ${product.badge === 'best_seller' ? 'bg-amber-500' : ''}
+                  ${product.badge === 'sold_out' ? 'bg-zinc-800 opacity-90' : ''}
+                `}>
                   {t(`goods.${product.badge}`, product.badge.replace('_', ' '))}
                 </Badge>
               )}

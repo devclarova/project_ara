@@ -134,19 +134,22 @@ export function ReplyInput({
           .in('nickname', filtered);
 
         if (mentionedProfiles && mentionedProfiles.length > 0) {
-          // notifications insert
+          // 멘션된 사용자들에게 알림 전송
           const payloads = mentionedProfiles
-            .filter(p => p.id !== profileId) // 혹시 동일인 방지(안전)
+            .filter(p => p.id !== profileId) // 자기 자신 멘션 제외
             .map(p => ({
               receiver_id: p.id,
               sender_id: profileId,
               type: 'mention',
               content: content.trim(),
               tweet_id: target.tweetId,
-              comment_id: data.id, // 방금 생성된 reply id
+              comment_id: data.id,
               is_read: false,
             }));
-          await supabase.from('notifications').insert(payloads);
+
+          if (payloads.length > 0) {
+            await supabase.from('notifications').insert(payloads);
+          }
         }
       }
     } catch (e) {

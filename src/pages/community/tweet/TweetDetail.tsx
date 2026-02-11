@@ -622,10 +622,11 @@ export default function TweetDetail() {
           setTimeout(() => {
             if (cancelled) return;
             const finalRect = el.getBoundingClientRect();
-            if (Math.abs(finalRect.top - headerOffset) > 5) {
+            // 50px 이상 벗어났을 때만 보정 (덜 공격적으로)
+            if (Math.abs(finalRect.top - headerOffset) > 50) {
               window.scrollTo({
                 top: window.scrollY + finalRect.top - headerOffset,
-                behavior: 'auto',
+                behavior: 'smooth',
               });
             }
             // 주행 완료 후 타겟 초기화 (무한 루프 방지 핵심)
@@ -756,9 +757,27 @@ export default function TweetDetail() {
           if (tweet?.id) fetchReplies(tweet.id, page);
         }}
         onCommentClick={commentId => {
-          setScrollTargetId(commentId);
+          const isOpening = openReplyId !== commentId;
           setOpenReplyId(prev => (prev === commentId ? null : commentId)); // 토글 지원으로 통합
-          setActiveHighlightId(commentId);
+          
+          // 댓글 입력창을 여는 경우에만 스크롤 고려
+          if (isOpening) {
+            // 댓글 카드 요소 찾기
+            const commentEl = document.getElementById(`reply-${commentId}`);
+            if (commentEl) {
+              const rect = commentEl.getBoundingClientRect();
+              const viewportHeight = window.innerHeight;
+              // 에디터 높이 예상 (대략 200px)
+              const editorHeight = 200;
+              // 댓글 하단 + 에디터가 화면에 들어오는지 확인
+              const wouldBeVisible = rect.bottom + editorHeight < viewportHeight - 50;
+              
+              // 화면에 무리 없이 나올 수 있으면 스크롤 안 함
+              if (!wouldBeVisible) {
+                setScrollTargetId(commentId);
+              }
+            }
+          }
         }}
         onAddedReply={handleChildReplyAdded}
         highlightId={activeHighlightId} // 스크롤용 ID와 별개로 하이라이트 전용 ID 사용

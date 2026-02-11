@@ -504,8 +504,9 @@ export default function TweetDetail() {
            setTimeout(() => {
               if (cancelled) return;
               const finalRect = el.getBoundingClientRect();
-              if (Math.abs(finalRect.top - headerOffset) > 5) {
-                window.scrollTo({ top: window.scrollY + finalRect.top - headerOffset, behavior: 'auto' });
+              // 50px 이상 벗어났을 때만 보정 (덜 공격적으로)
+              if (Math.abs(finalRect.top - headerOffset) > 50) {
+                window.scrollTo({ top: window.scrollY + finalRect.top - headerOffset, behavior: 'smooth' });
               }
               // 주행 완료 후 타겟 초기화 (무한 루프 방지 핵심)
               setScrollTargetId(null);
@@ -633,8 +634,23 @@ export default function TweetDetail() {
           if (tweet?.id) fetchReplies(tweet.id, page);
         }}
         onCommentClick={(commentId) => {
-            setScrollTargetId(commentId);
-            setActiveHighlightId(commentId); // 수동 클릭 시에는 즉시 하이라이트
+            // 댓글 카드가 이미 충분히 보이는지 확인
+            const commentEl = document.getElementById(`reply-${commentId}`);
+            if (commentEl) {
+              const rect = commentEl.getBoundingClientRect();
+              const viewportHeight = window.innerHeight;
+              const headerOffset = 130;
+              
+              // 댓글이 이미 화면의 좋은 위치에 있으면 스크롤 안 함
+              const isWellPositioned = rect.top > headerOffset && rect.bottom < viewportHeight - 100;
+              
+              if (!isWellPositioned) {
+                setScrollTargetId(commentId);
+              }
+            } else {
+              // 요소를 찾지 못한 경우 (아직 렌더링 안 됨) 스크롤
+              setScrollTargetId(commentId);
+            }
         }}
         highlightId={activeHighlightId}
       />

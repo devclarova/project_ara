@@ -30,10 +30,10 @@ export const GlobalNotificationListener: React.FC = () => {
     let chatChannel: ReturnType<typeof supabase.channel> | null = null;
 
     const setupSubscriptions = async () => {
-      // 1. Fetch profile ID and notification settings
+      // 1. Fetch profile ID
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id, notify_comment, notify_like, notify_follow, notify_chat')
+        .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -59,25 +59,6 @@ export const GlobalNotificationListener: React.FC = () => {
                 return;
               }
               
-              // 실시간으로 최신 설정 조회 (설정 변경 시 즉시 반영을 위해)
-              const { data: latestProfile } = await supabase
-                .from('profiles')
-                .select('notify_comment, notify_like, notify_follow')
-                .eq('id', profile.id)
-                .single();
-
-              // 설정 로드 실패 시 기본값(true)으로 간주하거나 초기 profile 값 사용
-              const currentSettings = latestProfile || profile;
-
-              // 알림 설정 확인
-              if (newNotif.type === 'comment' || newNotif.type === 'reply') {
-                if (currentSettings.notify_comment === false) return;
-              } else if (newNotif.type === 'like' || newNotif.type === 'like_comment' || newNotif.type === 'like_feed') {
-                if (currentSettings.notify_like === false) return;
-              } else if (newNotif.type === 'follow') {
-                if (currentSettings.notify_follow === false) return;
-              }
-
               const { data: senderProfile } = await supabase
                 .from('profiles')
                 .select('id, nickname, avatar_url, username, bio')
@@ -127,8 +108,9 @@ export const GlobalNotificationListener: React.FC = () => {
                           scrollKey: Date.now() // 강제 스크롤 트리거
                         } 
                       });
-                    } else if (newNotif.type === 'follow' && newNotif.sender_id) {
-                       // tweet_id가 없는 경우 /sns로 fallback
+                    } else if (newNotif.type === 'follow' && senderProfile?.nickname) {
+                       navigate(`/profile/${encodeURIComponent(senderProfile.nickname)}`);
+                    } else {
                        navigate('/sns');
                     }
                   }}
@@ -167,16 +149,21 @@ export const GlobalNotificationListener: React.FC = () => {
             if (!profile?.id) return;
             if (currentChatRef.current === newMessage.chat_id) return;
 
-            // 실시간으로 최신 설정 조회
-             const { data: currentSettings } = await supabase
-              .from('profiles')
-              .select('notify_chat')
-              .eq('user_id', user.id)
-              .single();
-            
-            // 채팅 알림 설정 확인 (기본값 true)
-            if (currentSettings?.notify_chat === false) {
-               return;
+            // 채팅 알림 설정 확인 (토스트용)
+            try {
+              const { data: chatSettings } = await supabase
+                .from('profiles')
+                .select('notify_chat')
+                .eq('user_id', user.id)
+                .single();
+              
+              // 채팅 알림이 비활성화되어 있으면 토스트 띄우지 않음 (헤더 알림은 DirectChatContext에서 처리)
+              if (chatSettings?.notify_chat === false) {
+                return;
+              }
+            } catch (err) {
+              // 에러 시 기본값(true)으로 동작
+              console.warn('[GlobalNotificationListener] Error checking chat notification settings:', err);
             }
 
             // active 상태도 같이 조회하여, 내가 나간 채팅방인지 확인

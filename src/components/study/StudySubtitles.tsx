@@ -50,9 +50,9 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
   const pageSize = useResponsivePageSize(); // 한번에 보여줄 자막 수
 
   useEffect(() => {
-    if (!Number.isFinite(resolvedStudyId)) {
-      setError('유효하지 않은 studyId 입니다.');
-      setLoading(false);
+    // studyId가 아직 준비되지 않았으면 에러를 띄우지 않고 대기 (부모 StudyPage에서 데이터 로딩 중일 수 있음)
+    if (!resolvedStudyId || !Number.isFinite(resolvedStudyId)) {
+      setLoading(true);
       return;
     }
 
