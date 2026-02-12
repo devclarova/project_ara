@@ -990,6 +990,9 @@ export async function searchMessagesGlobal(
 ): Promise<ChatApiResponse<DirectMessage[]>> {
   try {
     const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: '사용자가 로그인되지 않았습니다.' };
+    }
 
     if (!searchTerm.trim()) {
       return { success: true, data: [] };
@@ -1106,6 +1109,9 @@ export async function searchUsers(searchTerm: string): Promise<ChatApiResponse<C
 
     // 현재 사용자 정보 가져오기
     const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: '사용자가 로그인되지 않았습니다.' };
+    }
 
     // 현재 사용자와 이미 채팅 중인 사용자들 조회
     const { data: existingChats, error: chatError } = await supabase
@@ -1184,6 +1190,9 @@ export async function searchUsers(searchTerm: string): Promise<ChatApiResponse<C
 export async function clearNewChatNotification(chatId: string): Promise<ChatApiResponse<boolean>> {
   try {
     const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: '사용자가 로그인되지 않았습니다.' };
+    }
 
     // 채팅방 정보 조회
     const { data: chat, error: chatError } = await supabase
@@ -1224,6 +1233,9 @@ export async function clearNewChatNotification(chatId: string): Promise<ChatApiR
 export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
   try {
     const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: '사용자가 로그인되지 않았습니다.' };
+    }
 
     // 사용자의 비활성화된 채팅방 목록 조회
     // 현재 사용자만 나간 채팅방만 조회 (상대방은 아직 참여 중인 채팅방)
@@ -1334,6 +1346,9 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
 export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<boolean>> {
   try {
     const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: '사용자가 로그인되지 않았습니다.' };
+    }
 
     // 1단계: 채팅방 소유권 확인
     const { data: chat, error: chatError } = await supabase
@@ -1496,6 +1511,9 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
 export async function restoreDirectChat(chatId: string): Promise<ChatApiResponse<boolean>> {
   try {
     const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: '사용자가 로그인되지 않았습니다.' };
+    }
 
     // 1단계: 채팅방 소유권 확인
     const { data: chat, error: chatError } = await supabase
@@ -1600,6 +1618,9 @@ export async function searchMessagesInChat(
 export async function getMediaInChat(chatId: string): Promise<ChatApiResponse<DirectMessage[]>> {
   try {
     const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: '사용자가 로그인되지 않았습니다.' };
+    }
 
     // 채팅방 정보 조회 (사용자가 나간 시점 확인)
     const { data: chatInfo, error: chatError } = await supabase

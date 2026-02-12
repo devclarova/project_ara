@@ -259,7 +259,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                             <h4 className="text-xs font-bold text-orange-500 mb-3 flex items-center gap-2"><AlertTriangle size={14} /> 받은 신고 ({top.reportsReceived.length})</h4>
                                             {top.reportsReceived.map((r:any) => (
                                                 <div key={r.id} className="text-xs py-2 border-b last:border-0 cursor-pointer hover:text-primary" onClick={() => setDetailStack(p=>[...p, {...r, type:'report_detail'}])}>
-                                                    <span className="font-bold">[{r.target_type}]</span> {t(`report.reasons.${r.reason}`, r.reason)}
+                                                    <span className="font-bold">[{r.target_type}]</span> {String(t(`report.reasons.${r.reason}`, r.reason))}
                                                 </div>
                                             ))}
                                         </div>
@@ -337,7 +337,7 @@ export const HistoryReportDetailView = ({ report, onViewChatHistory, onItemClick
                  ) : <div className="text-center py-8 text-xs text-red-500 font-bold bg-red-50 rounded-xl border border-red-100 italic">원본이 삭제되어 현재 확인할 수 없는 콘텐츠입니다.</div>}
             </div>
             <div className="grid gap-3 p-4 bg-background border rounded-2xl shadow-sm">
-                <div className="flex justify-between font-bold text-sm"><span className="text-muted-foreground">신고 사유</span><span className="text-orange-600">{t(`report.reasons.${report.reason}`, report.reason)}</span></div>
+                <div className="flex justify-between font-bold text-sm"><span className="text-muted-foreground">신고 사유</span><span className="text-orange-600">{String(t(`report.reasons.${report.reason}`, report.reason))}</span></div>
                 <div className="flex justify-between font-bold text-sm"><span className="text-muted-foreground">신고 시각</span><span>{new Date(report.created_at).toLocaleString()}</span></div>
                 {report.description && <div className="text-xs bg-secondary/50 p-3 rounded-xl italic">"{report.description}"</div>}
             </div>
