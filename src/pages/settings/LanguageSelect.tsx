@@ -91,8 +91,10 @@ function LanguageSelect({ value, onChange, onClose, onSave, onCancel }: Language
   return (
     <div className="flex flex-col h-full">
       {/* 상단 영역 */}
-      <div className="px-6 pt-4 pb-2 shrink-0">
-        <p className="text-base font-semibold text-gray-800 dark:text-gray-200">{t('settings.languageSelect')}</p>
+      <div className="px-6 pt-4 pb-3 shrink-0">
+        <p className="text-base font-semibold text-gray-800 dark:text-gray-200">
+          {t('settings.languageSelect')}
+        </p>
       </div>
 
       {/* 스크롤 영역 - flex-1로 남은 공간 차지 */}
@@ -102,7 +104,7 @@ function LanguageSelect({ value, onChange, onClose, onSave, onCancel }: Language
           minHeight: 0, // flex에서 overflow가 작동하도록
         }}
       >
-        <div className="flex flex-col gap-3 py-2" role="radiogroup" aria-label="언어 선택">
+        <div className="flex flex-col gap-2 py-2" role="radiogroup" aria-label="언어 선택">
           {options.map(({ code, label, flag }) => {
             const selected = value === code;
             const isoCode = LANG_TO_ISO[code];
@@ -117,10 +119,10 @@ function LanguageSelect({ value, onChange, onClose, onSave, onCancel }: Language
                 aria-checked={selected}
                 onClick={() => onChange(code)}
                 className={[
-                  'flex items-center justify-between gap-4 px-5 py-3.5 rounded-xl transition-all duration-200 text-sm font-medium w-full',
+                  'flex items-center justify-between gap-4 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium w-full',
                   selected
                     ? 'bg-gradient-to-r from-primary/90 to-primary text-white shadow-lg'
-                    : 'bg-primary/5 dark:bg-primary/10 text-gray-900 dark:text-gray-100 border border-primary/5 dark:border-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20 hover:border-primary/30',
+                    : 'bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700/60',
                 ].join(' ')}
               >
                 <span className="font-medium">{label}</span>
@@ -128,7 +130,7 @@ function LanguageSelect({ value, onChange, onClose, onSave, onCancel }: Language
                   <img
                     src={flagUrl}
                     alt={`${label} flag`}
-                    className="w-8 h-6 rounded shadow-sm object-cover"
+                    className="w-7 h-5 rounded shadow-sm object-cover"
                     onError={(e) => {
                       // 이미지 로드 실패 시 이모지로 대체
                       e.currentTarget.style.display = 'none';

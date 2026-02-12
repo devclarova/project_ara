@@ -22,6 +22,8 @@ import { DirectChatProvider } from './contexts/DirectChatContext';
 import { NewChatNotificationProvider } from './contexts/NewChatNotificationContext';
 import { PresenceProvider } from './contexts/PresenceContext';
 import { supabase } from './lib/supabase';
+
+// Admin Pages
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminAuthCallback from './pages/admin/AdminAuthCallback';
 import AdminContentModeration from './pages/admin/AdminContentModeration';
@@ -35,10 +37,18 @@ import AdminSettings from './pages/admin/AdminSettings';
 import AdminStudyManagement from './pages/admin/AdminStudyManagement';
 import AdminStudyUpload from './pages/admin/AdminStudyUpload';
 import UserManagement from './pages/admin/UserManagement';
+
+// Auth Pages
 import AuthCallback from './pages/auth/AuthCallback';
 import SignInPage from './pages/auth/SignInPage';
 import SignUpPage from './pages/auth/SignUpPage';
 import SignUpWizard from './pages/auth/SignUpWizard';
+import FindEmailPage from './pages/auth/FindEmailPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import UpdatePasswordPage from './pages/auth/UpdatePasswordPage';
+import RecoveryReminderModal from './components/auth/RecoveryReminderModal';
+
+// Content Pages
 import DirectChatPage from './pages/chat/DirectChatPage';
 import CommunityFeed from './pages/community/CommunityFeed';
 import CommunityLayout from './pages/community/CommunityLayout';
@@ -69,13 +79,11 @@ function RequireGuest() {
   if (loading) return null;
   if (session) {
     const provider = (session.user.app_metadata?.provider as string | undefined) ?? 'email';
-    // 세션 있으면: 소셜은 온보딩으로, 이메일은 홈으로
     return <Navigate to={provider === 'email' ? '/studyList' : '/signup/social'} replace />;
   }
   return <Outlet />;
 }
 
-// 관리자 인증 가드
 function RequireAdmin() {
   const { session, loading } = useAuth();
   const location = useLocation();
@@ -83,7 +91,6 @@ function RequireAdmin() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    // 세션이 변경되면 상태 초기화 후 재검사
     setChecking(true);
     setIsAdmin(null);
 
@@ -95,7 +102,6 @@ function RequireAdmin() {
       }
 
       try {
-        // Supabase에서 is_admin 확인
         const { data, error } = await supabase
           .from('profiles')
           .select('is_admin')
@@ -116,7 +122,6 @@ function RequireAdmin() {
   }, [session]);
 
   if (loading || checking) {
-    // 로딩 중 표시 (빈 화면 대신 스피너 등)
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -125,12 +130,10 @@ function RequireAdmin() {
   }
 
   if (!session) {
-    // 인증되지 않았으면 로그인 페이지로
     return <Navigate to="/admin/login" replace state={{ from: location }} />;
   }
 
   if (!isAdmin) {
-    // 관리자가 아님 -> 명시적 에러 페이지 표시 (무한 리다이렉트 방지)
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-4">
         <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-full">
@@ -167,12 +170,8 @@ function RequireAdmin() {
 function AppInner() {
   const location = useLocation();
 
-  // 헤더를 숨길 경로들
-  const HIDE_HEADER_PATHS = ['/signin', '/signup', '/auth/callback', '/signup/social', '/admin'];
+  const HIDE_HEADER_PATHS = ['/signin', '/signup', '/auth/callback', '/signup/social', '/admin', '/find-email', '/reset-password', '/update-password'];
   const hideHeader = HIDE_HEADER_PATHS.some(path => location.pathname.startsWith(path));
-
-  // 푸터를 숨길 경로들 (채팅방, 로그인 등)
-  const HIDE_FOOTER_PATHS = [...HIDE_HEADER_PATHS, '/chat', '/sns'];
 
   const hideFooter = [...HIDE_HEADER_PATHS, '/chat'].some(path =>
     location.pathname.startsWith(path),
@@ -180,14 +179,11 @@ function AppInner() {
 
   return (
     <>
-      {/* 공통 스크롤 리셋 */}
       <ScrollToTop />
 
       <div className="layout min-h-screen flex flex-col">
-        {/* 로그인/회원가입/온보딩에서는 헤더 렌더링 안 함 */}
         {!hideHeader && <Header />}
 
-        {/* 헤더가 있을 때만 상단 여백 주기 (고정 헤더 높이 보정) */}
         <main
           className={
             hideHeader ? 'flex-1' : 'flex-1 pt-[57px] sm:pt-[73px] lg:pt-[81px] xl:pt-[97px]'
@@ -197,7 +193,6 @@ function AppInner() {
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/" element={<LandingPage />} />
             <Route path="/landing" element={<LandingPage />} />
-            {/* 공개용 (랜딩/인기콘텐츠에서만 사용) */}
             <Route path="/guest-study/:contents/:episode/:scene?" element={<StudyPage />} />
             <Route path="/studyList" element={<StudyListPage />} />
             <Route path="/sns" element={<SnsPage />} />
@@ -227,8 +222,11 @@ function AppInner() {
             <Route element={<RequireGuest />}>
               <Route path="/signup" element={<SignUpPage />} />
               <Route path="/signin" element={<SignInPage />} />
+              <Route path="/find-email" element={<FindEmailPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
             </Route>
-
+            
+            <Route path="/update-password" element={<UpdatePasswordPage />} />
             <Route path="/signup/social" element={<SignUpWizard mode="social" />} />
 
             <Route element={<RequireAuth />}>
@@ -244,22 +242,17 @@ function AppInner() {
                 </Route>
               </Route>
             </Route>
-            {/* </Route> */}
 
-            {/* 존재하지 않는 경로 */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
 
-        {/* 푸터 노출 조건: hideFooter가 아닐 때만 */}
         {!hideFooter && <Footer />}
       </div>
     </>
   );
 }
 
-// ---------- 최상위 App (Provider + Router 래핑) ----------
-// 감싸야 useTheme 사용 가능
 const ThemedToaster = () => {
   const { theme } = useTheme();
 
@@ -275,7 +268,6 @@ const ThemedToaster = () => {
       theme={theme as 'light' | 'dark' | 'system'}
       toastOptions={{
         duration: 4000,
-        // Tailwind 클래스로 !important 강제 적용 (배경색 문제 해결)
         className: 'font-sans !bg-white dark:!bg-[#18181b] !border-teal-500/30 !shadow-xl',
         style: {
           color: isDarkMode ? '#fff' : '#09090b',
@@ -290,7 +282,6 @@ const ThemedToaster = () => {
   );
 };
 
-// ---------- 최상위 App (Provider + Router 래핑) ----------
 const App = () => {
   return (
     <AuthProvider>
@@ -303,6 +294,7 @@ const App = () => {
                 <GlobalNotificationListener />
                 <GlobalBanListener />
                 <GlobalUserStatusTracker />
+                <RecoveryReminderModal />
                 <AppInner />
               </Router>
             </DirectChatProvider>

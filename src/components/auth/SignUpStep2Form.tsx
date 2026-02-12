@@ -7,8 +7,6 @@ import InputField from './InputField';
 import { useTranslation } from 'react-i18next';
 import { useNicknameValidator } from '@/hooks/useNicknameValidator';
 import NicknameInputField from '@/components/common/NicknameInputField';
-import { RECOVERY_QUESTIONS, type RecoveryQuestion } from '@/types/signup';
-import SelectField from './SelectField';
 
 const EMAIL_ASCII_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 const NON_ASCII_RE = /[^\x00-\x7F]/;
@@ -56,7 +54,6 @@ function validatePasswordField(pw: string, t: (key: string) => string): string {
   return '';
 }
 
-// === 만 14세 이상 여부 판단 ===
 function isAge14Plus(dateLike?: Date | string | null) {
   if (!dateLike) return false;
   const birth = dateLike instanceof Date ? dateLike : new Date(dateLike);
@@ -89,10 +86,6 @@ export type FormData = {
   birth: Date | null;
   birthYmd?: string | null;
   country: string;
-  // Recovery 정보 (필수)
-  recoveryQuestion: RecoveryQuestion | '';
-  recoveryAnswer: string;
-  recoveryEmail: string; // 임시 이메일 (입력은 선택이지만 빈 문자열로라도 저장)
 };
 
 export default function SignUpStep2Form({
@@ -107,8 +100,6 @@ export default function SignUpStep2Form({
   signupKind,
 }: Props) {
   const { t } = useTranslation();
-  
-  // Use new hook
   const nickValidator = useNicknameValidator();
   
   const [email, setEmail] = useState(value?.email ?? '');
@@ -121,9 +112,6 @@ export default function SignUpStep2Form({
     value?.birth ? toYMDLocal(value.birth) : (value?.birthYmd ?? null),
   );
   const [country, setCountry] = useState(value?.country ?? '');
-  const [recoveryQuestion, setRecoveryQuestion] = useState<RecoveryQuestion | ''>(value?.recoveryQuestion ?? '');
-  const [recoveryAnswer, setRecoveryAnswer] = useState(value?.recoveryAnswer ?? '');
-  const [recoveryEmail, setRecoveryEmail] = useState(value?.recoveryEmail ?? '');
 
   useEffect(() => {
     if (!value) return;
@@ -135,20 +123,14 @@ export default function SignUpStep2Form({
     setBirth(value.birth ?? null);
     setBirthYmd(value.birth ? toYMDLocal(value.birth) : (value.birthYmd ?? null));
     setCountry(value.country ?? '');
-    setRecoveryQuestion(value.recoveryQuestion ?? '');
-    setRecoveryAnswer(value.recoveryAnswer ?? '');
-    setRecoveryEmail(value.recoveryEmail ?? '');
     
-    // Initialize validator state for existing nickname
     if (value.nickname) {
        nickValidator.validateInput(value.nickname);
     }
   }, [value]);
 
-  // 부모로 변경 통지
   const emit = (next: FormData) => onChange?.(next);
 
-  // 소셜 모드: 이메일/비번 자동 세팅 & 비활성화
   useEffect(() => {
     if (signupKind !== 'social') return;
     (async () => {
@@ -172,57 +154,40 @@ export default function SignUpStep2Form({
         birth,
         birthYmd,
         country,
-        recoveryQuestion,
-        recoveryAnswer,
-        recoveryEmail,
       });
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signupKind]);
 
-  // 값 변경시 중복검사 캐시 무효화 판단
   useEffect(() => {
     onInvalidateByChange(email, nickname);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email, nickname]);
 
-  // 외부 캐시 → 로컬 표시 동기화
   useEffect(() => {
     if (verified.email.ok && verified.email.value === email) {
       setEmailCheckResult('available');
       setErrors(prev => ({ ...prev, email: undefined }));
     }
-    // 닉네임: 외부 캐시가 OK면 훅의 상태도 OK로 동기화(가능한 선에서)
     if (verified.nickname.ok && verified.nickname.value === nickname) {
-       // useNicknameValidator는 내부 상태가 있으므로 직접 제어는 어렵지만 에러만 제거
        nickValidator.setError(undefined);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [verified.email.value, verified.email.ok, verified.nickname.value, verified.nickname.ok]);
 
-  // 제출 시도 → 전체 검증
   useEffect(() => {
     if (submitAttempted) validate(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitAttempted]);
 
   const snapshot: FormData = useMemo(
-    () => ({ email, pw, confirmPw, nickname, gender, birth, birthYmd, country, recoveryQuestion, recoveryAnswer, recoveryEmail }),
-    [email, pw, confirmPw, nickname, gender, birth, birthYmd, country, recoveryQuestion, recoveryAnswer, recoveryEmail],
+    () => ({ email, pw, confirmPw, nickname, gender, birth, birthYmd, country }),
+    [email, pw, confirmPw, nickname, gender, birth, birthYmd, country],
   );
 
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [emailChecking, setEmailChecking] = useState(false);
   const [emailCheckResult, setEmailCheckResult] = useState<'available' | 'taken' | ''>('');
-  const [recoveryEmailChecking, setRecoveryEmailChecking] = useState(false);
-  const [recoveryEmailCheckResult, setRecoveryEmailCheckResult] = useState<'available' | 'taken' | '' | 'same_as_primary'>('');
   
-  // Nickname checking and result are managed by hook basically, but we need to integrate with form submission flow logic
-
   const validate = (withDupHints = false): boolean => {
     const newErr: Partial<Record<keyof FormData, string>> = {};
 
-    // 이메일/비번 검증은 이메일 가입에서만
     if (signupKind !== 'social') {
       const emailMsg = validateEmailField(email, t);
       if (emailMsg) newErr.email = emailMsg;
@@ -239,38 +204,17 @@ export default function SignUpStep2Form({
       if (confirmMsg) newErr.confirmPw = confirmMsg;
     }
 
-    // 공통 검증 (닉네임)
     const { error: nickMsg } = nickValidator.getFormatError(nickname);
     if (nickMsg) newErr.nickname = nickMsg;
     
     if (!gender) newErr.gender = t('validation.gender_select');
     if (!birth) newErr.birth = t('validation.required_birthday');
-    // [추가] 생일이 들어왔다면, 오늘 기준 만 14세 이상인지 체크
     if (birth && !isAge14Plus(birth)) {
       newErr.birth = t('validation.age_restriction');
     }
     if (!country) newErr.country = t('validation.country_select');
 
-    // Recovery 정보 검증
-    if (!recoveryQuestion) newErr.recoveryQuestion = t('validation.recovery_question_required');
-    if (!recoveryAnswer.trim()) {
-      newErr.recoveryAnswer = t('validation.recovery_answer_required');
-    } else if (recoveryAnswer.trim().length < 2) {
-      newErr.recoveryAnswer = t('validation.recovery_answer_too_short');
-    }
-    // Recovery Email 검증 (필출)
-    if (!recoveryEmail.trim()) {
-      newErr.recoveryEmail = t('validation.recovery_email_invalid'); // 또는 새로운 required 키
-    } else {
-      const tempEmailMsg = validateEmailField(recoveryEmail, t);
-      if (tempEmailMsg) newErr.recoveryEmail = t('validation.recovery_email_invalid');
-      if (!tempEmailMsg && recoveryEmail === email) {
-        newErr.recoveryEmail = t('validation.recovery_email_same_as_primary');
-      }
-    }
-
     if (withDupHints) {
-      // 이메일 중복 힌트는 이메일 가입에서만
       if (signupKind !== 'social') {
         const emailVerifiedOk = verified.email.ok && verified.email.value === email;
         if (!newErr.email && !emailVerifiedOk && emailCheckResult !== 'available') {
@@ -280,11 +224,7 @@ export default function SignUpStep2Form({
               : t('validation.email_check_required');
         }
       }
-      // 닉네임 중복 힌트
-      // verified.nickname.ok 가 true면 이미 검증된 것으로 간주
       const nickVerifiedOk = verified.nickname.ok && verified.nickname.value === nickname;
-      
-      // 훅의 checkResult가 available이면 통과
       const hookAvailable = nickValidator.checkResult === 'available' && nickValidator.lastCheckedNick === nickname;
 
       if (!newErr.nickname && !nickVerifiedOk && !hookAvailable) {
@@ -299,7 +239,6 @@ export default function SignUpStep2Form({
     return Object.keys(newErr).length === 0;
   };
 
-  // 이메일 중복 상태
   const emailDupStatus = async (): Promise<'available' | 'taken' | 'error'> => {
     if (signupKind === 'social') return 'available';
     const msg = validateEmailField(email, t);
@@ -316,7 +255,6 @@ export default function SignUpStep2Form({
     }
   };
 
-  // 이메일 체크 버튼
   const handleEmailCheck = async () => {
     const res = await emailDupStatus();
     if (res === 'taken') {
@@ -331,52 +269,14 @@ export default function SignUpStep2Form({
     }
   };
 
-  // 닉네임 체크 버튼
   const handleNickCheck = async () => {
     const isAvailable = await nickValidator.checkAvailability(nickname);
     if (isAvailable) {
       onDupChecked('nickname', nickname, true);
+      setErrors(prev => ({ ...prev, nickname: undefined }));
     }
   };
 
-  const checkRecoveryEmailStrict = async (): Promise<'available' | 'taken' | 'error' | 'same_as_primary'> => {
-    // Basic format check
-    const tempEmailMsg = validateEmailField(recoveryEmail, t);
-    if (tempEmailMsg) {
-       setErrors(prev => ({ ...prev, recoveryEmail: tempEmailMsg }));
-       return 'error';
-    }
-    if (recoveryEmail === email) {
-       setErrors(prev => ({ ...prev, recoveryEmail: t('validation.recovery_email_same_as_primary') }));
-       return 'same_as_primary';
-    }
-    try {
-      setRecoveryEmailChecking(true);
-      const { data, error } = await supabase.rpc('check_email_exists_strict', { _email: recoveryEmail.trim() });
-      setRecoveryEmailChecking(false);
-      
-      if (error) return 'error';
-      return data === true ? 'taken' : 'available';
-    } catch {
-      setRecoveryEmailChecking(false);
-      return 'error';
-    }
-  };
-
-  const handleRecoveryEmailCheck = async () => {
-    const res = await checkRecoveryEmailStrict();
-    if (res === 'taken') {
-       setRecoveryEmailCheckResult('taken');
-       setErrors(prev => ({ ...prev, recoveryEmail: t('signup.error_email_taken') }));
-    } else if (res === 'available') {
-       setRecoveryEmailCheckResult('available');
-       setErrors(prev => ({ ...prev, recoveryEmail: undefined }));
-    } else {
-       setRecoveryEmailCheckResult('');
-    }
-  };
-  
-  // Hook에서 에러 발생 시 Form 에러 업데이트
   useEffect(() => {
     if (nickValidator.error) {
        setErrors(prev => ({ ...prev, nickname: nickValidator.error }));
@@ -384,7 +284,6 @@ export default function SignUpStep2Form({
        setErrors(prev => ({ ...prev, nickname: undefined }));
     }
   }, [nickValidator.error]);
-
 
   const handleNext = async () => {
     if (!validate(true)) return;
@@ -400,27 +299,14 @@ export default function SignUpStep2Form({
     }
 
     setEmailChecking(signupKind !== 'social');
-    // nickChecking is handled by hook
     
     try {
       const emailPromise = signupKind === 'social' ? Promise.resolve<'available'>('available') : emailDupStatus();
-      // If nickname not verified yet, check it
       const nickPromise = (cachedNickOK || hookNickOK) ? Promise.resolve(true) : nickValidator.checkAvailability(nickname);
       
       const [eRes, nRes] = await Promise.all([emailPromise, nickPromise]);
 
       setEmailCheckResult(eRes === 'available' ? 'available' : eRes === 'taken' ? 'taken' : '');
-      // nRes is boolean (true if available)
-
-      // Recovery Email Dup Check (Strict: Check against both Primary and Recovery)
-      let rEmailRes = recoveryEmailCheckResult;
-      
-      if (!rEmailRes && recoveryEmail.trim()) {
-         const directRes = await checkRecoveryEmailStrict();
-         if (directRes === 'taken') rEmailRes = 'taken';
-         else if (directRes === 'same_as_primary') rEmailRes = 'same_as_primary';
-         else if (directRes === 'available') rEmailRes = 'available';
-      }
 
       if (eRes === 'taken') {
         setErrors(prev => ({ ...prev, email: t('signup.error_email_taken') }));
@@ -430,20 +316,8 @@ export default function SignUpStep2Form({
         setErrors(prev => ({ ...prev, email: t('signup.error_email_check_retry') }));
         return;
       }
-      // NEW: Block if recovery email starts with existing primary email
-      if (rEmailRes === 'taken') {
-        setErrors(prev => ({ ...prev, recoveryEmail: t('validation.email_taken') }));
-        return;
-      }
-      if (rEmailRes === 'same_as_primary') {
-         // Error is already set by checkRecoveryEmailStrict
-         return;
-      }
       
-      if (!nRes) {
-        // Error is already set by hook
-        return;
-      }
+      if (!nRes) return;
 
       if (signupKind !== 'social') onDupChecked('email', email, true);
       onDupChecked('nickname', nickname, true);
@@ -468,7 +342,7 @@ export default function SignUpStep2Form({
           label={t('signup.label_email')}
           value={email}
           onChange={v => {
-            if (signupKind === 'social') return; // 소셜은 고정
+            if (signupKind === 'social') return;
             setEmail(v);
             setErrors(prev => ({ ...prev, email: undefined }));
             setEmailCheckResult('');
@@ -478,98 +352,47 @@ export default function SignUpStep2Form({
           isChecking={emailChecking}
           checkResult={signupKind === 'social' ? '' : emailCheckResult}
           onCheck={signupKind === 'social' ? undefined : handleEmailCheck}
-          className={signupKind === 'social' ? 'opacity-70 cursor-not-allowed' : ''}
-          inputProps={
-            signupKind === 'social'
-              ? {
-                  readOnly: true,
-                  tabIndex: -1,
-                  onFocus: e => e.currentTarget.blur(),
-                  onMouseDown: e => e.preventDefault(),
-                  onKeyDown: e => e.preventDefault(),
-                  style: {
-                    backgroundColor: 'rgb(243 244 246)',
-                    color: 'rgb(107 114 128)',
-                    outline: 'none',
-                    cursor: 'default',
-                  },
-                }
-              : { placeholder: ' ' }
-          }
+          disabled={signupKind === 'social'}
         />
 
-        <InputField
-          id="pw"
-          label={t('signup.label_password')}
-          type="password"
-          value={pw}
-          onChange={v => {
-            if (signupKind === 'social') return;
-            setPw(v);
-            setErrors(prev => ({ ...prev, pw: undefined, confirmPw: undefined }));
-            emit({ ...snapshot, pw: v });
-          }}
-          error={errors.pw}
-          inputProps={
-            signupKind === 'social'
-              ? {
-                  readOnly: true,
-                  tabIndex: -1,
-                  onFocus: e => e.currentTarget.blur(),
-                  onMouseDown: e => e.preventDefault(),
-                  onKeyDown: e => e.preventDefault(),
-                  style: {
-                    backgroundColor: 'rgb(243 244 246)',
-                    color: 'rgb(107 114 128)',
-                    outline: 'none',
-                    cursor: 'default',
-                  },
-                }
-              : { placeholder: ' ' }
-          }
-        />
+        {signupKind !== 'social' && (
+          <>
+            <InputField
+              id="pw"
+              label={t('signup.label_password')}
+              type="password"
+              value={pw}
+              onChange={v => {
+                setPw(v);
+                setErrors(prev => ({ ...prev, pw: undefined, confirmPw: undefined }));
+                emit({ ...snapshot, pw: v });
+              }}
+              error={errors.pw}
+            />
 
-        <InputField
-          id="confirmPw"
-          label={t('signup.label_password_confirm')}
-          type="password"
-          value={confirmPw}
-          onChange={v => {
-            if (signupKind === 'social') return;
-            setConfirmPw(v);
-            setErrors(prev => ({ ...prev, confirmPw: undefined }));
-            emit({ ...snapshot, confirmPw: v });
-          }}
-          error={errors.confirmPw}
-          inputProps={
-            signupKind === 'social'
-              ? {
-                  readOnly: true,
-                  tabIndex: -1,
-                  onFocus: e => e.currentTarget.blur(),
-                  onMouseDown: e => e.preventDefault(),
-                  onKeyDown: e => e.preventDefault(),
-                  style: {
-                    backgroundColor: 'rgb(243 244 246)',
-                    color: 'rgb(107 114 128)',
-                    outline: 'none',
-                    cursor: 'default',
-                  },
-                }
-              : { placeholder: ' ' }
-          }
-        />
+            <InputField
+              id="confirmPw"
+              label={t('signup.label_password_confirm')}
+              type="password"
+              value={confirmPw}
+              onChange={v => {
+                setConfirmPw(v);
+                setErrors(prev => ({ ...prev, confirmPw: undefined }));
+                emit({ ...snapshot, confirmPw: v });
+              }}
+              error={errors.confirmPw}
+            />
+          </>
+        )}
 
         <NicknameInputField
           value={nickname}
           onChange={v => {
             setNickname(v);
-            // Real-time detection & State update
             nickValidator.validateInput(v);
-            
             emit({ ...snapshot, nickname: v });
           }}
-          error={errors.nickname} // We still control error display via form errors
+          error={errors.nickname}
           checkResult={nickValidator.checkResult}
           isChecking={nickValidator.checking}
           onCheck={handleNickCheck}
@@ -577,22 +400,6 @@ export default function SignUpStep2Form({
           minLen={nickValidator.detectedLang ? nickValidator.minLen(nickValidator.detectedLang) : 0}
           maxLen={nickValidator.detectedLang ? nickValidator.maxLen(nickValidator.detectedLang) : 0}
         />
-        
-        {/*
-           Original code had an inline <p> for hint. 
-           NicknameInputField has it built-in.
-           So I don't need to put it here.
-           BUT, `nickValidator.detectedLang` is only updated when `checkAvailability` runs in my current hook design?
-           Let me check hook code again.
-           Yes, `setDetectedLang(lang)` is inside `checkAvailability`.
-           This is a regression from original code which updated it on input change.
-           
-           I MUST fix the hook to update lang on change or expose a method to do so.
-           I will update the `onChange` logic in the ReplacementContent to manually call a setter if I exposed it? No.
-           I will modify `useNicknameValidator` to allow updating lang without full check.
-           OR I can just pass `detectLang(nickname)` result to the component props directly, bypassing the hook state for display purposes.
-           That seems safer and easier.
-        */}
 
         <GenderSelect
           value={gender}
@@ -626,79 +433,6 @@ export default function SignUpStep2Form({
           }}
           error={!!errors.country}
         />
-
-        {/* 이메일 찾기 섹션 */}
-        <div className="mt-6 xs:mt-4 pt-6 xs:pt-4 border-t border-gray-200 dark:border-gray-700">
-          <h3 
-            className="text-lg xs:text-[17px] font-semibold text-gray-800 dark:text-gray-100 mb-1"
-          >
-            {t('recovery.section_title')}
-          </h3>
-          <p 
-            className="text-sm xs:text-[13px] text-gray-500 dark:text-gray-400 mb-4 xs:mb-3"
-            style={{ overflowWrap: 'break-word' }}
-          >
-            {t('recovery.section_description')}
-          </p>
-
-          <div className="flex flex-col gap-4 xs:gap-3">
-            {/* 질문 선택 */}
-            <SelectField
-              id="recovery-question"
-              label={t('recovery.question_label')}
-              value={recoveryQuestion}
-              onChange={v => {
-                setRecoveryQuestion(v as RecoveryQuestion);
-                setErrors(prev => ({ ...prev, recoveryQuestion: undefined }));
-                emit({ ...snapshot, recoveryQuestion: v as RecoveryQuestion });
-              }}
-              options={RECOVERY_QUESTIONS.map(q => ({ value: q, label: t(q) }))}
-              error={errors.recoveryQuestion}
-            />
-
-            {/* 답변 입력 */}
-            <InputField
-              id="recovery-answer"
-              label={t('recovery.answer_label')}
-              value={recoveryAnswer}
-              onChange={v => {
-                setRecoveryAnswer(v);
-                setErrors(prev => ({ ...prev, recoveryAnswer: undefined }));
-                emit({ ...snapshot, recoveryAnswer: v });
-              }}
-              error={errors.recoveryAnswer}
-              inputProps={{
-                placeholder: ' '
-              }}
-            />
-
-            {/* 보조 이메일 */}
-            <div>
-              <InputField
-                id="recovery-email"
-                label={t('recovery.temp_email_label')}
-                type="email"
-                value={recoveryEmail}
-                onChange={v => {
-                  setRecoveryEmail(v);
-                  setErrors(prev => ({ ...prev, recoveryEmail: undefined }));
-                  setRecoveryEmailCheckResult('');
-                  emit({ ...snapshot, recoveryEmail: v });
-                }}
-                isChecking={recoveryEmailChecking}
-                checkResult={recoveryEmailCheckResult}
-                onCheck={handleRecoveryEmailCheck}
-                error={errors.recoveryEmail}
-                inputProps={{
-                  placeholder: ' '
-                }}
-              />
-              <p className="mt-1.5 text-[11px] xs:text-[10.5px] text-gray-500 dark:text-gray-400 ml-3">
-                {t('recovery.temp_email_description')}
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div className="flex justify-between sm:justify-end gap-2 sm:gap-3 mt-6 xs:mt-4">

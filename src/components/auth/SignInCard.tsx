@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import CheckboxSquare from '../common/CheckboxSquare';
 import { useTranslation } from 'react-i18next';
+import { useRelinkDetection } from '@/hooks/useRelinkDetection';
 
 const DRAFT_KEY = 'signup-profile-draft';
 
@@ -43,7 +44,7 @@ async function ensureProfileFromDraftAfterSignIn(userId: string, email?: string 
     nickname,
     gender: (draft?.gender ?? 'Male').toString().trim(),
     birthday: (draft?.birthday ?? '2000-01-01').toString().trim(),
-    country: (draft?.country ?? 'Unknown').toString().trim(),
+    country: draft?.country ? String(draft.country).trim() : null,
     bio: (draft?.bio ?? '').toString().trim() || null,
     avatar_url: draft?.pendingAvatarUrl ?? null,
     tos_agreed: !!draft?.tos_agreed,
@@ -110,8 +111,10 @@ async function postSignInRoute(navigate: ReturnType<typeof useNavigate>) {
 function SignInCard() {
   const { t } = useTranslation();
   const { signIn, session, signInWithGoogle, signInWithKakao } = useAuth();
+  const { RelinkModal } = useRelinkDetection();
   const [email, setEmail] = useState<string>('');
   const [pw, setPw] = useState<string>('');
+  const [showPassword, setShowPassword] = useState(false);
   const [msg, setMsg] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; pw?: string }>({});
@@ -304,15 +307,23 @@ function SignInCard() {
         {/* Password */}
         <div className="relative">
           <input
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             id="password"
             value={pw}
             onChange={e => handleChange('pw', e.target.value)}
             placeholder=" "
-            className={`peer w-full px-4 py-2 border bg-white dark:bg-secondary text-gray-800 dark:text-gray-100 text-sm ara-rounded
+            className={`peer w-full px-4 py-2 pr-12 border bg-white dark:bg-secondary text-gray-800 dark:text-gray-100 text-sm ara-rounded
                 ${errors.pw ? 'ara-focus--error' : 'ara-focus'}
                 ${errors.pw ? '' : 'border-gray-300 dark:border-gray-600'}`}
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary hover:opacity-80 transition-opacity"
+            aria-label={showPassword ? t('settings.hide') : t('settings.show')}
+          >
+            <i className={showPassword ? 'ri-eye-off-line text-lg' : 'ri-eye-line text-lg'} />
+          </button>
           <label
             htmlFor="password"
             className={`absolute left-4 text-sm transition-all bg-white dark:bg-secondary dark:text-gray-400
@@ -370,6 +381,7 @@ function SignInCard() {
         <div className="flex items-center gap-3">
           <button
             type="button"
+            onClick={() => navigate('/find-email')}
             className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary underline-offset-2 hover:underline"
             aria-label={t('auth.find_email')}
           >
@@ -378,6 +390,7 @@ function SignInCard() {
           <span className="text-gray-300 dark:text-gray-600">|</span>
           <button
             type="button"
+            onClick={() => navigate('/reset-password')}
             className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary underline-offset-2 hover:underline"
             aria-label={t('auth.find_password')}
           >
@@ -412,9 +425,9 @@ function SignInCard() {
       </p>
 
       <div className="mt-4 flex items-center">
-        <hr className="flex-grow border-gray-300 dark:border-gray-700" />
-        <span className="mx-2 text-gray-400 dark:text-gray-100 text-sm sm:text-base">OR</span>
-        <hr className="flex-grow border-gray-300 dark:border-gray-700" />
+        <div className="flex-grow border-t border-gray-300 dark:border-gray-400" />
+        <span className="mx-2 text-gray-400 dark:text-gray-200 text-sm sm:text-base">{t('common.or')}</span>
+        <div className="flex-grow border-t border-gray-300 dark:border-gray-400" />
       </div>
 
       <div className="mt-4 space-y-2 flex flex-col gap-3">
@@ -451,6 +464,7 @@ function SignInCard() {
           <span>{t('auth.login_with_kakao')}</span>
         </button>
       </div>
+      <RelinkModal />
     </div>
   );
 }

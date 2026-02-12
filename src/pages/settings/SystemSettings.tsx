@@ -113,7 +113,12 @@ function SystemSettings({ onBackToMenu, searchQuery }: PrivacySettingsProps) {
       </div>
 
       {/* 모달: active 가 있을 때만 렌더링 */}
-      <Modal isOpen={!!active} onClose={close} title={t(getSystemTitle(active))}>
+      <Modal 
+        isOpen={!!active} 
+        onClose={close} 
+        title={t(getSystemTitle(active))}
+        className={active === 'theme' ? 'max-w-3xl h-auto' : undefined}
+      >
         {active === 'language' && (
           <LanguageSelect
             value={draftLanguage}

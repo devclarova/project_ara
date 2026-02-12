@@ -41,26 +41,33 @@ const InputField: React.FC<InputFieldProps> = ({
 }) => {
   const { t } = useTranslation();
   const hasCheck = typeof onCheck === 'function';
+  const isPasswordField = type === 'password';
+  const [showPassword, setShowPassword] = React.useState(false);
+
+  // Determine actual input type
+  const actualType = isPasswordField && showPassword ? 'text' : type;
 
   return (
     <div className={`relative ${className ?? ''}`}>
       {/* 인풋 전용 고정 높이 래퍼 */}
-      <div className="relative h-12 xs:h-11">
+      <div className="relative">
         <input
           id={id}
-          type={type}
+          type={actualType}
           value={value}
           onChange={e => onChange(e.target.value)}
           onBlur={onBlur}
           disabled={disabled}
           placeholder=" "
-          className={`peer w-full h-12 xs:h-11 px-4 
-            ${hasCheck ? 'pr-24' : 'pr-4'} 
-            border text-sm xs:text-[14px] text-gray-900 dark:text-gray-100
-            ${error ? 'ara-focus--error' : 'ara-focus'} ara-rounded ${error ? '' : 'border-gray-300'}
+          className={`peer w-full px-4 py-2.5
+            ${isPasswordField ? 'pr-12' : hasCheck ? 'pr-24' : 'pr-4'} 
+            border text-sm xs:text-[14px]
+            ${error ? 'ara-focus--error' : 'ara-focus'} ara-rounded
+            ${error ? '' : 'border-gray-300 dark:border-gray-600'}
+            bg-white dark:bg-secondary
             ${disabled 
-              ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 border-gray-200 cursor-default' 
-              : 'bg-white dark:bg-secondary'
+              ? 'text-gray-500 dark:text-gray-400 opacity-60 cursor-not-allowed' 
+              : 'text-gray-900 dark:text-gray-100'
             }
             placeholder-transparent focus:placeholder-gray-400 dark:focus:placeholder-gray-500
           `}
@@ -71,16 +78,29 @@ const InputField: React.FC<InputFieldProps> = ({
         <label
           htmlFor={id}
           className={`
-            pointer-events-none absolute left-3 sm:left-4 px-1 rounded transition-all duration-150
-            ${value ? '-top-2 text-xs max-w-full' : `top-3 xs:top-3 text-sm xs:text-[11.5px] ${hasCheck ? 'max-w-[calc(100%-6.5rem)]' : 'max-w-[calc(100%-2rem)]'} truncate`}
+            pointer-events-none absolute left-4 px-1 rounded transition-all duration-150 z-10
+            ${value ? '-top-3 text-sm max-w-full' : `top-2.5 text-sm xs:text-[14px] ${hasCheck ? 'max-w-[calc(100%-6.5rem)]' : 'max-w-[calc(100%-2rem)]'} truncate`}
+            bg-white dark:bg-secondary
             ${disabled
-              ? 'bg-white dark:bg-secondary text-gray-400'
-              : 'bg-white/95 dark:bg-secondary text-gray-400 peer-focus:-top-2 peer-focus:text-xs peer-focus:text-primary peer-focus:max-w-full'
+              ? 'text-gray-500 dark:text-gray-400'
+              : 'text-gray-400 dark:text-gray-300 peer-focus:-top-3 peer-focus:text-sm peer-focus:text-primary peer-focus:max-w-full'
             }
           `}
         >
           {label}
         </label>
+
+        {/* 비밀번호 표시/숨기기 아이콘 */}
+        {isPasswordField && !disabled && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary hover:opacity-80 transition-opacity z-10"
+            aria-label={showPassword ? t('settings.hide') : t('settings.show')}
+          >
+            <i className={showPassword ? 'ri-eye-off-line text-lg' : 'ri-eye-line text-lg'} />
+          </button>
+        )}
 
         {/* 버튼: 인풋 래퍼 높이에만 종속 → 더 이상 안 움직임 */}
         {hasCheck && (

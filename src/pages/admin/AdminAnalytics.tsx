@@ -205,19 +205,23 @@ const AdminAnalytics = () => {
     // --- Realtime Subscriptions ---
     
     // 1. Active Users Monitor (Profiles)
+    let fetchTimer: any = null;
     const profileChannel = supabase
       .channel('admin-stats-profiles')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'profiles' },
         () => {
-           // Re-fetch active users count accurately
-           const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-           supabase.from('profiles').select('*', { count: 'exact', head: true })
-             .or(`is_online.eq.true,last_active_at.gt.${fiveMinsAgo}`)
-             .then(({ count }) => {
-                 if (count !== null) setRealtimeUsers(count);
-             });
+           // Debounce re-fetch to every 2 seconds to avoid excessive queries during heartbeats
+           if (fetchTimer) clearTimeout(fetchTimer);
+           fetchTimer = setTimeout(() => {
+             const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+             supabase.from('profiles').select('*', { count: 'exact', head: true })
+               .or(`is_online.eq.true,last_active_at.gt.${fiveMinsAgo}`)
+               .then(({ count }) => {
+                   if (count !== null) setRealtimeUsers(count);
+               });
+           }, 2000);
         }
       )
       .subscribe();

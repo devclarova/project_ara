@@ -387,7 +387,7 @@ export default function TweetCard({
           const { error: notiError } = await supabase.from('notifications').insert([
             {
               type: 'like',
-              content: content || safeContent, // 실제 게시글 내용
+              content: content || safeContent,
               is_read: false,
               tweet_id: id,
               comment_id: null,

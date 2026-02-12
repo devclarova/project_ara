@@ -1,0 +1,17 @@
+diff --git a/src/pages/admin/AdminLogin.tsx b/src/pages/admin/AdminLogin.tsx
+index d7fad94..289e683 100644
+--- a/src/pages/admin/AdminLogin.tsx
++++ b/src/pages/admin/AdminLogin.tsx
+@@ -235,10 +235,10 @@ const AdminLogin = () => {
+             {/* Divider */}
+             <div className="relative">
+               <div className="absolute inset-0 flex items-center">
+-                <div className="w-full border-t border-gray-300"></div>
++                <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+               </div>
+               <div className="relative flex justify-center text-sm">
+-                <span className="px-2 bg-white/70 text-muted-foreground">또는</span>
++                <span className="px-3 bg-white dark:bg-zinc-950 text-muted-foreground">{t('common.or')}</span>
+               </div>
+             </div>
+ 

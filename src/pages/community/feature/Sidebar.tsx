@@ -22,7 +22,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
   const { chats } = useDirectChat();
   const unreadCount = chats.reduce((sum, chat) => sum + (chat.unread_count || 0), 0);
 
-  const isHome = location.pathname === '/finalhome';
+  const isHome = location.pathname === '/sns';
   // const detailMatch = matchPath({ path: '/finalhome/:id', end: true }, location.pathname);
   // const isTweetDetail =
   //   !!detailMatch &&
@@ -103,7 +103,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
         return;
       }
 
-      navigate(`/finalhome/user/${encodeURIComponent(data.nickname)}`);
+      navigate(`/sns/user/${encodeURIComponent(data.nickname)}`);
     } catch (err: any) {
       console.error('프로필 이동 실패:', err.message);
       toast.error(t('common.error_navigate_profile'));
@@ -116,9 +116,9 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
   };
 
   const navigationItems = [
-    { icon: 'ri-home-5-fill', label: t('nav.home'), path: '/finalhome' },
-    { icon: 'ri-notification-3-line', label: t('nav.notifications'), path: '/finalhome/hnotifications' },
-    { icon: 'ri-chat-3-line', label: t('nav.chat'), path: '/finalhome/chat' },
+    { icon: 'ri-home-5-fill', label: t('nav.home'), path: '/sns' },
+    { icon: 'ri-notification-3-line', label: t('nav.notifications'), path: '/sns/hnotifications' },
+    { icon: 'ri-chat-3-line', label: t('nav.chat'), path: '/sns/chat' },
     { icon: 'ri-user-line', label: t('nav.profile'), onClick: handleProfileClick },
     { imgSrc: '/apple-touch-icon.png', label: t('nav.study'), path: '/studyList' },
   ];
@@ -126,7 +126,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
   const handleNavigation = (path?: string, onClick?: () => void) => {
     if (onClick) onClick();
     else if (path) {
-      if (path === '/finalhome') sessionStorage.removeItem('sns-last-tweet-id');
+      if (path === '/sns') sessionStorage.removeItem('sns-last-tweet-id');
       navigate(path);
     }
   };
@@ -136,7 +136,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
       <div className="flex justify-center lg:justify-center flex-shrink-0">
         <button
           onClick={() => {
-            if (location.pathname === '/finalhome') {
+            if (location.pathname === '/sns') {
               if (window.scrollY <= 5) {
                 window.location.reload();
               } else {
@@ -144,7 +144,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
               }
             } else {
               sessionStorage.removeItem('sns-last-tweet-id');
-              navigate('/finalhome');
+              navigate('/sns');
             }
           }}
           className="cursor-pointer"

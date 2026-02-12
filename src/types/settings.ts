@@ -15,7 +15,7 @@ export type SettingsLayoutProps = {
   children: React.ReactNode; // 오른쪽 콘텐츠(라우팅 or 조건부 렌더링)
 };
 
-export type ActiveSetting = 'password' | 'sns' | 'withdraw' | 'blocked_users' | null;
+export type ActiveSetting = 'password' | 'recovery' | 'sns' | 'withdraw' | 'blocked_users' | null;
 
 export type ActiveKey = 'terms' | 'privacy' | 'marketing' | 'support' | null;
 

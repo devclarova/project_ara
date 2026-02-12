@@ -32,7 +32,7 @@ function readProfileDraftFallback(u: User) {
   const nickname = (draft?.nickname ?? u.email?.split('@')[0] ?? 'user').toString().trim();
   const gender = (draft?.gender ?? 'Male').toString().trim();
   const birth = (draft?.birthday ?? '2000-01-01').toString().trim();
-  const country = (draft?.country ?? 'Unknown').toString().trim();
+  const country = draft?.country ? String(draft.country).trim() : null;
   const bio = (draft?.bio ?? '').toString().trim() || null;
   const avatar_url = draft?.pendingAvatarUrl ?? null;
 
@@ -103,7 +103,7 @@ export async function createSocialProfileDefaultsIfMissing(u: User) {
     nickname,
     gender: 'Male',
     birthday: '2000-01-01',
-    country: 'Unknown',
+    country: null,
     bio: null,
     avatar_url: null,
     is_onboarded: false,

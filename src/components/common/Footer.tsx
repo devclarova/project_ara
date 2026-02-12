@@ -56,7 +56,7 @@ export default function Footer() {
   // States for modals
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
   const [policyModalOpen, setPolicyModalOpen] = useState<ConsentKey | 'support' | null>(null);
-  const currentLang = LANGUAGES.find(l => l.code === i18n.language)?.label || 'English (US)';
+  const currentLang = LANGUAGES.find(l => l.code === i18n.language.split('-')[0])?.label || 'English (US)';
   
   // Flag state management
   const [flagMap, setFlagMap] = useState<Record<string, string>>({});
@@ -246,10 +246,13 @@ export default function Footer() {
                   <button type="button" className="group flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-zinc-800 hover:border-primary/30 bg-white dark:bg-zinc-900 transition-all text-xs font-medium text-muted-foreground hover:text-foreground shadow-sm animate-in fade-in zoom-in duration-300 outline-none">
                     {/* Current language flag */}
                     {(() => {
-                      const currentIso = LANG_TO_ISO[i18n.language];
+                      // 언어 코드 정규화: 'ko-KR' -> 'ko'
+                      const normalizedLang = i18n.language.split('-')[0];
+                      const currentIso = LANG_TO_ISO[normalizedLang];
+                      const currentEmoji = EMOJI_FLAGS[normalizedLang];
                       const currentFlagUrl = currentIso ? flagMap[currentIso] : null;
-                      const currentEmoji = EMOJI_FLAGS[i18n.language];
 
+                      // 1순위: DB 국기 이미지
                       if (currentFlagUrl) {
                         const isChina = currentIso === 'CN';
                         
@@ -260,17 +263,18 @@ export default function Footer() {
                               alt="Current Language" 
                               className={`w-full h-full object-cover ${isChina ? 'object-left' : 'object-center'}`}
                             />
-                            {/* Glossy Effect */}
                             <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-black/10 via-transparent to-white/50 pointer-events-none ring-1 ring-inset ring-black/5 dark:ring-white/10" />
                             <div className="absolute inset-0 rounded-full shadow-[inset_0_2px_4px_rgba(255,255,255,0.4)] pointer-events-none" />
                           </div>
                         );
                       }
                       
+                      // 2순위: 이모지 국기 (즉시 표시)
                       if (currentEmoji) {
                         return <span className="text-base">{currentEmoji}</span>;
                       }
 
+                      // 3순위: Globe fallback
                       return <Globe className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />;
                     })()}
                     <span>{currentLang}</span>

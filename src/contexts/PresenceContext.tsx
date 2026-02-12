@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from './AuthContext';
 
@@ -11,6 +11,7 @@ export interface PresenceState {
 interface PresenceContextType {
   onlineUsers: Set<string>;
   dbOnlineUsers: Record<string, boolean>; // DB 기반 온라인 상태 맵 추가
+  updateDbStatus: (userId: string, isOnline: boolean) => void;
 }
 
 const PresenceContext = createContext<PresenceContextType | undefined>(undefined);
@@ -91,9 +92,18 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, []);
 
+  // 수동 DB 상태 업데이트 함수 (API 로드 시 초기값 세팅용)
+  const updateDbStatus = useCallback((userId: string, isOnline: boolean) => {
+    setDbOnlineUsers(prev => {
+      if (prev[userId] === isOnline) return prev;
+      return { ...prev, [userId]: isOnline };
+    });
+  }, []);
+
   const value = {
     onlineUsers,
-    dbOnlineUsers
+    dbOnlineUsers,
+    updateDbStatus
   };
 
   return (

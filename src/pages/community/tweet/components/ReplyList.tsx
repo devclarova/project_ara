@@ -69,6 +69,7 @@ function ReplyTree({
         }}
         onDeleted={onDeleted}
         onReply={!disableInteractions ? () => onCommentClick?.(node.id) : undefined}
+        onCommentClick={onCommentClick}
         highlight={node.id === highlightId}
         disableInteractions={disableInteractions}
         depth={depth}
