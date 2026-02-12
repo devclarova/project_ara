@@ -6,32 +6,32 @@ import Modal from '@/components/common/Modal';
 interface BlockButtonProps {
   targetProfileId: string;
   onClose: () => void;
-  onBlock?: () => void;
+  onChanged?: (nextBlocked: boolean) => void;
 }
 
-export default function BlockButton({ targetProfileId, onClose, onBlock }: BlockButtonProps) {
+export default function BlockButton({ targetProfileId, onClose, onChanged }: BlockButtonProps) {
   const { t } = useTranslation();
   const { isBlocked, isLoading, toggleBlock } = useBlock(targetProfileId);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showUnblockConfirm, setShowUnblockConfirm] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isBlocked) {
-      // Unblock: ask for confirmation or just toggle?
-      // Requirement said confirmation for "blocking", but let's see if we need for unblock
-      // Using confirmation for unblock too if standard UI, but here let's stick to toggle for unblock if not specified.
-      handleAction();
+      setShowUnblockConfirm(true);
     } else {
       setShowConfirm(true);
     }
   };
 
   const handleAction = async () => {
-    await toggleBlock();
-    if (!isBlocked && onBlock) {
-      onBlock();
-    }
+    const wasBlocked = isBlocked; // 토글 전 상태 저장
+    await toggleBlock(); // DB 트리거가 후처리(언팔 등) 수행
+    const nextBlocked = !wasBlocked; // 토글 후 상태 직접 계산
+
+    onChanged?.(nextBlocked); // 부모에서 목록/카운트/blockedIds 갱신
     setShowConfirm(false);
+    setShowUnblockConfirm(false);
     onClose();
   };
 
@@ -41,11 +41,15 @@ export default function BlockButton({ targetProfileId, onClose, onBlock }: Block
         onClick={handleClick}
         disabled={isLoading}
         className="w-full text-left px-4 py-3 hover:bg-gray-100 
-          dark:hover:bg-white/10 flex items-center gap-2 text-gray-800 dark:text-gray-200
+          dark:hover:bg-white/10 flex items-center gap-2 text-gray-800 dark:text-gray-200 text-sm
           disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <i className="ri-forbid-line" />
-        {isLoading ? t('common.loading', '로딩중...') : (isBlocked ? t('common.unblock', '차단 해제') : t('common.block', '차단'))}
+        {isLoading
+          ? t('common.loading', '로딩중...')
+          : isBlocked
+            ? t('common.unblock', '차단 해제')
+            : t('common.block', '차단')}
       </button>
 
       <Modal
@@ -126,7 +130,7 @@ export default function BlockButton({ targetProfileId, onClose, onBlock }: Block
 
           <div className="flex items-center gap-3">
             <button
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 setShowConfirm(false);
               }}
@@ -135,7 +139,7 @@ export default function BlockButton({ targetProfileId, onClose, onBlock }: Block
               {t('common.cancel', '취소')}
             </button>
             <button
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 handleAction();
               }}
@@ -143,6 +147,45 @@ export default function BlockButton({ targetProfileId, onClose, onBlock }: Block
               className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-red-500 text-white hover:bg-red-600 active:scale-95 disabled:opacity-50 transition-all shadow-md shadow-red-500/20"
             >
               {isLoading ? t('common.loading', '처리 중...') : t('common.block', '차단하기')}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={showUnblockConfirm}
+        onClose={() => setShowUnblockConfirm(false)}
+        title={t('common.unblock_modal_title', '차단을 해제하시겠습니까?')}
+        className="max-w-md h-auto"
+      >
+        <div className="flex flex-col gap-6 py-4 px-6 text-left">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+              <i className="ri-eye-line text-emerald-500 text-2xl" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                프로필과 게시글이 다시 표시돼요
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                상대가 다시 내 프로필을 볼 수 있어요.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowUnblockConfirm(false)}
+              className="flex-1 py-2.5 rounded-xl text-sm bg-gray-100 dark:bg-white/10"
+            >
+              취소
+            </button>
+            <button
+              onClick={handleAction}
+              disabled={isLoading}
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-emerald-500 text-white hover:bg-emerald-600"
+            >
+              {isLoading ? '처리 중…' : '차단 해제'}
             </button>
           </div>
         </div>

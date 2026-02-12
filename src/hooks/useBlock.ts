@@ -15,7 +15,7 @@ interface UseBlockReturn {
  * Hook for managing user blocks with Supabase
  * Uses soft delete pattern (ended_at) - same as follows
  */
-export function useBlock(targetProfileId: string): UseBlockReturn {
+export function useBlock(targetProfileId?: string): UseBlockReturn {
   const { user } = useAuth();
   const { t } = useTranslation();
   const [isBlocked, setIsBlocked] = useState(false);
@@ -25,17 +25,17 @@ export function useBlock(targetProfileId: string): UseBlockReturn {
   // Get current user's profile ID
   useEffect(() => {
     if (!user) return;
-    
+
     const loadProfile = async () => {
       const { data } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
-      
+
       if (data) setMyProfileId(data.id);
     };
-    
+
     loadProfile();
   }, [user]);
 
@@ -46,20 +46,36 @@ export function useBlock(targetProfileId: string): UseBlockReturn {
       return;
     }
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('user_blocks')
       .select('id')
       .eq('blocker_id', myProfileId)
       .eq('blocked_id', targetProfileId)
-      .is('ended_at', null) // Only active blocks
+      .is('ended_at', null)
       .maybeSingle();
+
+    if (error) {
+      console.error('[useBlock] checkBlockStatus error:', error);
+      return;
+    }
 
     setIsBlocked(!!data);
   }, [myProfileId, targetProfileId]);
 
-  // Initial load
+  // Initial + whenever ids change
   useEffect(() => {
+    if (!myProfileId || !targetProfileId) return;
     checkBlockStatus();
+  }, [myProfileId, targetProfileId, checkBlockStatus]);
+
+  // 전역 차단 갱신 이벤트를 받으면 재조회
+  useEffect(() => {
+    const handler = () => {
+      checkBlockStatus();
+    };
+
+    window.addEventListener('REFRESH_BLOCKED_USERS', handler);
+    return () => window.removeEventListener('REFRESH_BLOCKED_USERS', handler);
   }, [checkBlockStatus]);
 
   // Toggle block/unblock
@@ -104,7 +120,7 @@ export function useBlock(targetProfileId: string): UseBlockReturn {
           .maybeSingle();
 
         let error;
-        
+
         if (existing && existing.ended_at !== null) {
           // Reactivate soft-deleted block
           ({ error } = await supabase
@@ -114,13 +130,11 @@ export function useBlock(targetProfileId: string): UseBlockReturn {
             .eq('blocked_id', targetProfileId));
         } else if (!existing) {
           // Create new block
-          ({ error } = await supabase
-            .from('user_blocks')
-            .insert({
-              blocker_id: myProfileId,
-              blocked_id: targetProfileId,
-              ended_at: null,
-            }));
+          ({ error } = await supabase.from('user_blocks').insert({
+            blocker_id: myProfileId,
+            blocked_id: targetProfileId,
+            ended_at: null,
+          }));
         } else {
           // Already blocked
           toast.info(t('profile.already_blocked', '이미 차단 중입니다'));
@@ -162,13 +176,15 @@ export function useBlock(targetProfileId: string): UseBlockReturn {
           const { data: chat } = await supabase
             .from('direct_chats')
             .select('id, user1_id, user2_id, user1_active, user2_active')
-            .or(`and(user1_id.eq.${myProfileId},user2_id.eq.${targetProfileId}),and(user1_id.eq.${targetProfileId},user2_id.eq.${myProfileId})`)
+            .or(
+              `and(user1_id.eq.${myProfileId},user2_id.eq.${targetProfileId}),and(user1_id.eq.${targetProfileId},user2_id.eq.${myProfileId})`,
+            )
             .maybeSingle();
 
           if (chat) {
             const isUser1 = chat.user1_id === myProfileId;
             const isActive = isUser1 ? chat.user1_active : chat.user2_active;
-            
+
             if (isActive) {
               const { exitDirectChat } = await import('@/services/chat/directChatService');
               await exitDirectChat(chat.id);
@@ -180,10 +196,11 @@ export function useBlock(targetProfileId: string): UseBlockReturn {
 
         // TODO: Add system notification in Phase 4
       }
-      
-      // 전역 차단 목록 갱신 트리거
-      window.dispatchEvent(new Event('REFRESH_BLOCKED_USERS'));
 
+      // 전역 차단 목록 갱신 트리거
+      await checkBlockStatus(); // 마지막 동기화
+      window.dispatchEvent(new Event('REFRESH_BLOCKED_USERS'));
+      window.dispatchEvent(new Event('REFRESH_FOLLOW_COUNTS'));
     } catch (error) {
       console.error('Block toggle error:', error);
       toast.error(t('common.error', '오류가 발생했습니다'));

@@ -578,49 +578,51 @@ export async function sendMessage(
     let isBlockedByOther = false;
 
     if (otherUserId) {
-        // active block only (ended_at is null)
-        const { data: blockData } = await supabase
-            .from('user_blocks')
-            .select('id, blocker_id')
-            .or(`and(blocker_id.eq.${currentUser.profileId},blocked_id.eq.${otherUserId}),and(blocker_id.eq.${otherUserId},blocked_id.eq.${currentUser.profileId})`)
-            .is('ended_at', null)
-            .maybeSingle();
+      // active block only (ended_at is null)
+      const { data: blockData } = await supabase
+        .from('user_blocks')
+        .select('id, blocker_id')
+        .or(
+          `and(blocker_id.eq.${currentUser.profileId},blocked_id.eq.${otherUserId}),and(blocker_id.eq.${otherUserId},blocked_id.eq.${currentUser.profileId})`,
+        )
+        .is('ended_at', null)
+        .maybeSingle();
 
-        if (blockData) {
-            // Case 1: 내가 상대를 차단함 -> 전송 불가 (에러)
-            if (blockData.blocker_id === currentUser.profileId) {
-                return { success: false, error: '차단한 사용자에게는 메시지를 보낼 수 없습니다.' };
-            } 
-            // Case 2: 상대가 나를 차단함 -> 전송 성공 처리하되, 알림은 가지 않음 (Shadow Block)
-            else {
-                isBlockedByOther = true;
-            }
+      if (blockData) {
+        // Case 1: 내가 상대를 차단함 -> 전송 불가 (에러)
+        if (blockData.blocker_id === currentUser.profileId) {
+          return { success: false, error: '차단한 사용자에게는 메시지를 보낼 수 없습니다.' };
         }
+        // Case 2: 상대가 나를 차단함 -> 전송 성공 처리하되, 알림은 가지 않음 (Shadow Block)
+        else {
+          isBlockedByOther = true;
+        }
+      }
     }
 
     // 상대방의 active 상태를 true로 변경하고 알림 설정
     // 단, 상대방이 나를 차단했다면 알림/활성화를 강제하지 않음 (Shadow Block)
     if (!isBlockedByOther) {
-        const isCurrentUserUser1 = chat.user1_id === currentUser.profileId;
-        const otherUserActiveField = isCurrentUserUser1 ? 'user2_active' : 'user1_active';
-        const otherUserNotifiedField = isCurrentUserUser1 ? 'user2_notified' : 'user1_notified';
+      const isCurrentUserUser1 = chat.user1_id === currentUser.profileId;
+      const otherUserActiveField = isCurrentUserUser1 ? 'user2_active' : 'user1_active';
+      const otherUserNotifiedField = isCurrentUserUser1 ? 'user2_notified' : 'user1_notified';
 
-        // 상대방이 나간 상태에서 메시지를 받으면 알림 설정
-        if (!chat[otherUserActiveField]) {
-            const updateData = {
-                [otherUserActiveField]: true,
-                [otherUserNotifiedField]: true, // 새 메시지 알림 설정
-            };
+      // 상대방이 나간 상태에서 메시지를 받으면 알림 설정
+      if (!chat[otherUserActiveField]) {
+        const updateData = {
+          [otherUserActiveField]: true,
+          [otherUserNotifiedField]: true, // 새 메시지 알림 설정
+        };
 
-            const { error: activateError } = await supabase
-                .from('direct_chats')
-                .update(updateData)
-                .eq('id', messageData.chat_id);
+        const { error: activateError } = await supabase
+          .from('direct_chats')
+          .update(updateData)
+          .eq('id', messageData.chat_id);
 
-            if (activateError) {
-                console.error('상대방 활성화 및 알림 설정 오류:', activateError);
-            }
+        if (activateError) {
+          console.error('상대방 활성화 및 알림 설정 오류:', activateError);
         }
+      }
     }
 
     // 1단계: 메시지 저장
@@ -1291,7 +1293,7 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
           .eq('chat_id', chat.id)
           .order('created_at', { ascending: false })
           .limit(1)
-          .single();
+          .maybeSingle();
 
         // 읽지 않은 메시지 수 조회
         const { count: unreadCount } = await supabase
@@ -1353,8 +1355,6 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
       console.error('채팅방 조회 오류:', chatError);
       return { success: false, error: '채팅방을 찾을 수 없습니다.' };
     }
-
-
 
     /* [단체 대화방 구현을 위한 예약 코드 - 현재 비활성화]
     // 2단계: 상대방에게 시스템 메시지 전송
@@ -1462,9 +1462,6 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
         }
       }
     }
-
-
-
 
     /* [단체 대화방 구현을 위한 예약 코드 - 현재 비활성화]
     // 4단계: 채팅방의 마지막 메시지 시간 업데이트
@@ -1600,9 +1597,7 @@ export async function searchMessagesInChat(
  * - 미디어 갤러리에서 사용
  * @param chatId - 채팅방 ID
  */
-export async function getMediaInChat(
-  chatId: string,
-): Promise<ChatApiResponse<DirectMessage[]>> {
+export async function getMediaInChat(chatId: string): Promise<ChatApiResponse<DirectMessage[]>> {
   try {
     const currentUser = await getCurrentUser();
 
@@ -1625,7 +1620,8 @@ export async function getMediaInChat(
     // 미디어가 있는 메시지만 조회
     const { data: rawMessages, error } = await supabase
       .from('direct_messages')
-      .select(`
+      .select(
+        `
         id,
         chat_id,
         sender_id,
@@ -1640,12 +1636,11 @@ export async function getMediaInChat(
           width,
           height
         )
-      `)
+      `,
+      )
       .eq('chat_id', chatId)
       .gte('created_at', userLeftAt || '1970-01-01')
       .order('created_at', { ascending: false });
-
-
 
     if (error) {
       console.error('미디어 메시지 조회 오류:', error);
@@ -1714,4 +1709,3 @@ export async function getMediaInChat(
     return { success: false, error: '미디어 조회 중 오류가 발생했습니다.' };
   }
 }
-

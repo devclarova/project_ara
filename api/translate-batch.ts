@@ -5,17 +5,14 @@ interface BatchTranslateRequest {
   targetLang: string;
 }
 
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
-) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version',
   );
 
   // OPTIONS 요청 처리
@@ -43,25 +40,25 @@ export default async function handler(
     }
 
     const langCodeToName: Record<string, string> = {
-      'ko': 'Korean',
-      'en': 'English',
-      'ja': 'Japanese',
-      'zh': 'Chinese (Simplified)',
-      'ru': 'Russian',
-      'vi': 'Vietnamese',
-      'bn': 'Bengali',
-      'ar': 'Arabic',
-      'hi': 'Hindi',
-      'th': 'Thai',
-      'es': 'Spanish',
-      'fr': 'French',
-      'pt': 'Portuguese',
+      ko: 'Korean',
+      en: 'English',
+      ja: 'Japanese',
+      zh: 'Chinese (Simplified)',
+      ru: 'Russian',
+      vi: 'Vietnamese',
+      bn: 'Bengali',
+      ar: 'Arabic',
+      hi: 'Hindi',
+      th: 'Thai',
+      es: 'Spanish',
+      fr: 'French',
+      pt: 'Portuguese',
       'pt-br': 'Brazilian Portuguese',
-      'de': 'German',
-      'fi': 'Finnish',
-      'id': 'Indonesian',
-      'it': 'Italian',
-      'tr': 'Turkish',
+      de: 'German',
+      fi: 'Finnish',
+      id: 'Indonesian',
+      it: 'Italian',
+      tr: 'Turkish',
     };
     const targetLanguageName = langCodeToName[targetLang] || targetLang;
 
@@ -78,7 +75,7 @@ CRITICAL TRANSLATION RULES (Follow Strictly):
    - If the input is Korean, **TRANSLATE** it to ${targetLanguageName}.
 2. **PRONUNCIATION (Romanization) HANDLING (HIGHEST PRIORITY)**:
    - **Scenario A (Bracketed)**: Input contains '[Romanization]'.
-     - Action: Transliterate content inside '[]' to Target Script (Sound Only). **No Meaning Translation.**
+     - Action: Transliterate content inside '[]' to Target Script (Sound Only). **No Meaning **
    - **Scenario B (Raw/Unbracketed)**: Input is ONLY Romanized Korean (e.g. "Saranghae", "Annyeong").
      - Action: **Transliterate** to Target Script (Sound Only).
      - **Strict Rule**: NEVER translate the meaning of Romanized Korean.
@@ -104,7 +101,7 @@ CRITICAL TRANSLATION RULES (Follow Strictly):
           { role: 'system', content: systemPrompt },
           { role: 'user', content: JSON.stringify({ texts }) },
         ],
-        response_format: { type: "json_object" },
+        response_format: { type: 'json_object' },
         temperature: 0.3,
       }),
     });
@@ -137,7 +134,6 @@ CRITICAL TRANSLATION RULES (Follow Strictly):
     }
 
     return res.status(200).json({ translations: parsedResults });
-
   } catch (error) {
     console.error('Batch translation error:', error);
     return res.status(500).json({ error: 'Internal server error' });

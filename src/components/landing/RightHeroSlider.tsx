@@ -19,23 +19,23 @@ type SlideItem = {
 const SLIDES: SlideItem[] = [
   {
     id: 'preview',
-    title: '드라마 장면으로 배우는 표현',
-    subtitle: '실제 대사와 자막, 상황 설명을 한눈에',
-    bullets: ['대사 → 표현 해석', '사용 상황 & 문화 팁', '짧은 연습 문제 포함'],
-    ctaLabel: '학습 미리보기',
+    title: '이야기로 배우는 한국어 표현',
+    subtitle: '상황 속 대화로 표현과 뉘앙스를 자연스럽게',
+    bullets: ['대화 → 표현 이해', '사용 상황 & 문화 팁', '짧은 연습 문제 포함'],
+    ctaLabel: '에피소드 미리보기',
     ctaPath: '/studyList',
     thumbnail: '/images/right_slider_1.png',
-    alt: '드라마 장면 기반 학습 화면 미리보기',
+    alt: '이야기 기반 에피소드 학습 화면',
   },
   {
-    id: 'popular',
-    title: '지금 가장 많이 보는 콘텐츠',
-    subtitle: '다른 학습자들이 자주 듣는 코스를 한 번에',
-    bullets: ['레벨별 인기 코스', '짧게 끝나는 영상 모음', '입문자용 추천 묶음'],
-    ctaLabel: '인기 콘텐츠 보기',
+    id: 'folktale',
+    title: '전래동화·설화로 만나는 한국어',
+    subtitle: '옛이야기를 현대 한국어로 다시 읽어요',
+    bullets: ['전래동화 & 설화 콘텐츠', '표현 속 문화와 배경 설명', '입문자용 추천 묶음'],
+    ctaLabel: '동화 콘텐츠 미리보기',
     ctaPath: '/studyList',
     thumbnail: '/images/right_slider_2.jpg',
-    alt: '인기 학습 콘텐츠 썸네일',
+    alt: '한국 전래동화 및 설화 학습 콘텐츠',
   },
   {
     id: 'community',
@@ -54,80 +54,102 @@ export default function RightHeroSlider() {
 
   return (
     <div className="w-full max-w-[360px] sm:max-w-[420px] max-h-[520px]">
-      <Swiper
-        modules={[Autoplay, Pagination]}
-        autoplay={{
-          delay: 4500,
-          disableOnInteraction: false,
-          pauseOnMouseEnter: true, // ✅ 추가
-        }}
-        style={
-          {
-            '--swiper-pagination-color': '#00bfa5', // 활성화된 dot 색상
-            '--swiper-pagination-bullet-inactive-color': '#9ca3af', // 비활성 dot
-            '--swiper-pagination-bullet-inactive-opacity': '0.5',
-          } as React.CSSProperties
-        }
-        className="hero-slider"
-        pagination={{ clickable: true }}
-        loop
-        aria-live="polite"
+      <div
+        className="
+      relative rounded-[26px]
+      bg-white/[0.06] dark:bg-white/[0.03]
+      border border-black/[0.04] dark:border-white/[0.06]
+      backdrop-blur-[10px]
+      shadow-[0_10px_30px_rgba(0,0,0,0.05)]
+      p-[6px] sm:p-2
+      overflow-hidden
+    "
       >
-        {SLIDES.map((s, idx) => (
-          <SwiperSlide key={s.id}>
-            <article
-              className="relative rounded-3xl bg-white/95 dark:bg-secondary p-4 sm:p-5 border border-white/60 dark:border-slate-700 flex flex-col h-full"
-              aria-labelledby={`hero-slide-title-${s.id}`}
-            >
-              <div className="relative w-full h-48 xs:h-56 sm:h-60 md:h-64 overflow-hidden rounded-2xl bg-gray-100 dark:bg-background/70">
-                <img
-                  src={s.thumbnail}
-                  alt={s.alt ?? s.title}
-                  className="w-full h-full object-cover"
-                  loading={idx === 0 ? "eager" : "lazy"}
-                  decoding="async"
-                  draggable={false}
-                />
-              </div>
-
-              <div className="mt-4">
-                <h3
-                  id={`hero-slide-title-${s.id}`}
-                  className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100"
+        {/* 슬라이드(움직이는 내용) */}
+        <div className="relative">
+          <Swiper
+            modules={[Autoplay, Pagination]}
+            autoplay={{
+              delay: 4500,
+              disableOnInteraction: false,
+              pauseOnMouseEnter: true,
+            }}
+            style={
+              {
+                '--swiper-pagination-color': '#00bfa5',
+                '--swiper-pagination-bullet-inactive-color': '#9ca3af',
+                '--swiper-pagination-bullet-inactive-opacity': '0.5',
+              } as React.CSSProperties
+            }
+            className="hero-slider"
+            pagination={{ clickable: true }}
+            loop
+            aria-live="polite"
+          >
+            {SLIDES.map((s, idx) => (
+              <SwiperSlide key={s.id}>
+                <article
+                  className="
+                relative rounded-3xl
+               
+                p-4 sm:p-5
+          
+                flex flex-col h-full
+              "
+                  aria-labelledby={`hero-slide-title-${s.id}`}
                 >
-                  {s.title}
-                </h3>
-                {s.subtitle && (
-                  <p className="text-[12px] sm:text-sm text-gray-600 dark:text-gray-300 mt-1">
-                    {s.subtitle}
-                  </p>
-                )}
+                  <div className="relative w-full h-48 xs:h-56 sm:h-60 md:h-64 overflow-hidden rounded-2xl bg-gray-100 dark:bg-background/70">
+                    <img
+                      src={s.thumbnail}
+                      alt={s.alt ?? s.title}
+                      className="w-full h-full object-cover"
+                      loading={idx === 0 ? 'eager' : 'lazy'}
+                      decoding="async"
+                      draggable={false}
+                    />
+                  </div>
 
-                {s.bullets && (
-                  <ul className="mt-3 text-[12px] text-gray-600 flex flex-col justify-center dark:text-gray-300 space-y-1">
-                    {s.bullets.slice(0, 3).map((b, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <span className="mt-0.5 inline-block w-2 h-2 rounded-full bg-primary" />
-                        <span className="-translate-y-1">{b}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                  <div className="mt-4">
+                    <h3
+                      id={`hero-slide-title-${s.id}`}
+                      className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100"
+                    >
+                      {s.title}
+                    </h3>
 
-                <div className="mt-4 flex items-center justify-end gap-2">
-                  <button
-                    onClick={() => navigate(s.ctaPath ?? '/studylist')}
-                    className="inline-flex items-center justify-center rounded-[10px] bg-primary px-4 py-2 text-xs sm:text-sm font-semibold text-white transition hover:bg-primary/90"
-                    aria-label={s.ctaLabel ?? '자세히 보기'}
-                  >
-                    {s.ctaLabel ?? '자세히 보기'}
-                  </button>
-                </div>
-              </div>
-            </article>
-          </SwiperSlide>
-        ))}
-      </Swiper>
+                    {s.subtitle && (
+                      <p className="text-[12px] sm:text-sm text-gray-600 dark:text-gray-300 mt-1">
+                        {s.subtitle}
+                      </p>
+                    )}
+
+                    {s.bullets && (
+                      <ul className="mt-3 text-[12px] text-gray-600 flex flex-col justify-center dark:text-gray-300 space-y-1">
+                        {s.bullets.slice(0, 3).map((b, idx2) => (
+                          <li key={idx2} className="flex items-start gap-2">
+                            <span className="mt-0.5 inline-block w-2 h-2 rounded-full bg-primary" />
+                            <span className="-translate-y-1">{b}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    <div className="mt-4 flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => navigate(s.ctaPath ?? '/studylist')}
+                        className="inline-flex items-center justify-center rounded-[10px] bg-primary px-4 py-2 text-xs sm:text-sm font-semibold text-white transition hover:bg-primary/90"
+                        aria-label={s.ctaLabel ?? '자세히 보기'}
+                      >
+                        {s.ctaLabel ?? '자세히 보기'}
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
+      </div>
     </div>
   );
 }

@@ -8,9 +8,9 @@ interface ModalProps {
   children: React.ReactNode;
   closeOnBackdrop?: boolean;
   closeOnEsc?: boolean;
-  className?: string; // ✅ 모달 컨테이너(카드) 스타일 커스텀
-  contentClassName?: string; // ✅ 내부 컨텐츠 영역 스타일 커스텀
-  headerClassName?: string; // ✅ 헤더 영역 스타일 커스텀
+  className?: string; // 모달 컨테이너(카드) 스타일 커스텀
+  contentClassName?: string; // 내부 컨텐츠 영역 스타일 커스텀
+  headerClassName?: string; // 헤더 영역 스타일 커스텀
 }
 export default function Modal({
   isOpen,
@@ -45,7 +45,7 @@ export default function Modal({
   return createPortal(
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm transition-opacity"
-      onMouseDown={e => e.stopPropagation()} // ✅ 부모의 '외부 클릭 감지' 방지 (Portal 사용 시 필수)
+      onMouseDown={e => e.stopPropagation()} // 부모의 '외부 클릭 감지' 방지 (Portal 사용 시 필수)
       onClick={closeOnBackdrop ? onClose : undefined}
       role="dialog"
       aria-modal="true"
@@ -60,7 +60,9 @@ export default function Modal({
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className={`flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800 shrink-0 bg-white/50 dark:bg-secondary/50 backdrop-blur-sm ${headerClassName || ''}`}>
+        <div
+          className={`flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800 shrink-0 bg-white/50 dark:bg-secondary/50 backdrop-blur-sm ${headerClassName || ''}`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
           <button
             onClick={onClose}
