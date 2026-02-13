@@ -50,9 +50,7 @@ const AdminContentModeration = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState<ContentType>(() => {
-    return (sessionStorage.getItem('admin-mod-tab') as ContentType) || 'post';
-  });
+  const [activeTab, setActiveTab] = useState<ContentType>('post');
   const [searchTerm, setSearchTerm] = useState(() => {
     return sessionStorage.getItem('admin-mod-search') || '';
   });
@@ -98,24 +96,12 @@ const AdminContentModeration = () => {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Marker-based state reset on fresh entry
+  // Force 'post' tab and clear state on fresh mount (entry)
   useEffect(() => {
-    const isReturning = sessionStorage.getItem('admin-mod-returning') === 'true';
-    if (!isReturning) {
-      // Clear all moderation session state on fresh entry
-      sessionStorage.removeItem('admin-mod-tab');
-      sessionStorage.removeItem('admin-mod-search');
-      sessionStorage.removeItem('admin-mod-page');
-      sessionStorage.removeItem('admin-mod-scroll');
-      sessionStorage.removeItem('admin-mod-scroll-target');
-      
-      // Reset local states to defaults
-      setActiveTab('post');
-      setSearchTerm('');
-      setPage(1);
-    }
-    // Always consume the marker
-    sessionStorage.removeItem('admin-mod-returning');
+    setActiveTab('post');
+    setSearchTerm('');
+    setPage(1);
+    fetchContent();
   }, []);
 
   // Sync all state to storage immediately
@@ -267,14 +253,46 @@ const AdminContentModeration = () => {
     }
   };
 
-  const handleUserClick = (item: ModerationItem) => {
-    setSelectedUser({
-      id: item.author_id,
-      nickname: item.nickname,
-      avatar_url: item.avatar_url,
-      email: item.email,
-    });
-    setShowProfileModal(true);
+  const handleUserClick = async (item: ModerationItem) => {
+    try {
+      // First fetch basic profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', item.author_id)
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+      if (!profile) {
+        toast.error('사용자 정보를 찾을 수 없습니다.');
+        return;
+      }
+
+      // Then fetch country separately if it exists to avoid relationship errors (400)
+      let countryData = null;
+      if (profile.country) {
+        const { data: country } = await supabase
+          .from('countries')
+          .select('name, flag_url')
+          .or(`id.eq.${profile.country},iso_code.eq.${profile.country}`)
+          .maybeSingle();
+        countryData = country;
+      }
+
+      // Map data for UserProfileModal
+      const enrichedUser = {
+        ...profile,
+        profile_id: profile.id,
+        country_name: countryData?.name || profile.country,
+        country_flag_url: countryData?.flag_url
+      };
+      
+      setSelectedUser(enrichedUser);
+      setShowProfileModal(true);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      toast.error('사용자 정보를 불러오는 데 실패했습니다.');
+    }
   };
 
   const handleContentClick = (item: ModerationItem, type: ContentType) => {

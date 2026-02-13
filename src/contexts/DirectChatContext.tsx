@@ -37,7 +37,6 @@ import {
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { useNewChatNotification } from './NewChatNotificationContext';
-import { usePresence } from './PresenceContext';
 
 interface DirectChatContextType {
   chats: ChatListItem[];
@@ -108,8 +107,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
   const { user } = useAuth();
   const currentUserId = user?.id;
   const { setUnreadCount } = useNewChatNotification();
-  const { updateDbStatus } = usePresence();
-
+  
   // 프로필 캐시 & 조회용 Ref
   const profileCache = useRef<Map<string, ChatUser>>(new Map());
   const currentUserProfileRef = useRef<ChatUser | null>(null);
@@ -118,31 +116,39 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     setError(errorMessage);
   }, []);
 
-  // 차단 목록 로드
+  // 차단 목록 로드 (Ref를 사용하여 함수의 안정성 확보)
+  const blockedIdsRef = useRef<Set<string>>(new Set());
+  
   const loadBlockedUsers = useCallback(async () => {
     if (!currentUserId) return;
-    let myProfId = '';
-    if (currentUserProfileRef.current) {
-      myProfId = currentUserProfileRef.current.id;
-    } else {
-      const { data: pData } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', currentUserId)
-        .maybeSingle();
-      if (pData) myProfId = pData.id;
-    }
+    try {
+      let myProfId = '';
+      if (currentUserProfileRef.current) {
+        myProfId = currentUserProfileRef.current.id;
+      } else {
+        const { data: pData } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', currentUserId)
+          .maybeSingle();
+        if (pData) myProfId = pData.id;
+      }
 
-    if (!myProfId) return;
+      if (!myProfId) return;
 
-    const { data } = await supabase
-      .from('user_blocks')
-      .select('blocked_id')
-      .eq('blocker_id', myProfId)
-      .is('ended_at', null);
+      const { data } = await supabase
+        .from('user_blocks')
+        .select('blocked_id')
+        .eq('blocker_id', myProfId)
+        .is('ended_at', null);
 
-    if (data) {
-      setBlockedUserIds(new Set(data.map(b => b.blocked_id)));
+      if (data) {
+        const newSet = new Set(data.map(b => b.blocked_id));
+        blockedIdsRef.current = newSet;
+        setBlockedUserIds(newSet);
+      }
+    } catch (err) {
+      console.error('Failed to load blocked users:', err);
     }
   }, [currentUserId]);
 
@@ -166,16 +172,11 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         if (response.success && response.data) {
           setChats(response.data);
           const unreadChatsCount = response.data.filter(chat => {
-            if (blockedUserIds.has(chat.other_user.id)) return false;
+            // Ref를 사용하여 최신 차단 정보 보되 의존성 제거
+            if (blockedIdsRef.current.has(chat.other_user.id)) return false;
             return (chat.unread_count || 0) > 0;
           }).length;
           setUnreadCount(unreadChatsCount);
-          
-          response.data.forEach(chat => {
-            if (chat.other_user?.id && chat.other_user.is_online !== undefined) {
-              updateDbStatus(chat.other_user.id, chat.other_user.is_online);
-            }
-          });
         } else {
           handleError(response.error || '채팅방 목록을 불러올 수 없습니다.');
         }
@@ -186,9 +187,10 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         isLoadingChatsRef.current = false;
       }
     }, 200);
-  }, [blockedUserIds, setUnreadCount, handleError, updateDbStatus]);
+  }, [setUnreadCount, handleError]); 
+  // blockedUserIds 의존성 제거 -> 리렌더링은 chats 업데이트로 충분함
 
-  // 차단/해제 시 상태 갱신 리스너
+  // 차단/해제 시 상태 갱신 리스너 (의존성 최소화로 무한루프 방지)
   useEffect(() => {
     loadBlockedUsers();
 
@@ -201,7 +203,8 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     return () => {
       window.removeEventListener('REFRESH_BLOCKED_USERS', handleRefresh);
     };
-  }, [loadBlockedUsers, loadChats]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUserId]); // currentUserId가 바뀔 때만 (즉 로그인 시에만) 초기화
 
   const fetchProfileByAuthId = useCallback(
     async (authUserId: string): Promise<ChatUser> => {
@@ -252,13 +255,9 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         currentUserProfileRef.current = userInfo;
       }
 
-      if (userInfo.id && userInfo.is_online !== undefined) {
-        updateDbStatus(userInfo.id, userInfo.is_online);
-      }
-
       return userInfo;
     },
-    [user, updateDbStatus],
+    [user],
   );
 
   useEffect(() => {
@@ -320,9 +319,6 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           if (chatInfo.is_new_chat) {
             await clearNewChatNotificationHandler(chatId);
           }
-          if (chatInfo.other_user?.id && chatInfo.other_user.is_online !== undefined) {
-            updateDbStatus(chatInfo.other_user.id, chatInfo.other_user.is_online);
-          }
         }
 
         const response = await getMessages(chatId, 30, undefined, targetId);
@@ -354,7 +350,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         handleError('메시지 로드 중 오류가 발생했습니다.');
       }
     },
-    [clearNewChatNotificationHandler, blockedUserIds, handleError, updateDbStatus],
+    [clearNewChatNotificationHandler, blockedUserIds, handleError],
   );
 
   const loadMoreMessages = useCallback(async (): Promise<number> => {
@@ -478,23 +474,26 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         setMessages(prev => [...prev, optimisticMessage]);
       }
 
-      setChats(prev =>
-        prev.map(chat =>
-          chat.id === messageData.chat_id
-            ? {
-                ...chat,
-                last_message: {
-                  content: messageData.content ?? '',
-                  created_at: now,
-                  sender_nickname: myProfile?.nickname || '',
-                  sender_id: user?.id || '',
-                  attachments: previewAttachments,
-                },
-                last_message_at: now,
-              }
-            : chat,
-        ),
-      );
+      setChats(prev => {
+        const chatIdx = prev.findIndex(chat => chat.id === messageData.chat_id);
+        if (chatIdx === -1) return prev;
+        
+        const updatedChat = {
+          ...prev[chatIdx],
+          last_message: {
+            content: messageData.content ?? '',
+            created_at: now,
+            sender_nickname: myProfile?.nickname || '',
+            sender_id: user?.id || '',
+            attachments: previewAttachments,
+          },
+          last_message_at: now,
+        };
+        
+        const next = [...prev];
+        next.splice(chatIdx, 1);
+        return [updatedChat, ...next];
+      });
 
       try {
         const response = await sendMessageService({
@@ -518,23 +517,26 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
             );
           }
 
-          setChats(prev =>
-            prev.map(chat =>
-              chat.id === messageData.chat_id
-                ? {
-                    ...chat,
-                    last_message: {
-                      content: sent.content ?? '',
-                      created_at: sent.created_at,
-                      sender_nickname: sent.sender?.nickname || '',
-                      sender_id: sent.sender_id,
-                      attachments: sent.attachments ?? [],
-                    },
-                    last_message_at: sent.created_at,
-                  }
-                : chat,
-            ),
-          );
+          setChats(prev => {
+            const chatIdx = prev.findIndex(chat => chat.id === messageData.chat_id);
+            if (chatIdx === -1) return prev;
+
+            const updatedChat = {
+              ...prev[chatIdx],
+              last_message: {
+                content: sent.content ?? '',
+                created_at: sent.created_at,
+                sender_nickname: sent.sender?.nickname || '',
+                sender_id: sent.sender_id,
+                attachments: sent.attachments ?? [],
+              },
+              last_message_at: sent.created_at,
+            };
+
+            const next = [...prev];
+            next.splice(chatIdx, 1);
+            return [updatedChat, ...next];
+          });
           return true;
         } else {
           if (currentChatId.current === messageData.chat_id) {
@@ -809,34 +811,32 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         }
       }
 
-      if (newMessage.sender_id !== currentUserId) {
-        setChats(prevChats => {
-          const existingChatIndex = prevChats.findIndex(chat => chat.id === chatId);
-          if (existingChatIndex !== -1) {
-            const updatedChat = { ...prevChats[existingChatIndex] };
-            updatedChat.last_message = {
-              content: newMessage.content ?? '',
-              created_at: newMessage.created_at,
-              sender_id: newMessage.sender_id,
-              sender_nickname: '',
-              attachments: newMessage.attachments ?? [],
-            };
-            updatedChat.last_message_at = newMessage.created_at;
+      setChats(prevChats => {
+        const existingChatIndex = prevChats.findIndex(chat => chat.id === chatId);
+        if (existingChatIndex !== -1) {
+          const updatedChat = { ...prevChats[existingChatIndex] };
+          updatedChat.last_message = {
+            content: newMessage.content ?? '',
+            created_at: newMessage.created_at,
+            sender_id: newMessage.sender_id,
+            sender_nickname: '',
+            attachments: newMessage.attachments ?? [],
+          };
+          updatedChat.last_message_at = newMessage.created_at;
 
-            if (currentChatId.current !== chatId) {
-              updatedChat.unread_count = (updatedChat.unread_count || 0) + 1;
-              updatedChat.is_new_chat = true;
-            }
-
-            const newChats = [...prevChats];
-            newChats.splice(existingChatIndex, 1);
-            return [updatedChat, ...newChats];
-          } else {
-            loadChats();
-            return prevChats;
+          if (currentChatId.current !== chatId) {
+            updatedChat.unread_count = (updatedChat.unread_count || 0) + 1;
+            updatedChat.is_new_chat = true;
           }
-        });
-      }
+
+          const newChats = [...prevChats];
+          newChats.splice(existingChatIndex, 1);
+          return [updatedChat, ...newChats];
+        } else {
+          loadChats();
+          return prevChats;
+        }
+      });
     };
 
     const channel = supabase

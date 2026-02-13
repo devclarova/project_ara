@@ -442,7 +442,7 @@ export function ReplyCard({
                 </span>
                 {!isDeleted && (
                   <OnlineIndicator
-                    userId={reply.user.username}
+                    userId={reply.user.id}
                     size="sm"
                     className="absolute -top-1 right-0 z-20 border-white dark:border-background border shadow-none"
                   />

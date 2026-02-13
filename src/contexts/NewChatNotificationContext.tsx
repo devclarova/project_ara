@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
 
 interface NewChatNotificationContextType {
   // 읽지 않은 "채팅방" 개수
@@ -23,16 +23,16 @@ export const NewChatNotificationProvider = ({ children }: { children: React.Reac
   const hasNewChat = unreadCount > 0;
 
   // 전체 읽음 처리 (안 쓰면 안 써도 됨)
-  const markChatAsRead = () => {
+  const markChatAsRead = useCallback(() => {
     setUnreadCount(0);
-  };
+  }, []);
 
-  const value: NewChatNotificationContextType = {
+  const value = useMemo(() => ({
     unreadCount,
     hasNewChat,
     setUnreadCount,
     markChatAsRead,
-  };
+  }), [unreadCount, hasNewChat, markChatAsRead]);
 
   return (
     <NewChatNotificationContext.Provider value={value}>

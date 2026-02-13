@@ -4,6 +4,7 @@ import React, {
   useContext,
   useEffect,
   useState,
+  useMemo,
   type PropsWithChildren,
 } from 'react';
 import { supabase } from '../lib/supabase';
@@ -21,6 +22,7 @@ type AuthContextType = {
   signInWithKakao: () => Promise<{ error?: string }>;
   bannedUntil: string | null;
   isBanned: boolean;
+  profileId: string | null;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -112,6 +114,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
   // { id: string, deletedAt: string } 형태
   const [restoreUser, setRestoreUser] = useState<{ id: string; deletedAt: string } | null>(null);
 
+  // 프로필 ID (profiles.id)
+  const [profileId, setProfileId] = useState<string | null>(null);
+
   // 제재 상태
   const [bannedUntil, setBannedUntil] = useState<string | null>(null);
   const [isBannedState, setIsBannedState] = useState(false);
@@ -177,23 +182,35 @@ export function AuthProvider({ children }: PropsWithChildren) {
     // 1) 초기 세션
     supabase.auth.getSession().then(({ data }) => {
       if (!mounted) return;
+      const initialUser = data.session?.user ?? null;
       setSession(data.session ?? null);
-      setUser(data.session?.user ?? null);
-      setLoading(false);
+      setUser(initialUser);
 
-      // 초기 진입 시 삭제 여부 체크
-      if (data.session?.user) {
-        checkAccountStatus(data.session.user.id);
+      // 초기 진입 시 프로필/제재 체크가 끝날 때까지 loading 유지
+      if (initialUser) {
+        setLoading(true);
+        Promise.all([
+          checkAccountStatus(initialUser.id),
+          supabase.from('profiles').select('id').eq('user_id', initialUser.id).maybeSingle()
+        ]).then(([_, profileRes]) => {
+          if (!mounted) return;
+          if (profileRes.data) setProfileId(profileRes.data.id);
+          setLoading(false);
+        }).catch(() => {
+          if (mounted) setLoading(false);
+        });
+      } else {
+        setLoading(false);
       }
     });
 
     // 2) 세션 변동 구독
     const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (!mounted) return;
-      setSession(newSession);
+      
       const u = newSession?.user ?? null;
+      setSession(newSession);
       setUser(u);
-      setLoading(false);
 
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
         if (u) {
@@ -204,14 +221,33 @@ export function AuthProvider({ children }: PropsWithChildren) {
             } catch {}
           }
 
-          // 계정 삭제 상태 체크
-          checkAccountStatus(u.id);
+          // 프로필 ID 및 계정 상태 체크 완료 전까지 loading 유지
+          setLoading(true);
+          Promise.all([
+            checkAccountStatus(u.id),
+            supabase.from('profiles').select('id').eq('user_id', u.id).maybeSingle()
+          ]).then(([_, profileRes]) => {
+            if (!mounted) return;
+            if (profileRes.data) setProfileId(profileRes.data.id);
+            setLoading(false);
+          }).catch(() => {
+            if (mounted) setLoading(false);
+          });
 
           const provider = (u.app_metadata?.provider as string | undefined) ?? 'email';
           if (provider === 'email') {
             void Promise.allSettled([createProfileFromDraftIfMissing(u)]);
           }
+        } else {
+          setProfileId(null);
+          setLoading(false);
         }
+      } else if (event === 'SIGNED_OUT') {
+        setProfileId(null);
+        setLoading(false);
+      } else {
+        // 기타 이벤트 (SIGNED_IN/OUT 도중 로딩 방지)
+        setLoading(false);
       }
     });
 
@@ -355,21 +391,22 @@ export function AuthProvider({ children }: PropsWithChildren) {
     await signOut();
   };
 
+  const value = useMemo(() => ({
+    session,
+    user,
+    loading,
+    signIn,
+    signUp,
+    signOut,
+    signInWithGoogle,
+    signInWithKakao,
+    bannedUntil,
+    isBanned: isBannedState,
+    profileId,
+  }), [session, user, loading, signIn, signUp, signOut, signInWithGoogle, signInWithKakao, bannedUntil, isBannedState, profileId]);
+
   return (
-    <AuthContext.Provider
-      value={{
-        session,
-        user,
-        loading,
-        signIn,
-        signUp,
-        signOut,
-        signInWithGoogle,
-        signInWithKakao,
-        bannedUntil,
-        isBanned: isBannedState,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
       {/* 계정 복구 모달: restoreUser 상태가 있을 때만 노출 */}
       <RestoreAccountModal

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from './AuthContext';
 
@@ -8,21 +8,73 @@ export interface PresenceState {
   status: 'online' | 'offline';
 }
 
+interface RealtimeStats {
+  totalUsers: number;
+  onlineUsersCount: number;
+  activeSessions: number;
+  adminCount: number;
+  bannedCount: number;
+  newUsers7d: number;
+  pendingReports: number;
+}
+
 interface PresenceContextType {
   onlineUsers: Set<string>;
-  dbOnlineUsers: Record<string, boolean>; // DB 기반 온라인 상태 맵 추가
+  dbOnlineUsers: Record<string, boolean>; 
+  onlineCount: number;
+  sessionCount: number;
+  stats: RealtimeStats;
+  isUserOnline: (profileId: string | undefined) => boolean;
   updateDbStatus: (userId: string, isOnline: boolean) => void;
+  refreshStats: () => Promise<void>;
 }
 
 const PresenceContext = createContext<PresenceContextType | undefined>(undefined);
 
 export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, profileId } = useAuth();
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
   const [dbOnlineUsers, setDbOnlineUsers] = useState<Record<string, boolean>>({});
+  const [stats, setStats] = useState<RealtimeStats>({
+    totalUsers: 0,
+    onlineUsersCount: 0,
+    activeSessions: 0,
+    adminCount: 0,
+    bannedCount: 0,
+    newUsers7d: 0,
+    pendingReports: 0
+  });
+
+  const channelRef = useRef<any>(null);
+
+  // 전역 통계 새로고침 함수
+  const refreshStats = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
+      if (!error && data) {
+        setStats(prev => ({
+          ...prev,
+          totalUsers: data.total_users || 0,
+          adminCount: data.admin_count || 0,
+          bannedCount: data.banned_count || 0,
+          newUsers7d: data.new_users_7d || 0,
+          pendingReports: data.pending_reports || 0,
+          // onlineUsersCount와 activeSessions는 Presence 채널에서 실시간 업데이트됨
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to refresh global stats:', err);
+    }
+  }, []);
 
   useEffect(() => {
-    if (!user) {
+    refreshStats();
+    const interval = setInterval(refreshStats, 30000); // 30초마다 DB 데이터 동기화
+    return () => clearInterval(interval);
+  }, [refreshStats]);
+
+  useEffect(() => {
+    if (!user || !profileId) {
       setOnlineUsers(new Set());
       return;
     }
@@ -30,41 +82,47 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const channel = supabase.channel('online-users', {
       config: {
         presence: {
-          key: user.id,
+          key: profileId,
         },
       },
     });
+    channelRef.current = channel;
 
     channel
       .on('presence' as any, { event: 'sync' }, () => {
-        const newState = channel.presenceState();
-        const onlineIds = new Set<string>();
-        
-        Object.keys(newState).forEach((key) => {
-          onlineIds.add(key);
+        const state = channel.presenceState();
+        const users = new Set<string>();
+        let totalSessions = 0;
+
+        Object.keys(state).forEach((key) => {
+          const presences = state[key] as any[];
+          users.add(key);
+          totalSessions += (presences?.length || 0);
         });
-        
-        setOnlineUsers(onlineIds);
-      })
-      .on('presence' as any, { event: 'join' }, ({ newPresences }) => {
-        // console.log('Joined:', newPresences);
-      })
-      .on('presence' as any, { event: 'leave' }, ({ leftPresences }) => {
-        // console.log('Left:', leftPresences);
+
+        setOnlineUsers(users);
+        setStats(prev => ({
+          ...prev,
+          onlineUsersCount: users.size,
+          activeSessions: totalSessions
+        }));
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           await channel.track({
-            user_id: user.id,
+            profile_id: profileId,
             online_at: new Date().toISOString(),
           });
         }
       });
 
     return () => {
-      channel.unsubscribe();
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
-  }, [user]);
+  }, [user, profileId]);
 
   // DB 실시간 상태 구독 (is_online 필드 변경 감지)
   useEffect(() => {
@@ -92,19 +150,28 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
   }, []);
 
-  // 수동 DB 상태 업데이트 함수 (API 로드 시 초기값 세팅용)
+  const isUserOnline = useCallback((pId: string | undefined): boolean => {
+    if (!pId) return false;
+    // 1. 실시간 프레즌스 데이터에서 확인
+    if (onlineUsers.has(pId)) return true;
+    // 2. DB 실시간 동기화 상태에서 확인 (폴백)
+    return dbOnlineUsers[pId] ?? false;
+  }, [onlineUsers, dbOnlineUsers]);
+
   const updateDbStatus = useCallback((userId: string, isOnline: boolean) => {
-    setDbOnlineUsers(prev => {
-      if (prev[userId] === isOnline) return prev;
-      return { ...prev, [userId]: isOnline };
-    });
+    setDbOnlineUsers(prev => ({ ...prev, [userId]: isOnline }));
   }, []);
 
-  const value = {
+  const value = useMemo(() => ({
     onlineUsers,
     dbOnlineUsers,
-    updateDbStatus
-  };
+    onlineCount: onlineUsers.size,
+    sessionCount: stats.activeSessions,
+    stats,
+    isUserOnline,
+    updateDbStatus,
+    refreshStats
+  }), [onlineUsers, dbOnlineUsers, stats, isUserOnline, updateDbStatus, refreshStats]);
 
   return (
     <PresenceContext.Provider value={value}>

@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
  * - 이 정보는 관리자 페이지 및 다른 사용자에게 '현재 접속 중' 여부를 알려주는 데 사용됩니다.
  */
 export const GlobalUserStatusTracker = () => {
-  const { user } = useAuth();
+  const { user, profileId } = useAuth();
 
   useEffect(() => {
     if (!user) return;
@@ -25,7 +25,7 @@ export const GlobalUserStatusTracker = () => {
             is_online: online,
             last_active_at: new Date().toISOString(),
           })
-          .eq('user_id', user.id);
+          .eq('user_id', user.id); // profiles 테이블의 user_id 컬럼과 auth.users.id 매칭
         
         if (error) {
           // 406 Not Acceptable 등 무의미한 에러 로깅 제외 (세션 만료 등)
@@ -56,8 +56,9 @@ export const GlobalUserStatusTracker = () => {
     
     // 4. 페이지 가시성/종료 이벤트 기반 오프라인 처리 보강
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        // 백그라운드로 갈 때 즉시 오프라인으로 하지는 않지만, 세션 종료 가능성 대비
+      if (document.visibilityState === 'visible') {
+        // 백그라운드에서 포그라운드로 올 때 즉시 하트비트/시간 갱신
+        updateStatus(true);
       }
     };
 

@@ -8,6 +8,7 @@ import {
   CreditCard,
   ShoppingBag,
   Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
@@ -17,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import UserProfileModal from './components/UserProfileModal';
 import { usePresence } from '@/contexts/PresenceContext';
+import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 
 interface DashboardStats {
   total_users: number;
@@ -60,50 +62,44 @@ const AdminHome = () => {
   const [revenueType, setRevenueType] = useState<'total' | 'subscription' | 'shop'>('total');
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const { onlineUsers, dbOnlineUsers } = usePresence();
-
-  // Helper to determine real-time online status
-  const isUserOnline = (user: any) => {
-    // 1. Check real-time DB updates first (Most authoritative for explicit changes)
-    if (user.profile_id && user.profile_id in dbOnlineUsers) return dbOnlineUsers[user.profile_id];
-    if (user.id in dbOnlineUsers) return dbOnlineUsers[user.id];
-
-    // 2. Check presence channel (Active connection)
-    if (onlineUsers.has(user.id)) return true;
-
-    // 3. ✨ CRITICAL FIX: If Presence is active (we have >0 users) but this user is NOT in it,
-    //    they are OFFLINE. Ignore stale 'user.is_online' from initial load.
-    if (onlineUsers.size > 0) return false;
-
-    // 4. Fallback to initial DB data ONLY if Presence system isn't monitoring anyone yet (e.g. init)
-    return user.is_online;
-  };
+  const { onlineCount, sessionCount, isUserOnline, stats: globalStats } = usePresence();
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
-        if (error) {
-          console.error('RPC Error:', error);
-          if (error.code === 'PGRST202') {
-            toast.error('대시보드 RPC를 찾을 수 없습니다. SQL 마이그레이션이 실행되었는지 확인해주세요.');
-          }
-          throw error;
-        }
+        if (error) throw error;
         setStats(data);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching dashboard stats:', err);
+        if (err.status === 400 || err.code === 'PGRST202') {
+           toast.error('대시보드 데이터 수신 오류 (400). 최신 SQL 마이그레이션을 적용했는지 확인해주세요.');
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchStats();
-    
-    // Set up interval for real-time updates every 30 seconds
-    const interval = setInterval(fetchStats, 30000);
+    const interval = setInterval(fetchStats, 60000); 
     return () => clearInterval(interval);
   }, []);
+
+  const displayStats = {
+    total_users: globalStats.totalUsers || stats?.total_users || 0,
+    online_users: onlineCount,
+    session_count: sessionCount,
+    new_users_7d: globalStats.newUsers7d || stats?.new_users_7d || 0,
+    pending_reports: stats?.pending_reports || 0,
+    total_revenue: stats?.total_revenue || 0,
+    user_growth_pct: stats?.user_growth_pct || 0
+  };
+
+  const getRevenueValue = () => {
+    if (!stats) return '$0';
+    const value = revenueType === 'total' ? stats.total_revenue : revenueType === 'subscription' ? stats.subscription_revenue : stats.shop_revenue;
+    return `$${value.toLocaleString()}`;
+  };
 
   if (loading) {
     return (
@@ -114,306 +110,101 @@ const AdminHome = () => {
     );
   }
 
-  if (!stats) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <p className="text-muted-foreground font-bold">대시보드 데이터를 불러오지 못했습니다.</p>
-        <button 
-          onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-xl font-bold shadow-lg hover:opacity-90 transition-all"
-        >
-          다시 시도
-        </button>
-      </div>
-    );
-  }
-
-  const getRevenueValue = () => {
-    if (!stats) return '$0';
-    const value = revenueType === 'total' 
-      ? stats.total_revenue 
-      : revenueType === 'subscription' 
-        ? stats.subscription_revenue 
-        : stats.shop_revenue;
-    return `$${value.toLocaleString()}`;
-  };
-
-  const getRevenueTitle = () => {
-    if (revenueType === 'total') return '전체 수익';
-    if (revenueType === 'subscription') return '구독 수익';
-    return '쇼핑몰 수익';
-  };
-
   const summaryStats = [
-    { 
-      title: '총 사용자', 
-      value: stats?.total_users.toLocaleString() || '0', 
-      icon: Users, 
-      color: 'text-primary-500 dark:text-primary-400', 
-      bg: 'bg-primary-50 dark:bg-primary-900/30' 
-    },
-    { 
-      title: '활성 세션', 
-      value: stats?.online_users.toLocaleString() || '0', 
-      icon: Activity, 
-      color: 'text-primary dark:text-primary', 
-      bg: 'bg-primary/10 dark:bg-primary-900/30' 
-    },
-    { 
-      title: '신규 가입(7일)', 
-      value: stats?.new_users_7d.toLocaleString() || '0', 
-      change: stats?.user_growth_pct || 0,
-      icon: TrendingUp, 
-      color: 'text-violet-500 dark:text-violet-400', 
-      bg: 'bg-violet-50 dark:bg-violet-900/30' 
-    },
-    { 
-      title: getRevenueTitle(), 
-      value: getRevenueValue(), 
-      icon: revenueType === 'subscription' ? CreditCard : revenueType === 'shop' ? ShoppingBag : DollarSign, 
-      color: 'text-amber-500 dark:text-amber-400', 
-      bg: 'bg-amber-50 dark:bg-amber-900/30',
-      isRevenue: true
-    },
+    { title: '전체 사용자', value: displayStats.total_users.toLocaleString(), change: displayStats.user_growth_pct, icon: Users, color: 'text-primary-500', bg: 'bg-primary-50' },
+    { title: '실시간 접속 유저', value: displayStats.online_users.toLocaleString(), subtitle: `${displayStats.session_count}개 세션(탭) 활성`, icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-50', isLive: true },
+    { title: '신규 가입 (7일)', value: displayStats.new_users_7d.toLocaleString(), icon: TrendingUp, color: 'text-violet-500', bg: 'bg-violet-50' },
+    { title: '신고 대기', value: displayStats.pending_reports.toLocaleString(), icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-50' },
   ];
 
   return (
-    <div className="w-full space-y-3 sm:space-y-4 md:space-y-6 lg:space-y-8 animate-in fade-in zoom-in-95 duration-500">
-      
-      {/* Title Section */}
+    <div className="w-full space-y-6 lg:space-y-8 animate-in fade-in zoom-in-95 duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground break-words">대시보드 개요</h1>
-          <p className="text-sm sm:text-base text-muted-foreground break-words">안녕하세요, 실시간 운영 지표입니다 (7일 대비 성장률 포함).</p>
+          <h1 className="text-2xl font-bold text-foreground">대시보드 개요</h1>
+          <p className="text-muted-foreground text-sm mt-1">실시간 운영 지표 및 사용자 트렌드 (통합 버전)</p>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 min-[350px]:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {summaryStats.map((stat, i) => (
           <motion.div 
-            key={i} 
-            layout
-            className="bg-secondary p-3 sm:p-4 md:p-6 rounded-2xl border border-gray-300 dark:border-gray-500 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group flex flex-col justify-between min-h-[110px] sm:min-h-[140px]"
+            key={i} layout
+            className="bg-secondary p-6 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all h-full flex flex-col justify-between"
           >
-            <div className="flex items-start justify-between mb-2 sm:mb-4 relative">
-              <div className={`p-2 sm:p-3 rounded-xl ${stat.bg} ${stat.color} shrink-0`}>
-                <stat.icon size={16} className="sm:w-5 sm:h-5" />
+            <div className="flex items-start justify-between mb-4">
+              <div className={`p-3 rounded-xl ${stat.bg} ${stat.color} shadow-sm`}>
+                <stat.icon size={20} />
               </div>
-              
               {stat.change !== undefined && (
-                <span className={`text-[9px] sm:text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
-                  stat.change >= 0 
-                  ? 'bg-green-100 dark:bg-green-900/40 text-green-600' 
-                  : 'bg-red-100 dark:bg-red-900/40 text-red-600'
-                }`}>
+                <span className={`text-xs font-bold px-2 py-1 rounded-full ${stat.change >= 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
                   {stat.change >= 0 ? '+' : ''}{stat.change.toFixed(1)}%
                 </span>
               )}
-
-              {stat.isRevenue && (
-                <div className="absolute right-0 top-0 flex flex-col items-end gap-1">
-                  <div className="flex bg-muted p-0.5 rounded-lg border border-gray-300 dark:border-gray-600 scale-90 origin-top-right transition-all flex-wrap justify-end gap-0.5 max-w-[120px] sm:max-w-none">
-                    {(['total', 'subscription', 'shop'] as const).map((type) => (
-                      <button
-                        key={type}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setRevenueType(type);
-                        }}
-                        className={`px-2 py-1 sm:px-3 sm:py-1 text-[9px] sm:text-[10px] font-bold rounded-md transition-all ${
-                          revenueType === type 
-                          ? 'bg-primary text-primary-foreground shadow-md' 
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted-foreground/10'
-                        }`}
-                      >
-                        {type === 'total' ? '전체' : type === 'subscription' ? '구독' : '쇼핑'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              {stat.isLive && (
+                <span className="flex items-center gap-1.5 px-2 py-1 bg-emerald-100 text-emerald-600 rounded-full text-[10px] font-black uppercase">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  LIVE
+                </span>
               )}
             </div>
-
             <div>
-              <AnimatePresence mode="wait">
-                <motion.h3 
-                  key={stat.value}
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  className="text-lg sm:text-2xl md:text-3xl font-bold text-foreground mb-0.5 sm:mb-1 truncate leading-tight"
-                >
-                  {stat.value}
-                </motion.h3>
-              </AnimatePresence>
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">{stat.title}</p>
+              <h3 className="text-2xl font-bold text-foreground leading-tight mb-1">{stat.value}</h3>
+              <p className="text-xs text-muted-foreground font-medium">{stat.title}</p>
+              {stat.subtitle && <p className="text-[10px] text-emerald-500 font-bold mt-1">{stat.subtitle}</p>}
             </div>
           </motion.div>
         ))}
       </div>
 
-      {/* Chart & Activity Section (Grid) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:gap-8 min-w-0">
-        {/* Main Chart Area */}
-        <div className="lg:col-span-2 bg-secondary rounded-2xl border border-gray-300 dark:border-gray-500 shadow-sm p-3 sm:p-4 md:p-6 lg:h-[380px] flex flex-col min-w-0">
-          <div className="flex items-center justify-between mb-4 sm:mb-8 shrink-0">
-            <div>
-              <h2 className="text-base sm:text-lg font-bold text-foreground truncate">사용자 가입 추이 (최근 7일)</h2>
-              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">막대 그래프 및 트렌드 라인 분석</p>
-            </div>
-            <button 
-              className="p-2 hover:bg-accent rounded-lg text-muted-foreground transition-all group"
-              title="데이터 내보내기 (준비 중)"
-            >
-              <MoreVertical size={20} className="transition-transform" />
-            </button>
-          </div>
-          
-          <div className="flex-1 relative min-h-[250px] mt-4">
-            {/* SVG Trend Line Overlay - Points centered over bars */}
-            {/* SVG Trend Line Overlay - Path only */}
-            <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full z-10 pointer-events-none overflow-visible">
-              <defs>
-                <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path
-                d={stats?.daily_trends.map((trend, i) => {
-                  const maxCount = Math.max(...stats!.daily_trends.map(t => t.count), 1);
-                  const x = ((i + 0.5) / stats!.daily_trends.length) * 100;
-                  const y = 100 - (trend.count / maxCount) * 100;
-                  return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
-                }).join(' ')}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                vectorEffect="non-scaling-stroke"
-                className="text-primary/30"
-              />
-              <path
-                d={stats?.daily_trends.map((trend, i) => {
-                  const maxCount = Math.max(...stats!.daily_trends.map(t => t.count), 1);
-                  const x = ((i + 0.5) / stats!.daily_trends.length) * 100;
-                  const y = 100 - (trend.count / maxCount) * 100;
-                  return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
-                }).join(' ') + ` L ${((stats!.daily_trends.length - 1 + 0.5) / stats!.daily_trends.length) * 100} 100 L ${(0.5 / stats!.daily_trends.length) * 100} 100 Z`}
-                fill="url(#lineGradient)"
-              />
-            </svg>
-
-            <div className="h-full flex items-end relative z-0">
-                {stats?.daily_trends.map((trend, idx) => {
-                  const maxCount = Math.max(...stats.daily_trends.map(t => t.count), 1);
-                  const heightPercent = trend.count === 0 ? 3 : (trend.count / maxCount) * 100;
-                  
-                  return (
-                    <div key={idx} className="flex-1 flex flex-col items-center group h-full justify-end relative">
-                      {/* CSS Circular Point - Guaranteed to be a circle */}
-                      <div 
-                        className="absolute z-20 w-2.5 h-2.5 bg-primary border-2 border-background rounded-full shadow-sm transition-transform group-hover:scale-125"
-                        style={{ 
-                          bottom: `${heightPercent}%`, 
-                          transform: 'translateY(50%)' 
-                        }}
-                      />
-
-                      <div className="w-1/2 sm:w-2/5 max-w-[40px] bg-muted/20 hover:bg-primary/5 dark:hover:bg-primary/10 rounded-t-xl relative transition-all cursor-pointer overflow-hidden" style={{ height: '100%' }}>
-                        <motion.div 
-                          initial={{ height: 0 }}
-                          animate={{ height: `${heightPercent}%` }}
-                          transition={{ duration: 1.2, ease: 'backOut' }}
-                          className="absolute bottom-0 left-0 right-0 mx-auto w-full bg-gradient-to-t from-primary/30 to-primary/60 dark:from-primary/20 dark:to-primary/40 rounded-t-lg transition-all group-hover:from-primary/50 group-hover:to-primary/80"
-                        />
-                      </div>
-                      {/* Tooltip at the Bottom - Closer to the graph */}
-                      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] font-bold px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap z-30 shadow-xl border border-background/10 scale-90 group-hover:scale-100 origin-top">
-                        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-foreground rotate-45" />
-                        {trend.count}명 가입
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-
-          <div className="flex justify-between mt-8 text-[10px] sm:text-xs text-muted-foreground px-1 border-t border-gray-100 dark:border-gray-800 pt-3 shrink-0">
-            {stats?.daily_trends.map((trend, idx) => (
-              <span key={idx} className="flex-1 text-center font-bold flex flex-col gap-0.5">
-                <span>{new Date(trend.date).toLocaleDateString('ko-KR', { weekday: 'short' })}</span>
-                <span className="text-[9px] opacity-60 font-medium">
-                  {new Date(trend.date).toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' })}
-                </span>
-              </span>
-            ))}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-secondary rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6">
+          <h2 className="text-lg font-bold mb-6">사용자 가입 추이 (최근 7일)</h2>
+          <div className="h-[250px] w-full flex items-end gap-2 px-2">
+            {stats?.daily_trends.map((trend, idx) => {
+              const max = Math.max(...stats.daily_trends.map(t => t.count), 1);
+              const h = (trend.count / max) * 100;
+              return (
+                <div key={idx} className="flex-1 flex flex-col items-center group relative h-full justify-end">
+                   <div className="absolute -top-6 bg-foreground text-background text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">{trend.count}명</div>
+                   <div className="w-full bg-primary/10 hover:bg-primary/20 rounded-t-lg transition-all" style={{ height: `${Math.max(h, 5)}%` }} />
+                   <div className="mt-2 text-[10px] text-muted-foreground font-bold">{new Date(trend.date).toLocaleDateString('ko-KR', { weekday: 'short' })}</div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Recent Users List */}
-        <div className="bg-secondary rounded-2xl border border-gray-300 dark:border-gray-500 shadow-sm p-3 sm:p-4 md:p-6 flex flex-col lg:h-[380px] min-w-0">
-          <h2 className="text-base sm:text-lg font-bold text-foreground mb-4 sm:mb-6 shrink-0 truncate">최근 접속 사용자</h2>
-          <div className="space-y-3 sm:space-y-5 flex-1 overflow-hidden">
-            {stats?.recent_users.map((user, i) => {
-              const isOnline = isUserOnline(user);
+        <div className="bg-secondary rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 overflow-hidden flex flex-col">
+          <h2 className="text-lg font-bold mb-4">최근 접속 사용자</h2>
+          <div className="space-y-4 flex-1 overflow-y-auto pr-1 custom-scrollbar">
+            {stats?.recent_users.map((user) => {
+              const online = isUserOnline(user.profile_id || user.id);
               return (
-              <div 
-                key={i} 
-                className="flex items-center gap-2 sm:gap-3 group cursor-pointer hover:bg-muted/30 p-2 sm:p-2.5 rounded-2xl transition-all" 
-                onClick={() => {
-                  setSelectedUser(user);
-                  setShowProfileModal(true);
-                }}
-              >
-                <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:border-primary transition-all overflow-hidden shrink-0 shadow-sm">
-                  {user.avatar_url ? (
-                    <img src={user.avatar_url} alt={user.nickname} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-primary font-bold text-xs sm:text-sm">{user.nickname.charAt(0)}</span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-xs sm:text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">
-                      {user.nickname}
-                    </p>
-                    {isOnline && (
-                      <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                    )}
+                <div key={user.id} onClick={() => { setSelectedUser(user); setShowProfileModal(true); }} className="flex items-center justify-between p-2 rounded-xl hover:bg-white dark:hover:bg-zinc-800 transition-all cursor-pointer border border-transparent hover:border-zinc-100">
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      {user.avatar_url ? <img src={user.avatar_url} className="w-10 h-10 rounded-full object-cover" /> : <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground"><Users size={18} /></div>}
+                      <div className="absolute -bottom-0.5 -right-0.5"><OnlineIndicator userId={user.profile_id || user.id} size="sm" className="ring-2 ring-secondary" /></div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold truncate max-w-[100px]">{user.nickname}</p>
+                      <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Activity size={10} /> {online ? '온라인' : (user.last_active_at ? formatDistanceToNow(new Date(user.last_active_at), { addSuffix: true, locale: ko }) : '정보 없음')}</p>
+                    </div>
                   </div>
-                  <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate">{user.email}</p>
+                  <MoreVertical size={16} className="text-muted-foreground opacity-50" />
                 </div>
-                <span className={`text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-1 sm:py-1.5 rounded-lg whitespace-nowrap ${
-                  isOnline 
-                    ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' 
-                    : 'bg-muted/50 text-muted-foreground'
-                }`}>
-                  {isOnline 
-                    ? '접속 중' 
-                    : (user.last_active_at 
-                        ? formatDistanceToNow(new Date(user.last_active_at), { addSuffix: true, locale: ko })
-                            .replace('1분 미만', '1분')
-                        : '기록 없음')}
-                </span>
-              </div>
-            );
+              );
             })}
           </div>
-          <button 
-            onClick={() => navigate('/admin/users')}
-            className="w-full mt-4 sm:mt-6 py-2 sm:py-3 text-xs sm:text-sm text-center text-primary-600 dark:text-primary-400 hover:bg-primary/10 font-bold border-2 border-primary/10 hover:border-primary/30 rounded-xl sm:rounded-2xl transition-all shrink-0"
-          >
-            전체 사용자 목록 보기
-          </button>
+          <button onClick={() => navigate('/admin/users')} className="w-full mt-6 py-2.5 text-xs font-bold text-primary hover:bg-primary/10 border-2 border-primary/10 rounded-xl transition-all">전체 사용자 목록</button>
         </div>
       </div>
 
-      <UserProfileModal
-        isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-        user={selectedUser}
-      />
+      <UserProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} user={selectedUser} />
     </div>
   );
 };

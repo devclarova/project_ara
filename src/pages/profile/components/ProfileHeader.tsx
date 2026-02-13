@@ -614,7 +614,7 @@ export default function ProfileHeader({
             <div className="relative inline-flex items-center pr-2.5">
               <span>{userProfile.name}</span>
               <OnlineIndicator
-                userId={userProfile.user_id}
+                userId={userProfile.id}
                 size="md"
                 className="absolute top-0.5 right-0 z-10 border-white dark:border-gray-900 border-2"
               />
