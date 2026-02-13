@@ -1237,88 +1237,115 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
       return { success: false, error: '사용자가 로그인되지 않았습니다.' };
     }
 
-    // 사용자의 비활성화된 채팅방 목록 조회
-    // 현재 사용자만 나간 채팅방만 조회 (상대방은 아직 참여 중인 채팅방)
-    const { data: chats, error: chatsError } = await supabase
+    // [Refactor] Split complex OR/AND query into two simple queries to avoid 502/CORS errors
+    // Query 1: user1_id matches current user and user1_active is false
+    const { data: chats1, error: error1 } = await supabase
       .from('direct_chats')
       .select('*')
-      .or(
-        `and(user1_id.eq.${currentUser.profileId},user1_active.eq.false),and(user2_id.eq.${currentUser.profileId},user2_active.eq.false)`,
-      )
-      .order('last_message_at', { ascending: false });
+      .eq('user1_id', currentUser.profileId)
+      .eq('user1_active', false);
 
-    if (chatsError) {
-      console.error('비활성화된 채팅방 목록 조회 오류:', chatsError);
+    // Query 2: user2_id matches current user and user2_active is false
+    const { data: chats2, error: error2 } = await supabase
+      .from('direct_chats')
+      .select('*')
+      .eq('user2_id', currentUser.profileId)
+      .eq('user2_active', false);
+
+    if (error1 || error2) {
+      console.error('비활성화된 채팅방 목록 조회 오류:', error1 || error2);
       return { success: false, error: '채팅방 목록을 불러올 수 없습니다.' };
     }
 
-    if (!chats || chats.length === 0) {
+    const chats = [...(chats1 || []), ...(chats2 || [])].sort((a, b) => {
+      const timeA = new Date(a.last_message_at || a.created_at).getTime();
+      const timeB = new Date(b.last_message_at || b.created_at).getTime();
+      return timeB - timeA;
+    });
+
+    if (chats.length === 0) {
       return { success: true, data: [] };
     }
 
-    // 각 채팅방의 마지막 메시지와 읽지 않은 메시지 수 조회
+    // 1단계: 모든 채팅방의 상대방 ID 수집
+    const otherUserIds = Array.from(
+      new Set(
+        chats.map(chat =>
+          chat.user1_id === currentUser.profileId ? chat.user2_id : chat.user1_id,
+        ),
+      ),
+    );
+
+    // 2단계: 상대방 프로필 일괄 조회 (getChatList와 동일한 Batch Fetch 방식 적용)
+    let profileMap = new Map<string, ChatUser>();
+    if (otherUserIds.length > 0) {
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, nickname, avatar_url, username, is_online')
+        .in('id', otherUserIds);
+
+      if (!profileError && profiles) {
+        profiles.forEach(p => {
+          profileMap.set(p.id, {
+            id: p.id,
+            email: `user-${p.id}@example.com`,
+            nickname: p.nickname,
+            username: p.username,
+            avatar_url: p.avatar_url,
+            is_online: p.is_online,
+          });
+        });
+      }
+    }
+
+    // 3단계: 채팅방 정보 조립
     const chatListItems: ChatListItem[] = await Promise.all(
       chats.map(async chat => {
-        // 상대방 사용자 ID
         const otherUserId = chat.user1_id === currentUser.profileId ? chat.user2_id : chat.user1_id;
-
-        // 상대방 사용자 정보 조회 (profiles 테이블에서)
-        let otherUserInfo: ChatUser;
-        try {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('id, nickname, avatar_url')
-            .eq('id', otherUserId)
-            .single();
-
-          if (profileError || !profileData) {
-            // 조회 실패 시 기본값 사용
-            otherUserInfo = {
-              id: otherUserId,
-              email: `user-${otherUserId}@example.com`,
-              nickname: `User ${otherUserId.slice(0, 8)}`,
-              avatar_url: null,
-            };
-          } else {
-            // 실제 사용자 정보 사용
-            otherUserInfo = {
-              id: profileData.id,
-              email: `user-${profileData.id}@example.com`,
-              nickname: profileData.nickname,
-              avatar_url: profileData.avatar_url,
-            };
-          }
-        } catch (error) {
-          console.error('사용자 정보 조회 오류:', error);
-          otherUserInfo = {
-            id: otherUserId,
-            email: `user-${otherUserId}@example.com`,
-            nickname: `User ${otherUserId.slice(0, 8)}`,
-            avatar_url: null,
-          };
-        }
+        const otherUserInfo: ChatUser = profileMap.get(otherUserId) || {
+          id: otherUserId,
+          email: `user-${otherUserId}@example.com`,
+          nickname: `User ${otherUserId.slice(0, 8)}`,
+          avatar_url: null,
+        };
 
         // 마지막 메시지 조회
-        const { data: lastMessage } = await supabase
-          .from('direct_messages')
-          .select('*, attachments:direct_message_attachments(type)')
-          .eq('chat_id', chat.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        let lastMessage = null;
+        try {
+          const { data: lastMessageData } = await supabase
+            .from('direct_messages')
+            .select('content, created_at, sender_id, attachments:direct_message_attachments(type)')
+            .eq('chat_id', chat.id)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          if (lastMessageData && lastMessageData.length > 0) {
+            lastMessage = lastMessageData[0];
+          }
+        } catch (error) {}
 
         // 읽지 않은 메시지 수 조회
-        const { count: unreadCount } = await supabase
-          .from('direct_messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('chat_id', chat.id)
-          .eq('sender_id', otherUserId)
-          .eq('is_read', false);
+        let unreadCount = 0;
+        try {
+          const { count } = await supabase
+            .from('direct_messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('chat_id', chat.id)
+            .eq('is_read', false)
+            .neq('sender_id', currentUser.id);
+          if (count !== null) unreadCount = count;
+        } catch (error) {}
 
         return {
           id: chat.id,
           other_user: otherUserInfo,
-          last_message: lastMessage || null,
+          last_message: lastMessage ? {
+            content: lastMessage.content,
+            created_at: lastMessage.created_at,
+            sender_nickname: lastMessage.sender_id === currentUser.id ? '나' : otherUserInfo.nickname,
+            sender_id: lastMessage.sender_id,
+            attachments: lastMessage.attachments || [],
+          } : undefined,
           unread_count: unreadCount || 0,
           last_message_at: chat.last_message_at,
         };

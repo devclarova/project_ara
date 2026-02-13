@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { usePresence } from '@/contexts/PresenceContext';
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -23,7 +24,10 @@ interface UserProfileModalProps {
 }
 
 const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, user }) => {
+  const { isUserOnline } = usePresence();
   if (!user) return null;
+
+  const isOnline = isUserOnline(user.profile_id || user.id);
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '정보 없음';
@@ -75,8 +79,8 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
                 <div className="relative">
                   {user.nickname}
                   <div 
-                    className={`absolute top-0.5 -right-3 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-zinc-900 ${user.is_online ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-zinc-300'}`} 
-                    title={user.is_online ? '온라인' : '오프라인'} 
+                    className={`absolute top-0.5 -right-3 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-zinc-900 ${isOnline ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-zinc-300'}`} 
+                    title={isOnline ? '온라인' : '오프라인'} 
                   />
                 </div>
                 {user.is_admin && (
@@ -120,7 +124,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
             />
             <InfoItem icon={<User size={16} />} label="성별" value={getGenderLabel(user.gender)} />
             <InfoItem icon={<Calendar size={16} />} label="생년월일" value={user.birthday || '정보 없음'} />
-            <InfoItem icon={<Circle size={16} className={user.is_online ? 'text-emerald-500' : 'text-zinc-400'} />} label="상태" value={user.is_online ? '현재 온라인' : '오프라인'} />
+            <InfoItem icon={<Circle size={16} className={isOnline ? 'text-emerald-500' : 'text-zinc-400'} />} label="상태" value={isOnline ? '현재 온라인' : '오프라인'} />
             <InfoItem icon={<Clock size={16} />} label="마지막 접속" value={formatDate(user.last_active_at)} />
             <InfoItem icon={<Clock size={16} />} label="마지막 로그인" value={formatDate(user.last_sign_in_at)} />
             <InfoItem icon={<Calendar size={16} />} label="가입일" value={formatDate(user.created_at)} />
@@ -130,7 +134,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
           {/* Action Footer */}
           <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 flex justify-end">
             <button 
-              onClick={() => window.open(`/profile/${user.profile_id}`, '_blank')}
+              onClick={() => window.open(`/profile/${user.nickname}`, '_blank')}
               className="flex items-center gap-2 px-4 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded-xl text-sm font-bold transition-all"
             >
               <ExternalLink size={16} /> 사이트에서 프로필 보기

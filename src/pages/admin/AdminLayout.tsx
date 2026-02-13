@@ -104,7 +104,7 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className="min-h-screen min-w-[300px] bg-background flex font-sans text-foreground overflow-x-hidden">
+    <div className="min-h-screen min-w-[300px] bg-background font-sans text-foreground relative">
       {/* Sidebar - Hidden on mobile, always visible on desktop */}
       <aside 
         className={`fixed inset-y-0 left-0 z-50 w-64 bg-secondary border-r border-gray-300 dark:border-gray-600 transform transition-transform duration-300 ease-in-out ${
@@ -115,10 +115,12 @@ const AdminLayout = () => {
           <div className="h-16 flex items-center px-6 border-b border-gray-300 dark:border-gray-600">
             <Link 
               to="/admin" 
-              className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-emerald-600"
+              className="outline-none focus:outline-none active:outline-none no-underline hover:no-underline"
               onClick={() => setSidebarOpen(false)}
             >
-              ARA Admin
+              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-emerald-600">
+                ARA Admin
+              </span>
             </Link>
             <button 
               className="md:hidden ml-auto text-muted-foreground hover:text-foreground"
@@ -189,9 +191,9 @@ const AdminLayout = () => {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden md:ml-64">
+      <div className="flex-1 flex flex-col min-w-0 md:ml-64">
         {/* Header */}
-        <header className="h-14 sm:h-16 bg-secondary/80 backdrop-blur border-b border-gray-300 dark:border-gray-600 flex items-center justify-between px-3 sm:px-4 md:px-6 sticky top-0 z-40">
+        <header className="h-14 sm:h-16 bg-secondary/80 backdrop-blur-md border-b border-gray-300 dark:border-gray-600 flex items-center justify-between px-3 sm:px-4 md:px-6 sticky top-0 z-[110] shadow-sm flex-shrink-0">
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-1">
             <button 
               className="md:hidden text-muted-foreground hover:text-foreground p-1 flex-shrink-0"
@@ -228,7 +230,7 @@ const AdminLayout = () => {
         </header>
 
         {/* Dynamic Content Area */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 sm:px-4 sm:py-6 md:p-6 lg:p-8 bg-background w-full max-w-full box-border">
+        <main className="flex-1 px-3 py-4 sm:px-4 sm:py-6 md:p-6 lg:p-8 bg-background w-full max-w-full box-border">
             <Outlet />
         </main>
       </div>
@@ -255,7 +257,7 @@ function NavItem({ icon: Icon, label, to, end, onClick }: { icon: any, label: st
     <Link 
       to={to} 
       onClick={onClick}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors mb-1 ${
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors mb-1 outline-none focus:outline-none focus:ring-0 active:outline-none ring-0 focus-visible:ring-0 focus-visible:outline-none ${
       isActive 
         ? 'bg-primary/10 text-primary font-medium' 
         : 'text-muted-foreground hover:text-foreground hover:bg-muted'

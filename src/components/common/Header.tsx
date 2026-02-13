@@ -385,9 +385,8 @@ function Header() {
                         {displayNickname}
                       </span>
                       <OnlineIndicator 
-                        userId={user.id} 
+                        userId={profileId || undefined} 
                         size="sm" 
-                        isOnlineOverride={true}
                         className="absolute -top-1 -right-2.5 z-10 border-white dark:border-secondary border-[1.5px] shadow-none" 
                       />
                     </div>
@@ -639,9 +638,8 @@ function Header() {
               </div>
               {user && (
                 <OnlineIndicator 
-                  userId={user.id} 
+                  userId={profileId || undefined} 
                   size="sm" 
-                  isOnlineOverride={true}
                   className="absolute -top-1 -right-2.5 z-10 border-white dark:border-secondary border-[1.5px] shadow-none" 
                 />
               )}

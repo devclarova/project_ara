@@ -369,11 +369,11 @@ export default function NotificationCard({
             </AvatarFallback>
           </Avatar>
           {notification.type !== 'system' && (
-            <OnlineIndicator 
-              userId={notification.user.username} 
-              size="sm" 
-              className="absolute -bottom-0.5 -right-0.5 z-10 border-white dark:border-secondary border-2"
-            />
+          <OnlineIndicator 
+            userId={notification.user.id} 
+            size="sm" 
+            className="absolute -bottom-0.5 -right-0.5 z-10 border-white dark:border-secondary border-2"
+          />
           )}
         </div>
 

@@ -668,7 +668,7 @@ export default function TweetCard({
               </span>
               {!isDeletedUser && (
                 <OnlineIndicator
-                  userId={user.username}
+                  userId={user.id}
                   size="sm"
                   className="absolute top-0.5 right-0 z-20 border-white dark:border-background border shadow-none"
                 />
