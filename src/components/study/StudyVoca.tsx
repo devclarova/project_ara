@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import StudyVocaItem from './StudyVocaItem';
-import EpisodeVocabModal, { type EpisodeWord } from '@/pages/study/EpisodeVocaModal';
+import EpisodeVocabModal, { type EpisodeWord } from '@/components/study/EpisodeVocaModal';
 
 type WordRow = {
   id: number;
@@ -27,6 +27,9 @@ type StudyVocaProps = {
   studyId?: number;
   subscribeRealtime?: boolean;
   className?: string;
+
+  sourceStudyPath?: string;
+  sourceStudyTitle?: string;
 };
 
 // 반응형 pageSize 훅: Tailwind 브레이크포인트와 동일한 기준 사용
@@ -50,7 +53,14 @@ const useResponsivePageSize = () => {
   return pageSize;
 };
 
-const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: StudyVocaProps) => {
+const StudyVoca = ({
+  words,
+  studyId,
+  subscribeRealtime = false,
+  className,
+  sourceStudyPath,
+  sourceStudyTitle,
+}: StudyVocaProps) => {
   const controlled = Array.isArray(words) && words.length > 0;
 
   const [localWords, setLocalWords] = useState<WordItem[]>([]);
@@ -137,16 +147,18 @@ const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: Stu
   // - 앞면 ko: words(=term)
   // - 뒷면 en: means(=meaning)  ← 지금 테이블에 이미 번역/의미가 있으니 그대로 사용
   const modalWords: EpisodeWord[] = useMemo(() => {
+    const sid = studyId ?? 'study';
     return data.map(w => ({
-      id: String(w.id ?? `${w.term}-${w.meaning}`),
+      id: `${sid}:${String(w.id ?? `${w.term}-${w.meaning}`)}`,
       ko: w.term,
       en: w.meaning,
       exampleKo: w.example,
-      // ja/zh/예문번역/난이도/이미지는 일단 목업
       difficulty: 2,
       imageEmoji: '📌',
+      pronKo: w.pron,
+      pos: w.pos,
     }));
-  }, [data]);
+  }, [data, studyId]);
 
   // pageSize 또는 data가 바뀔 때 현재 페이지를 안전하게 클램프
   useEffect(() => {
@@ -167,7 +179,8 @@ const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: Stu
 
   // 단어 클릭 → 모달 오픈 (해당 단어부터 시작)
   const openModal = (w: WordItem) => {
-    const id = String(w.id ?? `${w.term}-${w.meaning}`);
+    const sid = studyId ?? 'study';
+    const id = `${sid}:${String(w.id ?? `${w.term}-${w.meaning}`)}`;
     setInitialWordId(id);
     setIsModalOpen(true);
   };
@@ -280,6 +293,8 @@ const StudyVoca = ({ words, studyId, subscribeRealtime = false, className }: Stu
         words={modalWords}
         initialWordId={initialWordId}
         title="단어 카드"
+        sourceStudyPath={sourceStudyPath}
+        sourceStudyTitle={sourceStudyTitle}
       />
     </div>
   );
