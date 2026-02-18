@@ -74,7 +74,7 @@ export default function CountrySelect({ value, onChange, error = false, isDisabl
         : error && !value
           ? 'red'
           : isDark
-            ? '#D1D5DB' // 다크: gray-300
+            ? '#4b5563' // 다크: gray-600
             : '#D1D5DB'; // 라이트: 기존 톤 유지
       const isXs = typeof window !== 'undefined' && window.innerWidth < 450;
       return {
@@ -99,7 +99,7 @@ export default function CountrySelect({ value, onChange, error = false, isDisabl
             : error && !value
               ? 'red'
               : isDark
-                ? '#D1D5DB'
+                ? '#4b5563'
                 : '#D1D5DB',
         },
       };
@@ -147,7 +147,7 @@ export default function CountrySelect({ value, onChange, error = false, isDisabl
       marginBottom: 13,
       backgroundColor: isDark ? 'hsl(var(--secondary))' : provided.backgroundColor,
       color: isDark ? '#9CA3AF' : '#111827',
-      border: `1px solid ${isDark ? '#D1D5DB' : '#E5E7EB'}`, // 다크 보더 통일
+      border: `1px solid ${isDark ? '#4b5563' : '#E5E7EB'}`, // 다크 보더 통일
       borderRadius: 12,
       overflow: 'hidden',
     }),
@@ -217,14 +217,13 @@ export default function CountrySelect({ value, onChange, error = false, isDisabl
       />
 
       <label
-        className={`absolute left-3 px-1 bg-white/95 rounded transition-all dark:bg-secondary pointer-events-none
+        className={`absolute left-4 px-1 bg-white transition-all dark:bg-secondary pointer-events-none z-10
           ${
-            isFocused
-              ? '-top-2 text-xs text-primary'
-              : value
-                ? '-top-2 text-xs text-gray-400'
-                : 'top-3 xs:top-2.5 text-sm xs:text-[14px] text-gray-400'
+            isFocused || value
+              ? '-top-3 text-sm text-primary'
+              : 'top-2.5 text-sm xs:text-[14px] text-gray-400'
           }
+          ${!isFocused && value ? 'text-gray-400' : ''}
         `}
       >
         {t('signup.label_country')}

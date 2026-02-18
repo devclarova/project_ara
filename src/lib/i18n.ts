@@ -41,22 +41,22 @@ const resources = {
 
 // Trigger HMR
 export const LANGUAGES = [
-  { code: 'ko', label: '한국어' },
-  { code: 'en', label: 'English' },
-  { code: 'ja', label: '日本語' },
-  { code: 'zh', label: '中文' },
-  { code: 'ru', label: 'Русский' },
-  { code: 'vi', label: 'Tiếng Việt' },
-  { code: 'bn', label: 'বাংলা' },
-  { code: 'ar', label: 'العربية' },
-  { code: 'hi', label: 'हिन्दी' },
-  { code: 'th', label: 'ไทย' },
-  { code: 'es', label: 'Español' },
-  { code: 'fr', label: 'Français' },
-  { code: 'pt', label: 'Português' },
+  { code: 'ko', label: '한국어 (Korean)' },
+  { code: 'en', label: 'English (US)' },
+  { code: 'ja', label: '日本語 (Japanese)' },
+  { code: 'zh', label: '中文 (Chinese)' },
+  { code: 'ru', label: 'Русский (Russian)' },
+  { code: 'vi', label: 'Tiếng Việt (Vietnamese)' },
+  { code: 'bn', label: 'বাংলা (Bengali)' },
+  { code: 'ar', label: 'العربية (Arabic)' },
+  { code: 'hi', label: 'हिन्दी (Hindi)' },
+  { code: 'th', label: 'ไทย (Thai)' },
+  { code: 'es', label: 'Español (Spanish)' },
+  { code: 'fr', label: 'Français (French)' },
+  { code: 'pt', label: 'Português (Portuguese)' },
   { code: 'pt-br', label: 'Português (Brasil)' },
-  { code: 'de', label: 'Deutsch' },
-  { code: 'fi', label: 'Suomi' },
+  { code: 'de', label: 'Deutsch (German)' },
+  { code: 'fi', label: 'Suomi (Finnish)' },
 ] as const;
 
 export type LanguageCode = typeof LANGUAGES[number]['code'];

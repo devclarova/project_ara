@@ -16,18 +16,12 @@ export const OnlineIndicator: React.FC<OnlineIndicatorProps> = ({
   isOnlineOverride
 }) => {
   const { t } = useTranslation();
-  const { onlineUsers, dbOnlineUsers } = usePresence();
+  const { isUserOnline } = usePresence();
   
-  // 1. 직접 전달된 상태(isOnlineOverride) 우선
-  // 2. Presence 시스템이 활성화(size > 0)되어 있으면, 거기 포함 여부를 최우선 (DB의 stale data 무시)
-  // 3. Presence 시스템이 비활성 상태면 DB 실시간 상태(dbOnlineUsers) 참고
+  // 통합된 온라인 판단 로직 사용
   const isOnline = isOnlineOverride !== undefined
     ? isOnlineOverride
-    : userId 
-      ? (onlineUsers.size > 0 
-          ? onlineUsers.has(userId) 
-          : (dbOnlineUsers[userId] ?? false))
-      : false;
+    : isUserOnline(userId);
 
   const sizeClasses = {
     sm: 'w-2 h-2',

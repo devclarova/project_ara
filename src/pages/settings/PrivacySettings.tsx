@@ -2,10 +2,11 @@ import Modal from '@/components/common/Modal';
 import InputField from '@/components/auth/InputField';
 import type { ActiveSetting } from '@/types/settings';
 import { getSettingsTitle } from '@/utils/getTitle';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Row } from '../../components/settings/Row';
 import PasswordChange from './PasswordChange';
 import SNSConnect from './SNSConnect';
+import RecoverySettings from './RecoverySettings';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,6 +16,7 @@ import BlockedUsersList from './components/BlockedUsersList';
 interface PrivacySettingsProps {
   onBackToMenu?: () => void;
   searchQuery?: string;
+  initialActiveSetting?: ActiveSetting;
 }
 
 import Select, { components, type SingleValue, type StylesConfig } from 'react-select';
@@ -35,11 +37,18 @@ import { useTranslation } from 'react-i18next';
 
 // const CONFIRM_PHRASE = '탈퇴하겠습니다.'; // Moved inside component
 
-export default function PrivacySettings({ onBackToMenu, searchQuery }: PrivacySettingsProps) {
+export default function PrivacySettings({ onBackToMenu, searchQuery, initialActiveSetting }: PrivacySettingsProps) {
   const { t } = useTranslation();
   const CONFIRM_PHRASE = t('settings.withdraw_phrase');
 
-  const [active, setActive] = useState<ActiveSetting>(null);
+  const [active, setActive] = useState<ActiveSetting>(initialActiveSetting || null);
+  
+  useEffect(() => {
+    if (initialActiveSetting) {
+      setActive(initialActiveSetting);
+    }
+  }, [initialActiveSetting]);
+
   const open = (key: ActiveSetting) => setActive(key);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -251,7 +260,15 @@ export default function PrivacySettings({ onBackToMenu, searchQuery }: PrivacySe
         </div>
 
         <div className="space-y-2">
-          <Row label={t('settings.change_password')} onClick={() => open('password')} searchQuery={searchQuery} />
+          {/* 비밀번호 변경/설정 */}
+          {((user?.app_metadata?.provider as string) ?? 'email') === 'email' ? (
+            // 이메일 가입자: 비밀번호 변경
+            <Row label={t('settings.change_password')} onClick={() => open('password')} searchQuery={searchQuery} />
+          ) : (
+            // 소셜 가입자: 비밀번호 설정
+            <Row label={t('settings.set_password', '비밀번호 설정')} onClick={() => open('password')} searchQuery={searchQuery} />
+          )}
+          <Row label={t('settings.title_recovery')} onClick={() => open('recovery')} searchQuery={searchQuery} />
           <Row label={t('settings.connect_sns')} onClick={() => open('sns')} searchQuery={searchQuery} />
           <Row label={t('settings.blocked_users', '차단된 사용자')} onClick={() => open('blocked_users')} searchQuery={searchQuery} />
         </div>
@@ -273,6 +290,8 @@ export default function PrivacySettings({ onBackToMenu, searchQuery }: PrivacySe
       {/* 모달: active 가 있을 때만 렌더링 */}
       <Modal isOpen={!!active} onClose={close} title={t(getSettingsTitle(active))}>
         {active === 'password' && <PasswordChange onDone={close} onClose={close} />}
+
+        {active === 'recovery' && <RecoverySettings onDone={close} onClose={close} />}
 
         {active === 'sns' && <SNSConnect onClose={close} />}
         

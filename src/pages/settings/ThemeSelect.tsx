@@ -21,10 +21,12 @@ function ThemeSelect({ value, onChange, onClose, onSave, onCancel }: ThemeSelect
   ] as const;
 
   return (
-    <div className="flex flex-col min-h-[420px]">
+    <div className="flex flex-col">
       {/* 상단 영역 */}
-      <div className="space-y-4">
-        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings.themeSelect', 'Select Theme')}</p>
+      <div className="px-6 pt-5 pb-4 space-y-4">
+        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t('settings.themeSelect', 'Select Theme')}
+        </p>
         <div
           className="flex-col items-center gap-2 rounded-lg p-1.5"
           role="radiogroup"
@@ -40,10 +42,10 @@ function ThemeSelect({ value, onChange, onClose, onSave, onCancel }: ThemeSelect
                 aria-checked={selected}
                 onClick={() => onChange(key)}
                 className={[
-                  'flex items-center gap-1.5 px-4 py-2 mb-2 rounded-lg transition-all duration-200 text-sm font-medium w-full h-12',
+                  'flex items-center gap-2 px-4 py-3.5 mb-2 rounded-xl transition-all duration-200 text-sm font-medium w-full',
                   selected
-                    ? 'bg-gradient-to-r from-primary/80 to-primary text-white shadow-md scale-[1.03]'
-                    : 'text-gray-700 dark:text-gray-300 border border-transparent hover:bg-white/40 dark:hover:bg-gray-700/60',
+                    ? 'bg-gradient-to-r from-primary/90 to-primary text-white shadow-lg'
+                    : 'text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-700/60',
                 ].join(' ')}
               >
                 {icon}
@@ -55,7 +57,7 @@ function ThemeSelect({ value, onChange, onClose, onSave, onCancel }: ThemeSelect
       </div>
 
       {/* 하단 버튼 */}
-      <div className="-mx-6 mt-auto dark:border-gray-800 bg-white dark:bg-secondary px-6 py-4 flex justify-end gap-2 transition-colors">
+      <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-secondary px-6 py-4 flex justify-end gap-2 transition-colors">
         <Button type="button" variant="ghost" size="md" onClick={onCancel ?? onClose}>
           {t('common.cancel')}
         </Button>

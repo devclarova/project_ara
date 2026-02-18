@@ -188,13 +188,13 @@ export default function BirthInput({
           className={`peer w-full h-12 xs:h-11 px-4 xs:px-3 pr-16 xs:pr-[3.5rem] py-3 border rounded-[14px] bg-white text-black text-sm xs:text-[13px] dark:bg-secondary dark:text-gray-300 ${
             error
               ? 'ara-focus--error border-red-500'
-              : 'ara-focus border-gray-300 dark:border-[#D1D5DB]'
+            : 'ara-focus border-gray-300 dark:border-gray-600'
           }`}
         />
         <label
-          className={`absolute left-3 transition-all text-gray-400 bg-white/95 rounded dark:bg-secondary pointer-events-none
-      ${inputValue ? '-top-2 text-xs' : 'top-3 xs:top-2.5 text-sm xs:text-[14px]'}
-      peer-focus:-top-2 peer-focus:text-xs peer-focus:text-primary`}
+          className={`absolute left-4 px-1 bg-white transition-all dark:bg-secondary pointer-events-none z-10
+            ${inputValue ? '-top-3 text-sm' : 'top-2.5 text-sm xs:text-[14px] text-gray-400'}
+            peer-focus:-top-3 peer-focus:text-sm peer-focus:text-primary`}
         >
           {t('signup.label_birth')}
         </label>

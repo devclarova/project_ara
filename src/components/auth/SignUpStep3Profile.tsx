@@ -4,13 +4,13 @@ import { v4 as uuid } from 'uuid';
 import { supabase } from '../../lib/supabase';
 import type { ConsentResult } from '@/types/consent';
 import { useTranslation } from 'react-i18next';
-import { hashRecoveryAnswer } from '@/utils/recovery';
-import type { RecoveryQuestion } from '@/types/signup';
 
-type ProfileDraft = {
+export type ProfileDraft = {
   bio: string;
   file: File | null;
   preview: string | null;
+  coverFile: File | null;
+  coverPreview: string | null;
 };
 
 type Props = {
@@ -26,10 +26,6 @@ type Props = {
   draft: ProfileDraft;
   onChangeDraft: React.Dispatch<React.SetStateAction<ProfileDraft>>;
   signupKind: 'email' | 'social';
-  // Recovery 정보
-  recoveryQuestion: RecoveryQuestion | '';
-  recoveryAnswer: string;
-  recoveryEmail: string;
 };
 
 const DRAFT_KEY = 'signup-profile-draft';
@@ -66,38 +62,19 @@ export default function SignUpStep3Profile(props: Props) {
     draft,
     onChangeDraft,
     signupKind,
-    recoveryQuestion,
-    recoveryAnswer,
-    recoveryEmail,
   } = props;
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
-  // 성공 케이스 상태: 모달에서 동기적으로 사용
   const [successKind, setSuccessKind] = useState<'social' | 'email' | null>(null);
-
-  // 현재 호출이 소셜 플로우인지(=이미 세션이 있는지) 판단해서 캐싱
-  // - 소셜: AuthCallback에서 exchange 후 세션 O
-  // - 이메일: signUp만 하고 자동 로그인 X → 세션 없음
-  const [isSocialFlow, setIsSocialFlow] = useState<boolean>(false);
-
-  useEffect(() => {
-    // 최초 마운트 시 한 번만 판단해도 충분 (submit 때 매번 getSession 해도 OK)
-    supabase.auth.getSession().then(({ data }) => {
-      setIsSocialFlow(!!data.session);
-    });
-  }, []);
 
   const handleSubmit = async () => {
     setMsg('');
     setLoading(true);
 
     try {
-      // ─────────────────────────────────────────
-      // 0) 공통: 프론트 유효성
-      // ─────────────────────────────────────────
       const birthdayStr = birth ? toYMDLocal(birth) : '';
 
       if (!email?.trim()) {
@@ -121,13 +98,11 @@ export default function SignUpStep3Profile(props: Props) {
         return;
       }
 
-      // [추가] 만 14세 미만 최종 차단 (프론트 우회 대비)
       if (!isAge14Plus(birth)) {
         setMsg(t('validation.age_restriction'));
         return;
       }
 
-      // 소셜이 아닌 경우에만 비밀번호 확인(소셜은 임의값/비활성화)
       if (signupKind !== 'social') {
         if (!pw?.trim()) {
           setMsg(t('validation.required_password'));
@@ -135,20 +110,16 @@ export default function SignUpStep3Profile(props: Props) {
         }
       }
 
-      // ─────────────────────────────────────────
-      // 1) 이미지 업로드 (임시 또는 최종)
-      //    - 이메일: pending 경로에 업로드해서 draft에 URL 저장
-      //    - 소셜: 최종 경로로 업로드해서 avatar_url 확정
-      // ─────────────────────────────────────────
       let pendingAvatarUrl: string | null = null;
       let finalAvatarUrl: string | null = null;
+      let pendingBannerUrl: string | null = null;
+      let finalBannerUrl: string | null = null;
 
       if (draft.file) {
         const ext =
           (draft.file.name.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '') || 'jpg';
 
         if (signupKind === 'social') {
-          // 소셜은 세션이 반드시 있어야 함
           const { data: s1 } = await supabase.auth.getSession();
           const uid = s1.session?.user?.id;
           if (!uid) {
@@ -166,13 +137,11 @@ export default function SignUpStep3Profile(props: Props) {
           const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
           finalAvatarUrl = pub?.publicUrl ?? null;
         } else {
-          // 이메일 가입은 아직 세션이 없으므로 pending에 저장 후 인증/로그인 뒤 프로필 생성 시 사용
           const path = `pending/${uuid()}.${ext}`;
           const { error: upErr } = await supabase.storage
             .from('avatars')
             .upload(path, draft.file, { upsert: true });
           if (upErr) {
-            // 업로드 실패는 치명적이지 않으므로 경고만
             console.warn('avatar upload skipped:', upErr);
           } else {
             const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
@@ -180,18 +149,45 @@ export default function SignUpStep3Profile(props: Props) {
           }
         }
       } else if (draft.preview && draft.preview.startsWith('http')) {
-        // 파일이 없지만 preview가 있으면(소셜 연동된 기존 URL), 그대로 사용
         finalAvatarUrl = draft.preview;
       }
 
-      // ─────────────────────────────────────────
-      // 2) 분기 처리
-      //    A) 이메일 가입: draft 저장 → signUp(이메일 인증 필요)
-      //    B) 소셜 가입: 즉시 profiles upsert (users는 소셜 로그인 시 이미 생성)
-      // ─────────────────────────────────────────
+      if (draft.coverFile) {
+        const ext =
+          (draft.coverFile.name.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '') || 'jpg';
+
+        if (signupKind === 'social') {
+          const { data: s1 } = await supabase.auth.getSession();
+          const uid = s1.session?.user?.id;
+          if (!uid) {
+            setMsg(t('auth.session_expired'));
+            return;
+          }
+          const path = `covers/${uid}/${uuid()}.${ext}`;
+          const { error: upErr } = await supabase.storage
+            .from('avatars')
+            .upload(path, draft.coverFile, { upsert: true });
+          if (upErr) {
+            console.warn('cover upload skipped:', upErr);
+          } else {
+            const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
+            finalBannerUrl = pub?.publicUrl ?? null;
+          }
+        } else {
+          const path = `pending/covers/${uuid()}.${ext}`;
+          const { error: upErr } = await supabase.storage
+            .from('avatars')
+            .upload(path, draft.coverFile, { upsert: true });
+          if (upErr) {
+            console.warn('cover upload skipped:', upErr);
+          } else {
+            const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
+            pendingBannerUrl = pub?.publicUrl ?? null;
+          }
+        }
+      }
 
       if (signupKind === 'email') {
-        // (안전) 혹시 남아있는 세션이 있으면 로컬 스코프만 정리 후 진행
         const { data: s0 } = await supabase.auth.getSession();
         if (s0.session) {
           try {
@@ -201,38 +197,41 @@ export default function SignUpStep3Profile(props: Props) {
           }
         }
 
-        // 2-A) 이메일: 프로필 드래프트를 저장 (인증 후 로그인 시 프로필 생성 로직이 이 값을 사용)
-        // Recovery 정보도 함께 저장 (답변 해싱)
-        const recoveryAnswerHash = recoveryAnswer ? await hashRecoveryAnswer(recoveryAnswer) : '';
-        
         localStorage.setItem(
           DRAFT_KEY,
           JSON.stringify({
             nickname: nickname.trim(),
             gender: gender.trim(),
-            birthday: birthdayStr, // 로컬 기준 'YYYY-MM-DD'
+            birthday: birthdayStr,
             country: country.trim(),
             bio: (draft.bio ?? '').toString(),
             pendingAvatarUrl,
-            // 동의 항목도 함께 저장해 인증 후 최초 로그인 시 profiles 생성에 반영
+            pendingBannerUrl,
             tos_agreed: !!consents?.terms,
             privacy_agreed: !!consents?.privacy,
             age_confirmed: !!consents?.age,
             marketing_opt_in: !!consents?.marketing,
-            // Recovery 정보
-            recovery_question: recoveryQuestion,
-            recovery_answer_hash: recoveryAnswerHash,
-            recovery_email: recoveryEmail.trim() || null,
           }),
         );
 
-        // 2-A) 이메일 가입(signUp) 호출
         const { error } = await supabase.auth.signUp({
           email,
           password: pw,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
-            // metadata가 필요하면 data: { signup_kind: 'email' } 등 추가 가능
+            data: {
+              nickname: nickname.trim(),
+              gender: gender.trim(),
+              birthday: birthdayStr,
+              country: country.trim(),
+              bio: (draft.bio ?? '').toString(),
+              pendingAvatarUrl,
+              pendingBannerUrl,
+              tos_agreed: !!consents?.terms,
+              privacy_agreed: !!consents?.privacy,
+              age_confirmed: !!consents?.age,
+              marketing_opt_in: !!consents?.marketing,
+            },
           },
         });
 
@@ -247,13 +246,11 @@ export default function SignUpStep3Profile(props: Props) {
           return;
         }
 
-        // 성공 모달 (이메일 인증 안내)
         setSuccessKind('email');
         setShowSuccess(true);
         return;
       }
 
-      // 2-B) 소셜: 세션 필수 → profiles 즉시 upsert
       const { data: s1 } = await supabase.auth.getSession();
       const uid = s1.session?.user?.id;
       if (!uid) {
@@ -261,15 +258,13 @@ export default function SignUpStep3Profile(props: Props) {
         return;
       }
 
-      // Recovery 답변 해싱
-      const recoveryAnswerHash = recoveryAnswer ? await hashRecoveryAnswer(recoveryAnswer) : '';
-
       const { error: upErr } = await supabase.from('profiles').upsert(
         {
           user_id: uid,
           nickname: nickname.trim(),
-          avatar_url: finalAvatarUrl, // 소셜은 최종 URL
-          birthday: birthdayStr, // 'YYYY-MM-DD'
+          avatar_url: finalAvatarUrl,
+          banner_url: finalBannerUrl,
+          birthday: birthdayStr,
           gender: gender.trim() as any,
           country: country.trim(),
           bio: (draft.bio ?? '').toString(),
@@ -280,10 +275,6 @@ export default function SignUpStep3Profile(props: Props) {
           is_onboarded: true,
           is_public: true,
           updated_at: new Date().toISOString(),
-          // Recovery 정보
-          recovery_question: recoveryQuestion || null,
-          recovery_answer_hash: recoveryAnswerHash || null,
-          recovery_email: recoveryEmail.trim() || null,
         },
         { onConflict: 'user_id' },
       );
@@ -293,7 +284,6 @@ export default function SignUpStep3Profile(props: Props) {
         return;
       }
 
-      // 성공 모달 (소셜은 바로 시작)
       setSuccessKind('social');
       setShowSuccess(true);
     } catch (e: any) {
@@ -310,7 +300,6 @@ export default function SignUpStep3Profile(props: Props) {
         {t('profile.profile_optional')}
       </h2>
 
-      {/* 아바타 업로더 */}
       <div className="flex flex-col items-center mt-1 sm:mt-2">
         <label className="mb-2 font-semibold text-gray-700 dark:text-gray-200 text-sm sm:text-base">
           {t('profile.profile_image')}
@@ -346,7 +335,43 @@ export default function SignUpStep3Profile(props: Props) {
         <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">{t('signup.image_size_hint')}</p>
       </div>
 
-      {/* 자기소개 */}
+      <div className="mt-5">
+        <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-200 text-sm sm:text-base">
+          {t('profile.cover_photo')}
+        </label>
+        <label
+          htmlFor="cover-upload"
+          className="block w-full h-44 sm:h-48 rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/20 overflow-hidden bg-gray-100 dark:bg-neutral-800 cursor-pointer hover:ring-2 hover:ring-[var(--ara-ring)] transition"
+        >
+          {draft.coverPreview ? (
+            <img
+              src={draft.coverPreview}
+              alt="커버 미리보기"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <span className="text-gray-400 dark:text-gray-500 text-xs sm:text-sm text-center">
+                {t('profile.select_cover')}
+              </span>
+            </div>
+          )}
+          <input
+            id="cover-upload"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={e => {
+              const f = e.target.files?.[0] ?? null;
+              if (!f) return onChangeDraft(d => ({ ...d, coverFile: null, coverPreview: null }));
+              const url = URL.createObjectURL(f);
+              onChangeDraft(d => ({ ...d, coverFile: f, coverPreview: url }));
+            }}
+          />
+        </label>
+        <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">{t('profile.cover_photo_hint')}</p>
+      </div>
+
       <div className="mt-5">
         <label htmlFor="bio" className="block font-semibold text-gray-800 dark:text-gray-100 mb-2">
           {t('profile.bio')}
@@ -406,7 +431,7 @@ export default function SignUpStep3Profile(props: Props) {
               onClick={() => {
                 setShowSuccess(false);
                 onDone?.();
-                navigate(successKind === 'social' ? '/finalhome' : '/');
+                navigate(successKind === 'social' ? '/studyList' : '/');
               }}
               className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white"
               style={{ background: 'var(--ara-primary)' }}

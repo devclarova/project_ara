@@ -43,7 +43,7 @@ const SLIDES: SlideItem[] = [
     subtitle: '여러 언어권 학습자와 문장을 나누고 피드백을 받아요',
     bullets: ['다국어 사용자 커뮤니티', '짧은 문장 교류', '표현/문화 팁 공유'],
     ctaLabel: '커뮤니티 미리보기',
-    ctaPath: '/finalhome',
+    ctaPath: '/sns',
     thumbnail: '/images/right_slider_3.png',
     alt: '글로벌 커뮤니티 활동 예시',
   },

@@ -19,7 +19,6 @@ import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 import { OnlineIndicator } from './OnlineIndicator';
-
 function Header() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -151,22 +150,18 @@ function Header() {
         .select('id, sender_id')
         .eq('receiver_id', profileId)
         .eq('is_read', false);
-
       if (error) {
         console.error('알림 로드 실패:', error.message);
         return;
       }
-
       // 2. 차단한 사용자의 알림 필터링 + 자동 읽음 처리
       const blockedNotiIds = (unreadNotis || [])
         .filter(n => blockedUserIds.has(n.sender_id))
         .map(n => n.id);
-
       if (blockedNotiIds.length > 0) {
         // 차단된 알림은 백그라운드에서 읽음 처리
         await supabase.from('notifications').update({ is_read: true }).in('id', blockedNotiIds);
       }
-
       // 3. 실제 표시될 숫자 계산
       const validCount = (unreadNotis || []).filter(n => !blockedUserIds.has(n.sender_id)).length;
       setUnreadNotificationCount(validCount);
@@ -207,11 +202,9 @@ function Header() {
       if (nickname) setProfileNickname(nickname);
       if (avatar_url) setProfileAvatar(avatar_url);
     };
-
     window.addEventListener('notifications:cleared', handleCleared);
     window.addEventListener('notification:deleted-one', handleDeletedOne);
     window.addEventListener('profile:updated', handleProfileUpdated as EventListener);
-
     return () => {
       window.removeEventListener('notifications:cleared', handleCleared);
       window.removeEventListener('notification:deleted-one', handleDeletedOne);
@@ -254,7 +247,6 @@ function Header() {
     setProfileNickname(null);
     setProfileAvatar(null);
     setProfileId(null);
-
     await signOut();
     setIsOpen(false);
     setIsProfileMenuOpen(false);
@@ -298,7 +290,6 @@ function Header() {
                     if (target === '/sns') {
                       sessionStorage.removeItem('sns-last-tweet-id');
                     }
-
                     if (location.pathname === target) {
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     } else {
@@ -391,11 +382,11 @@ function Header() {
                       <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 group-hover:opacity-80 whitespace-nowrap">
                         {displayNickname}
                       </span>
-                      <OnlineIndicator
-                        userId={user.id}
-                        size="sm"
+                      <OnlineIndicator 
+                        userId={profileId || undefined} 
+                        size="sm" 
                         isOnlineOverride={true}
-                        className="absolute -top-1 -right-2.5 z-10 border-white dark:border-secondary border-[1.5px] shadow-none"
+                        className="absolute -top-1 -right-2.5 z-10 border-white dark:border-secondary border-[1.5px] shadow-none" 
                       />
                     </div>
                     <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
@@ -426,7 +417,6 @@ function Header() {
                         <span className="inline-flex items-center justify-center rounded-md p-1.5 bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">
                           <Library className="w-4 h-4" />
                         </span>
-
                         <div className="flex flex-col items-start">
                           <span className="font-medium">{t('nav.voca')}</span>
                           <span className="text-xs text-gray-400 dark:text-gray-500">
@@ -434,7 +424,6 @@ function Header() {
                           </span>
                         </div>
                       </button>
-
                       <button
                         type="button"
                         onClick={() => {
@@ -488,7 +477,6 @@ function Header() {
                           </span>
                         </div>
                       </button>
-
                       {/* Admin Mode - Only visible if is_admin */}
                       {isAdmin && (
                         <>
@@ -521,7 +509,6 @@ function Header() {
                           </button>
                         </>
                       )}
-
                       {/* 로그아웃 버튼 - 드롭다운 하단에 작은 텍스트로 */}
                       <div className="px-4 pt-2 pb-3 border-t border-gray-100/80 dark:border-gray-700/70 mt-1">
                         <button
@@ -667,11 +654,11 @@ function Header() {
                 {user ? displayNickname : t('auth.please_login')}
               </div>
               {user && (
-                <OnlineIndicator
-                  userId={user.id}
-                  size="sm"
+                <OnlineIndicator 
+                  userId={profileId || undefined} 
+                  size="sm" 
                   isOnlineOverride={true}
-                  className="absolute -top-1 -right-2.5 z-10 border-white dark:border-secondary border-[1.5px] shadow-none"
+                  className="absolute -top-1 -right-2.5 z-10 border-white dark:border-secondary border-[1.5px] shadow-none" 
                 />
               )}
             </div>

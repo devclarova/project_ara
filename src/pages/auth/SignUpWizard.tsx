@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useMemo, useState, useEffect } from 'react';
+import AuthBackground from '@/components/auth/AuthBackground';
 import SignUpStep1Consent from '@/components/auth/SignUpStep1Consent';
 import SignUpStep2Form, { type FormData } from '@/components/auth/SignUpStep2Form';
 import SignUpStep3Profile from '@/components/auth/SignUpStep3Profile';
@@ -80,9 +81,6 @@ export default function SignUpWizard({ mode = 'social' }: { mode?: 'social' }) {
           gender: '',
           birth: null,
           country: '',
-          recoveryQuestion: '',
-          recoveryAnswer: '',
-          recoveryEmail: '',
         }));
       }
     })();
@@ -95,7 +93,9 @@ export default function SignUpWizard({ mode = 'social' }: { mode?: 'social' }) {
     bio: string;
     file: File | null;
     preview: string | null;
-  }>({ bio: '', file: null, preview: null });
+    coverFile: File | null;
+    coverPreview: string | null;
+  }>({ bio: '', file: null, preview: null, coverFile: null, coverPreview: null });
   const [verified, setVerified] = useState<Verified>({
     email: { value: '', ok: true }, // 소셜: 이메일 자동 OK
     nickname: { value: '', ok: false },
@@ -159,9 +159,9 @@ export default function SignUpWizard({ mode = 'social' }: { mode?: 'social' }) {
   const back = () => goTo(step === 3 ? 2 : 1);
 
   return (
-    <div className="min-h-auto mt-4 w-full bg-white dark:bg-black flex justify-center items-start pt-5 sm:pt-7 pb-4 overflow-y-auto">
-      <div className="w-full max-w-md sm:max-w-lg md:max-w-2xl px-4 sm:px-6 md:px-8">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-800 dark:text-white mb-3 sm:mb-4">
+    <AuthBackground>
+      <div className="w-full max-w-md sm:max-w-lg md:max-w-2xl px-4 sm:px-6 md:px-8 py-10">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-emerald-600 mb-6 drop-shadow-sm">
           소셜 회원가입
         </h1>
 
@@ -249,9 +249,6 @@ export default function SignUpWizard({ mode = 'social' }: { mode?: 'social' }) {
                     birth={form.birth}
                     country={form.country}
                     consents={consents ?? undefined}
-                    recoveryQuestion={form.recoveryQuestion}
-                    recoveryAnswer={form.recoveryAnswer}
-                    recoveryEmail={form.recoveryEmail}
                     onBack={back}
                     onDone={() => {
                       /* 완료 시 행동은 컴포넌트 내에서 navigate 처리 */
@@ -266,6 +263,6 @@ export default function SignUpWizard({ mode = 'social' }: { mode?: 'social' }) {
           </motion.div>
         </StepCard>
       </div>
-    </div>
+    </AuthBackground>
   );
 }

@@ -4,9 +4,13 @@ export function getSettingsTitle(active: ActiveSetting) {
   switch (active) {
     case 'password':
       return 'settings.title_password_change';
+    case 'recovery':
+      return 'settings.title_recovery';
     case 'sns':
       return 'settings.title_sns_connect';
-      case 'withdraw':
+    case 'blocked_users':
+      return 'settings.blocked_users';
+    case 'withdraw':
       return 'settings.title_withdraw';
     default:
       return '';

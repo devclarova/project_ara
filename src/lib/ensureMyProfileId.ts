@@ -46,7 +46,7 @@ export async function ensureMyProfileId(): Promise<string> {
     avatar_url: null,
     gender: 'Male',
     birthday: '2000-01-01',
-    country: 'Unknown',
+    country: null,
   };
 
   // Trigger 충돌 방지를 위해, INSERT 실패시 무시하고 재조회

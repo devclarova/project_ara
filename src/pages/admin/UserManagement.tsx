@@ -82,7 +82,7 @@ const UserManagement = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const { onlineUsers } = usePresence();
+  const { onlineUsers, dbOnlineUsers, onlineCount: globalOnlineCount, sessionCount, isUserOnline, stats: globalStats } = usePresence();
 
   // Ban Dialog State
   const [showBanDialog, setShowBanDialog] = useState(false);
@@ -117,13 +117,8 @@ const UserManagement = () => {
   // Filters & Pagination
   const [page, setPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
-  const [totalCount, setTotalCount] = useState(0);
-  const [adminCount, setAdminCount] = useState(0);
-  const [bannedCount, setBannedCount] = useState(0);
-  const [reportedCount, setReportedCount] = useState(0);
-  const [onlineCount, setOnlineCount] = useState(0);
-  const [newUserCount, setNewUserCount] = useState(0);
-  const [deletedCount, setDeletedCount] = useState(0);
+  const [filteredTotalCount, setFilteredTotalCount] = useState(0);
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('All');
   const [filterStatus, setFilterStatus] = useState('All');
@@ -140,8 +135,25 @@ const UserManagement = () => {
     nickname: targetUser.nickname 
   } : null, [targetUser?.id]);
 
-  const fetchUsers = useCallback(async () => {
-    setLoading(true);
+  // Stable sorting: Online first, then by ID (to keep internal order fixed)
+  const sortedUsers = useMemo(() => {
+    return [...users].sort((a, b) => {
+      const aOnline = isUserOnline(a.profile_id);
+      const bOnline = isUserOnline(b.profile_id);
+      
+      // First priority: Online status
+      if (aOnline !== bOnline) {
+        return aOnline ? -1 : 1;
+      }
+      
+      // Second priority (Stable tie-breaker): Use existing sort from server or fallback to ID
+      // This prevents users within the same status group from jumping around
+      return a.id.localeCompare(b.id);
+    });
+  }, [users, isUserOnline]);
+
+  const fetchUsers = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const { data, error } = await supabase.rpc('get_admin_users_list', {
         page: page,
@@ -161,45 +173,45 @@ const UserManagement = () => {
 
       if (data && data.length > 0) {
         setUsers(data as AdminUser[]);
-          setTotalCount(data[0].total_count);
-          setAdminCount(data[0].global_admin_count || 0);
-          setBannedCount(data[0].global_banned_count || 0);
-          setReportedCount(data[0].global_reported_user_count || 0);
-          setOnlineCount(data[0].global_online_count || 0);
-          setNewUserCount(data[0].global_new_user_count || 0);
-          setDeletedCount(data[0].global_deleted_count || 0);
+        setFilteredTotalCount(data[0].total_count);
       } else {
         setUsers([]);
-        setTotalCount(0);
+        setFilteredTotalCount(0);
       }
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('사용자 목록을 불러오지 못했습니다.');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [page, searchTerm, filterRole, filterStatus, filterGender, filterOnline, filterCountry, filterBirthday, filterCreatedAt, sortBy]);
 
+  // 자동 갱신 기능 (30초마다 데이터 리프레시)
   useEffect(() => {
-    fetchUsers();
+    fetchUsers(); // 초기 로드
+
+    const refreshInterval = setInterval(() => {
+      fetchUsers(true); // silent refresh
+    }, 1000 * 30);
+
+    return () => clearInterval(refreshInterval);
   }, [fetchUsers]);
 
-  // Real-time status subscription
+  // Real-time status subscription is now handled globally by PresenceContext.
+  // We only need to listen for profile updates that might affect nickname/avatar etc.
   useEffect(() => {
     const channel = supabase
-      .channel('admin-users-realtime')
+      .channel('admin-users-profile-updates')
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'profiles' },
-        (payload) => {
+        (payload: any) => {
+          // Update local list if profile details change
           setUsers(currentUsers =>
             currentUsers.map(u => {
-              // profiles 테이블의 기본 키는 'id'이며, 이는 AdminUser의 'profile_id'와 대응됩니다.
               if (u.profile_id === payload.new.id) {
                 return {
                   ...u,
-                  is_online: payload.new.is_online !== undefined ? payload.new.is_online : u.is_online,
-                  last_active_at: payload.new.last_active_at || u.last_active_at,
                   nickname: payload.new.nickname || u.nickname,
                   avatar_url: payload.new.avatar_url || u.avatar_url,
                   banned_until: 'banned_until' in payload.new ? payload.new.banned_until : u.banned_until,
@@ -209,6 +221,9 @@ const UserManagement = () => {
               return u;
             })
           );
+          
+          // Background refresh for counts if needed
+          fetchUsers(true);
         }
       )
       .subscribe();
@@ -216,11 +231,11 @@ const UserManagement = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchUsers]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-    setPage(1); // Reset to page 1 on search
+    setPage(1);
   };
 
   const handleRoleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -265,7 +280,7 @@ const UserManagement = () => {
         toast.success('사용자가 삭제되었습니다.');
         // Remove from list
         setUsers(users.filter(u => u.id !== userId));
-        setTotalCount(prev => prev - 1);
+        setFilteredTotalCount(prev => Math.max(0, prev - 1));
     } catch (error) {
         console.error('Error deleting user:', error);
         toast.error('사용자 삭제에 실패했습니다.');
@@ -360,11 +375,11 @@ const UserManagement = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">사용자 관리</h1>
-          <p className="text-muted-foreground mt-1">총 <span className="font-semibold text-foreground">{totalCount}</span>명의 사용자가 등록되어 있습니다.</p>
+          <p className="text-muted-foreground mt-1">총 <span className="font-semibold text-foreground">{globalStats.totalUsers.toLocaleString()}</span>명의 사용자가 등록되어 있습니다.</p>
         </div>
         <div className="flex items-center gap-2">
            <button
-             onClick={fetchUsers}
+             onClick={() => fetchUsers()}
              className="flex items-center gap-2 px-3 py-2 bg-secondary border border-border text-muted-foreground rounded-lg hover:bg-muted transition-colors font-medium text-sm"
              title="새로고침"
            >
@@ -388,15 +403,14 @@ const UserManagement = () => {
         </div>
       </div>
 
-      {/* Stats Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4">
         {[
-          { label: '전체 사용자', value: totalCount.toLocaleString(), trend: 'Total', color: 'blue' },
-          { label: '온라인 사용자', value: onlineCount.toLocaleString(), trend: 'Online', color: 'emerald' },
-          { label: '신규 사용자 (1주)', value: newUserCount.toLocaleString(), trend: 'New', color: 'violet' },
-          { label: '탈퇴 신청자 (1주)', value: deletedCount.toLocaleString(), trend: 'Withdrawal', color: 'rose' },
-          { label: '신고된 사용자', value: reportedCount.toLocaleString(), trend: 'Reported', color: 'amber' },
-          { label: '정지된 사용자', value: bannedCount.toLocaleString(), trend: 'Banned', color: 'red' },
+          { label: '전체 사용자', value: globalStats.totalUsers.toLocaleString(), trend: 'Total', color: 'blue' },
+          { label: '온라인 사용자', value: globalOnlineCount.toLocaleString(), trend: `${sessionCount} Sessions`, color: 'emerald' },
+          { label: '신규 사용자 (1주)', value: globalStats.newUsers7d.toLocaleString(), trend: 'New', color: 'violet' },
+          { label: '신고 대기 건수', value: globalStats.pendingReports.toLocaleString(), trend: 'Pending', color: 'amber' },
+          { label: '관리자 계정', value: globalStats.adminCount.toLocaleString(), trend: 'Admin', color: 'rose' },
+          { label: '정지된 사용자', value: globalStats.bannedCount.toLocaleString(), trend: 'Banned', color: 'red' },
         ].map((stat, idx) => (
           <div key={idx} className="bg-secondary p-5 rounded-2xl border-2 border-gray-300 dark:border-gray-500 shadow-sm">
             <div className="flex justify-between items-start">
@@ -636,7 +650,7 @@ const UserManagement = () => {
                     </td>
                  </tr>
               ) : (
-              users.map((user) => {
+              sortedUsers.map((user) => {
                  const isUserBanned = user.banned_until && new Date(user.banned_until) > new Date();
                  const statusLabel = isUserBanned ? 'Banned' : 'Active';
                  const roleLabel = user.is_admin ? 'Admin' : 'User';
@@ -716,11 +730,10 @@ const UserManagement = () => {
                       <div className="flex items-center gap-1.5">
                         <OnlineIndicator 
                           userId={user.profile_id} 
-                          isOnlineOverride={user.is_online || onlineUsers.has(user.id)}
                           size="sm"
                         />
                         <span className="text-[10px] font-bold text-zinc-500 uppercase">
-                          {(user.is_online || onlineUsers.has(user.id)) ? '온라인' : '오프라인'}
+                          {isUserOnline(user.profile_id) ? '온라인' : '오프라인'}
                         </span>
                       </div>
                     </div>
@@ -887,30 +900,30 @@ const UserManagement = () => {
 
         {/* Pagination & Summary */}
         <div className="px-6 py-4 border-t border-gray-300 dark:border-gray-600 flex items-center justify-between">
-           <p className="text-sm text-muted-foreground">
-             <span className="font-bold text-primary">전체 {totalCount}명</span>의 사용자가 검색되었습니다.
-           </p>
-           <div className="flex items-center gap-3">
-             <div className="flex items-center gap-1">
-               <button
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="px-3 py-1.5 border-2 border-gray-300 dark:border-gray-500 rounded-lg text-sm text-muted-foreground hover:bg-muted dark:hover:bg-accent700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-               >
-                  이전
-               </button>
-               <div className="min-w-[80px] text-center text-sm font-bold bg-muted px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700">
-                 {page} / {Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE))}
-               </div>
-               <button
-                  onClick={() => setPage(p => p + 1)}
-                  disabled={page * ITEMS_PER_PAGE >= totalCount}
-                  className="px-3 py-1.5 border-2 border-gray-300 dark:border-gray-500 rounded-lg text-sm text-muted-foreground hover:bg-muted dark:hover:bg-accent700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-               >
-                  다음
-               </button>
-             </div>
-           </div>
+          <div className="flex items-center gap-3">
+            {page > 1 && (
+              <button 
+                onClick={() => setPage(p => p - 1)}
+                className="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+              >
+                이전
+              </button>
+            )}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-xs font-bold text-zinc-600 dark:text-zinc-400">
+              {page} / {Math.max(1, Math.ceil(filteredTotalCount / ITEMS_PER_PAGE))} 페이지
+            </div>
+            {page < Math.ceil(filteredTotalCount / ITEMS_PER_PAGE) && (
+              <button 
+                onClick={() => setPage(p => p + 1)}
+                className="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+              >
+                다음
+              </button>
+            )}
+          </div>
+          <div className="text-xs text-zinc-400 font-medium">
+            검색 결과: {filteredTotalCount.toLocaleString()}명
+          </div>
         </div>
       </div>
 

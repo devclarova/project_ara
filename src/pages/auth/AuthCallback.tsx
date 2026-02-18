@@ -3,6 +3,8 @@ import { Timer as TimerIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRelinkDetection } from '@/hooks/useRelinkDetection';
+import { toast } from 'sonner';
 
 const DRAFT_KEY = 'signup-profile-draft';
 
@@ -22,15 +24,10 @@ function readDraft() {
  * - 생성 성공 시 draft 제거
  * - 이메일 플로우는 is_onboarded=true로 마무리(첫 로그인에서 바로 /social)
  */
-async function ensureProfileFromDraft(uid: string, email?: string | null) {
-  // 이미 존재하면 no-op
-  const { count, error: exErr } = await supabase
-    .from('profiles')
-    .select('user_id', { count: 'exact', head: true })
-    .eq('user_id', uid);
-  if (!exErr && (count ?? 0) > 0) return;
-
-  const draft = readDraft();
+async function ensureProfileFromDraft(uid: string, email?: string | null, userMetadata?: any) {
+  const localDraft = readDraft();
+  // 로컬 드래프트와 메타데이터 결합 (메타데이터가 있으면 우선권)
+  const draft = { ...localDraft, ...userMetadata };
 
   const nickname =
     (draft?.nickname ?? (email && email.includes('@') ? email.split('@')[0] : '') ?? 'user')
@@ -60,13 +57,18 @@ async function ensureProfileFromDraft(uid: string, email?: string | null) {
     nickname,
     gender: (draft?.gender ?? 'Male').toString().trim(),
     birthday: (draft?.birthday ?? '2000-01-01').toString().trim(), // YYYY-MM-DD
-    country: (draft?.country ?? 'Unknown').toString().trim(),
+    country: draft?.country ? String(draft.country).trim() : null,
     bio: (draft?.bio ?? '').toString().trim() || null,
     avatar_url: draft?.pendingAvatarUrl ?? null,
+    banner_url: draft?.pendingBannerUrl ?? null,
     tos_agreed,
     privacy_agreed,
     age_confirmed,
     marketing_opt_in,
+    // Recovery 정보
+    recovery_question: draft?.recovery_question ?? null,
+    recovery_answer_hash: draft?.recovery_answer_hash ?? null,
+    recovery_email: draft?.recovery_email ?? null,
     // 체크 제약 충족 시에만 true
     is_onboarded: canOnboard,
     is_public: true,
@@ -99,7 +101,7 @@ async function createProfileShellIfMissing(user: any) {
     nickname: `user_${uid.slice(0, 8)}`,
     gender: 'Male', // enum이면 허용값과 대소문자 정확히 일치해야 합니다
     birthday: '2000-01-01', // YYYY-MM-DD
-    country: 'Unknown',
+    country: null,
     bio: null,
     avatar_url: avatarUrl,
     tos_agreed: false,
@@ -124,6 +126,7 @@ export default function AuthCallback() {
 
   const navigate = useNavigate();
   const [msg, setMsg] = useState('인증 처리 중 ...');
+  const { checkForRelink, RelinkModal } = useRelinkDetection();
 
   // 중복 실행 방지
   const ranRef = useRef(false);
@@ -157,7 +160,32 @@ export default function AuthCallback() {
       
       const type = getParam('type');
       const code = getParam('code');
+      const errorMsg = getParam('error_description') || getParam('error');
       
+      const isLinking = sessionStorage.getItem('ara_linking_in_progress') === 'true';
+
+      // (A) Error Handling (OAuth errors)
+      if (errorMsg) {
+        if (isLinking) {
+          sessionStorage.removeItem('ara_linking_in_progress');
+          
+          if (errorMsg.includes('Identity is already linked to another user')) {
+            toast.error(
+              '이미 다른 계정에 연결된 SNS입니다. 해당 SNS로 로그인하여 기존 연결을 해제한 후 다시 시도해주세요.',
+              { duration: 8000 }
+            );
+          } else {
+            toast.error(`연결 실패: ${errorMsg}`);
+          }
+          
+          navigate('/settings', { replace: true });
+        } else {
+          toast.error(`인증 오류: ${errorMsg}`);
+          navigate('/signin', { replace: true });
+        }
+        return;
+      }
+
       const hasCode = !!code;
       const hasHashToken = href.includes('#access_token=');
       const hasTokenHash = href.includes('token_hash=');
@@ -205,16 +233,20 @@ export default function AuthCallback() {
       // -> 소셜 아이디가 있으면 type=signup이 있어도 소셜 로그인으로 처리 (강제 로그아웃 방지)
       // -----------------------------------------------------------------
       const identities = u.identities ?? [];
-      const hasSocial = identities.some(id => id.provider && id.provider !== 'email');
+      const socialProvider = u.app_metadata?.provider;
+      const isSocialLogin = socialProvider && socialProvider !== 'email';
+      const hasSocialIdentities = identities.some(id => id.provider && id.provider !== 'email');
       
-      // 이메일 가입 흐름으로 간주하려면: type이 signup이고 && 소셜 계정이 없어야 함
-      const isEmailSignup = (type === 'signup') && !hasSocial;
+      const shouldCheckRelink = isSocialLogin || hasSocialIdentities;
+
+      // 이메일 가입 흐름으로 간주하려면: type이 signup이고 && 소셜 계정이 아니어야 함
+      const isEmailSignup = (type === 'signup') && !shouldCheckRelink;
 
       if (isEmailSignup) {
         // [이메일 가입 흐름]
         // 1. 드래프트 기반 프로필 생성
         try {
-          await ensureProfileFromDraft(u.id, u.email);
+          await ensureProfileFromDraft(u.id, u.email, u.user_metadata);
         } catch (e) {
           // console.warn('[AuthCallback] ensureProfileFromDraft error', e);
         }
@@ -236,6 +268,53 @@ export default function AuthCallback() {
         await new Promise(r => setTimeout(r, 100));
       }
 
+      // [New Logic] Capture bypass and linking flags early
+      const isLinkingFlag = sessionStorage.getItem('ara_linking_in_progress') === 'true';
+      const isSignupBypass = sessionStorage.getItem('ara_social_signup_bypass') === 'true';
+      
+      let wasBypassed = false;
+
+      // Check for previously unlinked identity (Google/Kakao only)
+      if (shouldCheckRelink) {
+        if (isSignupBypass) {
+          // Bypass social signup block once
+          wasBypassed = true;
+          sessionStorage.removeItem('ara_social_signup_bypass');
+        } else {
+          const isBlocked = await checkForRelink(u, isLinkingFlag);
+          
+          if (isBlocked && !isLinkingFlag) {
+            // Normal login flow: block and redirect to signin
+            navigate('/signin', { replace: true });
+            return;
+          }
+        }
+
+        // Cleanup: If we were linking OR starting new account, clear the block record
+        if (isLinkingFlag || wasBypassed) {
+          try {
+            // Delete the unlinked history record now that it's successfully re-linked
+            const latestIdentity = (u.identities as any[])?.sort(
+              (a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+            )[0];
+            
+            if (latestIdentity) {
+              await supabase
+                .from('unlinked_identities')
+                .delete()
+                .match({
+                  provider: latestIdentity.provider,
+                  identity_id: latestIdentity.id
+                });
+            }
+          } catch (e) {
+            console.error('[AuthCallback] Clear record error:', e);
+          } finally {
+            // Do NOT remove linking flag here yet, we need it for the final redirect check below
+          }
+        }
+      }
+
       // 1. 이미 프로필이 있는지 확인
       const { data: existingProfile } = await supabase
         .from('profiles')
@@ -243,13 +322,20 @@ export default function AuthCallback() {
         .eq('user_id', u.id)
         .maybeSingle();
 
-      if (existingProfile?.is_onboarded) {
-        // 이미 온보딩 완료된 유저 → 메인으로
-        navigate('/sns', { replace: true });
+      // (A) 연결(Linking) 플로우인 경우: 온보딩 여부와 관계없이 설정 페이지로 복귀
+      if (isLinkingFlag) {
+        sessionStorage.removeItem('ara_linking_in_progress');
+        navigate('/settings', { replace: true });
         return;
       }
 
-      // 2. 프로필 없거나 온보딩 미완료 → 셸 생성 시도 후 위자드로
+      // (B) 이미 온보딩 완료된 유저 → 메인으로
+      if (existingProfile?.is_onboarded) {
+        navigate('/studyList', { replace: true });
+        return;
+      }
+
+      // (C) 프로필 없거나 온보딩 미완료 → 셸 생성 시도 후 위자드로
       try {
         await createProfileShellIfMissing(u);
       } catch (e) {
@@ -258,16 +344,20 @@ export default function AuthCallback() {
 
       // 소셜 전용 회원가입(추가 정보 입력) 페이지로 이동
       navigate('/signup/social', { replace: true, state: { from: 'oauth' } });
+
     })();
   }, [navigate]);
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="mb-3">
-        <TimerIcon className="w-6 h-6 animate-pulse" aria-hidden />
+    <>
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="mb-3">
+          <TimerIcon className="w-6 h-6 animate-pulse" aria-hidden />
+        </div>
+        <h2 className="text-xl font-semibold mb-2">인증 페이지</h2>
+        <div className="text-gray-600 whitespace-pre-wrap px-4">{msg}</div>
       </div>
-      <h2 className="text-xl font-semibold mb-2">인증 페이지</h2>
-      <div className="text-gray-600 whitespace-pre-wrap px-4">{msg}</div>
-    </div>
+      <RelinkModal />
+    </>
   );
 }
