@@ -1,0 +1,41 @@
+
+> project_ara@0.0.0 build
+> tsc -b && vite build
+
+[36mvite v7.2.2 [32mbuilding client environment for production...[36m[39m
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+transforming...
+
+[1m[33mwarn[39m[22m - The `min-*` and `max-*` variants are not supported with a `screens` configuration containing objects.
+[32m✓[39m 4533 modules transformed.
+rendering chunks...
+[33m[plugin vite:reporter] 
+(!) D:/study/jh/project_ara/src/services/chat/directChatService.ts is dynamically imported by D:/study/jh/project_ara/src/contexts/DirectChatContext.tsx, D:/study/jh/project_ara/src/hooks/useBlock.ts but also statically imported by D:/study/jh/project_ara/src/components/chat/direct/DirectChatRoom.tsx, D:/study/jh/project_ara/src/components/chat/direct/MediaGalleryModal.tsx, D:/study/jh/project_ara/src/contexts/DirectChatContext.tsx, dynamic import will not move module into another chunk.
+[39m
+[33m[plugin vite:reporter] 
+(!) D:/study/jh/project_ara/src/lib/snsState.ts is dynamically imported by D:/study/jh/project_ara/src/pages/community/tweet/components/TweetDetailCard.tsx but also statically imported by D:/study/jh/project_ara/src/pages/community/CommunityFeed.tsx, D:/study/jh/project_ara/src/pages/community/feature/TweetCard.tsx, D:/study/jh/project_ara/src/pages/community/tweet/TweetDetail.tsx, D:/study/jh/project_ara/src/pages/community/tweet/components/TweetDetailCard.tsx, dynamic import will not move module into another chunk.
+[39m
+computing gzip size...
+[2mdist/[22m[32mindex.html                      [39m[1m[2m    3.77 kB[22m[1m[22m[2m │ gzip:   1.57 kB[22m
+[2mdist/[22m[35massets/index-DUskvArB.css       [39m[1m[2m  273.86 kB[22m[1m[22m[2m │ gzip:  43.33 kB[22m
+[2mdist/[22m[36massets/Mixcloud-CYPldq9r.js     [39m[1m[2m    2.71 kB[22m[1m[22m[2m │ gzip:   1.32 kB[22m
+[2mdist/[22m[36massets/Kaltura-FNnebcRY.js      [39m[1m[2m    2.85 kB[22m[1m[22m[2m │ gzip:   1.35 kB[22m
+[2mdist/[22m[36massets/Vidyard-DYZ_56fz.js      [39m[1m[2m    2.92 kB[22m[1m[22m[2m │ gzip:   1.38 kB[22m
+[2mdist/[22m[36massets/SoundCloud-DBJYQLrj.js   [39m[1m[2m    2.98 kB[22m[1m[22m[2m │ gzip:   1.40 kB[22m
+[2mdist/[22m[36massets/Streamable-BH4_U2zA.js   [39m[1m[2m    3.00 kB[22m[1m[22m[2m │ gzip:   1.38 kB[22m
+[2mdist/[22m[36massets/DailyMotion-Dy-t5eYF.js  [39m[1m[2m    3.02 kB[22m[1m[22m[2m │ gzip:   1.42 kB[22m
+[2mdist/[22m[36massets/Preview-237RBY4C.js      [39m[1m[2m    3.07 kB[22m[1m[22m[2m │ gzip:   1.49 kB[22m
+[2mdist/[22m[36massets/Twitch-B7gVy6kI.js       [39m[1m[2m    3.14 kB[22m[1m[22m[2m │ gzip:   1.47 kB[22m
+[2mdist/[22m[36massets/Facebook-D3HvqZQg.js     [39m[1m[2m    3.28 kB[22m[1m[22m[2m │ gzip:   1.48 kB[22m
+[2mdist/[22m[36massets/Wistia-BDqzBai3.js       [39m[1m[2m    3.58 kB[22m[1m[22m[2m │ gzip:   1.57 kB[22m
+[2mdist/[22m[36massets/Vimeo-B0SB_low.js        [39m[1m[2m    3.69 kB[22m[1m[22m[2m │ gzip:   1.55 kB[22m
+[2mdist/[22m[36massets/YouTube-OF9h0sM2.js      [39m[1m[2m    4.51 kB[22m[1m[22m[2m │ gzip:   2.10 kB[22m
+[2mdist/[22m[36massets/Mux-YUPxtfEe.js          [39m[1m[2m    5.42 kB[22m[1m[22m[2m │ gzip:   1.97 kB[22m
+[2mdist/[22m[36massets/FilePlayer-PBwZA2KD.js   [39m[1m[2m    9.10 kB[22m[1m[22m[2m │ gzip:   3.13 kB[22m
+[2mdist/[22m[36massets/index-kM4m3YXN.js        [39m[1m[33m3,454.12 kB[39m[22m[2m │ gzip: 995.15 kB[22m
+[33m
+(!) Some chunks are larger than 1000 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[32m✓ built in 17.08s[39m

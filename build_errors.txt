@@ -1,0 +1,16 @@
+
+> project_ara@0.0.0 build
+> tsc -b && vite build
+
+src/pages/admin/components/ReportActionModal.tsx(295,23): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+src/pages/admin/components/ReportActionModal.tsx(340,22): error TS2345: Argument of type '(prev: FeedItem[]) => (FeedItem | { id: any; type: "tweet"; user: { name: any; username: any; avatar: any; }; content: any; timestamp: any; createdAt: any; stats: { likes: any; replies: any; retweets: number; views: any; }; image: any; })[]' is not assignable to parameter of type 'SetStateAction<FeedItem[]>'.
+  Type '(prev: FeedItem[]) => (FeedItem | { id: any; type: "tweet"; user: { name: any; username: any; avatar: any; }; content: any; timestamp: any; createdAt: any; stats: { likes: any; replies: any; retweets: number; views: any; }; image: any; })[]' is not assignable to type '(prevState: FeedItem[]) => FeedItem[]'.
+    Type '(FeedItem | { id: any; type: "tweet"; user: { name: any; username: any; avatar: any; }; content: any; timestamp: any; createdAt: any; stats: { likes: any; replies: any; retweets: number; views: any; }; image: any; })[]' is not assignable to type 'FeedItem[]'.
+      Type 'FeedItem | { id: any; type: "tweet"; user: { name: any; username: any; avatar: any; }; content: any; timestamp: any; createdAt: any; stats: { likes: any; replies: any; retweets: number; views: any; }; image: any; }' is not assignable to type 'FeedItem'.
+        Type '{ id: any; type: "tweet"; user: { name: any; username: any; avatar: any; }; content: any; timestamp: any; createdAt: any; stats: { likes: any; replies: any; retweets: number; views: any; }; image: any; }' is not assignable to type 'FeedItem'.
+          Type '{ id: any; type: "tweet"; user: { name: any; username: any; avatar: any; }; content: any; timestamp: any; createdAt: any; stats: { likes: any; replies: any; retweets: number; views: any; }; image: any; }' is not assignable to type 'UIPost'.
+            Types of property 'user' are incompatible.
+              Property 'id' is missing in type '{ name: any; username: any; avatar: any; }' but required in type 'TweetUser'.
+src/pages/admin/components/ReportActionModal.tsx(926,79): error TS2551: Property 'created_at' does not exist on type 'UIReply'. Did you mean 'createdAt'?
+src/pages/admin/components/ReportActionModal.tsx(998,49): error TS2741: Property 'id' is missing in type '{ username: any; name: any; avatar: any; }' but required in type 'TweetUser'.
+src/pages/admin/components/ReportActionModal.tsx(1031,53): error TS2741: Property 'id' is missing in type '{ username: any; name: any; avatar: any; }' but required in type 'TweetUser'.

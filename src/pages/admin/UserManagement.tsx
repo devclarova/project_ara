@@ -146,8 +146,15 @@ const UserManagement = () => {
         return aOnline ? -1 : 1;
       }
       
-      // Second priority (Stable tie-breaker): Use existing sort from server or fallback to ID
-      // This prevents users within the same status group from jumping around
+      // Second priority: Sort by last activity within the same status group
+      const aTime = a.last_active_at ? new Date(a.last_active_at).getTime() : 0;
+      const bTime = b.last_active_at ? new Date(b.last_active_at).getTime() : 0;
+      
+      if (aTime !== bTime) {
+        return bTime - aTime; // Most recent first
+      }
+      
+      // Third priority (Stable tie-breaker): Use ID
       return a.id.localeCompare(b.id);
     });
   }, [users, isUserOnline]);

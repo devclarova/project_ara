@@ -144,10 +144,6 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
       setContextData(null);
       setActiveUserTab('posts');
       setDetailStack([]);
-      setTargetData(null);
-      setContextData(null);
-      setActiveUserTab('posts');
-      setDetailStack([]);
       setReportedMessages([]);
     }
   }, [isOpen, report]);
@@ -292,7 +288,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
              }
         }
         
-        setTargetData(prev => ({ ...prev, countryName, countryFlagUrl }));
+        setTargetData((prev: any) => ({ ...prev, countryName, countryFlagUrl }));
       }
     } catch (error) {
       console.error('Error fetching target data:', error);
@@ -321,6 +317,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
         id: tweet.id,
         type: 'tweet' as const,
         user: {
+          id: tweet.profiles?.id || '00000000-0000-0000-0000-000000000000',
           name: tweet.profiles?.nickname || 'Unknown',
           username: tweet.profiles?.user_id || 'unknown',
           avatar: tweet.profiles?.avatar_url || ''
@@ -442,8 +439,6 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                }
           }
 
-          // Mark report as resolved
-          await supabase.from('reports').update({ status: 'resolved' }).eq('id', report.id);
           // Mark report as resolved
           await supabase.from('reports').update({ status: 'resolved' }).eq('id', report.id);
           const durationText = banDuration === 'permanent' ? '영구' : banDuration === 'custom' ? `${customDays}일` : `${banDuration}일`;
@@ -923,7 +918,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                         key={'detail-' + item.id}
                                         reply={{
                                             ...item,
-                                            timestamp: item.timestamp || item.created_at || item.createdAt
+                                            timestamp: item.timestamp || (item as any).created_at || item.createdAt || ''
                                         } as UIReply}
                                         highlight={false}
                                         disableInteractions={true}
@@ -996,6 +991,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                                 <TweetCard 
                                                 id={targetData.id}
                                                 user={{
+                                                    id: targetData.profiles?.id || '00000000-0000-0000-0000-000000000000',
                                                     username: targetData.profiles?.user_id || 'unknown',
                                                     name: targetData.profiles?.nickname || 'Unknown',
                                                     avatar: targetData.profiles?.avatar_url || ''
@@ -1029,6 +1025,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                                     tweetId: targetData.tweet_id,
                                                     type: 'reply',
                                                     user: {
+                                                        id: targetData.profiles?.id || '00000000-0000-0000-0000-000000000000',
                                                         username: targetData.profiles?.user_id || 'unknown',
                                                         name: targetData.profiles?.nickname || 'Unknown',
                                                         avatar: targetData.profiles?.avatar_url || ''

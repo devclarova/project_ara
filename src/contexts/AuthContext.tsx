@@ -23,6 +23,7 @@ type AuthContextType = {
   bannedUntil: string | null;
   isBanned: boolean;
   profileId: string | null;
+  isAdmin: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -116,6 +117,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   // 프로필 ID (profiles.id)
   const [profileId, setProfileId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // 제재 상태
   const [bannedUntil, setBannedUntil] = useState<string | null>(null);
@@ -125,11 +127,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const checkAccountStatus = async (userId: string) => {
     const { data, error } = await supabase
       .from('profiles')
-      .select('deleted_at, banned_until')
+      .select('deleted_at, banned_until, is_admin')
       .eq('user_id', userId)
       .maybeSingle();
 
-    if (error || !data) return;
+    if (error || !data) {
+      setIsAdmin(false);
+      return;
+    }
+
+    setIsAdmin(!!data.is_admin);
 
     if (data.deleted_at) {
       const deletedAt = new Date(data.deleted_at);
@@ -244,6 +251,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         }
       } else if (event === 'SIGNED_OUT') {
         setProfileId(null);
+        setIsAdmin(false);
         setLoading(false);
       } else {
         // 기타 이벤트 (SIGNED_IN/OUT 도중 로딩 방지)
@@ -355,6 +363,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
     } finally {
       setSession(null);
       setUser(null);
+      setProfileId(null);
+      setIsAdmin(false);
       setBannedUntil(null);
       setIsBannedState(false);
       try {
@@ -403,7 +413,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
     bannedUntil,
     isBanned: isBannedState,
     profileId,
-  }), [session, user, loading, signIn, signUp, signOut, signInWithGoogle, signInWithKakao, bannedUntil, isBannedState, profileId]);
+    isAdmin,
+  }), [session, user, loading, signIn, signUp, signOut, signInWithGoogle, signInWithKakao, bannedUntil, isBannedState, profileId, isAdmin]);
 
   return (
     <AuthContext.Provider value={value}>

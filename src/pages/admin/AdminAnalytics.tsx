@@ -21,13 +21,42 @@ interface StatsData {
   conversionRate: number;
   anomalies: any[];
   chartData: Array<{ name: string; activity: number; signups: number }>;
-  geoData: Array<{ country: string; count: number }>;
+  geoData: Array<{ country: string; country_name?: string; count: number; online?: number }>;
+  funnel?: {
+    visitors: number;
+    onboarded: number;
+    active_creators: number;
+  };
+  cohorts?: Array<{
+    cohort: string;
+    size: number;
+    d1: number;
+    d7: number;
+    d30: number;
+  }>;
+  health?: {
+    api_latency: number;
+    db_status: string;
+    cache_hit_rate: number;
+  };
 }
 
 type Tab = 'overview' | 'acquisition' | 'retention' | 'dataops';
 
 // Constants
 const GEO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
+
+const COUNTRY_NAMES_KO: Record<string, string> = {
+  'KR': '대한민국', 'US': '미국', 'JP': '일본', 'CN': '중국', 'VN': '베트남',
+  'ID': '인도네시아', 'TH': '태국', 'PH': '필리핀', 'TW': '대만', 'MY': '말레이시아',
+  'SG': '싱가포르', 'BR': '브라질', 'DE': '독일', 'FR': '프랑스', 'GB': '영국',
+  'CA': '캐나다', 'AU': '호주', 'RU': '러시아', 'IN': '인도', 'TR': '터키',
+  'ES': '스페인', 'IT': '이탈리아', 'MX': '멕시코', 'SA': '사우디아라비아', 'AE': '아랍에미리트',
+  'NL': '네덜란드', 'SE': '스웨덴', 'CH': '스위스', 'PL': '폴란드', 'AR': '아르헨티나',
+  'EG': '이집트', 'ZA': '남아프리카공화국', 'NG': '나이지리아', 'PK': '파키스탄', 'BD': '방글라데시',
+  'UA': '우크라이나', 'IL': '이스라엘', 'NZ': '뉴질랜드', 'HK': '홍콩', 'MO': '마카오',
+  '111': '대한민국', '18': '일본', 'Unknown': '알 수 없음'
+};
 
 const AdminAnalytics = () => {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
@@ -41,6 +70,7 @@ const AdminAnalytics = () => {
   const [isMounted, setIsMounted] = useState(false);
   const { onlineUsers, dbOnlineUsers, onlineCount, sessionCount, isUserOnline, stats: globalStats } = usePresence();
   const [activeUsersSet, setActiveUsersSet] = useState<Set<string>>(new Set());
+  const [tooltipContent, setTooltipContent] = useState("");
 
   // Tab Scroll Logic
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
@@ -114,95 +144,50 @@ const AdminAnalytics = () => {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const sevenDaysIso = sevenDaysAgo.toISOString();
-
-        // Active Criteria: Last active within 5 minutes (Legacy reliable check + heartbeat)
-        const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-
-        const [
-            { count: totalUsers },
-            { count: activeUsers },
-            { count: postCount },
-            { count: commentCount },
-            { count: newUsersRecent },
-            { data: geoData },
-            { data: recentTweets },
-            { data: recentComments },
-            { data: recentSignups }
-        ] = await Promise.all([
-            supabase.from('profiles').select('*', { count: 'exact', head: true }),
-            // Query by time instead of just 'is_online' for better accuracy if cleanup failed
-            supabase.from('profiles').select('*', { count: 'exact', head: true }).or(`is_online.eq.true,last_active_at.gt.${fiveMinsAgo}`),
-            supabase.from('tweets').select('*', { count: 'exact', head: true }),
-            supabase.from('tweet_replies').select('*', { count: 'exact', head: true }),
-            supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', sevenDaysIso),
-            supabase.from('profiles').select('country').not('country', 'is', null).eq('is_online', true).limit(1000), // 실시간 접속자만 필터링
-            supabase.from('tweets').select('created_at').gte('created_at', sevenDaysIso),
-            supabase.from('tweet_replies').select('created_at').gte('created_at', sevenDaysIso),
-            supabase.from('profiles').select('created_at').gte('created_at', sevenDaysIso)
-        ]);
-
-        // Aggregate Daily Activity for Chart
-        const days = [];
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            days.push(d.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })); 
-        }
         
-        const chartMap = days.map(label => ({ name: label, activity: 0, signups: 0 }));
-        
-        const addToMap = (dateStr: string, type: 'activity' | 'signups') => {
-            if (!dateStr) return;
-            const d = new Date(dateStr);
-            const label = d.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' });
-            const item = chartMap.find(c => c.name === label);
-            if (item) {
-                if (type === 'activity') item.activity += 1;
-                else item.signups += 1;
-            }
-        };
-
-        recentTweets?.forEach(t => addToMap(t.created_at, 'activity'));
-        recentComments?.forEach(c => addToMap(c.created_at, 'activity'));
-        recentSignups?.forEach(u => addToMap(u.created_at, 'signups'));
-
-        // Aggregate Geo Data (실시간 온라인 유저 기준 필터링)
-        const countryStats: Record<string, number> = {};
-        
-        // stats.activeUsers 대신 현재 Presence에 있는 유저들의 국가 정보를 기반으로 집계하는 것이 더 정확함
-        // 하지만 profiles 테이블에서 모든 국가 정보를 가져오는 geoData는 전체 사용자 기준임.
-        // 이를 실시간 위주로 보여주기 위해, profiles에서 fetch할 때 online 유저만 필터링하거나 
-        // 전체를 보여주되 레이블을 명확히 함. 
-        // 여기서는 '실시간 접속 지역'이라는 컨셉에 맞춰 online 인원 위주로 필터링하도록profiles 쿼리 수정 제안 (또는 클라이언트 필터링)
-        
-        geoData?.forEach((p: any) => {
-            const c = p.country; 
-            if (c) countryStats[c] = (countryStats[c] || 0) + 1;
+        // Use the new consolidated RPC for deep analytics
+        const { data, error } = await supabase.rpc('get_admin_analytics_v2', { 
+          p_days: dateRange === '24시간' ? 1 : dateRange === '7일' ? 7 : dateRange === '30일' ? 30 : 90 
         });
-        const geoArray = Object.entries(countryStats).map(([country, count]) => ({ country, count }));
- 
-        // setRealtimeUsers(activeUsers || 0); // PresenceContext handles this
+
+        if (error) throw error;
+
+        // Standardize chart data labels
+        const formattedChartData = data.daily_activity?.map((item: any) => ({
+          ...item,
+          name: new Date(item.date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }),
+          activity: (item.posts || 0) + (item.comments || 0)
+        })) || [];
+
+        // Aggregate geo data for map & list
+        const geoArray = data.geo_data?.map((d: any) => ({
+          country: d.country,
+          country_name: d.country_name,
+          count: d.count,
+          online: d.online_count || 0
+        })) || [];
 
         setStats({
-            totalUsers: totalUsers || 0,
-            cumulativeUsers: (totalUsers || 0) + 24, // Mock added history
-            newUsersRecent: newUsersRecent || 0,
-            newUserGrowth: 0, 
-            activeUsers: activeUsers || 0,
-            postCount: postCount || 0,
-            commentCount: commentCount || 0,
-            totalRevenue: 0,
-            conversionRate: 0,
-            chartData: chartMap,
-            geoData: geoArray,
-            anomalies: []
-        });
+          totalUsers: data.summary.total_users || 0,
+          cumulativeUsers: data.summary.total_users || 0,
+          newUsersRecent: data.summary.new_users_7d || 0,
+          newUserGrowth: 0, // Calculated on backend if needed
+          activeUsers: data.summary.active_users_5m || 0,
+          postCount: data.summary.post_count || 0,
+          commentCount: data.summary.comment_count || 0,
+          totalRevenue: data.summary.total_revenue || 0,
+          conversionRate: data.summary.conversion_rate || 0,
+          chartData: formattedChartData,
+          geoData: geoArray,
+          anomalies: [],
+          // Injected extended data for specific tabs
+          funnel: data.funnel,
+          cohorts: data.cohorts,
+          health: data.health
+        } as any);
 
       } catch (e) {
-        console.error("Failed to load stats", e);
+        console.error("Failed to load analytics stats", e);
       } finally {
         setLoading(false);
       }
@@ -465,30 +450,44 @@ const AdminAnalytics = () => {
                              실시간 접속 지역 (World Map)
                          </h3>
                          <div className="flex-1 flex flex-col items-center justify-center min-h-[250px] bg-muted/30 rounded-xl overflow-hidden relative">
-                            {isMounted ? (
-                                <ComposableMap projection="geoMercator" projectionConfig={{ scale: 100 }}>
-                                    <Geographies geography={GEO_URL}>
-                                        {({ geographies }: { geographies: any[] }) =>
-                                            geographies.map((geo: any) => {
-                                                const countryData = stats?.geoData.find(d => d.country === geo.properties.ISO_A2 || d.country === geo.properties.NAME);
-                                                return (
-                                                    <Geography
-                                                        key={geo.rsmKey}
-                                                        geography={geo}
-                                                        fill={countryData ? colorScale(countryData.count) : "#EAEAEC"}
-                                                        stroke="#D6D6DA"
-                                                        strokeWidth={0.5}
-                                                        style={{
-                                                            default: { outline: "none" },
-                                                            hover: { fill: "#10B981", outline: "none" },
-                                                            pressed: { outline: "none" },
-                                                        }}
-                                                    />
-                                                );
-                                            })
-                                        }
-                                    </Geographies>
-                                </ComposableMap>
+                             {isMounted ? (
+                                <div className="w-full h-full relative">
+                                    <ComposableMap projection="geoMercator" projectionConfig={{ scale: 100 }}>
+                                        <Geographies geography={GEO_URL}>
+                                            {({ geographies }: { geographies: any[] }) =>
+                                                geographies.map((geo: any) => {
+                                                    const { NAME, ISO_A2 } = geo.properties;
+                                                    const countryData = stats?.geoData.find(d => d.country === ISO_A2 || d.country === NAME);
+                                                    return (
+                                                        <Geography
+                                                            key={geo.rsmKey}
+                                                            geography={geo}
+                                                            fill={countryData ? colorScale(countryData.count) : "#EAEAEC"}
+                                                            stroke="#D6D6DA"
+                                                            strokeWidth={0.5}
+                                                            onMouseEnter={() => {
+                                                                setTooltipContent(`${COUNTRY_NAMES_KO[ISO_A2] || NAME}: ${countryData?.count || 0}명`);
+                                                            }}
+                                                            onMouseLeave={() => {
+                                                                setTooltipContent("");
+                                                            }}
+                                                            style={{
+                                                                default: { outline: "none" },
+                                                                hover: { fill: "#10B981", outline: "none", cursor: "pointer" },
+                                                                pressed: { outline: "none" },
+                                                            }}
+                                                        />
+                                                    );
+                                                })
+                                            }
+                                        </Geographies>
+                                    </ComposableMap>
+                                    {tooltipContent && (
+                                        <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-foreground/90 text-background text-[10px] px-2 py-1 rounded-md shadow-xl pointer-events-none animate-in fade-in zoom-in-95 duration-200 z-50 font-bold">
+                                            {tooltipContent}
+                                        </div>
+                                    )}
+                                </div>
                             ) : (
                                 <div className="text-xs text-muted-foreground">Loading Map...</div>
                             )}
@@ -498,7 +497,9 @@ const AdminAnalytics = () => {
                                 <div className="flex flex-col gap-2">
                                      {(stats?.geoData || []).slice(0, 3).map((d, i) => (
                                          <div key={i} className="flex justify-between text-xs">
-                                             <span className="font-semibold">{d.country}</span>
+                                             <span className="font-semibold">
+                                               {COUNTRY_NAMES_KO[d.country] || d.country_name || d.country}
+                                             </span>
                                              <span className="font-bold text-emerald-600">{d.count} Users</span>
                                          </div>
                                      ))}
@@ -518,7 +519,7 @@ const AdminAnalytics = () => {
             </div>
          )}
 
-         {activeTab === 'acquisition' && (
+          {activeTab === 'acquisition' && (
             <div className="space-y-6">
                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="bg-secondary p-6 rounded-2xl border border-gray-300 dark:border-gray-500 shadow-sm">
@@ -547,9 +548,9 @@ const AdminAnalytics = () => {
                      <h3 className="font-bold text-foreground mb-4">가입 전환 퍼널</h3>
                      <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-4">
                         {[
-                           { step: '방문', count: '1,240', drop: '100%', icon: Globe },
-                           { step: '회원가입/로그인 페이지', count: '850', drop: '68%', icon: Search },
-                           { step: '가입 완료', count: '312', drop: '25%', icon: CheckCircle2 }
+                           { step: '전체 방문(가입)', count: stats?.funnel?.visitors || 0, drop: '100%', icon: Globe },
+                           { step: '프로필 설정 완료', count: stats?.funnel?.onboarded || 0, drop: `${stats?.funnel?.visitors ? Math.round((stats.funnel.onboarded / stats.funnel.visitors) * 100) : 0}%`, icon: Search },
+                           { step: '콘텐츠 생성자', count: stats?.funnel?.active_creators || 0, drop: `${stats?.funnel?.visitors ? Math.round((stats.funnel.active_creators / stats.funnel.visitors) * 100) : 0}%`, icon: CheckCircle2 }
                         ].map((item, i, arr) => (
                            <React.Fragment key={i}>
                               <div className="flex-1 flex flex-col items-center p-4 bg-muted/30 rounded-xl border border-border/40 w-full">
@@ -557,7 +558,7 @@ const AdminAnalytics = () => {
                                     <item.icon size={24} />
                                  </div>
                                  <span className="text-sm font-medium text-muted-foreground">{item.step}</span>
-                                 <span className="text-xl font-bold mt-1">{item.count}</span>
+                                 <span className="text-xl font-bold mt-1">{item.count.toLocaleString()}</span>
                                  <span className="text-xs text-primary font-bold mt-1">{item.drop}</span>
                               </div>
                               {i < arr.length - 1 && (
@@ -571,9 +572,9 @@ const AdminAnalytics = () => {
                   </div>
                </div>
             </div>
-         )}
+          )}
 
-         {activeTab === 'retention' && (
+          {activeTab === 'retention' && (
             <div className="space-y-6">
                <div className="bg-secondary p-6 rounded-2xl border border-gray-300 dark:border-gray-500 shadow-sm">
                   <h3 className="font-bold text-foreground mb-4">사용자 유지율 (Retention Rate)</h3>
@@ -581,44 +582,47 @@ const AdminAnalytics = () => {
                      <table className="w-full text-sm">
                         <thead>
                            <tr className="border-b">
-                              <th className="text-left py-3 px-4 font-black">Cohort</th>
+                              <th className="text-left py-3 px-4 font-black">Cohort (Signup Mo.)</th>
                               <th className="py-3 px-4">Size</th>
-                              {['D+1', 'D+3', 'D+7', 'D+14', 'D+30'].map(d => (
+                              {['D+1', 'D+7', 'D+30'].map(d => (
                                  <th key={d} className="py-3 px-4 font-black">{d}</th>
                               ))}
                            </tr>
                         </thead>
                         <tbody>
-                           {[
-                              { date: '2024-02-01', size: 120, rates: [45, 32, 28, 22, 18] },
-                              { date: '2024-02-02', size: 145, rates: [48, 35, 29, 24, 19] },
-                              { date: '2024-02-03', size: 110, rates: [42, 30, 25, 21, 15] },
-                              { date: '2024-02-04', size: 130, rates: [51, 38, 31, 26, 20] }
-                           ].map((row, i) => (
+                           {(stats as any)?.cohorts?.map((row: any, i: number) => (
                               <tr key={i} className="border-b hover:bg-muted/20">
-                                 <td className="py-3 px-4 font-medium">{row.date}</td>
+                                 <td className="py-3 px-4 font-medium">{row.cohort}</td>
                                  <td className="py-3 px-4 text-center text-muted-foreground">{row.size}</td>
-                                 {row.rates.map((rate, j) => (
-                                    <td key={j} className="py-3 px-4 text-center">
-                                       <div 
-                                          className="py-2 rounded-md font-bold" 
-                                          style={{ 
-                                             backgroundColor: `rgba(16, 185, 129, ${rate / 100})`,
-                                             color: rate > 50 ? 'white' : 'inherit'
-                                          }}
-                                       >
-                                          {rate}%
-                                       </div>
-                                    </td>
-                                 ))}
+                                 {[row.d1, row.d7, row.d30].map((count, j) => {
+                                    const rate = Math.round((count / row.size) * 100) || 0;
+                                    return (
+                                       <td key={j} className="py-3 px-4 text-center">
+                                          <div 
+                                             className="py-2 rounded-md font-bold" 
+                                             style={{ 
+                                                backgroundColor: `rgba(16, 185, 129, ${rate / 100})`,
+                                                color: rate > 50 ? 'white' : 'inherit'
+                                             }}
+                                          >
+                                             {rate}%
+                                          </div>
+                                       </td>
+                                    );
+                                 })}
                               </tr>
                            ))}
+                           {!(stats as any)?.cohorts?.length && (
+                             <tr>
+                               <td colSpan={5} className="py-8 text-center text-muted-foreground">코호트 데이터가 충분하지 않습니다.</td>
+                             </tr>
+                           )}
                         </tbody>
                      </table>
                   </div>
                </div>
             </div>
-         )}
+          )}
 
          {activeTab === 'dataops' && (
             <div className="space-y-6">
@@ -631,7 +635,7 @@ const AdminAnalytics = () => {
                      <div className="space-y-6">
                         <div className="flex justify-between items-center">
                            <span className="text-sm font-medium">평균 API 응답 속도</span>
-                           <span className="text-xl font-bold text-emerald-600">142ms</span>
+                           <span className="text-xl font-bold text-emerald-600">{(stats as any)?.health?.api_latency || 0}ms</span>
                         </div>
                         <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                            <div className="h-full bg-emerald-500" style={{ width: '92%' }} />
@@ -639,11 +643,11 @@ const AdminAnalytics = () => {
                         <div className="grid grid-cols-2 gap-4">
                            <div className="p-4 bg-muted/30 rounded-xl border border-border/40">
                               <div className="text-xs text-muted-foreground mb-1">DB Connection</div>
-                              <div className="text-lg font-bold text-emerald-600">Stable</div>
+                              <div className="text-lg font-bold text-emerald-600 capitalize">{(stats as any)?.health?.db_status || 'stable'}</div>
                            </div>
                            <div className="p-4 bg-muted/30 rounded-xl border border-border/40">
                               <div className="text-xs text-muted-foreground mb-1">Cache Hit Rate</div>
-                              <div className="text-lg font-bold text-emerald-600">88.4%</div>
+                              <div className="text-lg font-bold text-emerald-600">{(stats as any)?.health?.cache_hit_rate || 0}%</div>
                            </div>
                         </div>
                      </div>
