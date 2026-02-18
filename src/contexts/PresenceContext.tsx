@@ -32,7 +32,7 @@ interface PresenceContextType {
 const PresenceContext = createContext<PresenceContextType | undefined>(undefined);
 
 export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, profileId } = useAuth();
+  const { user, profileId, isAdmin } = useAuth();
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
   const [dbOnlineUsers, setDbOnlineUsers] = useState<Record<string, boolean>>({});
   const [stats, setStats] = useState<RealtimeStats>({
@@ -49,6 +49,8 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // 전역 통계 새로고침 함수
   const refreshStats = useCallback(async () => {
+    if (!isAdmin) return;
+    
     try {
       const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
       if (!error && data) {
@@ -65,7 +67,7 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (err) {
       console.error('Failed to refresh global stats:', err);
     }
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => {
     refreshStats();
@@ -109,6 +111,20 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
+          // Detect country via IP and update profile
+          try {
+            const geoRes = await fetch('https://ipapi.co/json/');
+            const geoData = await geoRes.json();
+            if (geoData?.country_code) {
+              await supabase
+                .from('profiles')
+                .update({ last_known_country: geoData.country_code })
+                .eq('id', profileId);
+            }
+          } catch (err) {
+            console.warn('Failed to detect geolocation:', err);
+          }
+
           await channel.track({
             profile_id: profileId,
             online_at: new Date().toISOString(),

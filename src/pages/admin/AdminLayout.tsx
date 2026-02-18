@@ -103,8 +103,20 @@ const AdminLayout = () => {
     }
   };
 
+  // Prevent background scroll when mobile sidebar is open
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [sidebarOpen]);
+
   return (
-    <div className="min-h-screen min-w-[300px] bg-background font-sans text-foreground relative">
+    <div className="min-h-screen min-w-[300px] bg-background font-sans text-foreground relative overflow-x-hidden">
       {/* Sidebar - Hidden on mobile, always visible on desktop */}
       <aside 
         className={`fixed inset-y-0 left-0 z-50 w-64 bg-secondary border-r border-gray-300 dark:border-gray-600 transform transition-transform duration-300 ease-in-out ${
