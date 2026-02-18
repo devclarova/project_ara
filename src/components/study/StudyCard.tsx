@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import StudyCultureNote from './StudyCultureNote';
 import StudyVoca from './StudyVoca';
 import type { Subtitle } from '../../types/study';
+import { useLocation } from 'react-router-dom';
 
 interface StudyCardProps {
   subtitle: Subtitle | null;
@@ -10,9 +11,18 @@ interface StudyCardProps {
   noteText?: string;
 }
 
+const LAST_STUDY_KEY = 'ara_last_study_path';
+
 const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'words' | 'culture'>('words');
+
+  const location = useLocation();
+  const fullPath = location.pathname + location.search;
+
+  useEffect(() => {
+    localStorage.setItem(LAST_STUDY_KEY, fullPath);
+  }, [fullPath]);
 
   return (
     <div>
@@ -50,7 +60,7 @@ const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) =>
           {/* 탭 내용 */}
           <div className="mt-2 sm:mt-3">
             {activeTab === 'words' ? (
-              <StudyVoca studyId={studyId} subscribeRealtime />
+              <StudyVoca studyId={studyId} subscribeRealtime sourceStudyPath={fullPath} />
             ) : noteText && noteText.trim() !== '' ? (
               <StudyCultureNote note={noteText} />
             ) : (

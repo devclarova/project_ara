@@ -60,9 +60,9 @@ import HNotificationsPage from './pages/notifications/HNotificationsPage';
 import ProfileAsap from './pages/profile/ProfileAsap';
 import SnsDetailPage from './pages/sns/SnsDetailPage';
 import SnsPage from './pages/sns/SnsPage';
-import VocaPage from './pages/study/VocaPage';
 import StudyListPage from './pages/StudyListPage';
 import StudyPage from './pages/StudyPage';
+import StudyVocaPage from './pages/StudyVocaPage';
 import OnboardingWall from './routes/guards/OnboardingWall';
 
 // ---------- 인증 가드 ----------
@@ -199,7 +199,7 @@ function AppInner() {
             <Route path="/sns/:id" element={<SnsDetailPage />} />
             <Route path="/goods" element={<GoodsPage />} />
             <Route path="/goods/:id" element={<GoodsDetailPage />} />
-            <Route path="/voca" element={<VocaPage />} />
+            <Route path="/voca" element={<StudyVocaPage />} />
 
             {/* Admin Routes */}
             <Route path="/admin/login" element={<AdminLogin />} />
