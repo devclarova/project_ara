@@ -1,7 +1,14 @@
 import type { EpisodeWord } from '@/components/study/EpisodeVocaModal';
 import EpisodeVocabModal from '@/components/study/EpisodeVocaModal';
+import MatchingQuizModal from '@/components/study/MatchingQuizModal';
+import McqQuizModal from '@/components/study/McqQuizModal';
+import OxQuizModal from '@/components/study/OxQuizModal';
+import QuizMenuModal from '@/components/study/QuizMenuModal';
+import ConfirmModal from '@/components/common/ConfirmModal';
+import Pagination from '@/components/common/Pagination';
 import { deleteMyVoca, fetchMyVoca, updateMyVocaStatus, type UserVocaRow } from '@/lib/userVoca';
-import React, { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, Gamepad2, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 type VocabItem = {
@@ -64,6 +71,18 @@ export default function StudyVocaPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [initialWordId, setInitialWordId] = useState<string | undefined>(undefined);
 
+  const [quizMenuOpen, setQuizMenuOpen] = useState(false);
+  const [activeQuiz, setActiveQuiz] = useState<null | 'mcq' | 'ox' | 'matching'>(null);
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmType, setConfirmType] = useState<'single' | 'all' | null>(null);
+  const [targetId, setTargetId] = useState<string | null>(null);
+
+  const matchingPool = useMemo(() => items.filter(v => (v.wrongCount ?? 0) > 0), [items]);
+
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(9); // 기본은 데스크톱
+
   const reload = async () => {
     const rows = await fetchMyVoca();
 
@@ -88,8 +107,81 @@ export default function StudyVocaPage() {
     );
   };
 
+  const handleDeleteOne = async (id: string) => {
+    try {
+      await deleteMyVoca(id);
+      await reload();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    try {
+      await Promise.all(items.map(v => deleteMyVoca(v.id)));
+      await reload();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const openDeleteConfirm = (id: string) => {
+    setConfirmType('single');
+    setTargetId(id);
+    setConfirmOpen(true);
+  };
+
+  const openDeleteAllConfirm = () => {
+    setConfirmType('all');
+    setTargetId(null);
+    setConfirmOpen(true);
+  };
+
+  const closeConfirm = () => {
+    setConfirmOpen(false);
+    setConfirmType(null);
+    setTargetId(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (confirmType === 'single' && targetId) {
+      await handleDeleteOne(targetId);
+    }
+
+    if (confirmType === 'all') {
+      await handleDeleteAll();
+    }
+
+    closeConfirm();
+  };
+
   useEffect(() => {
     reload();
+  }, []);
+
+  useEffect(() => {
+    const updatePageSize = () => {
+      const width = window.innerWidth;
+
+      // 모바일: 1열 4개
+      if (width < 640) {
+        setPageSize(4);
+        return;
+      }
+
+      // 태블릿: 2열 6개
+      if (width < 1024) {
+        setPageSize(6);
+        return;
+      }
+
+      // 데스크톱: 3열 9개
+      setPageSize(9);
+    };
+
+    updatePageSize();
+    window.addEventListener('resize', updatePageSize);
+    return () => window.removeEventListener('resize', updatePageSize);
   }, []);
 
   const filtered = useMemo(() => {
@@ -110,6 +202,29 @@ export default function StudyVocaPage() {
       );
     });
   }, [items, q, status]);
+
+  // 검색/필터 바뀌면 1페이지로
+  useEffect(() => {
+    setPage(1);
+  }, [q, status]);
+
+  const total = filtered.length;
+  const totalPages = Math.ceil(total / pageSize);
+
+  const paginated = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    return filtered.slice(start, end);
+  }, [filtered, page, pageSize]);
+
+  // 페이지 보정
+  useEffect(() => {
+    if (totalPages === 0) {
+      if (page !== 1) setPage(1);
+      return;
+    }
+    if (page > totalPages) setPage(totalPages);
+  }, [totalPages, page]);
 
   const modalWords: EpisodeWord[] = useMemo(() => {
     return filtered.map(v => ({
@@ -136,8 +251,8 @@ export default function StudyVocaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-background">
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-5">
+    <div className="min-h-screen bg-white dark:bg-background relative">
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-5">
         {/* 헤더 */}
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -149,10 +264,19 @@ export default function StudyVocaPage() {
 
           <div className="flex gap-2">
             <button
-              onClick={() => navigate('/studylist')}
-              className="shrink-0 px-4 py-2 rounded-xl ring-1 ring-gray-200 hover:ring-primary/50 hover:bg-primary/20 transition text-sm"
+              onClick={() => setQuizMenuOpen(true)}
+              className="shrink-0 px-4 py-2 rounded-xl ring-1 ring-gray-200 hover:ring-primary/50 hover:bg-primary/20 transition text-sm flex items-center gap-2"
             >
-              ← 학습으로
+              <Gamepad2 size={16} />
+              퀴즈
+            </button>
+
+            <button
+              onClick={() => navigate('/studylist')}
+              className="shrink-0 px-4 py-2 rounded-xl ring-1 ring-gray-200 hover:ring-primary/50 hover:bg-primary/20 transition text-sm flex items-center gap-2"
+            >
+              <ArrowLeft size={16} />
+              학습으로
             </button>
           </div>
         </div>
@@ -177,14 +301,7 @@ export default function StudyVocaPage() {
           </select>
 
           <button
-            onClick={async () => {
-              try {
-                await Promise.all(items.map(v => deleteMyVoca(v.id)));
-                await reload();
-              } catch (e) {
-                console.error(e);
-              }
-            }}
+            onClick={openDeleteAllConfirm}
             className="px-3 py-2 rounded-xl ring-1 ring-gray-200 hover:bg-gray-50 dark:hover:bg-gray-900 transition text-sm"
             title="단어장 초기화"
           >
@@ -199,85 +316,95 @@ export default function StudyVocaPage() {
             저장해보아요.
           </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {filtered.map(v => (
-              <div
-                key={v.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => openModal(v.id)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' || e.key === ' ') openModal(v.id);
-                }}
-                className="p-4 rounded-2xl ring-1 ring-gray-200 bg-white dark:bg-secondary cursor-pointer hover:bg-gray-50/60 dark:hover:bg-white/5 transition"
-              >
-                <div className="flex justify-between items-start gap-2">
-                  <div className="min-w-0">
-                    <div className="font-bold text-gray-900 dark:text-gray-100">{v.term}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">{v.meaning}</div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-4">
+              {paginated.map(v => (
+                <div
+                  key={v.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openModal(v.id)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') openModal(v.id);
+                  }}
+                  className="p-4 rounded-2xl ring-1 ring-gray-200 bg-white dark:bg-secondary cursor-pointer hover:bg-gray-50/60 dark:hover:bg-white/5 transition"
+                >
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="min-w-0">
+                      <div className="font-bold text-gray-900 dark:text-gray-100">{v.term}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                        {v.meaning}
+                      </div>
 
-                    {/* pos/pron: 없어도 레이아웃 고정 */}
-                    <div className="mt-1 min-h-[16px] text-[11px] text-gray-400">
-                      {v.pos || v.pron ? (
-                        <>
-                          {v.pos ? `(${v.pos})` : ''}
-                          {v.pron ? ` · ${v.pron}` : ''}
-                        </>
-                      ) : (
-                        <span className="invisible">placeholder</span>
-                      )}
+                      <div className="mt-1 min-h-[16px] text-[11px] text-gray-400">
+                        {v.pos || v.pron ? (
+                          <>
+                            {v.pos ? `(${v.pos})` : ''}
+                            {v.pron ? ` · ${v.pron}` : ''}
+                          </>
+                        ) : (
+                          <span className="invisible">placeholder</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  <button
-                    onClick={async e => {
-                      e.stopPropagation();
-                      try {
-                        await deleteMyVoca(v.id); // v.id == word_key
-                        await reload();
-                      } catch (err) {
-                        console.error(err);
-                      }
-                    }}
-                    className="text-xs px-2 py-1 rounded-md ring-1 ring-gray-200 hover:bg-gray-50 dark:hover:bg-gray-900"
-                  >
-                    삭제
-                  </button>
-                </div>
-
-                {(v.exampleKo || v.exampleTr) && (
-                  <div className="mt-3 text-xs text-gray-500 space-y-1">
-                    {v.exampleKo && <div>예문: {v.exampleKo}</div>}
-                    {v.exampleTr && <div className="text-gray-400">{v.exampleTr}</div>}
-                  </div>
-                )}
-
-                <div className="mt-3 flex items-center gap-1">
-                  {(['unknown', 'learning', 'known'] as const).map(st => (
                     <button
-                      key={st}
-                      onClick={async e => {
+                      onClick={e => {
                         e.stopPropagation();
-                        try {
-                          await updateMyVocaStatus(v.id, st); // v.id == word_key
-                          await reload();
-                        } catch (err) {
-                          console.error(err);
-                        }
+                        openDeleteConfirm(v.id);
                       }}
-                      className={`text-[11px] px-2 py-1 rounded-full ring-1 transition ${
-                        v.status === st
-                          ? 'ring-primary/60 bg-primary-50 text-primary'
-                          : 'ring-primary/60 hover:ring-primary'
-                      }`}
+                      className="p-1.5 rounded-md ring-1 ring-gray-200 hover:bg-gray-50 dark:hover:bg-gray-900 transition"
+                      aria-label="삭제"
+                      title="삭제"
                     >
-                      {st}
+                      <Trash2 size={14} className="text-gray-500" />
                     </button>
-                  ))}
+                  </div>
+
+                  {(v.exampleKo || v.exampleTr) && (
+                    <div className="mt-3 text-xs text-gray-500 space-y-1">
+                      {v.exampleKo && <div>예문: {v.exampleKo}</div>}
+                      {v.exampleTr && <div className="text-gray-400">{v.exampleTr}</div>}
+                    </div>
+                  )}
+
+                  <div className="mt-3 flex items-center gap-1">
+                    {(['unknown', 'learning', 'known'] as const).map(st => (
+                      <button
+                        key={st}
+                        onClick={async e => {
+                          e.stopPropagation();
+                          try {
+                            await updateMyVocaStatus(v.id, st);
+                            await reload();
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }}
+                        className={`text-[11px] px-2 py-1 rounded-full ring-1 transition ${
+                          v.status === st
+                            ? 'ring-primary/60 bg-primary-50 text-primary'
+                            : 'ring-primary/60 hover:ring-primary'
+                        }`}
+                      >
+                        {st}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <Pagination
+                totalPages={totalPages}
+                page={page}
+                onPageChange={setPage}
+                windowSize={5}
+                autoScrollTop={true}
+              />
+            )}
+          </>
         )}
       </div>
 
@@ -288,6 +415,38 @@ export default function StudyVocaPage() {
         initialWordId={initialWordId}
         getEpisodeHref={getEpisodeHref}
         episodeCtaLabel="에피소드로"
+      />
+
+      <QuizMenuModal
+        isOpen={quizMenuOpen}
+        onClose={() => setQuizMenuOpen(false)}
+        totalCount={items.length}
+        matchingCount={matchingPool.length}
+        pool={items}
+      />
+
+      {activeQuiz === 'mcq' && (
+        <McqQuizModal isOpen onClose={() => setActiveQuiz(null)} pool={items} />
+      )}
+
+      {activeQuiz === 'ox' && (
+        <OxQuizModal isOpen onClose={() => setActiveQuiz(null)} pool={items} />
+      )}
+
+      {activeQuiz === 'matching' && (
+        <MatchingQuizModal isOpen onClose={() => setActiveQuiz(null)} pool={matchingPool} />
+      )}
+
+      <ConfirmModal
+        open={confirmOpen}
+        title={confirmType === 'single' ? '단어 삭제' : '전체 삭제'}
+        description={
+          confirmType === 'single' ? '단어를 삭제하시겠습니까?' : '전체 단어를 삭제하시겠습니까?'
+        }
+        confirmText="삭제"
+        cancelText="취소"
+        onConfirm={handleConfirmDelete}
+        onCancel={closeConfirm}
       />
     </div>
   );
