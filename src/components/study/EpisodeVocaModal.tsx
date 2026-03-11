@@ -2,6 +2,17 @@ import { deleteMyVoca, isSavedMyVoca, upsertMyVoca } from '@/lib/userVoca';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  Bookmark,
+  BookmarkCheck,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  Volume2,
+  VolumeX,
+  X,
+} from 'lucide-react';
 
 export type EpisodeWord = {
   id: string;
@@ -25,170 +36,6 @@ function pickBackText(word: EpisodeWord, targetLang: string) {
   if (lang.startsWith('ja')) return word.ja || word.en;
   if (lang.startsWith('zh')) return word.zh || word.en;
   return word.en;
-}
-
-/** 북마크 아이콘 (채움/라인) */
-function BookmarkIcon({ filled }: { filled?: boolean }) {
-  return filled ? (
-    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-      <path
-        d="M6 3.75C6 2.784 6.784 2 7.75 2h8.5C17.216 2 18 2.784 18 3.75V22l-6-3.2L6 22V3.75Z"
-        fill="currentColor"
-      />
-    </svg>
-  ) : (
-    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-      <path
-        d="M7.75 2h8.5C17.216 2 18 2.784 18 3.75V22l-6-3.2L6 22V3.75C6 2.784 6.784 2 7.75 2Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M7.5 4.2V19.5l4.5-2.4 4.5 2.4V4.2"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-/** 카드 뒤집기 아이콘 */
-function FlipIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-      <path
-        d="M7.5 7.5h9A3 3 0 0 1 19.5 10.5v6A3 3 0 0 1 16.5 19.5h-9A3 3 0 0 1 4.5 16.5v-6A3 3 0 0 1 7.5 7.5Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M9 6.3l3-2.3 3 2.3"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M12 4v3.2"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M9.2 13.2h5.6"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M14.2 11.6l1.6 1.6-1.6 1.6"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-/** 스피커(TTS) 아이콘 */
-function SpeakerIcon({ on }: { on?: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-      <path
-        d="M11 5 7 9H4v6h3l4 4V5Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M16 9.5c1.2 1 1.2 4 0 5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M18.5 7c2.2 2 2.2 8 0 10"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        opacity={on ? 1 : 0.6}
-      />
-    </svg>
-  );
-}
-
-/** 단어장 아이콘 */
-function VocaIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-      <path
-        d="M6.5 4.5h10A2 2 0 0 1 18.5 6.5v13A1.5 1.5 0 0 0 17 18H6.5A2 2 0 0 1 4.5 16V6.5A2 2 0 0 1 6.5 4.5Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M7.5 8h8"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M7.5 11h8"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-/** Chevron 아이콘 */
-function ChevronLeftIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-      <path
-        d="M14.5 6.5 9 12l5.5 5.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function ChevronRightIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-      <path
-        d="M9.5 6.5 15 12l-5.5 5.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
 }
 
 type Props = {
@@ -297,7 +144,7 @@ export default function EpisodeVocaModal({
     return pickBackText(word, targetLang);
   }, [word, targetLang]);
 
-  // ✅ DB에서 저장 여부 확인
+  // DB에서 저장 여부 확인
   useEffect(() => {
     if (!isOpen) return;
     if (!word) return;
@@ -352,7 +199,7 @@ export default function EpisodeVocaModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, hasWords, index, words.length]);
 
-  // ✅ 북마크 토글 (DB)
+  // 북마크 토글 (DB)
   const handleToggleBookmark = async () => {
     if (!word) return;
 
@@ -418,7 +265,7 @@ export default function EpisodeVocaModal({
     setTtsSpeaking(false);
   }, [isOpen]);
 
-  // ✅ 에피소드 이동 링크는 "외부에서"만 결정
+  // 에피소드 이동 링크는 "외부에서"만 결정
   const episodeHref = useMemo(() => {
     if (!word) return null;
     return getEpisodeHref?.(word) ?? null;
@@ -463,7 +310,7 @@ export default function EpisodeVocaModal({
                     aria-label={saved ? '북마크 해제' : '북마크 저장'}
                     title={saved ? '저장됨 (클릭하면 해제)' : '저장하기'}
                   >
-                    <BookmarkIcon filled={saved} />
+                    {saved ? <BookmarkCheck size={22} /> : <Bookmark size={22} />}
                   </button>
 
                   <button
@@ -472,7 +319,7 @@ export default function EpisodeVocaModal({
                     aria-label="닫기"
                     title="닫기"
                   >
-                    <span className="text-xl leading-none">✕</span>
+                    <X size={22} />
                   </button>
                 </div>
               </div>
@@ -487,7 +334,15 @@ export default function EpisodeVocaModal({
                   </div>
 
                   {/* pos + pron */}
-                  <div className="mt-1 min-h-[16px] sm:min-h-[18px] text-[11px] sm:text-xs text-gray-400">
+                  <div className="mt-1 min-h-[18px] sm:min-h-[20px] text-[12px] sm:text-sm text-gray-500 dark:text-gray-300 text-center">
+                    {word?.pronKo && !flipped ? (
+                      <>{`[${word.pronKo}]`}</>
+                    ) : (
+                      <span className="invisible">placeholder</span>
+                    )}
+                  </div>
+
+                  <div className="mt-2 min-h-[16px] sm:min-h-[18px] text-[11px] sm:text-xs text-gray-400">
                     {word && (word.pos || word.pron) ? (
                       <>
                         {word.pos ? `(${word.pos})` : ''}
@@ -497,14 +352,6 @@ export default function EpisodeVocaModal({
                       <span className="invisible">placeholder</span>
                     )}
                   </div>
-                </div>
-
-                <div className="mt-2 min-h-[18px] sm:min-h-[20px] text-[12px] sm:text-sm text-gray-500 dark:text-gray-300 text-center">
-                  {word?.pronKo && !flipped ? (
-                    <>{`[${word.pronKo}]`}</>
-                  ) : (
-                    <span className="invisible">placeholder</span>
-                  )}
                 </div>
 
                 {/* image + 좌우 버튼 */}
@@ -520,7 +367,7 @@ export default function EpisodeVocaModal({
                       title="이전"
                     >
                       <span className="text-emerald-700 dark:text-emerald-200">
-                        <ChevronLeftIcon />
+                        <ChevronLeft size={22} strokeWidth={2.2} />
                       </span>
                     </button>
                   )}
@@ -548,7 +395,7 @@ export default function EpisodeVocaModal({
                       title="다음"
                     >
                       <span className="text-emerald-700 dark:text-emerald-200">
-                        <ChevronRightIcon />
+                        <ChevronRight size={22} strokeWidth={2.2} />
                       </span>
                     </button>
                   )}
@@ -580,7 +427,7 @@ export default function EpisodeVocaModal({
                              bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-lg
                              active:scale-[0.99] transition flex items-center justify-center gap-0 sm:gap-2"
                 >
-                  <FlipIcon />
+                  <RefreshCw size={22} />
                   <span className="hidden sm:inline text-[14px]">
                     {flipped ? '앞면' : '뒤집기'}
                   </span>
@@ -596,7 +443,7 @@ export default function EpisodeVocaModal({
                              active:scale-[0.99] transition flex items-center justify-center gap-0 sm:gap-2
                              disabled:opacity-50 dark:bg-white/10 dark:hover:bg-white/15 dark:text-gray-100"
                 >
-                  <SpeakerIcon on={ttsSpeaking} />
+                  {ttsSpeaking ? <VolumeX size={22} /> : <Volume2 size={22} />}
                   <span className="hidden sm:inline text-[14px]">
                     {ttsSpeaking ? '중지' : '발음'}
                   </span>
@@ -619,7 +466,7 @@ export default function EpisodeVocaModal({
                              active:scale-[0.99] transition flex items-center justify-center gap-0 sm:gap-2
                              disabled:opacity-50 dark:bg-white/10 dark:hover:bg-white/15 dark:text-gray-100"
                 >
-                  <VocaIcon />
+                  <BookOpen size={22} />
                   <span className="hidden sm:inline text-[14px]">
                     {isVocaPage ? (episodeCtaLabel ?? '에피소드') : '단어장'}
                   </span>
