@@ -61,25 +61,30 @@ BEGIN
         ORDER BY d ASC
     ) t;
 
-    -- 5. Geo Distribution (All users by country)
+    -- 5. Geo Distribution (All users by country, deduplicated by canonical country code)
     SELECT json_agg(g) INTO v_geo_data
     FROM (
-        SELECT 
-            COALESCE(c.iso_code, p.last_known_country, p.country) as country,
-            COALESCE(
-              (SELECT cc.name FROM public.countries cc WHERE cc.id::text = p.last_known_country OR cc.iso_code = p.last_known_country LIMIT 1),
-              (SELECT cc.name FROM public.countries cc WHERE cc.id::text = p.country OR cc.iso_code = p.country LIMIT 1),
-              CASE 
-                WHEN p.last_known_country = 'Unknown' OR p.country = 'Unknown' THEN '알 수 없음' 
-                ELSE COALESCE(p.last_known_country, p.country) 
-              END
-            ) as country_name,
-            COUNT(*) as count,
-            COUNT(*) FILTER (WHERE p.is_online = true OR p.last_active_at >= now() - interval '5 minutes') as online_count
-        FROM public.profiles p
-        LEFT JOIN public.countries c ON (c.id::text = COALESCE(p.last_known_country, p.country) OR c.iso_code = COALESCE(p.last_known_country, p.country))
-        WHERE (p.country IS NOT NULL AND p.country != '') OR (p.last_known_country IS NOT NULL AND p.last_known_country != '')
-        GROUP BY COALESCE(c.iso_code, p.last_known_country, p.country), p.last_known_country, p.country
+        WITH normalized AS (
+            SELECT
+                COALESCE(c.iso_code, p.last_known_country, p.country) AS canonical_country,
+                p.last_active_at
+            FROM public.profiles p
+            LEFT JOIN public.countries c
+                ON c.iso_code = COALESCE(p.last_known_country, p.country)
+                OR c.id::text = COALESCE(p.last_known_country, p.country)
+            WHERE COALESCE(p.last_known_country, p.country) IS NOT NULL
+              AND COALESCE(p.last_known_country, p.country) != ''
+        )
+        SELECT
+            canonical_country AS country,
+            canonical_country AS country_name,
+            COUNT(*)::int AS count,
+            -- online_count: last_active_at 5분 이내로 통일 (is_online은 stale 가능성 있어 제외)
+            COUNT(*) FILTER (
+                WHERE last_active_at >= now() - interval '5 minutes'
+            )::int AS online_count
+        FROM normalized
+        GROUP BY canonical_country
         ORDER BY count DESC
         LIMIT 50
     ) g;

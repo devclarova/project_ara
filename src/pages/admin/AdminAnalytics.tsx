@@ -1,11 +1,10 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Activity, Users, Database, DollarSign, TrendingUp, Zap, Filter, Download, PieChart, BarChart2, AlertTriangle, CheckCircle2, AlertOctagon, XCircle, Search, Layers, Globe } from 'lucide-react';
+import { Activity, Users, Database, DollarSign, TrendingUp, Zap, Filter, Download, BarChart2, AlertTriangle, CheckCircle2, XCircle, Search, Layers, Globe } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import ReactGA from "react-ga4";
-import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
-import { scaleLinear } from "d3-scale";
+import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
 import { usePresence } from '../../contexts/PresenceContext';
 
 // Types
@@ -46,16 +45,135 @@ type Tab = 'overview' | 'acquisition' | 'retention' | 'dataops';
 // Constants
 const GEO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
+// 숫자 코드·전체 이름·world-atlas 명칭 등을 ISO 2자리 코드로 정규화
+const getCanonicalCode = (raw: string): string => {
+  if (!raw || raw === 'Unknown' || raw === 'unknown') return 'Unknown';
+  const trimmed = raw.trim();
+  const upper = trimmed.toUpperCase();
+  if (/^[A-Z]{2}$/.test(upper)) return upper;
+  const numMap: Record<string, string> = {
+    '410': 'KR', '840': 'US', '392': 'JP', '156': 'CN', '643': 'RU',
+    '276': 'DE', '250': 'FR', '826': 'GB', '036': 'AU', '124': 'CA',
+    '356': 'IN', '076': 'BR', '484': 'MX', '704': 'VN', '360': 'ID',
+    '764': 'TH', '608': 'PH', '158': 'TW', '458': 'MY', '702': 'SG',
+    '111': 'KR', '18': 'JP',
+  };
+  if (numMap[trimmed]) return numMap[trimmed];
+  const nameMap: Record<string, string> = {
+    'KOREA': 'KR', 'SOUTH KOREA': 'KR', 'REPUBLIC OF KOREA': 'KR', 'KOREA, REPUBLIC OF': 'KR', 'KOR': 'KR',
+    'UNITED STATES': 'US', 'UNITED STATES OF AMERICA': 'US', 'USA': 'US',
+    'JAPAN': 'JP', 'JPN': 'JP',
+    'CHINA': 'CN', "PEOPLE'S REPUBLIC OF CHINA": 'CN', 'CHN': 'CN',
+    'RUSSIA': 'RU', 'RUSSIAN FEDERATION': 'RU', 'RUS': 'RU',
+    'GERMANY': 'DE', 'DEU': 'DE', 'FRANCE': 'FR', 'FRA': 'FR',
+    'UNITED KINGDOM': 'GB', 'GBR': 'GB', 'UK': 'GB',
+    'SPAIN': 'ES', 'ESP': 'ES', 'ITALY': 'IT', 'ITA': 'IT',
+    'NETHERLANDS': 'NL', 'NLD': 'NL', 'SWEDEN': 'SE', 'SWE': 'SE',
+    'SWITZERLAND': 'CH', 'CHE': 'CH', 'POLAND': 'PL', 'POL': 'PL',
+    'PORTUGAL': 'PT', 'PRT': 'PT', 'UKRAINE': 'UA', 'UKR': 'UA',
+    'NORWAY': 'NO', 'NOR': 'NO', 'DENMARK': 'DK', 'DNK': 'DK',
+    'FINLAND': 'FI', 'FIN': 'FI', 'AUSTRIA': 'AT', 'AUT': 'AT',
+    'BELGIUM': 'BE', 'BEL': 'BE', 'CZECH REPUBLIC': 'CZ', 'CZECHIA': 'CZ', 'CZE': 'CZ',
+    'AUSTRALIA': 'AU', 'AUS': 'AU', 'CANADA': 'CA', 'CAN': 'CA',
+    'INDIA': 'IN', 'IND': 'IN', 'BRAZIL': 'BR', 'BRA': 'BR',
+    'MEXICO': 'MX', 'MEX': 'MX',
+    'VIETNAM': 'VN', 'VIET NAM': 'VN', 'VNM': 'VN',
+    'INDONESIA': 'ID', 'IDN': 'ID', 'THAILAND': 'TH', 'THA': 'TH',
+    'PHILIPPINES': 'PH', 'PHL': 'PH',
+    'TAIWAN': 'TW', 'TAIWAN, PROVINCE OF CHINA': 'TW', 'TWN': 'TW',
+    'MALAYSIA': 'MY', 'MYS': 'MY', 'SINGAPORE': 'SG', 'SGP': 'SG',
+    'NEW ZEALAND': 'NZ', 'NZL': 'NZ', 'HONG KONG': 'HK', 'HKG': 'HK',
+    'TURKEY': 'TR', 'TURKIYE': 'TR', 'TUR': 'TR',
+    'SAUDI ARABIA': 'SA', 'SAU': 'SA',
+    'UNITED ARAB EMIRATES': 'AE', 'ARE': 'AE',
+    'ISRAEL': 'IL', 'ISR': 'IL',
+    'ARGENTINA': 'AR', 'ARG': 'AR',
+    'EGYPT': 'EG', 'EGY': 'EG', 'SOUTH AFRICA': 'ZA', 'ZAF': 'ZA',
+    'NIGERIA': 'NG', 'NGA': 'NG',
+    'PAKISTAN': 'PK', 'PAK': 'PK', 'BANGLADESH': 'BD', 'BGD': 'BD',
+  };
+  if (nameMap[upper]) return nameMap[upper];
+  if (/^[A-Z]{3}$/.test(upper)) return upper.slice(0, 2);
+  return 'Unknown';
+};
+
 const COUNTRY_NAMES_KO: Record<string, string> = {
-  'KR': '대한민국', 'US': '미국', 'JP': '일본', 'CN': '중국', 'VN': '베트남',
-  'ID': '인도네시아', 'TH': '태국', 'PH': '필리핀', 'TW': '대만', 'MY': '말레이시아',
-  'SG': '싱가포르', 'BR': '브라질', 'DE': '독일', 'FR': '프랑스', 'GB': '영국',
-  'CA': '캐나다', 'AU': '호주', 'RU': '러시아', 'IN': '인도', 'TR': '터키',
-  'ES': '스페인', 'IT': '이탈리아', 'MX': '멕시코', 'SA': '사우디아라비아', 'AE': '아랍에미리트',
-  'NL': '네덜란드', 'SE': '스웨덴', 'CH': '스위스', 'PL': '폴란드', 'AR': '아르헨티나',
-  'EG': '이집트', 'ZA': '남아프리카공화국', 'NG': '나이지리아', 'PK': '파키스탄', 'BD': '방글라데시',
-  'UA': '우크라이나', 'IL': '이스라엘', 'NZ': '뉴질랜드', 'HK': '홍콩', 'MO': '마카오',
-  '111': '대한민국', '18': '일본', 'Unknown': '알 수 없음'
+  // 아시아
+  'KR': '대한민국', 'JP': '일본', 'CN': '중국', 'VN': '베트남', 'ID': '인도네시아',
+  'TH': '태국', 'PH': '필리핀', 'TW': '대만', 'MY': '말레이시아', 'SG': '싱가포르',
+  'IN': '인도', 'PK': '파키스탄', 'BD': '방글라데시', 'LK': '스리랑카',
+  'NP': '네팔', 'MM': '미얀마', 'KH': '캄보디아', 'LA': '라오스',
+  'MN': '몽골', 'BT': '부탄', 'MV': '몰디브', 'TL': '동티모르',
+  'HK': '홍콩', 'MO': '마카오', 'BN': '브루나이',
+  'KZ': '카자흐스탄', 'UZ': '우즈베키스탄', 'TM': '투르크메니스탄',
+  'TJ': '타지키스탄', 'KG': '키르기스스탄', 'AF': '아프가니스탄',
+  // 중동
+  'SA': '사우디아라비아', 'AE': '아랍에미리트', 'TR': '터키',
+  'IL': '이스라엘', 'IR': '이란', 'IQ': '이라크', 'SY': '시리아',
+  'JO': '요르단', 'LB': '레바논', 'KW': '쿠웨이트', 'QA': '카타르',
+  'BH': '바레인', 'OM': '오만', 'YE': '예멘', 'PS': '팔레스타인',
+  // 유럽
+  'US': '미국', 'GB': '영국', 'DE': '독일', 'FR': '프랑스', 'IT': '이탈리아',
+  'ES': '스페인', 'RU': '러시아', 'NL': '네덜란드', 'SE': '스웨덴',
+  'CH': '스위스', 'PL': '폴란드', 'PT': '포르투갈', 'NO': '노르웨이',
+  'DK': '덴마크', 'FI': '핀란드', 'AT': '오스트리아', 'BE': '벨기에',
+  'CZ': '체코', 'RO': '루마니아', 'HU': '헝가리', 'GR': '그리스',
+  'UA': '우크라이나', 'SK': '슬로바키아', 'HR': '크로아티아',
+  'BG': '불가리아', 'RS': '세르비아', 'SI': '슬로베니아',
+  'LT': '리투아니아', 'LV': '라트비아', 'EE': '에스토니아',
+  'BY': '벨라루스', 'MD': '몰도바', 'AL': '알바니아',
+  'MK': '북마케도니아', 'BA': '보스니아 헤르체고비나',
+  'ME': '모돈테네그리당', 'XK': '코소보', 'LU': '룩셀부르크',
+  'IE': '아일랜드', 'IS': '아이슬란드', 'MT': '몰타',
+  'CY': '키프로스', 'LI': '리히텐슈타인', 'MC': '모나코',
+  'AD': '안도라', 'SM': '산마리노', 'VA': '바티칸',
+  // 아메리카화
+  'CA': '캐나다', 'BR': '브라질', 'MX': '멕시코', 'AR': '아르헨티나',
+  'CL': '칠레', 'CO': '콜롬비아', 'PE': '페루', 'VE': '베네수엘라',
+  'EC': '에쿼아도르', 'BO': '볼리비아', 'PY': '파라과이',
+  'UY': '우루과이', 'SR': '수리남', 'GY': '가이아나',
+  'GT': '과테말라', 'HN': '온두라스', 'SV': '엘살바도르',
+  'NI': '니카라과아', 'CR': '코스타리카', 'PA': '파나마',
+  'CU': '쿠바', 'DO': '도미니카공화국', 'HT': '아이티',
+  'JM': '자메이카', 'TT': '트리니다드토바고', 'BB': '바르바도스',
+  'LC': '세인트루시아', 'VC': '세인트빈센트', 'GD': '그레나다',
+  'AG': '앤티가바부다', 'DM': '도미니카', 'KN': '세인트키츠네비스',
+  'BS': '바하마', 'BZ': '벨리즈', 'PR': '푸에르토리코',
+  // 아프리카
+  'ZA': '남아프리카공화국', 'NG': '나이지리아', 'EG': '이집트',
+  'KE': '케냐', 'ET': '에티오피아', 'GH': '가나', 'TZ': '탄자니아',
+  'UG': '우간다', 'DZ': '알제리', 'MA': '모로코',
+  'CI': '코트디부아르', 'CM': '카메룬', 'MZ': '모잠비크',
+  'MG': '마다가스카르', 'AO': '앙골라', 'ZM': '잠비아',
+  'ZW': '짐바브웨', 'SN': '세네갈', 'TN': '튀니지',
+  'SD': '수단', 'SS': '남수단', 'ML': '말리', 'NE': '니제르',
+  'BF': '부르키나파소', 'MR': '모리타니', 'LY': '리비아',
+  'SO': '소말리아', 'RW': '르완다', 'BI': '부룬디',
+  'TD': '차드', 'CF': '중앙아프리카공화국',
+  'CD': '콩고민주주의공화국', 'CG': '콩고공화국',
+  'GA': '가봉', 'GQ': '적도기니', 'ST': '상투메프린시페',
+  'GW': '기니비사우', 'GN': '기니', 'SL': '시에라리온',
+  'LR': '라이베리아', 'GM': '감비아', 'CV': '카보베르데',
+  'BJ': '베냉', 'TG': '토고', 'BW': '보츠와나',
+  'NA': '나미비아', 'LS': '레소토', 'SZ': '에스와티니',
+  'MW': '말라위', 'SC': '세이셸', 'MU': '모리셔스',
+  'KM': '코모로', 'DJ': '지부티', 'ER': '에리트레아', 'RE': '레위니옹', 'YT': '마요트',
+  'EH': '서사하라',
+  // 오세아니아
+  'AU': '호주', 'NZ': '뉴질랜드', 'PG': '파푸아뉴기니',
+  'FJ': '피지', 'SB': '솔로몬제도', 'VU': '바누아투',
+  'WS': '사모아', 'TO': '통가', 'TV': '투발루', 'NR': '나우루',
+  'PW': '팔라우', 'MH': '마셜제도', 'FM': '미크로네시아',
+  'KI': '키리바시', 'CK': '쿡제도', 'NC': '뉴칼레도니아',
+  'PF': '프랑스령폴리네시아', 'AS': '아메리칸사모아', 'GU': '괌',
+  'MP': '북마리아나제도', 'VI': '미국령버진아일랜드', 'GL': '그린란드',
+  'FO': '페로제도', 'GF': '프랑스령기아나', 'PM': '세인트피에르미클롱',
+  'Unknown': '알 수 없음',
+};
+
+const getCountryNameKO = (code: string, fallback?: string): string => {
+  const upper = (code || '').toUpperCase();
+  return COUNTRY_NAMES_KO[upper] || COUNTRY_NAMES_KO[code] || (fallback && fallback !== code ? fallback : undefined) || '알 수 없음';
 };
 
 const AdminAnalytics = () => {
@@ -68,12 +186,17 @@ const AdminAnalytics = () => {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
-  const { onlineUsers, dbOnlineUsers, onlineCount, sessionCount, isUserOnline, stats: globalStats } = usePresence();
-  const [activeUsersSet, setActiveUsersSet] = useState<Set<string>>(new Set());
+  const { onlineCount, sessionCount, stats: globalStats } = usePresence();
   const [tooltipContent, setTooltipContent] = useState("");
+
+  // 2단계 추가 상태: 지도 모드 및 모달 제어
+  const [mapMode, setMapMode] = useState<'total' | 'online'>('total');
+  const [isStatesModalOpen, setIsStatesModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Tab Scroll Logic
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const mapContainerRef = React.useRef<HTMLDivElement>(null);
   const [showLeftGradient, setShowLeftGradient] = useState(false);
   const [showRightGradient, setShowRightGradient] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
@@ -123,24 +246,51 @@ const AdminAnalytics = () => {
      return () => window.removeEventListener('resize', handleScroll);
   }, []);
 
-  // Map Color Scale
+  // 지도 휠 이벤트: 최대/최소 줌 경계에서 페이지 스크롤 전파 차단
+  useEffect(() => {
+    const el = mapContainerRef.current;
+    if (!el) return;
+    const onMapWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    el.addEventListener('wheel', onMapWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onMapWheel);
+  }, [isMounted]);
+
+  // Map Color Scale - 모드에 따라 유연한 임계값 적용
   const colorScale = useMemo(() => {
-     const maxCount = stats?.geoData.length ? Math.max(...stats.geoData.map(d => d.count)) : 10;
-     return scaleLinear().domain([0, maxCount]).range(["#D1FAE5", "#059669"]);
-  }, [stats]);
+     const isOnlineMode = mapMode === 'online';
+     const getThresholdColor = (count: number) => {
+        if (count <= 0) return "#E5E7EB";
+        if (isOnlineMode) {
+            if (count <= 1) return "#D1FAE5";
+            if (count <= 3) return "#6EE7B7";
+            if (count <= 10) return "#10B981";
+            return "#064E3B";
+        } else {
+            if (count <= 2) return "#D1FAE5";
+            if (count <= 10) return "#6EE7B7";
+            if (count <= 30) return "#10B981";
+            return "#064E3B";
+        }
+     };
+     return getThresholdColor;
+  }, [mapMode]);
 
 
-  // Initialize & Fetch
+  // GA4 Init & Mount (once only)
   useEffect(() => {
     setTimeout(() => setIsMounted(true), 200);
-    
-    // GA4 Init
     const GA_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
     if (GA_ID) {
         ReactGA.initialize(GA_ID);
         ReactGA.send({ hitType: "pageview", page: window.location.pathname });
     }
+  }, []);
 
+  // Fetch Stats & Realtime (re-runs on dateRange change)
+  useEffect(() => {
     const fetchStats = async () => {
       try {
         setLoading(true);
@@ -159,13 +309,24 @@ const AdminAnalytics = () => {
           activity: (item.posts || 0) + (item.comments || 0)
         })) || [];
 
-        // Aggregate geo data for map & list
-        const geoArray = data.geo_data?.map((d: any) => ({
-          country: d.country,
-          country_name: d.country_name,
-          count: d.count,
-          online: d.online_count || 0
-        })) || [];
+        // 국가 코드 정규화 + 중복 집계 (같은 나라의 여러 표현을 하나로 합산)
+        const geoMap = new Map<string, { country: string; country_name: string; count: number; online: number }>();
+        (data.geo_data || []).forEach((d: any) => {
+          const code = getCanonicalCode(d.country || '');
+          const existing = geoMap.get(code);
+          if (existing) {
+            existing.count += Number(d.count) || 0;
+            existing.online += Number(d.online_count) || 0;
+          } else {
+            geoMap.set(code, {
+              country: code,
+              country_name: COUNTRY_NAMES_KO[code] || d.country_name || code,
+              count: Number(d.count) || 0,
+              online: Number(d.online_count) || 0,
+            });
+          }
+        });
+        const geoArray = Array.from(geoMap.values()).sort((a, b) => b.count - a.count);
 
         setStats({
           totalUsers: data.summary.total_users || 0,
@@ -195,12 +356,10 @@ const AdminAnalytics = () => {
     
     fetchStats();
 
-    // --- Realtime Subscriptions ---
-    
-    // Presence Context in App.tsx handles global online tracking.
-    // Logic for Admin perspective: we just consume the shared presence state.
+    // 5분마다 자동 재조회 - geo_data online_count와 activeUsers 모두 동일 기준(last_active_at >= 5분)으로 갱신
+    const refreshInterval = setInterval(fetchStats, 5 * 60 * 1000);
 
-    // 2. Activity Monitor (Tweets/Comments) - Updates Chart & Counters
+    // Activity Monitor (Tweets/Comments)
     const activityChannel = supabase
         .channel('admin-stats-activity')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tweets' }, () => {
@@ -226,9 +385,11 @@ const AdminAnalytics = () => {
         .subscribe();
 
     return () => { 
+        clearInterval(refreshInterval);
         supabase.removeChannel(activityChannel);
     };
-  }, []);
+  }, [dateRange]);
+
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -443,81 +604,156 @@ const AdminAnalytics = () => {
                          </div>
                       </div>
 
-                      {/* Right: Geo Map */}
-                      <div className="bg-secondary p-6 rounded-2xl border border-gray-300 dark:border-gray-500 shadow-sm flex flex-col">
-                         <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
-                             <Globe size={18} className="text-muted-foreground" />
-                             실시간 접속 지역 (World Map)
-                         </h3>
-                         <div className="flex-1 flex flex-col items-center justify-center min-h-[250px] bg-muted/30 rounded-xl overflow-hidden relative">
-                             {isMounted ? (
-                                <div className="w-full h-full relative">
-                                    <ComposableMap projection="geoMercator" projectionConfig={{ scale: 100 }}>
-                                        <Geographies geography={GEO_URL}>
-                                            {({ geographies }: { geographies: any[] }) =>
-                                                geographies.map((geo: any) => {
-                                                    const { NAME, ISO_A2 } = geo.properties;
-                                                    const countryData = stats?.geoData.find(d => d.country === ISO_A2 || d.country === NAME);
-                                                    return (
-                                                        <Geography
-                                                            key={geo.rsmKey}
-                                                            geography={geo}
-                                                            fill={countryData ? colorScale(countryData.count) : "#EAEAEC"}
-                                                            stroke="#D6D6DA"
-                                                            strokeWidth={0.5}
-                                                            onMouseEnter={() => {
-                                                                setTooltipContent(`${COUNTRY_NAMES_KO[ISO_A2] || NAME}: ${countryData?.count || 0}명`);
-                                                            }}
-                                                            onMouseLeave={() => {
-                                                                setTooltipContent("");
-                                                            }}
-                                                            style={{
-                                                                default: { outline: "none" },
-                                                                hover: { fill: "#10B981", outline: "none", cursor: "pointer" },
-                                                                pressed: { outline: "none" },
-                                                            }}
-                                                        />
-                                                    );
-                                                })
-                                            }
-                                        </Geographies>
-                                    </ComposableMap>
-                                    {tooltipContent && (
-                                        <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-foreground/90 text-background text-[10px] px-2 py-1 rounded-md shadow-xl pointer-events-none animate-in fade-in zoom-in-95 duration-200 z-50 font-bold">
-                                            {tooltipContent}
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="text-xs text-muted-foreground">Loading Map...</div>
-                            )}
-                            
-                            {/* Simple Legend Overlay */}
-                            <div className="absolute bottom-2 left-2 right-2 bg-background/80 backdrop-blur-sm p-3 rounded-lg border shadow-sm">
-                                <div className="flex flex-col gap-2">
-                                     {(stats?.geoData || []).slice(0, 3).map((d, i) => (
-                                         <div key={i} className="flex justify-between text-xs">
-                                             <span className="font-semibold">
-                                               {COUNTRY_NAMES_KO[d.country] || d.country_name || d.country}
-                                             </span>
-                                             <span className="font-bold text-emerald-600">{d.count} Users</span>
-                                         </div>
-                                     ))}
-                                     {(stats?.geoData.length || 0) > 3 && (
-                                         <div className="text-[10px] text-center text-muted-foreground pt-1 border-t">
-                                             + {(stats?.geoData.length || 0) - 3} more regions
+                       {/* Right: Geo Map */}
+                       <div className="bg-secondary p-6 rounded-2xl border border-gray-300 dark:border-gray-500 shadow-sm flex flex-col">
+                          <div className="flex items-center justify-between mb-4">
+                             <h3 className="font-bold text-foreground flex items-center gap-2">
+                                 <Globe size={18} className="text-muted-foreground" />
+                                 실시간 접속 지역
+                             </h3>
+                             <div className="flex p-0.5 bg-muted/50 rounded-lg border border-border/40 scale-95 origin-right">
+                                <button onClick={() => setMapMode('total')} className={`px-3 py-1 rounded-md text-[10px] font-black transition-all ${mapMode === 'total' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm ring-1 ring-black/5' : 'text-muted-foreground hover:text-foreground'}`}>전체</button>
+                                <button onClick={() => setMapMode('online')} className={`px-2.5 py-1 rounded-md text-[10px] font-black transition-all flex items-center gap-1 ${mapMode === 'online' ? 'bg-white dark:bg-slate-800 text-emerald-600 shadow-sm ring-1 ring-black/5' : 'text-muted-foreground hover:text-foreground'}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${mapMode === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground'}`} />라이브
+                                </button>
+                             </div>
+                          </div>
+                          <div className="flex-1 flex flex-col items-center justify-center min-h-[300px] bg-muted/20 rounded-xl overflow-hidden relative border border-border/40">
+                              {isMounted ? (
+                                 <div ref={mapContainerRef} className="w-full h-full relative cursor-move">
+                                     <ComposableMap projection="geoMercator" projectionConfig={{ scale: 120 }}>
+                                         <ZoomableGroup zoom={1} maxZoom={5} center={[0, 20]}>
+                                             <Geographies geography={GEO_URL}>
+                                                 {({ geographies }: { geographies: any[] }) =>
+                                                     geographies.map((geo: any) => {
+                                                         const { NAME, name, ISO_A2, iso_a2 } = geo.properties;
+                                                         const targetName = NAME || name;
+                                                         const targetCode = ISO_A2 || iso_a2;
+                                                         if (targetName === 'Antarctica' || targetName === 'Fr. S. Antarctic Lands') return null;
+                                                         const geoCode = getCanonicalCode(targetCode || targetName || '');
+                                                         const countryData = geoCode !== 'Unknown' ? stats?.geoData.find(d => d.country === geoCode) : undefined;
+                                                         const val = mapMode === 'total' ? (countryData?.count || 0) : (countryData?.online || 0);
+                                                         const fillColor = colorScale(val) as string;
+                                                         const displayName = countryData?.country_name || getCountryNameKO(geoCode, targetName);
+                                                         return (
+                                                             <Geography
+                                                                 key={geo.rsmKey}
+                                                                 geography={geo}
+                                                                 onMouseEnter={() => setTooltipContent(`${displayName}\n전체: ${countryData?.count || 0}명 | 온라인: ${countryData?.online || 0}명`)}
+                                                                 onMouseLeave={() => setTooltipContent("")}
+                                                                 style={{
+                                                                     default: { fill: fillColor, outline: "none", transition: "all 300ms", stroke: "#FFFFFF", strokeWidth: 0.4 },
+                                                                     hover: { fill: "#10B981", outline: "none", cursor: "pointer", stroke: "#FFFFFF", strokeWidth: 0.6 },
+                                                                     pressed: { outline: "none" },
+                                                                 }}
+                                                             />
+                                                         );
+                                                     })
+                                                 }
+                                             </Geographies>
+                                         </ZoomableGroup>
+                                     </ComposableMap>
+                                     {tooltipContent && (
+                                         <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-foreground text-background text-[11px] px-3 py-1.5 rounded-lg shadow-2xl pointer-events-none animate-in fade-in zoom-in-95 duration-200 z-50 font-bold border border-white/10 whitespace-pre-line text-center">
+                                             {tooltipContent}
                                          </div>
                                      )}
-                                     {(stats?.geoData.length === 0) && <div className="text-xs text-center text-muted-foreground">No location data yet</div>}
-                                </div>
+                                 </div>
+                             ) : (
+                                 <div className="text-xs text-muted-foreground animate-pulse">Loading Map...</div>
+                             )}
+                             <div className="absolute bottom-3 left-3 right-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-4 rounded-xl border border-border/60 shadow-xl z-20">
+                                 <div className="space-y-3">
+                                      <div className="flex justify-between items-center">
+                                          <div className="flex flex-col gap-1.5 flex-1">
+                                              <div className="flex justify-between text-[8px] md:text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">
+                                                  <span>낮음</span><span>{mapMode === 'total' ? '유저 밀도' : '온라인 접속'}</span><span>높음</span>
+                                              </div>
+                                              <div className="flex w-full h-1.5 md:h-2 rounded-full overflow-hidden border border-black/5 shadow-inner">
+                                                  {["#E5E7EB", "#D1FAE5", "#6EE7B7", "#10B981", "#064E3B"].map((c, i) => (
+                                                      <div key={i} className="flex-1 h-full" style={{ backgroundColor: c }} />
+                                                  ))}
+                                              </div>
+                                          </div>
+                                          <button onClick={() => setIsStatesModalOpen(true)} className="ml-4 px-3 py-1.5 bg-primary/10 text-primary text-[10px] font-black rounded-lg hover:bg-primary/20 transition-colors whitespace-nowrap border border-primary/20">전체 보기</button>
+                                      </div>
+                                      <div className="h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
+                                      <div className="space-y-2">
+                                          {(stats?.geoData || []).filter(d => d.country !== 'Unknown').sort((a, b) => (mapMode === 'total' ? b.count - a.count : (b.online || 0) - (a.online || 0))).slice(0, 3).map((d, i) => (
+                                            <div key={i} className="flex items-center justify-between group/item">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-2.5 h-2.5 rounded-full shadow-sm ring-1 ring-black/5" style={{ backgroundColor: colorScale(mapMode === 'total' ? d.count : (d.online || 0)) as string }} />
+                                                    <span className="text-[12px] font-bold text-foreground/90">{getCountryNameKO(d.country, d.country_name)}</span>
+                                                </div>
+                                                <span className="text-[11px] font-black text-primary">{(mapMode === 'total' ? d.count : (d.online || 0)).toLocaleString()}명</span>
+                                            </div>
+                                          ))}
+                                          {(stats?.geoData.length === 0) && <div className="text-xs text-center text-muted-foreground">지역 데이터가 없습니다</div>}
+                                      </div>
+                                 </div>
+                             </div>
+                          </div>
+                       </div>
+                    </div>
+
+                    {/* 전체 국가 통계 모달 */}
+                    {isStatesModalOpen && (
+                      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-black/60 animate-in fade-in duration-300" onClick={() => setIsStatesModalOpen(false)} />
+                        <div className="relative w-full max-w-2xl bg-secondary rounded-2xl border border-border shadow-2xl flex flex-col max-h-[80vh] animate-in zoom-in-95 duration-300">
+                          <div className="flex items-center justify-between p-5 border-b border-border/60">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-primary/10 text-primary rounded-xl"><Globe size={20} /></div>
+                              <div>
+                                <h3 className="font-bold text-foreground">국가별 접속 통계</h3>
+                                <p className="text-xs text-muted-foreground">전체 {stats?.geoData.length || 0}개 지역 · {mapMode === 'total' ? '전체 사용자' : '온라인 사용자'} 기준</p>
+                              </div>
                             </div>
-                         </div>
+                            <button onClick={() => setIsStatesModalOpen(false)} className="p-2 hover:bg-muted rounded-lg transition-colors"><XCircle size={20} className="text-muted-foreground" /></button>
+                          </div>
+                          <div className="p-4 border-b border-border/40">
+                            <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg border border-border/40">
+                              <Search size={14} className="text-muted-foreground" />
+                              <input type="text" placeholder="국가 검색..." className="bg-transparent border-none outline-none text-sm flex-1 text-foreground placeholder:text-muted-foreground" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                            </div>
+                          </div>
+                          <div className="flex-1 overflow-y-auto p-2 scrollbar-hide">
+                            <table className="w-full text-sm">
+                              <thead className="sticky top-0 bg-secondary/95 z-10">
+                                <tr className="text-xs font-black text-muted-foreground uppercase tracking-wider">
+                                  <th className="text-left py-2 px-3">순위</th><th className="text-left py-2 px-3">국가</th>
+                                  <th className="text-right py-2 px-3">전체</th><th className="text-right py-2 px-3">온라인</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-border/40">
+                                {(stats?.geoData || []).filter(d => getCountryNameKO(d.country, d.country_name).includes(searchTerm) || d.country.toLowerCase().includes(searchTerm.toLowerCase())).sort((a, b) => (mapMode === 'total' ? b.count - a.count : (b.online || 0) - (a.online || 0))).map((d, i) => (
+                                  <tr key={i} className="hover:bg-muted/30 transition-colors">
+                                    <td className="py-3 px-3 text-muted-foreground font-bold text-xs">#{i + 1}</td>
+                                    <td className="py-3 px-3">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colorScale(mapMode === 'total' ? d.count : (d.online || 0)) as string }} />
+                                        <span className="font-semibold">{getCountryNameKO(d.country, d.country_name)}</span>
+                                        <span className="text-[10px] text-muted-foreground">{d.country}</span>
+                                      </div>
+                                    </td>
+                                    <td className="py-3 px-3 text-right font-bold text-primary">{d.count.toLocaleString()}</td>
+                                    <td className="py-3 px-3 text-right text-emerald-600 font-bold">{(d.online || 0).toLocaleString()}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                          <div className="p-4 border-t border-border/60 flex justify-between items-center">
+                            <span className="text-xs text-muted-foreground">전체 {stats?.geoData.length || 0}개 지역</span>
+                            <button onClick={() => setIsStatesModalOpen(false)} className="px-4 py-2 bg-muted text-foreground text-sm font-bold rounded-lg hover:bg-muted/80">닫기</button>
+                          </div>
+                        </div>
                       </div>
-                   </div>
-                </>
-               )}
-            </div>
-         )}
+                    )}
+                 </>
+                )}
+             </div>
+          )}
 
           {activeTab === 'acquisition' && (
             <div className="space-y-6">
