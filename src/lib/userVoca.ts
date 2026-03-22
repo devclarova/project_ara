@@ -13,6 +13,7 @@ export type UserVocaRow = {
   example_tr?: string | null;
   pos?: string | null;
   pron?: string | null;
+  image_url?: string | null;
 
   status: VocaStatus;
   wrong_count: number;
@@ -37,14 +38,86 @@ async function requireUserId() {
 export async function fetchMyVoca() {
   const user_id = await requireUserId();
 
-  const { data, error } = await supabase
+  const { data: vocaRows, error: vocaError } = await supabase
     .from('user_voca')
     .select('*')
     .eq('user_id', user_id)
     .order('updated_at', { ascending: false });
 
-  if (error) throw error;
-  return (data ?? []) as UserVocaRow[];
+  if (vocaError) throw vocaError;
+
+  const rows = (vocaRows ?? []) as UserVocaRow[];
+
+  if (rows.length === 0) return rows;
+
+  // word_key가 "1:5" 같은 형식이면 뒤쪽 실제 word.id 추출
+  const parsedWordIds = rows
+    .map(row => {
+      const raw = String(row.word_key ?? '').trim();
+      if (!raw) return null;
+
+      const last = raw.includes(':') ? raw.split(':').pop() : raw;
+      if (!last) return null;
+
+      const num = Number(last);
+      return Number.isFinite(num) ? num : null;
+    })
+    .filter((v): v is number => v !== null);
+
+  if (parsedWordIds.length === 0) {
+    return rows.map(row => ({
+      ...row,
+      image_url: row.image_url ?? null,
+      pron: row.pron ?? null,
+    })) as UserVocaRow[];
+  }
+
+  try {
+    const { data: wordRows, error: wordError } = await supabase
+      .from('word')
+      .select('id, image_url, pronunciation')
+      .in('id', parsedWordIds);
+
+    if (wordError) {
+      console.error('word 정보 조회 실패:', wordError);
+      return rows.map(row => ({
+        ...row,
+        image_url: row.image_url ?? null,
+        pron: row.pron ?? null,
+      })) as UserVocaRow[];
+    }
+
+    const wordMap = new Map(
+      (wordRows ?? []).map(
+        (w: { id: number; image_url?: string | null; pronunciation?: string | null }) => [
+          String(w.id),
+          {
+            image_url: w.image_url ?? null,
+            pronunciation: w.pronunciation ?? null,
+          },
+        ],
+      ),
+    );
+
+    return rows.map(row => {
+      const raw = String(row.word_key ?? '').trim();
+      const last = raw.includes(':') ? (raw.split(':').pop() ?? '') : raw;
+      const matched = wordMap.get(String(last));
+
+      return {
+        ...row,
+        image_url: row.image_url ?? matched?.image_url ?? null,
+        pron: row.pron ?? matched?.pronunciation ?? null,
+      };
+    }) as UserVocaRow[];
+  } catch (err) {
+    console.error('word 테이블 매핑 실패:', err);
+    return rows.map(row => ({
+      ...row,
+      image_url: row.image_url ?? null,
+      pron: row.pron ?? null,
+    })) as UserVocaRow[];
+  }
 }
 
 export async function upsertMyVoca(input: {
@@ -56,6 +129,7 @@ export async function upsertMyVoca(input: {
   example_tr?: string | null;
   pos?: string | null;
   pron?: string | null;
+  image_url?: string | null;
 
   status?: VocaStatus;
   wrong_count?: number;
@@ -77,6 +151,7 @@ export async function upsertMyVoca(input: {
     example_tr: input.example_tr ?? null,
     pos: input.pos ?? null,
     pron: input.pron ?? null,
+    image_url: input.image_url ?? null,
 
     status: input.status ?? 'unknown',
     wrong_count: input.wrong_count ?? 0,
@@ -120,7 +195,6 @@ export async function updateMyVocaStatus(word_key: string, status: VocaStatus) {
   if (error) throw error;
 }
 
-/** user_id 조건 반드시 포함 */
 export async function isSavedMyVoca(word_key: string) {
   const user_id = await requireUserId();
 

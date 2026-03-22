@@ -81,7 +81,7 @@ export default function EpisodeVocaModal({
   }, [initialWordId, words, hasWords]);
 
   const [index, setIndex] = useState(0);
-  const [flipped, setFlipped] = useState(false);
+  const [showOriginal, setShowOriginal] = useState(false);
   const [saved, setSaved] = useState(false);
   const [ttsSpeaking, setTtsSpeaking] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -89,12 +89,12 @@ export default function EpisodeVocaModal({
   useEffect(() => {
     if (!isOpen) return;
     setIndex(initialIndex);
-    setFlipped(false);
+    setShowOriginal(false);
   }, [isOpen, initialIndex]);
 
   useEffect(() => {
     if (!isOpen) return;
-    setFlipped(false);
+    setShowOriginal(false);
     setImgError(false);
   }, [index, isOpen]);
 
@@ -170,19 +170,13 @@ export default function EpisodeVocaModal({
     targetLang,
   );
 
-  const displayMeaning = flipped
-    ? isKorean
-      ? meaningSrc
-      : normalize(translatedMeaning) || meaningSrc
-    : meaningSrc;
+  const translatedMeaningText = isKorean ? meaningSrc : normalize(translatedMeaning) || meaningSrc;
+  const translatedExampleText = isKorean ? exampleSrc : normalize(translatedExample) || exampleSrc;
+  const translatedPosText = isKorean ? posSrc : normalize(translatedPos) || posSrc;
 
-  const displayExample = flipped
-    ? isKorean
-      ? exampleSrc
-      : normalize(translatedExample) || exampleSrc
-    : exampleSrc;
-
-  const displayPos = flipped ? (isKorean ? posSrc : normalize(translatedPos) || posSrc) : posSrc;
+  const displayMeaning = showOriginal ? meaningSrc : translatedMeaningText;
+  const displayExample = showOriginal ? exampleSrc : translatedExampleText;
+  const displayPos = showOriginal ? posSrc : translatedPosText;
   const displayPron = pronSrc;
 
   useEffect(() => {
@@ -233,7 +227,7 @@ export default function EpisodeVocaModal({
       if (e.key === 'ArrowLeft') goPrev();
       if (e.key === ' ') {
         e.preventDefault();
-        setFlipped(v => !v);
+        setShowOriginal(v => !v);
       }
     };
 
@@ -260,7 +254,8 @@ export default function EpisodeVocaModal({
         example_ko: word.exampleKo ?? null,
         example_tr: word.exampleEn ?? null,
         pos: word.pos ?? null,
-        pron: word.pron ?? null,
+        pron: word.pronKo ?? word.pron ?? null,
+        image_url: word.image_url ?? null,
         status: 'unknown',
         wrong_count: 0,
         source_study_path: sourceStudyPath ?? null,
@@ -376,23 +371,21 @@ export default function EpisodeVocaModal({
                   </div>
 
                   <div className="mt-1 min-h-[18px] text-[12px] sm:text-xs text-gray-400">
-                    {displayPos ? displayPos : <span className="invisible">placeholder</span>}
+                    {displayPos ? (
+                      `(${displayPos})`
+                    ) : (
+                      <span className="invisible">placeholder</span>
+                    )}
                   </div>
                 </div>
 
                 <div className="mt-3 sm:mt-2">
-                  {/* <div className="text-base sm:text-xs font-extrabold tracking-wide text-emerald-600 text-center">
-                    뜻
-                  </div> */}
                   <div className="mt-2 text-center text-[18px] sm:text-[22px] font-bold text-gray-900 dark:text-gray-100 px-2 break-keep min-h-[30px]">
                     {displayMeaning || '-'}
                   </div>
                 </div>
 
                 <div className="mt-3 sm:mt-2">
-                  {/* <div className="text-base sm:text-xs font-extrabold tracking-wide text-emerald-600 text-center">
-                    예문
-                  </div> */}
                   <div className="mt-2 px-3 sm:px-5 text-center text-[13px] sm:text-[15px] leading-relaxed text-gray-600 dark:text-gray-300 break-keep min-h-[48px]">
                     {displayExample ? `“${displayExample}”` : '-'}
                   </div>
@@ -429,15 +422,17 @@ export default function EpisodeVocaModal({
             <div className="px-5 sm:px-7 pb-4 sm:pb-7 pt-3 sm:pt-5">
               <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 <button
-                  onClick={() => setFlipped(v => !v)}
-                  aria-label={flipped ? '원문 보기' : '번역 보기'}
-                  title={flipped ? '원문 보기' : '번역 보기'}
+                  onClick={() => setShowOriginal(v => !v)}
+                  aria-label={showOriginal ? '번역 보기' : '원문 보기'}
+                  title={showOriginal ? '번역 보기' : '원문 보기'}
                   className="h-[44px] sm:h-[56px] rounded-[16px] sm:rounded-[18px]
                              bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-lg
                              active:scale-[0.99] transition flex items-center justify-center gap-0 sm:gap-2"
                 >
                   <RefreshCw size={22} />
-                  <span className="hidden sm:inline text-[14px]">{flipped ? '원문' : '번역'}</span>
+                  <span className="hidden sm:inline text-[14px]">
+                    {showOriginal ? '번역 보기' : '원문 보기'}
+                  </span>
                 </button>
 
                 <button
