@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { BetaAnalyticsDataClient } from '@google-analytics/data';
+import path from 'path';
 
 dotenv.config();
 
@@ -594,6 +596,41 @@ app.get('/api/admin/stats/overview', async (req, res) => {
   } catch (error) {
     console.error('Admin Stats API Error:', error);
     return res.status(500).json({ error: 'Failed to fetch admin stats' });
+  }
+});
+
+// GA4 Data API endpoint
+app.post('/api/analytics', async (req, res) => {
+  try {
+    const propertyId = process.env.GA4_PROPERTY_ID;
+    if (!propertyId) {
+      return res.status(500).json({ error: 'GA4_PROPERTY_ID is not configured' });
+    }
+
+    const { dateRanges, dimensions, metrics } = req.body;
+
+    const analyticsDataClient = new BetaAnalyticsDataClient({
+      keyFilename: path.resolve(process.cwd(), 'ga-credentials.json')
+    });
+
+    const [response] = await analyticsDataClient.runReport({
+      property: `properties/${propertyId}`,
+      dateRanges: dateRanges || [{ startDate: '30daysAgo', endDate: 'today' }],
+      dimensions: dimensions || [{ name: 'sessionDefaultChannelGroup' }],
+      metrics: metrics || [{ name: 'activeUsers' }, { name: 'sessions' }, { name: 'screenPageViews' }],
+    });
+
+    // Extracting data in a simple format
+    const formattedData = response.rows?.map(row => {
+      const dimensionValues = row.dimensionValues?.map(d => d.value) || [];
+      const metricValues = row.metricValues?.map(m => m.value) || [];
+      return { dimensions: dimensionValues, metrics: metricValues };
+    }) || [];
+
+    return res.status(200).json({ data: formattedData, rowCount: response.rowCount });
+  } catch (error) {
+    console.error('GA4 Analytics Request Error:', error);
+    return res.status(500).json({ error: 'Failed to fetch GA4 data' });
   }
 });
 

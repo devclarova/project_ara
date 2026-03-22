@@ -49,6 +49,7 @@ export default function PopularContentSection() {
         `,
         )
         .eq('is_featured', true)
+        .eq('is_hidden', false)
         .order('id', { ascending: true })
         .limit(6);
 

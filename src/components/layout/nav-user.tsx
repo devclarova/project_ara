@@ -157,6 +157,13 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={async () => {
+                // 로그아웃 전 오프라인 상태 즉시 반영
+                if (user) {
+                  await supabase
+                    .from('profiles')
+                    .update({ is_online: false, last_active_at: new Date().toISOString() })
+                    .eq('user_id', user.id);
+                }
                 await supabase.auth.signOut();
                 window.location.reload();
               }}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import { addYears, addDays } from 'date-fns';
 import { 
   MoreHorizontal, 
@@ -24,7 +25,8 @@ import {
   Trash2,
   User,
   ShieldAlert,
-  Loader2
+  Loader2,
+  Target
 } from 'lucide-react';
 import { usePresence } from '@/contexts/PresenceContext';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
@@ -79,11 +81,14 @@ interface AdminUser {
 }
 
 const UserManagement = () => {
+  const navigate = useNavigate();
+  const { onlineUsers, dbOnlineUsers, onlineCount: globalOnlineCount, sessionCount, isUserOnline, stats: globalStats } = usePresence();
+
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const { onlineUsers, dbOnlineUsers, onlineCount: globalOnlineCount, sessionCount, isUserOnline, stats: globalStats } = usePresence();
-
+  const [trackedUserIds, setTrackedUserIds] = useState<Set<string>>(new Set());
+  
   // Ban Dialog State
   const [showBanDialog, setShowBanDialog] = useState(false);
   const [showReportsModal, setShowReportsModal] = useState(false);
@@ -127,7 +132,10 @@ const UserManagement = () => {
   const [filterCountry, setFilterCountry] = useState('All');
   const [filterBirthday, setFilterBirthday] = useState('All');
   const [filterCreatedAt, setFilterCreatedAt] = useState('All');
+  const [filterTracking, setFilterTracking] = useState('All');
   const [sortBy, setSortBy] = useState('last_active_desc');
+  
+  const [availableCountries, setAvailableCountries] = useState<{ iso_code: string, name: string }[]>([]);
 
   const modalUser = useMemo(() => targetUser ? { 
     id: targetUser.id, 
@@ -135,11 +143,22 @@ const UserManagement = () => {
     nickname: targetUser.nickname 
   } : null, [targetUser?.id]);
 
+  // 💎 통합 온라인 판별: PresenceContext의 isUserOnline(웹소켓+DB 5분 임계치) + RPC 스냅샷 폴백
+  const checkIsOnline = useCallback((u: AdminUser) => {
+    // 1. PresenceContext 기반 (웹소켓 + DB 실시간 구독, 좀비 방어 내장)
+    if (isUserOnline(u.profile_id)) return true;
+    // 2. RPC에서 받아온 is_online 스냅샷 폴백 (초기 로드 직후, 아직 DB 구독이 안 먹었을 때)
+    if (u.is_online && u.last_active_at) {
+      return (Date.now() - new Date(u.last_active_at).getTime()) < 5 * 60 * 1000;
+    }
+    return false;
+  }, [isUserOnline]);
+
   // Stable sorting: Online first, then by ID (to keep internal order fixed)
   const sortedUsers = useMemo(() => {
     return [...users].sort((a, b) => {
-      const aOnline = isUserOnline(a.profile_id);
-      const bOnline = isUserOnline(b.profile_id);
+      const aOnline = checkIsOnline(a);
+      const bOnline = checkIsOnline(b);
       
       // First priority: Online status
       if (aOnline !== bOnline) {
@@ -173,7 +192,8 @@ const UserManagement = () => {
         filter_country: filterCountry,
         filter_birthday: filterBirthday,
         filter_created_at: filterCreatedAt,
-        sort_by: sortBy
+        sort_by: sortBy,
+        filter_tracking: filterTracking
       });
 
       if (error) throw error;
@@ -191,7 +211,37 @@ const UserManagement = () => {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [page, searchTerm, filterRole, filterStatus, filterGender, filterOnline, filterCountry, filterBirthday, filterCreatedAt, sortBy]);
+  }, [page, searchTerm, filterRole, filterStatus, filterGender, filterOnline, filterCountry, filterBirthday, filterCreatedAt, sortBy, filterTracking]);
+
+  // 추적된 유저(traffic_logs) 데이터 가져오기 (하이브리드 트래킹 배지용)
+  useEffect(() => {
+    const fetchTrackedUsers = async () => {
+      try {
+        const { data } = await supabase.from('traffic_logs').select('user_id').not('user_id', 'is', null);
+        if (data) {
+          setTrackedUserIds(new Set(data.map(d => d.user_id)));
+        }
+      } catch (e) {
+        console.error('트래킹 유저 목록 로드 실패:', e);
+      }
+    };
+    fetchTrackedUsers();
+  }, []);
+
+  // 지원하는 모든 국적 범주 데이터 가져오기 (국적 필터용)
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const { data } = await supabase.from('countries').select('iso_code, name').order('name');
+        if (data) {
+          setAvailableCountries(data);
+        }
+      } catch (e) {
+        console.error('국적 목록 로드 실패:', e);
+      }
+    };
+    fetchCountries();
+  }, []);
 
   // 자동 갱신 기능 (30초마다 데이터 리프레시)
   useEffect(() => {
@@ -415,13 +465,19 @@ const UserManagement = () => {
           { label: '전체 사용자', value: globalStats.totalUsers.toLocaleString(), trend: 'Total', color: 'blue' },
           { label: '온라인 사용자', value: globalOnlineCount.toLocaleString(), trend: `${sessionCount} Sessions`, color: 'emerald' },
           { label: '신규 사용자 (1주)', value: globalStats.newUsers7d.toLocaleString(), trend: 'New', color: 'violet' },
-          { label: '신고 대기 건수', value: globalStats.pendingReports.toLocaleString(), trend: 'Pending', color: 'amber' },
+          { label: '신고 대기 건수', value: globalStats.pendingReports.toLocaleString(), trend: 'Pending', color: 'amber', href: '/admin/reports' },
           { label: '관리자 계정', value: globalStats.adminCount.toLocaleString(), trend: 'Admin', color: 'rose' },
           { label: '정지된 사용자', value: globalStats.bannedCount.toLocaleString(), trend: 'Banned', color: 'red' },
         ].map((stat, idx) => (
-          <div key={idx} className="bg-secondary p-5 rounded-2xl border-2 border-gray-300 dark:border-gray-500 shadow-sm">
+          <div 
+            key={idx} 
+            onClick={() => stat.href && navigate(stat.href)}
+            className={`bg-secondary p-5 rounded-2xl border-2 border-gray-300 dark:border-gray-500 shadow-sm ${
+              stat.href ? 'cursor-pointer hover:border-primary dark:hover:border-primary transition-all group hover:-translate-y-0.5' : ''
+            }`}
+          >
             <div className="flex justify-between items-start">
-              <p className="text-sm font-medium text-muted-foreground break-keep">{stat.label}</p>
+              <p className={`text-sm font-medium text-muted-foreground break-keep ${stat.href ? 'group-hover:text-primary transition-colors' : ''}`}>{stat.label}</p>
               <span className={`text-xs font-semibold px-2 py-0.5 rounded-full bg-${stat.color}-50 dark:bg-${stat.color}-900/30 text-${stat.color}-600 dark:text-${stat.color}-400`}>
                 {stat.trend}
               </span>
@@ -514,20 +570,37 @@ const UserManagement = () => {
                 </DropdownMenuContent>
              </DropdownMenu>
 
-             {/* Country Filter (Sample) */}
+             {/* Country Filter */}
              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center gap-2 px-3 py-2 bg-muted border-2 border-gray-300 dark:border-gray-500 rounded-xl hover:bg-white dark:hover:bg-muted hover:shadow-md hover:-translate-y-0.5 transition-all text-sm font-semibold text-foreground outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:border-gray-400 border-2 ring-0 ring-offset-0">
                     <Globe size={16} className="text-muted-foreground" />
-                    <span>{filterCountry === 'All' ? '모든 국적' : filterCountry}</span>
+                    <span className="max-w-[150px] truncate">{(() => {
+                      if (filterCountry === 'All') return '모든 국적';
+                      try {
+                        return new Intl.DisplayNames(['ko'], { type: 'region' }).of(filterCountry.toUpperCase()) || filterCountry;
+                      } catch {
+                        return availableCountries.find(c => c.iso_code === filterCountry)?.name || filterCountry;
+                      }
+                    })()}</span>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-48 max-h-60 overflow-y-auto bg-white/95 dark:bg-secondary/95 backdrop-blur-sm border-gray-100/80 dark:border-gray-700/70 rounded-xl shadow-xl outline-none ring-0">
+                <DropdownMenuContent align="start" className="w-48 max-h-60 overflow-y-auto bg-white/95 dark:bg-secondary/95 backdrop-blur-sm border-gray-100/80 dark:border-gray-700/70 rounded-xl shadow-xl outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 z-[100]">
                   <DropdownMenuRadioGroup value={filterCountry} onValueChange={setFilterCountry}>
-                    <DropdownMenuRadioItem value="All" className="focus:bg-primary/5 focus:outline-none focus:ring-0 cursor-pointer">모든 국적</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="KR" className="focus:bg-primary/5 focus:outline-none focus:ring-0 cursor-pointer">대한민국 (KR)</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="JP" className="focus:bg-primary/5 focus:outline-none focus:ring-0 cursor-pointer">일본 (JP)</DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="US" className="focus:bg-primary/5 focus:outline-none focus:ring-0 cursor-pointer">미국 (US)</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="All" className="focus:bg-primary/5 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 cursor-pointer">모든 국적</DropdownMenuRadioItem>
+                    {availableCountries.map(country => {
+                      let koreanName = country.name;
+                      try {
+                         if (country.iso_code) {
+                            koreanName = new Intl.DisplayNames(['ko'], { type: 'region' }).of(country.iso_code.toUpperCase()) || country.name;
+                         }
+                      } catch (e) { }
+                      return (
+                        <DropdownMenuRadioItem key={country.iso_code} value={country.iso_code} className="focus:bg-primary/5 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 cursor-pointer text-sm">
+                          {koreanName} ({country.iso_code?.toUpperCase() || ''})
+                        </DropdownMenuRadioItem>
+                      );
+                    })}
                   </DropdownMenuRadioGroup>
                 </DropdownMenuContent>
              </DropdownMenu>
@@ -578,6 +651,26 @@ const UserManagement = () => {
                     <DropdownMenuRadioItem value="Week" className="focus:bg-primary/5 focus:outline-none focus:ring-0 cursor-pointer">최근 1주일</DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="Month" className="focus:bg-primary/5 focus:outline-none focus:ring-0 cursor-pointer">최근 1개월</DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="Year" className="focus:bg-primary/5 focus:outline-none focus:ring-0 cursor-pointer">최근 1년</DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+             </DropdownMenu>
+
+             {/* Tracking Filter (Acquisition) */}
+             <DropdownMenu modal={false}>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 px-3 py-2 bg-muted border-2 border-gray-300 dark:border-gray-500 rounded-xl hover:bg-white dark:hover:bg-muted hover:shadow-md hover:-translate-y-0.5 transition-all text-sm font-semibold text-foreground outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:border-gray-400 border-2 ring-0 ring-offset-0">
+                    <Target size={16} className={`text-${filterTracking === 'Tracked' ? 'emerald' : 'muted'}-500`} />
+                    <span>{
+                      filterTracking === 'All' ? '모든 유입 패턴' :
+                      filterTracking === 'Tracked' ? '트래킹 (광고/외부)' : '자연 유입 (Direct, 등)'
+                    }</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48 bg-white/95 dark:bg-secondary/95 backdrop-blur-sm border-gray-100/80 dark:border-gray-700/70 rounded-xl shadow-xl outline-none ring-0">
+                  <DropdownMenuRadioGroup value={filterTracking} onValueChange={setFilterTracking}>
+                    <DropdownMenuRadioItem value="All" className="focus:bg-primary/5 focus:outline-none focus:ring-0 cursor-pointer">모든 유입 패턴</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="Tracked" className="focus:bg-primary/5 focus:outline-none focus:ring-0 cursor-pointer">트래킹/외부 링크 유입</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="Untracked" className="focus:bg-primary/5 focus:outline-none focus:ring-0 cursor-pointer">자연/직접 접속 유입</DropdownMenuRadioItem>
                   </DropdownMenuRadioGroup>
                 </DropdownMenuContent>
              </DropdownMenu>
@@ -674,28 +767,29 @@ const UserManagement = () => {
                     />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <div
-                        onClick={() => {
-                          setTargetUser(user);
-                          setShowUserProfileModal(true);
-                        }}
-                        className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-foreground font-bold border-2 border-gray-100 dark:border-gray-700 overflow-hidden cursor-pointer hover:border-primary transition-all"
-                      >
+                    <div 
+                      className="flex items-center gap-3 cursor-pointer group/user"
+                      onClick={() => {
+                        setTargetUser(user);
+                        setShowUserProfileModal(true);
+                      }}
+                    >
+                      <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-foreground font-bold border-2 border-gray-100 dark:border-gray-700 overflow-hidden group-hover/user:border-primary transition-all">
                         <img
                           src={user.avatar_url || '/images/default-avatar.svg'}
                           alt=""
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <div
-                        className="cursor-pointer group/name"
-                        onClick={() => {
-                          setTargetUser(user);
-                          setShowUserProfileModal(true);
-                        }}
-                      >
-                        <p className="text-sm font-semibold text-foreground group-hover/name:text-primary transition-colors">{user.nickname}</p>
+                      <div>
+                        <div className="flex items-center gap-2">
+                           <p className="text-sm font-semibold text-foreground group-hover/user:text-primary transition-colors">{user.nickname}</p>
+                           {trackedUserIds.has(user.profile_id) && (
+                              <span className="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 text-[9px] rounded-full border border-emerald-200 dark:border-emerald-800/80 font-bold flex items-center gap-1 shadow-sm" title="클릭하여 유입 경로 확인">
+                                 <Target size={10} /> 마케팅 유입
+                              </span>
+                           )}
+                        </div>
                         <p className="text-xs text-muted-foreground">{user.email}</p>
                       </div>
                     </div>
@@ -738,9 +832,10 @@ const UserManagement = () => {
                         <OnlineIndicator 
                           userId={user.profile_id} 
                           size="sm"
+                          isOnlineOverride={checkIsOnline(user)}
                         />
                         <span className="text-[10px] font-bold text-zinc-500 uppercase">
-                          {isUserOnline(user.profile_id) ? '온라인' : '오프라인'}
+                          {checkIsOnline(user) ? '온라인' : '오프라인'}
                         </span>
                       </div>
                     </div>

@@ -1,0 +1,4 @@
+
+> project_ara@0.0.0 lint
+> eslint .
+
