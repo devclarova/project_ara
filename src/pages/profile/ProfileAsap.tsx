@@ -51,6 +51,15 @@ export default function ProfileAsap() {
   const decodedUsername = username ? decodeURIComponent(username) : '';
   const isOwnProfile = user && userProfile ? user.id === userProfile.user_id : false;
 
+  useEffect(() => {
+    if (!userProfile) {
+      document.title = '프로필 | ARA';
+      return;
+    }
+
+    document.title = isOwnProfile ? `내 프로필 | ARA` : `${userProfile.name} 프로필 | ARA`;
+  }, [userProfile, isOwnProfile]);
+
   // Real-time listener for profile updates (bans)
 
   const fetchBanDetails = async (authId: string) => {

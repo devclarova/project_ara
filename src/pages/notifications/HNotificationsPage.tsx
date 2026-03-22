@@ -7,7 +7,16 @@ import { toast } from 'sonner';
 
 interface Notification {
   id: string;
-  type: 'comment' | 'like' | 'mention' | 'follow' | 'reply' | 'system' | 'repost' | 'like_comment' | 'like_feed';
+  type:
+    | 'comment'
+    | 'like'
+    | 'mention'
+    | 'follow'
+    | 'reply'
+    | 'system'
+    | 'repost'
+    | 'like_comment'
+    | 'like_feed';
   content: string;
   is_read: boolean;
   created_at: string;
@@ -28,11 +37,17 @@ export default function HNotificationsPage() {
   const [profileId, setProfileId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'like' | 'comment' | 'follow' | 'system' | 'updates'>('like');
+  const [activeTab, setActiveTab] = useState<'like' | 'comment' | 'follow' | 'system' | 'updates'>(
+    'like',
+  );
 
   // 삭제 모달 상태
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  useEffect(() => {
+    document.title = '알림 | ARA';
+  }, []);
 
   // 내 profile id 로드
   useEffect(() => {
@@ -86,9 +101,9 @@ export default function HNotificationsPage() {
           ) {
             contentToUse = n.tweet.content;
           }
-          
+
           if (n.type === 'reply' && n.comment_id && n.reply?.content && !contentToUse) {
-             contentToUse = n.reply.content;
+            contentToUse = n.reply.content;
           }
 
           return {
@@ -105,7 +120,7 @@ export default function HNotificationsPage() {
                   name: n.sender.nickname,
                   username: n.sender.username || n.sender.nickname,
                   avatar: n.sender.avatar_url,
-                  bio: n.sender.bio
+                  bio: n.sender.bio,
                 }
               : null,
           };
@@ -132,7 +147,7 @@ export default function HNotificationsPage() {
         async payload => {
           const newItem = payload.new as any;
 
-          const { data: sender } = newItem.sender_id 
+          const { data: sender } = newItem.sender_id
             ? await supabase
                 .from('profiles')
                 .select('id, nickname, user_id, avatar_url, username, bio')
@@ -185,7 +200,7 @@ export default function HNotificationsPage() {
                   name: sender.nickname,
                   username: sender.username || sender.nickname,
                   avatar: sender.avatar_url,
-                  bio: sender.bio
+                  bio: sender.bio,
                 }
               : null,
           };
@@ -338,15 +353,17 @@ export default function HNotificationsPage() {
             ].map(tab => {
               const isCommentsTab = tab.key === 'comment';
               const isLikesTab = tab.key === 'like';
-              
+
               const filteredForCount = notifications.filter(n => {
-                if (isCommentsTab) return (['comment', 'reply', 'mention'] as string[]).includes(n.type);
-                if (isLikesTab) return (['like', 'like_comment', 'like_feed'] as string[]).includes(n.type);
+                if (isCommentsTab)
+                  return (['comment', 'reply', 'mention'] as string[]).includes(n.type);
+                if (isLikesTab)
+                  return (['like', 'like_comment', 'like_feed'] as string[]).includes(n.type);
                 return n.type === tab.key;
               });
-              
+
               const unreadCount = filteredForCount.filter(n => !n.is_read).length;
-              
+
               return (
                 <button
                   key={tab.key}
@@ -378,73 +395,80 @@ export default function HNotificationsPage() {
         <div className="flex-1 divide-y divide-gray-100 dark:divide-gray-900">
           {(() => {
             const filteredNotifications = notifications.filter(n => {
-              if (activeTab === 'comment') return (['comment', 'reply', 'mention'] as string[]).includes(n.type);
-              if (activeTab === 'like') return (['like', 'like_comment', 'like_feed'] as string[]).includes(n.type);
+              if (activeTab === 'comment')
+                return (['comment', 'reply', 'mention'] as string[]).includes(n.type);
+              if (activeTab === 'like')
+                return (['like', 'like_comment', 'like_feed'] as string[]).includes(n.type);
               return n.type === activeTab;
             });
-            
+
             return filteredNotifications.length > 0 ? (
-            <>
-              {filteredNotifications.map(n => (
-                <NotificationCard
-                  key={n.id}
-                  notification={{
-                    id: n.id,
-                    type: n.type as any, // Alignment with card props
-                    user: {
-                      id: n.sender?.id || '',
-                      name: n.type === 'system' ? t('common.ara_team') : (n.sender?.name || 'Unknown'),
-                      username: n.type === 'system' ? 'ara_admin' : (n.sender?.username || 'anonymous'),
-                      avatar: n.type === 'system' ? '/images/sample_font_logo.png' : (n.sender?.avatar || '/default-avatar.svg'),
-                      bio: n.sender?.bio
-                    },
-                    action:
-                      n.type === 'comment' || n.type === 'reply' || n.type === 'mention'
-                        ? t('notification.action_comment')
-                        : n.type === 'like' || n.type === 'like_comment' || n.type === 'like_feed'
-                          ? n.comment_id
-                            ? t('notification.action_like_comment')
-                            : t('notification.action_like_feed')
-                          : n.type === 'system'
-                            ? '' // 시스템 알림은 본문이 길어서 action 칸은 비웁니다
-                            : n.content,
-                    content: n.content,
-                    timestamp: n.created_at,
-                    isRead: n.is_read,
-                    tweetId: n.tweet_id,
-                    replyId: n.comment_id, // null 가능
-                  }}
-                  onMarkAsRead={markAsRead}
-                  onDelete={handleRequestDelete}
-                  onSilentDelete={async id => {
-                    // 직접 삭제 (모달 없이) - 삭제된 컨텐츠 클릭 시 사용
-                    try {
-                      // UI 선반영
-                      const target = notifications.find(n => n.id === id);
-                      setNotifications(prev => prev.filter(n => n.id !== id));
+              <>
+                {filteredNotifications.map(n => (
+                  <NotificationCard
+                    key={n.id}
+                    notification={{
+                      id: n.id,
+                      type: n.type as any, // Alignment with card props
+                      user: {
+                        id: n.sender?.id || '',
+                        name:
+                          n.type === 'system' ? t('common.ara_team') : n.sender?.name || 'Unknown',
+                        username:
+                          n.type === 'system' ? 'ara_admin' : n.sender?.username || 'anonymous',
+                        avatar:
+                          n.type === 'system'
+                            ? '/images/sample_font_logo.png'
+                            : n.sender?.avatar || '/default-avatar.svg',
+                        bio: n.sender?.bio,
+                      },
+                      action:
+                        n.type === 'comment' || n.type === 'reply' || n.type === 'mention'
+                          ? t('notification.action_comment')
+                          : n.type === 'like' || n.type === 'like_comment' || n.type === 'like_feed'
+                            ? n.comment_id
+                              ? t('notification.action_like_comment')
+                              : t('notification.action_like_feed')
+                            : n.type === 'system'
+                              ? '' // 시스템 알림은 본문이 길어서 action 칸은 비웁니다
+                              : n.content,
+                      content: n.content,
+                      timestamp: n.created_at,
+                      isRead: n.is_read,
+                      tweetId: n.tweet_id,
+                      replyId: n.comment_id, // null 가능
+                    }}
+                    onMarkAsRead={markAsRead}
+                    onDelete={handleRequestDelete}
+                    onSilentDelete={async id => {
+                      // 직접 삭제 (모달 없이) - 삭제된 컨텐츠 클릭 시 사용
+                      try {
+                        // UI 선반영
+                        const target = notifications.find(n => n.id === id);
+                        setNotifications(prev => prev.filter(n => n.id !== id));
 
-                      // 뱃지 업데이트
-                      if (target && !target.is_read) {
-                        window.dispatchEvent(new Event('notification:deleted-one'));
+                        // 뱃지 업데이트
+                        if (target && !target.is_read) {
+                          window.dispatchEvent(new Event('notification:deleted-one'));
+                        }
+
+                        // DB 삭제
+                        await supabase.from('notifications').delete().eq('id', id);
+                      } catch (err) {
+                        console.error('알림 자동 삭제 실패:', err);
                       }
+                    }}
+                  />
+                ))}
 
-                      // DB 삭제
-                      await supabase.from('notifications').delete().eq('id', id);
-                    } catch (err) {
-                      console.error('알림 자동 삭제 실패:', err);
-                    }
-                  }}
-                />
-              ))}
-
-              <div className="h-px bg-gray-100 dark:bg-gray-900" />
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
-              <i className="ri-notification-3-line text-3xl mb-2" />
-              {t('notification.no_notifications')}
-            </div>
-          );
+                <div className="h-px bg-gray-100 dark:bg-gray-900" />
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                <i className="ri-notification-3-line text-3xl mb-2" />
+                {t('notification.no_notifications')}
+              </div>
+            );
           })()}
         </div>
       </div>

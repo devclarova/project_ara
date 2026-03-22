@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import SnsLayout from './SnsLayout';
 import CommunityFeed from '../community/CommunityFeed';
@@ -9,6 +9,10 @@ export default function SnsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const { user } = useAuth();
   const { showLoginModal, handleLoginModalClose } = useSnsLoginGate(user);
+
+  useEffect(() => {
+    document.title = '커뮤니티 | ARA';
+  }, []);
 
   return (
     <>

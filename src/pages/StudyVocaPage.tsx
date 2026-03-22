@@ -9,7 +9,7 @@ import Pagination from '@/components/common/Pagination';
 import { deleteMyVoca, fetchMyVoca, updateMyVocaStatus, type UserVocaRow } from '@/lib/userVoca';
 import { ArrowLeft, Gamepad2, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 type VocabItem = {
   id: string;
@@ -82,6 +82,10 @@ export default function StudyVocaPage() {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(9); // 기본은 데스크톱
+
+  useEffect(() => {
+    document.title = '단어장 | ARA';
+  }, []);
 
   const reload = async () => {
     const rows = await fetchMyVoca();
@@ -312,8 +316,14 @@ export default function StudyVocaPage() {
         {/* 리스트 */}
         {filtered.length === 0 ? (
           <div className="py-16 text-center text-gray-500">
-            저장된 단어가 없어요. <span className="text-primary">학습 페이지</span>에서 단어를
-            저장해보아요.
+            저장된 단어가 없어요.
+            <Link
+              to="/studylist"
+              className="text-primary font-medium underline underline-offset-2 hover:text-primary/80"
+            >
+              학습 페이지
+            </Link>
+            에서 단어를 저장해보아요.
           </div>
         ) : (
           <>

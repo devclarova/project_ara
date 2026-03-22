@@ -2,6 +2,7 @@ import { deleteMyVoca, isSavedMyVoca, upsertMyVoca } from '@/lib/userVoca';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAutoTranslation } from '@/hooks/useAutoTranslation';
 import {
   Bookmark,
   BookmarkCheck,
@@ -19,24 +20,15 @@ export type EpisodeWord = {
   ko: string;
   meaning?: string;
   en: string;
-  ja?: string;
-  zh?: string;
   exampleKo?: string;
   exampleEn?: string;
   difficulty?: 1 | 2 | 3;
   imageEmoji?: string;
-  pos?: string; // 품사
-  pronKo?: string; // 발음(한글)
-  pron?: string; // 발음(기타)
+  image_url?: string | null;
+  pos?: string;
+  pronKo?: string;
+  pron?: string;
 };
-
-function pickBackText(word: EpisodeWord, targetLang: string) {
-  const lang = (targetLang || 'en').toLowerCase();
-  if (lang.startsWith('ko')) return word.ko;
-  if (lang.startsWith('ja')) return word.ja || word.en;
-  if (lang.startsWith('zh')) return word.zh || word.en;
-  return word.en;
-}
 
 type Props = {
   isOpen: boolean;
@@ -45,9 +37,8 @@ type Props = {
   initialWordId?: string;
   title?: string;
 
-  // 단어 -> 에피소드 이동 링크 만들어주는 함수 (단어장에서만 넘겨도 됨)
   getEpisodeHref?: (word: EpisodeWord) => string | null;
-  episodeCtaLabel?: string; // 버튼 라벨 커스텀
+  episodeCtaLabel?: string;
 
   sourceEpisodeId?: string;
   sourceEpisodeTitle?: string;
@@ -55,6 +46,8 @@ type Props = {
   sourceStudyPath?: string;
   sourceStudyTitle?: string;
 };
+
+const normalize = (v?: string | null) => (v ?? '').trim();
 
 export default function EpisodeVocaModal({
   isOpen,
@@ -64,18 +57,20 @@ export default function EpisodeVocaModal({
   title = '단어 카드',
   getEpisodeHref,
   episodeCtaLabel,
-
   sourceEpisodeId,
   sourceEpisodeTitle,
-
   sourceStudyPath,
   sourceStudyTitle,
 }: Props) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { i18n } = useTranslation();
+
   const targetLang = i18n.language || 'en';
+  const isKorean = targetLang.toLowerCase().startsWith('ko');
 
   const hasWords = Array.isArray(words) && words.length > 0;
+  const isVocaPage = location.pathname.startsWith('/voca');
 
   const initialIndex = useMemo(() => {
     if (!hasWords) return 0;
@@ -89,9 +84,7 @@ export default function EpisodeVocaModal({
   const [flipped, setFlipped] = useState(false);
   const [saved, setSaved] = useState(false);
   const [ttsSpeaking, setTtsSpeaking] = useState(false);
-
-  const location = useLocation();
-  const isVocaPage = location.pathname.startsWith('/voca');
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -102,9 +95,9 @@ export default function EpisodeVocaModal({
   useEffect(() => {
     if (!isOpen) return;
     setFlipped(false);
+    setImgError(false);
   }, [index, isOpen]);
 
-  // 바디 스크롤 잠금
   useEffect(() => {
     if (!isOpen) return;
 
@@ -127,10 +120,10 @@ export default function EpisodeVocaModal({
     };
   }, [isOpen]);
 
-  // 인덱스 클램프
   useEffect(() => {
     if (!isOpen) return;
     if (!hasWords) return;
+
     setIndex(prev => {
       const maxIdx = words.length - 1;
       return Math.min(Math.max(prev, 0), maxIdx);
@@ -139,20 +132,68 @@ export default function EpisodeVocaModal({
 
   const word = hasWords ? words[index] : null;
 
-  const backText = useMemo(() => {
-    if (!word) return '';
-    return pickBackText(word, targetLang);
-  }, [word, targetLang]);
+  useEffect(() => {
+    setImgError(false);
+  }, [word?.image_url, index]);
 
-  // DB에서 저장 여부 확인
+  const meaningSrc = normalize(word?.meaning || word?.en);
+  const exampleSrc = normalize(word?.exampleEn || word?.exampleKo);
+  const posSrc = normalize(word?.pos);
+  const pronSrc = normalize(word?.pronKo || word?.pron);
+
+  const imageSrc = useMemo(() => {
+    const raw = normalize(word?.image_url);
+    if (!raw) return '';
+
+    try {
+      return encodeURI(raw);
+    } catch {
+      return raw;
+    }
+  }, [word?.image_url]);
+
+  const { translatedText: translatedMeaning } = useAutoTranslation(
+    meaningSrc,
+    `episode_voca_meaning_${word?.id ?? 'empty'}`,
+    targetLang,
+  );
+
+  const { translatedText: translatedExample } = useAutoTranslation(
+    exampleSrc,
+    `episode_voca_example_${word?.id ?? 'empty'}`,
+    targetLang,
+  );
+
+  const { translatedText: translatedPos } = useAutoTranslation(
+    posSrc,
+    `episode_voca_pos_${word?.id ?? 'empty'}`,
+    targetLang,
+  );
+
+  const displayMeaning = flipped
+    ? isKorean
+      ? meaningSrc
+      : normalize(translatedMeaning) || meaningSrc
+    : meaningSrc;
+
+  const displayExample = flipped
+    ? isKorean
+      ? exampleSrc
+      : normalize(translatedExample) || exampleSrc
+    : exampleSrc;
+
+  const displayPos = flipped ? (isKorean ? posSrc : normalize(translatedPos) || posSrc) : posSrc;
+  const displayPron = pronSrc;
+
   useEffect(() => {
     if (!isOpen) return;
     if (!word) return;
 
     let alive = true;
+
     (async () => {
       try {
-        const exists = await isSavedMyVoca(String(word.id)); // word.id === word_key
+        const exists = await isSavedMyVoca(String(word.id));
         if (alive) setSaved(exists);
       } catch (e) {
         console.error(e);
@@ -180,12 +221,14 @@ export default function EpisodeVocaModal({
     setIndex(prev => prev - 1);
   };
 
-  // 키보드
   useEffect(() => {
     if (!isOpen) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') return;
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
       if (e.key === 'ArrowRight') goNext();
       if (e.key === 'ArrowLeft') goPrev();
       if (e.key === ' ') {
@@ -196,10 +239,8 @@ export default function EpisodeVocaModal({
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, hasWords, index, words.length]);
+  }, [isOpen, index, words.length, onClose]);
 
-  // 북마크 토글 (DB)
   const handleToggleBookmark = async () => {
     if (!word) return;
 
@@ -222,7 +263,6 @@ export default function EpisodeVocaModal({
         pron: word.pron ?? null,
         status: 'unknown',
         wrong_count: 0,
-
         source_study_path: sourceStudyPath ?? null,
         source_study_title: sourceStudyTitle ?? null,
         source_episode_id: sourceEpisodeId ?? null,
@@ -235,7 +275,6 @@ export default function EpisodeVocaModal({
     }
   };
 
-  // TTS
   const handleSpeak = () => {
     if (!word) return;
     const synth = window.speechSynthesis;
@@ -247,9 +286,8 @@ export default function EpisodeVocaModal({
       return;
     }
 
-    const text = flipped ? backText : word.ko;
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = flipped ? (targetLang.startsWith('ko') ? 'ko-KR' : targetLang) : 'ko-KR';
+    const utter = new SpeechSynthesisUtterance(word.ko);
+    utter.lang = 'ko-KR';
 
     utter.onstart = () => setTtsSpeaking(true);
     utter.onend = () => setTtsSpeaking(false);
@@ -265,7 +303,6 @@ export default function EpisodeVocaModal({
     setTtsSpeaking(false);
   }, [isOpen]);
 
-  // 에피소드 이동 링크는 "외부에서"만 결정
   const episodeHref = useMemo(() => {
     if (!word) return null;
     return getEpisodeHref?.(word) ?? null;
@@ -278,9 +315,8 @@ export default function EpisodeVocaModal({
       <div className="absolute inset-0 bg-black/55 backdrop-blur-[3px]" aria-hidden="true" />
 
       <div className="relative z-10 flex min-h-screen items-center justify-center p-3 sm:p-6">
-        <div className="w-full max-w-[520px] h-[92dvh] max-h-[720px] sm:h-[680px]">
+        <div className="relative w-full max-w-[560px] h-[92dvh] max-h-[760px] sm:h-[720px]">
           <div className="h-full rounded-[28px] sm:rounded-[32px] bg-white dark:bg-secondary shadow-2xl overflow-hidden flex flex-col">
-            {/* top bar */}
             <div className="px-4 sm:px-6 pt-4 sm:pt-6">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -301,12 +337,11 @@ export default function EpisodeVocaModal({
                   <button
                     onClick={handleToggleBookmark}
                     disabled={!word}
-                    className={`h-10 w-10 rounded-full flex items-center justify-center transition disabled:opacity-50
-                      ${
-                        saved
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-white/10 dark:text-gray-200 dark:hover:bg-white/15'
-                      }`}
+                    className={`h-10 w-10 rounded-full flex items-center justify-center transition disabled:opacity-50 ${
+                      saved
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-white/10 dark:text-gray-200 dark:hover:bg-white/15'
+                    }`}
                     aria-label={saved ? '북마크 해제' : '북마크 저장'}
                     title={saved ? '저장됨 (클릭하면 해제)' : '저장하기'}
                   >
@@ -325,112 +360,84 @@ export default function EpisodeVocaModal({
               </div>
             </div>
 
-            {/* content */}
-            <div className="flex-1 px-4 sm:px-7 pt-3 sm:pt-6 pb-3 sm:pb-6 overflow-y-auto overscroll-contain scrollbar-thin">
-              <div className="pt-2 sm:pt-6">
+            <div className="flex-1 px-4 sm:px-7 pt-3 sm:pt-5 pb-3 sm:pb-6 overflow-y-auto overscroll-contain scrollbar-thin">
+              <div className="pt-1 sm:pt-2">
                 <div className="text-center">
-                  <div className="text-[22px] leading-[1.25] sm:text-[30px] sm:leading-snug font-extrabold text-gray-900 dark:text-gray-100">
-                    {word ? (flipped ? word.en : word.ko) : '단어 카드'}
+                  <div className="text-[26px] leading-[1] sm:text-[34px] font-extrabold text-gray-900 dark:text-gray-100">
+                    {word?.ko ?? '단어 카드'}
                   </div>
 
-                  {/* pos + pron */}
-                  <div className="mt-1 min-h-[18px] sm:min-h-[20px] text-[12px] sm:text-sm text-gray-500 dark:text-gray-300 text-center">
-                    {word?.pronKo && !flipped ? (
-                      <>{`[${word.pronKo}]`}</>
+                  <div className="mt-1 min-h-[20px] text-[13px] sm:text-[15px] text-gray-500 dark:text-gray-300">
+                    {displayPron ? (
+                      `[${displayPron}]`
                     ) : (
                       <span className="invisible">placeholder</span>
                     )}
                   </div>
 
-                  <div className="mt-2 min-h-[16px] sm:min-h-[18px] text-[11px] sm:text-xs text-gray-400">
-                    {word && (word.pos || word.pron) ? (
-                      <>
-                        {word.pos ? `(${word.pos})` : ''}
-                        {word.pron ? ` · ${word.pron}` : ''}
-                      </>
-                    ) : (
-                      <span className="invisible">placeholder</span>
-                    )}
+                  <div className="mt-1 min-h-[18px] text-[12px] sm:text-xs text-gray-400">
+                    {displayPos ? displayPos : <span className="invisible">placeholder</span>}
                   </div>
                 </div>
 
-                {/* image + 좌우 버튼 */}
-                <div className="relative mt-[clamp(10px,2.2vh,28px)] flex items-center justify-center">
-                  {!isFirst && (
-                    <button
-                      onClick={goPrev}
-                      className="absolute left-0 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full
-                                bg-white/80 hover:bg-white shadow-md flex items-center justify-center
-                                ring-1 ring-black/5 hover:ring-emerald-200 transition
-                                dark:bg-black/30 dark:hover:bg-black/40 dark:ring-white/10"
-                      aria-label="이전 단어"
-                      title="이전"
-                    >
-                      <span className="text-emerald-700 dark:text-emerald-200">
-                        <ChevronLeft size={22} strokeWidth={2.2} />
-                      </span>
-                    </button>
-                  )}
+                <div className="mt-3 sm:mt-2">
+                  {/* <div className="text-base sm:text-xs font-extrabold tracking-wide text-emerald-600 text-center">
+                    뜻
+                  </div> */}
+                  <div className="mt-2 text-center text-[18px] sm:text-[22px] font-bold text-gray-900 dark:text-gray-100 px-2 break-keep min-h-[30px]">
+                    {displayMeaning || '-'}
+                  </div>
+                </div>
 
+                <div className="mt-3 sm:mt-2">
+                  {/* <div className="text-base sm:text-xs font-extrabold tracking-wide text-emerald-600 text-center">
+                    예문
+                  </div> */}
+                  <div className="mt-2 px-3 sm:px-5 text-center text-[13px] sm:text-[15px] leading-relaxed text-gray-600 dark:text-gray-300 break-keep min-h-[48px]">
+                    {displayExample ? `“${displayExample}”` : '-'}
+                  </div>
+                </div>
+
+                <div className="mt-3 sm:mt-4 flex items-center justify-center">
                   <div
-                    className="h-[min(28dvh,240px)] w-[min(28dvh,240px)] sm:h-[240px] sm:w-[240px]
-                               rounded-[30px] sm:rounded-[40px]
+                    className="h-[min(27dvh,205px)] w-[min(35dvh,265px)] sm:h-[250px] sm:w-[400px]
+                               rounded-[28px] sm:rounded-[36px]
                                bg-gradient-to-b from-emerald-50 to-white
                                dark:from-white/10 dark:to-transparent
-                               flex items-center justify-center shadow-inner"
+                               flex items-center justify-center shadow-inner overflow-hidden"
                   >
-                    <span className="text-[min(11dvh,92px)] sm:text-[92px]">
-                      {word?.imageEmoji ?? (flipped ? '🔁' : '📚')}
-                    </span>
+                    {imageSrc && !imgError ? (
+                      <img
+                        src={imageSrc}
+                        alt={word?.ko ?? '단어 이미지'}
+                        className="h-full w-full object-cover"
+                        referrerPolicy="no-referrer"
+                        onError={() => setImgError(true)}
+                      />
+                    ) : (
+                      <div className="flex h-full w-full flex-col items-center justify-center gap-2">
+                        <span className="text-[min(9dvh,78px)] sm:text-[78px]">
+                          {word?.imageEmoji ?? '📚'}
+                        </span>
+                      </div>
+                    )}
                   </div>
-
-                  {!isLast && (
-                    <button
-                      onClick={goNext}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full
-                                bg-white/80 hover:bg-white shadow-md flex items-center justify-center
-                                ring-1 ring-black/5 hover:ring-emerald-200 transition
-                                dark:bg-black/30 dark:hover:bg-black/40 dark:ring-white/10"
-                      aria-label="다음 단어"
-                      title="다음"
-                    >
-                      <span className="text-emerald-700 dark:text-emerald-200">
-                        <ChevronRight size={22} strokeWidth={2.2} />
-                      </span>
-                    </button>
-                  )}
                 </div>
-
-                {/* example */}
-                {word?.exampleKo && !flipped && (
-                  <div className="mt-[clamp(8px,2vh,24px)] text-[clamp(11px,3vw,14px)] text-gray-600 dark:text-gray-300 text-center px-2">
-                    “{word.exampleKo}”
-                  </div>
-                )}
-
-                {word?.exampleEn && flipped && !targetLang.toLowerCase().startsWith('ko') && (
-                  <div className="mt-4 sm:mt-7 text-[12px] sm:text-sm text-gray-600 dark:text-gray-300 text-center px-2">
-                    “{word.exampleEn}”
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* bottom actions */}
             <div className="px-5 sm:px-7 pb-4 sm:pb-7 pt-3 sm:pt-5">
               <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 <button
                   onClick={() => setFlipped(v => !v)}
-                  aria-label={flipped ? '앞면 보기' : '뒤집기'}
-                  title={flipped ? '앞면 보기' : '뒤집기'}
+                  aria-label={flipped ? '원문 보기' : '번역 보기'}
+                  title={flipped ? '원문 보기' : '번역 보기'}
                   className="h-[44px] sm:h-[56px] rounded-[16px] sm:rounded-[18px]
                              bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-lg
                              active:scale-[0.99] transition flex items-center justify-center gap-0 sm:gap-2"
                 >
                   <RefreshCw size={22} />
-                  <span className="hidden sm:inline text-[14px]">
-                    {flipped ? '앞면' : '뒤집기'}
-                  </span>
+                  <span className="hidden sm:inline text-[14px]">{flipped ? '원문' : '번역'}</span>
                 </button>
 
                 <button
@@ -474,6 +481,42 @@ export default function EpisodeVocaModal({
               </div>
             </div>
           </div>
+
+          {!isFirst && (
+            <button
+              onClick={goPrev}
+              className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-20
+                         h-12 w-12 rounded-full
+                         bg-white/90 hover:bg-white shadow-lg
+                         flex items-center justify-center
+                         ring-1 ring-black/5 hover:ring-emerald-200 transition
+                         dark:bg-black/40 dark:hover:bg-black/50"
+              aria-label="이전 단어"
+              title="이전"
+            >
+              <span className="text-emerald-700 dark:text-emerald-200">
+                <ChevronLeft size={22} strokeWidth={2.2} />
+              </span>
+            </button>
+          )}
+
+          {!isLast && (
+            <button
+              onClick={goNext}
+              className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-20
+                         h-12 w-12 rounded-full
+                         bg-white/90 hover:bg-white shadow-lg
+                         flex items-center justify-center
+                         ring-1 ring-black/5 hover:ring-emerald-200 transition
+                         dark:bg-black/40 dark:hover:bg-black/50"
+              aria-label="다음 단어"
+              title="다음"
+            >
+              <span className="text-emerald-700 dark:text-emerald-200">
+                <ChevronRight size={22} strokeWidth={2.2} />
+              </span>
+            </button>
+          )}
 
           {!hasWords && (
             <div className="mt-3 text-center text-sm text-gray-200">표시할 단어가 없어요.</div>

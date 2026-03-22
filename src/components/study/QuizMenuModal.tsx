@@ -106,7 +106,7 @@ export default function QuizMenuModal({
 
           <button
             onClick={onClose}
-            className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-gray-200 ring-1 ring-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
+            className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-gray-200 ring-1 ring-gray-200 dark:hover:bg-white/5"
           >
             <svg
               viewBox="0 0 24 24"

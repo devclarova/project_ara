@@ -69,6 +69,35 @@ function Header() {
     },
     { key: 'settings', label: t('nav.settings'), path: '/settings', matchPaths: ['/settings'] },
   ];
+  const mobileMenuItems = (() => {
+    if (!user) return menuItems;
+
+    const studyIndex = menuItems.findIndex(item => item.key === 'study');
+
+    if (studyIndex === -1) {
+      return [
+        {
+          key: 'voca',
+          label: t('nav.voca'),
+          path: '/voca',
+          matchPaths: ['/voca'],
+        },
+        ...menuItems,
+      ];
+    }
+
+    const newItems = [...menuItems];
+
+    newItems.splice(studyIndex, 0, {
+      key: 'voca',
+      label: t('nav.voca'),
+      path: '/voca',
+      matchPaths: ['/voca'],
+    });
+
+    return newItems;
+  })();
+
   const isRouteActive = (item: (typeof menuItems)[number]) => {
     const path = location.pathname;
     if (item.key === 'home') return path === '/' || path === '/home';
@@ -77,6 +106,8 @@ function Header() {
   // 메뉴 이름별 아이콘 매핑 (모바일용)
   const getMenuIcon = (key: string) => {
     switch (key) {
+      case 'voca':
+        return <Library className="w-4 h-4" />;
       case 'study':
         return <BookOpen className="w-4 h-4" />;
       case 'community':
@@ -382,11 +413,11 @@ function Header() {
                       <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 group-hover:opacity-80 whitespace-nowrap">
                         {displayNickname}
                       </span>
-                      <OnlineIndicator 
-                        userId={profileId || undefined} 
-                        size="sm" 
+                      <OnlineIndicator
+                        userId={profileId || undefined}
+                        size="sm"
                         isOnlineOverride={true}
-                        className="absolute -top-1 -right-2.5 z-10 border-white dark:border-secondary border-[1.5px] shadow-none" 
+                        className="absolute -top-1 -right-2.5 z-10 border-white dark:border-secondary border-[1.5px] shadow-none"
                       />
                     </div>
                     <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
@@ -654,11 +685,11 @@ function Header() {
                 {user ? displayNickname : t('auth.please_login')}
               </div>
               {user && (
-                <OnlineIndicator 
-                  userId={profileId || undefined} 
-                  size="sm" 
+                <OnlineIndicator
+                  userId={profileId || undefined}
+                  size="sm"
                   isOnlineOverride={true}
-                  className="absolute -top-1 -right-2.5 z-10 border-white dark:border-secondary border-[1.5px] shadow-none" 
+                  className="absolute -top-1 -right-2.5 z-10 border-white dark:border-secondary border-[1.5px] shadow-none"
                 />
               )}
             </div>
@@ -670,7 +701,7 @@ function Header() {
         <div className="h-px bg-gray-100 dark:bg-primary/20 my-2" />
         {/* 메뉴 리스트: 아이콘 포함 */}
         <div className="flex flex-col">
-          {menuItems
+          {mobileMenuItems
             .filter(item => item.key !== 'settings' || !!user)
             .map(item => {
               const active = isRouteActive(item);

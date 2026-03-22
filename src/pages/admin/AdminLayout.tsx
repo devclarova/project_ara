@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  BarChart, 
-  Users, 
-  Settings, 
-  LogOut, 
-  Home, 
-  Search, 
-  Bell, 
+import {
+  BarChart,
+  Users,
+  Settings,
+  LogOut,
+  Home,
+  Search,
+  Bell,
   Menu,
   X,
   Video,
   AlertTriangle,
   ShieldAlert,
   PieChart,
-  Package
+  Package,
 } from 'lucide-react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import ThemeSwitcher from '../../components/common/ThemeSwitcher';
@@ -32,6 +32,25 @@ const AdminLayout = () => {
     avatar_url: string | null;
   } | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const path = location.pathname;
+
+    let pageTitle = '관리자';
+
+    if (path === '/admin') pageTitle = '관리자 대시보드';
+    else if (path.startsWith('/admin/study/upload')) pageTitle = '학습 영상 업로드';
+    else if (path.startsWith('/admin/study/manage')) pageTitle = '학습 관리';
+    else if (path.startsWith('/admin/goods/new')) pageTitle = '상품 등록';
+    else if (path.startsWith('/admin/goods/manage')) pageTitle = '상품 관리';
+    else if (path.startsWith('/admin/content')) pageTitle = '게시물 및 댓글 관리';
+    else if (path.startsWith('/admin/reports')) pageTitle = '신고 및 문의';
+    else if (path.startsWith('/admin/analytics')) pageTitle = '통계 및 분석';
+    else if (path.startsWith('/admin/users')) pageTitle = '사용자 관리';
+    else if (path.startsWith('/admin/settings')) pageTitle = '관리자 설정';
+
+    document.title = `${pageTitle} | ARA Admin`;
+  }, [location.pathname]);
 
   // Fetch admin profile data
   useEffect(() => {
@@ -76,13 +95,13 @@ const AdminLayout = () => {
           table: 'profiles',
           filter: `user_id=eq.${user!.id}`,
         },
-        async (payload) => {
+        async payload => {
           const newProfile = payload.new as { is_admin: boolean | null };
           if (!newProfile.is_admin) {
             toast.error(t('admin.permission_revoked', '관리자 권한이 해제되었습니다.'));
             await handleLogout();
           }
-        }
+        },
       )
       .subscribe();
 
@@ -118,15 +137,15 @@ const AdminLayout = () => {
   return (
     <div className="min-h-screen min-w-[300px] bg-background font-sans text-foreground relative overflow-x-hidden">
       {/* Sidebar - Hidden on mobile, always visible on desktop */}
-      <aside 
+      <aside
         className={`fixed inset-y-0 left-0 z-50 w-64 bg-secondary border-r border-gray-300 dark:border-gray-600 transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } md:translate-x-0`}
       >
         <div className="h-full flex flex-col">
           <div className="h-16 flex items-center px-6 border-b border-gray-300 dark:border-gray-600">
-            <Link 
-              to="/admin" 
+            <Link
+              to="/admin"
               className="outline-none focus:outline-none active:outline-none no-underline hover:no-underline"
               onClick={() => setSidebarOpen(false)}
             >
@@ -134,7 +153,7 @@ const AdminLayout = () => {
                 ARA Admin
               </span>
             </Link>
-            <button 
+            <button
               className="md:hidden ml-auto text-muted-foreground hover:text-foreground"
               onClick={() => setSidebarOpen(false)}
             >
@@ -142,31 +161,87 @@ const AdminLayout = () => {
             </button>
           </div>
 
-
           <div className="flex-1 min-h-0 overflow-y-auto py-4 px-3 space-y-1">
-            <NavItem to="/admin" icon={Home} label="대시보드" end onClick={() => setSidebarOpen(false)} />
-            
-            <div className="pt-4 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">콘텐츠 관리</div>
-            <NavItem to="/admin/study/upload" icon={Video} label="학습 영상 업로드" onClick={() => setSidebarOpen(false)} />
-            <NavItem to="/admin/study/manage" icon={Video} label="학습 관리" onClick={() => setSidebarOpen(false)} />
-            <NavItem to="/admin/goods/new" icon={Package} label="상품 등록" onClick={() => setSidebarOpen(false)} />
-            <NavItem to="/admin/goods/manage" icon={Package} label="상품 관리" onClick={() => setSidebarOpen(false)} />
-            <NavItem to="/admin/content" icon={ShieldAlert} label="게시물 및 댓글 관리" onClick={() => setSidebarOpen(false)} />
-            
-            <div className="pt-4 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">운영 지원</div>
-            <NavItem to="/admin/reports" icon={AlertTriangle} label="신고 및 문의" onClick={() => setSidebarOpen(false)} />
-            <NavItem to="/admin/analytics" icon={PieChart} label="통계 및 분석" onClick={() => setSidebarOpen(false)} />
-            <NavItem to="/admin/users" icon={Users} label="사용자 관리" onClick={() => setSidebarOpen(false)} />
-            
-             <div className="pt-4 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">설정</div>
-            <NavItem to="/admin/settings" icon={Settings} label="설정" onClick={() => setSidebarOpen(false)} />
+            <NavItem
+              to="/admin"
+              icon={Home}
+              label="대시보드"
+              end
+              onClick={() => setSidebarOpen(false)}
+            />
+
+            <div className="pt-4 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              콘텐츠 관리
+            </div>
+            <NavItem
+              to="/admin/study/upload"
+              icon={Video}
+              label="학습 영상 업로드"
+              onClick={() => setSidebarOpen(false)}
+            />
+            <NavItem
+              to="/admin/study/manage"
+              icon={Video}
+              label="학습 관리"
+              onClick={() => setSidebarOpen(false)}
+            />
+            <NavItem
+              to="/admin/goods/new"
+              icon={Package}
+              label="상품 등록"
+              onClick={() => setSidebarOpen(false)}
+            />
+            <NavItem
+              to="/admin/goods/manage"
+              icon={Package}
+              label="상품 관리"
+              onClick={() => setSidebarOpen(false)}
+            />
+            <NavItem
+              to="/admin/content"
+              icon={ShieldAlert}
+              label="게시물 및 댓글 관리"
+              onClick={() => setSidebarOpen(false)}
+            />
+
+            <div className="pt-4 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              운영 지원
+            </div>
+            <NavItem
+              to="/admin/reports"
+              icon={AlertTriangle}
+              label="신고 및 문의"
+              onClick={() => setSidebarOpen(false)}
+            />
+            <NavItem
+              to="/admin/analytics"
+              icon={PieChart}
+              label="통계 및 분석"
+              onClick={() => setSidebarOpen(false)}
+            />
+            <NavItem
+              to="/admin/users"
+              icon={Users}
+              label="사용자 관리"
+              onClick={() => setSidebarOpen(false)}
+            />
+
+            <div className="pt-4 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              설정
+            </div>
+            <NavItem
+              to="/admin/settings"
+              icon={Settings}
+              label="설정"
+              onClick={() => setSidebarOpen(false)}
+            />
           </div>
 
           <div className="p-4 border-t border-gray-300 dark:border-gray-600 shrink-0">
             <div className="flex items-center gap-3 px-2 py-2 mb-2">
               {adminProfile?.avatar_url ? (
-                <img 
-                  src={adminProfile.avatar_url} 
+                <img
+                  src={adminProfile.avatar_url}
                   alt={adminProfile.nickname}
                   className="w-8 h-8 rounded-full object-cover"
                 />
@@ -184,14 +259,14 @@ const AdminLayout = () => {
                 </p>
               </div>
             </div>
-            <button 
+            <button
               onClick={() => navigate('/')}
               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors mb-2"
             >
               <Home size={16} />
               사용자 페이지로 이동
             </button>
-            <button 
+            <button
               onClick={handleLogout}
               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
             >
@@ -207,7 +282,7 @@ const AdminLayout = () => {
         {/* Header */}
         <header className="h-14 sm:h-16 bg-secondary/80 backdrop-blur-md border-b border-gray-300 dark:border-gray-600 flex items-center justify-between px-3 sm:px-4 md:px-6 sticky top-0 z-[110] shadow-sm flex-shrink-0">
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-1">
-            <button 
+            <button
               className="md:hidden text-muted-foreground hover:text-foreground p-1 flex-shrink-0"
               onClick={() => setSidebarOpen(true)}
             >
@@ -217,7 +292,10 @@ const AdminLayout = () => {
             {/* Search - Hidden on very small screens */}
             <div className="hidden min-[500px]:flex items-center flex-1 max-w-xl">
               <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  size={16}
+                />
                 <input
                   type="text"
                   placeholder="검색..."
@@ -243,13 +321,13 @@ const AdminLayout = () => {
 
         {/* Dynamic Content Area */}
         <main className="flex-1 px-3 py-4 sm:px-4 sm:py-6 md:p-6 lg:p-8 bg-background w-full max-w-full box-border">
-            <Outlet />
+          <Outlet />
         </main>
       </div>
 
       {/* Mobile Overlay - Only show on mobile when sidebar is open */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -259,21 +337,32 @@ const AdminLayout = () => {
 };
 
 // Subcomponent for nav items
-function NavItem({ icon: Icon, label, to, end, onClick }: { icon: any, label: string, to: string, end?: boolean, onClick?: () => void }) {
+function NavItem({
+  icon: Icon,
+  label,
+  to,
+  end,
+  onClick,
+}: {
+  icon: any;
+  label: string;
+  to: string;
+  end?: boolean;
+  onClick?: () => void;
+}) {
   const location = useLocation();
-  const isActive = end 
-    ? location.pathname === to 
-    : location.pathname.startsWith(to);
-  
+  const isActive = end ? location.pathname === to : location.pathname.startsWith(to);
+
   return (
-    <Link 
-      to={to} 
+    <Link
+      to={to}
       onClick={onClick}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors mb-1 outline-none focus:outline-none focus:ring-0 active:outline-none ring-0 focus-visible:ring-0 focus-visible:outline-none ${
-      isActive 
-        ? 'bg-primary/10 text-primary font-medium' 
-        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-    }`}>
+        isActive
+          ? 'bg-primary/10 text-primary font-medium'
+          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+      }`}
+    >
       <Icon size={18} />
       <span className="text-sm">{label}</span>
       {isActive && <div className="ml-auto w-1.5 h-1.5 bg-primary rounded-full" />}

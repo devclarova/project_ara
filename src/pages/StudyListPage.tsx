@@ -76,6 +76,20 @@ const StudyListPage = () => {
     return valid as TCategory;
   }, [searchParams.get('category')]); // 의존성 최소화
 
+  useEffect(() => {
+    const categoryMap: Record<string, string> = {
+      전체: '학습',
+      드라마: '드라마 학습',
+      영화: '영화 학습',
+      예능: '예능 학습',
+      음악: '음악 학습',
+    };
+
+    const baseTitle = categoryMap[displayCategory] || 'Study';
+
+    document.title = keyword.trim() ? `${keyword} | ${baseTitle} | ARA` : `${baseTitle} | ARA`;
+  }, [displayCategory, keyword]);
+
   const contentFilter = searchParams.get('content')?.trim() ?? '';
   const episodeFilter = searchParams.get('episode')?.trim() ?? '';
 
@@ -545,7 +559,7 @@ const StudyListPage = () => {
                 {/* 모바일 전용 검색 버튼 (필터 옆에 위치) */}
                 <button
                   onClick={() => setShowSearch(true)}
-                  className="hidden mobile-search-btn-900 shrink-0 h-11 w-11 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-secondary transition"
+                  className="hidden mobile-search-btn-900 shrink-0 h-11 w-11 items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-secondary transition"
                   aria-label="검색 열기"
                 >
                   <i className="ri-search-line text-[20px] sm:text-[24px] text-gray-600 dark:text-gray-200" />
