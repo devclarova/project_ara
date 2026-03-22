@@ -48,6 +48,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
 
   const [videoRowId, setVideoRowId] = useState<number | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [playerError, setPlayerError] = useState<string | null>(null);
 
   const dec = (v?: string) => (v == null ? v : decodeURIComponent(v));
 
@@ -136,7 +137,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
       if (s != null) {
         const { data, error } = await supabase
           .from('video')
-          .select('id,study_id,video_url,video_start_time,video_end_time,image_url')
+          .select('id,study_id,video_url,video_start_time,video_end_time,image_url, study(poster_image_url)')
           .eq('contents', c)
           .eq('episode', e)
           .eq('scene', s)
@@ -152,11 +153,21 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
         const row = data as VideoFetchRow;
         setVideoRowId(row.id);
         setVideo(row.video_url ?? undefined);
-        setVideoStartSec(typeof row.video_start_time === 'number' ? row.video_start_time : 0);
-        setVideoEndSec(typeof row.video_end_time === 'number' ? row.video_end_time : undefined);
-        setSegStartSec(typeof row.video_start_time === 'number' ? row.video_start_time : 0);
-        setSegEndSec(typeof row.video_end_time === 'number' ? row.video_end_time : undefined);
-        setImageUrl(row.image_url ?? null);
+        const startSec = typeof row.video_start_time === 'number' ? row.video_start_time : 0;
+        let endSec: number | undefined = typeof row.video_end_time === 'number' ? row.video_end_time : undefined;
+
+        if (endSec !== undefined && endSec <= startSec) {
+             endSec = undefined;
+        }
+
+        setVideoStartSec(startSec);
+        setVideoEndSec(endSec);
+        setSegStartSec(startSec);
+        setSegEndSec(endSec);
+        
+        const fallbackUrl = (row as any).study?.poster_image_url;
+        setImageUrl(row.image_url || fallbackUrl || null);
+        
         setViewRecorded(false);
         setWatchTime(0);
         return;
@@ -165,7 +176,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
       // scene 미지정 시 첫 장면 선택
       const { data, error } = await supabase
         .from('video')
-        .select('id,study_id,video_url,video_start_time,video_end_time,image_url,scene')
+        .select('id,study_id,video_url,video_start_time,video_end_time,image_url,scene, study(poster_image_url)')
         .eq('contents', c)
         .eq('episode', e)
         .order('scene', { ascending: true })
@@ -181,11 +192,21 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
 
       setVideoRowId(first.id);
       setVideo(first.video_url ?? undefined);
-      setVideoStartSec(typeof first.video_start_time === 'number' ? first.video_start_time : 0);
-      setVideoEndSec(typeof first.video_end_time === 'number' ? first.video_end_time : undefined);
-      setSegStartSec(typeof first.video_start_time === 'number' ? first.video_start_time : 0);
-      setSegEndSec(typeof first.video_end_time === 'number' ? first.video_end_time : undefined);
-      setImageUrl(first.image_url ?? null);
+      const startSec = typeof first.video_start_time === 'number' ? first.video_start_time : 0;
+      let endSec: number | undefined = typeof first.video_end_time === 'number' ? first.video_end_time : undefined;
+
+      if (endSec !== undefined && endSec <= startSec) {
+           endSec = undefined;
+      }
+
+      setVideoStartSec(startSec);
+      setVideoEndSec(endSec);
+      setSegStartSec(startSec);
+      setSegEndSec(endSec);
+      
+      const fallbackUrl = (first as any).study?.poster_image_url;
+      setImageUrl(first.image_url || fallbackUrl || null);
+      
       setViewRecorded(false);
       setWatchTime(0);
     };
@@ -198,15 +219,16 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
     setPlaying(false);
     setHasStarted(false);
     setIsBuffering(false);
+    setPlayerError(null); // URL 변경 시 에러 초기화
 
-    // 썸네일 먼저 보이기 위해
-    playerRef.current?.seekTo(videoStartSec ?? 0, 'seconds');
+    // 썸네일 먼저 보이기 위한 seekTo는 onReady 내부로 일원화 (에러 원인: 초기 렌더링 직후 무리한 HTML5 video 접근 시 재생 불능화)
   }, [contents, episode, scene]);
 
-  // 영상이 준비되면 시작 지점으로 이동
+  // 영상이 준비되면 시작 지점으로 이동 (단, 이미 0초일 때 불필요하게 0초로 seekTo()를 호출하면 Pending Play() Promise와 충돌하여 무한루프를 발생시키므로 0보다 클 때만 이동)
   const handleReady = () => {
-    const start = videoStartSec ?? 0; // undefined면 0초로
-    playerRef.current?.seekTo(start, 'seconds');
+    if (videoStartSec && videoStartSec > 0) {
+      playerRef.current?.seekTo(videoStartSec, 'seconds');
+    }
   };
 
   // 누적 시청 시간 및 조회수 반영
@@ -251,15 +273,18 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
 
   // 재생/일시정지
   const handlePlayPause = () => {
-    const t = playerRef.current?.getCurrentTime?.();
+    // 재생 버튼을 클릭한 즉시 오버레이를 해제하여 내부 플레이어 에러나 버퍼링 상태를 사용자에게 노출
+    setHasStarted(true);
 
-    // 영상 끝에 있을 때 → startSec으로 돌리고 재생 시작
+    const t = playerRef.current?.getCurrentTime?.() ?? 0;
+    const dur = videoDuration ?? Infinity;
+
+    // 영상 끝에 있을 때 → startSec으로 돌리고 재생 시작 (버퍼 0.5초 여유)
     if (
-      (videoEndSec !== undefined && typeof t === 'number' && t >= videoEndSec) ||
-      (videoEndSec === undefined &&
-        typeof t === 'number' &&
-        videoDuration !== undefined &&
-        t >= videoDuration)
+      dur > 0 && (
+        (videoEndSec !== undefined && t >= videoEndSec) ||
+        (videoEndSec === undefined && dur !== Infinity && t >= dur - 0.5)
+      )
     ) {
       playerRef.current?.seekTo(videoStartSec ?? 0, 'seconds');
       setPlaying(true);
@@ -297,7 +322,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
             ref={playerRef}
             url={video || undefined}
             playing={playing}
-            controls={false}
+            controls={video?.includes('supabase.co')} // 직접 업로드된 MP4는 브라우저 정책 우회 및 디버깅을 위해 네이티브 컨트롤 유지
             width="100%"
             height="100%"
             onReady={handleReady}
@@ -305,9 +330,15 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
             onDuration={d => setVideoDuration(d)}
             progressInterval={100}
             playsinline
-            onPlay={() => setHasStarted(true)}
+            onPlay={() => { setPlaying(true); setHasStarted(true); setPlayerError(null); }}
+            onPause={() => setPlaying(false)}
             onBuffer={() => setIsBuffering(true)}
             onBufferEnd={() => setIsBuffering(false)}
+            onError={(err) => {
+              console.warn('[VideoPlayer] Media/Promise Error:', err);
+              // 오진 방지: 단순 DOMException(NotAllowed, Abort) 발생 시에도 무조건 코덱 에러를 띄워 화면을 잠가버리는 치명적 버그를 제거
+              // setPlayerError(...) 삭제
+            }}
             onEnded={() => {
               setPlaying(false);
               setHasStarted(false);
@@ -325,17 +356,27 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
             }}
           />
 
-          {/* 오버레이 (클릭 차단) — 기존 그대로 */}
-          <div className="absolute inset-0 bg-transparent pointer-events-auto" />
+          {/* 오버레이 (클릭 차단) — 유튜브는 차단 유지, MP4는 네이티브 클릭 허용 */}
+          <div className={`absolute inset-0 bg-transparent ${video?.includes('supabase.co') ? 'pointer-events-none' : 'pointer-events-auto'}`} />
 
-          {!hasStarted && (
+        {/* 에러 오버레이 제거됨 (오진으로 인한 UI 블락 방지) */}
+
+          {!hasStarted && !playerError && (
             <div className="absolute inset-0 bg-black text-white flex items-center justify-center">
               {video ? (
-                <img
-                  src={imageUrl || undefined}
-                  alt="video thumbnail"
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
+                imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt="video thumbnail"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-black flex items-center justify-center">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="white" className="opacity-50">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                )
               ) : (
                 <div className="flex items-center justify-center w-full h-full text-gray-400">
                   이미지 로딩 중...

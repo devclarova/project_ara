@@ -9,6 +9,7 @@ import {
   ShoppingBag,
   Loader2,
   AlertCircle,
+  Shield,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
@@ -62,7 +63,18 @@ const AdminHome = () => {
   const [revenueType, setRevenueType] = useState<'total' | 'subscription' | 'shop'>('total');
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [hybridData, setHybridData] = useState({ totalLogs: 0, distinctUsers: 0 });
   const { onlineCount, sessionCount, isUserOnline, stats: globalStats } = usePresence();
+
+  useEffect(() => {
+     const fetchHybridLogs = async () => {
+        const { count: total } = await supabase.from('traffic_logs').select('*', { count: 'exact', head: true });
+        const { data: users } = await supabase.from('traffic_logs').select('user_id').not('user_id', 'is', null);
+        const distinct = new Set(users?.map(u => u.user_id)).size;
+        setHybridData({ totalLogs: total || 0, distinctUsers: distinct || 0 });
+     };
+     fetchHybridLogs();
+  }, []);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -158,6 +170,37 @@ const AdminHome = () => {
             </div>
           </motion.div>
         ))}
+      </div>
+
+      {/* Hybrid Tracking Coverage Banner */}
+      <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-200 dark:border-emerald-800/50 p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden group">
+         <div className="absolute right-[-20px] top-[-20px] opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-500">
+            <Activity size={150} className="text-emerald-500" />
+         </div>
+         <div className="flex items-start gap-4 z-10">
+            <div className="p-3 bg-white dark:bg-emerald-900/50 rounded-xl shadow-sm text-emerald-600 dark:text-emerald-400">
+               <Shield size={24} />
+            </div>
+            <div>
+               <h3 className="font-bold text-emerald-900 dark:text-emerald-300 text-sm md:text-base flex items-center gap-2">
+                  자체 DB 하이브리드 트래킹 가동 중
+                  <span className="px-2 py-0.5 bg-emerald-500 text-white text-[10px] rounded-full scale-animation">ACTIVE</span>
+               </h3>
+               <p className="text-xs text-emerald-700/80 dark:text-emerald-400/80 mt-1 max-w-xl">
+                  프론트엔드 레벨에서 Ad-block 등 광고 차단기를 우회하여 유입 데이터를 자체 데이터베이스(`traffic_logs`)에 안전하게 백업하고 있습니다. 구글 애널리틱스의 데이터 누락을 100% 상호 보완합니다.
+               </p>
+            </div>
+         </div>
+         <div className="flex gap-4 z-10 w-full md:w-auto mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-emerald-200/50 dark:border-emerald-800/50 md:pl-6 md:border-l">
+            <div>
+               <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">방어/수집된 트래픽</p>
+               <p className="text-xl font-black text-emerald-700 dark:text-emerald-300">{hybridData.totalLogs.toLocaleString()}<span className="text-sm font-medium opacity-70 ml-1">건</span></p>
+            </div>
+            <div>
+               <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">식별 유저</p>
+               <p className="text-xl font-black text-emerald-700 dark:text-emerald-300">{hybridData.distinctUsers.toLocaleString()}<span className="text-sm font-medium opacity-70 ml-1">명</span></p>
+            </div>
+         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

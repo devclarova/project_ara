@@ -25,6 +25,22 @@ interface UserProfileModalProps {
 
 const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, user }) => {
   const { isUserOnline } = usePresence();
+  const [tracking, setTracking] = React.useState<any>(null);
+  const [trackingLoading, setTrackingLoading] = React.useState(false);
+  
+  React.useEffect(() => {
+    const fetchTracking = async () => {
+      if (!user?.profile_id && !user?.id) return;
+      setTrackingLoading(true);
+      const targetId = user.profile_id || user.id;
+      const { supabase } = await import('@/lib/supabase');
+      const { data } = await supabase.from('traffic_logs').select('*').eq('user_id', targetId).order('created_at', { ascending: true }).limit(1).maybeSingle();
+      setTracking(data);
+      setTrackingLoading(false);
+    };
+    if (isOpen) fetchTracking();
+  }, [user, isOpen]);
+
   if (!user) return null;
 
   const isOnline = isUserOnline(user.profile_id || user.id);
@@ -129,6 +145,55 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
             <InfoItem icon={<Clock size={16} />} label="마지막 로그인" value={formatDate(user.last_sign_in_at)} />
             <InfoItem icon={<Calendar size={16} />} label="가입일" value={formatDate(user.created_at)} />
             <InfoItem icon={<MapPin size={16} />} label="위치" value={user.location || '정보 없음'} />
+          </div>
+
+          {/* Acquisition Tracking Details */}
+          <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800">
+             <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-200 mb-4 flex items-center gap-2">
+                <Globe size={16} className="text-emerald-500" /> 최초 접속 유입 경로 (Acquisition)
+             </h3>
+             {trackingLoading ? (
+                <div className="h-20 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl animate-pulse flex items-center justify-center text-xs text-zinc-400">데이터를 분석 중입니다...</div>
+             ) : tracking ? (
+                <div className="p-5 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 relative overflow-hidden">
+                   <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                      <Globe size={80} className="text-emerald-500" />
+                   </div>
+                   <div className="grid grid-cols-2 gap-4 relative z-10">
+                      <div>
+                         <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-1">유입 소스 (UTM_SOURCE)</span>
+                         <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{tracking.utm_source || '직접 접속 (Direct)'}</span>
+                      </div>
+                      <div>
+                         <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-1">매체 (UTM_MEDIUM)</span>
+                         <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{tracking.utm_medium || '-'}</span>
+                      </div>
+                      {tracking.utm_campaign && (
+                        <div className="col-span-2">
+                           <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-1">캠페인 (UTM_CAMPAIGN)</span>
+                           <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{tracking.utm_campaign}</span>
+                        </div>
+                      )}
+                      <div className="col-span-2 mt-2 pt-2 border-t border-emerald-200 dark:border-emerald-800/30">
+                         <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-1">최초 접속 랜딩 페이지</span>
+                         <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300 break-all">{tracking.landing_page || '정보 없음'}</span>
+                      </div>
+                      {tracking.referrer && tracking.referrer !== 'direct' && (
+                         <div className="col-span-2 mt-2 pt-2 border-t border-emerald-200 dark:border-emerald-800/30">
+                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-1">이전 참조 사이트 (Referrer)</span>
+                            <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300 break-all">{tracking.referrer}</span>
+                         </div>
+                      )}
+                      <div className="col-span-2 mt-2">
+                         <span className="text-[10px] text-zinc-500 flex justify-end">추적 일시: {formatDate(tracking.created_at)}</span>
+                      </div>
+                   </div>
+                </div>
+             ) : (
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-700 text-center text-sm text-zinc-500">
+                   기록된 유입 트래킹 데이터가 없습니다. (최근 연동된 시스템이거나 Ad-block 영향일 수 있습니다)
+                </div>
+             )}
           </div>
 
           {/* Action Footer */}

@@ -142,6 +142,7 @@ const StudyListPage = () => {
       let query = supabase
         .from('study')
         .select('*, video(*,runtime_bucket)', { count: 'exact' })
+        .eq('is_hidden', false)
         .order('id', { ascending: true });
 
       // 필터 조건
@@ -154,6 +155,7 @@ const StudyListPage = () => {
         query = supabase
           .from('study')
           .select('*, video!inner(*,runtime_bucket)', { count: 'exact' })
+          .eq('is_hidden', false)
           .order('id', { ascending: true });
 
         if (needsCategory) query = query.eq('video.categories', activeCategory);
