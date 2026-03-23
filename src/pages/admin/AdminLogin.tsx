@@ -28,7 +28,7 @@ const AdminLogin = () => {
       await checkAdminAndNavigate(authData.user.id);
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.message || t('auth.auth_failed'));
+      toast.error(error.message || '인증에 실패했습니다. 계정 정보를 다시 확인해 주세요.');
       setIsLoading(false);
     }
   };
@@ -151,19 +151,19 @@ const AdminLogin = () => {
       `}</style>
 
       <div className="w-full max-w-md p-8 relative z-10">
-        <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50 p-8 md:p-10">
+        <div className="bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50 dark:border-zinc-800/50 p-8 md:p-10">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-emerald-600 mb-2">
-              ARA Admin
+              ARA 관리 센터
             </h1>
             <p className="text-muted-foreground text-sm">
-              Welcome back, please login to your account.
+              관리 전용 시스템입니다. 관리자 계정으로 로그인해 주세요.
             </p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground ml-1">Email</label>
+              <label className="text-sm font-medium text-muted-foreground ml-1">이메일 주소</label>
               <input
                 type="email"
                 value={email}
@@ -175,7 +175,7 @@ const AdminLogin = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground ml-1">Password</label>
+              <label className="text-sm font-medium text-muted-foreground ml-1">비밀번호</label>
               <input
                 type="password"
                 value={password}
@@ -193,11 +193,11 @@ const AdminLogin = () => {
                   className="rounded border-gray-300 dark:border-gray-500 text-primary focus:ring-1 focus:ring-primary/30/30"
                 />
                 <span className="group-hover:text-muted-foreground transition-colors">
-                  Remember me
+                  로그인 상태 유지
                 </span>
               </label>
               <a href="#" className="text-primary hover:text-primary font-medium transition-colors">
-                Forgot password?
+                비밀번호를 잊으셨나요?
               </a>
             </div>
 
@@ -228,18 +228,17 @@ const AdminLogin = () => {
                   ></path>
                 </svg>
               ) : (
-                'Sign In'
+                '대시보드 접속'
               )}
             </button>
 
             {/* Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-3 bg-white dark:bg-zinc-950 text-muted-foreground">{t('common.or')}</span>
-              </div>
+            <div className="flex items-center py-4">
+              <div className="flex-1 border-t border-gray-100 dark:border-zinc-800"></div>
+              <span className="px-4 text-[11px] font-black text-muted-foreground/40 uppercase tracking-widest whitespace-nowrap">
+                또는
+              </span>
+              <div className="flex-1 border-t border-gray-100 dark:border-zinc-800"></div>
             </div>
 
             {/* Social Login Buttons */}
