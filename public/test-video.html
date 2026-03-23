@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Test</title>
+</head>
+<body>
+    <h1>Native HTML5 Video Test</h1>
+    <video id="vid" controls autoplay width="800" src="https://lsjozpktmapfqxqyaarw.supabase.co/storage/v1/object/public/videos/study-videos/video-9c481ghgz9-1774133220233.mp4"></video>
+    
+    <div id="log" style="color: red; font-family: monospace; margin-top: 20px;"></div>
+
+    <script>
+        const v = document.getElementById('vid');
+        const l = document.getElementById('log');
+
+        v.addEventListener('error', (e) => {
+            l.innerHTML += '<br/>Video Error: ' + (v.error ? v.error.code + ' - ' + v.error.message : 'Unknown');
+        });
+        v.addEventListener('play', () => l.innerHTML += '<br/>Video Event: PLAY');
+        v.addEventListener('playing', () => l.innerHTML += '<br/>Video Event: PLAYING');
+        v.addEventListener('stalled', () => l.innerHTML += '<br/>Video Event: STALLED');
+        v.addEventListener('suspend', () => l.innerHTML += '<br/>Video Event: SUSPEND');
+        v.addEventListener('waiting', () => l.innerHTML += '<br/>Video Event: WAITING');
+    </script>
+</body>
+</html>

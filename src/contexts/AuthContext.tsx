@@ -228,8 +228,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
             } catch {}
           }
 
-          // 프로필 ID 및 계정 상태 체크 완료 전까지 loading 유지
-          setLoading(true);
+          // 이미 프로필 정보가 있는 상태에서 토큰만 갱신되는 경우 로딩을 트리거하지 않음
+          // 이를 통해 브라우저 탭 이동 시 화면이 깜빡이거나 폼 데이터가 날아가는 현상 방지
+          if (!profileId || event !== 'TOKEN_REFRESHED') {
+            setLoading(true);
+          }
+
           Promise.all([
             checkAccountStatus(u.id),
             supabase.from('profiles').select('id').eq('user_id', u.id).maybeSingle()

@@ -34,7 +34,7 @@ const AdminLayout = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const path = location.pathname;
+    const path = window.location.pathname;
 
     let pageTitle = '관리자';
 
@@ -50,7 +50,7 @@ const AdminLayout = () => {
     else if (path.startsWith('/admin/settings')) pageTitle = '관리자 설정';
 
     document.title = `${pageTitle} | ARA Admin`;
-  }, [location.pathname]);
+  }, [window.location.pathname]);
 
   // Fetch admin profile data
   useEffect(() => {
@@ -112,13 +112,19 @@ const AdminLayout = () => {
 
   const handleLogout = async () => {
     try {
-      // 먼저 리다이렉트하여 RequireAdmin 가드가 작동하기 전에 페이지 이동
-      window.location.href = '/';
-      // 백그라운드에서 로그아웃
+      // 1. DB에 오프라인 상태를 즉시 반영 (다른 관리자 화면에 실시간 전파)
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({ is_online: false, last_active_at: new Date().toISOString() })
+          .eq('user_id', user.id);
+      }
+      // 2. 세션 파기
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Logout error:', error);
-      // 에러가 발생해도 이미 리다이렉트되었으므로 토스트는 생략
+    } finally {
+      window.location.href = '/';
     }
   };
 
@@ -137,16 +143,16 @@ const AdminLayout = () => {
   return (
     <div className="min-h-screen min-w-[300px] bg-background font-sans text-foreground relative overflow-x-hidden">
       {/* Sidebar - Hidden on mobile, always visible on desktop */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-secondary border-r border-gray-300 dark:border-gray-600 transform transition-transform duration-300 ease-in-out ${
+      <aside 
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-secondary border-r border-gray-300 dark:border-gray-600 transform transition-transform duration-300 ease-in-out select-none [-webkit-tap-highlight-color:transparent] ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } md:translate-x-0`}
       >
         <div className="h-full flex flex-col">
           <div className="h-16 flex items-center px-6 border-b border-gray-300 dark:border-gray-600">
-            <Link
-              to="/admin"
-              className="outline-none focus:outline-none active:outline-none no-underline hover:no-underline"
+            <Link 
+              to="/admin" 
+              className="outline-none focus:outline-none active:outline-none no-underline hover:no-underline select-none [-webkit-tap-highlight-color:transparent]"
               onClick={() => setSidebarOpen(false)}
             >
               <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-emerald-600">
@@ -320,7 +326,7 @@ const AdminLayout = () => {
         </header>
 
         {/* Dynamic Content Area */}
-        <main className="flex-1 px-3 py-4 sm:px-4 sm:py-6 md:p-6 lg:p-8 bg-background w-full max-w-full box-border">
+        <main className="flex-1 px-3 py-4 sm:px-4 sm:py-6 md:p-6 lg:p-8 bg-background w-full max-full box-border">
           <Outlet />
         </main>
       </div>
@@ -351,18 +357,20 @@ function NavItem({
   onClick?: () => void;
 }) {
   const location = useLocation();
-  const isActive = end ? location.pathname === to : location.pathname.startsWith(to);
-
+  const isActive = end 
+    ? location.pathname === to 
+    : location.pathname.startsWith(to) || 
+      (to === '/admin/study/manage' && location.pathname.startsWith('/admin/study/edit'));
+  
   return (
     <Link
       to={to}
       onClick={onClick}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors mb-1 outline-none focus:outline-none focus:ring-0 active:outline-none ring-0 focus-visible:ring-0 focus-visible:outline-none ${
-        isActive
-          ? 'bg-primary/10 text-primary font-medium'
-          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-      }`}
-    >
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors mb-1 outline-none focus:outline-none focus:ring-0 active:outline-none ring-0 focus-visible:ring-0 focus-visible:outline-none select-none [-webkit-tap-highlight-color:transparent] ${
+      isActive 
+        ? 'bg-primary/10 !text-primary font-medium' 
+        : 'text-muted-foreground hover:!text-primary hover:bg-muted'
+    }`}>
       <Icon size={18} />
       <span className="text-sm">{label}</span>
       {isActive && <div className="ml-auto w-1.5 h-1.5 bg-primary rounded-full" />}

@@ -123,32 +123,34 @@ body {
 .prevent-scroll {
   overflow: hidden !important;
 }
-a {
-  text-decoration: none;
-  color: #3b82f6;
-  transition: color 0.2s ease;
-}
+@layer base {
+  a {
+    text-decoration: none;
+    color: #3b82f6;
+    transition: color 0.2s ease;
+  }
 
-a:hover {
-  color: #1e40af;
-}
+  a:hover {
+    color: #1e40af;
+  }
 
-a:focus {
-  color: #1e40af;
-  outline: none;
-  outline-offset: 2px;
-}
+  a:focus {
+    color: #1e40af;
+    outline: none;
+    outline-offset: 2px;
+  }
 
-a.btn {
-  color: inherit;
-}
+  a.btn {
+    color: inherit;
+  }
 
-a.btn:hover {
-  color: inherit;
-}
+  a.btn:hover {
+    color: inherit;
+  }
 
-a.btn:focus {
-  color: inherit;
+  a.btn:focus {
+    color: inherit;
+  }
 }
 
 /* ===== List Styles ===== */

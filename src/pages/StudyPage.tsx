@@ -159,17 +159,6 @@ const StudyPage = () => {
     return s ? `${basePath}/${c}/${e}/${s}` : `${basePath}/${c}/${e}`;
   };
 
-  // 게스트용 콘텐츠인지 확인
-  const checkIsFeatured = async (studyId: number): Promise<boolean> => {
-    const { data, error } = await supabase
-      .from('study')
-      .select('is_featured')
-      .eq('id', studyId)
-      .maybeSingle();
-
-    if (error) return false;
-    return !!data?.is_featured;
-  };
 
   useEffect(() => {
     const fetchStudy = async () => {
@@ -186,7 +175,7 @@ const StudyPage = () => {
         const { data, error } = await supabase
           .from('video')
           .select(
-            'id,study_id,categories,contents,episode,scene,level,runtime,runtime_bucket,image_url,view_count, study:study_id(title,short_description)',
+            'id,study_id,categories,contents,episode,scene,level,runtime,runtime_bucket,image_url,view_count, study:study_id(title,short_description,is_featured)',
           )
           .eq('contents', c)
           .eq('episode', e)
@@ -196,10 +185,12 @@ const StudyPage = () => {
 
         if (error) console.error('[video fetch error]', error);
 
-        // 보호처리 — 게스트 접근 차단
+        // 보호처리 — 게스트 접근 차단 (추천 콘텐츠는 통과)
         if (isGuest && data) {
-          const free = await checkIsFeatured(data.study_id);
-          if (!free) {
+          const studyData = data.study as any;
+          const isFeatured = Array.isArray(studyData) ? studyData[0]?.is_featured : studyData?.is_featured;
+          
+          if (!isFeatured) {
             setShowSignIn(true);
             setStudy(null);
             setLoading(false);
@@ -216,7 +207,7 @@ const StudyPage = () => {
       const { data } = await supabase
         .from('video')
         .select(
-          'id,study_id,categories,contents,episode,scene,level,runtime,runtime_bucket,image_url,view_count, study:study_id(title,short_description)',
+          'id,study_id,categories,contents,episode,scene,level,runtime,runtime_bucket,image_url,view_count, study:study_id(title,short_description,is_featured)',
         )
         .eq('contents', c)
         .eq('episode', e)
@@ -225,10 +216,12 @@ const StudyPage = () => {
 
       const row = (data?.[0] as unknown as VideoRow) ?? null;
 
-      // 게스트 보호 처리
+      // 게스트 보호 처리 (추천 콘텐츠는 통과)
       if (isGuest && row) {
-        const free = await checkIsFeatured(row.study_id);
-        if (!free) {
+        const studyData = row.study as any;
+        const isFeatured = Array.isArray(studyData) ? studyData[0]?.is_featured : studyData?.is_featured;
+
+        if (!isFeatured) {
           setShowSignIn(true);
           setStudy(null);
           setLoading(false);
@@ -280,8 +273,13 @@ const StudyPage = () => {
 
     // 게스트 보호조건
     if (isGuest) {
-      const free = await checkIsFeatured(next);
-      if (!free) {
+      const { data: sData } = await supabase
+        .from('study')
+        .select('is_featured')
+        .eq('id', next)
+        .maybeSingle();
+      
+      if (!sData?.is_featured) {
         setShowSignIn(true);
         return;
       }
@@ -305,8 +303,13 @@ const StudyPage = () => {
 
     // 게스트 보호조건
     if (isGuest) {
-      const free = await checkIsFeatured(prev);
-      if (!free) {
+      const { data: sData } = await supabase
+        .from('study')
+        .select('is_featured')
+        .eq('id', prev)
+        .maybeSingle();
+
+      if (!sData?.is_featured) {
         setShowSignIn(true);
         return;
       }

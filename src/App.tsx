@@ -9,6 +9,7 @@ import {
   useLocation,
 } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import { useUserTracker } from './hooks/useUserTracker';
 import Footer from './components/common/Footer';
 import { GlobalBanListener } from './components/common/GlobalBanListener';
 import { GlobalNotificationListener } from './components/common/GlobalNotificationListener';
@@ -106,7 +107,7 @@ function RequireAdmin() {
           .from('profiles')
           .select('is_admin')
           .eq('user_id', session.user.id)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
         setIsAdmin(data?.is_admin || false);
@@ -118,8 +119,12 @@ function RequireAdmin() {
       }
     };
 
+    // 이미 관리자 확인이 완료된 경우 백그라운드에서 조용히 재확인
+    if (isAdmin === null) {
+      setChecking(true);
+    }
     checkAdminStatus();
-  }, [session]);
+  }, [session?.user?.id]); // session 객체 대신 id를 의존성으로 사용 (안정성 확보)
 
   if (loading || checking) {
     return (
@@ -153,7 +158,13 @@ function RequireAdmin() {
             Retry Check
           </button>
           <button
-            onClick={() => supabase.auth.signOut()}
+            onClick={async () => {
+              await supabase
+                .from('profiles')
+                .update({ is_online: false, last_active_at: new Date().toISOString() })
+                .eq('user_id', session.user.id);
+              await supabase.auth.signOut();
+            }}
             className="px-4 py-2 border border-input bg-background hover:bg-accent text-accent-foreground rounded-lg transition"
           >
             Sign Out
@@ -169,6 +180,7 @@ function RequireAdmin() {
 // ---------- 실제 라우트 + 헤더 제어 ----------
 function AppInner() {
   const location = useLocation();
+  useUserTracker(); // 🔥 전역 하이브리드 트래커 초기화 및 로깅 수행
 
   const HIDE_HEADER_PATHS = ['/signin', '/signup', '/auth/callback', '/signup/social', '/admin', '/find-email', '/reset-password', '/update-password'];
   const hideHeader = HIDE_HEADER_PATHS.some(path => location.pathname.startsWith(path));
@@ -210,6 +222,7 @@ function AppInner() {
                 <Route path="users" element={<UserManagement />} />
                 <Route path="settings" element={<AdminSettings />} />
                 <Route path="study/upload" element={<AdminStudyUpload />} />
+                <Route path="study/edit/:id" element={<AdminStudyUpload />} />
                 <Route path="study/manage" element={<AdminStudyManagement />} />
                 <Route path="reports" element={<AdminReports />} />
                 <Route path="content" element={<AdminContentModeration />} />
