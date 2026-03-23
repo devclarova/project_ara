@@ -59,7 +59,7 @@ function DirectChatPage() {
     const state = location.state as { roomId?: string; messageId?: string } | null;
     if (state?.roomId) {
       // 채팅방만 열고 메시지 하이라이트는 하지 않음 (사용자 요청)
-      handleChatSelect(state.roomId); 
+      handleChatSelect(state.roomId);
     }
   }, [location.state, isMobile]); // isMobile dependency needed for handleChatSelect closure? No, handleChatSelect uses isMobile from scope.
 
@@ -86,16 +86,31 @@ function DirectChatPage() {
   const { user } = useAuth();
 
   useEffect(() => {
+    document.title = '채팅 | ARA';
+  }, []);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    if (!location.state?.roomId) {
+      setSelectedChatId(null);
+      setHighlightMessageId(undefined);
+      resetCurrentChat();
+      if (isMobile) setShowListOnMobile(true);
+    }
+  }, [user?.id, isMobile]);
+
+  useEffect(() => {
     if (!user?.id) return;
 
     // 만약 location.state로 들어온 경우 초기화 로직이 덮어쓰지 않도록 주의
     // 하지만 location.state가 있으면 위 useEffect가 다시 실행될 것임.
     // user change 시에는 초기화하는 게 맞음.
     if (!location.state?.roomId) {
-        setSelectedChatId(null);
-        setHighlightMessageId(undefined);
-        resetCurrentChat();
-        if (isMobile) setShowListOnMobile(true);
+      setSelectedChatId(null);
+      setHighlightMessageId(undefined);
+      resetCurrentChat();
+      if (isMobile) setShowListOnMobile(true);
     }
   }, [user?.id, isMobile]); // location.state dependency omitted to avoid loop, but checked inside
 
@@ -127,9 +142,7 @@ function DirectChatPage() {
                       highlightMessageId={highlightMessageId}
                     />
                   ) : (
-                    !isMobile && (
-                      <ChatWelcomeSearch onChatSelect={handleChatSelect} />
-                    )
+                    !isMobile && <ChatWelcomeSearch onChatSelect={handleChatSelect} />
                   )}
                 </div>
               )}

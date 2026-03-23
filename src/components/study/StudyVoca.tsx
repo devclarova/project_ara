@@ -11,6 +11,7 @@ type WordRow = {
   example: string | null;
   parts_of_speech?: string | null;
   pronunciation?: string | null;
+  image_url?: string | null;
 };
 
 export type WordItem = {
@@ -20,6 +21,7 @@ export type WordItem = {
   example?: string;
   pos?: string;
   pron?: string;
+  image_url?: string | null;
 };
 
 type StudyVocaProps = {
@@ -39,11 +41,9 @@ const useResponsivePageSize = () => {
   useEffect(() => {
     const calc = () => {
       const w = window.innerWidth;
-      if (w < 640)
-        setPageSize(1); // < sm (mobile)
-      else if (w < 1024)
-        setPageSize(4); // < lg (tablet)
-      else setPageSize(6); // >= lg (desktop)
+      if (w < 640) setPageSize(1);
+      else if (w < 1024) setPageSize(4);
+      else setPageSize(6);
     };
     calc();
     window.addEventListener('resize', calc);
@@ -67,7 +67,7 @@ const StudyVoca = ({
   const [loading, setLoading] = useState<boolean>(!controlled && !!studyId);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
-  const pageSize = useResponsivePageSize(); // 한번에 보여줄 단어 개수
+  const pageSize = useResponsivePageSize();
 
   // 모달 상태
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -76,6 +76,7 @@ const StudyVoca = ({
   // DB Row -> UI 데이터 매핑
   const mapRow = (row: WordRow): WordItem | null => {
     if (!row.words || !row.means) return null;
+
     return {
       id: row.id,
       term: row.words,
@@ -83,13 +84,14 @@ const StudyVoca = ({
       example: row.example ?? undefined,
       pos: row.parts_of_speech ?? undefined,
       pron: row.pronunciation ?? undefined,
+      image_url: row.image_url ?? undefined,
     };
   };
 
   // 자체 fetch 모드일 때만 동작
   useEffect(() => {
-    if (controlled) return; // 상위에서 words 제공 시 fetch하지 않음
-    if (!studyId && studyId !== 0) return; // studyId 없으면 아무것도 안 함
+    if (controlled) return;
+    if (!studyId && studyId !== 0) return;
 
     let alive = true;
 
@@ -99,7 +101,7 @@ const StudyVoca = ({
 
       const { data, error } = await supabase
         .from('word')
-        .select('id, study_id, words, means, example, parts_of_speech, pronunciation')
+        .select('id, study_id, words, means, example, parts_of_speech, pronunciation, image_url')
         .eq('study_id', studyId)
         .order('id', { ascending: true });
 
@@ -110,15 +112,17 @@ const StudyVoca = ({
         setError(error.message);
         setLocalWords([]);
       } else {
+        // console.log('word raw data:', data);
         const mapped = (data ?? []).map(mapRow).filter((v): v is WordItem => v !== null);
+        // console.log('mapped words:', mapped);
         setLocalWords(mapped);
       }
+
       setLoading(false);
     };
 
     fetchWords();
 
-    // 실시간 반영 옵션
     const channel =
       subscribeRealtime && studyId != null
         ? supabase
@@ -137,17 +141,16 @@ const StudyVoca = ({
     };
   }, [controlled, studyId, subscribeRealtime]);
 
-  // 실제 렌더에 사용할 데이터(우선순위: props.words > localWords)
+  // 실제 렌더에 사용할 데이터
   const data = useMemo<WordItem[]>(() => {
     if (controlled) return words!;
     return localWords;
   }, [controlled, words, localWords]);
 
   // 모달에 넘길 words(EpisodeWord[])로 변환
-  // - 앞면 ko: words(=term)
-  // - 뒷면 en: means(=meaning)  ← 지금 테이블에 이미 번역/의미가 있으니 그대로 사용
   const modalWords: EpisodeWord[] = useMemo(() => {
     const sid = studyId ?? 'study';
+
     return data.map(w => ({
       id: `${sid}:${String(w.id ?? `${w.term}-${w.meaning}`)}`,
       ko: w.term,
@@ -155,10 +158,15 @@ const StudyVoca = ({
       exampleKo: w.example,
       difficulty: 2,
       imageEmoji: '📌',
+      image_url: w.image_url ?? undefined,
       pronKo: w.pron,
       pos: w.pos,
     }));
   }, [data, studyId]);
+
+  useEffect(() => {
+    // console.log('modalWords:', modalWords);
+  }, [modalWords]);
 
   // pageSize 또는 data가 바뀔 때 현재 페이지를 안전하게 클램프
   useEffect(() => {
@@ -166,7 +174,6 @@ const StudyVoca = ({
     setCurrentPage(prev => Math.min(prev, totalPages - 1));
   }, [data.length, pageSize]);
 
-  // 페이지네이션: 현재 페이지에 해당하는 단어들만 보여주기
   const start = currentPage * pageSize;
   const end = start + pageSize;
   const currentData = data.slice(start, end);
@@ -177,7 +184,6 @@ const StudyVoca = ({
   const handleNextPage = () => setCurrentPage(prevPage => prevPage + 1);
   const handlePrevPage = () => setCurrentPage(prevPage => Math.max(prevPage - 1, 0));
 
-  // 단어 클릭 → 모달 오픈 (해당 단어부터 시작)
   const openModal = (w: WordItem) => {
     const sid = studyId ?? 'study';
     const id = `${sid}:${String(w.id ?? `${w.term}-${w.meaning}`)}`;
@@ -185,7 +191,6 @@ const StudyVoca = ({
     setIsModalOpen(true);
   };
 
-  // 로딩/에러 처리 (자체 fetch 모드일 때만)
   if (!controlled && loading) return <p className="p-3 text-sm text-gray-500">보카 불러오는 중…</p>;
   if (!controlled && error) return <p className="p-3 text-sm text-red-600">보카 오류: {error}</p>;
   if (!currentData || currentData.length === 0)
@@ -210,7 +215,6 @@ const StudyVoca = ({
         ))}
       </div>
 
-      {/* 페이지네이션 버튼 */}
       {data.length > pageSize && (
         <div className="flex justify-center mt-4">
           <button
@@ -286,7 +290,6 @@ const StudyVoca = ({
         </div>
       )}
 
-      {/* 모달 렌더 */}
       <EpisodeVocabModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

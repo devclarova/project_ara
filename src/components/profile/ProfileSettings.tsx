@@ -14,43 +14,43 @@ import { useLocation } from 'react-router-dom';
 
 export default function ProfileSettings() {
   const { t } = useTranslation();
-  
+
   // Ensure title is translated
   const settingsTitle = t('settings.account_settings', 'Settings');
-  
+
   const items: SidebarItem[] = [
-    { 
-      id: 'alarm', 
+    {
+      id: 'alarm',
       label: t('settings.notifications'),
-      keywords: [t('settings.alarm_push', '푸시 알림'), t('settings.alarm_email', '이메일 알림')]
+      keywords: [t('settings.alarm_push', '푸시 알림'), t('settings.alarm_email', '이메일 알림')],
     },
-    { 
-      id: 'privacy', 
+    {
+      id: 'privacy',
       label: t('settings.privacy'),
       keywords: [
-        t('settings.change_password', '비밀번호 변경'), 
-        t('settings.connect_sns', 'SNS 연결'), 
-        t('settings.withdraw', '탈퇴하기')
-      ]
+        t('settings.change_password', '비밀번호 변경'),
+        t('settings.connect_sns', 'SNS 연결'),
+        t('settings.withdraw', '탈퇴하기'),
+      ],
     },
-    { 
-      id: 'system', 
+    {
+      id: 'system',
       label: t('settings.system'),
       keywords: [
-        t('settings.language', '언어 설정'), 
-        t('settings.theme', '테마 설정'), 
-        t('settings.theme_dark', '다크 모드')
-      ]
+        t('settings.language', '언어 설정'),
+        t('settings.theme', '테마 설정'),
+        t('settings.theme_dark', '다크 모드'),
+      ],
     },
-    { 
-      id: 'policy', 
+    {
+      id: 'policy',
       label: t('settings.support_policy'),
       keywords: [
-        t('settings.terms', '이용약관'), 
-        t('settings.privacy_policy', '개인정보 처리방침'), 
+        t('settings.terms', '이용약관'),
+        t('settings.privacy_policy', '개인정보 처리방침'),
         t('settings.marketing_consent', '마케팅 정보 수신 동의'),
-        t('settings.help_center', '고객센터')
-      ]
+        t('settings.help_center', '고객센터'),
+      ],
     },
   ];
 
@@ -62,6 +62,10 @@ export default function ProfileSettings() {
   const state = location.state as { activeTab?: MenuId; openSetting?: any } | null;
 
   const [activeId, setActiveId] = useState<MenuId>(state?.activeTab || 'alarm');
+
+  useEffect(() => {
+    document.title = `${settingsTitle} | ARA`;
+  }, [settingsTitle]);
 
   useEffect(() => {
     if (state?.activeTab) {
@@ -115,9 +119,9 @@ export default function ProfileSettings() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    
+
     const newFilteredItems = getFilteredItems(query);
-    
+
     // 검색 결과가 존재하고, 현재 활성화된 탭이 결과에 포함되지 않을 경우
     // 결과 중 첫 번째 항목으로 자동 이동하여 오른쪽 화면 갱신
     if (newFilteredItems.length > 0) {
@@ -132,7 +136,7 @@ export default function ProfileSettings() {
     filteredItems.length === 0 ? (
       <SettingsContent>
         <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-gray-500 dark:text-gray-400">
-           <p className="text-sm">{t('chat.no_result')}</p>
+          <p className="text-sm">{t('chat.no_result')}</p>
         </div>
       </SettingsContent>
     ) : activeId === 'alarm' ? (
@@ -141,9 +145,9 @@ export default function ProfileSettings() {
       </SettingsContent>
     ) : activeId === 'privacy' ? (
       <SettingsContent>
-        <PrivacySettings 
-          onBackToMenu={() => setShowMenuOnMobile(true)} 
-          searchQuery={searchQuery} 
+        <PrivacySettings
+          onBackToMenu={() => setShowMenuOnMobile(true)}
+          searchQuery={searchQuery}
           initialActiveSetting={activeId === 'privacy' ? state?.openSetting : undefined}
         />
       </SettingsContent>
@@ -166,9 +170,9 @@ export default function ProfileSettings() {
             {/* 상단 검색 인풋 여백 */}
             <div className="mb-4 md:mb-6">
               <SearchBar
-                placeholder={t('common.search_placeholder', 'Search...')} 
+                placeholder={t('common.search_placeholder', 'Search...')}
                 value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
+                onChange={e => handleSearch(e.target.value)}
                 onSubmit={() => {}}
               />
             </div>

@@ -14,6 +14,10 @@ export default function GoodsPage() {
   const [showNotice, setShowNotice] = useState(false);
 
   useEffect(() => {
+    document.title = '굿즈샵 | ARA';
+  }, []);
+
+  useEffect(() => {
     // 세션 키 v30으로 상향 조정하여 강제 재노출
     const hasSeenNotice = sessionStorage.getItem('ara-goods-notice-v30');
     if (!hasSeenNotice) {
@@ -29,9 +33,10 @@ export default function GoodsPage() {
     sessionStorage.setItem('ara-goods-notice-v30', 'true');
   };
 
-  const filteredProducts = activeCategory === 'all'
-    ? MOCK_PRODUCTS
-    : MOCK_PRODUCTS.filter(p => p.category === activeCategory);
+  const filteredProducts =
+    activeCategory === 'all'
+      ? MOCK_PRODUCTS
+      : MOCK_PRODUCTS.filter(p => p.category === activeCategory);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black/90 pb-20">
@@ -43,7 +48,7 @@ export default function GoodsPage() {
           title={null}
           className="max-w-[420px] h-auto overflow-hidden border-none shadow-2xl rounded-[2.5rem]"
         >
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="p-12 flex flex-col items-center text-center"
@@ -54,13 +59,15 @@ export default function GoodsPage() {
 
             <div className="space-y-4 mb-10">
               <span className="text-[11px] font-black tracking-[0.2em] text-primary/70 uppercase">
-                 안내사항
+                안내사항
               </span>
               <h3 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">
                 ARA 공식 굿즈 스토어
               </h3>
               <p className="text-[15px] leading-relaxed text-gray-400 dark:text-gray-500 font-medium break-keep px-2">
-                ARA의 정체성을 담은 공식 라인업이 출시될 예정입니다.<br/>예시 상품들을 미리 살펴보세요.
+                ARA의 정체성을 담은 공식 라인업이 출시될 예정입니다.
+                <br />
+                예시 상품들을 미리 살펴보세요.
               </p>
             </div>
 
@@ -77,11 +84,11 @@ export default function GoodsPage() {
       {/* Hero Section */}
       <div className="relative w-full h-[40vh] min-h-[300px] overflow-hidden">
         <div className="absolute inset-0 bg-black">
-           <img
-              src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80"
-              className="w-full h-full object-cover opacity-80"
-              alt="Hero Background"
-           />
+          <img
+            src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80"
+            className="w-full h-full object-cover opacity-80"
+            alt="Hero Background"
+          />
         </div>
 
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-4">
@@ -103,15 +110,16 @@ export default function GoodsPage() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-10">
         <div className="bg-white dark:bg-card rounded-2xl shadow-xl dark:shadow-none dark:border border-gray-800 p-2 mb-8 flex flex-wrap justify-center gap-2">
-          {CATEGORIES.map((cat) => (
+          {CATEGORIES.map(cat => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className={`
                 px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200
-                ${activeCategory === cat
-                  ? 'bg-primary text-white shadow-md transform scale-105'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                ${
+                  activeCategory === cat
+                    ? 'bg-primary text-white shadow-md transform scale-105'
+                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                 }
               `}
             >
@@ -121,7 +129,7 @@ export default function GoodsPage() {
         </div>
 
         <motion.div layout className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          {filteredProducts.map((product) => (
+          {filteredProducts.map(product => (
             <motion.div
               layout
               initial={{ opacity: 0 }}
@@ -138,33 +146,35 @@ export default function GoodsPage() {
                 />
                 {product.badge && (
                   <div className="absolute top-3 left-3">
-                    <Badge className={`
+                    <Badge
+                      className={`
                       text-[10px] font-bold tracking-wider px-2 py-1 uppercase border-none
                       ${product.badge === 'new_arrival' ? 'bg-[#00bfa5] text-white shadow-sm' : ''}
                       ${product.badge === 'best_seller' ? 'bg-amber-500 text-white shadow-sm' : ''}
                       ${product.badge === 'sold_out' ? 'bg-zinc-800 text-white opacity-90' : ''}
-                    `}>
+                    `}
+                    >
                       {t(`goods.${product.badge}`, product.badge.replace('_', ' '))}
                     </Badge>
                   </div>
                 )}
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                   <div className="bg-white/90 dark:bg-black/80 rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-transform">
-                      <ShoppingBag size={24} className="text-gray-900 dark:text-white" />
-                   </div>
+                  <div className="bg-white/90 dark:bg-black/80 rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                    <ShoppingBag size={24} className="text-gray-900 dark:text-white" />
+                  </div>
                 </div>
               </div>
               <div className="p-4">
                 <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 uppercase font-bold tracking-wider">
-                   {t(`goods.category_${product.category}`, product.category)}
+                  {t(`goods.category_${product.category}`, product.category)}
                 </div>
                 <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 truncate">
-                   {t(`goods.items.${product.itemKey}.title`)}
+                  {t(`goods.items.${product.itemKey}.title`)}
                 </h3>
                 <div className="flex items-center justify-between">
-                   <span className="font-semibold text-lg text-primary">
-                     ${product.price.toFixed(2)}
-                   </span>
+                  <span className="font-semibold text-lg text-primary">
+                    ${product.price.toFixed(2)}
+                  </span>
                 </div>
               </div>
             </motion.div>
@@ -172,10 +182,10 @@ export default function GoodsPage() {
         </motion.div>
 
         {filteredProducts.length === 0 && (
-           <div className="text-center py-20 text-gray-500">
-              <ShoppingBag className="w-16 h-16 mx-auto mb-4 opacity-20" />
-              <p>상품이 존재하지 않습니다.</p>
-           </div>
+          <div className="text-center py-20 text-gray-500">
+            <ShoppingBag className="w-16 h-16 mx-auto mb-4 opacity-20" />
+            <p>상품이 존재하지 않습니다.</p>
+          </div>
         )}
       </div>
     </div>

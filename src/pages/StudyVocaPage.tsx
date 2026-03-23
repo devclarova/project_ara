@@ -7,9 +7,11 @@ import QuizMenuModal from '@/components/study/QuizMenuModal';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import Pagination from '@/components/common/Pagination';
 import { deleteMyVoca, fetchMyVoca, updateMyVocaStatus, type UserVocaRow } from '@/lib/userVoca';
+import { useAutoTranslation } from '@/hooks/useAutoTranslation';
 import { ArrowLeft, Gamepad2, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 type VocabItem = {
   id: string;
@@ -19,6 +21,7 @@ type VocabItem = {
   exampleTr?: string;
   pos?: string;
   pron?: string;
+  image_url?: string | null;
   status: 'unknown' | 'learning' | 'known';
   wrongCount: number;
   createdAt: string;
@@ -61,6 +64,113 @@ function setVocabStatus(id: string, status: VocabItem['status']) {
   saveVocab(out);
 }
 
+type VocabCardProps = {
+  v: VocabItem;
+  onOpen: () => void;
+  onDelete: () => void;
+  onChangeStatus: (status: VocabItem['status']) => void;
+};
+
+function VocabCard({ v, onOpen, onDelete, onChangeStatus }: VocabCardProps) {
+  const { i18n } = useTranslation();
+  const targetLang = i18n.language || 'en';
+  const isKorean = targetLang.toLowerCase().startsWith('ko');
+
+  const meaningSrc = v.meaning ?? '';
+  const exampleKoSrc = v.exampleKo ?? '';
+  const exampleTrSrc = v.exampleTr ?? '';
+  const posSrc = v.pos ?? '';
+
+  const { translatedText: translatedMeaning } = useAutoTranslation(
+    meaningSrc,
+    `voca_page_meaning_${v.id}`,
+    targetLang,
+  );
+
+  const { translatedText: translatedExampleKo } = useAutoTranslation(
+    exampleKoSrc,
+    `voca_page_example_ko_${v.id}`,
+    targetLang,
+  );
+
+  const { translatedText: translatedPos } = useAutoTranslation(
+    posSrc,
+    `voca_page_pos_${v.id}`,
+    targetLang,
+  );
+
+  const displayMeaning = isKorean ? meaningSrc : translatedMeaning?.trim() || meaningSrc;
+  const displayExample = isKorean
+    ? exampleKoSrc || exampleTrSrc
+    : translatedExampleKo?.trim() || exampleTrSrc || exampleKoSrc;
+  const displayPos = isKorean ? posSrc : translatedPos?.trim() || posSrc;
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') onOpen();
+      }}
+      className="p-4 rounded-2xl ring-1 ring-gray-200 bg-white dark:bg-secondary cursor-pointer hover:bg-gray-50/60 dark:hover:bg-white/5 transition"
+    >
+      <div className="flex justify-between items-start gap-2">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="font-bold text-gray-900 dark:text-gray-100 truncate">{v.term}</div>
+
+            {v.pron && (
+              <div className="text-[11px] text-gray-400 whitespace-nowrap">[{v.pron}]</div>
+            )}
+          </div>
+          <div className="mt-1 min-h-[16px] text-[11px] text-gray-400">
+            {displayPos ? `(${displayPos})` : ''}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">{displayMeaning}</div>
+        </div>
+
+        <button
+          onClick={e => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          className="p-1.5 rounded-md ring-1 ring-gray-200 hover:bg-gray-50 dark:hover:bg-gray-900 transition"
+          aria-label="삭제"
+          title="삭제"
+        >
+          <Trash2 size={14} className="text-gray-500" />
+        </button>
+      </div>
+
+      {displayExample && (
+        <div className="mt-3 text-xs text-gray-500 space-y-1">
+          <div>예문: {displayExample}</div>
+        </div>
+      )}
+
+      <div className="mt-3 flex items-center gap-1">
+        {(['unknown', 'learning', 'known'] as const).map(st => (
+          <button
+            key={st}
+            onClick={e => {
+              e.stopPropagation();
+              onChangeStatus(st);
+            }}
+            className={`text-[11px] px-2 py-1 rounded-full ring-1 transition ${
+              v.status === st
+                ? 'ring-primary/60 bg-primary-50 text-primary'
+                : 'ring-primary/60 hover:ring-primary'
+            }`}
+          >
+            {st}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function StudyVocaPage() {
   const navigate = useNavigate();
 
@@ -81,7 +191,11 @@ export default function StudyVocaPage() {
   const matchingPool = useMemo(() => items.filter(v => (v.wrongCount ?? 0) > 0), [items]);
 
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(9); // 기본은 데스크톱
+  const [pageSize, setPageSize] = useState(9);
+
+  useEffect(() => {
+    document.title = '단어장 | ARA';
+  }, []);
 
   const reload = async () => {
     const rows = await fetchMyVoca();
@@ -95,6 +209,7 @@ export default function StudyVocaPage() {
         exampleTr: r.example_tr ?? undefined,
         pos: r.pos ?? undefined,
         pron: r.pron ?? undefined,
+        image_url: r.image_url ?? undefined,
         status: r.status,
         wrongCount: r.wrong_count,
         createdAt: r.created_at,
@@ -163,19 +278,16 @@ export default function StudyVocaPage() {
     const updatePageSize = () => {
       const width = window.innerWidth;
 
-      // 모바일: 1열 4개
       if (width < 640) {
         setPageSize(4);
         return;
       }
 
-      // 태블릿: 2열 6개
       if (width < 1024) {
         setPageSize(6);
         return;
       }
 
-      // 데스크톱: 3열 9개
       setPageSize(9);
     };
 
@@ -203,7 +315,6 @@ export default function StudyVocaPage() {
     });
   }, [items, q, status]);
 
-  // 검색/필터 바뀌면 1페이지로
   useEffect(() => {
     setPage(1);
   }, [q, status]);
@@ -217,7 +328,6 @@ export default function StudyVocaPage() {
     return filtered.slice(start, end);
   }, [filtered, page, pageSize]);
 
-  // 페이지 보정
   useEffect(() => {
     if (totalPages === 0) {
       if (page !== 1) setPage(1);
@@ -235,6 +345,8 @@ export default function StudyVocaPage() {
       exampleEn: v.exampleTr,
       pos: v.pos,
       pron: v.pron,
+      pronKo: v.pron,
+      image_url: v.image_url ?? undefined,
       imageEmoji: '📌',
       difficulty: 2,
     }));
@@ -253,7 +365,6 @@ export default function StudyVocaPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-background relative">
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-5">
-        {/* 헤더 */}
         <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">단어장</h1>
@@ -281,7 +392,6 @@ export default function StudyVocaPage() {
           </div>
         </div>
 
-        {/* 검색/필터 */}
         <div className="flex flex-col sm:flex-row gap-2">
           <input
             value={q}
@@ -309,89 +419,35 @@ export default function StudyVocaPage() {
           </button>
         </div>
 
-        {/* 리스트 */}
         {filtered.length === 0 ? (
           <div className="py-16 text-center text-gray-500">
-            저장된 단어가 없어요. <span className="text-primary">학습 페이지</span>에서 단어를
-            저장해보아요.
+            저장된 단어가 없어요.
+            <Link
+              to="/studylist"
+              className="text-primary font-medium underline underline-offset-2 hover:text-primary/80"
+            >
+              학습 페이지
+            </Link>
+            에서 단어를 저장해보아요.
           </div>
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-4">
               {paginated.map(v => (
-                <div
+                <VocabCard
                   key={v.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => openModal(v.id)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' || e.key === ' ') openModal(v.id);
+                  v={v}
+                  onOpen={() => openModal(v.id)}
+                  onDelete={() => openDeleteConfirm(v.id)}
+                  onChangeStatus={async st => {
+                    try {
+                      await updateMyVocaStatus(v.id, st);
+                      await reload();
+                    } catch (err) {
+                      console.error(err);
+                    }
                   }}
-                  className="p-4 rounded-2xl ring-1 ring-gray-200 bg-white dark:bg-secondary cursor-pointer hover:bg-gray-50/60 dark:hover:bg-white/5 transition"
-                >
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="min-w-0">
-                      <div className="font-bold text-gray-900 dark:text-gray-100">{v.term}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                        {v.meaning}
-                      </div>
-
-                      <div className="mt-1 min-h-[16px] text-[11px] text-gray-400">
-                        {v.pos || v.pron ? (
-                          <>
-                            {v.pos ? `(${v.pos})` : ''}
-                            {v.pron ? ` · ${v.pron}` : ''}
-                          </>
-                        ) : (
-                          <span className="invisible">placeholder</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        openDeleteConfirm(v.id);
-                      }}
-                      className="p-1.5 rounded-md ring-1 ring-gray-200 hover:bg-gray-50 dark:hover:bg-gray-900 transition"
-                      aria-label="삭제"
-                      title="삭제"
-                    >
-                      <Trash2 size={14} className="text-gray-500" />
-                    </button>
-                  </div>
-
-                  {(v.exampleKo || v.exampleTr) && (
-                    <div className="mt-3 text-xs text-gray-500 space-y-1">
-                      {v.exampleKo && <div>예문: {v.exampleKo}</div>}
-                      {v.exampleTr && <div className="text-gray-400">{v.exampleTr}</div>}
-                    </div>
-                  )}
-
-                  <div className="mt-3 flex items-center gap-1">
-                    {(['unknown', 'learning', 'known'] as const).map(st => (
-                      <button
-                        key={st}
-                        onClick={async e => {
-                          e.stopPropagation();
-                          try {
-                            await updateMyVocaStatus(v.id, st);
-                            await reload();
-                          } catch (err) {
-                            console.error(err);
-                          }
-                        }}
-                        className={`text-[11px] px-2 py-1 rounded-full ring-1 transition ${
-                          v.status === st
-                            ? 'ring-primary/60 bg-primary-50 text-primary'
-                            : 'ring-primary/60 hover:ring-primary'
-                        }`}
-                      >
-                        {st}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                />
               ))}
             </div>
 

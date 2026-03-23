@@ -134,23 +134,33 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
 
   // --- Batch Translation Integration ---
   // 현재 페이지의 자막 텍스트 수집
-  const pronTexts = currentDialogues.map(d => d.pronunciation ?? '');
-  const pronKeys = currentDialogues.map(d => `subtitle_pron_${d.id}`);
-  
+  // const pronTexts = currentDialogues.map(d => d.pronunciation ?? '');
+  // const pronKeys = currentDialogues.map(d => `subtitle_pron_${d.id}`);
+
   const contentTexts = currentDialogues.map(d => d.english_subtitle ?? '');
   const contentKeys = currentDialogues.map(d => `subtitle_content_${d.id}`);
 
   // 배치 번역 훅 호출
-  const { translatedTexts: translatedProns } = useBatchAutoTranslation(pronTexts, pronKeys, targetLang);
-  const { translatedTexts: translatedContents } = useBatchAutoTranslation(contentTexts, contentKeys, targetLang);
+  // const { translatedTexts: translatedProns } = useBatchAutoTranslation(pronTexts, pronKeys, targetLang);
+  const { translatedTexts: translatedContents } = useBatchAutoTranslation(
+    contentTexts,
+    contentKeys,
+    targetLang,
+  );
   // -------------------------------------
 
   return (
     <div>
-      <h2 className="text-lg sm:text-xl font-bold ml-2 mb-2 dark:text-gray-100">{t('study.subtitle_title')}</h2>
+      <h2 className="text-lg sm:text-xl font-bold ml-2 mb-2 dark:text-gray-100">
+        {t('study.subtitle_title')}
+      </h2>
 
       {loading && <p className="text-sm sm:text-base">{t('study.subtitle_loading')}</p>}
-      {error && <p className="text-sm sm:text-base text-red-600">{t('common.error')}: {error}</p>}
+      {error && (
+        <p className="text-sm sm:text-base text-red-600">
+          {t('common.error')}: {error}
+        </p>
+      )}
 
       {!loading && !error && currentDialogues.length > 0 ? (
         <>
@@ -161,7 +171,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
                 subtitle={d}
                 onSelect={onSelectDialogue}
                 onSeek={onSeek}
-                translatedPron={translatedProns[idx]}
+                translatedPron={d.pronunciation ?? ''}
                 translatedContent={translatedContents[idx]}
               />
             ))}
