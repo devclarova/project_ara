@@ -44,6 +44,7 @@ const ContentCard = ({
   translatedDescProp,
   translatedDurationProp,
   translatedEpisodeProp,
+  created_at,
 }: ContentCardProps) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -138,6 +139,15 @@ const ContentCard = ({
 
   // Helpers
   const enc = (v?: string | number | null) => encodeURIComponent(String(v ?? ''));
+  
+  // NEW Badge Logic: 7 days
+  const isNew = useMemo(() => {
+    if (!created_at) return false;
+    const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+    const uploadTime = new Date(created_at).getTime();
+    const currentTime = Date.now();
+    return currentTime - uploadTime < sevenDaysInMs;
+  }, [created_at]);
 
   const buildStudyUrl = (row: {
     contents?: string | null;
@@ -314,6 +324,13 @@ const ContentCard = ({
       {isGuest && isPreview && (
         <span className="absolute top-3 left-3 z-[40] bg-primary/90 backdrop-blur-sm text-white px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded-full shadow-sm tracking-wide border border-white/20">
           {t('study.preview')}
+        </span>
+      )}
+
+      {/* NEW 뱃지 (최상위) - 업로드 7일 이내 */}
+      {isNew && (
+        <span className="absolute top-3 right-3 z-[40] bg-rose-600 text-white px-2.5 py-1 text-[10px] sm:text-[11px] font-black rounded-md shadow-lg shadow-rose-500/30 tracking-tighter border border-white/20 animate-pulse">
+          NEW
         </span>
       )}
     </div>

@@ -46,6 +46,16 @@ const AdminReports = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const fetchReports = useCallback(async () => {
     setLoading(true);
@@ -71,11 +81,18 @@ const AdminReports = () => {
         query = query.eq('status', filterStatus);
       }
 
+      if (debouncedSearch) {
+        // Search in reason or reporter's nickname
+        // Note: Complex OR across joins is tricky in postgrest, but we can search reason at least
+        // or join profiles and search there.
+        query = query.or(`reason.ilike.%${debouncedSearch}%,description.ilike.%${debouncedSearch}%`);
+      }
+
       const { data: reportsData, error } = await query;
 
       if (error) throw error;
 
-      // Enhance Chat Reports with Suspect Info
+      // Enhance Chat & User Reports with Suspect Info
       const enhancedReports = await Promise.all(reportsData.map(async (report: any) => {
         if (report.target_type === 'chat') {
             try {
@@ -104,6 +121,20 @@ const AdminReports = () => {
             } catch (err) {
                 console.error('Error fetching chat suspect', err);
             }
+        } else if (report.target_type === 'user') {
+            try {
+                const { data: suspect } = await supabase
+                    .from('profiles')
+                    .select('nickname, user_id, avatar_url')
+                    .eq('id', report.target_id)
+                    .maybeSingle();
+                
+                if (suspect) {
+                    return { ...report, suspect_profile: suspect };
+                }
+            } catch (err) {
+                console.error('Error fetching user suspect', err);
+            }
         }
         return report;
       }));
@@ -115,7 +146,7 @@ const AdminReports = () => {
     } finally {
       setLoading(false);
     }
-  }, [filterStatus]);
+  }, [filterStatus, debouncedSearch]);
 
   useEffect(() => {
     fetchReports();
@@ -148,7 +179,9 @@ const AdminReports = () => {
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <input 
               type="text" 
-              placeholder="작성자, 내용 검색..." 
+              placeholder="사유, 내용 검색..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 pr-4 py-2 w-full bg-secondary border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
           </div>
@@ -212,16 +245,14 @@ const AdminReports = () => {
                      targetName = report.content_snapshot.user.name || report.content_snapshot.user.nickname;
                      targetAvatar = report.content_snapshot.user.avatar || report.content_snapshot.user.avatar_url;
                      targetSub = report.content_snapshot.user.username ? `@${report.content_snapshot.user.username}` : null;
+                 } else if (report.suspect_profile) {
+                     targetName = report.suspect_profile.nickname;
+                     targetAvatar = report.suspect_profile.avatar_url;
+                     targetSub = `@${report.suspect_profile.user_id}`;
                  } else if (report.target_type === 'user') {
                      targetName = 'User Profile'; 
                  } else if (report.target_type === 'chat') {
-                     if (report.suspect_profile) {
-                         targetName = report.suspect_profile.nickname;
-                         targetAvatar = report.suspect_profile.avatar_url;
-                         targetSub = `@${report.suspect_profile.user_id}`;
-                     } else {
-                         targetName = 'Chat Room';
-                     }
+                     targetName = 'Chat Room';
                  }
 
                  return (

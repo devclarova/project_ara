@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { ShoppingBag, Box } from 'lucide-react';
+import { ShoppingBag, Box, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
-import { CATEGORIES, MOCK_PRODUCTS } from './data';
+import { goodsService } from '@/services/goodsService';
+import type { Product } from '@/services/goodsService';
+import { CATEGORIES } from './data';
 import Modal from '@/components/common/Modal';
 
 export default function GoodsPage() {
@@ -12,6 +14,8 @@ export default function GoodsPage() {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [showNotice, setShowNotice] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     document.title = '굿즈샵 | ARA';
@@ -27,16 +31,34 @@ export default function GoodsPage() {
     }
   }, []);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const data = await goodsService.fetchProducts({
+          category: activeCategory === 'all' ? undefined : activeCategory, // 'all'일 경우 category 필터링 제외
+          is_hidden: false
+        });
+        setProducts(data);
+      } catch (err) {
+        console.error('Failed to fetch products:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [activeCategory]);
+
   const handleCloseNotice = () => {
     // 즉시 상태 변경 (애니메이션 충돌 방지 위해 AnimatePresence 없이 직접 제어)
     setShowNotice(false);
     sessionStorage.setItem('ara-goods-notice-v30', 'true');
   };
 
-  const filteredProducts =
-    activeCategory === 'all'
-      ? MOCK_PRODUCTS
-      : MOCK_PRODUCTS.filter(p => p.category === activeCategory);
+  // filteredProducts는 이제 activeCategory에 따라 goodsService에서 직접 필터링된 products를 사용
+  // 따라서 별도의 필터링 로직이 필요 없음. products 상태 자체가 이미 필터링된 결과임.
+  // 이 변수는 더 이상 필요 없거나, products를 직접 사용하면 됨.
+  // const filteredProducts = products; // 또는 products를 직접 사용
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black/90 pb-20">
@@ -129,7 +151,11 @@ export default function GoodsPage() {
         </div>
 
         <motion.div layout className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          {filteredProducts.map(product => (
+          {loading ? (
+            <div className="col-span-full py-20 flex justify-center">
+              <Loader2 className="w-10 h-10 animate-spin text-primary opacity-50" />
+            </div>
+          ) : products.map(product => (
             <motion.div
               layout
               initial={{ opacity: 0 }}
@@ -140,24 +166,26 @@ export default function GoodsPage() {
             >
               <div className="relative aspect-square overflow-hidden bg-gray-200 dark:bg-gray-800">
                 <img
-                  src={product.image}
-                  alt={t(`goods.items.${product.itemKey}.title`)}
+                  src={product.main_image_url || 'https://images.unsplash.com/photo-1583573636246-18cb2246697f?q=80&w=500'}
+                  alt={product.name}
                   className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
                 />
-                {product.badge && (
-                  <div className="absolute top-3 left-3">
-                    <Badge
-                      className={`
-                      text-[10px] font-bold tracking-wider px-2 py-1 uppercase border-none
-                      ${product.badge === 'new_arrival' ? 'bg-[#00bfa5] text-white shadow-sm' : ''}
-                      ${product.badge === 'best_seller' ? 'bg-amber-500 text-white shadow-sm' : ''}
-                      ${product.badge === 'sold_out' ? 'bg-zinc-800 text-white opacity-90' : ''}
-                    `}
-                    >
-                      {t(`goods.${product.badge}`, product.badge.replace('_', ' '))}
+                <div className="absolute top-3 left-3 flex flex-col gap-1">
+                  {product.badge_new && (
+                    <Badge className="bg-[#00bfa5] text-white shadow-sm text-[10px] font-bold tracking-wider px-2 py-1 uppercase border-none">NEW</Badge>
+                  )}
+                  {product.badge_best && (
+                    <Badge className="bg-amber-500 text-white shadow-sm text-[10px] font-bold tracking-wider px-2 py-1 uppercase border-none">BEST</Badge>
+                  )}
+                  {product.discount_percent > 0 && (
+                    <Badge className="bg-red-500 text-white shadow-sm text-[10px] font-bold tracking-wider px-2 py-1 uppercase border-none">
+                        {product.discount_percent}% OFF
                     </Badge>
-                  </div>
-                )}
+                  )}
+                  {product.status === 'soldout' && (
+                    <Badge className="bg-zinc-800 text-white opacity-90 text-[10px] font-bold tracking-wider px-2 py-1 uppercase border-none">SOLD OUT</Badge>
+                  )}
+                </div>
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <div className="bg-white/90 dark:bg-black/80 rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-transform">
                     <ShoppingBag size={24} className="text-gray-900 dark:text-white" />
@@ -169,19 +197,26 @@ export default function GoodsPage() {
                   {t(`goods.category_${product.category}`, product.category)}
                 </div>
                 <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-2 truncate">
-                  {t(`goods.items.${product.itemKey}.title`)}
+                  {product.name}
                 </h3>
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-lg text-primary">
-                    ${product.price.toFixed(2)}
-                  </span>
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-lg text-primary">
+                      ${product.sale_price.toFixed(2)}
+                    </span>
+                    {product.discount_percent > 0 && (
+                      <span className="text-xs text-gray-400 line-through">
+                        ${product.price.toFixed(2)}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </motion.div>
           ))}
         </motion.div>
 
-        {filteredProducts.length === 0 && (
+        {!loading && products.length === 0 && (
           <div className="text-center py-20 text-gray-500">
             <ShoppingBag className="w-16 h-16 mx-auto mb-4 opacity-20" />
             <p>상품이 존재하지 않습니다.</p>

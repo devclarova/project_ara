@@ -12,7 +12,8 @@
     "post": "게시하기",
     "admin": "관리자 모드",
     "admin_dashboard": "관리자 대시보드",
-    "goods": "굿즈샵"
+    "admin_goods": "상품 관리",
+    "goods": "굿즈"
   },
   "admin": {
     "report_processed": "신고가 처리되었습니다.",
@@ -972,65 +973,38 @@
     }
   },
   "goods": {
-    "hero_title": "Official Boutique",
-    "hero_desc": "ARA의 감성을 담은 공식 굿즈 컬렉션",
     "category_all": "전체",
     "category_clothing": "의류",
     "category_accessories": "액세서리",
     "category_stationery": "문구",
-    "new_arrival": "신상품",
-    "best_seller": "베스트",
-    "sold_out": "품절",
-    "price_unit": "$",
-    "add_to_cart": "장바구니 담기",
-    "buy_now": "바로 구매",
-    "option_color": "색상",
-    "option_size": "사이즈",
-    "quantity": "수량",
-    "related_items": "함께 보면 좋은 상품",
+    "category_digital": "디지털",
+    "related_products": "이런 상품은 어떠세요?",
+    "product_not_found": "상품을 찾을 수 없습니다.",
     "back_to_list": "목록으로 돌아가기",
-    "items": {
-      "hoodie": {
-        "title": "시그니처 후드티",
-        "desc": "시그니처 로고가 새겨진 프리미엄 코튼 후드티입니다. 데일리로 입기 좋은 편안한 핏입니다."
-      },
-      "tote_bag": {
-        "title": "에코 토트백",
-        "desc": "환경을 생각한 캔버스 토트백입니다. 튼튼하고 수납공간이 넉넉합니다."
-      },
-      "note_set": {
-        "title": "프리미엄 노트 세트",
-        "desc": "고품질 종이로 제작된 노트 세트입니다. 공부와 저널링에 완벽합니다."
-      },
-      "planner": {
-        "title": "2026 디지털 플래너",
-        "desc": "iPad/태블릿용 올인원 디지털 플래너. 2026년을 효율적으로 계획하세요."
-      },
-      "cap": {
-        "title": "로고 볼캡",
-        "desc": "자수 로고가 들어간 스타일리시한 볼캡입니다. 조절 가능한 스트랩으로 핏을 맞추세요."
-      },
-      "tumbler": {
-        "title": "미니멀리스트 텀블러",
-        "desc": "스테인리스 스틸 텀블러입니다. 12시간 동안 보온/보냉이 유지됩니다."
-      }
-    },
-    "product_not_found": "상품을 찾을 수 없습니다",
-    "reviews_count": "리뷰 {{count}}개",
-    "free_shipping": "$50 이상 무료 배송",
-    "authentic_guarantee": "정품 보증",
+    "add_to_cart": "장바구니 담기",
+    "free_shipping": "무료 배송",
+    "authentic_guarantee": "100% 정품 보장",
     "product_details": "상품 상세 정보",
+    "reviews_count": "{{count}}개의 후기",
     "reviews": {
-      "title": "리뷰",
+      "title": "사용자 후기",
+      "count": "{{count}}건의 후기",
       "rating_average": "평균 별점",
-      "count": "{{count}}건의 리뷰",
-      "write_btn": "리뷰 작성하기",
+      "photo_review": "포토 후기만 보기",
+      "write_btn": "후기 작성하기",
+      "verified_purchase": "구매자 인증",
+      "helpful": "도움이 돼요",
+      "no_reviews": "아직 작성된 후기가 없습니다.",
+      "be_first": "첫 후기를 기다리고 있습니다",
+      "be_first_desc": "첫 번째 리뷰를 작성하고 다른 구매자들에게 도움을 주세요.",
+      "load_more": "리뷰 더보기",
+      "view_all": "전체 후기 보기",
+      "no_stats": "데이터 없음",
+      "positive_ratio": "구매자의 긍정적 검토 비율",
+      "buyer_only_error": "실제 구매하신 고객님만 후기를 작성하실 수 있습니다.",
       "sort_latest": "최신순",
       "sort_highest": "평점 높은순",
-      "sort_lowest": "평점 낮은순",
-      "helpful": "도움돼요",
-      "photo_review": "포토 리뷰",
-      "verified_purchase": "구매자 인증"
+      "sort_lowest": "평점 낮은순"
     },
     "preview_notice": "공식 굿즈샵 런칭 준비 중입니다. ARA의 새로운 컬렉션을 먼저 만나보세요.",
     "preview_modal": {

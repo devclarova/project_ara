@@ -15,6 +15,7 @@ import { GlobalBanListener } from './components/common/GlobalBanListener';
 import { GlobalNotificationListener } from './components/common/GlobalNotificationListener';
 import { GlobalUserStatusTracker } from './components/common/GlobalUserStatusTracker';
 import Header from './components/common/Header';
+import { GlobalNoticeBar } from './components/common/GlobalNoticeBar';
 import ScrollToTop from './components/common/ScrollToTop';
 import ProfileSettings from './components/profile/ProfileSettings';
 import { ThemeProvider, useTheme } from './components/theme-provider';
@@ -185,6 +186,51 @@ function AppInner() {
   const HIDE_HEADER_PATHS = ['/signin', '/signup', '/auth/callback', '/signup/social', '/admin', '/find-email', '/reset-password', '/update-password'];
   const hideHeader = HIDE_HEADER_PATHS.some(path => location.pathname.startsWith(path));
 
+  const [maintenance, setMaintenance] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchMaintenance = async () => {
+      const { data } = await supabase.from('site_settings').select('value').eq('key', 'maintenance_mode').maybeSingle();
+      if (data?.value?.enabled) {
+        setMaintenance(data.value);
+      }
+    };
+    fetchMaintenance();
+
+    // Realtime maintenance check
+    const channel = supabase
+      .channel('maintenance_check')
+      .on('postgres_changes', { 
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: 'site_settings',
+        filter: 'key=eq.maintenance_mode'
+      }, (payload) => {
+        if (payload.new.value.enabled) {
+          setMaintenance(payload.new.value);
+        } else {
+          setMaintenance(null);
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  const { session } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!session) return;
+      const { data } = await supabase.from('profiles').select('is_admin').eq('user_id', session.user.id).maybeSingle();
+      setIsAdmin(!!data?.is_admin);
+    };
+    checkAdmin();
+  }, [session]);
+
+  const showMaintenance = maintenance?.enabled && !isAdmin && !location.pathname.startsWith('/admin');
+
   const hideFooter = [...HIDE_HEADER_PATHS, '/chat'].some(path =>
     location.pathname.startsWith(path),
   );
@@ -192,7 +238,24 @@ function AppInner() {
   return (
     <>
       <ScrollToTop />
+      <GlobalNoticeBar />
 
+      {showMaintenance ? (
+        <div className="fixed inset-0 z-[9999] bg-white dark:bg-zinc-950 flex flex-col items-center justify-center p-6 text-center">
+            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-full mb-6">
+                <AlertTriangle className="w-16 h-16 text-amber-500" />
+            </div>
+            <h1 className="text-3xl font-bold text-foreground mb-4">서비스 점검 중입니다</h1>
+            <p className="text-muted-foreground max-w-md mb-8 whitespace-pre-wrap">
+                {maintenance.message || "더 나은 서비스를 위해 시스템 점검을 진행하고 있습니다.\n잠시 후 다시 이용해 주세요."}
+            </p>
+            {maintenance.end_time && (
+                <div className="px-6 py-3 bg-secondary rounded-2xl border border-border">
+                    <p className="text-sm font-medium">예상 종료 시간: {new Date(maintenance.end_time).toLocaleString()}</p>
+                </div>
+            )}
+        </div>
+      ) : (
       <div className="layout min-h-screen flex flex-col">
         {!hideHeader && <Header />}
 
@@ -228,6 +291,7 @@ function AppInner() {
                 <Route path="content" element={<AdminContentModeration />} />
                 <Route path="analytics" element={<AdminAnalytics />} />
                 <Route path="goods/new" element={<AdminGoodsUpload />} />
+                <Route path="goods/edit/:id" element={<AdminGoodsUpload />} />
                 <Route path="goods/manage" element={<AdminGoodsManagement />} />
               </Route>
             </Route>
@@ -262,6 +326,7 @@ function AppInner() {
 
         {!hideFooter && <Footer />}
       </div>
+      )}
     </>
   );
 }

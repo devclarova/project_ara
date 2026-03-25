@@ -92,7 +92,7 @@ export function ReplyCard({
 }: ReplyCardProps) {
   const navigate = useNavigate();
   const params = useParams();
-  const { user: authUser } = useAuth();
+  const { user: authUser, isAdmin } = useAuth();
   const { t } = useTranslation();
   const [liked, setLiked] = useState(reply.liked ?? false);
   const [likeCount, setLikeCount] = useState(reply.stats?.likes ?? 0);
@@ -162,10 +162,13 @@ export function ReplyCard({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isSoftDeleted = !!reply.deleted_at;
+  const isHiddenContent = reply.is_hidden && !isAdmin;
 
   // rawContent는 초기값/동기화용으로만 두고
   const rawContent =
-    isSoftDeleted && !isAdminView ? '관리자에 의해 삭제된 메시지입니다.' : (reply.content ?? '');
+    (isSoftDeleted || isHiddenContent) && !isAdminView 
+      ? (isSoftDeleted ? '관리자에 의해 삭제된 메시지입니다.' : '관리자에 의해 숨김 처리된 콘텐츠입니다.') 
+      : (reply.content ?? '');
 
   const [currentContent, setCurrentContent] = useState(rawContent);
 
@@ -279,8 +282,9 @@ export function ReplyCard({
     const imgs = Array.from(doc.querySelectorAll('img'))
       .map(img => img.src)
       .filter(Boolean);
-    setContentImages(imgs);
-  }, [rawContent]);
+    // 숨김 처리된 경우 이미지 보호 (관리자가 아닐 때)
+    setContentImages(isHiddenContent && !isAdminView ? [] : imgs);
+  }, [rawContent, isHiddenContent, isAdminView]);
 
   // content 동기화
   useEffect(() => {
@@ -295,8 +299,8 @@ export function ReplyCard({
     const imgs = Array.from(doc.querySelectorAll('img'))
       .map(img => img.src)
       .filter(Boolean);
-    setContentImages(imgs);
-  }, [currentContent]);
+    setContentImages(isHiddenContent && !isAdminView ? [] : imgs);
+  }, [currentContent, isHiddenContent, isAdminView]);
 
   useEffect(() => {
     if (!isEditing) return; // 내가 편집 대상일 때만
@@ -847,11 +851,16 @@ export function ReplyCard({
               )}
 
               <span className="mx-1 text-gray-500 dark:text-gray-400">·</span>
-              <span className="text-gray-500 dark:text-gray-400 text-sm">
-                {formatSmartDate(createdAt)}
-                {isEdited ? <span className="ml-1 text-xs text-gray-400">수정됨</span> : null}
-              </span>
-            </div>
+              <span className="text-gray-500 dark:text-gray-400 text-xs shrink-0 self-center">
+              · {formatSmartDate(createdAt)}
+              {isEdited && <span className="ml-1 text-[10px] text-gray-400">수정됨</span>}
+            </span>
+            {isAdmin && reply.is_hidden && (
+              <Badge variant="outline" className="ml-2 border-amber-500 text-amber-500 text-[10px] py-0 h-4 self-center">
+                숨김
+              </Badge>
+            )}
+          </div>
 
             <div className="flex items-center">
               {isAuthorBlocked && (

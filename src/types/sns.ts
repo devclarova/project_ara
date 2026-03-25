@@ -31,6 +31,7 @@ export interface TweetQueryResponse {
     avatar_url: string | null;
     banned_until?: string | null;
   } | null;
+  is_hidden?: boolean;
 }
 
 export interface ReplyQueryResponse {
@@ -53,6 +54,7 @@ export interface ReplyQueryResponse {
     author_id: string;
   } | null;
   updated_at?: string;
+  is_hidden?: boolean;
 }
 
 export type TweetStats = {
@@ -75,6 +77,7 @@ export interface BaseFeedItem {
   liked?: boolean;
   liked_at?: string; // For 'likes' tab sorting
   deleted_at?: string | null; // Soft delete timestamp
+  is_hidden?: boolean; // Added for content hiding
   // 10-zzeon compatibility
   parent_reply_id?: string | null;
   root_reply_id?: string | null;

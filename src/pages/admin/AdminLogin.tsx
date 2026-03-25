@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { ArrowLeft, Mail, Lock, Home } from 'lucide-react';
 
 const AdminLogin = () => {
   const { t } = useTranslation();
@@ -150,13 +151,17 @@ const AdminLogin = () => {
         }
       `}</style>
 
+
+
       <div className="w-full max-w-md p-8 relative z-10">
-        <div className="bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50 dark:border-zinc-800/50 p-8 md:p-10">
-          <div className="text-center mb-8">
+        <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/40 dark:border-zinc-800/50 p-8 md:p-12 relative overflow-hidden">
+
+
+          <div className="text-center mb-10">
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-emerald-600 mb-2">
               ARA 관리 센터
             </h1>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground text-sm break-keep">
               관리 전용 시스템입니다. 관리자 계정으로 로그인해 주세요.
             </p>
           </div>
@@ -164,26 +169,36 @@ const AdminLogin = () => {
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground ml-1">이메일 주소</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-500 bg-white/50 focus:bg-white focus:ring-2 focus:ring-1 focus:ring-primary/30/20 focus:border-ring transition-all duration-200 outline-none text-muted-foreground placeholder:text-muted-foreground"
-                placeholder="admin@example.com"
-                required
-              />
+              <div className="relative group/input">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-zinc-400 group-focus-within/input:text-teal-500 transition-colors">
+                  <Mail size={18} />
+                </div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-gray-200 dark:border-zinc-700 bg-gray-50/50 dark:bg-zinc-800/30 focus:bg-white dark:focus:bg-zinc-800 focus:ring-4 focus:ring-teal-500/10 transition-all duration-300 outline-none text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
+                  placeholder="admin@example.com"
+                  required
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground ml-1">비밀번호</label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-500 bg-white/50 focus:bg-white focus:ring-2 focus:ring-1 focus:ring-primary/30/20 focus:border-ring transition-all duration-200 outline-none text-muted-foreground placeholder:text-muted-foreground"
-                placeholder="••••••••"
-                required
-              />
+              <div className="relative group/input">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-zinc-400 group-focus-within/input:text-teal-500 transition-colors">
+                  <Lock size={18} />
+                </div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-gray-200 dark:border-zinc-700 bg-gray-50/50 dark:bg-zinc-800/30 focus:bg-white dark:focus:bg-zinc-800 focus:ring-4 focus:ring-teal-500/10 transition-all duration-300 outline-none text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
             </div>
 
             <div className="flex items-center justify-between text-sm">
@@ -228,7 +243,7 @@ const AdminLogin = () => {
                   ></path>
                 </svg>
               ) : (
-                '대시보드 접속'
+                '로그인'
               )}
             </button>
 
@@ -283,9 +298,22 @@ const AdminLogin = () => {
               </button>
             </div>
           </form>
+
+          {/* Integrated Footer Link */}
+          <div className="mt-10 pt-6 border-t border-gray-100 dark:border-zinc-800/50 text-center">
+            <button 
+              onClick={() => navigate('/')}
+              className="text-xs text-muted-foreground hover:text-teal-500 transition-colors inline-flex items-center gap-2 group font-medium"
+            >
+              <Home size={14} className="group-hover:scale-110 transition-transform" />
+              메인 사이트로 돌아가기
+            </button>
+          </div>
         </div>
 
-        <div className="mt-8 text-center text-xs text-muted-foreground">
+
+
+        <div className="mt-8 text-center text-[10px] text-muted-foreground opacity-60 tracking-wider">
           <p>© 2025 Project Ara. All rights reserved.</p>
         </div>
       </div>

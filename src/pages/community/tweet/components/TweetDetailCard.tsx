@@ -22,6 +22,31 @@ import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import EditButton from '@/components/common/EditButton';
 import EditTweetModal from '@/components/common/EditTweetModal';
 
+function htmlToEditorText(html: string) {
+  const doc = new DOMParser().parseFromString(html || '', 'text/html');
+  doc.querySelectorAll('img').forEach(img => img.remove());
+  doc.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+  return doc.body.textContent ?? '';
+}
+
+function extractImageSrcs(html: string) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return Array.from(doc.querySelectorAll('img')).map(img => img.src);
+}
+
+function escapeHtml(text: string) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function editorTextToHtml(text: string) {
+  return escapeHtml(text).replace(/\n/g, '<br />');
+}
+
 interface TweetDetailCardProps {
   tweet: UIPost;
   replyCount: number; // 상세 페이지에서 내려주는 실시간 댓글 수
@@ -39,7 +64,7 @@ export default function TweetDetailCard({
 }: TweetDetailCardProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { user: authUser } = useAuth();
+  const { user: authUser, isAdmin } = useAuth();
 
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(tweet.stats.likes || 0);
@@ -204,11 +229,14 @@ export default function TweetDetailCard({
   }, [tweet.updatedAt]);
 
   const propImages = Array.isArray(tweet.image) ? tweet.image : tweet.image ? [tweet.image] : [];
+  const isHiddenContent = tweet.is_hidden && !isAdmin;
   const allImages =
-    isSoftDeleted && !isAdminView ? [] : propImages.length > 0 ? propImages : contentImages;
+    (isSoftDeleted || isHiddenContent) ? [] : propImages.length > 0 ? propImages : contentImages;
 
   const displayContent =
-    isSoftDeleted && !isAdminView ? '관리자에 의해 삭제된 메시지입니다.' : currentContent;
+    (isSoftDeleted || isHiddenContent)
+      ? (isSoftDeleted ? '관리자에 의해 삭제된 메시지입니다.' : '관리자에 의해 숨김 처리된 콘텐츠입니다.') 
+      : currentContent;
 
   const safeContent = DOMPurify.sanitize(displayContent, {
     ADD_TAGS: ['iframe', 'video', 'source'],
@@ -598,6 +626,11 @@ export default function TweetDetailCard({
                 return isEdited ? <span className="ml-1 text-xs text-gray-400">수정됨</span> : null;
               })()}
             </span>
+            {isAdmin && tweet.is_hidden && (
+              <Badge variant="outline" className="ml-2 border-amber-500 text-amber-500 text-[10px] py-0 h-4">
+                숨김
+              </Badge>
+            )}
           </div>
         </div>
         <div className="relative ml-auto" ref={menuRef}>
@@ -688,7 +721,7 @@ export default function TweetDetailCard({
         {hasText && (
           <div className="flex items-center gap-2">
             <div
-              className={`text-xl leading-relaxed break-words whitespace-pre-line ${isSoftDeleted ? 'italic text-gray-500 opacity-60' : 'text-gray-900 dark:text-gray-100'}`}
+              className={`text-xl leading-relaxed break-words whitespace-pre-line ${(isSoftDeleted || isHiddenContent) ? 'italic text-gray-500 opacity-60' : 'text-gray-900 dark:text-gray-100'}`}
             >
               <div dangerouslySetInnerHTML={{ __html: safeContent }} />
             </div>
@@ -787,7 +820,7 @@ export default function TweetDetailCard({
         onFileChange={handleEditFiles} // 기존 함수 그대로 사용 가능
         onClose={() => {
           // 취소하면 원복해두고 닫기(선택)
-          setEditText(htmlToPlainText(currentContent));
+          setEditText(htmlToEditorText(currentContent));
           setEditImages(extractImageSrcs(currentContent));
           closeEditModal();
         }}

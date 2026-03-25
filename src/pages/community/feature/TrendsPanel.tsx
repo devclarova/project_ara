@@ -58,7 +58,8 @@ export default function TrendsPanel({
         if (
           o.like_count !== n.like_count ||
           o.reply_count !== n.reply_count ||
-          o.view_count !== n.view_count
+          o.view_count !== n.view_count ||
+          o.is_hidden !== n.is_hidden // [추가] 숨김 상태 변화 감지
         ) {
           fetchTrendingTweets();
         }

@@ -18,12 +18,13 @@ import {
   AlertTriangle,
   Clock,
   Shield,
+  Eye,
+  EyeOff,
   Ban,
   Trash2,
   CheckCircle,
   XOctagon,
   ArrowRight,
-  Eye,
   ChevronLeft
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -77,6 +78,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
   const [isBanProcessing, setIsBanProcessing] = useState(false);
   const [showDismissDialog, setShowDismissDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showHideDialog, setShowHideDialog] = useState(false);
   const activitySectionRef = useRef<HTMLDivElement>(null);
 
   // Chat Report State
@@ -361,6 +363,10 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
     if (action === 'delete') {
          setShowDeleteDialog(true);
     }
+    
+    if (action === 'toggle_hide' as any) {
+        setShowHideDialog(true);
+    }
   };
 
   const executeDismiss = async () => {
@@ -397,6 +403,37 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
           console.error(e);
           toast.error('작업 수행 실패');
       }
+  };
+
+  const executeToggleHide = async () => {
+    if (!report || !targetData) return;
+    try {
+      const currentHidden = !!targetData.is_hidden;
+      const newHidden = !currentHidden;
+      
+      const { error } = await supabase.rpc('toggle_content_hidden', {
+        p_type: report.target_type === 'tweet' ? 'post' : report.target_type === 'reply' ? 'comment' : 'message',
+        p_id: report.target_id,
+        p_hidden: newHidden
+      });
+
+      if (error) throw error;
+
+      // Status update is optional, but usually hiding means it's partially resolved or reviewed
+      if (report.status === 'pending') {
+        await supabase.from('reports').update({ status: 'reviewed' }).eq('id', report.id);
+      }
+
+      toast.success(newHidden ? '콘텐츠가 숨김 처리되었습니다.' : '숨김 처리가 해제되었습니다.');
+      
+      // Update local state
+      setTargetData((prev: any) => ({ ...prev, is_hidden: newHidden }));
+      setShowHideDialog(false);
+      onResolve();
+    } catch (e) {
+      console.error(e);
+      toast.error('상태 변경 중 오류가 발생했습니다.');
+    }
   };
 
   const executeBan = async () => {
@@ -646,6 +683,38 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
           </div>
       )}
 
+      {/* Hide Confirmation Dialog */}
+      {showHideDialog && (
+          <div className="absolute inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-zinc-900 rounded-xl max-w-sm w-full p-6 shadow-xl border border-zinc-200 dark:border-zinc-800 animate-in fade-in zoom-in duration-200">
+                  <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
+                      {targetData?.is_hidden ? <Eye className="text-blue-500" /> : <XOctagon className="text-amber-500" />}
+                      {targetData?.is_hidden ? '숨김 해제' : '콘텐츠 숨기기'}
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-6">
+                      {targetData?.is_hidden 
+                        ? '숨겨진 콘텐츠를 다시 공개하시겠습니까? 일반 사용자들에게도 다시 노출됩니다.' 
+                        : '해당 콘텐츠를 숨기시겠습니까? 일반 사용자들에게는 안내 문구가 표시되며 실제 내용은 가려집니다.'}
+                  </p>
+
+                  <div className="flex justify-end gap-2">
+                        <button 
+                            onClick={() => setShowHideDialog(false)}
+                            className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-zinc-800"
+                        >
+                            취소
+                        </button>
+                        <button 
+                            onClick={executeToggleHide}
+                            className={`px-4 py-2 ${targetData?.is_hidden ? 'bg-blue-600 hover:bg-blue-700' : 'bg-amber-600 hover:bg-amber-700'} text-white rounded-lg text-sm font-bold shadow-sm`}
+                        >
+                            {targetData?.is_hidden ? '공개하기' : '숨기기'}
+                        </button>
+                  </div>
+              </div>
+          </div>
+      )}
+
 
       <div className="flex flex-col md:flex-row h-full overflow-hidden bg-background">
         
@@ -810,12 +879,26 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                     <Shield size={16} /> 신고 기각
                 </button>
                 {(report.target_type === 'tweet' || report.target_type === 'reply' || report.target_type === 'chat') && (
-                     <button 
-                        onClick={() => handleAction('delete')}
-                        className="w-full flex items-center justify-center gap-2 p-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 transition text-sm font-medium shadow-sm"
-                     >
-                        <Trash2 size={16} /> 콘텐츠 삭제
-                    </button>
+                    <>
+                        <button 
+                            onClick={() => handleAction('toggle_hide' as any)}
+                            className={`w-full flex items-center justify-center gap-2 p-2.5 rounded-lg border-2 ${
+                                targetData?.is_hidden 
+                                ? 'border-amber-500 text-amber-500 bg-amber-50 dark:bg-amber-900/10 hover:bg-amber-100' 
+                                : 'border-blue-500 text-blue-500 bg-blue-50 dark:bg-blue-900/10 hover:bg-blue-100'
+                            } transition text-sm font-bold shadow-sm`}
+                        >
+                            {targetData?.is_hidden ? <EyeOff size={16} /> : <Eye size={16} />}
+                            {targetData?.is_hidden ? '숨기기 해제' : '콘텐츠 숨기기'}
+                        </button>
+                        
+                        <button 
+                            onClick={() => handleAction('delete')}
+                            className="w-full flex items-center justify-center gap-2 p-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 transition text-sm font-medium shadow-sm"
+                        >
+                            <Trash2 size={16} /> 콘텐츠 삭제
+                        </button>
+                    </>
                 )}
                 <button 
                      onClick={() => handleAction('ban')}

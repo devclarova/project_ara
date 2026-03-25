@@ -66,6 +66,7 @@ interface TweetCardProps {
   onAvatarClick?: (username: string) => void;
   disableInteractions?: boolean;
   onUpdated?: (id: string, updates: Partial<UITweet>) => void;
+  is_hidden?: boolean;
 }
 
 export default function TweetCard({
@@ -87,10 +88,11 @@ export default function TweetCard({
   onAvatarClick,
   disableInteractions = false,
   onUpdated,
+  is_hidden: isHiddenProp = false,
 }: TweetCardProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user: authUser } = useAuth();
+  const { user: authUser, isAdmin } = useAuth();
   const { t } = useTranslation();
   const [liked, setLiked] = useState(initialLiked ?? false);
   const [profileId, setProfileId] = useState<string | null>(null);
@@ -121,9 +123,10 @@ export default function TweetCard({
 
   const isSoftDeleted = !!deletedAt;
 
+  const isHiddenContent = isHiddenProp && !isAdmin;
   // 최종 슬라이드에 사용할 이미지 목록 (prop 우선, 없으면 content에서 추출한 것)
-  // Soft delete 되면 이미지는 숨김
-  const allImages = isSoftDeleted ? [] : propImages.length > 0 ? propImages : contentImages;
+  // Soft delete 또는 숨김 처리되면 이미지는 숨김 (관리자가 아닐 때)
+  const allImages = (isSoftDeleted || isHiddenContent) ? [] : propImages.length > 0 ? propImages : contentImages;
   const [isDraggingText, setIsDraggingText] = useState(false);
   const dragInfo = useRef({
     startX: 0,
@@ -146,7 +149,11 @@ export default function TweetCard({
 
   // 본문에서는 img 태그는 제거 (슬라이드에서만 보여줌)
   // Soft Delete 되면 Placeholder 사용
-  const displayContent = isSoftDeleted ? '관리자에 의해 삭제된 메시지입니다.' : currentContent;
+  const displayContent = isSoftDeleted 
+    ? '관리자에 의해 삭제된 메시지입니다.' 
+    : isHiddenContent 
+      ? '관리자에 의해 숨김 처리된 콘텐츠입니다.' 
+      : currentContent;
 
   const safeContent = DOMPurify.sanitize(displayContent, {
     FORBID_TAGS: ['img'],
@@ -706,6 +713,11 @@ export default function TweetCard({
                 return isEdited ? <span className="ml-1 text-xs text-gray-400">수정됨</span> : null;
               })()}
             </span>
+            {isAdmin && isHiddenProp && (
+              <Badge variant="outline" className="ml-2 border-amber-500 text-amber-500 text-[10px] py-0 h-4">
+                숨김
+              </Badge>
+            )}
           </div>
 
           {/* Menu Button */}

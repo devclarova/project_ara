@@ -156,8 +156,13 @@ const StudyListPage = () => {
       let query = supabase
         .from('study')
         .select('*, video(*,runtime_bucket)', { count: 'exact' })
-        .eq('is_hidden', false)
-        .order('id', { ascending: true });
+        .eq('is_hidden', false);
+
+      // 비로그인 사용자면 무료(Preview) 우선
+      if (!user) {
+        query = query.order('is_featured', { ascending: false });
+      }
+      query = query.order('created_at', { ascending: false });
 
       // 필터 조건
       const needsCategory = activeCategory !== '전체';
@@ -169,8 +174,12 @@ const StudyListPage = () => {
         query = supabase
           .from('study')
           .select('*, video!inner(*,runtime_bucket)', { count: 'exact' })
-          .eq('is_hidden', false)
-          .order('id', { ascending: true });
+          .eq('is_hidden', false);
+
+        if (!user) {
+          query = query.order('is_featured', { ascending: false });
+        }
+        query = query.order('created_at', { ascending: false });
 
         if (needsCategory) query = query.eq('video.categories', activeCategory);
         if (needsContent) query = query.eq('video.contents', contentFilter);
@@ -638,6 +647,7 @@ const StudyListPage = () => {
                         basePath={user ? '/study' : '/guest-study'} // 로그인/게스트에 따라 이동 경로 달라짐
                         isGuest={!user} // 게스트 여부
                         isPreview={study.is_featured}
+                        created_at={study.created_at}
                         openLoginModal={() => setShowSignIn(true)} // 잠금 콘텐츠 눌렀을 때 로그인 모달 열기
                         categories={v?.categories || null}
                         translatedTitleProp={originalIndex >= 0 ? trTitles[originalIndex] : null}
