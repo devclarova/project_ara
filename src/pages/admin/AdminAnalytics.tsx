@@ -921,8 +921,8 @@ const AdminAnalytics = () => {
                          }
                       />
 
-                      <MetricCard title="총 매출" value={`$${stats?.totalRevenue?.toLocaleString() || "0"}`} trend="-" subtitle="결제 시스템 연동 예정" icon={DollarSign} />
-                      <MetricCard title="구매 전환률" value={`${stats?.conversionRate || 0}%`} trend="-" subtitle="활성 유저 대비" icon={Zap} />
+                      <MetricCard title="총 매출" value={`₩${stats?.totalRevenue?.toLocaleString() || "0"}`} trend="Live" trendUp={true} subtitle="실시간 데이터 집계 중" icon={DollarSign} />
+                      <MetricCard title="구매 전환률" value={`${stats?.conversionRate || 0}%`} trend="Live" trendUp={true} subtitle="활성 유저 대비" icon={Zap} />
                    </div>
 
                    {/* Anomaly / System Health */}

@@ -1,3 +1,26 @@
+// i18next 홍보 문구 차단용 전역 인터셉터 (임포트 전 최상단 배치)
+(function silenceI18n() {
+  const originalLog = console.log;
+  const originalInfo = console.info;
+  
+  const filter = (...args: any[]) => {
+    const msg = args[0];
+    if (typeof msg === 'string' && (msg.includes('i18next is maintained') || msg.includes('Locize'))) {
+      return true; // 필터링됨
+    }
+    return false;
+  };
+
+  console.log = (...args: any[]) => { if (!filter(...args)) originalLog.apply(console, args); };
+  console.info = (...args: any[]) => { if (!filter(...args)) originalInfo.apply(console, args); };
+
+  // 3초 후 복구
+  setTimeout(() => {
+    console.log = originalLog;
+    console.info = originalInfo;
+  }, 3000);
+})();
+
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
@@ -61,18 +84,20 @@ export const LANGUAGES = [
 
 export type LanguageCode = typeof LANGUAGES[number]['code'];
 
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
+    debug: false,
     resources,
-    // lng: 'ko', // Remove explicit language setting to allow detection
+    supportedLngs: ['ko', 'en', 'ja', 'zh', 'ru', 'vi', 'bn', 'ar', 'hi', 'th', 'es', 'fr', 'pt', 'pt-br', 'de', 'fi'],
     fallbackLng: 'ko',
     interpolation: {
-      escapeValue: false, // react already safes from xss
+      escapeValue: false,
     },
     detection: {
-      order: ['localStorage', 'navigator'], // Use localStorage first, then browser language
+      order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
     },
   });

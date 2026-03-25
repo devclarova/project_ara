@@ -20,7 +20,7 @@ export const tweetService = {
     const { data, error } = await supabase
       .from('tweets')
       .select(
-        `id, content, image_url, created_at, deleted_at,
+        `id, content, image_url, created_at, deleted_at, is_hidden,
         reply_count, like_count, view_count,
         profiles:author_id (id, nickname, user_id, avatar_url, banned_until)`,
       )
@@ -30,10 +30,9 @@ export const tweetService = {
 
     if (error) throw error;
 
-    const tweets = (data as unknown as TweetQueryResponse[]) ?? [];
-
-    return tweets
-      .filter(t => !blockedUserIds.includes(t.profiles?.id ?? '')) // 필터링 (UUID 기준)
+    return ((data as unknown as TweetQueryResponse[]) ?? [])
+      // .filter(t => !t.is_hidden) // RLS에서 처리 (작성자/관리자는 보이게)
+      .filter(t => !blockedUserIds.includes(t.profiles?.id ?? ''))
       .map(t => ({
         type: 'post',
         id: t.id,
@@ -48,6 +47,7 @@ export const tweetService = {
         image: t.image_url || undefined,
         timestamp: t.created_at,
         deleted_at: (t as any).deleted_at,
+        is_hidden: t.is_hidden,
         stats: {
           replies: t.reply_count ?? 0,
           likes: t.like_count ?? 0,
@@ -76,6 +76,7 @@ export const tweetService = {
         created_at,
         updated_at,
         deleted_at,
+        is_hidden,
         tweet_id,
         parent_reply_id,
         root_reply_id,
@@ -96,6 +97,7 @@ export const tweetService = {
 
     return replies
       .filter(r => !blockedUserIds.includes(r.profiles?.id ?? '')) // 필터링 (UUID 기준)
+      // .filter(r => !r.is_hidden) // RLS에서 처리 (작성자/관리자는 보이게)
       .map(
         r =>
           ({
@@ -117,6 +119,7 @@ export const tweetService = {
             createdAt: r.created_at,
             updatedAt: r.updated_at ?? undefined,
             deleted_at: (r as any).deleted_at,
+            is_hidden: r.is_hidden,
             stats: {
               replies: 0,
               likes: Array.isArray(r.tweet_replies_likes)
@@ -200,7 +203,7 @@ export const tweetService = {
           .from('tweets')
           .select(
             `
-            id, content, image_url, created_at, deleted_at,
+            id, content, image_url, created_at, deleted_at, is_hidden,
             reply_count, like_count, view_count,
             profiles(id, nickname, user_id, avatar_url, banned_until)
         `,
@@ -214,7 +217,7 @@ export const tweetService = {
           .from('tweet_replies')
           .select(
             `
-            id, content, created_at, updated_at, tweet_id, deleted_at, parent_reply_id, root_reply_id,
+            id, content, created_at, updated_at, tweet_id, deleted_at, is_hidden, parent_reply_id, root_reply_id,
             profiles(id, nickname, user_id, avatar_url, banned_until),
             tweet_replies_likes(count),
             tweets(content, author_id)
@@ -262,6 +265,7 @@ export const tweetService = {
             image: p.image_url,
             timestamp: p.created_at,
             deleted_at: (p as any).deleted_at,
+            is_hidden: p.is_hidden,
             stats: {
               replies: p.reply_count ?? 0,
               likes: p.like_count ?? 0,
@@ -292,6 +296,7 @@ export const tweetService = {
             timestamp: r.created_at,
             createdAt: r.created_at,
             deleted_at: (r as any).deleted_at,
+            is_hidden: r.is_hidden,
             updatedAt: r.updated_at ?? undefined,
             stats: {
               replies: 0,
@@ -304,6 +309,7 @@ export const tweetService = {
         }
       })
       .filter((item): item is FeedItem => item !== null);
+      // .filter((item): item is FeedItem => item !== null && !(item as any).is_hidden); // RLS에서 처리
 
     return { items: mappedItems, allLikedItems: allItems };
   },
@@ -316,12 +322,13 @@ export const tweetService = {
       .from('tweets')
       .select(
         `
-        id, content, image_url, created_at, updated_at, deleted_at,
+        id, content, image_url, created_at, updated_at, deleted_at, is_hidden,
         reply_count, repost_count, like_count, bookmark_count, view_count,
         profiles (id, nickname, user_id, avatar_url, banned_until)
       `,
       )
       .eq('id', tweetId)
+      // .eq('is_hidden', false) // RLS 정책에서 작성자/관리자 예외 처리를 하기 위해 여기서 제거
       .single();
 
     if (error) {
@@ -347,6 +354,7 @@ export const tweetService = {
 
       timestamp: tweet.created_at,
       createdAt,
+      is_hidden: tweet.is_hidden,
       updatedAt: (tweet as any).updated_at ?? undefined,
       stats: {
         replies: tweet.reply_count ?? 0,
@@ -366,9 +374,10 @@ export const tweetService = {
     let query = supabase
       .from('tweet_replies')
       .select(
-        `id, content, created_at, updated_at, deleted_at, parent_reply_id, root_reply_id, profiles:author_id (id, nickname, user_id, avatar_url, banned_until), tweet_replies_likes (count)`,
+        `id, content, created_at, updated_at, deleted_at, is_hidden, parent_reply_id, root_reply_id, profiles:author_id (id, nickname, user_id, avatar_url, banned_until), tweet_replies_likes (count)`,
       )
       .eq('tweet_id', tweetId)
+      // .eq('is_hidden', false) // RLS 정책에서 작성자/관리자 예외 처리를 하기 위해 여기서 제거
       .order('created_at', { ascending: true });
 
     if (!loadAll) {
@@ -402,6 +411,7 @@ export const tweetService = {
           },
           content: r.content,
           deleted_at: (r as any).deleted_at,
+          is_hidden: r.is_hidden,
           timestamp: r.created_at,
           createdAt: r.created_at, // for sorting
           updatedAt: r.updated_at ?? undefined,
@@ -425,9 +435,10 @@ export const tweetService = {
     const { data, error } = await supabase
       .from('tweet_replies')
       .select(
-        `id, content, created_at, tweet_id, deleted_at, parent_reply_id, root_reply_id, profiles:author_id (id, nickname, user_id, avatar_url, banned_until), tweet_replies_likes (count), updated_at`,
+        `id, content, created_at, tweet_id, deleted_at, is_hidden, parent_reply_id, root_reply_id, profiles:author_id (id, nickname, user_id, avatar_url, banned_until), tweet_replies_likes (count), updated_at`,
       )
       .eq('parent_reply_id', parentId)
+      // .eq('is_hidden', false) // RLS에서 처리
       .order('created_at', { ascending: true });
 
     if (error) throw error;
@@ -451,7 +462,7 @@ export const tweetService = {
           },
           content: r.content,
           deleted_at: (r as any).deleted_at,
-
+          is_hidden: r.is_hidden,
           timestamp: r.created_at,
           createdAt: r.created_at,
           stats: {

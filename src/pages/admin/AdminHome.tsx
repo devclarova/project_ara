@@ -126,6 +126,7 @@ const AdminHome = () => {
     { title: '전체 사용자', value: displayStats.total_users.toLocaleString(), change: displayStats.user_growth_pct, icon: Users, color: 'text-primary-500', bg: 'bg-primary-50' },
     { title: '실시간 접속 유저', value: displayStats.online_users.toLocaleString(), subtitle: `${displayStats.session_count}개 세션(탭) 활성`, icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-50', isLive: true },
     { title: '신규 가입 (7일)', value: displayStats.new_users_7d.toLocaleString(), icon: TrendingUp, color: 'text-violet-500', bg: 'bg-violet-50' },
+    { title: '총 매출', value: `₩${displayStats.total_revenue.toLocaleString()}`, icon: DollarSign, color: 'text-amber-500', bg: 'bg-amber-50' },
     { title: '신고 대기', value: displayStats.pending_reports.toLocaleString(), icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-50' },
   ];
 
@@ -138,7 +139,7 @@ const AdminHome = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {summaryStats.map((stat, i) => (
           <motion.div 
             key={i} layout

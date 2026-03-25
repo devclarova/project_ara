@@ -308,9 +308,9 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
     try {
       let query;
       if (activeTab === 'tweets') {
-        query = supabase.from('tweets').select('*, profiles:author_id(nickname, avatar_url, user_id)').eq('author_id', user.profile_id).order('created_at', { ascending: false });
+        query = supabase.from('tweets').select('*, profiles:author_id(nickname, avatar_url, user_id), is_hidden').eq('author_id', user.profile_id).order('created_at', { ascending: false });
       } else if (activeTab === 'replies') {
-        query = supabase.from('tweet_replies').select('*, profiles:author_id(nickname, avatar_url, banned_until, user_id), tweets(profiles:author_id(nickname, user_id))').eq('author_id', user.profile_id).order('created_at', { ascending: false });
+        query = supabase.from('tweet_replies').select('*, profiles:author_id(nickname, avatar_url, banned_until, user_id), tweets(profiles:author_id(nickname, user_id)), is_hidden').eq('author_id', user.profile_id).order('created_at', { ascending: false });
       } else if (activeTab === 'likes') {
         fetchLikes(0);
         return;
@@ -387,6 +387,7 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
         views: item.view_count || item.stats?.views || 0,
       },
       deleted_at: item.deleted_at,
+      is_hidden: item.is_hidden,
     };
   };
 
@@ -518,7 +519,14 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
           <div className="flex items-center gap-2 mb-1"><span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">{nickname}</span><span className="text-[9px] text-zinc-400">{format(new Date(item.created_at || item.timestamp), 'MM.dd HH:mm')}</span></div>
           {isReply && item.tweets?.content && <div className="mb-2 p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded text-[10px] text-zinc-500 border-l-2 border-primary/30 line-clamp-1 italic text-xs">{stripHtml(item.tweets.content)}</div>}
           <p className={`text-sm font-medium line-clamp-2 ${item.deleted_at ? 'text-zinc-400' : 'text-zinc-700 dark:text-zinc-300'}`}>{mediaText && <span className="text-primary mr-1">{mediaText}</span>}{displayContent}</p>
-          <div className="flex items-center gap-3 mt-2 text-[10px] text-zinc-400 opacity-60 group-hover:opacity-100 transition-opacity"><div className="flex items-center gap-1"><MessageCircle size={10} /> {item.reply_count || item.stats?.replies || 0}</div><div className="flex items-center gap-1"><Heart size={10} /> {item.like_count || item.stats?.likes || 0}</div>{item.deleted_at && <span className="text-red-500 font-bold ml-auto text-[8px]">삭제됨</span>}</div>
+          <div className="flex items-center gap-3 mt-2 text-[10px] text-zinc-400 opacity-60 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1"><MessageCircle size={10} /> {item.reply_count || item.stats?.replies || 0}</div>
+            <div className="flex items-center gap-1"><Heart size={10} /> {item.like_count || item.stats?.likes || 0}</div>
+            <div className="ml-auto flex gap-2">
+              {item.is_hidden && <span className="text-amber-500 font-bold text-[8px] bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded">숨김</span>}
+              {item.deleted_at && <span className="text-red-500 font-bold text-[8px] bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded">삭제됨</span>}
+            </div>
+          </div>
         </div>
       </div>
     );

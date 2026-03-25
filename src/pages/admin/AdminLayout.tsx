@@ -141,10 +141,10 @@ const AdminLayout = () => {
   }, [sidebarOpen]);
 
   return (
-    <div className="min-h-screen min-w-[300px] bg-background font-sans text-foreground relative overflow-x-hidden">
+    <div className="h-screen flex bg-background font-sans text-foreground overflow-hidden">
       {/* Sidebar - Hidden on mobile, always visible on desktop */}
       <aside 
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-secondary border-r border-gray-300 dark:border-gray-600 transform transition-transform duration-300 ease-in-out select-none [-webkit-tap-highlight-color:transparent] ${
+        className={`fixed inset-y-0 left-0 z-[120] w-64 bg-secondary border-r border-gray-300 dark:border-gray-600 transform transition-transform duration-300 ease-in-out select-none [-webkit-tap-highlight-color:transparent] ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } md:translate-x-0`}
       >
@@ -283,9 +283,9 @@ const AdminLayout = () => {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 md:ml-64">
-        {/* Header */}
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 md:ml-64 h-full relative overflow-hidden">
+        {/* Header - Truly fixed at top */}
         <header className="h-14 sm:h-16 bg-secondary/80 backdrop-blur-md border-b border-gray-300 dark:border-gray-600 flex items-center justify-between px-3 sm:px-4 md:px-6 sticky top-0 z-[110] shadow-sm flex-shrink-0">
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-1">
             <button
@@ -325,8 +325,8 @@ const AdminLayout = () => {
           </div>
         </header>
 
-        {/* Dynamic Content Area */}
-        <main className="flex-1 px-3 py-4 sm:px-4 sm:py-6 md:p-6 lg:p-8 bg-background w-full max-full box-border">
+        {/* Dynamic Content Area - Scrollable */}
+        <main className="flex-1 overflow-y-auto px-3 py-4 sm:px-4 sm:py-6 md:p-6 lg:p-8 bg-background relative z-0 overscroll-contain">
           <Outlet />
         </main>
       </div>
@@ -334,11 +334,12 @@ const AdminLayout = () => {
       {/* Mobile Overlay - Only show on mobile when sidebar is open */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[115] md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
     </div>
+
   );
 };
 

@@ -13,11 +13,80 @@ import {
   AlertTriangle,
   Layout
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 // Design: Sidebar specific to settings page (tabs)
 const AdminSettings = () => {
   const [activeTab, setActiveTab] = useState('general');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Settings State
+  const [settings, setSettings] = useState<any>({
+    global_notice: { enabled: false, text: '', color: 'blue' },
+    maintenance_mode: { enabled: false, message: '', end_time: null },
+    site_metadata: { title: 'Project Ara', description: '', logo_url: null },
+    security_config: { ip_restriction: true, multi_login_limit: false, brute_force_protection: true, tfa_required: false }
+  });
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.from('site_settings').select('*');
+      if (error) throw error;
+
+      if (data) {
+        const newSettings = { ...settings };
+        data.forEach(item => {
+          newSettings[item.key] = item.value;
+        });
+        setSettings(newSettings);
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+      toast.error('설정을 불러오는 데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      
+      const updatePromises = Object.entries(settings).map(([key, value]) => 
+        supabase.from('site_settings').upsert({ key, value })
+      );
+
+      const results = await Promise.all(updatePromises);
+      const errors = results.filter(r => r.error);
+
+      if (errors.length > 0) throw errors[0].error;
+
+      toast.success('설정이 성공적으로 저장되었습니다.');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast.error('설정 저장 중 오류가 발생했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateNestedSetting = (key: string, subKey: string, value: any) => {
+    setSettings((prev: any) => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        [subKey]: value
+      }
+    }));
+  };
 
   const tabs = [
     { id: 'general', label: '일반 설정', icon: Globe },
@@ -66,24 +135,69 @@ const AdminSettings = () => {
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">서비스 상태</label>
                     <div className="grid grid-cols-3 gap-3">
-                      <StatusOption label="정상 운영" color="emerald" selected />
-                      <StatusOption label="점검 중" color="amber" />
-                      <StatusOption label="접속 제한" color="red" />
+                      <StatusOption 
+                        label="정상 운영" 
+                        color="emerald" 
+                        selected={!settings.maintenance_mode.enabled} 
+                        onClick={() => updateNestedSetting('maintenance_mode', 'enabled', false)}
+                      />
+                      <StatusOption 
+                        label="점검 중" 
+                        color="amber" 
+                        selected={settings.maintenance_mode.enabled} 
+                        onClick={() => updateNestedSetting('maintenance_mode', 'enabled', true)}
+                      />
+                      <StatusOption label="접속 제한 (차단)" color="red" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">서비스 명칭</label>
-                    <input type="text" defaultValue="Project Ara" className="form-input w-full md:w-1/2 bg-background border-gray-300 dark:border-gray-500 text-foreground" />
+                    <label className="block text-sm font-medium text-foreground mb-1">서비스 명칭 (Title)</label>
+                    <input 
+                      type="text" 
+                      value={settings.site_metadata.title} 
+                      onChange={(e) => updateNestedSetting('site_metadata', 'title', e.target.value)}
+                      className="form-input w-full md:w-1/2 bg-background border-gray-300 dark:border-gray-500 text-foreground rounded-xl" 
+                    />
                   </div>
                 </div>
               </SectionCard>
 
               <SectionCard title="글로벌 공지사항" description="모든 페이지 상단에 노출되는 긴급 공지바를 설정합니다.">
                  <div className="space-y-3">
-                    <ToggleRow label="공지바 활성화" description="사이트 최상단에 공지 내용을 표시합니다." />
+                    <div className="flex items-center justify-between py-2">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">공지바 활성화</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">사이트 최상단에 공지 내용을 표시합니다.</p>
+                      </div>
+                      <button 
+                        onClick={() => updateNestedSetting('global_notice', 'enabled', !settings.global_notice.enabled)}
+                        className={`w-11 h-6 rounded-full transition-colors relative ${settings.global_notice.enabled ? 'bg-primary' : 'bg-muted '}`}
+                      >
+                        <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-secondary shadow-sm transition-transform ${settings.global_notice.enabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                      </button>
+                    </div>
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-1">공지 내용</label>
-                      <input type="text" placeholder="예: 서버 점검 예정 안내 (02:00 ~ 04:00)" className="form-input w-full bg-background border-gray-300 dark:border-gray-500 text-foreground placeholder:text-muted-foreground dark:placeholder:text-muted-foreground" />
+                      <input 
+                        type="text" 
+                        value={settings.global_notice.text}
+                        onChange={(e) => updateNestedSetting('global_notice', 'text', e.target.value)}
+                        placeholder="예: 서버 점검 예정 안내 (02:00 ~ 04:00)" 
+                        className="form-input w-full bg-background border-gray-300 dark:border-gray-500 text-foreground placeholder:text-muted-foreground rounded-xl" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1">공지바 색상</label>
+                      <div className="flex gap-2">
+                        {['blue', 'red', 'amber', 'emerald'].map(c => (
+                          <button 
+                            key={c}
+                            onClick={() => updateNestedSetting('global_notice', 'color', c)}
+                            className={`w-8 h-8 rounded-full border-2 ${settings.global_notice.color === c ? 'border-primary ring-2 ring-primary/20' : 'border-transparent'}`}
+                            style={{ backgroundColor: c === 'emerald' ? '#10b981' : c === 'amber' ? '#f59e0b' : c === 'blue' ? '#3b82f6' : '#ef4444' }}
+                          />
+                        ))}
+                      </div>
                     </div>
                  </div>
               </SectionCard>
@@ -178,16 +292,28 @@ const AdminSettings = () => {
              </div>
            )}
            
-           {/* Global Save Action */}
-           <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-300 dark:border-gray-600 mt-8">
-             <button className="px-5 py-2.5 text-muted-foreground font-medium hover:bg-accent rounded-xl transition-colors">
-               취소
-             </button>
-             <button className="px-5 py-2.5 bg-secondary dark:bg-primary text-white font-medium rounded-xl hover:bg-muted dark:hover:bg-primary-700 transition-colors shadow-lg shadow-border dark:shadow-emerald-900/20 flex items-center gap-2">
-               <Save size={18} />
-               변경사항 저장
-             </button>
-           </div>
+            {/* Global Save Action */}
+            <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-300 dark:border-gray-600 mt-8">
+              <button 
+                onClick={fetchSettings}
+                className="px-5 py-2.5 text-muted-foreground font-medium hover:bg-accent rounded-xl transition-colors"
+                disabled={saving}
+              >
+                취소
+              </button>
+              <button 
+                onClick={handleSave}
+                disabled={saving}
+                className="px-5 py-2.5 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-colors shadow-lg shadow-emerald-900/20 flex items-center gap-2 disabled:opacity-50"
+              >
+                {saving ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Save size={18} />
+                )}
+                {saving ? '저장 중...' : '변경사항 저장'}
+              </button>
+            </div>
 
         </div>
       </div>
@@ -228,18 +354,20 @@ function ToggleRow({ label, description, checked = false }: { label: string, des
 }
 
 
-function StatusOption({ label, color, selected }: { label: string, color: string, selected?: boolean }) {
+function StatusOption({ label, color, selected, onClick }: { label: string, color: string, selected?: boolean, onClick?: () => void }) {
   const colorStyles: Record<string, string> = {
-    emerald: 'bg-primary/10 text-primary border-emerald-200',
+    emerald: 'bg-primary/10 text-primary border-primary/20',
     amber: 'bg-amber-50 text-amber-700 border-amber-200',
     red: 'bg-red-50 text-red-700 border-red-200',
     slate: 'bg-muted text-foreground border-border'
   };
 
   return (
-    <button className={`w-full py-2.5 rounded-lg border text-sm font-medium transition-all ${
+    <button 
+      onClick={onClick}
+      className={`w-full py-2.5 rounded-lg border text-sm font-medium transition-all ${
       selected 
-        ? `${colorStyles[color]} ring-1 ring-${color}-500 ring-offset-1` 
+        ? `${colorStyles[color]} ring-2 ring-primary/20` 
         : 'bg-secondary border-gray-300 dark:border-gray-500 text-muted-foreground hover:bg-muted'
     }`}>
       {label}

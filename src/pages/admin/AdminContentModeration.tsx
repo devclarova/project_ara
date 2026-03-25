@@ -7,6 +7,7 @@ import {
   Search,
   Heart,
   Eye,
+  EyeOff,
   Calendar,
   User as UserIcon,
   Loader2,
@@ -16,6 +17,7 @@ import {
   ChevronRight,
   ShieldAlert
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -43,6 +45,7 @@ interface ModerationItem {
     replies: number;
     views: number;
   };
+  is_hidden: boolean;
   total_count: number;
 }
 
@@ -252,6 +255,33 @@ const AdminContentModeration = () => {
       setIsDeleting(false);
     }
   };
+  
+  const handleToggleHide = async (item: ModerationItem) => {
+    const originalStatus = !!item.is_hidden;
+    const newHiddenStatus = !originalStatus;
+    
+    // 1. Optimistic UI Update
+    setContent(prev => prev.map(c => c.id === item.id ? { ...c, is_hidden: newHiddenStatus } : c));
+    
+    try {
+      const { error } = await supabase.rpc('toggle_content_hidden', {
+        p_type: item.content_type,
+        p_id: item.id,
+        p_hidden: newHiddenStatus
+      });
+
+      if (error) {
+        // 2. Rollback on error
+        setContent(prev => prev.map(c => c.id === item.id ? { ...c, is_hidden: originalStatus } : c));
+        throw error;
+      }
+      
+      toast.success(newHiddenStatus ? '콘텐츠가 숨김 처리되었습니다.' : '숨김 처리가 해제되었습니다.');
+    } catch (error: any) {
+      console.error('Error toggling hide status:', error);
+      toast.error('상태 변경 중 오류가 발생했습니다. DB 연동 상태를 확인해 주세요.');
+    }
+  };
 
   const handleUserClick = async (item: ModerationItem) => {
     try {
@@ -324,7 +354,7 @@ const AdminContentModeration = () => {
           scrollKey: Date.now()
         } 
       });
-    } else {
+    } else if (type === 'comment') {
       // parent_id (tweet_id)가 없으면 이동 불가
       if (!item.parent_id) {
         toast.error('원문 게시글 정보를 찾을 수 없습니다. (SQL 마이그레이션 적용이 필요합니다)');
@@ -441,9 +471,14 @@ const AdminContentModeration = () => {
           ) : (
             <div className="grid grid-cols-1 gap-4">
               {content.map((item) => (
-                <div 
+                <motion.div 
                   key={item.id} 
-                  className="bg-background border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-4 md:p-5 hover:border-primary transition-all group relative shadow-sm hover:shadow-md cursor-pointer active:scale-[0.995]"
+                  layout
+                  className={`group relative bg-secondary border-2 ${
+                    item.is_hidden 
+                      ? 'border-amber-200 dark:border-amber-900/50 bg-amber-50/30 dark:bg-amber-900/5' 
+                      : 'border-gray-300 dark:border-gray-500'
+                  } rounded-2xl overflow-hidden transition-all hover:shadow-md cursor-pointer active:scale-[0.995] p-4 md:p-5`}
                   onClick={() => handleContentClick(item, item.content_type)}
                 >
                   <div className="flex gap-4 items-start">
@@ -479,19 +514,42 @@ const AdminContentModeration = () => {
                           >
                             {item.nickname}
                           </span>
-                          <span className="text-xs text-muted-foreground truncate hidden sm:inline">@{item.email.split('@')[0]}</span>
+                          <span className="text-xs text-muted-foreground truncate hidden sm:inline">@{item.email?.split('@')[0] || 'user'}</span>
                           <span className="text-xs text-muted-foreground shrink-0">· {format(new Date(item.created_at), 'MM월 dd일 HH:mm', { locale: ko })}</span>
+                          {item.is_hidden && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-full text-[10px] font-bold">
+                              숨김 처리됨
+                            </span>
+                          )}
                         </div>
                         
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openDeleteModal(item.id);
-                          }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 dark:bg-red-950/30 text-red-500 hover:bg-red-500 hover:text-white rounded-xl text-xs font-bold transition-all md:opacity-0 group-hover:opacity-100 shadow-sm"
-                        >
-                          <Trash2 size={14} /> 삭제
-                        </button>
+                        <div className="flex items-center gap-2 md:opacity-0 group-hover:opacity-100 transition-all">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleHide(item);
+                            }}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 ${
+                              item.is_hidden 
+                                ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-500 hover:bg-amber-500 hover:text-white'
+                                : 'bg-blue-50 dark:bg-blue-950/30 text-blue-500 hover:bg-blue-500 hover:text-white'
+                            } rounded-xl text-xs font-bold transition-all shadow-sm`}
+                            title={item.is_hidden ? '숨김 해제' : '숨김 처리'}
+                          >
+                             {item.is_hidden ? <EyeOff size={14} /> : <Eye size={14} />}
+                             {item.is_hidden ? '숨기기 해제' : '숨기기'}
+                           </button>
+
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openDeleteModal(item.id);
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 dark:bg-red-950/30 text-red-500 hover:bg-red-500 hover:text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+                          >
+                            <Trash2 size={14} /> 삭제
+                          </button>
+                        </div>
                       </div>
 
                       <div className="group/content py-1">
@@ -543,7 +601,7 @@ const AdminContentModeration = () => {
                       </div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           )}
