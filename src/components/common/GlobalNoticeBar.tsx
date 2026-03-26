@@ -1,70 +1,39 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { X, Bell, Info, AlertTriangle, CheckCircle } from 'lucide-react';
+import { useSiteSettings } from '../../contexts/SiteSettingsContext';
+import { X, Bell, Info, AlertTriangle, CheckCircle, Megaphone } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-export const GlobalNoticeBar = () => {
+export function GlobalNoticeBar() {
+    const { settings } = useSiteSettings();
     const [notice, setNotice] = useState<any>(null);
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
-        const fetchNotice = async () => {
-            const { data, error } = await supabase
-                .from('site_settings')
-                .select('value')
-                .eq('key', 'global_notice')
-                .maybeSingle();
-            
-            if (data?.value?.enabled) {
-                setNotice(data.value);
-                setIsVisible(true);
-            }
-        };
+        if (settings?.global_notice) {
+            setNotice(settings.global_notice);
+            setIsVisible(!!settings.global_notice.enabled && !!settings.global_notice.text);
+        }
+    }, [settings]);
 
-        fetchNotice();
-
-        // Listen for changes
-        const channel = supabase
-            .channel('site_settings_notice')
-            .on('postgres_changes', { 
-                event: 'UPDATE', 
-                schema: 'public', 
-                table: 'site_settings',
-                filter: 'key=eq.global_notice'
-            }, (payload) => {
-                const newValue = payload.new.value;
-                if (newValue.enabled) {
-                    setNotice(newValue);
-                    setIsVisible(true);
-                } else {
-                    setIsVisible(false);
-                }
-            })
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, []);
-
-    if (!isVisible || !notice) return null;
+    if (!isVisible || !notice || !notice.text) return null;
 
     const getColorClasses = () => {
         switch (notice.color) {
             case 'red': return 'bg-red-600 text-white';
             case 'amber': return 'bg-amber-500 text-white';
             case 'emerald': return 'bg-emerald-600 text-white';
-            case 'blue': 
-            default: return 'bg-primary text-white';
+            case 'blue': return 'bg-blue-600 text-white';
+            default: return 'bg-zinc-900 text-white';
         }
     };
 
     const getIcon = () => {
         switch (notice.color) {
-            case 'red': return <AlertTriangle size={16} />;
-            case 'amber': return <Info size={16} />;
-            case 'emerald': return <CheckCircle size={16} />;
-            default: return <Bell size={16} />;
+            case 'red': return <AlertTriangle className="w-4 h-4" />;
+            case 'amber': return <Info className="w-4 h-4" />;
+            case 'emerald': return <CheckCircle className="w-4 h-4" />;
+            case 'blue': 
+            default: return <Bell className="w-4 h-4" />;
         }
     };
 
@@ -75,7 +44,7 @@ export const GlobalNoticeBar = () => {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className={`relative z-[100] w-full ${getColorClasses()} py-2 px-4 shadow-md overflow-hidden`}
+                    className={`relative z-[110] w-full ${getColorClasses()} py-2 px-4 shadow-md overflow-hidden`}
                 >
                     <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
                         <span className="shrink-0 animate-pulse">
@@ -95,4 +64,4 @@ export const GlobalNoticeBar = () => {
             )}
         </AnimatePresence>
     );
-};
+}

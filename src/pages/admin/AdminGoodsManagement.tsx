@@ -32,7 +32,7 @@ const AdminGoodsManagement = () => {
       setGoods(data);
     } catch (err: any) {
       console.error('Fetch goods error:', err);
-      toast.error('상품 목록을 불러오는데 실패했습니다.');
+      toast.error('상품 목록을 불러오는 데 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -224,7 +224,10 @@ const AdminGoodsManagement = () => {
                       </td>
                       <td className="px-6 py-8 text-center">
                         <span className="px-4 py-2 bg-gray-100 dark:bg-zinc-800 rounded-xl text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                          {product.category || 'N/A'}
+                          {product.category === 'clothing' ? '👕 의류' : 
+                           product.category === 'accessories' ? '💍 액세서리' : 
+                           product.category === 'stationery' ? '✏️ 문구' : 
+                           product.category === 'digital' ? '📱 디지털' : (product.category || '기타')}
                         </span>
                       </td>
                       <td className="px-6 py-8 text-right font-mono">

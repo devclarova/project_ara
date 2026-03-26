@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { retryWithBackoff, isOnline } from '@/utils/networkUtils';
 
 /**
  * GlobalUserStatusTracker
@@ -11,14 +12,15 @@ export const GlobalUserStatusTracker = () => {
   const { user } = useAuth();
   const lastUpdateRef = useRef<{ time: number; status: boolean | null }>({ time: 0, status: null });
   const isUnloadingRef = useRef(false);
+  const isRetryingRef = useRef(false);
 
   useEffect(() => {
     if (!user) return;
 
     // 1. 상태 업데이트 함수
     const updateStatus = async (online: boolean, force = false) => {
-      // 오프라인이거나 사용자가 없으면 중단
-      if (!window.navigator.onLine || !user) return;
+      // 오프라인이거나 사용자가 없거나 이미 재시도 중이면 중단
+      if (!isOnline() || !user || isRetryingRef.current) return;
 
       const now = Date.now();
       // 쓰로틀링: 상태가 같고 5초 이내면 업데이트 스킵 (force가 아닐 때만)
@@ -26,7 +28,7 @@ export const GlobalUserStatusTracker = () => {
         return;
       }
 
-      try {
+      const performUpdate = async () => {
         const { error } = await supabase
           .from('profiles')
           .update({ 
@@ -35,19 +37,35 @@ export const GlobalUserStatusTracker = () => {
           })
           .eq('user_id', user.id);
         
-        if (error) {
-          // 언로드 중이 아닐 때만 유의미한 에러 로깅
-          if (!isUnloadingRef.current && error.code !== 'PGRST116') {
-             console.warn('[StatusTracker] Update failed:', error.message);
-          }
+        if (error) throw error;
+      };
+
+      try {
+        if (force) {
+          // 강제 업데이트(초기화/언로드) 시에는 즉시 실행
+          await performUpdate();
         } else {
-          lastUpdateRef.current = { time: now, status: online };
+          // 일반 하트비트는 재시도 로직 적용
+          isRetryingRef.current = true;
+          await retryWithBackoff(performUpdate, {
+            maxAttempts: 2,
+            shouldRetry: (err) => {
+              const msg = err?.message?.toLowerCase() || '';
+              return msg.includes('fetch') || msg.includes('network');
+            }
+          });
         }
-      } catch (err) {
-        // 네트워크 페치 실패(Failed to fetch) 등은 언로드 중일 가능성이 높으므로 로깅 제외
+        lastUpdateRef.current = { time: now, status: online };
+      } catch (err: any) {
+        // 네트워크 페치 실패(Failed to fetch) 등은 하트비트 수준에서는 무시 (다음 주기에 다시 시도)
         if (!isUnloadingRef.current) {
-          // console.debug('[StatusTracker] Network error during update');
+          const isNetworkError = err?.message?.includes('fetch') || err?.message?.includes('network');
+          if (!isNetworkError && err?.code !== 'PGRST116') {
+             console.warn('[StatusTracker] Update failed:', err.message || err);
+          }
         }
+      } finally {
+        isRetryingRef.current = false;
       }
     };
 

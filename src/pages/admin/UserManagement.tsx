@@ -78,6 +78,7 @@ interface AdminUser {
   last_sign_in_at: string | null;
   total_count: number;
   received_reports_count: number;
+  is_tracked?: boolean;
 }
 
 const UserManagement = () => {
@@ -213,20 +214,8 @@ const UserManagement = () => {
     }
   }, [page, searchTerm, filterRole, filterStatus, filterGender, filterOnline, filterCountry, filterBirthday, filterCreatedAt, sortBy, filterTracking]);
 
-  // 추적된 유저(traffic_logs) 데이터 가져오기 (하이브리드 트래킹 배지용)
-  useEffect(() => {
-    const fetchTrackedUsers = async () => {
-      try {
-        const { data } = await supabase.from('traffic_logs').select('user_id').not('user_id', 'is', null);
-        if (data) {
-          setTrackedUserIds(new Set(data.map(d => d.user_id)));
-        }
-      } catch (e) {
-        console.error('트래킹 유저 목록 로드 실패:', e);
-      }
-    };
-    fetchTrackedUsers();
-  }, []);
+  // [OPTIMIZED] 트래킹 여부는 이제 get_admin_users_list RPC에서 직접 판단하여 넘겨주므로, 
+  // 클라이언트 측에서 traffic_logs 전체를 로드할 필요가 없습니다.
 
   // 지원하는 모든 국적 범주 데이터 가져오기 (국적 필터용)
   useEffect(() => {
@@ -462,12 +451,12 @@ const UserManagement = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4">
         {[
-          { label: '전체 사용자', value: globalStats.totalUsers.toLocaleString(), trend: 'Total', color: 'blue' },
-          { label: '온라인 사용자', value: globalOnlineCount.toLocaleString(), trend: `${sessionCount} Sessions`, color: 'emerald' },
-          { label: '신규 사용자 (1주)', value: globalStats.newUsers7d.toLocaleString(), trend: 'New', color: 'violet' },
-          { label: '신고 대기 건수', value: globalStats.pendingReports.toLocaleString(), trend: 'Pending', color: 'amber', href: '/admin/reports' },
-          { label: '관리자 계정', value: globalStats.adminCount.toLocaleString(), trend: 'Admin', color: 'rose' },
-          { label: '정지된 사용자', value: globalStats.bannedCount.toLocaleString(), trend: 'Banned', color: 'red' },
+          { label: '전체 사용자', value: globalStats.totalUsers.toLocaleString(), trend: '누적', color: 'blue' },
+          { label: '온라인 사용자', value: globalOnlineCount.toLocaleString(), trend: `${sessionCount} 세션`, color: 'emerald' },
+          { label: '신규 사용자 (1주)', value: globalStats.newUsers7d.toLocaleString(), trend: '신규', color: 'violet' },
+          { label: '신고 대기 건수', value: globalStats.pendingReports.toLocaleString(), trend: '대기', color: 'amber', href: '/admin/reports' },
+          { label: '관리자 계정', value: globalStats.adminCount.toLocaleString(), trend: '관리자', color: 'rose' },
+          { label: '정지된 사용자', value: globalStats.bannedCount.toLocaleString(), trend: '정지', color: 'red' },
         ].map((stat, idx) => (
           <div 
             key={idx} 
@@ -784,7 +773,7 @@ const UserManagement = () => {
                       <div>
                         <div className="flex items-center gap-2">
                            <p className="text-sm font-semibold text-foreground group-hover/user:text-primary transition-colors">{user.nickname}</p>
-                           {trackedUserIds.has(user.profile_id) && (
+                           {user.is_tracked && (
                               <span className="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 text-[9px] rounded-full border border-emerald-200 dark:border-emerald-800/80 font-bold flex items-center gap-1 shadow-sm" title="클릭하여 유입 경로 확인">
                                  <Target size={10} /> 마케팅 유입
                               </span>

@@ -65,8 +65,8 @@ const AdminGoodsUpload = () => {
 
   const [useOptions, setUseOptions] = useState(false);
   const [optionGroups, setOptionGroups] = useState<ProductOptionUI[]>([
-    { id: 'opt-1', name: 'Color', values: [] },
-    { id: 'opt-2', name: 'Size', values: [] }
+    { id: 'opt-1', name: '색상', values: [] },
+    { id: 'opt-2', name: '사이즈', values: [] }
   ]);
   const [variants, setVariants] = useState<ProductVariantUI[]>([]);
 

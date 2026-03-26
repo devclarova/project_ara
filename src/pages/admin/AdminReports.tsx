@@ -81,12 +81,7 @@ const AdminReports = () => {
         query = query.eq('status', filterStatus);
       }
 
-      if (debouncedSearch) {
-        // Search in reason or reporter's nickname
-        // Note: Complex OR across joins is tricky in postgrest, but we can search reason at least
-        // or join profiles and search there.
-        query = query.or(`reason.ilike.%${debouncedSearch}%,description.ilike.%${debouncedSearch}%`);
-      }
+      // debouncedSearch 서버 필터링 제거 (클라이언트 필터에서 번역문/닉네임 통합 검색 수행)
 
       const { data: reportsData, error } = await query;
 
@@ -142,7 +137,7 @@ const AdminReports = () => {
       setReports(enhancedReports as Report[]);
     } catch (error) {
       console.error('Error fetching reports:', error);
-      toast.error('Failed to load reports');
+      toast.error('신고 목록을 불러오는 데 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -236,7 +231,28 @@ const AdminReports = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {reports.map((report: any) => {
+              {reports
+                .filter((report: any) => {
+                  if (!debouncedSearch) return true;
+                  const lowerSearch = debouncedSearch.toLowerCase();
+                  
+                  // 번역된 사유가 검색어에 포함되는지 확인
+                  const translatedReason = t(`report.reasons.${report.reason}`, { defaultValue: report.reason }).toLowerCase();
+                  if (translatedReason.includes(lowerSearch)) return true;
+
+                  // 닉네임(신고자/피신고자) 확인
+                  if (report.reporter?.nickname?.toLowerCase().includes(lowerSearch)) return true;
+                  if (report.suspect_profile?.nickname?.toLowerCase().includes(lowerSearch)) return true;
+                  if (report.content_snapshot?.user?.nickname?.toLowerCase().includes(lowerSearch)) return true;
+                  if (report.content_snapshot?.user?.name?.toLowerCase().includes(lowerSearch)) return true;
+
+                  // 기본 필드(원본 사유, 설명) 확인
+                  if (report.reason.toLowerCase().includes(lowerSearch)) return true;
+                  if (report.description?.toLowerCase().includes(lowerSearch)) return true;
+
+                  return false;
+                })
+                .map((report: any) => {
                  let targetName = '-';
                  let targetAvatar = null;
                  let targetSub = null;

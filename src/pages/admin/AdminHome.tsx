@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import UserProfileModal from './components/UserProfileModal';
 import { usePresence } from '@/contexts/PresenceContext';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import AdminTrafficLogsModal from './components/AdminTrafficLogsModal';
 
 interface DashboardStats {
@@ -34,7 +35,7 @@ interface DashboardStats {
   total_revenue: number;
   subscription_revenue: number;
   shop_revenue: number;
-  daily_trends: { date: string; count: number }[];
+  daily_trends: { date: string; count?: number; signup_count?: number; active_user_count?: number }[];
   recent_users: {
     id: string;
     profile_id: string;
@@ -58,6 +59,7 @@ interface DashboardStats {
     country_name: string | null;
     country_flag_url: string | null;
   }[];
+  bounce_rate: number;
 }
 
 const AdminHome = () => {
@@ -68,15 +70,23 @@ const AdminHome = () => {
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showTrafficModal, setShowTrafficModal] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const [hybridData, setHybridData] = useState({ totalLogs: 0, distinctUsers: 0 });
   const { onlineCount, sessionCount, isUserOnline, stats: globalStats } = usePresence();
 
   useEffect(() => {
      const fetchHybridLogs = async () => {
-        const { count: total } = await supabase.from('traffic_logs').select('*', { count: 'exact', head: true });
-        const { data: users } = await supabase.from('traffic_logs').select('user_id').not('user_id', 'is', null);
-        const distinct = new Set(users?.map(u => u.user_id)).size;
-        setHybridData({ totalLogs: total || 0, distinctUsers: distinct || 0 });
+        try {
+           // RPC를 통해 서버 측에서 정확하고 빠르게 집계
+           const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
+           if (!error && data) {
+              // get_admin_dashboard_stats에 포함된 지표 활용 (이미 최적화된 SQL 반영됨)
+              setHybridData({ 
+                 totalLogs: data.total_traffic_count || 0, 
+                 distinctUsers: data.active_user_count || 0 
+              });
+           }
+        } catch (e) { console.error(e); }
      };
      fetchHybridLogs();
   }, []);
@@ -98,6 +108,7 @@ const AdminHome = () => {
     };
 
     fetchStats();
+    setIsMounted(true);
     const interval = setInterval(fetchStats, 60000); 
     return () => clearInterval(interval);
   }, []);
@@ -109,6 +120,9 @@ const AdminHome = () => {
     new_users_7d: globalStats.newUsers7d || stats?.new_users_7d || 0,
     pending_reports: stats?.pending_reports || 0,
     total_revenue: stats?.total_revenue || 0,
+    subscription_revenue: stats?.subscription_revenue || 0,
+    shop_revenue: stats?.shop_revenue || 0,
+    bounce_rate: stats?.bounce_rate || 0,
     user_growth_pct: stats?.user_growth_pct || 0
   };
 
@@ -127,7 +141,10 @@ const AdminHome = () => {
     { title: '실시간 접속 유저', value: displayStats.online_users.toLocaleString(), subtitle: `${displayStats.session_count}개 세션(탭) 활성`, icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-50', isLive: true },
     { title: '신규 가입 (7일)', value: displayStats.new_users_7d.toLocaleString(), icon: TrendingUp, color: 'text-violet-500', bg: 'bg-violet-50' },
     { title: '총 매출', value: `₩${displayStats.total_revenue.toLocaleString()}`, icon: DollarSign, color: 'text-amber-500', bg: 'bg-amber-50' },
+    { title: '구독 수익', value: `₩${displayStats.subscription_revenue.toLocaleString()}`, icon: CreditCard, color: 'text-blue-500', bg: 'bg-blue-50' },
+    { title: '상점 수익', value: `₩${displayStats.shop_revenue.toLocaleString()}`, icon: ShoppingBag, color: 'text-emerald-500', bg: 'bg-emerald-50' },
     { title: '신고 대기', value: displayStats.pending_reports.toLocaleString(), icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-50' },
+    { title: '이탈률 (Bounce)', value: `${displayStats.bounce_rate}%`, icon: TrendingUp, color: 'text-slate-500', bg: 'bg-slate-50', trend: 'Low', trendUp: false },
   ];
 
   return (
@@ -139,7 +156,7 @@ const AdminHome = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {summaryStats.map((stat, i) => (
           <motion.div 
             key={i} layout
@@ -160,7 +177,7 @@ const AdminHome = () => {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                   </span>
-                  LIVE
+                  실시간
                 </span>
               )}
             </div>
@@ -213,20 +230,96 @@ const AdminHome = () => {
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-secondary rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6">
-          <h2 className="text-lg font-bold mb-6">사용자 가입 추이 (최근 7일)</h2>
-          <div className="h-[250px] w-full flex items-end gap-2 px-2">
-            {stats?.daily_trends.map((trend, idx) => {
-              const max = Math.max(...(stats?.daily_trends.map(t => t.count) || [1]), 1);
-              const h = (trend.count / max) * 100;
-              return (
-                <div key={idx} className="flex-1 flex flex-col items-center group relative h-full justify-end">
-                   <div className="absolute -top-6 bg-foreground text-background text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">{trend.count}명</div>
-                   <div className="w-full bg-primary/10 hover:bg-primary/20 rounded-t-lg transition-all" style={{ height: `${Math.max(h, 5)}%` }} />
-                   <div className="mt-2 text-[10px] text-muted-foreground font-bold">{new Date(trend.date).toLocaleDateString('ko-KR', { weekday: 'short' })}</div>
-                </div>
-              );
-            })}
+        <div className="lg:col-span-2 bg-secondary rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 overflow-hidden min-w-0">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-lg font-bold">주간 사용자 활동 트렌드</h2>
+            <div className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full font-medium">최근 7일 실시간 통계</div>
+          </div>
+          <div className="w-full block min-w-0" style={{ height: '300px', overflow: 'hidden' }}>
+            {isMounted && stats && (
+              <ResponsiveContainer width="100%" height={300} minWidth={0}>
+                <AreaChart
+                  data={stats?.daily_trends || []}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                <defs>
+                  <linearGradient id="colorActive" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorSignup" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(128,128,128,0.08)" />
+                <XAxis 
+                  dataKey="date" 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 11, fontWeight: 600, fill: '#64748b' }}
+                  dy={12}
+                  tickFormatter={(date) => {
+                    const d = new Date(date);
+                    const dayName = d.toLocaleDateString('ko-KR', { weekday: 'short' });
+                    const formattedDate = d.toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' });
+                    return `${formattedDate} (${dayName})`;
+                  }}
+                />
+                <YAxis 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 11, fontWeight: 600, fill: '#64748b' }}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#1e293b', 
+                    borderRadius: '16px', 
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: '#fff',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)'
+                  }}
+                  itemStyle={{ padding: '4px 0' }}
+                  labelStyle={{ marginBottom: '10px', color: '#94a3b8', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                  labelFormatter={(label) => {
+                    const d = new Date(label);
+                    return d.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+                  }}
+                />
+                <Legend 
+                  verticalAlign="top" 
+                  align="right" 
+                  height={40}
+                  iconType="circle"
+                  iconSize={10}
+                  wrapperStyle={{ fontSize: '12px', fontWeight: 600, paddingBottom: '24px' }}
+                />
+                <Area 
+                  name="활성 유저 (DAU)"
+                  type="monotone" 
+                  dataKey={(d) => d.active_user_count || d.count || 0} 
+                  stroke="#6366f1" 
+                  strokeWidth={4}
+                  fillOpacity={1} 
+                  fill="url(#colorActive)" 
+                  animationDuration={1500}
+                />
+                <Area 
+                  name="신규 가입"
+                  type="monotone" 
+                  dataKey="signup_count" 
+                  stroke="#10b981" 
+                  strokeWidth={3}
+                  strokeDasharray="6 4"
+                  fillOpacity={1} 
+                  fill="url(#colorSignup)" 
+                  animationDuration={2000}
+                />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
