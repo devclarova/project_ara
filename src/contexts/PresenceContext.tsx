@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from './AuthContext';
+import { retryWithBackoff, isOnline } from '@/utils/networkUtils';
 
 export interface PresenceState {
   user_id: string;
@@ -55,23 +56,37 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // 1. 전역 통계 새로고침 (관리자 전용)
   // ============================================================
   const refreshStats = useCallback(async () => {
-    if (!isAdmin) return;
+    if (!isAdmin || !isOnline()) return;
     
     try {
-      const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
-      if (!error && data) {
-        setStats(prev => ({
-          ...prev,
-          totalUsers: data.total_users || 0,
-          dbOnlineUsersCount: data.online_users || 0,
-          adminCount: data.admin_count || 0,
-          bannedCount: data.banned_count || 0,
-          newUsers7d: data.new_users_7d || 0,
-          pendingReports: data.pending_reports || 0,
-        }));
+      await retryWithBackoff(async () => {
+        const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
+        if (error) throw error;
+        if (data) {
+          setStats(prev => ({
+            ...prev,
+            totalUsers: data.total_users || 0,
+            dbOnlineUsersCount: data.online_users || 0,
+            adminCount: data.admin_count || 0,
+            bannedCount: data.banned_count || 0,
+            newUsers7d: data.new_users_7d || 0,
+            pendingReports: data.pending_reports || 0,
+          }));
+        }
+      }, {
+        maxAttempts: 2,
+        shouldRetry: (err: any) => {
+          const msg = err?.message?.toLowerCase() || '';
+          return msg.includes('fetch') || msg.includes('network');
+        }
+      });
+    } catch (err: any) {
+      // 네트워크 오류는 조용히 무시 (다음 주기에 시도)
+      const msg = err?.message?.toLowerCase() || '';
+      const isNetworkError = msg.includes('fetch') || msg.includes('network');
+      if (!isNetworkError) {
+        console.error('Failed to refresh global stats:', err);
       }
-    } catch (err) {
-      console.error('Failed to refresh global stats:', err);
     }
   }, [isAdmin]);
 

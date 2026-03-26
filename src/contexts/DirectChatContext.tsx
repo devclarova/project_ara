@@ -340,9 +340,31 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
             setHasNewerMessages(false);
           }
 
-          setChats(prev =>
-            prev.map(chat => (chat.id === chatId ? { ...chat, unread_count: 0 } : chat)),
-          );
+          // DB에서도 해당 채팅방의 미읽음 메시지를 일괄 읽음 처리 (await으로 완료 대기)
+          if (currentUserId) {
+            const { error: readError } = await supabase
+              .from('direct_messages')
+              .update({ is_read: true, read_at: new Date().toISOString() })
+              .eq('chat_id', chatId)
+              .neq('sender_id', currentUserId)
+              .eq('is_read', false);
+
+            if (readError) {
+              console.error('[loadMessages] is_read 일괄 업데이트 실패:', readError);
+            }
+          }
+
+          // 로컬 상태 즉시 반영
+          setChats(prev => {
+            const updated = prev.map(chat => (chat.id === chatId ? { ...chat, unread_count: 0 } : chat));
+            // 헤더 배지도 동기화: 나머지 채팅방의 미읽음 수 재계산
+            const totalUnread = updated.filter(c => {
+              if (blockedIdsRef.current.has(c.other_user.id)) return false;
+              return (c.unread_count || 0) > 0;
+            }).length;
+            setUnreadCount(totalUnread);
+            return updated;
+          });
         } else {
           handleError(response.error || '메시지를 불러올 수 없습니다.');
         }

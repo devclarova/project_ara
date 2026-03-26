@@ -290,7 +290,7 @@ function Header() {
   const headerAvatar = profileAvatar ?? '/default-avatar.svg';
   return (
     <div
-      className="fixed inset-x-0 top-0 z-[100] flex justify-between items-center px-4 sm:px-8 lg:px-12 xl:px-24 2xl:px-36 py-2
+      className="relative inset-x-0 top-0 z-[90] flex justify-between items-center px-4 sm:px-8 lg:px-12 xl:px-24 2xl:px-36 py-2
                  border-b border-gray-200 bg-white
                  dark:border-gray-800 dark:bg-secondary"
     >

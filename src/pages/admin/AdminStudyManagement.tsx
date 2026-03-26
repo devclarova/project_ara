@@ -462,11 +462,12 @@ const AdminStudyManagement = () => {
                         <td className="px-4 py-3 min-w-[80px] whitespace-nowrap">
                           {video?.level ? (
                             <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
-                              video.level === 'Easy' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400' :
-                              video.level === 'Normal' ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' :
+                              (video.level === 'Easy' || video.level === '초급') ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400' :
+                              (video.level === 'Normal' || video.level === '중급') ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' :
                               'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'
                             }`}>
-                              {video.level}
+                              {video.level === 'Easy' || video.level === '초급' ? '초급' : 
+                               video.level === 'Normal' || video.level === '중급' ? '중급' : '고급'}
                             </span>
                           ) : (
                             <span className="text-xs text-muted-foreground">-</span>
@@ -562,11 +563,12 @@ const AdminStudyManagement = () => {
                         )}
                         {video?.level && (
                           <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                            video.level === 'Easy' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400' :
-                            video.level === 'Normal' ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' :
+                            (video.level === 'Easy' || video.level === '초급') ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400' :
+                            (video.level === 'Normal' || video.level === '중급') ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' :
                             'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'
                           }`}>
-                            {video.level}
+                            {video.level === 'Easy' || video.level === '초급' ? '초급' : 
+                             video.level === 'Normal' || video.level === '중급' ? '중급' : '고급'}
                           </span>
                         )}
                         {study.is_hidden && (

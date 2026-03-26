@@ -1,5 +1,5 @@
 import { AlertTriangle } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import {
   Navigate,
   Outlet,
@@ -23,7 +23,11 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DirectChatProvider } from './contexts/DirectChatContext';
 import { NewChatNotificationProvider } from './contexts/NewChatNotificationContext';
 import { PresenceProvider } from './contexts/PresenceContext';
+import { SiteSettingsProvider, useSiteSettings } from './contexts/SiteSettingsContext';
+import { DocumentMetadataManager } from './components/common/DocumentMetadataManager';
+import { SecurityGuard } from './components/common/SecurityGuard';
 import { supabase } from './lib/supabase';
+import RecoveryReminderModal from './components/auth/RecoveryReminderModal';
 
 // Admin Pages
 import AdminAnalytics from './pages/admin/AdminAnalytics';
@@ -48,7 +52,6 @@ import SignUpWizard from './pages/auth/SignUpWizard';
 import FindEmailPage from './pages/auth/FindEmailPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import UpdatePasswordPage from './pages/auth/UpdatePasswordPage';
-import RecoveryReminderModal from './components/auth/RecoveryReminderModal';
 
 // Content Pages
 import DirectChatPage from './pages/chat/DirectChatPage';
@@ -66,19 +69,22 @@ import StudyListPage from './pages/StudyListPage';
 import StudyPage from './pages/StudyPage';
 import StudyVocaPage from './pages/StudyVocaPage';
 import OnboardingWall from './routes/guards/OnboardingWall';
+import PageLoader from './components/common/PageLoader';
+
+const HIDE_HEADER_PATHS = ['/signin', '/signup', '/auth/callback', '/signup/social', '/admin', '/find-email', '/reset-password', '/update-password'];
 
 // ---------- 인증 가드 ----------
 function RequireAuth() {
   const { session, loading } = useAuth();
   const location = useLocation();
-  if (loading) return null;
+  if (loading) return <PageLoader />;
   if (!session) return <Navigate to="/signin" replace state={{ from: location }} />;
   return <Outlet />;
 }
 
 function RequireGuest() {
   const { session, loading } = useAuth();
-  if (loading) return null;
+  if (loading) return <PageLoader />;
   if (session) {
     const provider = (session.user.app_metadata?.provider as string | undefined) ?? 'email';
     return <Navigate to={provider === 'email' ? '/studyList' : '/signup/social'} replace />;
@@ -93,24 +99,14 @@ function RequireAdmin() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    setChecking(true);
-    setIsAdmin(null);
-
     const checkAdminStatus = async () => {
       if (!session) {
         setIsAdmin(false);
         setChecking(false);
         return;
       }
-
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('user_id', session.user.id)
-          .maybeSingle();
-
-        if (error) throw error;
+        const { data } = await supabase.from('profiles').select('is_admin').eq('user_id', session.user.id).maybeSingle();
         setIsAdmin(data?.is_admin || false);
       } catch (error) {
         console.error('Admin check error:', error);
@@ -119,106 +115,23 @@ function RequireAdmin() {
         setChecking(false);
       }
     };
-
-    // 이미 관리자 확인이 완료된 경우 백그라운드에서 조용히 재확인
-    if (isAdmin === null) {
-      setChecking(true);
-    }
     checkAdminStatus();
-  }, [session?.user?.id]); // session 객체 대신 id를 의존성으로 사용 (안정성 확보)
+  }, [session?.user?.id]);
 
-  if (loading || checking) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
-  }
-
-  if (!session) {
-    return <Navigate to="/admin/login" replace state={{ from: location }} />;
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-4">
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-full">
-          <AlertTriangle className="w-12 h-12 text-red-500" />
-        </div>
-        <h1 className="text-2xl font-bold">Access Denied</h1>
-        <p className="text-center text-muted-foreground max-w-md">
-          Your account ({session.user.email}) does not have administrator privileges.
-          <br />
-          Please ensure <code>is_admin</code> is set to true in the database.
-        </p>
-        <div className="flex gap-2 mt-4">
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition"
-          >
-            Retry Check
-          </button>
-          <button
-            onClick={async () => {
-              await supabase
-                .from('profiles')
-                .update({ is_online: false, last_active_at: new Date().toISOString() })
-                .eq('user_id', session.user.id);
-              await supabase.auth.signOut();
-            }}
-            className="px-4 py-2 border border-input bg-background hover:bg-accent text-accent-foreground rounded-lg transition"
-          >
-            Sign Out
-          </button>
-        </div>
-      </div>
-    );
-  }
-
+  if (loading || checking) return <PageLoader />;
+  if (!session) return <Navigate to="/admin/login" replace state={{ from: location }} />;
+  if (!isAdmin) return <div className="p-8 text-center text-red-500">Admin Privileges Required</div>;
   return <Outlet />;
 }
 
 // ---------- 실제 라우트 + 헤더 제어 ----------
 function AppInner() {
+  const { settings } = useSiteSettings();
   const location = useLocation();
-  useUserTracker(); // 🔥 전역 하이브리드 트래커 초기화 및 로깅 수행
-
-  const HIDE_HEADER_PATHS = ['/signin', '/signup', '/auth/callback', '/signup/social', '/admin', '/find-email', '/reset-password', '/update-password'];
-  const hideHeader = HIDE_HEADER_PATHS.some(path => location.pathname.startsWith(path));
-
-  const [maintenance, setMaintenance] = useState<any>(null);
-
-  useEffect(() => {
-    const fetchMaintenance = async () => {
-      const { data } = await supabase.from('site_settings').select('value').eq('key', 'maintenance_mode').maybeSingle();
-      if (data?.value?.enabled) {
-        setMaintenance(data.value);
-      }
-    };
-    fetchMaintenance();
-
-    // Realtime maintenance check
-    const channel = supabase
-      .channel('maintenance_check')
-      .on('postgres_changes', { 
-        event: 'UPDATE', 
-        schema: 'public', 
-        table: 'site_settings',
-        filter: 'key=eq.maintenance_mode'
-      }, (payload) => {
-        if (payload.new.value.enabled) {
-          setMaintenance(payload.new.value);
-        } else {
-          setMaintenance(null);
-        }
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, []);
-
   const { session } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  
+  useUserTracker();
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -229,16 +142,20 @@ function AppInner() {
     checkAdmin();
   }, [session]);
 
+  const maintenance = settings?.maintenance_mode;
   const showMaintenance = maintenance?.enabled && !isAdmin && !location.pathname.startsWith('/admin');
-
-  const hideFooter = [...HIDE_HEADER_PATHS, '/chat'].some(path =>
-    location.pathname.startsWith(path),
-  );
+  const hideHeader = HIDE_HEADER_PATHS.some(path => location.pathname.startsWith(path));
+  const hideFooter = hideHeader;
 
   return (
-    <>
+    <SecurityGuard>
+      <DocumentMetadataManager />
       <ScrollToTop />
-      <GlobalNoticeBar />
+      
+      <div className="sticky top-0 z-[100] w-full flex flex-col">
+        <GlobalNoticeBar />
+        {!showMaintenance && !hideHeader && <Header />}
+      </div>
 
       {showMaintenance ? (
         <div className="fixed inset-0 z-[9999] bg-white dark:bg-zinc-950 flex flex-col items-center justify-center p-6 text-center">
@@ -249,95 +166,78 @@ function AppInner() {
             <p className="text-muted-foreground max-w-md mb-8 whitespace-pre-wrap">
                 {maintenance.message || "더 나은 서비스를 위해 시스템 점검을 진행하고 있습니다.\n잠시 후 다시 이용해 주세요."}
             </p>
-            {maintenance.end_time && (
-                <div className="px-6 py-3 bg-secondary rounded-2xl border border-border">
-                    <p className="text-sm font-medium">예상 종료 시간: {new Date(maintenance.end_time).toLocaleString()}</p>
-                </div>
-            )}
         </div>
       ) : (
-      <div className="layout min-h-screen flex flex-col">
-        {!hideHeader && <Header />}
+        <div className="layout min-h-screen flex flex-col w-full">
+          <main className="flex-1 w-full">
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/landing" element={<LandingPage />} />
+                <Route path="/guest-study/:contents/:episode/:scene?" element={<StudyPage />} />
+                <Route path="/studyList" element={<StudyListPage />} />
+                <Route path="/sns" element={<SnsPage />} />
+                <Route path="/sns/:id" element={<SnsDetailPage />} />
+                <Route path="/goods" element={<GoodsPage />} />
+                <Route path="/goods/:id" element={<GoodsDetailPage />} />
+                <Route path="/voca" element={<StudyVocaPage />} />
 
-        <main
-          className={
-            hideHeader ? 'flex-1' : 'flex-1 pt-[57px] sm:pt-[73px] lg:pt-[81px] xl:pt-[97px]'
-          }
-        >
-          <Routes>
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/landing" element={<LandingPage />} />
-            <Route path="/guest-study/:contents/:episode/:scene?" element={<StudyPage />} />
-            <Route path="/studyList" element={<StudyListPage />} />
-            <Route path="/sns" element={<SnsPage />} />
-            <Route path="/sns/:id" element={<SnsDetailPage />} />
-            <Route path="/goods" element={<GoodsPage />} />
-            <Route path="/goods/:id" element={<GoodsDetailPage />} />
-            <Route path="/voca" element={<StudyVocaPage />} />
-
-            {/* Admin Routes */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/callback" element={<AdminAuthCallback />} />
-            <Route element={<RequireAdmin />}>
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<AdminHome />} />
-                <Route path="users" element={<UserManagement />} />
-                <Route path="settings" element={<AdminSettings />} />
-                <Route path="study/upload" element={<AdminStudyUpload />} />
-                <Route path="study/edit/:id" element={<AdminStudyUpload />} />
-                <Route path="study/manage" element={<AdminStudyManagement />} />
-                <Route path="reports" element={<AdminReports />} />
-                <Route path="content" element={<AdminContentModeration />} />
-                <Route path="analytics" element={<AdminAnalytics />} />
-                <Route path="goods/new" element={<AdminGoodsUpload />} />
-                <Route path="goods/edit/:id" element={<AdminGoodsUpload />} />
-                <Route path="goods/manage" element={<AdminGoodsManagement />} />
-              </Route>
-            </Route>
-
-            <Route element={<RequireGuest />}>
-              <Route path="/signup" element={<SignUpPage />} />
-              <Route path="/signin" element={<SignInPage />} />
-              <Route path="/find-email" element={<FindEmailPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-            </Route>
-            
-            <Route path="/update-password" element={<UpdatePasswordPage />} />
-            <Route path="/signup/social" element={<SignUpWizard mode="social" />} />
-
-            <Route element={<RequireAuth />}>
-              <Route element={<OnboardingWall />}>
-                <Route path="/study/:contents/:episode/:scene?" element={<StudyPage />} />
-                <Route path="/settings" element={<ProfileSettings />} />
-                <Route path="/profile" element={<ProfileAsap />} />
-                <Route path="/profile/:username" element={<ProfileAsap />} />
-                <Route path="hnotifications" element={<HNotificationsPage />} />
-                <Route path="chat" element={<DirectChatPage />} />
-                <Route path="community" element={<CommunityLayout />}>
-                  <Route index element={<CommunityFeed />} />
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route path="/admin/callback" element={<AdminAuthCallback />} />
+                <Route element={<RequireAdmin />}>
+                  <Route path="/admin" element={<AdminLayout />}>
+                    <Route index element={<AdminHome />} />
+                    <Route path="users" element={<UserManagement />} />
+                    <Route path="settings" element={<AdminSettings />} />
+                    <Route path="study/upload" element={<AdminStudyUpload />} />
+                    <Route path="study/edit/:id" element={<AdminStudyUpload />} />
+                    <Route path="study/manage" element={<AdminStudyManagement />} />
+                    <Route path="reports" element={<AdminReports />} />
+                    <Route path="content" element={<AdminContentModeration />} />
+                    <Route path="analytics" element={<AdminAnalytics />} />
+                    <Route path="goods/new" element={<AdminGoodsUpload />} />
+                    <Route path="goods/edit/:id" element={<AdminGoodsUpload />} />
+                    <Route path="goods/manage" element={<AdminGoodsManagement />} />
+                  </Route>
                 </Route>
-              </Route>
-            </Route>
 
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </main>
+                <Route element={<RequireGuest />}>
+                  <Route path="/signup" element={<SignUpPage />} />
+                  <Route path="/signin" element={<SignInPage />} />
+                  <Route path="/find-email" element={<FindEmailPage />} />
+                  <Route path="/reset-password" element={<ResetPasswordPage />} />
+                </Route>
+                
+                <Route path="/update-password" element={<UpdatePasswordPage />} />
+                <Route path="/signup/social" element={<SignUpWizard mode="social" />} />
 
-        {!hideFooter && <Footer />}
-      </div>
+                <Route element={<RequireAuth />}>
+                  <Route element={<OnboardingWall />}>
+                    <Route path="/study/:contents/:episode/:scene?" element={<StudyPage />} />
+                    <Route path="/settings" element={<ProfileSettings />} />
+                    <Route path="/profile" element={<ProfileAsap />} />
+                    <Route path="/profile/:username" element={<ProfileAsap />} />
+                    <Route path="hnotifications" element={<HNotificationsPage />} />
+                    <Route path="chat" element={<DirectChatPage />} />
+                    <Route path="community" element={<CommunityLayout />}>
+                      <Route index element={<CommunityFeed />} />
+                    </Route>
+                  </Route>
+                </Route>
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </Suspense>
+          </main>
+          {!hideFooter && <Footer />}
+        </div>
       )}
-    </>
+    </SecurityGuard>
   );
 }
 
 const ThemedToaster = () => {
   const { theme } = useTheme();
-
-  const isDarkMode =
-    theme === 'dark' ||
-    (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-
   return (
     <Toaster
       position="bottom-right"
@@ -347,14 +247,7 @@ const ThemedToaster = () => {
       toastOptions={{
         duration: 4000,
         className: 'font-sans !bg-white dark:!bg-[#18181b] !border-teal-500/30 !shadow-xl',
-        style: {
-          color: isDarkMode ? '#fff' : '#09090b',
-          borderRadius: '16px',
-          padding: '12px 16px',
-          maxWidth: '320px',
-          marginBottom: '8px',
-          zIndex: 9999,
-        },
+        style: { borderRadius: '16px', zIndex: 9999 },
       }}
     />
   );
@@ -363,22 +256,24 @@ const ThemedToaster = () => {
 const App = () => {
   return (
     <AuthProvider>
-      <ThemeProvider defaultTheme="system" storageKey="theme-mode">
-        <PresenceProvider>
-          <NewChatNotificationProvider>
-            <DirectChatProvider>
-              <ThemedToaster />
-              <Router>
-                <GlobalNotificationListener />
-                <GlobalBanListener />
-                <GlobalUserStatusTracker />
-                <RecoveryReminderModal />
-                <AppInner />
-              </Router>
-            </DirectChatProvider>
-          </NewChatNotificationProvider>
-        </PresenceProvider>
-      </ThemeProvider>
+      <SiteSettingsProvider>
+        <ThemeProvider defaultTheme="system" storageKey="theme-mode">
+          <PresenceProvider>
+            <NewChatNotificationProvider>
+              <DirectChatProvider>
+                <ThemedToaster />
+                <Router>
+                  <GlobalNotificationListener />
+                  <GlobalBanListener />
+                  <GlobalUserStatusTracker />
+                  <RecoveryReminderModal />
+                  <AppInner />
+                </Router>
+              </DirectChatProvider>
+            </NewChatNotificationProvider>
+          </PresenceProvider>
+        </ThemeProvider>
+      </SiteSettingsProvider>
     </AuthProvider>
   );
 };
