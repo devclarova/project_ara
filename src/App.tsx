@@ -34,6 +34,7 @@ import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminAuthCallback from './pages/admin/AdminAuthCallback';
 import AdminContentModeration from './pages/admin/AdminContentModeration';
 import AdminGoodsManagement from './pages/admin/AdminGoodsManagement';
+import AdminBannerManager from './pages/admin/AdminBannerManager';
 import AdminGoodsUpload from './pages/admin/AdminGoodsUpload';
 import AdminHome from './pages/admin/AdminHome';
 import AdminLayout from './pages/admin/AdminLayout';
@@ -70,6 +71,7 @@ import StudyPage from './pages/StudyPage';
 import StudyVocaPage from './pages/StudyVocaPage';
 import OnboardingWall from './routes/guards/OnboardingWall';
 import PageLoader from './components/common/PageLoader';
+import { MarketingPopup } from './components/marketing/MarketingPopup';
 
 const HIDE_HEADER_PATHS = ['/signin', '/signup', '/auth/callback', '/signup/social', '/admin', '/find-email', '/reset-password', '/update-password'];
 
@@ -157,6 +159,9 @@ function AppInner() {
         {!showMaintenance && !hideHeader && <Header />}
       </div>
 
+      {/* 마케팅 팝업 (비관리자 페이지에서만) */}
+      {!hideHeader && <MarketingPopup />}
+
       {showMaintenance ? (
         <div className="fixed inset-0 z-[9999] bg-white dark:bg-zinc-950 flex flex-col items-center justify-center p-6 text-center">
             <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-full mb-6">
@@ -199,6 +204,7 @@ function AppInner() {
                     <Route path="goods/new" element={<AdminGoodsUpload />} />
                     <Route path="goods/edit/:id" element={<AdminGoodsUpload />} />
                     <Route path="goods/manage" element={<AdminGoodsManagement />} />
+                    <Route path="banners" element={<AdminBannerManager />} />
                   </Route>
                 </Route>
 

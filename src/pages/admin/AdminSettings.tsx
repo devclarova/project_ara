@@ -127,7 +127,7 @@ const AdminSettings = () => {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in duration-700">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-32 animate-in fade-in duration-700">
       {/* Header with Glassmorphism */}
       <div className="relative mb-10 p-8 rounded-3xl bg-gradient-to-r from-primary/10 via-background to-background border border-primary/20 overflow-hidden shadow-2xl shadow-primary/5">
         <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
@@ -221,7 +221,7 @@ const AdminSettings = () => {
                              value={settings.maintenance_mode.message}
                              onChange={(e) => updateNestedSetting('maintenance_mode', 'message', e.target.value)}
                              placeholder="공사중입니다. 곧 돌아오겠습니다."
-                             className="form-textarea w-full bg-amber-500/5 border-amber-500/20 text-foreground rounded-xl text-sm focus:ring-amber-500/20 h-24"
+                             className="form-textarea w-full bg-amber-500/5 border-amber-500/20 text-foreground rounded-xl text-sm focus:ring-amber-500/20 h-24 resize-none"
                           />
                        </div>
                     )}

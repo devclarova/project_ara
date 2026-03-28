@@ -14,6 +14,7 @@ import {
   ShieldAlert,
   PieChart,
   Package,
+  Megaphone,
 } from 'lucide-react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import ThemeSwitcher from '../../components/common/ThemeSwitcher';
@@ -47,6 +48,7 @@ const AdminLayout = () => {
     else if (path.startsWith('/admin/reports')) pageTitle = '신고 및 문의';
     else if (path.startsWith('/admin/analytics')) pageTitle = '통계 및 분석';
     else if (path.startsWith('/admin/users')) pageTitle = '사용자 관리';
+    else if (path.startsWith('/admin/banners')) pageTitle = '배너 관리';
     else if (path.startsWith('/admin/settings')) pageTitle = '관리자 설정';
 
     document.title = `${pageTitle} | ARA Admin`;
@@ -229,6 +231,16 @@ const AdminLayout = () => {
               to="/admin/users"
               icon={Users}
               label="사용자 관리"
+              onClick={() => setSidebarOpen(false)}
+            />
+
+            <div className="pt-4 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              마케팅
+            </div>
+            <NavItem
+              to="/admin/banners"
+              icon={Megaphone}
+              label="배너 관리"
               onClick={() => setSidebarOpen(false)}
             />
 
