@@ -35,6 +35,7 @@ import AdminAuthCallback from './pages/admin/AdminAuthCallback';
 import AdminContentModeration from './pages/admin/AdminContentModeration';
 import AdminGoodsManagement from './pages/admin/AdminGoodsManagement';
 import AdminBannerManager from './pages/admin/AdminBannerManager';
+import AdminPromotionsPage from './pages/admin/AdminPromotionsPage';
 import AdminGoodsUpload from './pages/admin/AdminGoodsUpload';
 import AdminHome from './pages/admin/AdminHome';
 import AdminLayout from './pages/admin/AdminLayout';
@@ -55,6 +56,7 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import UpdatePasswordPage from './pages/auth/UpdatePasswordPage';
 
 // Content Pages
+import SubscriptionPage from './pages/subscription/SubscriptionPage';
 import DirectChatPage from './pages/chat/DirectChatPage';
 import CommunityFeed from './pages/community/CommunityFeed';
 import CommunityLayout from './pages/community/CommunityLayout';
@@ -147,39 +149,42 @@ function AppInner() {
   const maintenance = settings?.maintenance_mode;
   const showMaintenance = maintenance?.enabled && !isAdmin && !location.pathname.startsWith('/admin');
   const hideHeader = HIDE_HEADER_PATHS.some(path => location.pathname.startsWith(path));
-  const hideFooter = hideHeader;
-
+  const hideFooter = hideHeader || location.pathname.startsWith('/chat');
   return (
     <SecurityGuard>
       <DocumentMetadataManager />
       <ScrollToTop />
       
-      <div className="sticky top-0 z-[100] w-full flex flex-col">
-        <GlobalNoticeBar />
-        {!showMaintenance && !hideHeader && <Header />}
-      </div>
-
-      {/* 마케팅 팝업 (비관리자 페이지에서만) */}
-      {!hideHeader && <MarketingPopup />}
-
-      {showMaintenance ? (
-        <div className="fixed inset-0 z-[9999] bg-white dark:bg-zinc-950 flex flex-col items-center justify-center p-6 text-center">
-            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-full mb-6">
-                <AlertTriangle className="w-16 h-16 text-amber-500" />
-            </div>
-            <h1 className="text-3xl font-bold text-foreground mb-4">서비스 점검 중입니다</h1>
-            <p className="text-muted-foreground max-w-md mb-8 whitespace-pre-wrap">
-                {maintenance.message || "더 나은 서비스를 위해 시스템 점검을 진행하고 있습니다.\n잠시 후 다시 이용해 주세요."}
-            </p>
+      {/* 전체 화면을 통제하는 하나의 Flex 컨테이너로 감싸서, 
+          헤더(알림바 유무 포함)가 자기 높이를 차지하고 남은 '정확한' 공간을 아래 레이아웃이 100% 차지하게 만듭니다. */}
+      <div className={`flex flex-col w-full ${location.pathname.startsWith('/admin') ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
+        <div className="sticky top-0 z-[100] w-full flex flex-col shrink-0">
+          <GlobalNoticeBar />
+          {!showMaintenance && !hideHeader && <Header />}
         </div>
-      ) : (
-        <div className="layout min-h-screen flex flex-col w-full">
-          <main className="flex-1 w-full">
-            <Suspense fallback={<PageLoader />}>
+
+        {/* 마케팅 팝업 (비관리자 페이지에서만) */}
+        {!hideHeader && <MarketingPopup />}
+
+        {showMaintenance ? (
+          <div className="fixed inset-0 z-[9999] bg-white dark:bg-zinc-950 flex flex-col items-center justify-center p-6 text-center">
+              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-full mb-6">
+                  <AlertTriangle className="w-16 h-16 text-amber-500" />
+              </div>
+              <h1 className="text-3xl font-bold text-foreground mb-4">서비스 점검 중입니다</h1>
+              <p className="text-muted-foreground max-w-md mb-8 whitespace-pre-wrap">
+                  {maintenance.message || "더 나은 서비스를 위해 시스템 점검을 진행하고 있습니다.\n잠시 후 다시 이용해 주세요."}
+              </p>
+          </div>
+        ) : (
+          <div className="layout flex flex-col w-full flex-1 min-h-0">
+            <main className="flex-1 w-full flex flex-col min-h-0">
+              <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/landing" element={<LandingPage />} />
+                <Route path="/subscription" element={<SubscriptionPage />} />
                 <Route path="/guest-study/:contents/:episode/:scene?" element={<StudyPage />} />
                 <Route path="/studyList" element={<StudyListPage />} />
                 <Route path="/sns" element={<SnsPage />} />
@@ -205,6 +210,7 @@ function AppInner() {
                     <Route path="goods/edit/:id" element={<AdminGoodsUpload />} />
                     <Route path="goods/manage" element={<AdminGoodsManagement />} />
                     <Route path="banners" element={<AdminBannerManager />} />
+                    <Route path="promotions" element={<AdminPromotionsPage />} />
                   </Route>
                 </Route>
 
@@ -238,6 +244,7 @@ function AppInner() {
           {!hideFooter && <Footer />}
         </div>
       )}
+      </div>
     </SecurityGuard>
   );
 }
@@ -284,4 +291,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default App;

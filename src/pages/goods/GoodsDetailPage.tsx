@@ -41,6 +41,10 @@ export default function GoodsDetailPage() {
   const [myLikes, setMyLikes] = useState<string[]>([]);
   const [offset, setOffset] = useState(0);
   const reviewsPerPage = 5;
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -109,7 +113,46 @@ export default function GoodsDetailPage() {
 
   // Derived State
   const hasOptions = product.options && product.options.length > 0;
-  const currentPrice = product.sale_price || product.price;
+  const itemPrice = product.sale_price || product.price;
+  const [finalPrice, setFinalPrice] = useState(itemPrice);
+
+  useEffect(() => {
+    if (appliedCoupon) {
+      if (appliedCoupon.discount_type === 'percentage') {
+        const discount = itemPrice * (appliedCoupon.discount_value / 100);
+        setFinalPrice(Math.max(0, itemPrice - discount));
+      } else {
+        setFinalPrice(Math.max(0, itemPrice - appliedCoupon.discount_value));
+      }
+    } else {
+      setFinalPrice(itemPrice);
+    }
+  }, [appliedCoupon, itemPrice]);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setIsValidatingCoupon(true);
+    setCouponError('');
+    try {
+      const { data, error } = await supabase.rpc('validate_coupon', { 
+        p_code: couponCode.trim(),
+        p_user_id: session?.user?.id || null
+      });
+      if (error) throw error;
+      if (data && data.is_valid) {
+        setAppliedCoupon(data.promotion);
+        toast.success(t('goods.coupon_applied', '쿠폰이 적용되었습니다!'));
+      } else {
+        setCouponError(data?.reason || t('goods.coupon_invalid', '유효하지 않은 쿠폰입니다.'));
+        setAppliedCoupon(null);
+      }
+    } catch (err: any) {
+      console.error('Coupon validation fail:', err);
+      setCouponError(t('goods.coupon_error', '쿠폰 확인 중 오류가 발생했습니다.'));
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-gray-100 pb-20">
@@ -206,7 +249,7 @@ export default function GoodsDetailPage() {
             <div className="flex items-center gap-4 mb-6">
               <div className="flex flex-col">
                 <div className="text-3xl font-semibold text-primary">
-                  ${currentPrice.toFixed(2)}
+                  ${finalPrice.toFixed(2)}
                 </div>
                 {product.discount_percent > 0 && (
                   <div className="text-sm text-gray-400 line-through">
@@ -254,6 +297,55 @@ export default function GoodsDetailPage() {
               </div>
             )}
 
+            {/* Coupon Application Section */}
+            <div className="mb-8 p-6 bg-gray-50 dark:bg-zinc-900 rounded-3xl border border-gray-100 dark:border-white/5">
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">할인 쿠폰 적용</label>
+                <div className="flex gap-2">
+                    <input 
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value)}
+                        placeholder="쿠폰 코드를 입력하세요"
+                        className="flex-1 bg-white dark:bg-black border border-gray-200 dark:border-zinc-800 rounded-xl px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                    <Button 
+                        variant="outline" 
+                        onClick={handleApplyCoupon}
+                        disabled={isValidatingCoupon}
+                        className="rounded-xl font-bold"
+                    >
+                        {isValidatingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : '적용'}
+                    </Button>
+                </div>
+                {couponError && <p className="text-red-500 text-[10px] mt-2 ml-1 font-bold">{couponError}</p>}
+                {appliedCoupon && (
+                    <div className="mt-3 flex items-center justify-between p-3 bg-primary/10 rounded-xl border border-primary/20">
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-primary" />
+                            <span className="text-xs font-bold text-primary">{appliedCoupon.name} 적용됨</span>
+                        </div>
+                        <button onClick={() => { setAppliedCoupon(null); setCouponCode(''); }} className="text-primary/60 hover:text-primary transition-colors">
+                            <XIcon size={14} />
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {/* Price Preview */}
+            <div className="mb-8 flex justify-between items-end bg-primary/5 p-6 rounded-3xl border-2 border-dashed border-primary/10">
+                <span className="text-sm font-bold text-gray-500">최종 결제 금액</span>
+                <div className="text-right">
+                    {appliedCoupon && (
+                        <div className="text-sm text-gray-400 line-through mb-1">
+                            ${itemPrice.toFixed(2)}
+                        </div>
+                    )}
+                    <div className="text-4xl font-black text-primary tracking-tighter">
+                        ${finalPrice.toFixed(2)}
+                    </div>
+                </div>
+            </div>
+
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
                <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-full px-4 h-14 w-fit bg-gray-50 dark:bg-gray-900">
@@ -261,8 +353,25 @@ export default function GoodsDetailPage() {
                   <span className="w-8 text-center font-medium">{quantity}</span>
                   <button onClick={() => setQuantity(quantity+1)} className="px-2 hover:text-primary">+</button>
                </div>
-               <Button className="flex-1 h-14 rounded-full text-lg font-semibold bg-primary hover:bg-primary/90">
-                 {t('goods.add_to_cart')}
+               <Button 
+                onClick={async () => {
+                    if (!session) {
+                        toast.error(t('auth.login_needed'));
+                        return;
+                    }
+                    // TODO: Connect to PG in 6-D
+                    toast.promise(
+                        new Promise((resolve) => setTimeout(resolve, 1500)),
+                        {
+                            loading: '결제 준비 중...',
+                            success: '주문이 접수되었습니다! (가상 결제 완료)',
+                            error: '결제 실패'
+                        }
+                    );
+                }}
+                className="flex-1 h-14 rounded-full text-lg font-semibold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+               >
+                 {t('goods.buy_now') || '지금 구매하기'}
                </Button>
                <Button variant="outline" className="h-14 w-14 rounded-full p-0 flex-shrink-0" onClick={() => setIsWishlisted(!isWishlisted)}>
                  <Heart className={`w-6 h-6 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />

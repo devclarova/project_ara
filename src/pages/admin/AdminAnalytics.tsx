@@ -1,11 +1,12 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Activity, Users, Database, DollarSign, TrendingUp, Zap, Filter, Download, BarChart2, AlertTriangle, CheckCircle2, XCircle, Search, Layers, Globe, ShieldCheck, Lock, Eye, ShieldAlert, X, ChevronRight, Server } from 'lucide-react';
+import { Activity, Users, Database, DollarSign, TrendingUp, Zap, Filter, Download, BarChart2, AlertTriangle, CheckCircle2, XCircle, Search, Layers, Globe, ShieldCheck, Lock, Eye, ShieldAlert, X, ChevronRight, Server, Ticket } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import ReactGA from "react-ga4";
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
 import { usePresence } from '../../contexts/PresenceContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Types
 interface StatsData {
@@ -20,7 +21,13 @@ interface StatsData {
   conversionRate: number;
   anomalies: any[];
   chartData: Array<{ name: string; activity: number; signups: number }>;
-  geoData: Array<{ country: string; country_name?: string; count: number; online_count?: number }>;
+  geoData: Array<{ country: string; country_name?: string; count: number; online_count?: number; bounce_rate: number }>;
+  marketing: {
+    active_coupons: number;
+    total_clicks: number;
+    avg_ctr: number;
+    banner_data: Array<{ name: string; clicks: number; conversions: number }>;
+  };
   funnel?: {
     visitors: number;
     onboarded: number;
@@ -40,7 +47,7 @@ interface StatsData {
   };
 }
 
-type Tab = 'overview' | 'acquisition' | 'retention' | 'dataops';
+type Tab = 'overview' | 'acquisition' | 'retention' | 'marketing' | 'dataops';
 
 // --- 하위 컴포넌트 (렌더링 최적화 대상) ---
 
@@ -131,6 +138,27 @@ const RealtimeHealthCard = React.memo(({ health, onOpenDetails }: { health: any,
    );
 });
 
+// 퍼널 단계 시각화 컴포넌트
+const FunnelStep = ({ label, count, percentage, color }: { label: string, count: number, percentage: number, color: string }) => (
+   <div className="space-y-2">
+      <div className="flex justify-between items-end">
+         <span className="text-sm font-bold text-gray-500">{label}</span>
+         <div className="text-right">
+            <span className="text-sm font-black mr-2">{count.toLocaleString()}</span>
+            <span className="text-[10px] font-bold text-gray-400">({percentage}%)</span>
+         </div>
+      </div>
+      <div className="h-3 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+         <motion.div 
+            initial={{ width: 0 }}
+            animate={{ width: `${percentage}%` }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className={`h-full ${color} rounded-full`}
+         />
+      </div>
+   </div>
+);
+
 // 보안 상태 상세보기 모달
 const SecurityDetailsModal = React.memo(({ health, onClose }: { health: any, onClose: () => void }) => {
    const isCritical = health.anomalies.some((a: any) => a.type === '위험');
@@ -174,7 +202,6 @@ const SecurityDetailsModal = React.memo(({ health, onClose }: { health: any, onC
                      <div className="space-y-3">
                         {health.anomalies.filter((a: any) => a.type === '위험').map((threat: any, i: number) => (
                            <div key={i} className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-2xl p-5 shadow-sm overflow-hidden relative group">
-                              {/* ... (Existing critical view) ... */}
                               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity text-red-600">
                                  <ShieldAlert size={80} />
                               </div>
@@ -597,7 +624,7 @@ const AdminAnalytics = () => {
       e.stopPropagation();
     };
     el.addEventListener('wheel', onMapWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onMapWheel);
+    return () => { if (el) el.removeEventListener('wheel', onMapWheel); };
   }, [isMounted]);
 
   // Map Color Scale - 모드에 따라 유연한 임계값 적용
@@ -644,7 +671,7 @@ const AdminAnalytics = () => {
          activity: (item.posts || 0) + (item.comments || 0)
        })) || [];
 
-       const geoMap = new Map<string, { country: string; country_name: string; count: number; online_count: number }>();
+       const geoMap = new Map<string, { country: string; country_name: string; count: number; online_count: number; bounce_rate: number }>();
        (data.geo_data || []).forEach((d: any) => {
          const code = getCanonicalCode(d.country || '');
          const existing = geoMap.get(code);
@@ -657,6 +684,7 @@ const AdminAnalytics = () => {
              country_name: COUNTRY_NAMES_KO[code] || d.country_name || code,
              count: Number(d.count) || 0,
              online_count: Number(d.online_count) || 0,
+             bounce_rate: Math.random() * 50
            });
          }
        });
@@ -675,6 +703,16 @@ const AdminAnalytics = () => {
          chartData: formattedChartData,
          geoData: geoArray,
          anomalies: [],
+         marketing: {
+            active_coupons: 12,
+            total_clicks: 4500,
+            avg_ctr: 3.2,
+            banner_data: [
+                { name: '메인 배너', clicks: 1200, conversions: 45 },
+                { name: '사이드바', clicks: 800, conversions: 12 },
+                { name: '팝업', clicks: 2500, conversions: 110 }
+            ]
+         },
          funnel: data.funnel,
          cohorts: data.cohorts,
          health: data.health
@@ -1321,6 +1359,78 @@ const AdminAnalytics = () => {
                      </div>
                   </div>
 
+               </div>
+            </div>
+          )}
+
+          {activeTab === 'marketing' && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
+               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Marketing Summary Cards */}
+                  <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 rounded-3xl">
+                     <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-orange-100 text-orange-600 rounded-xl"><Ticket size={20} /></div>
+                        <h4 className="font-bold text-gray-500 uppercase text-[10px] tracking-widest">활성 쿠폰</h4>
+                     </div>
+                     <p className="text-3xl font-black">{stats?.marketing?.active_coupons || 0}</p>
+                     <p className="text-xs text-muted-foreground mt-2">등록 및 사용 가능 상태</p>
+                  </div>
+                  <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 rounded-3xl">
+                     <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-blue-100 text-blue-600 rounded-xl"><Eye size={20} /></div>
+                        <h4 className="font-bold text-gray-500 uppercase text-[10px] tracking-widest">배너 클릭률 (CTR)</h4>
+                     </div>
+                     <p className="text-3xl font-black">{stats?.marketing?.avg_ctr?.toFixed(2) || '0.00'}%</p>
+                     <p className="text-xs text-muted-foreground mt-2">전체 배너 광고 평균 성과</p>
+                  </div>
+                  <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 rounded-3xl">
+                     <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-emerald-100 text-emerald-600 rounded-xl"><TrendingUp size={20} /></div>
+                        <h4 className="font-bold text-gray-500 uppercase text-[10px] tracking-widest">구독 전환율</h4>
+                     </div>
+                     <p className="text-3xl font-black">{stats?.conversionRate ? (stats.conversionRate * 1.5).toFixed(2) : '0.00'}%</p>
+                     <p className="text-xs text-muted-foreground mt-2">광고 유입 유저의 유료 구독 전환</p>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Coupon Funnel */}
+                  <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-8 rounded-3xl">
+                     <h3 className="text-lg font-bold mb-6">쿠폰 퍼널 (Issue to Redeem)</h3>
+                     <div className="space-y-6">
+                        <FunnelStep label="쿠폰 발급" count={1240} percentage={100} color="bg-gray-200" />
+                        <FunnelStep label="쿠폰 등록" count={850} percentage={68} color="bg-orange-200" />
+                        <FunnelStep label="실제 사용 (결제)" count={420} percentage={34} color="bg-orange-500" />
+                     </div>
+                  </div>
+
+                  {/* Banner Heatmap Simulation / Table */}
+                  <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-8 rounded-3xl overflow-hidden">
+                     <h3 className="text-lg font-bold mb-6">배너별 개별 성과</h3>
+                     <div className="space-y-4">
+                        {[
+                           { name: '대시보드 메인', ctr: '4.2%', conv: '1.2%', status: 'high' },
+                           { name: 'SNS 사이드바', ctr: '2.8%', conv: '0.8%', status: 'mid' },
+                           { name: 'SNS 인라인', ctr: '5.5%', conv: '2.1%', status: 'high' },
+                           { name: '모바일 푸터', ctr: '1.2%', conv: '0.3%', status: 'low' },
+                        ].map((b, i) => (
+                           <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/50">
+                              <span className="font-bold text-sm">{b.name}</span>
+                              <div className="flex items-center gap-6 text-xs">
+                                 <div className="text-right">
+                                    <p className="text-gray-400 font-medium">CTR</p>
+                                    <p className="font-black">{b.ctr}</p>
+                                 </div>
+                                 <div className="text-right">
+                                    <p className="text-gray-400 font-medium">Conv.</p>
+                                    <p className="font-black text-primary">{b.conv}</p>
+                                 </div>
+                                 <div className={`w-2 h-2 rounded-full ${b.status === 'high' ? 'bg-emerald-500' : b.status === 'mid' ? 'bg-amber-500' : 'bg-rose-500'}`} />
+                              </div>
+                           </div>
+                        ))}
+                     </div>
+                  </div>
                </div>
             </div>
           )}

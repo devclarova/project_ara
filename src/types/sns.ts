@@ -4,6 +4,7 @@ export type TweetUser = {
   username: string;
   avatar: string;
   banned_until?: string | null;
+  plan?: 'free' | 'basic' | 'premium';
 };
 
 // DB Row Types (Manual definition since database.ts is incomplete)
@@ -12,6 +13,7 @@ export interface DBProfile {
   user_id: string;
   nickname: string;
   avatar_url: string | null;
+  plan?: 'free' | 'basic' | 'premium';
 }
 
 export interface TweetQueryResponse {
@@ -30,6 +32,7 @@ export interface TweetQueryResponse {
     user_id: string;
     avatar_url: string | null;
     banned_until?: string | null;
+    plan?: 'free' | 'basic' | 'premium';
   } | null;
   is_hidden?: boolean;
 }
@@ -47,6 +50,7 @@ export interface ReplyQueryResponse {
     user_id: string;
     avatar_url: string | null;
     banned_until?: string | null;
+    plan?: 'free' | 'basic' | 'premium';
   } | null;
   tweet_replies_likes?: { count: number }[];
   tweets?: {

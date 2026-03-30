@@ -36,13 +36,17 @@ const StudyListPage = () => {
   const [total, setTotal] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, userPlan, isAdmin } = useAuth();
   const [showSignIn, setShowSignIn] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
-  const [pageSize, setPageSize] = useState(9);
+
+  // Ad-free users (Premium/Basic)
+  // Admins only see ads if their current plan is set to 'free' (for testing).
+  const isAdFree = userPlan === 'premium' || userPlan === 'basic' || (isAdmin && userPlan !== 'free');
+  const [pageSize, setPageSize] = useState(isAdFree ? 12 : 10);
   const limit = pageSize;
 
-  const { banners: inlineBanners, trackClick: trackBannerClick, trackView: trackBannerView } = useMarketingBanners('inline_card', 'study');
+  const { banners: inlineBanners, trackClick: trackBannerClick, trackView: trackBannerView } = useMarketingBanners('inline_card');
 
   useEffect(() => {
     if (!isGuideModalDismissed(LEANING_GUIDE_KEY)) setShowGuide(true);
@@ -80,6 +84,9 @@ const StudyListPage = () => {
         .from('study')
         .select(needsVideoFilter ? '*, video!inner(*)' : '*, video(*)', { count: 'exact' });
       
+      // Only show non-hidden contents on the public list
+      query = query.eq('is_hidden', false);
+
       if (activeCategory !== '전체') query = query.eq('video.categories', activeCategory);
       if (levelFilter) query = query.eq('video.level', levelFilter);
       if (keyword.trim()) query = query.ilike('title', `%${keyword.trim()}%`);
@@ -169,35 +176,60 @@ const StudyListPage = () => {
                         basePath={user ? '/study' : '/guest-study'}
                         isGuest={!user}
                         isPreview={study.is_featured}
+                        required_plan={study.required_plan}
                         created_at={study.created_at}
                         openLoginModal={() => setShowSignIn(true)}
                       />
                     );
 
-                    if ((index + 1) % 6 === 0 && inlineBanners.length > 0) {
-                      const bannerIndex = Math.floor(index / 6) % inlineBanners.length;
-                      const banner = inlineBanners[bannerIndex];
+                    // 5번째, 10번째 위치에 광고 삽입 (isAdFree가 아닐 때만)
+                    if (!isAdFree && (index + 1) % 5 === 0) {
+                      const globalIndex = ((page - 1) * limit) + index;
+                      const hasBanners = inlineBanners.length > 0;
+                      const bannerIndex = hasBanners ? (Math.floor(globalIndex / 5) % inlineBanners.length) : 0;
+                      const banner = hasBanners ? inlineBanners[bannerIndex] : null;
+                      
                       acc.push(
                         <motion.div
-                          key={`marketing-${index}-${banner.id}`}
+                          key={`marketing-${globalIndex}-${banner?.id || 'default'}`}
                           initial={{ opacity: 0, y: 20 }}
                           whileInView={{ opacity: 1, y: 0 }}
                           viewport={{ once: true }}
                           onClick={() => {
-                            trackBannerClick(banner.id);
-                            if (banner.link_url) window.open(banner.link_url, '_blank', 'noopener');
+                            if (banner) {
+                              trackBannerClick(banner.id);
+                              if (banner.link_url) window.open(banner.link_url, '_blank', 'noopener');
+                            } else {
+                              // 기본 배너 클릭 시 구독 페이지로 이동
+                              window.location.href = '/subscription';
+                            }
                           }}
-                          onViewportEnter={() => trackBannerView(banner.id)}
+                          onViewportEnter={() => banner && trackBannerView(banner.id)}
                           className="relative aspect-[4/3] rounded-3xl overflow-hidden cursor-pointer group shadow-sm hover:shadow-xl transition-all duration-500 bg-gray-100 dark:bg-zinc-900 border border-gray-100 dark:border-white/5"
                         >
-                          <img src={banner.image_url!} alt={banner.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                          {banner?.image_url ? (
+                            <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                          ) : (
+                            // 기본 홍보 배너 (데이터가 없을 때)
+                            <div className="w-full h-full bg-gradient-to-br from-[#00E5FF]/20 to-[#00BFA5]/20 flex flex-col items-center justify-center p-8 text-center">
+                              <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 border border-white/20">
+                                <span className="text-xl font-black text-[#00BFA5]">A</span>
+                              </div>
+                              <h4 className="text-lg font-black text-gray-900 dark:text-white mb-2 leading-tight">광고 없는 아라 프리미엄</h4>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">지금 프리미엄으로 업그레이드하고<br/>모든 혜택을 누려보세요!</p>
+                            </div>
+                          )}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
                           <div className="absolute inset-0 p-6 flex flex-col justify-end">
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-md text-[10px] font-black text-white tracking-widest border border-white/10 uppercase">AD</span>
-                              {banner.link_url && <ExternalLink size={14} className="text-white/60" />}
+                              <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-md text-[10px] font-black text-white tracking-widest border border-white/10 uppercase">
+                                {banner ? 'AD' : 'PROMOTION'}
+                              </span>
+                              {(banner?.link_url || !banner) && <ExternalLink size={14} className="text-white/60" />}
                             </div>
-                            <h4 className="text-xl font-black text-white leading-tight tracking-tight">{banner.title}</h4>
+                            <h4 className="text-xl font-black text-white leading-tight tracking-tight">
+                              {banner?.title || 'ARA Premium Academy'}
+                            </h4>
                           </div>
                         </motion.div>
                       );
