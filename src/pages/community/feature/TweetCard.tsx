@@ -11,6 +11,8 @@ import { supabase } from '@/lib/supabase';
 import { type TweetStats, type TweetUser, type UITweet } from '@/types/sns';
 import { formatSmartDate } from '@/utils/dateUtils';
 import DOMPurify from 'dompurify';
+import { Bird, Heart, MessageCircle, Share2, MoreHorizontal, ShieldAlert } from 'lucide-react';
+import SeagullIcon from '@/components/common/SeagullIcon';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -650,17 +652,26 @@ export default function TweetCard({
         {/* Avatar */}
         <div
           onClick={handleAvatarClick}
-          className={`w-10 h-10 flex-shrink-0 relative ${isDeletedUser ? 'cursor-default' : 'cursor-pointer'}`}
+          className={`relative flex-shrink-0 ${isDeletedUser ? 'cursor-default' : 'cursor-pointer'}`}
         >
-          <Avatar className="w-10 h-10">
-            <AvatarImage
-              src={user.avatar || '/default-avatar.svg'}
-              alt={isDeletedUser ? t('deleted_user') : user.name}
-            />
-            <AvatarFallback>
-              {isDeletedUser ? '?' : user.name.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <div className={`w-10 h-10 relative ${user.plan === 'premium' && !isDeletedUser ? 'rounded-full p-[2px] bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] shadow-[0_2px_10px_rgba(0,191,165,0.4)]' : ''}`}>
+            <Avatar className="w-full h-full border-2 border-white dark:border-background">
+              <AvatarImage
+                src={user.avatar || '/default-avatar.svg'}
+                alt={isDeletedUser ? t('deleted_user') : user.name}
+              />
+              <AvatarFallback>
+                {isDeletedUser ? '?' : user.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            {user.plan === 'premium' && !isDeletedUser && (
+              <div className="absolute -top-1.5 -left-1.5 z-10 p-[2px] bg-white dark:bg-background rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.1)] transition-transform hover:scale-110 -rotate-12" title="Premium Member">
+                <div className="bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] w-[15px] h-[15px] rounded-full flex items-center justify-center shadow-[inset_0_1px_3px_rgba(255,255,255,0.5)]">
+                  <SeagullIcon size={12} className="text-white drop-shadow-sm" />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* User Info & Menu */}

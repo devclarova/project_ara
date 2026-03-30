@@ -61,6 +61,7 @@ const AdminBannerManager = () => {
   const [filterType, setFilterType] = useState('all');
   const [showForm, setShowForm] = useState(false);
   const [editingBanner, setEditingBanner] = useState<MarketingBanner | null>(null);
+  const [previewBanner, setPreviewBanner] = useState<MarketingBanner | null>(null);
   const [deleteModal, setDeleteModal] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -76,7 +77,7 @@ const AdminBannerManager = () => {
     text_color: '#ffffff',
     target_page: 'all',
     target_audience: 'all',
-    priority: 0,
+    priority: 999,
     starts_at: '',
     ends_at: '',
     is_active: true,
@@ -89,7 +90,7 @@ const AdminBannerManager = () => {
       const { data, error } = await supabase
         .from('marketing_banners')
         .select('*')
-        .order('priority', { ascending: false })
+        .order('priority', { ascending: true })
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -118,7 +119,7 @@ const AdminBannerManager = () => {
       text_color: '#ffffff',
       target_page: 'all',
       target_audience: 'all',
-      priority: 0,
+      priority: 999,
       starts_at: '',
       ends_at: '',
       is_active: true,
@@ -280,7 +281,7 @@ const AdminBannerManager = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: '전체 배너', value: banners.length, icon: Image },
-            { label: '노출 중', value: banners.filter(b => b.is_active).length, icon: Eye },
+            { label: '활성 배너', value: banners.filter(b => b.is_active).length, icon: Eye },
             { label: '총 클릭 수', value: banners.reduce((s, b) => s + b.click_count, 0).toLocaleString(), icon: ExternalLink },
             { label: '총 노출 수', value: banners.reduce((s, b) => s + b.view_count, 0).toLocaleString(), icon: BarChart3 },
           ].map((stat, i) => (
@@ -363,6 +364,9 @@ const AdminBannerManager = () => {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                        <span className="px-2 py-0.5 rounded-lg bg-primary/10 text-primary text-[10px] font-black border border-primary/20">
+                          순번: {banner.priority}
+                        </span>
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate">{banner.title}</h3>
                         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${status.color}`}>
                           <span className="w-1 h-1 rounded-full bg-current" />
@@ -395,7 +399,7 @@ const AdminBannerManager = () => {
                         <p className="text-sm font-bold text-gray-900 dark:text-white">{banner.click_count.toLocaleString()}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-400 mb-0.5">CTR</p>
+                        <p className="text-xs text-gray-400 mb-0.5">클릭률</p>
                         <p className="text-sm font-bold text-primary">{getCTR(banner)}%</p>
                       </div>
                     </div>
@@ -408,6 +412,13 @@ const AdminBannerManager = () => {
                         title={banner.is_active ? '비활성화' : '활성화'}
                       >
                         {banner.is_active ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                      <button
+                        onClick={() => setPreviewBanner(banner)}
+                        className="p-2.5 rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-500/10 text-gray-400 hover:text-emerald-500 transition-colors"
+                        title="실제 화면 미리보기"
+                      >
+                        <Monitor size={16} />
                       </button>
                       <button
                         onClick={() => openEditForm(banner)}
@@ -449,16 +460,27 @@ const AdminBannerManager = () => {
             </div>
 
             <div className="p-8 pt-6 space-y-6">
-              {/* Title */}
-              <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">배너 제목 *</label>
-                <input
-                  type="text"
-                  value={form.title}
-                  onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                  placeholder="예: 봄맞이 20% 할인 이벤트"
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-zinc-800 border border-transparent focus:border-primary/20 focus:ring-2 focus:ring-primary/10 outline-none text-sm"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex-1">
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">배너 제목 *</label>
+                  <input
+                    type="text"
+                    value={form.title}
+                    onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                    placeholder="예: 봄맞이 20% 할인 이벤트"
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-zinc-800 border border-transparent focus:border-primary/20 focus:ring-2 focus:ring-primary/10 outline-none text-sm"
+                  />
+                </div>
+                <div className="w-32">
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">노출 순번 (1, 2...)</label>
+                  <input
+                    type="number"
+                    value={form.priority}
+                    onChange={e => setForm(f => ({ ...f, priority: parseInt(e.target.value, 10) || 0 }))}
+                    placeholder="1"
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-zinc-800 border border-transparent focus:border-primary/20 focus:ring-2 focus:ring-primary/10 outline-none text-sm font-bold text-primary"
+                  />
+                </div>
               </div>
 
               {/* Type + Active */}
@@ -713,6 +735,100 @@ const AdminBannerManager = () => {
                 삭제
               </button>
             </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ────── Live Preview Modal (Portal) ────── */}
+      {previewBanner && createPortal(
+        <div className="fixed inset-0 z-[9999] flex flex-col pointer-events-auto">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          
+          {/* Top Admin Controls */}
+          <div className="relative z-10 bg-zinc-900 border-b border-white/10 p-4 flex justify-between items-center shadow-lg">
+            <div className="text-white flex items-center gap-3">
+              <span className="bg-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">PREVIEW MODE</span>
+              <span className="font-medium text-sm">실제 사용자에게 보여지는 형태입니다. (클릭해도 기록에 남지 않습니다)</span>
+            </div>
+            <button
+              onClick={() => setPreviewBanner(null)}
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-bold transition-colors flex items-center gap-2"
+            >
+              <X size={16} /> 미리보기 종료
+            </button>
+          </div>
+
+          {/* Preview Container */}
+          <div className="relative flex-1 overflow-auto flex items-center justify-center p-8">
+            
+            {/* Top Bar Preview */}
+            {previewBanner.banner_type === 'top_bar' && (
+              <div className="absolute top-0 left-0 w-full animate-in slide-in-from-top-4 duration-500 shadow-xl">
+                 <div
+                    className="w-full flex items-center justify-center text-sm font-bold p-3"
+                    style={{ backgroundColor: previewBanner.bg_color, color: previewBanner.text_color }}
+                  >
+                    <span>{previewBanner.content}</span>
+                  </div>
+              </div>
+            )}
+
+            {/* Popup Preview */}
+            {previewBanner.banner_type === 'popup' && (
+              <div className="w-full max-w-[800px] bg-white dark:bg-zinc-900 rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 relative">
+                  <div className="w-full aspect-[16/9] bg-gray-100 dark:bg-zinc-800 relative">
+                     {previewBanner.image_url ? (
+                        <img src={previewBanner.image_url} alt="Popup" className="w-full h-full object-cover" />
+                     ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xl font-bold p-8 text-center" style={{ backgroundColor: previewBanner.bg_color, color: previewBanner.text_color }}>
+                           {previewBanner.content || previewBanner.title}
+                        </div>
+                     )}
+                  </div>
+                  <div className="flex bg-white dark:bg-[#1a1a1a] border-t border-gray-100 dark:border-white/5 divide-x divide-gray-100 dark:divide-white/5">
+                    <button className="flex-1 py-4 text-sm text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                      오늘 하루 보지 않기
+                    </button>
+                    <button className="flex-1 py-4 text-sm font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                      닫기
+                    </button>
+                  </div>
+              </div>
+            )}
+
+            {/* Hero Slide Preview */}
+            {previewBanner.banner_type === 'hero_slide' && (
+              <div className="w-full max-w-[1920px] shadow-2xl overflow-hidden animate-in fade-in duration-500 relative rounded-xl border border-white/10" style={{ aspectRatio: '32/9' }}>
+                 {previewBanner.image_url ? (
+                    <img src={previewBanner.image_url} alt="Hero" className="w-full h-full object-cover" />
+                 ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center" style={{ backgroundColor: previewBanner.bg_color, color: previewBanner.text_color }}>
+                       <h2 className="text-4xl font-black mb-4">{previewBanner.title}</h2>
+                       <p className="text-xl opacity-90">{previewBanner.content}</p>
+                    </div>
+                 )}
+              </div>
+            )}
+
+            {/* Inline Card Preview */}
+            {previewBanner.banner_type === 'inline_card' && (
+              <div className="w-[600px] bg-white dark:bg-zinc-900 rounded-2xl shadow-xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500 relative border border-gray-100 dark:border-white/5">
+                  <div className="w-full aspect-[4/3] bg-gray-100 dark:bg-zinc-800 relative group cursor-pointer">
+                     {previewBanner.image_url ? (
+                        <img src={previewBanner.image_url} alt="Card" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                     ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center transition-transform duration-500 group-hover:scale-105" style={{ backgroundColor: previewBanner.bg_color, color: previewBanner.text_color }}>
+                           <h3 className="text-2xl font-black mb-2">{previewBanner.title}</h3>
+                           <p className="text-sm opacity-90">{previewBanner.content}</p>
+                        </div>
+                     )}
+                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                  </div>
+              </div>
+            )}
+
           </div>
         </div>,
         document.body

@@ -12,7 +12,8 @@ import {
   Shield,
   BarChart3,
   ChevronRight,
-  ShieldCheck
+  ShieldCheck,
+  Ticket
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
@@ -36,6 +37,11 @@ interface DashboardStats {
   subscription_revenue: number;
   shop_revenue: number;
   daily_trends: { date: string; count?: number; signup_count?: number; active_user_count?: number }[];
+  marketing: {
+    active_coupons: number;
+    total_clicks: number;
+    avg_ctr: number;
+  };
   recent_users: {
     id: string;
     profile_id: string;
@@ -77,10 +83,8 @@ const AdminHome = () => {
   useEffect(() => {
      const fetchHybridLogs = async () => {
         try {
-           // RPC를 통해 서버 측에서 정확하고 빠르게 집계
            const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
            if (!error && data) {
-              // get_admin_dashboard_stats에 포함된 지표 활용 (이미 최적화된 SQL 반영됨)
               setHybridData({ 
                  totalLogs: data.total_traffic_count || 0, 
                  distinctUsers: data.active_user_count || 0 
@@ -99,9 +103,6 @@ const AdminHome = () => {
         setStats(data);
       } catch (err: any) {
         console.error('Error fetching dashboard stats:', err);
-        if (err.status === 400 || err.code === 'PGRST202') {
-           toast.error('대시보드 데이터 수신 오류 (400). 최신 SQL 마이그레이션을 적용했는지 확인해주세요.');
-        }
       } finally {
         setLoading(false);
       }
@@ -126,7 +127,6 @@ const AdminHome = () => {
     user_growth_pct: stats?.user_growth_pct || 0
   };
 
-   // 초기 로드 시에만 전체 화면 로딩 표시 (재로딩 시에는 기존 화면 유지하여 모달 닫힘 방지)
    if (loading && !stats) {
      return (
        <div className="w-full h-[60vh] flex flex-col items-center justify-center text-muted-foreground">
@@ -145,6 +145,8 @@ const AdminHome = () => {
     { title: '상점 수익', value: `₩${displayStats.shop_revenue.toLocaleString()}`, icon: ShoppingBag, color: 'text-emerald-500', bg: 'bg-emerald-50' },
     { title: '신고 대기', value: displayStats.pending_reports.toLocaleString(), icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-50' },
     { title: '이탈률 (Bounce)', value: `${displayStats.bounce_rate}%`, icon: TrendingUp, color: 'text-slate-500', bg: 'bg-slate-50', trend: 'Low', trendUp: false },
+    { title: '활성 쿠폰', value: stats?.marketing?.active_coupons?.toLocaleString() || '0', icon: Ticket, color: 'text-orange-500', bg: 'bg-orange-50' },
+    { title: '광고 CTR', value: `${stats?.marketing?.avg_ctr?.toFixed(2) || '0.00'}%`, icon: BarChart3, color: 'text-blue-600', bg: 'bg-blue-50' },
   ];
 
   return (
@@ -190,7 +192,6 @@ const AdminHome = () => {
         ))}
       </div>
 
-      {/* Hybrid Tracking Coverage Banner (Clickable Card) */}
       <motion.div 
         whileHover={{ scale: 1.01, translateY: -2 }}
         whileTap={{ scale: 0.99 }}
@@ -325,7 +326,7 @@ const AdminHome = () => {
 
         <div className="bg-secondary rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6 overflow-hidden flex flex-col">
           <h2 className="text-lg font-bold mb-4">최근 접속 사용자</h2>
-          <div className="space-y-4 flex-1 overflow-y-auto pr-1 custom-scrollbar">
+          <div className="space-y-4 flex-1 overflow-y-auto pr-1">
             {stats?.recent_users.map((user) => {
               const online = isUserOnline(user.profile_id || user.id);
               return (

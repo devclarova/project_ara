@@ -15,6 +15,7 @@ export type StudyListProps = {
   duration: string | null;
   comments?: string;
   categories?: string | null;
+  required_plan?: string;
 };
 
 // 1. Study (학습 단위)
@@ -25,6 +26,7 @@ export interface Study {
   poster_image_url: string;
   short_description: string;
   is_featured?: boolean;
+  required_plan?: string;
   video?: Video[];
 }
 
