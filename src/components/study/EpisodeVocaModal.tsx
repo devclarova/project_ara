@@ -14,6 +14,7 @@ import {
   VolumeX,
   X,
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export type EpisodeWord = {
   id: string;
@@ -65,6 +66,7 @@ export default function EpisodeVocaModal({
   const navigate = useNavigate();
   const location = useLocation();
   const { i18n } = useTranslation();
+  const { user } = useAuth();
 
   const targetLang = i18n.language || 'en';
   const isKorean = targetLang.toLowerCase().startsWith('ko');
@@ -151,6 +153,31 @@ export default function EpisodeVocaModal({
       return raw;
     }
   }, [word?.image_url]);
+
+  const toImageSrc = (url?: string | null) => {
+    const raw = normalize(url);
+    if (!raw) return '';
+
+    try {
+      return encodeURI(raw);
+    } catch {
+      return raw;
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen || !hasWords) return;
+
+    const preloadTargets = [words[index + 1], words[index + 2], words[index - 1]]
+      .filter(Boolean)
+      .map(w => toImageSrc(w?.image_url))
+      .filter(Boolean);
+
+    preloadTargets.forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, [isOpen, hasWords, index, words]);
 
   const { translatedText: translatedMeaning } = useAutoTranslation(
     meaningSrc,
@@ -309,9 +336,9 @@ export default function EpisodeVocaModal({
     <div className="fixed inset-0 z-[9999]">
       <div className="absolute inset-0 bg-black/55 backdrop-blur-[3px]" aria-hidden="true" />
 
-      <div className="relative z-10 flex min-h-screen items-center justify-center p-3 sm:p-6">
-        <div className="relative w-full max-w-[560px] h-[92dvh] max-h-[760px] sm:h-[720px]">
-          <div className="h-full rounded-[28px] sm:rounded-[32px] bg-white dark:bg-secondary shadow-2xl overflow-hidden flex flex-col">
+      <div className="relative z-10 flex min-h-screen items-center justify-center p-2 sm:p-6">
+        <div className="relative w-[min(92vw,420px)] sm:w-full sm:max-w-[560px] h-[85dvh] max-h-[760px]">
+          <div className="h-full rounded-[22px] sm:rounded-[32px] bg-white dark:bg-secondary shadow-2xl overflow-hidden flex flex-col">
             <div className="px-4 sm:px-6 pt-4 sm:pt-6">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -356,13 +383,13 @@ export default function EpisodeVocaModal({
             </div>
 
             <div className="flex-1 px-4 sm:px-7 pt-3 sm:pt-5 pb-3 sm:pb-6 overflow-y-auto overscroll-contain scrollbar-thin">
-              <div className="pt-1 sm:pt-2">
+              <div className="pt-2 sm:pt-5">
                 <div className="text-center">
                   <div className="text-[26px] leading-[1] sm:text-[34px] font-extrabold text-gray-900 dark:text-gray-100">
                     {word?.ko ?? '단어 카드'}
                   </div>
 
-                  <div className="mt-1 min-h-[20px] text-[13px] sm:text-[15px] text-gray-500 dark:text-gray-300">
+                  <div className="mt-2 min-h-[20px] text-[13px] sm:text-[15px] text-gray-500 dark:text-gray-300">
                     {displayPron ? (
                       `[${displayPron}]`
                     ) : (
@@ -370,7 +397,7 @@ export default function EpisodeVocaModal({
                     )}
                   </div>
 
-                  <div className="mt-1 min-h-[18px] text-[12px] sm:text-xs text-gray-400">
+                  <div className="mt-2 min-h-[18px] text-[12px] sm:text-xs text-gray-400">
                     {displayPos ? (
                       `(${displayPos})`
                     ) : (
@@ -380,31 +407,28 @@ export default function EpisodeVocaModal({
                 </div>
 
                 <div className="mt-3 sm:mt-2">
-                  <div className="mt-2 text-center text-[18px] sm:text-[22px] font-bold text-gray-900 dark:text-gray-100 px-2 break-keep min-h-[30px]">
+                  <div className="mt-2 text-center text-[18px] sm:text-[22px] font-bold text-gray-900 dark:text-gray-100 px-2 break-keep min-h-[22px] sm:min-h-[30px]">
                     {displayMeaning || '-'}
                   </div>
                 </div>
 
                 <div className="mt-3 sm:mt-2">
-                  <div className="mt-2 px-3 sm:px-5 text-center text-[13px] sm:text-[15px] leading-relaxed text-gray-600 dark:text-gray-300 break-keep min-h-[48px]">
+                  <div className="mt-2 px-3 sm:px-5 text-center text-[13px] sm:text-[15px] leading-relaxed text-gray-600 dark:text-gray-300 break-keep min-h-[28px] sm:min-h-[42px]">
                     {displayExample ? `“${displayExample}”` : '-'}
                   </div>
                 </div>
 
-                <div className="mt-3 sm:mt-4 flex items-center justify-center">
-                  <div
-                    className="h-[min(27dvh,205px)] w-[min(35dvh,265px)] sm:h-[250px] sm:w-[400px]
-                               rounded-[28px] sm:rounded-[36px]
-                               bg-gradient-to-b from-emerald-50 to-white
-                               dark:from-white/10 dark:to-transparent
-                               flex items-center justify-center shadow-inner overflow-hidden"
-                  >
+                <div className="mt-2 sm:mt-2 flex items-center justify-center">
+                  <div className="h-[min(22dvh,180px)] w-[min(78vw,240px)] sm:h-[260px] sm:w-[410px] rounded-[22px] sm:rounded-[36px] bg-gradient-to-b from-emerald-50 to-white dark:from-white/10 dark:to-transparent flex items-center justify-center shadow-inner overflow-hidden">
                     {imageSrc && !imgError ? (
                       <img
                         src={imageSrc}
                         alt={word?.ko ?? '단어 이미지'}
                         className="h-full w-full object-cover"
                         referrerPolicy="no-referrer"
+                        loading="eager"
+                        decoding="async"
+                        fetchPriority="high"
                         onError={() => setImgError(true)}
                       />
                     ) : (
@@ -440,7 +464,7 @@ export default function EpisodeVocaModal({
                   disabled={!word}
                   aria-label={ttsSpeaking ? '발음 중지' : '발음 듣기'}
                   title={ttsSpeaking ? '중지' : '발음'}
-                  className="h-[48px] sm:h-[56px] rounded-[16px] sm:rounded-[18px]
+                  className="h-[42px] sm:h-[56px] rounded-[16px] sm:rounded-[18px]
                              bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold
                              active:scale-[0.99] transition flex items-center justify-center gap-0 sm:gap-2
                              disabled:opacity-50 dark:bg-white/10 dark:hover:bg-white/15 dark:text-gray-100"
@@ -451,28 +475,30 @@ export default function EpisodeVocaModal({
                   </span>
                 </button>
 
-                <button
-                  onClick={() => {
-                    if (isVocaPage) {
-                      if (!episodeHref) return;
-                      navigate(episodeHref);
-                    } else {
-                      navigate('/voca');
-                    }
-                  }}
-                  disabled={isVocaPage ? !episodeHref : false}
-                  aria-label={isVocaPage ? '에피소드로 이동' : '단어장으로 이동'}
-                  title={isVocaPage ? '에피소드로' : '단어장'}
-                  className="h-[48px] sm:h-[56px] rounded-[16px] sm:rounded-[18px]
+                {user && (
+                  <button
+                    onClick={() => {
+                      if (isVocaPage) {
+                        if (!episodeHref) return;
+                        navigate(episodeHref);
+                      } else {
+                        navigate('/voca');
+                      }
+                    }}
+                    disabled={isVocaPage ? !episodeHref : false}
+                    aria-label={isVocaPage ? '에피소드로 이동' : '단어장으로 이동'}
+                    title={isVocaPage ? '에피소드로' : '단어장'}
+                    className="h-[48px] sm:h-[56px] rounded-[16px] sm:rounded-[18px]
                              bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold
                              active:scale-[0.99] transition flex items-center justify-center gap-0 sm:gap-2
                              disabled:opacity-50 dark:bg-white/10 dark:hover:bg-white/15 dark:text-gray-100"
-                >
-                  <BookOpen size={22} />
-                  <span className="hidden sm:inline text-[14px]">
-                    {isVocaPage ? (episodeCtaLabel ?? '에피소드') : '단어장'}
-                  </span>
-                </button>
+                  >
+                    <BookOpen size={22} />
+                    <span className="hidden sm:inline text-[14px]">
+                      {isVocaPage ? (episodeCtaLabel ?? '에피소드') : '단어장'}
+                    </span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -481,7 +507,7 @@ export default function EpisodeVocaModal({
             <button
               onClick={goPrev}
               className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-20
-                         h-12 w-12 rounded-full
+                        h-10 w-10 sm:h-12 sm:w-12 rounded-full
                          bg-white/90 hover:bg-white shadow-lg
                          flex items-center justify-center
                          ring-1 ring-black/5 hover:ring-emerald-200 transition

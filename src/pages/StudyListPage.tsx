@@ -6,12 +6,13 @@ import FilterDropdown, { type TDifficulty } from '@/components/study/FilterDropd
 import SearchBar from '@/components/ui/SearchBar';
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useBatchAutoTranslation } from '@/hooks/useBatchAutoTranslation';
 import { supabase } from '../lib/supabase';
 import type { Study } from '../types/study';
 import { useAuth } from '@/contexts/AuthContext';
 import SignInModal from '@/components/auth/SignInModal';
+import { BookOpen } from 'lucide-react';
 
 const ALL_CATEGORIES: TCategory[] = ['전체', '드라마', '영화', '예능', '음악'];
 const ALL_LEVELS: TDifficulty[] = ['', '초급', '중급', '고급'];
@@ -62,6 +63,8 @@ const StudyListPage = () => {
 
   const [pageSize, setPageSize] = useState(9);
   const limit = pageSize;
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!isGuideModalDismissed(LEANING_GUIDE_KEY)) {
@@ -515,7 +518,7 @@ const StudyListPage = () => {
           {/* 메인 영역 */}
           <main className="flex-1 min-w-0 overflow-y-auto overflow-x-auto bg-white dark:bg-background">
             {/* 탭 + 검색 */}
-            <div className="flex flex-row justify-between items-center gap-1 md:gap-3 bg-white dark:bg-background sticky top-0 z-20 pb-2 pl-6 pt-8 pr-2">
+            <div className="flex flex-row justify-between items-center gap-1 md:gap-3 bg-white dark:bg-background sticky top-0 z-20 pb-2 pl-6 pt-8 pr-5">
               {/* 왼쪽: 카테고리 탭 (스크롤 가능) */}
               <div
                 className={`flex-1 min-w-0 overflow-x-auto no-scrollbar ${isScrollable ? 'mask-gradient' : ''}`}
@@ -545,10 +548,24 @@ const StudyListPage = () => {
               {/* 오른쪽: 필터 + 검색 (고정 크기) */}
               <div className="flex items-center gap-1 flex-shrink-0">
                 {/* 필터는 항상 표시 */}
-                <div className="flex items-center h-11">
+                <div className="flex items-center h-11 gap-2">
+                  {/* 단어장 버튼 */}
+                  {user && (
+                    <button
+                      onClick={() => navigate('/voca')}
+                      className="shrink-0 h-11 px-3.5 inline-flex items-center justify-center gap-1.5 rounded-full ring-1 ring-gray-200 dark:ring-white/10 bg-white/70 dark:bg-white/5 text-gray-700 dark:text-gray-200 hover:ring-primary/50 hover:bg-primary/20 dark:hover:bg-primary/25 hover:text-primary transition-all"
+                      aria-label="단어장"
+                      title="단어장"
+                    >
+                      <BookOpen size={19} />
+                      <span className="hidden md:inline text-sm font-semibold">단어장</span>
+                    </button>
+                  )}
+
                   <FilterDropdown
                     value={levelFilter}
-                    onApply={applyLevel}
+                    onApply={value => applyLevel(value as TDifficulty)}
+                    title={t('study.level.title')}
                     labelMap={{
                       '': t('study.level.all'),
                       초급: t('study.level.beginner'),

@@ -182,7 +182,16 @@ function AppInner() {
   const location = useLocation();
   useUserTracker(); // 🔥 전역 하이브리드 트래커 초기화 및 로깅 수행
 
-  const HIDE_HEADER_PATHS = ['/signin', '/signup', '/auth/callback', '/signup/social', '/admin', '/find-email', '/reset-password', '/update-password'];
+  const HIDE_HEADER_PATHS = [
+    '/signin',
+    '/signup',
+    '/auth/callback',
+    '/signup/social',
+    '/admin',
+    '/find-email',
+    '/reset-password',
+    '/update-password',
+  ];
   const hideHeader = HIDE_HEADER_PATHS.some(path => location.pathname.startsWith(path));
 
   const hideFooter = [...HIDE_HEADER_PATHS, '/chat'].some(path =>
@@ -238,7 +247,7 @@ function AppInner() {
               <Route path="/find-email" element={<FindEmailPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
             </Route>
-            
+
             <Route path="/update-password" element={<UpdatePasswordPage />} />
             <Route path="/signup/social" element={<SignUpWizard mode="social" />} />
 

@@ -4,21 +4,41 @@ import CheckboxSquare from '../common/CheckboxSquare';
 
 export type TDifficulty = '' | '초급' | '중급' | '고급';
 
-interface FilterDropdownProps {
-  value: TDifficulty; // 현재 적용된(부모가 들고있는) 난이도
-  onApply: (next: TDifficulty) => void; // 적용하기 눌렀을 때 부모로 반영
-  labelMap?: Record<string, string>; // 번역된 라벨 맵
+type FilterValue = string;
+
+interface FilterOption {
+  label: string;
+  value: string;
 }
 
-const DIFFS: Exclude<TDifficulty, ''>[] = ['초급', '중급', '고급'];
+const DEFAULT_LEVEL_OPTIONS: FilterOption[] = [
+  { label: '전체', value: '' },
+  { label: '초급', value: '초급' },
+  { label: '중급', value: '중급' },
+  { label: '고급', value: '고급' },
+];
 
-const FilterDropdown = ({ value, onApply, labelMap }: FilterDropdownProps) => {
+interface FilterDropdownProps {
+  value: string;
+  onApply: (next: string) => void;
+  labelMap?: Record<string, string>;
+  options?: FilterOption[];
+  title?: string;
+}
+
+const FilterDropdown = ({
+  value,
+  onApply,
+  labelMap,
+  options = DEFAULT_LEVEL_OPTIONS,
+  title = '난이도 선택',
+}: FilterDropdownProps) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // 드롭다운 안에서만 쓰는 '초안' 난이도 상태
-  const [draft, setDraft] = useState<TDifficulty>(value);
+  const [draft, setDraft] = useState<FilterValue>(value);
 
   useEffect(() => {
     if (open) setDraft(value);
@@ -40,42 +60,48 @@ const FilterDropdown = ({ value, onApply, labelMap }: FilterDropdownProps) => {
       <button
         onClick={() => setOpen(!open)}
         className={[
-          'flex items-center gap-2 px-3 h-10 rounded-button transition-all whitespace-nowrap',
-          value
-            ? 'text-primary dark:text-primary'
-            : 'text-gray-600 dark:text-gray-300 hover:text-black',
+          'shrink-0 h-11 px-3.5 inline-flex items-center justify-center gap-1.5 rounded-full',
+          'ring-1 ring-gray-200 dark:ring-white/10',
+          'bg-white/70 dark:bg-white/5',
+          'text-gray-700 dark:text-gray-200',
+          'transition-all whitespace-nowrap',
+          open
+            ? 'ring-primary/50 bg-primary/20 dark:bg-primary/25 text-primary'
+            : 'hover:ring-primary/50 hover:bg-primary/20 dark:hover:bg-primary/25 hover:text-primary',
         ].join(' ')}
       >
-        {value && <span className="text-sm">{labelMap ? labelMap[value] : value}</span>}
-        <i className="ri-filter-line text-2xl" />
+        <span className="text-sm font-semibold">
+          {labelMap
+            ? labelMap[value] || options.find(option => option.value === value)?.label || value
+            : options.find(option => option.value === value)?.label || value || '필터'}
+        </span>
+
+        <i className="ri-filter-line text-lg" />
       </button>
 
       {open && (
-        <div 
-          className="absolute mt-2 w-48 bg-white dark:bg-secondary rounded-lg shadow-lg border border-gray-100 dark:border-secondary z-[999] right-0 lg:right-auto lg:left-0"
-        >
+        <div className="absolute right-0 lg:right-auto lg:left-0 mt-2 w-56 rounded-2xl ring-1 ring-gray-200 dark:ring-white/10 bg-white dark:bg-secondary shadow-xl z-[999] overflow-hidden">
           <div className="p-4 space-y-4">
             {/* 난이도 */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-100">{t('study.level.title')}</h3>
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-100">{title}</h3>
               </div>
               <div className="space-y-2">
-                <label className="flex items-center">
+                {/* <label className="flex items-center">
                   <CheckboxSquare checked={draft === ''} onChange={() => setDraft('')} />
                   <span className="ml-2 text-sm text-gray-600 dark:text-gray-100">
                     {labelMap ? labelMap[''] || '전체' : '전체'}
                   </span>
-                </label>
-                {DIFFS.map(label => (
-                  <label key={label} className="flex items-center">
+                </label> */}
+                {options.map(option => (
+                  <label key={option.value} className="flex items-center">
                     <CheckboxSquare
-                      key={label}
-                      checked={draft === label}
-                      onChange={() => setDraft(label)}
+                      checked={draft === option.value}
+                      onChange={() => setDraft(option.value)}
                     />
                     <span className="ml-2 text-sm text-gray-600 dark:text-gray-100">
-                      {labelMap ? labelMap[label] : label}
+                      {labelMap ? labelMap[option.value] || option.label : option.label}
                     </span>
                   </label>
                 ))}
@@ -128,7 +154,7 @@ const FilterDropdown = ({ value, onApply, labelMap }: FilterDropdownProps) => {
                 onClick={() => {
                   onApply(draft);
                   setOpen(false);
-                }} // ✅ 적용하기: onApply 호출 + 닫기
+                }} // 적용하기: onApply 호출 + 닫기
                 type="button"
               >
                 {t('common.apply')}

@@ -74,26 +74,26 @@ function Header() {
 
     const studyIndex = menuItems.findIndex(item => item.key === 'study');
 
-    if (studyIndex === -1) {
-      return [
-        {
-          key: 'voca',
-          label: t('nav.voca'),
-          path: '/voca',
-          matchPaths: ['/voca'],
-        },
-        ...menuItems,
-      ];
-    }
+    // if (studyIndex === -1) {
+    //   return [
+    //     {
+    //       key: 'voca',
+    //       label: t('nav.voca'),
+    //       path: '/voca',
+    //       matchPaths: ['/voca'],
+    //     },
+    //     ...menuItems,
+    //   ];
+    // }
 
     const newItems = [...menuItems];
 
-    newItems.splice(studyIndex, 0, {
-      key: 'voca',
-      label: t('nav.voca'),
-      path: '/voca',
-      matchPaths: ['/voca'],
-    });
+    // newItems.splice(studyIndex, 0, {
+    //   key: 'voca',
+    //   label: t('nav.voca'),
+    //   path: '/voca',
+    //   matchPaths: ['/voca'],
+    // });
 
     return newItems;
   })();
@@ -106,8 +106,8 @@ function Header() {
   // 메뉴 이름별 아이콘 매핑 (모바일용)
   const getMenuIcon = (key: string) => {
     switch (key) {
-      case 'voca':
-        return <Library className="w-4 h-4" />;
+      // case 'voca':
+      //   return <Library className="w-4 h-4" />;
       case 'study':
         return <BookOpen className="w-4 h-4" />;
       case 'community':
@@ -435,7 +435,7 @@ function Header() {
                   >
                     {/* 메뉴 리스트 */}
                     <div className="py-1">
-                      <button
+                      {/* <button
                         type="button"
                         onClick={() => {
                           if (location.pathname !== '/voca') {
@@ -454,7 +454,7 @@ function Header() {
                             {t('common.view_voca')}
                           </span>
                         </div>
-                      </button>
+                      </button> */}
                       <button
                         type="button"
                         onClick={() => {
