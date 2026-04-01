@@ -12,6 +12,7 @@ import { ArrowLeft, Gamepad2, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import FilterDropdown from '@/components/study/FilterDropdown';
 
 type VocabItem = {
   id: string;
@@ -399,16 +400,17 @@ export default function StudyVocaPage() {
             placeholder="단어/뜻/예문/품사/발음 검색"
             className="flex-1 px-3 py-2 rounded-xl ring-1 ring-gray-200 bg-white dark:bg-secondary"
           />
-          <select
+          <FilterDropdown
             value={status}
-            onChange={e => setStatus(e.target.value as any)}
-            className="px-3 py-2 rounded-xl ring-1 ring-gray-200 bg-white dark:bg-secondary"
-          >
-            <option value="all">전체</option>
-            <option value="unknown">unknown</option>
-            <option value="learning">learning</option>
-            <option value="known">known</option>
-          </select>
+            onApply={value => setStatus(value as 'all' | 'unknown' | 'learning' | 'known')}
+            title="학습 상태"
+            options={[
+              { label: '전체', value: 'all' },
+              { label: 'unknown', value: 'unknown' },
+              { label: 'learning', value: 'learning' },
+              { label: 'known', value: 'known' },
+            ]}
+          />
 
           <button
             onClick={openDeleteAllConfirm}

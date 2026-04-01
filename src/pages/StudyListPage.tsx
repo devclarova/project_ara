@@ -7,14 +7,14 @@ import FilterDropdown, { type TDifficulty } from '@/components/study/FilterDropd
 import SearchBar from '@/components/ui/SearchBar';
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useBatchAutoTranslation } from '@/hooks/useBatchAutoTranslation';
 import { supabase } from '../lib/supabase';
 import type { Study } from '../types/study';
 import { useAuth } from '@/contexts/AuthContext';
 import SignInModal from '@/components/auth/SignInModal';
+import { BookOpen, ExternalLink } from 'lucide-react';
 import { useMarketingBanners } from '@/hooks/useMarketingBanners';
-import { ExternalLink } from 'lucide-react';
 
 const ALL_CATEGORIES: TCategory[] = ['전체', '드라마', '영화', '예능', '음악'];
 const ALL_LEVELS: TDifficulty[] = ['', '초급', '중급', '고급'];
@@ -31,6 +31,7 @@ const LEANING_GUIDE_SLIDES = [
 const StudyListPage = () => {
   const { t, i18n } = useTranslation();
   const targetLang = i18n.language;
+  const navigate = useNavigate();
   const [clips, setClips] = useState<Study[]>([]);
   const [keyword, setKeyword] = useState('');
   const [total, setTotal] = useState(0);
@@ -41,7 +42,6 @@ const StudyListPage = () => {
   const [showGuide, setShowGuide] = useState(false);
 
   // Ad-free users (Premium/Basic)
-  // Admins only see ads if their current plan is set to 'free' (for testing).
   const isAdFree = userPlan === 'premium' || userPlan === 'basic' || (isAdmin && userPlan !== 'free');
   const [pageSize, setPageSize] = useState(isAdFree ? 12 : 10);
   const limit = pageSize;
@@ -67,14 +67,6 @@ const StudyListPage = () => {
   // Translation Hooks
   const { translatedTexts: trTitles } = useBatchAutoTranslation(clips.map(c => c.title), clips.map(c => `study_title_${c.id}`), targetLang);
   const { translatedTexts: trDescs } = useBatchAutoTranslation(clips.map(c => c.short_description || ''), clips.map(c => `study_desc_${c.id}`), targetLang);
-  const { translatedTexts: trDurations } = useBatchAutoTranslation(clips.map(c => {
-    const v = Array.isArray(c.video) ? c.video[0] : (c.video as any);
-    return typeof v?.runtime_bucket === 'string' ? v.runtime_bucket : '';
-  }), clips.map(c => `study_duration_${c.id}`), targetLang);
-  const { translatedTexts: trEpisodes } = useBatchAutoTranslation(clips.map(c => {
-    const v = Array.isArray(c.video) ? c.video[0] : (c.video as any);
-    return v?.episode || '';
-  }), clips.map(c => `study_episode_${c.id}`), targetLang);
 
   useEffect(() => {
     let ignore = false;
@@ -84,7 +76,6 @@ const StudyListPage = () => {
         .from('study')
         .select(needsVideoFilter ? '*, video!inner(*)' : '*, video(*)', { count: 'exact' });
       
-      // Only show non-hidden contents on the public list
       query = query.eq('is_hidden', false);
 
       if (activeCategory !== '전체') query = query.eq('video.categories', activeCategory);
@@ -123,6 +114,11 @@ const StudyListPage = () => {
     setSearchParams(nextParams, { replace: true });
   };
 
+  const handleKeywordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setKeyword(e.target.value);
+    setPage(1);
+  };
+
   const totalPages = Math.ceil(total / limit);
 
   return (
@@ -132,8 +128,12 @@ const StudyListPage = () => {
       <div className="flex justify-center min-h-screen">
         <div className="flex w-full max-w-7xl">
           <main className="flex-1 min-w-0 overflow-y-auto overflow-x-auto bg-white dark:bg-background">
-            <div className="flex flex-row justify-between items-center gap-1 md:gap-3 bg-white dark:bg-background sticky top-0 z-20 pb-2 pl-6 pt-8 pr-2">
-              <div className="flex-1 min-w-0 overflow-x-auto no-scrollbar" ref={categoryScrollRef}>
+            {/* 탭 + 검색 섹션 (26-zzeon 기반 고도화) */}
+            <div className="flex flex-row justify-between items-center gap-1 md:gap-3 bg-white dark:bg-background sticky top-0 z-20 pb-2 pl-6 pt-8 pr-5">
+              <div
+                className={`flex-1 min-w-0 overflow-x-auto no-scrollbar ${isScrollable ? 'mask-gradient' : ''}`}
+                ref={categoryScrollRef}
+              >
                 <CategoryTabs
                   active={activeCategory}
                   onChange={handleCategoryChange}
@@ -144,13 +144,47 @@ const StudyListPage = () => {
                 />
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
-                <FilterDropdown
-                  value={levelFilter}
-                  onApply={applyLevel}
-                  labelMap={{ '': t('study.level.all'), 초급: t('study.level.beginner'), 중급: t('study.level.intermediate'), 고급: t('study.level.advanced') }}
-                />
-                <div className="hidden lg:flex items-center h-11">
-                  <SearchBar placeholder={t('study.search_placeholder')} value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }} onSubmit={() => {}} />
+                <div className="flex items-center h-11 gap-2">
+                  {/* 단어장 버튼 (26-zzeon) */}
+                  {user && (
+                    <button
+                      onClick={() => navigate('/voca')}
+                      className="shrink-0 h-11 px-3.5 inline-flex items-center justify-center gap-1.5 rounded-full ring-1 ring-gray-200 dark:ring-white/10 bg-white/70 dark:bg-white/5 text-gray-700 dark:text-gray-200 hover:ring-primary/50 hover:bg-primary/20 dark:hover:bg-primary/25 hover:text-primary transition-all"
+                    >
+                      <BookOpen size={19} />
+                      <span className="hidden md:inline text-sm font-semibold">단어장</span>
+                    </button>
+                  )}
+
+                  <FilterDropdown
+                    value={levelFilter}
+                    onApply={value => applyLevel(value as TDifficulty)}
+                    title={t('study.level.title')}
+                    labelMap={{
+                      '': t('study.level.all'),
+                      초급: t('study.level.beginner'),
+                      중급: t('study.level.intermediate'),
+                      고급: t('study.level.advanced'),
+                    }}
+                  />
+                </div>
+
+                {/* 모바일 전용 검색 버튼 */}
+                <button
+                  onClick={() => setShowSearch(true)}
+                  className="hidden mobile-search-btn-900 shrink-0 h-11 w-11 items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-secondary transition"
+                >
+                  <i className="ri-search-line text-[20px] sm:text-[24px] text-gray-600 dark:text-gray-200" />
+                </button>
+
+                {/* 데스크톱 검색바 */}
+                <div className="hidden desktop-search-900 items-center h-11">
+                  <SearchBar
+                    placeholder={t('study.search_placeholder')}
+                    value={keyword}
+                    onChange={handleKeywordChange}
+                    onSubmit={() => {}}
+                  />
                 </div>
               </div>
             </div>
@@ -182,7 +216,7 @@ const StudyListPage = () => {
                       />
                     );
 
-                    // 5번째, 10번째 위치에 광고 삽입 (isAdFree가 아닐 때만)
+                    // 광고 로직 (main 기반)
                     if (!isAdFree && (index + 1) % 5 === 0) {
                       const globalIndex = ((page - 1) * limit) + index;
                       const hasBanners = inlineBanners.length > 0;
@@ -200,7 +234,6 @@ const StudyListPage = () => {
                               trackBannerClick(banner.id);
                               if (banner.link_url) window.open(banner.link_url, '_blank', 'noopener');
                             } else {
-                              // 기본 배너 클릭 시 구독 페이지로 이동
                               window.location.href = '/subscription';
                             }
                           }}
@@ -210,7 +243,6 @@ const StudyListPage = () => {
                           {banner?.image_url ? (
                             <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                           ) : (
-                            // 기본 홍보 배너 (데이터가 없을 때)
                             <div className="w-full h-full bg-gradient-to-br from-[#00E5FF]/20 to-[#00BFA5]/20 flex flex-col items-center justify-center p-8 text-center">
                               <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 border border-white/20">
                                 <span className="text-xl font-black text-[#00BFA5]">A</span>
