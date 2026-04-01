@@ -115,7 +115,8 @@ const AdminStudyUpload = () => {
     poster_image_url: '',
     short_description: '',
     is_featured: false,
-    is_hidden: false
+    is_hidden: false,
+    required_plan: 'free'
   });
 
   /* ── video 테이블 데이터 ── */
@@ -196,7 +197,8 @@ const AdminStudyUpload = () => {
       poster_image_url: '',
       short_description: '',
       is_featured: false,
-      is_hidden: false
+      is_hidden: false,
+      required_plan: 'free'
     });
     setVideoInfo({
       video_url: '',
@@ -235,7 +237,8 @@ const AdminStudyUpload = () => {
         poster_image_url: study.poster_image_url || '',
         short_description: study.short_description || '',
         is_featured: study.is_featured ?? false,
-        is_hidden: study.is_hidden ?? false
+        is_hidden: study.is_hidden ?? false,
+        required_plan: study.required_plan || 'free'
       });
 
       // 2. video
@@ -331,7 +334,7 @@ const AdminStudyUpload = () => {
     }
   };
 
-  const handleStudyChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleStudyChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setStudyInfo((prev: any) => ({ ...prev, [name]: value }));
   };
@@ -433,7 +436,8 @@ const AdminStudyUpload = () => {
         poster_image_url: finalPosterUrl,
         short_description: studyInfo.short_description,
         is_featured: studyInfo.is_featured,
-        is_hidden: studyInfo.is_hidden
+        is_hidden: studyInfo.is_hidden,
+        required_plan: studyInfo.required_plan
         // category 필드가 study 테이블에 없으므로 제외 (video 테이블에서만 관리)
       };
 
@@ -643,6 +647,19 @@ const AdminStudyUpload = () => {
             </div>
           </div>
 
+          {/* 권한 레벨 (Premium / Basic / Free) */}
+          <div>
+            <label className={labelCls}>요구 멤버십 등급</label>
+            <div className="relative">
+              <select name="required_plan" value={studyInfo.required_plan} onChange={handleStudyChange} className={selectCls}>
+                <option value="free">Free (전체 공개)</option>
+                <option value="basic">Basic (베이직 이상)</option>
+                <option value="premium">🌟 Premium (VIP 전용)</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={14} />
+            </div>
+          </div>
+
           {/* 에피소드 + 씬 + 재생시간 */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
@@ -661,8 +678,35 @@ const AdminStudyUpload = () => {
 
           {/* 콘텐츠명 */}
           <div>
-            <label className={labelCls}>콘텐츠명 (contents)</label>
-            <input name="contents" value={videoInfo.contents} onChange={handleVideoChange} className={inputCls} placeholder="영상 콘텐츠명" />
+            <label className={labelCls}>콘텐츠 그룹 (드라마/영화 등 전체 이름)</label>
+            <input name="contents" value={videoInfo.contents} onChange={handleVideoChange} className={inputCls} placeholder="예: 오징어 게임" />
+          </div>
+
+          <hr className="border-gray-100 dark:border-gray-800" />
+
+          {/* 추가 설정 (숨김 / 추천) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-background/50">
+              <div>
+                <p className="text-sm font-semibold text-foreground">숨김 처리</p>
+                <p className="text-xs text-muted-foreground mt-0.5">사용자에게 콘텐츠를 노출하지 않습니다</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="is_hidden" checked={studyInfo.is_hidden} onChange={(e) => setStudyInfo((prev: any) => ({ ...prev, is_hidden: e.target.checked }))} className="sr-only peer" />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#00BFA5]/20 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#00BFA5]"></div>
+              </label>
+            </div>
+            
+            <div className="flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-background/50">
+              <div>
+                <p className="text-sm font-semibold text-foreground">추천 등록</p>
+                <p className="text-xs text-muted-foreground mt-0.5">메인 상단 추천 영역에 표시합니다</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="is_featured" checked={studyInfo.is_featured} onChange={(e) => setStudyInfo((prev: any) => ({ ...prev, is_featured: e.target.checked }))} className="sr-only peer" />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#00BFA5]/20 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#00BFA5]"></div>
+              </label>
+            </div>
           </div>
 
           {/* 썸네일 - 라벨 위, 입력 중간, 프리뷰 아래 */}

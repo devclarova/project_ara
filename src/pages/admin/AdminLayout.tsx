@@ -14,6 +14,8 @@ import {
   ShieldAlert,
   PieChart,
   Package,
+  Megaphone,
+  Ticket,
 } from 'lucide-react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import ThemeSwitcher from '../../components/common/ThemeSwitcher';
@@ -47,6 +49,8 @@ const AdminLayout = () => {
     else if (path.startsWith('/admin/reports')) pageTitle = '신고 및 문의';
     else if (path.startsWith('/admin/analytics')) pageTitle = '통계 및 분석';
     else if (path.startsWith('/admin/users')) pageTitle = '사용자 관리';
+    else if (path.startsWith('/admin/banners')) pageTitle = '배너 관리';
+    else if (path.startsWith('/admin/promotions')) pageTitle = '프로모션/쿠폰';
     else if (path.startsWith('/admin/settings')) pageTitle = '관리자 설정';
 
     document.title = `${pageTitle} | ARA Admin`;
@@ -141,12 +145,12 @@ const AdminLayout = () => {
   }, [sidebarOpen]);
 
   return (
-    <div className="min-h-screen min-w-[300px] bg-background font-sans text-foreground relative overflow-x-hidden">
+    <div className="h-full w-full flex-1 min-h-0 flex bg-background font-sans text-foreground overflow-hidden">
       {/* Sidebar - Hidden on mobile, always visible on desktop */}
       <aside 
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-secondary border-r border-gray-300 dark:border-gray-600 transform transition-transform duration-300 ease-in-out select-none [-webkit-tap-highlight-color:transparent] ${
+        className={`fixed inset-y-0 left-0 z-[120] w-64 bg-secondary border-r border-gray-300 dark:border-gray-600 transform transition-transform duration-300 ease-in-out select-none [-webkit-tap-highlight-color:transparent] ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0`}
+        } md:relative md:translate-x-0 md:flex-shrink-0 md:h-full`}
       >
         <div className="h-full flex flex-col">
           <div className="h-16 flex items-center px-6 border-b border-gray-300 dark:border-gray-600">
@@ -233,6 +237,22 @@ const AdminLayout = () => {
             />
 
             <div className="pt-4 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              마케팅
+            </div>
+            <NavItem
+              to="/admin/banners"
+              icon={Megaphone}
+              label="배너 관리"
+              onClick={() => setSidebarOpen(false)}
+            />
+            <NavItem
+              to="/admin/promotions"
+              icon={Ticket}
+              label="프로모션/쿠폰"
+              onClick={() => setSidebarOpen(false)}
+            />
+
+            <div className="pt-4 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               설정
             </div>
             <NavItem
@@ -283,9 +303,9 @@ const AdminLayout = () => {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 md:ml-64">
-        {/* Header */}
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden">
+        {/* Header - Truly fixed at top */}
         <header className="h-14 sm:h-16 bg-secondary/80 backdrop-blur-md border-b border-gray-300 dark:border-gray-600 flex items-center justify-between px-3 sm:px-4 md:px-6 sticky top-0 z-[110] shadow-sm flex-shrink-0">
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-1">
             <button
@@ -325,8 +345,8 @@ const AdminLayout = () => {
           </div>
         </header>
 
-        {/* Dynamic Content Area */}
-        <main className="flex-1 px-3 py-4 sm:px-4 sm:py-6 md:p-6 lg:p-8 bg-background w-full max-full box-border">
+        {/* Dynamic Content Area - Scrollable */}
+        <main className="flex-1 overflow-y-auto px-3 py-4 sm:px-4 sm:py-6 md:p-6 lg:p-8 bg-background relative z-0 overscroll-contain">
           <Outlet />
         </main>
       </div>
@@ -334,11 +354,12 @@ const AdminLayout = () => {
       {/* Mobile Overlay - Only show on mobile when sidebar is open */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[115] md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
     </div>
+
   );
 };
 

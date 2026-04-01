@@ -53,28 +53,29 @@ export function useUserTracker() {
         const campaign = localStorage.getItem('ara_utm_campaign');
         const referrer = localStorage.getItem('ara_referrer');
 
-        // Only log if we have something to log
-        if (source || referrer) {
-          try {
-            // Check if already logged for this user to prevent spam
-            const { count } = await supabase
-              .from('traffic_logs')
-              .select('*', { count: 'exact', head: true })
-              .eq('user_id', session.user.id);
+        // Log every day for authenticated users to track DAU
+        try {
+          const today = new Date().toISOString().split('T')[0];
+          
+          // Check if already logged TODAY for this user
+          const { count } = await supabase
+            .from('traffic_logs')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', session.user.id)
+            .gte('created_at', today);
 
-            if (count === 0) {
-              await supabase.from('traffic_logs').insert({
-                user_id: session.user.id,
-                utm_source: source,
-                utm_medium: medium,
-                utm_campaign: campaign,
-                referrer: referrer,
-                landing_page: location.pathname
-              });
-            }
-          } catch (e) {
-            console.error('Failed to sync traffic log', e);
+          if (count === 0) {
+            await supabase.from('traffic_logs').insert({
+              user_id: session.user.id,
+              utm_source: source || 'direct',
+              utm_medium: medium || 'none',
+              utm_campaign: campaign || 'none',
+              referrer: referrer || 'none',
+              landing_page: location.pathname
+            });
           }
+        } catch (e) {
+          console.error('Failed to sync traffic log', e);
         }
       };
 

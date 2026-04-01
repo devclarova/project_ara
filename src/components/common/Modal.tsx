@@ -41,12 +41,24 @@ export default function Modal({
   }, [isOpen, closeOnEsc, onClose]);
   // Portal target setting
   const modalRoot = typeof document !== 'undefined' ? document.body : null;
+  const isMouseDownOnBackdrop = useRef(false);
+
   if (!mounted || !isOpen || !modalRoot) return null;
   return createPortal(
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm transition-opacity"
-      onMouseDown={e => e.stopPropagation()} // 부모의 '외부 클릭 감지' 방지 (Portal 사용 시 필수)
-      onClick={closeOnBackdrop ? onClose : undefined}
+      onMouseDown={e => {
+        e.stopPropagation();
+        if (e.target === e.currentTarget) {
+          isMouseDownOnBackdrop.current = true;
+        }
+      }}
+      onMouseUp={e => {
+        if (closeOnBackdrop && e.target === e.currentTarget && isMouseDownOnBackdrop.current) {
+          onClose();
+        }
+        isMouseDownOnBackdrop.current = false;
+      }}
       role="dialog"
       aria-modal="true"
       aria-label={typeof title === 'string' ? title : 'Modal'}

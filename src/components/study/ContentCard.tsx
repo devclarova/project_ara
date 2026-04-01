@@ -4,6 +4,7 @@ import SignInModal from '../auth/SignInModal';
 import { useTranslation } from 'react-i18next';
 import { useMemo } from 'react';
 import { useAutoTranslation } from '@/hooks/useAutoTranslation';
+import { useAuth } from '@/contexts/AuthContext';
 
 type ContentCardProps = StudyListProps & {
   basePath?: '/study' | '/guest-study';
@@ -40,11 +41,14 @@ const ContentCard = ({
   isGuest,
   openLoginModal,
   categories,
+  required_plan,
   translatedTitleProp,
   translatedDescProp,
   translatedDurationProp,
   translatedEpisodeProp,
+  created_at,
 }: ContentCardProps) => {
+  const { user, userPlan, isAdmin } = useAuth();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const targetLang = i18n.language;
@@ -138,6 +142,15 @@ const ContentCard = ({
 
   // Helpers
   const enc = (v?: string | number | null) => encodeURIComponent(String(v ?? ''));
+  
+  // NEW Badge Logic: 7 days
+  const isNew = useMemo(() => {
+    if (!created_at) return false;
+    const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+    const uploadTime = new Date(created_at).getTime();
+    const currentTime = Date.now();
+    return currentTime - uploadTime < sevenDaysInMs;
+  }, [created_at]);
 
   const buildStudyUrl = (row: {
     contents?: string | null;
@@ -150,6 +163,8 @@ const ContentCard = ({
     return s ? `${basePath}/${c}/${e}/${s}` : `${basePath}/${c}/${e}`;
   };
 
+  const isPremiumLocked = required_plan === 'premium' && userPlan !== 'premium' && !isAdmin;
+
   const handleClick = () => {
     if (!contents || !episode) return;
     
@@ -157,6 +172,12 @@ const ContentCard = ({
       openLoginModal?.(); // 로그인 모달
       return;
     }
+
+    if (isPremiumLocked) {
+      navigate('/subscription');
+      return;
+    }
+    
     navigate(buildStudyUrl({ contents, episode, scene }));
   };
 
@@ -182,13 +203,18 @@ const ContentCard = ({
           )}
 
           {/* 게스트 잠금 오버레이 - 이미지 위에 은은하게 (Premium Look) */}
-          {isGuest && !isPreview && (
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-10 transition-colors group-hover:bg-black/50">
-              <div className="relative group/lock">
-                <div className="absolute inset-0 bg-primary/30 blur-xl rounded-full transform scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="bg-white/10 p-3 rounded-full border border-white/30 backdrop-blur-md shadow-2xl relative z-10 transform group-hover:scale-110 transition-transform duration-300">
-                  <i className="ri-lock-2-fill text-white text-2xl drop-shadow-md"></i>
+          {((isGuest && !isPreview) || isPremiumLocked) && (
+            <div className={`absolute inset-0 flex items-center justify-center z-10 transition-colors ${isPremiumLocked ? 'bg-black/60 backdrop-grayscale backdrop-blur-sm' : 'bg-black/40 backdrop-blur-[2px] group-hover:bg-black/50'}`}>
+              <div className="relative group/lock flex flex-col items-center">
+                <div className={`absolute inset-0 blur-xl rounded-full transform scale-150 transition-opacity duration-500 ${isPremiumLocked ? 'bg-[#00BFA5]/40 opacity-50 group-hover:opacity-100' : 'bg-primary/30 opacity-0 group-hover:opacity-100'}`}></div>
+                <div className={`p-3 rounded-full border backdrop-blur-md shadow-2xl relative z-10 transform group-hover:scale-110 transition-transform duration-300 ${isPremiumLocked ? 'bg-[#0a1a14]/80 border-[#00BFA5]/50' : 'bg-white/10 border-white/30'}`}>
+                  <i className={`ri-lock-2-fill text-2xl drop-shadow-md ${isPremiumLocked ? 'text-[#00F0FF]' : 'text-white'}`}></i>
                 </div>
+                {isPremiumLocked && (
+                  <span className="mt-3 relative z-10 text-[#00F0FF] text-xs font-black tracking-widest uppercase drop-shadow-lg">
+                    Premium Only
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -301,10 +327,10 @@ const ContentCard = ({
           </div>
 
           {/* 잠금 상태면 추가 표시 */}
-          {isGuest && !isPreview && (
-            <div className="mt-1.5 text-xs font-semibold text-rose-500 bg-rose-50 dark:bg-rose-900/20 py-1.5 rounded-lg flex items-center justify-center gap-1">
+          {((isGuest && !isPreview) || isPremiumLocked) && (
+            <div className={`mt-1.5 text-xs font-semibold py-1.5 rounded-lg flex items-center justify-center gap-1 ${isPremiumLocked ? 'text-[#AA771C] bg-[#D4AF37]/20 border border-[#D4AF37]/30' : 'text-rose-500 bg-rose-50 dark:bg-rose-900/20'}`}>
               <i className="ri-lock-2-line"></i>
-              {t('study.login_required')}
+              {isPremiumLocked ? '👑 프리미엄 전용 콘텐츠' : t('study.login_required')}
             </div>
           )}
         </div>
@@ -314,6 +340,13 @@ const ContentCard = ({
       {isGuest && isPreview && (
         <span className="absolute top-3 left-3 z-[40] bg-primary/90 backdrop-blur-sm text-white px-2.5 py-1 text-[11px] sm:text-xs font-bold rounded-full shadow-sm tracking-wide border border-white/20">
           {t('study.preview')}
+        </span>
+      )}
+
+      {/* NEW 뱃지 (최상위) - 업로드 7일 이내 */}
+      {isNew && (
+        <span className="absolute top-3 right-3 z-[40] bg-rose-600 text-white px-2.5 py-1 text-[10px] sm:text-[11px] font-black rounded-md shadow-lg shadow-rose-500/30 tracking-tighter border border-white/20 animate-pulse">
+          NEW
         </span>
       )}
     </div>

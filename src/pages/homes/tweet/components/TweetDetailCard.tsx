@@ -35,7 +35,7 @@ export default function TweetDetailCard({
 }: TweetDetailCardProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { user: authUser } = useAuth();
+  const { user: authUser, isAdmin } = useAuth();
 
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(tweet.stats.likes || 0);
@@ -166,6 +166,15 @@ export default function TweetDetailCard({
     fetchAuthorCountry();
   }, [tweet.user.username, isDeleted]);
 
+  const isSoftDeleted = !!tweet.deleted_at;
+  const isHiddenContent = tweet.is_hidden && !isAdmin;
+
+  const displayContent = isSoftDeleted 
+    ? '관리자에 의해 삭제된 메시지입니다.' 
+    : isHiddenContent 
+      ? '관리자에 의해 숨김 처리된 콘텐츠입니다.' 
+      : tweet.content;
+
   // content에서 <img> 태그 src 추출
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -181,9 +190,9 @@ export default function TweetDetailCard({
   }, [tweet.content]);
 
   const propImages = Array.isArray(tweet.image) ? tweet.image : tweet.image ? [tweet.image] : [];
-  const allImages = propImages.length > 0 ? propImages : contentImages;
+  const allImages = (isSoftDeleted || isHiddenContent) ? [] : propImages.length > 0 ? propImages : contentImages;
 
-  const safeContent = DOMPurify.sanitize(tweet.content, {
+  const safeContent = DOMPurify.sanitize(displayContent, {
     ADD_TAGS: ['iframe', 'video', 'source'],
     ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'controls'],
     FORBID_TAGS: ['img'],
@@ -486,7 +495,7 @@ export default function TweetDetailCard({
         {hasText && (
           <div className="flex items-center gap-2">
             <div
-              className="text-gray-900 dark:text-gray-100 text-xl leading-relaxed break-words whitespace-pre-line"
+              className={`text-xl leading-relaxed break-words whitespace-pre-line ${(isSoftDeleted || isHiddenContent) ? 'italic text-gray-500 opacity-60' : 'text-gray-900 dark:text-gray-100'}`}
               dangerouslySetInnerHTML={{ __html: safeContent }}
             />
             {/* 번역 버튼 */}

@@ -24,6 +24,8 @@ type AuthContextType = {
   isBanned: boolean;
   profileId: string | null;
   isAdmin: boolean;
+  userPlan: 'free' | 'basic' | 'premium';
+  refreshUserPlan: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -123,20 +125,25 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [bannedUntil, setBannedUntil] = useState<string | null>(null);
   const [isBannedState, setIsBannedState] = useState(false);
 
+  // 현재 구독 플랜 상태
+  const [userPlan, setUserPlan] = useState<'free' | 'basic' | 'premium'>('free');
+
   // 계정 삭제 상태 확인 함수
   const checkAccountStatus = async (userId: string) => {
     const { data, error } = await supabase
       .from('profiles')
-      .select('deleted_at, banned_until, is_admin')
+      .select('deleted_at, banned_until, is_admin, plan')
       .eq('user_id', userId)
       .maybeSingle();
 
     if (error || !data) {
       setIsAdmin(false);
+      setUserPlan('free');
       return;
     }
 
     setIsAdmin(!!data.is_admin);
+    setUserPlan(data.plan || 'free');
 
     if (data.deleted_at) {
       const deletedAt = new Date(data.deleted_at);
@@ -418,7 +425,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     isBanned: isBannedState,
     profileId,
     isAdmin,
-  }), [session, user, loading, signIn, signUp, signOut, signInWithGoogle, signInWithKakao, bannedUntil, isBannedState, profileId, isAdmin]);
+    userPlan,
+    refreshUserPlan: async () => {
+      if (user) await checkAccountStatus(user.id);
+    },
+  }), [session, user, loading, signIn, signUp, signOut, signInWithGoogle, signInWithKakao, bannedUntil, isBannedState, profileId, isAdmin, userPlan]);
 
   return (
     <AuthContext.Provider value={value}>

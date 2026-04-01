@@ -11,6 +11,8 @@ import { supabase } from '@/lib/supabase';
 import { type TweetStats, type TweetUser, type UITweet } from '@/types/sns';
 import { formatSmartDate } from '@/utils/dateUtils';
 import DOMPurify from 'dompurify';
+import { Bird, Heart, MessageCircle, Share2, MoreHorizontal, ShieldAlert } from 'lucide-react';
+import SeagullIcon from '@/components/common/SeagullIcon';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -66,6 +68,7 @@ interface TweetCardProps {
   onAvatarClick?: (username: string) => void;
   disableInteractions?: boolean;
   onUpdated?: (id: string, updates: Partial<UITweet>) => void;
+  is_hidden?: boolean;
 }
 
 export default function TweetCard({
@@ -87,10 +90,11 @@ export default function TweetCard({
   onAvatarClick,
   disableInteractions = false,
   onUpdated,
+  is_hidden: isHiddenProp = false,
 }: TweetCardProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user: authUser } = useAuth();
+  const { user: authUser, isAdmin } = useAuth();
   const { t } = useTranslation();
   const [liked, setLiked] = useState(initialLiked ?? false);
   const [profileId, setProfileId] = useState<string | null>(null);
@@ -121,9 +125,10 @@ export default function TweetCard({
 
   const isSoftDeleted = !!deletedAt;
 
+  const isHiddenContent = isHiddenProp && !isAdmin;
   // 최종 슬라이드에 사용할 이미지 목록 (prop 우선, 없으면 content에서 추출한 것)
-  // Soft delete 되면 이미지는 숨김
-  const allImages = isSoftDeleted ? [] : propImages.length > 0 ? propImages : contentImages;
+  // Soft delete 또는 숨김 처리되면 이미지는 숨김 (관리자가 아닐 때)
+  const allImages = (isSoftDeleted || isHiddenContent) ? [] : propImages.length > 0 ? propImages : contentImages;
   const [isDraggingText, setIsDraggingText] = useState(false);
   const dragInfo = useRef({
     startX: 0,
@@ -146,7 +151,11 @@ export default function TweetCard({
 
   // 본문에서는 img 태그는 제거 (슬라이드에서만 보여줌)
   // Soft Delete 되면 Placeholder 사용
-  const displayContent = isSoftDeleted ? '관리자에 의해 삭제된 메시지입니다.' : currentContent;
+  const displayContent = isSoftDeleted 
+    ? '관리자에 의해 삭제된 메시지입니다.' 
+    : isHiddenContent 
+      ? '관리자에 의해 숨김 처리된 콘텐츠입니다.' 
+      : currentContent;
 
   const safeContent = DOMPurify.sanitize(displayContent, {
     FORBID_TAGS: ['img'],
@@ -643,17 +652,26 @@ export default function TweetCard({
         {/* Avatar */}
         <div
           onClick={handleAvatarClick}
-          className={`w-10 h-10 flex-shrink-0 relative ${isDeletedUser ? 'cursor-default' : 'cursor-pointer'}`}
+          className={`relative flex-shrink-0 ${isDeletedUser ? 'cursor-default' : 'cursor-pointer'}`}
         >
-          <Avatar className="w-10 h-10">
-            <AvatarImage
-              src={user.avatar || '/default-avatar.svg'}
-              alt={isDeletedUser ? t('deleted_user') : user.name}
-            />
-            <AvatarFallback>
-              {isDeletedUser ? '?' : user.name.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <div className={`w-10 h-10 relative ${user.plan === 'premium' && !isDeletedUser ? 'rounded-full p-[2px] bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] shadow-[0_2px_10px_rgba(0,191,165,0.4)]' : ''}`}>
+            <Avatar className="w-full h-full border-2 border-white dark:border-background">
+              <AvatarImage
+                src={user.avatar || '/default-avatar.svg'}
+                alt={isDeletedUser ? t('deleted_user') : user.name}
+              />
+              <AvatarFallback>
+                {isDeletedUser ? '?' : user.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            {user.plan === 'premium' && !isDeletedUser && (
+              <div className="absolute -top-1.5 -left-1.5 z-10 p-[2px] bg-white dark:bg-background rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.1)] transition-transform hover:scale-110 -rotate-12" title="Premium Member">
+                <div className="bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] w-[15px] h-[15px] rounded-full flex items-center justify-center shadow-[inset_0_1px_3px_rgba(255,255,255,0.5)]">
+                  <SeagullIcon size={12} className="text-white drop-shadow-sm" />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* User Info & Menu */}
@@ -706,6 +724,11 @@ export default function TweetCard({
                 return isEdited ? <span className="ml-1 text-xs text-gray-400">수정됨</span> : null;
               })()}
             </span>
+            {isAdmin && isHiddenProp && (
+              <Badge variant="outline" className="ml-2 border-amber-500 text-amber-500 text-[10px] py-0 h-4">
+                숨김
+              </Badge>
+            )}
           </div>
 
           {/* Menu Button */}

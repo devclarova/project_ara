@@ -29,7 +29,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
   const { newTweet, setNewTweet, searchQuery: outletSearchQuery } = outletCtx;
   const mergedSearchQuery = (searchQuery ?? outletSearchQuery ?? '').trim();
   const isSearching = mergedSearchQuery.length > 0;
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { blockedIds } = useBlockedUsers(); // 차단된 유저 목록 가져오기
   const [tweets, setTweets] = useState<UITweet[]>([]);
   const [loading, setLoading] = useState(false);
@@ -68,12 +68,14 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
     user_id?: string; // from RPC
     avatar_url?: string; // from RPC
     deleted_at?: string | null; // Manually added
+    is_hidden?: boolean | null; // ✅ Added
     profiles?: {
       id: string; // ✅ Added
       nickname: string | null;
       user_id: string | null;
       avatar_url: string | null;
       banned_until?: string | null;
+      plan?: 'free' | 'basic' | 'premium';
     } | null;
   };
 
@@ -110,9 +112,9 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
             .from('tweets')
             .select(
               `
-            id, content, image_url, created_at, updated_at, deleted_at,
+            id, content, image_url, created_at, updated_at, deleted_at, is_hidden,
             reply_count, repost_count, like_count, bookmark_count, view_count,
-            profiles:author_id ( id, nickname, user_id, avatar_url, banned_until )
+            profiles:author_id ( id, nickname, user_id, avatar_url, banned_until, plan )
           `,
             )
             .order('created_at', { ascending: false })
@@ -133,6 +135,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
             username: t.user_id ?? t.profiles?.user_id ?? 'anonymous',
             avatar: t.avatar_url ?? t.profiles?.avatar_url ?? '/default-avatar.svg',
             banned_until: t.profiles?.banned_until ?? null,
+            plan: t.profiles?.plan,
           },
           content: t.content,
           image: t.image_url || undefined,
@@ -147,6 +150,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
             bookmarks: t.bookmark_count ?? 0,
             views: t.view_count ?? 0,
           },
+          is_hidden: t.is_hidden ?? false,
         }));
         // 상태 업데이트
         setTweets(prev => {
@@ -154,6 +158,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
           // 중복 제거 및 차단된 유저 필터링
           const seen = new Set();
           return combined.filter(t => {
+            if (t.is_hidden && !isAdmin) return false;
             if (t.user.id && blockedIds.includes(t.user.id)) return false; // 차단 필터링 (profiles.id UUID 기준)
             if (seen.has(t.id)) return false;
             seen.add(t.id);
@@ -196,10 +201,10 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
     }
     // 일반 모드: 스토어 캐시 확인 + 상세페이지에서 돌아온 경우(restoredRef)가 아니면 로드
     const cachedFeed = SnsStore.getFeed();
-    // 상세페이지 갔다온 경우는 useLayoutEffect에서 복원하므로 fetchTweets 스킵(이미 데이터가 있다고 가정하거나 복원 로직이 처리)
-    // 하지만 데이터가 비어있다면 로드해야 함.
     if (cachedFeed && cachedFeed.length > 0 && !restoredRef.current) {
-      setTweets(cachedFeed);
+      // [수정] 캐시 데이터에서도 숨김 게시물은 실시간으로 걸러냄 (관리자 예외)
+      const filteredCache = cachedFeed.filter((t: UITweet) => isAdmin || !t.is_hidden);
+      setTweets(filteredCache);
       setHasMore(SnsStore.getHasMore());
       pageRef.current = SnsStore.getPage();
       setLoading(false);
@@ -303,11 +308,12 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
         async payload => {
           const newTweet = payload.new as Database['public']['Tables']['tweets']['Row'] & {
             deleted_at?: string | null;
+            is_hidden?: boolean | null;
           };
 
           const { data: profile } = await supabase
             .from('profiles')
-            .select('id, nickname, user_id, avatar_url, banned_until')
+            .select('id, nickname, user_id, avatar_url, banned_until, plan')
             .eq('id', newTweet.author_id)
             .maybeSingle();
 
@@ -319,6 +325,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
               username: profile?.user_id || 'anonymous',
               avatar: profile?.avatar_url || '/default-avatar.svg',
               banned_until: profile?.banned_until ?? null,
+              plan: profile?.plan,
             },
             content: newTweet.content,
             image: newTweet.image_url || undefined,
@@ -334,6 +341,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
           };
 
           setTweets(prev => {
+            if (newTweet.is_hidden && !isAdmin) return prev; // [추가] 숨김 게시물은 실시간 피드에서 즉시 제외
             if (blockedIds.includes(formattedTweet.user.id)) return prev;
             if (prev.some(t => t.id === formattedTweet.id)) return prev;
             return [formattedTweet, ...prev];
@@ -341,7 +349,14 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
         },
       )
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tweets' }, payload => {
-        const updated = payload.new as Database['public']['Tables']['tweets']['Row'];
+        const updated = payload.new as Database['public']['Tables']['tweets']['Row'] & { is_hidden?: boolean };
+        
+        // [추가] 만약 업데이트된 트윗이 '숨김' 상태가 되었다면 일반 유저의 목록에서 즉시 제거
+        if (updated.is_hidden && !isAdmin) {
+          setTweets(prev => prev.filter(t => t.id !== updated.id));
+          return;
+        }
+
         setTweets(prev =>
           prev.map(t =>
             t.id === updated.id
@@ -378,7 +393,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
               ) {
                 return {
                   ...t,
-                  user: { ...t.user, banned_until: updated.banned_until },
+                  user: { ...t.user, banned_until: updated.banned_until, plan: updated.plan },
                 };
               }
               return t;

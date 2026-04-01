@@ -1,3 +1,80 @@
+# Project ARA 🌏
+### K-컬처 기반 글로벌 한국어 학습 SNS 플랫폼
+
+🔗 [배포 링크](https://project-ara.vercel.app)
+
+---
+
+## 👤 박재현 담당 기능
+
+### 📌 프로젝트 개요
+
+| 항목 | 내용 |
+|------|------|
+| 기간 | 2025.09 ~  |
+| 인원 / 역할 | 3인 · 팀장 |
+| 포지션 | 기획 총괄 / 인증 시스템 / 실시간 채팅 / 어드민 패널 |
+
+---
+
+### 인증 시스템
+- 이메일 / Google / Kakao 소셜 로그인 구현
+- Supabase RLS 정책 설계 (읽기/쓰기 권한 분리)
+- 사용자 역할(Admin/User) 기반 접근 제어 (RBAC)
+- 커스텀 Auth Storage Adapter 구현
+  - 로그인 유지 여부에 따라 localStorage / sessionStorage 동적 전환
+  - 공용 PC 보안 문제 해결
+
+### 실시간 DM 채팅
+- Supabase Realtime 기반 1:1 채팅 구현
+- useEffect cleanup 적용으로 구독 중복 문제 해결
+- Optimistic UI 적용 (tempId → realId 교체 방식으로 중복 렌더링 방지)
+- useMemo / useCallback으로 채팅 목록 불필요한 리렌더링 최적화
+- 욕설 필터 block / mask 정책 분리 설계
+
+### 어드민 패널
+- 주간 활성 사용자(WAU) 실시간 대시보드 (Recharts + react-simple-maps)
+- 학습 콘텐츠 CMS (YouTube API 연동, 단어장·문화노트 관리)
+- 신고 처리 워크플로우 설계 및 구현
+
+### 커뮤니티 UI
+- 중첩 댓글 스레드 라인 (CSS ::before + calc() 기반 픽셀 단위 구현)
+- 이미지 라이트박스 내비게이션
+- 좋아요 · 북마크 Optimistic UI (Zustand)
+
+### 기타
+- i18n 다국어 지원 16개 언어 (i18next)
+- 실시간 알림 카운트 동기화 (CustomEvent Dispatcher)
+- 스크롤 위치 보존, 다국어 폰트 깨짐 등 UX 버그 전수 처리
+- DB 정규화 및 인덱스 재설계
+
+---
+
+## 🔥 트러블슈팅
+
+| 문제 | 원인 | 해결 |
+|------|------|------|
+| 실시간 구독 중복으로 메시지 2~3번 수신 | useEffect cleanup 누락으로 채널 중복 구독 | cleanup 명시 + 메시지 ID 기반 중복 제거 |
+| Optimistic UI 타이밍 충돌로 메시지 중복 렌더링 | 로컬 메시지와 서버 응답 메시지 동시 수신 | tempId → realId 교체 방식으로 해결 |
+| RLS 정책 오류로 프로필 생성/조회 전체 차단 | 읽기/쓰기 정책 통합으로 auth.uid() 매칭 실패 시 전체 차단 | 읽기/쓰기 정책 분리 재설계 |
+| 인증 상태 확정 이전에 라우트가 결정되던 문제 | Supabase 세션 복원이 비동기인데 라우트 가드 즉시 실행 | 인증 상태를 loading / authenticated / unauthenticated 3단계로 분리 |
+
+---
+
+## 🛠 기술 스택
+
+| 분류 | 기술 |
+|------|------|
+| Frontend | React · TypeScript · Vite · Tailwind CSS |
+| State | Zustand |
+| Backend | Supabase (Auth / DB / Storage / Realtime) |
+| 기타 | i18next · Recharts · Framer Motion · Vercel |
+
+---
+
+<details>
+<summary>📄 전체 프로젝트 문서 보기</summary>
+
 # ARA - K-컬처 기반 SNS형 한국어 학습 플랫폼
 
 > 언어로 배우고 문화로 연결되는 경험
@@ -427,3 +504,5 @@ src/
 
 © 2025 Team ARA. All rights reserved.
 Made with sincerity in Daegu, Korea — and with respect for every culture.
+
+</details>

@@ -33,6 +33,7 @@ interface StudyItem {
   poster_image_url: string | null;
   is_featured: boolean;
   is_hidden: boolean;
+  required_plan: string;
   created_at: string;
   video: VideoData[];
 }
@@ -172,11 +173,19 @@ const AdminStudyManagement = () => {
       s.id === study.id ? { ...s, is_featured: newValue } : s
     ));
     setFeaturedCount(prev => newValue ? prev + 1 : prev - 1);
-    toast.success(newValue ? '추천 콘텐츠로 설정되었습니다.' : '추천이 해제되었습니다.');
+    toast.success(newValue ? '추천 콘텐츠로 설정되었습니다.' : '추천이 해제되었습니다.', {
+      style: { background: '#00BFA5', color: '#fff' }
+    });
   };
 
   const handleToggleHidden = async (study: StudyItem) => {
     const newValue = !study.is_hidden;
+    
+    // Optimistic UI Update
+    setStudies(prev => prev.map(s => 
+      s.id === study.id ? { ...s, is_hidden: newValue } : s
+    ));
+
     const { error } = await supabase
       .from('study')
       .update({ is_hidden: newValue })
@@ -184,14 +193,17 @@ const AdminStudyManagement = () => {
 
     if (error) {
       console.error('Hidden toggle error:', error);
-      toast.error(`숨김 상태 변경에 실패했습니다: ${error.message}`);
+      toast.error(`숨김 상태 변경 실패: ${error.message}`);
+      // Rollback
+      setStudies(prev => prev.map(s => 
+        s.id === study.id ? { ...s, is_hidden: !newValue } : s
+      ));
       return;
     }
 
-    setStudies(prev => prev.map(s => 
-      s.id === study.id ? { ...s, is_hidden: newValue } : s
-    ));
-    toast.success(newValue ? '콘텐츠가 숨김 처리되었습니다.' : '콘텐츠가 다시 노출됩니다.');
+    toast.success(newValue ? '콘텐츠가 숨김 처리되었습니다.' : '콘텐츠가 다시 노출됩니다.', {
+      style: { background: '#00BFA5', color: '#fff' }
+    });
   };
 
   const handleDeleteClick = (study: StudyItem) => {
@@ -462,11 +474,12 @@ const AdminStudyManagement = () => {
                         <td className="px-4 py-3 min-w-[80px] whitespace-nowrap">
                           {video?.level ? (
                             <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
-                              video.level === 'Easy' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400' :
-                              video.level === 'Normal' ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' :
+                              (video.level === 'Easy' || video.level === '초급') ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400' :
+                              (video.level === 'Normal' || video.level === '중급') ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' :
                               'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'
                             }`}>
-                              {video.level}
+                              {video.level === 'Easy' || video.level === '초급' ? '초급' : 
+                               video.level === 'Normal' || video.level === '중급' ? '중급' : '고급'}
                             </span>
                           ) : (
                             <span className="text-xs text-muted-foreground">-</span>
@@ -478,19 +491,19 @@ const AdminStudyManagement = () => {
                               onClick={() => handleToggleFeatured(study)}
                               className={`p-1.5 rounded-lg transition-colors ${
                                 study.is_featured 
-                                  ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30' 
-                                  : 'text-muted-foreground/40 hover:text-amber-500 hover:bg-muted'
+                                  ? 'text-[#00BFA5] bg-[#00BFA5]/10 hover:bg-[#00BFA5]/20' 
+                                  : 'text-muted-foreground/40 hover:text-[#00BFA5] hover:bg-muted'
                               }`}
                               title={study.is_featured ? '추천 해제' : '추천 설정'}
                             >
-                              {study.is_featured ? <Star size={16} /> : <StarOff size={16} />}
+                              {study.is_featured ? <Star size={16} fill="currentColor" /> : <StarOff size={16} />}
                             </button>
                             <button
                               onClick={() => handleToggleHidden(study)}
                               className={`p-1.5 rounded-lg transition-colors ${
                                 study.is_hidden 
-                                  ? 'text-red-500 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30' 
-                                  : 'text-muted-foreground/40 hover:text-primary hover:bg-muted'
+                                  ? 'text-[#00F0FF] bg-[#00BFA5]/10 hover:bg-[#00BFA5]/20' 
+                                  : 'text-muted-foreground/40 hover:text-[#00BFA5] hover:bg-muted'
                               }`}
                               title={study.is_hidden ? '표시하기' : '숨기기'}
                             >
@@ -553,8 +566,18 @@ const AdminStudyManagement = () => {
                     </div>
                     {/* Info */}
                     <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handlePreviewClick(study)}>
-                      <div className="font-medium text-sm text-foreground truncate">{study.title}</div>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm text-foreground max-w-[200px] truncate">{study.title}</span>
+                        {study.required_plan === 'premium' && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#00BFA5]/20 text-[#00F0FF]">
+                            👑 Premium
+                          </span>
+                        )}
+                        {study.required_plan === 'basic' && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100/50 text-blue-600">
+                            Basic
+                          </span>
+                        )}
                         {video?.categories && (
                           <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
                             {video.categories}
@@ -562,11 +585,12 @@ const AdminStudyManagement = () => {
                         )}
                         {video?.level && (
                           <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                            video.level === 'Easy' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400' :
-                            video.level === 'Normal' ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' :
+                            (video.level === 'Easy' || video.level === '초급') ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400' :
+                            (video.level === 'Normal' || video.level === '중급') ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' :
                             'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'
                           }`}>
-                            {video.level}
+                            {video.level === 'Easy' || video.level === '초급' ? '초급' : 
+                             video.level === 'Normal' || video.level === '중급' ? '중급' : '고급'}
                           </span>
                         )}
                         {study.is_hidden && (

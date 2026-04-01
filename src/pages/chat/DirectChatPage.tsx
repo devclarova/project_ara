@@ -114,16 +114,26 @@ function DirectChatPage() {
     }
   }, [user?.id, isMobile]); // location.state dependency omitted to avoid loop, but checked inside
 
+  useEffect(() => {
+    // 채팅 페이지 전체 화면 스크롤 금지 (이중 스크롤 완벽 차단용)
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
   return (
-    // SNS 레이아웃과 비슷하게: 바깥은 Tailwind, 안쪽은 CSS 모듈
-    <div className=" bg-white dark:bg-background overflow-x-hidden">
-      <div className="flex justify-center">
-        <div className="w-full max-w-6xl px-4 sm:px-5 lg:px-6">
-          {/* 안쪽 실제 채팅 박스 */}
-          <div className={styles.chatPage}>
-            <div className={styles.chatContainer}>
+    // 전체 배경 영역: App.tsx에서 전달해주는 남은 높이 공간을 100% 꽉 채웁니다. (flex-1)
+    <div className="bg-white dark:bg-background flex flex-col w-full flex-1 min-h-0">
+      {/* 화면 중앙 정렬 및 위아래 여백을 줘서 둥근 박스 구현 (사용자 요청: 100% 안의 하단 여백 포함) */}
+      <div className="flex flex-col flex-1 items-center justify-center w-full py-4 sm:py-6 min-h-0">
+        {/* 폭 제한(max-w-6xl) 내부를 꽉 채우도록 flex 구조 설계 */}
+        <div className="flex flex-col flex-1 w-full max-w-6xl px-4 sm:px-5 lg:px-6 min-h-0">
+          {/* CSS 모듈 쪽에도 flex: 1 이 들어가 있음 */}
+          <div className={`${styles.chatPage} w-full`}>
+            <div className={`${styles.chatContainer} w-full`}>
               {(!isMobile || showListOnMobile) && (
-                <div className="chat-sidebar">
+                <div className="chat-sidebar flex-shrink-0 flex flex-col min-h-0 border-r border-[#e5e7eb] dark:border-[#454545]">
                   <DirectChatList
                     onChatSelect={handleChatSelect}
                     onCreateChat={() => {}}
@@ -132,8 +142,9 @@ function DirectChatPage() {
                   />
                 </div>
               )}
+
               {(!isMobile || !showListOnMobile) && (
-                <div className="chat-main">
+                <div className="chat-main flex-1 flex flex-col min-h-0">
                   {selectedChatId ? (
                     <DirectChatRoom
                       chatId={selectedChatId}

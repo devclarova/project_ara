@@ -2,6 +2,8 @@ import AlarmSettings from '@/pages/settings/AlarmSettings';
 import PrivacySettings from '@/pages/settings/PrivacySettings';
 import SupportPolicy from '@/pages/settings/SupportPolicy';
 import SystemSettings from '@/pages/settings/SystemSettings';
+import SubscriptionCouponSettings from '../../pages/settings/SubscriptionCouponSettings';
+// IDE Cache Clear Comment
 import type { MenuId, SidebarItem } from '@/types/settings';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -40,6 +42,15 @@ export default function ProfileSettings() {
         t('settings.language', '언어 설정'),
         t('settings.theme', '테마 설정'),
         t('settings.theme_dark', '다크 모드'),
+      ],
+    },
+    {
+      id: 'subscription',
+      label: t('settings.subscription_coupon', '구독 및 쿠폰'),
+      keywords: [
+        t('settings.plan', '요금제'),
+        t('settings.coupon', '쿠폰 등록'),
+        t('settings.premium', '프리미엄'),
       ],
     },
     {
@@ -154,6 +165,10 @@ export default function ProfileSettings() {
     ) : activeId === 'system' ? (
       <SettingsContent>
         <SystemSettings onBackToMenu={() => setShowMenuOnMobile(true)} searchQuery={searchQuery} />
+      </SettingsContent>
+    ) : activeId === 'subscription' ? (
+      <SettingsContent>
+        <SubscriptionCouponSettings onBackToMenu={() => setShowMenuOnMobile(true)} />
       </SettingsContent>
     ) : (
       <SettingsContent>

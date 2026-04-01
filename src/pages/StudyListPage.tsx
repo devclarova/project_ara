@@ -1,4 +1,5 @@
 import GuideModal, { isGuideModalDismissed } from '@/components/common/GuideModal';
+import { motion, AnimatePresence } from 'framer-motion';
 import Pagination from '@/components/common/Pagination';
 import CategoryTabs, { type TCategory } from '@/components/study/CategoryTabs';
 import ContentCard from '@/components/study/ContentCard';
@@ -12,550 +13,143 @@ import { supabase } from '../lib/supabase';
 import type { Study } from '../types/study';
 import { useAuth } from '@/contexts/AuthContext';
 import SignInModal from '@/components/auth/SignInModal';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, ExternalLink } from 'lucide-react';
+import { useMarketingBanners } from '@/hooks/useMarketingBanners';
 
 const ALL_CATEGORIES: TCategory[] = ['전체', '드라마', '영화', '예능', '음악'];
 const ALL_LEVELS: TDifficulty[] = ['', '초급', '중급', '고급'];
-
 const LEANING_GUIDE_KEY = 'ara-leaning-guide';
 
 const LEANING_GUIDE_SLIDES = [
-  {
-    id: 'leaning-1',
-    image: '/images/leaning_guide_1.gif',
-    alt: 'ARA Study 이용 방법 안내 1',
-  },
-  {
-    id: 'leaning-2',
-    image: '/images/leaning_guide_2.gif',
-    alt: 'ARA Study 이용 방법 안내 2',
-  },
-  {
-    id: 'leaning-3',
-    image: '/images/leaning_guide_3.gif',
-    alt: 'ARA Study 이용 방법 안내 3',
-  },
-  {
-    id: 'leaning-4',
-    image: '/images/leaning_guide_4.gif',
-    alt: 'ARA Study 이용 방법 안내 4',
-  },
-  {
-    id: 'leaning-5',
-    image: '/images/leaning_guide_5.gif',
-    alt: 'ARA Study 이용 방법 안내 5',
-  },
+  { id: 'leaning-1', image: '/images/leaning_guide_1.gif', alt: 'ARA Study 이용 방법 안내 1' },
+  { id: 'leaning-2', image: '/images/leaning_guide_2.gif', alt: 'ARA Study 이용 방법 안내 2' },
+  { id: 'leaning-3', image: '/images/leaning_guide_3.gif', alt: 'ARA Study 이용 방법 안내 3' },
+  { id: 'leaning-4', image: '/images/leaning_guide_4.gif', alt: 'ARA Study 이용 방법 안내 4' },
+  { id: 'leaning-5', image: '/images/leaning_guide_5.gif', alt: 'ARA Study 이용 방법 안내 5' },
 ];
 
 const StudyListPage = () => {
   const { t, i18n } = useTranslation();
   const targetLang = i18n.language;
-
-  const [clips, setClips] = useState<Study[]>([]); // 콘텐츠 목록
-  const [keyword, setKeyword] = useState(''); // 검색
-  const [total, setTotal] = useState(0); // 전체 콘텐츠 개수
+  const navigate = useNavigate();
+  const [clips, setClips] = useState<Study[]>([]);
+  const [keyword, setKeyword] = useState('');
+  const [total, setTotal] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
-  const [searchParams, setSearchParams] = useSearchParams(); // URL 쿼리
-  const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { user, userPlan, isAdmin } = useAuth();
   const [showSignIn, setShowSignIn] = useState(false);
-
   const [showGuide, setShowGuide] = useState(false);
 
-  const [pageSize, setPageSize] = useState(9);
+  // Ad-free users (Premium/Basic)
+  const isAdFree = userPlan === 'premium' || userPlan === 'basic' || (isAdmin && userPlan !== 'free');
+  const [pageSize, setPageSize] = useState(isAdFree ? 12 : 10);
   const limit = pageSize;
 
-  const navigate = useNavigate();
+  const { banners: inlineBanners, trackClick: trackBannerClick, trackView: trackBannerView } = useMarketingBanners('inline_card');
 
   useEffect(() => {
-    if (!isGuideModalDismissed(LEANING_GUIDE_KEY)) {
-      setShowGuide(true);
-    }
+    if (!isGuideModalDismissed(LEANING_GUIDE_KEY)) setShowGuide(true);
   }, []);
 
-  // 쿼리에서 초기 category 읽기 (유효하지 않으면 '전체')
   const displayCategory: TCategory = useMemo(() => {
     const q = searchParams.get('category') ?? '전체';
-    const valid = ALL_CATEGORIES.includes(q as TCategory) ? q : '전체';
-    return valid as TCategory;
-  }, [searchParams.get('category')]); // 의존성 최소화
-
-  useEffect(() => {
-    const categoryMap: Record<string, string> = {
-      전체: '학습',
-      드라마: '드라마 학습',
-      영화: '영화 학습',
-      예능: '예능 학습',
-      음악: '음악 학습',
-    };
-
-    const baseTitle = categoryMap[displayCategory] || 'Study';
-
-    document.title = keyword.trim() ? `${keyword} | ${baseTitle} | ARA` : `${baseTitle} | ARA`;
-  }, [displayCategory, keyword]);
-
-  const contentFilter = searchParams.get('content')?.trim() ?? '';
-  const episodeFilter = searchParams.get('episode')?.trim() ?? '';
-
-  // 쿼리에서 초기 lelvels 읽기
-  const displayLevel: TDifficulty = useMemo(() => {
-    const raw = searchParams.get('level') ?? '';
-    return (ALL_LEVELS.includes(raw as TDifficulty) ? (raw as TDifficulty) : '') as TDifficulty;
-  }, [searchParams]);
-
-  // 쿼리에서 초기 page 읽기
-  const initialPage = useMemo(() => {
-    const pageParam = searchParams.get('page');
-    const pageNum = pageParam ? parseInt(pageParam, 10) : 1;
-    return pageNum > 0 ? pageNum : 1;
-  }, [searchParams.get('page')]);
+    return (ALL_CATEGORIES.includes(q as TCategory) ? q : '전체') as TCategory;
+  }, [searchParams.get('category')]);
 
   const [activeCategory, setActiveCategory] = useState<TCategory>(displayCategory);
-  const [levelFilter, setLevelFilter] = useState<TDifficulty>(displayLevel);
-  const [page, setPage] = useState(initialPage); // URL에서 초기화
+  const [levelFilter, setLevelFilter] = useState<TDifficulty>((searchParams.get('level') ?? '') as TDifficulty);
+  const [page, setPage] = useState(parseInt(searchParams.get('page') ?? '1', 10));
 
-  // Ref for horizontal scroll on wheel
   const categoryScrollRef = useRef<HTMLDivElement>(null);
   const [isScrollable, setIsScrollable] = useState(false);
 
-  // Batch Translation
-  const titles = clips.map(c => c.title);
-  const titleKeys = clips.map(c => `study_title_${c.id}`);
-  const { translatedTexts: trTitles } = useBatchAutoTranslation(titles, titleKeys, targetLang);
+  // Translation Hooks
+  const { translatedTexts: trTitles } = useBatchAutoTranslation(clips.map(c => c.title), clips.map(c => `study_title_${c.id}`), targetLang);
+  const { translatedTexts: trDescs } = useBatchAutoTranslation(clips.map(c => c.short_description || ''), clips.map(c => `study_desc_${c.id}`), targetLang);
 
-  const descs = clips.map(c => c.short_description || '');
-  const descKeys = clips.map(c => `study_desc_${c.id}`);
-  const { translatedTexts: trDescs } = useBatchAutoTranslation(descs, descKeys, targetLang);
-
-  const durations = clips.map(c => {
-    const v = Array.isArray(c.video) ? c.video[0] : (c.video as any); // Safe cast or check
-    return typeof v?.runtime_bucket === 'string' ? v.runtime_bucket : '';
-  });
-  const durationKeys = clips.map(c => `study_duration_${c.id}`);
-  const { translatedTexts: trDurations } = useBatchAutoTranslation(
-    durations,
-    durationKeys,
-    targetLang,
-  );
-
-  const episodes = clips.map(c => {
-    const v = Array.isArray(c.video) ? c.video[0] : (c.video as any);
-    return v?.episode || '';
-  });
-  const episodeKeys = clips.map(c => `study_episode_${c.id}`);
-  const { translatedTexts: trEpisodes } = useBatchAutoTranslation(
-    episodes,
-    episodeKeys,
-    targetLang,
-  );
-
-  // 데이터 불러오기
   useEffect(() => {
     let ignore = false;
-
-    const fetchData = async () => {
-      const from = (page - 1) * limit;
-      const to = from + limit - 1;
-
+    const fetchClips = async () => {
+      const needsVideoFilter = activeCategory !== '전체' || levelFilter !== '';
       let query = supabase
         .from('study')
-        .select('*, video(*,runtime_bucket)', { count: 'exact' })
-        .eq('is_hidden', false)
-        .order('id', { ascending: true });
+        .select(needsVideoFilter ? '*, video!inner(*)' : '*, video(*)', { count: 'exact' });
+      
+      query = query.eq('is_hidden', false);
 
-      // 필터 조건
-      const needsCategory = activeCategory !== '전체';
-      const needsContent = !!contentFilter;
-      const needsEpisode = !!episodeFilter;
-      const needsLevel = !!levelFilter;
+      if (activeCategory !== '전체') query = query.eq('video.categories', activeCategory);
+      if (levelFilter) query = query.eq('video.level', levelFilter);
+      if (keyword.trim()) query = query.ilike('title', `%${keyword.trim()}%`);
+      
+      const { data, count, error } = await query
+        .order('created_at', { ascending: false })
+        .range((page - 1) * limit, page * limit - 1);
 
-      if (needsCategory || needsContent || needsEpisode || needsLevel) {
-        query = supabase
-          .from('study')
-          .select('*, video!inner(*,runtime_bucket)', { count: 'exact' })
-          .eq('is_hidden', false)
-          .order('id', { ascending: true });
-
-        if (needsCategory) query = query.eq('video.categories', activeCategory);
-        if (needsContent) query = query.eq('video.contents', contentFilter);
-        if (needsEpisode) query = query.eq('video.episode', episodeFilter);
-        if (needsLevel) query = query.eq('video.level', levelFilter);
-      }
-
-      // keyword 검색은 클라이언트 사이드에서 처리 (번역 대응)
-      // keyword가 있을 때는 전체 데이터를 가져와서 클라이언트에서 필터링
-      const hasKeyword = keyword.trim().length > 0;
-
-      const { data, count, error } = hasKeyword
-        ? await query // 검색 시: 전체 데이터 가져오기
-        : await query.range(from, to); // 검색 없을 때: 페이지네이션
-
-      if (ignore) return;
-
-      if (error) {
-        console.error('데이터 불러오기 오류:', error.message);
-        return;
-      }
-      setClips((data ?? []) as Study[]);
-
-      // keyword 없을 때만 DB count 사용 (검색 시는 필터링 후 count)
-      if (!hasKeyword) {
-        setTotal(count ?? 0);
+      if (!ignore && data) {
+        setClips(data as Study[]);
+        setTotal(count || 0);
       }
     };
-
-    fetchData();
-
-    return () => {
-      ignore = true;
-    };
-  }, [page, limit, activeCategory, levelFilter, contentFilter, episodeFilter]); // keyword 제거
-
-  // 클라이언트 사이드 검색 필터링 (번역된 텍스트 포함)
-  const finalList = useMemo(() => {
-    if (!keyword.trim()) return clips;
-
-    const lowerKeyword = keyword.toLowerCase();
-
-    return clips.filter((clip, idx) => {
-      const originalTitle = clip.title?.toLowerCase() || '';
-      const translatedTitle = (trTitles[idx] || '').toLowerCase();
-      const originalDesc = (clip.short_description || '').toLowerCase();
-      const translatedDesc = (trDescs[idx] || '').toLowerCase();
-
-      // 원문 또는 번역문에서 검색어 포함 여부 확인
-      return (
-        originalTitle.includes(lowerKeyword) ||
-        translatedTitle.includes(lowerKeyword) ||
-        originalDesc.includes(lowerKeyword) ||
-        translatedDesc.includes(lowerKeyword)
-      );
-    });
-  }, [clips, keyword, trTitles, trDescs]);
-
-  // 검색 필터링 후 total 업데이트 + 페이지네이션 적용
-  const paginatedList = useMemo(() => {
-    // 검색이 있을 때는 필터링 후 클라이언트 페이지네이션
-    if (keyword.trim()) {
-      const start = (page - 1) * pageSize;
-      const end = start + pageSize;
-      return finalList.slice(start, end);
-    }
-    // 검색 없을 때는 이미 DB에서 페이지네이션된 결과
-    return finalList;
-  }, [finalList, keyword, page, pageSize]);
-
-  // 검색 필터링 후 total 업데이트 (검색이 있을 때만)
-  useEffect(() => {
-    if (keyword.trim()) {
-      setTotal(finalList.length);
-    }
-  }, [finalList, keyword]);
-
-  // URL이 바뀌면 탭/페이지도 맞춰주기
-  useEffect(() => {
-    setActiveCategory(displayCategory);
-    setPage(1);
-  }, [displayCategory, contentFilter, episodeFilter, keyword]); // keyword 추가
-
-  useEffect(() => {
-    setLevelFilter(displayLevel);
-    setPage(1);
-  }, [displayLevel]);
-
-  // 화면 크기에 따라 콘텐츠 수 설정
-  useEffect(() => {
-    const updatePageSize = () => {
-      const width = window.innerWidth;
-
-      if (width < 640) {
-        // 모바일 (1열) - 6개
-        setPageSize(6);
-      } else if (width < 1024) {
-        // 태블릿 (2열) - 8개
-        setPageSize(8);
-      } else {
-        // 데스크톱 (3열) - 9개
-        setPageSize(9);
-      }
-    };
-
-    updatePageSize();
-    window.addEventListener('resize', updatePageSize);
-    return () => window.removeEventListener('resize', updatePageSize);
-  }, []);
-
-  // Enable horizontal scroll on wheel for category tabs
-  useEffect(() => {
-    const scrollContainer = categoryScrollRef.current;
-    if (!scrollContainer) return;
-
-    const handleWheel = (e: WheelEvent) => {
-      // Only handle horizontal scroll if there's overflow
-      if (scrollContainer.scrollWidth > scrollContainer.clientWidth) {
-        e.preventDefault();
-        scrollContainer.scrollLeft += e.deltaY;
-      }
-    };
-
-    scrollContainer.addEventListener('wheel', handleWheel, { passive: false });
-    return () => scrollContainer.removeEventListener('wheel', handleWheel);
-  }, []);
-
-  // Check if category tabs are scrollable
-  useEffect(() => {
-    const checkScrollable = () => {
-      const scrollContainer = categoryScrollRef.current;
-      if (!scrollContainer) return;
-
-      const hasOverflow = scrollContainer.scrollWidth > scrollContainer.clientWidth;
-      setIsScrollable(hasOverflow);
-    };
-
-    checkScrollable();
-    window.addEventListener('resize', checkScrollable);
-    return () => window.removeEventListener('resize', checkScrollable);
-  }, [activeCategory, ALL_CATEGORIES]); // Re-check when categories change
-
-  // Enable drag scrolling for category tabs
-  useEffect(() => {
-    const scrollContainer = categoryScrollRef.current;
-    if (!scrollContainer) return;
-
-    let isDown = false;
-    let startX: number;
-    let scrollLeft: number;
-    let hasMoved = false; // Track if user actually dragged
-
-    const handleMouseDown = (e: MouseEvent) => {
-      // 스크롤 가능할 때만 드래그 활성화
-      if (scrollContainer.scrollWidth <= scrollContainer.clientWidth) return;
-
-      isDown = true;
-      hasMoved = false; // Reset on new drag
-      scrollContainer.style.cursor = 'grabbing';
-      startX = e.pageX - scrollContainer.offsetLeft;
-      scrollLeft = scrollContainer.scrollLeft;
-    };
-
-    const handleMouseLeave = () => {
-      isDown = false;
-      if (scrollContainer.scrollWidth > scrollContainer.clientWidth) {
-        scrollContainer.style.cursor = 'grab';
-      }
-    };
-
-    const handleMouseUp = () => {
-      isDown = false;
-      if (scrollContainer.scrollWidth > scrollContainer.clientWidth) {
-        scrollContainer.style.cursor = 'grab';
-      }
-
-      // Prevent click if user dragged
-      if (hasMoved) {
-        setTimeout(() => {
-          hasMoved = false;
-        }, 10);
-      }
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDown) return;
-      e.preventDefault();
-      const x = e.pageX - scrollContainer.offsetLeft;
-      const walk = (x - startX) * 2; // Scroll speed multiplier
-
-      // If moved more than 5px, consider it a drag
-      if (Math.abs(walk) > 5) {
-        hasMoved = true;
-      }
-
-      scrollContainer.scrollLeft = scrollLeft - walk;
-    };
-
-    const handleClick = (e: MouseEvent) => {
-      // Prevent click if user was dragging
-      if (hasMoved) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-
-    // 스크롤 가능할 때만 grab 커서 적용
-    if (scrollContainer.scrollWidth > scrollContainer.clientWidth) {
-      scrollContainer.style.cursor = 'grab';
-    } else {
-      scrollContainer.style.cursor = 'default';
-    }
-
-    scrollContainer.addEventListener('mousedown', handleMouseDown);
-    scrollContainer.addEventListener('mouseleave', handleMouseLeave);
-    scrollContainer.addEventListener('mouseup', handleMouseUp);
-    scrollContainer.addEventListener('mousemove', handleMouseMove);
-    scrollContainer.addEventListener('click', handleClick, true); // Use capture phase
-
-    return () => {
-      scrollContainer.removeEventListener('mousedown', handleMouseDown);
-      scrollContainer.removeEventListener('mouseleave', handleMouseLeave);
-      scrollContainer.removeEventListener('mouseup', handleMouseUp);
-      scrollContainer.removeEventListener('mousemove', handleMouseMove);
-      scrollContainer.removeEventListener('click', handleClick, true);
-    };
-  }, [isScrollable]); // isScrollable이 변경될 때마다 재실행
-
-  useEffect(() => {
-    const newTotalPages = Math.ceil(total / pageSize);
-    // 현재 페이지가 새로운 총 페이지 수를 초과하면 마지막 페이지로 이동
-    if (page > newTotalPages && newTotalPages > 0) {
-      setPage(newTotalPages);
-    }
-  }, [pageSize, total, page]);
-
-  const totalPages = Math.ceil(total / limit);
-
-  // page \ubcc0\uacbd \uc2dc URL \ub3d9\uae30\ud654
-  useEffect(() => {
-    const nextParams = new URLSearchParams(searchParams);
-    if (page === 1) {
-      nextParams.delete('page');
-    } else {
-      nextParams.set('page', page.toString());
-    }
-    setSearchParams(nextParams, { replace: true });
-  }, [page]);
-
-  useEffect(() => {
-    setShowGuide(true);
-  }, []);
-
-  const handleKeywordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setKeyword(e.target.value);
-    setPage(1); // 검색 변경 시 1페이지로
-  };
+    fetchClips();
+    return () => { ignore = true; };
+  }, [activeCategory, levelFilter, keyword, page, limit]);
 
   const handleCategoryChange = (c: string) => {
     const next = (ALL_CATEGORIES.includes(c as TCategory) ? c : '전체') as TCategory;
     setActiveCategory(next);
     setPage(1);
-
-    if (next === '전체') updateSearchParam('category', null);
-    else updateSearchParam('category', next);
-  };
-
-  const updateSearchParam = (key: string, value: string | null) => {
     const nextParams = new URLSearchParams(searchParams);
-    if (value === null) nextParams.delete(key);
-    else nextParams.set(key, value);
+    if (next === '전체') nextParams.delete('category');
+    else nextParams.set('category', next);
     setSearchParams(nextParams, { replace: true });
   };
 
   const applyLevel = (next: TDifficulty) => {
     setLevelFilter(next);
     setPage(1);
-    // ''(전체)이면 쿼리 제거, 아니면 세팅
-    if (!next) updateSearchParam('level', null);
-    else updateSearchParam('level', next);
+    const nextParams = new URLSearchParams(searchParams);
+    if (!next) nextParams.delete('level');
+    else nextParams.set('level', next);
+    setSearchParams(nextParams, { replace: true });
   };
 
-  // 리랜더링 방지
-  const PaginationComponent = React.memo(Pagination);
+  const handleKeywordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setKeyword(e.target.value);
+    setPage(1);
+  };
+
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="study-page relative min-h-screen bg-white dark:bg-background">
-      {/* StudyListPage 전용 미디어쿼리 */}
-      <style>
-        {`
-  @media (max-width: 1023px) {
-    /* md:hidden → 보이게 하는 기존 override */
-    .md\\:hidden {
-      display: inline-flex !important;
-    }
-
-    /* desktop 검색바 숨기기 */
-    .desktop-search-only {
-      display: none !important;
-    }
-    
-    /* 1023px 이하에서 모바일 검색 버튼 표시 */
-    .mobile-search-btn-900 {
-      display: flex !important;
-    }
-  }
-  
-  @media (min-width: 1024px) {
-    /* 1024px 이상에서 모바일 검색 버튼 숨김 */
-    .mobile-search-btn-900 {
-      display: none !important;
-    }
-    
-    /* 1024px 이상에서 데스크톱 검색 영역 표시 */
-    .desktop-search-900 {
-      display: flex !important;
-    }
-  }
-`}
-      </style>
-
-      <GuideModal
-        isOpen={showGuide}
-        onClose={() => setShowGuide(false)}
-        slides={LEANING_GUIDE_SLIDES}
-        storageKey={LEANING_GUIDE_KEY}
-        // 필요하면 버튼 텍스트 커스텀
-        // prevLabel="이전"
-        // nextLabel="다음"
-        // completeLabel="시작하기"
-        // closeLabel="닫기"
-        // neverShowLabel="다시 보지 않기"
-      />
-
+      <GuideModal isOpen={showGuide} onClose={() => setShowGuide(false)} slides={LEANING_GUIDE_SLIDES} storageKey={LEANING_GUIDE_KEY} />
+      
       <div className="flex justify-center min-h-screen">
         <div className="flex w-full max-w-7xl">
-          {/* Left Sidebar */}
-          {/* <aside className="w-20 lg:w-64 shrink-0 h-screen sticky top-0 bg-white dark:bg-background z-30">
-            <Sidebar onTweetClick={() => setShowTweetModal(true)} />
-          </aside> */}
-
-          {/* 메인 영역 */}
           <main className="flex-1 min-w-0 overflow-y-auto overflow-x-auto bg-white dark:bg-background">
-            {/* 탭 + 검색 */}
+            {/* 탭 + 검색 섹션 (26-zzeon 기반 고도화) */}
             <div className="flex flex-row justify-between items-center gap-1 md:gap-3 bg-white dark:bg-background sticky top-0 z-20 pb-2 pl-6 pt-8 pr-5">
-              {/* 왼쪽: 카테고리 탭 (스크롤 가능) */}
               <div
                 className={`flex-1 min-w-0 overflow-x-auto no-scrollbar ${isScrollable ? 'mask-gradient' : ''}`}
                 ref={categoryScrollRef}
               >
                 <CategoryTabs
-                  active={displayCategory}
+                  active={activeCategory}
                   onChange={handleCategoryChange}
                   categories={ALL_CATEGORIES.map(c => ({
                     value: c,
-                    label:
-                      c === '전체'
-                        ? t('study.category.all')
-                        : c === '드라마'
-                          ? t('study.category.drama')
-                          : c === '영화'
-                            ? t('study.category.movie')
-                            : c === '예능'
-                              ? t('study.category.entertainment')
-                              : c === '음악'
-                                ? t('study.category.music')
-                                : c,
+                    label: c === '전체' ? t('study.category.all') : t(`study.category.${c.toLowerCase()}`, c)
                   }))}
                 />
               </div>
-
-              {/* 오른쪽: 필터 + 검색 (고정 크기) */}
               <div className="flex items-center gap-1 flex-shrink-0">
-                {/* 필터는 항상 표시 */}
                 <div className="flex items-center h-11 gap-2">
-                  {/* 단어장 버튼 */}
+                  {/* 단어장 버튼 (26-zzeon) */}
                   {user && (
                     <button
                       onClick={() => navigate('/voca')}
                       className="shrink-0 h-11 px-3.5 inline-flex items-center justify-center gap-1.5 rounded-full ring-1 ring-gray-200 dark:ring-white/10 bg-white/70 dark:bg-white/5 text-gray-700 dark:text-gray-200 hover:ring-primary/50 hover:bg-primary/20 dark:hover:bg-primary/25 hover:text-primary transition-all"
-                      aria-label="단어장"
-                      title="단어장"
                     >
                       <BookOpen size={19} />
                       <span className="hidden md:inline text-sm font-semibold">단어장</span>
@@ -575,16 +169,15 @@ const StudyListPage = () => {
                   />
                 </div>
 
-                {/* 모바일 전용 검색 버튼 (필터 옆에 위치) */}
+                {/* 모바일 전용 검색 버튼 */}
                 <button
                   onClick={() => setShowSearch(true)}
                   className="hidden mobile-search-btn-900 shrink-0 h-11 w-11 items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-secondary transition"
-                  aria-label="검색 열기"
                 >
                   <i className="ri-search-line text-[20px] sm:text-[24px] text-gray-600 dark:text-gray-200" />
                 </button>
 
-                {/* 검색바는 1024px 이상에서만 표시 */}
+                {/* 데스크톱 검색바 */}
                 <div className="hidden desktop-search-900 items-center h-11">
                   <SearchBar
                     placeholder={t('study.search_placeholder')}
@@ -594,98 +187,97 @@ const StudyListPage = () => {
                   />
                 </div>
               </div>
-
-              {/* 모바일: 검색 전용 모달 */}
-              {showSearch && (
-                <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-20 lg:hidden">
-                  <div className="bg-white dark:bg-secondary w-[90%] max-w-sm rounded-xl shadow-lg p-4 flex flex-col gap-4">
-                    {/* 헤더 */}
-                    <div className="flex justify-between items-center">
-                      <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100">
-                        {t('common.search')}
-                      </h2>
-                      <button
-                        onClick={() => setShowSearch(false)}
-                        className="text-gray-500 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100"
-                        aria-label="닫기"
-                      >
-                        <i className="ri-close-line text-xl" />
-                      </button>
-                    </div>
-
-                    {/* 검색만 표시 */}
-                    <div className="mt-2">
-                      <SearchBar
-                        autoFocus
-                        placeholder={t('study.search_placeholder')}
-                        value={keyword}
-                        onChange={handleKeywordChange}
-                        onSubmit={() => {
-                          setShowSearch(false); // 검색 후 모달 닫기
-                        }}
-                        useSecondaryBg={true}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* 콘텐츠 영역 */}
-            <div className="w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1400px] bg-white dark:bg-background">
-              {/* 카드 그리드 */}
-              <div className="grid gap-6 sm:gap-8 px-0 grid-cols-1 sm:grid-cols-2 lg:[grid-template-columns:repeat(3,minmax(260px,1fr))] bg-white dark:bg-background">
-                {paginatedList.length > 0 ? (
-                  paginatedList.map(study => {
-                    // 원본 clips 배열에서 인덱스 찾기 (번역 데이터 매칭용)
+            <div className="w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1400px]">
+              <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                {clips.length > 0 ? (
+                  clips.reduce<React.ReactNode[]>((acc, study, index) => {
                     const originalIndex = clips.findIndex(c => c.id === study.id);
                     const [v] = study.video ?? [];
-                    return (
+                    acc.push(
                       <ContentCard
                         key={study.id}
                         id={study.id}
                         image={study.poster_image_url}
-                        title={study.title || '제목 없음'}
-                        short_description={study.short_description || '설명 없음'}
+                        title={originalIndex >= 0 ? (trTitles[originalIndex] ?? study.title ?? '') : (study.title || '')}
+                        short_description={originalIndex >= 0 ? (trDescs[originalIndex] ?? study.short_description ?? '') : (study.short_description || '')}
                         contents={v?.contents || ''}
                         episode={v?.episode || ''}
                         scene={v?.scene || ''}
                         level={v?.level || ''}
                         duration={typeof v?.runtime_bucket === 'string' ? v.runtime_bucket : null}
-                        basePath={user ? '/study' : '/guest-study'} // 로그인/게스트에 따라 이동 경로 달라짐
-                        isGuest={!user} // 게스트 여부
+                        basePath={user ? '/study' : '/guest-study'}
+                        isGuest={!user}
                         isPreview={study.is_featured}
-                        openLoginModal={() => setShowSignIn(true)} // 잠금 콘텐츠 눌렀을 때 로그인 모달 열기
-                        categories={v?.categories || null}
-                        translatedTitleProp={originalIndex >= 0 ? trTitles[originalIndex] : null}
-                        translatedDescProp={originalIndex >= 0 ? trDescs[originalIndex] : null}
-                        translatedDurationProp={
-                          originalIndex >= 0 ? trDurations[originalIndex] : null
-                        }
-                        translatedEpisodeProp={
-                          originalIndex >= 0 ? trEpisodes[originalIndex] : null
-                        }
+                        required_plan={study.required_plan}
+                        created_at={study.created_at}
+                        openLoginModal={() => setShowSignIn(true)}
                       />
                     );
-                  })
+
+                    // 광고 로직 (main 기반)
+                    if (!isAdFree && (index + 1) % 5 === 0) {
+                      const globalIndex = ((page - 1) * limit) + index;
+                      const hasBanners = inlineBanners.length > 0;
+                      const bannerIndex = hasBanners ? (Math.floor(globalIndex / 5) % inlineBanners.length) : 0;
+                      const banner = hasBanners ? inlineBanners[bannerIndex] : null;
+                      
+                      acc.push(
+                        <motion.div
+                          key={`marketing-${globalIndex}-${banner?.id || 'default'}`}
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          onClick={() => {
+                            if (banner) {
+                              trackBannerClick(banner.id);
+                              if (banner.link_url) window.open(banner.link_url, '_blank', 'noopener');
+                            } else {
+                              window.location.href = '/subscription';
+                            }
+                          }}
+                          onViewportEnter={() => banner && trackBannerView(banner.id)}
+                          className="relative aspect-[4/3] rounded-3xl overflow-hidden cursor-pointer group shadow-sm hover:shadow-xl transition-all duration-500 bg-gray-100 dark:bg-zinc-900 border border-gray-100 dark:border-white/5"
+                        >
+                          {banner?.image_url ? (
+                            <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-[#00E5FF]/20 to-[#00BFA5]/20 flex flex-col items-center justify-center p-8 text-center">
+                              <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 border border-white/20">
+                                <span className="text-xl font-black text-[#00BFA5]">A</span>
+                              </div>
+                              <h4 className="text-lg font-black text-gray-900 dark:text-white mb-2 leading-tight">광고 없는 아라 프리미엄</h4>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">지금 프리미엄으로 업그레이드하고<br/>모든 혜택을 누려보세요!</p>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+                          <div className="absolute inset-0 p-6 flex flex-col justify-end">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-md text-[10px] font-black text-white tracking-widest border border-white/10 uppercase">
+                                {banner ? 'AD' : 'PROMOTION'}
+                              </span>
+                              {(banner?.link_url || !banner) && <ExternalLink size={14} className="text-white/60" />}
+                            </div>
+                            <h4 className="text-xl font-black text-white leading-tight tracking-tight">
+                              {banner?.title || 'ARA Premium Academy'}
+                            </h4>
+                          </div>
+                        </motion.div>
+                      );
+                    }
+                    return acc;
+                  }, [])
                 ) : (
-                  // 빈 결과 문구
-                  <div className="col-span-full text-center py-16 text-gray-500 dark:text-gray-400 text-sm sm:text-base">
-                    {t('study.no_content')}
-                  </div>
+                  <div className="col-span-full text-center py-16 text-gray-500">{t('study.no_content')}</div>
                 )}
                 <SignInModal isOpen={showSignIn} onClose={() => setShowSignIn(false)} />
               </div>
 
-              {/* 페이지네이션 */}
               {totalPages > 1 && (
-                <PaginationComponent
-                  totalPages={totalPages}
-                  page={page}
-                  onPageChange={setPage}
-                  windowSize={5} // 5개씩 보이기
-                  autoScrollTop={true} // 숫자 클릭 시 상단으로
-                />
+                <div className="mt-12">
+                  <Pagination totalPages={totalPages} page={page} onPageChange={setPage} windowSize={5} autoScrollTop={true} />
+                </div>
               )}
             </div>
           </main>

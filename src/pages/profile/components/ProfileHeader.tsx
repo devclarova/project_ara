@@ -708,13 +708,6 @@ export default function ProfileHeader({
                     </span>
                   </span>
                 )}
-                {userProfile.age && (
-                  <span className="flex items-center gap-1">
-                    <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-medium">
-                      {userProfile.age}세
-                    </span>
-                  </span>
-                )}
               </>
             )}
             <span className="flex items-center gap-1">

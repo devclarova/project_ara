@@ -13,7 +13,7 @@ export default function ReportButton({ onClick }: ReportButtonProps) {
         onClick();
       }}
       className="w-full text-left px-4 py-3 hover:bg-gray-100 
-        dark:hover:bg-white/10 flex items-center gap-2 text-gray-800 dark:text-gray-200"
+        dark:hover:bg-white/10 flex items-center gap-2 text-gray-800 dark:text-gray-200 text-sm"
     >
       <i className="ri-flag-line" />
       {t('common.report')}

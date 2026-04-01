@@ -45,7 +45,8 @@ export default function PopularContentSection() {
             scene,
             level,
             runtime_bucket
-          )
+          ),
+          required_plan
         `,
         )
         .eq('is_featured', true)
@@ -74,6 +75,7 @@ export default function PopularContentSection() {
                 ? v.runtime_bucket
                 : (v?.runtime_bucket ?? null),
             comments: '0개 댓글',
+            required_plan: row.required_plan || 'free',
           };
         });
 
@@ -193,6 +195,7 @@ export default function PopularContentSection() {
                     level={item.level}
                     duration={item.duration}
                     comments={item.comments}
+                    required_plan={item.required_plan}
                     basePath={user ? '/study' : '/guest-study'}
                     isGuest={!user}
                     isPreview={!user}

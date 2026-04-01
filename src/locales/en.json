@@ -1008,7 +1008,15 @@
       "sort_lowest": "Lowest Rating",
       "helpful": "Helpful",
       "photo_review": "Photo Review",
-      "verified_purchase": "Verified"
+      "verified_purchase": "Verified",
+      "no_reviews": "No reviews yet.",
+      "be_first": "Be the first to review!",
+      "be_first_desc": "Share your experience and help other buyers.",
+      "load_more": "Load More",
+      "view_all": "View All",
+      "no_stats": "No Data",
+      "positive_ratio": "Positive Review Ratio",
+      "buyer_only_error": "Only verified buyers can write a review."
     },
     "preview_notice": "This service is currently under preparation. Preview it with virtual data.",
     "guide": {

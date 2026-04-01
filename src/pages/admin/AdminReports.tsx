@@ -46,6 +46,16 @@ const AdminReports = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const fetchReports = useCallback(async () => {
     setLoading(true);
@@ -71,11 +81,13 @@ const AdminReports = () => {
         query = query.eq('status', filterStatus);
       }
 
+      // debouncedSearch 서버 필터링 제거 (클라이언트 필터에서 번역문/닉네임 통합 검색 수행)
+
       const { data: reportsData, error } = await query;
 
       if (error) throw error;
 
-      // Enhance Chat Reports with Suspect Info
+      // Enhance Chat & User Reports with Suspect Info
       const enhancedReports = await Promise.all(reportsData.map(async (report: any) => {
         if (report.target_type === 'chat') {
             try {
@@ -104,6 +116,20 @@ const AdminReports = () => {
             } catch (err) {
                 console.error('Error fetching chat suspect', err);
             }
+        } else if (report.target_type === 'user') {
+            try {
+                const { data: suspect } = await supabase
+                    .from('profiles')
+                    .select('nickname, user_id, avatar_url')
+                    .eq('id', report.target_id)
+                    .maybeSingle();
+                
+                if (suspect) {
+                    return { ...report, suspect_profile: suspect };
+                }
+            } catch (err) {
+                console.error('Error fetching user suspect', err);
+            }
         }
         return report;
       }));
@@ -111,11 +137,11 @@ const AdminReports = () => {
       setReports(enhancedReports as Report[]);
     } catch (error) {
       console.error('Error fetching reports:', error);
-      toast.error('Failed to load reports');
+      toast.error('신고 목록을 불러오는 데 실패했습니다.');
     } finally {
       setLoading(false);
     }
-  }, [filterStatus]);
+  }, [filterStatus, debouncedSearch]);
 
   useEffect(() => {
     fetchReports();
@@ -148,7 +174,9 @@ const AdminReports = () => {
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <input 
               type="text" 
-              placeholder="작성자, 내용 검색..." 
+              placeholder="사유, 내용 검색..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 pr-4 py-2 w-full bg-secondary border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
           </div>
@@ -203,7 +231,28 @@ const AdminReports = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {reports.map((report: any) => {
+              {reports
+                .filter((report: any) => {
+                  if (!debouncedSearch) return true;
+                  const lowerSearch = debouncedSearch.toLowerCase();
+                  
+                  // 번역된 사유가 검색어에 포함되는지 확인
+                  const translatedReason = t(`report.reasons.${report.reason}`, { defaultValue: report.reason }).toLowerCase();
+                  if (translatedReason.includes(lowerSearch)) return true;
+
+                  // 닉네임(신고자/피신고자) 확인
+                  if (report.reporter?.nickname?.toLowerCase().includes(lowerSearch)) return true;
+                  if (report.suspect_profile?.nickname?.toLowerCase().includes(lowerSearch)) return true;
+                  if (report.content_snapshot?.user?.nickname?.toLowerCase().includes(lowerSearch)) return true;
+                  if (report.content_snapshot?.user?.name?.toLowerCase().includes(lowerSearch)) return true;
+
+                  // 기본 필드(원본 사유, 설명) 확인
+                  if (report.reason.toLowerCase().includes(lowerSearch)) return true;
+                  if (report.description?.toLowerCase().includes(lowerSearch)) return true;
+
+                  return false;
+                })
+                .map((report: any) => {
                  let targetName = '-';
                  let targetAvatar = null;
                  let targetSub = null;
@@ -212,16 +261,14 @@ const AdminReports = () => {
                      targetName = report.content_snapshot.user.name || report.content_snapshot.user.nickname;
                      targetAvatar = report.content_snapshot.user.avatar || report.content_snapshot.user.avatar_url;
                      targetSub = report.content_snapshot.user.username ? `@${report.content_snapshot.user.username}` : null;
+                 } else if (report.suspect_profile) {
+                     targetName = report.suspect_profile.nickname;
+                     targetAvatar = report.suspect_profile.avatar_url;
+                     targetSub = `@${report.suspect_profile.user_id}`;
                  } else if (report.target_type === 'user') {
                      targetName = 'User Profile'; 
                  } else if (report.target_type === 'chat') {
-                     if (report.suspect_profile) {
-                         targetName = report.suspect_profile.nickname;
-                         targetAvatar = report.suspect_profile.avatar_url;
-                         targetSub = `@${report.suspect_profile.user_id}`;
-                     } else {
-                         targetName = 'Chat Room';
-                     }
+                     targetName = 'Chat Room';
                  }
 
                  return (

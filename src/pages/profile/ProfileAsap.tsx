@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
+import SeagullIcon from '@/components/common/SeagullIcon';
+import { Bird } from 'lucide-react';
 import ProfileHeader from './components/ProfileHeader';
 import ProfileTabs, { type ProfileTabKey } from './components/ProfileTabs';
 import ProfileTweets from './components/ProfileTweets';
@@ -30,8 +32,8 @@ export interface UserProfile {
   nickname_updated_at?: string | null;
   country_updated_at?: string | null;
   gender?: string | null;
-  age?: number | null;
   banned_until?: string | null;
+  plan?: 'free' | 'basic' | 'premium';
 }
 export default function ProfileAsap() {
   const { t, i18n } = useTranslation();
@@ -97,7 +99,7 @@ export default function ProfileAsap() {
       let baseQuery = supabase.from('profiles').select(`
         id, user_id, nickname, avatar_url, banner_url, banner_position_y,
         bio, country, followers_count, following_count, created_at,
-        nickname_updated_at, country_updated_at, banned_until
+        nickname_updated_at, country_updated_at, banned_until, plan
       `);
 
       if (!decodedUsername && user) {
@@ -151,6 +153,7 @@ export default function ProfileAsap() {
         nickname_updated_at: profile.nickname_updated_at,
         country_updated_at: profile.country_updated_at,
         banned_until: profile.banned_until ?? null,
+        plan: profile.plan ?? 'free',
       });
 
       if (profile.banned_until) fetchBanDetails(profile.user_id);
@@ -230,13 +233,19 @@ export default function ProfileAsap() {
   }
   return (
     // 홈 피드처럼: 전체 배경 + 가운데 정렬 + 가운데 컬럼만 border-x
-    <div className="min-h-screen bg-white dark:bg-background">
-      <ScrollToTopButton className="bottom-10 right-6 lg:right-16 xl:right-[calc(50vw-500px)]" />
-      <div className="flex justify-center">
+    <div className={`min-h-screen relative overflow-hidden ${userProfile.plan === 'premium' ? 'bg-[#0a1a14] dark:bg-[#050d0a]' : 'bg-white dark:bg-background'}`}>
+      {userProfile.plan === 'premium' && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+          <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[50vh] bg-[#00BFA5]/10 rounded-[100%] blur-[120px] opacity-70 animate-pulse mix-blend-screen" style={{ animationDuration: '8s' }}></div>
+          <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vh] bg-[#00E5FF]/10 rounded-[100%] blur-[100px] opacity-60 animate-pulse mix-blend-screen" style={{ animationDuration: '12s' }}></div>
+        </div>
+      )}
+      <ScrollToTopButton className="bottom-10 right-6 lg:right-16 xl:right-[calc(50vw-500px)] z-50" />
+      <div className="flex justify-center relative z-10">
         {/* 가운데 프로필 컬럼 */}
-        <div className="w-full max-w-2xl lg:max-w-3xl border-x border-gray-200 dark:border-gray-700 dark:bg-background">
+        <div className={`w-full max-w-2xl lg:max-w-3xl border-x ${userProfile.plan === 'premium' ? 'border-[#00BFA5]/20 bg-transparent' : 'border-gray-200 dark:border-gray-700 dark:bg-background'}`}>
           {/* 상단 스티키 헤더 (뒤로가기 + 이름) */}
-          <div className="sticky top-0 bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4 z-20">
+          <div className={`sticky top-0 backdrop-blur-md border-b p-4 z-20 ${userProfile.plan === 'premium' ? 'bg-[#0a1a14]/80 border-[#00BFA5]/20 shadow-[0_4px_20px_rgba(0,191,165,0.05)]' : 'bg-white/80 dark:bg-background/80 border-gray-200 dark:border-gray-700'}`}>
             <div className="flex items-center">
               {/* 뒤로가기 */}
               <button
@@ -246,9 +255,19 @@ export default function ProfileAsap() {
                 <i className="ri-arrow-left-line text-xl text-gray-700 dark:text-gray-100" />
               </button>
               {/* 이름 */}
-              <h1 className="ml-3 text-xl font-bold text-gray-900 dark:text-gray-100">
-                {userProfile.name}
-              </h1>
+              <div className="flex flex-col ml-3 justify-center">
+                <h1 className={`text-xl font-bold flex items-center ${userProfile.plan === 'premium' ? 'text-[#00F0FF]' : 'text-gray-900 dark:text-gray-100'}`}>
+                  {userProfile.name}
+                  {userProfile.plan === 'premium' && (
+                    <SeagullIcon size={20} className="ml-1 text-[#00BFA5] drop-shadow-[0_0_8px_rgba(0,191,165,0.8)]" />
+                  )}
+                </h1>
+                {userProfile.plan === 'premium' && (
+                  <span className="text-[10px] font-black tracking-widest uppercase text-[#00BFA5] opacity-80 leading-none mt-0.5">
+                    Premium Member
+                  </span>
+                )}
+              </div>
               {/* 오른쪽 영역 */}
               {!isOwnProfile && (
                 <div className="ml-auto relative" ref={menuRef}>

@@ -4,6 +4,7 @@ export type TweetUser = {
   username: string;
   avatar: string;
   banned_until?: string | null;
+  plan?: 'free' | 'basic' | 'premium';
 };
 
 // DB Row Types (Manual definition since database.ts is incomplete)
@@ -12,6 +13,7 @@ export interface DBProfile {
   user_id: string;
   nickname: string;
   avatar_url: string | null;
+  plan?: 'free' | 'basic' | 'premium';
 }
 
 export interface TweetQueryResponse {
@@ -30,7 +32,9 @@ export interface TweetQueryResponse {
     user_id: string;
     avatar_url: string | null;
     banned_until?: string | null;
+    plan?: 'free' | 'basic' | 'premium';
   } | null;
+  is_hidden?: boolean;
 }
 
 export interface ReplyQueryResponse {
@@ -46,6 +50,7 @@ export interface ReplyQueryResponse {
     user_id: string;
     avatar_url: string | null;
     banned_until?: string | null;
+    plan?: 'free' | 'basic' | 'premium';
   } | null;
   tweet_replies_likes?: { count: number }[];
   tweets?: {
@@ -53,6 +58,7 @@ export interface ReplyQueryResponse {
     author_id: string;
   } | null;
   updated_at?: string;
+  is_hidden?: boolean;
 }
 
 export type TweetStats = {
@@ -75,6 +81,7 @@ export interface BaseFeedItem {
   liked?: boolean;
   liked_at?: string; // For 'likes' tab sorting
   deleted_at?: string | null; // Soft delete timestamp
+  is_hidden?: boolean; // Added for content hiding
   // 10-zzeon compatibility
   parent_reply_id?: string | null;
   root_reply_id?: string | null;
