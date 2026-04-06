@@ -27,7 +27,7 @@ const SubtitleItem: React.FC<SubtitleItemProps> = ({ subtitle, onSelect, onSeek,
           {subtitle.korean_subtitle}
         </button>
       )}
-      {/* 발음 번역 (또는 원본) */}
+      {/* 지역화 데이터 바인딩 — 번역 파이프라인에서 수신된 발음/내용 데이터가 존재할 경우 우선 렌더링, 부재 시 원문 노출 */}
       {(translatedPron || subtitle.pronunciation) && (
         <div className="block w-full text-base sm:text-lg text-gray-500 dark:text-gray-400 text-left mt-1 cursor-default select-text">
           [{translatedPron || subtitle.pronunciation}]

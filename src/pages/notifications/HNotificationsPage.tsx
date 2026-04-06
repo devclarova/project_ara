@@ -1,3 +1,8 @@
+/**
+ * 사용자 알림 허브 모듈(User Notifications Hub Module):
+ * - 목적(Why): 사용자 간섭(좋아요, 댓글, 팔로우) 및 시스템 공지 등 주요 활동 내역을 종합하여 보여줌
+ * - 방법(How): Supabase Realtime을 통한 실시간 푸시 수신, 탭 영역별 분류 렌더링 및 단일/전체 읽음/삭제 파이프라인으로 구성함
+ */
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';

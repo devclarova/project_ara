@@ -1,3 +1,8 @@
+/**
+ * 전역 알림 및 실시간 상호작용 브로드캐스트 엔진(Global Notification & Real-time Interaction Broadcast Engine):
+ * - 목적(Why): 서비스 전반에서 발생하는 소셜 활동(팔로우, 댓글, 좋아요) 및 채팅 메시지를 사용자에게 즉각 피드백함
+ * - 방법(How): 다중 Supabase Realtime 채널 구독, 수신 거부(차단) 필터링, 그리고 고유한 알림 키 기반의 디바운싱(Debouncing) 처리를 통해 고사양의 실시간 푸시 경험을 제공함
+ */
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -13,9 +18,9 @@ export const GlobalNotificationListener: React.FC = () => {
   const { user } = useAuth();
   const { currentChat, blockedUserIds } = useDirectChat();
   
-  // 현재 보고 있는 채팅방 ID를 ref로 추적 (의존성 배열 영향 없이 콜백 내부에서 접근)
+  // Active Context Tracking: Tracks the current chat room ID to suppress redundant push notifications while the user is in-view.
   const currentChatRef = useRef<string | null>(null);
-  // 최근 알림 추적 (0.5초 이내 동일 알림 = 중복, 그 이후는 새 알림)
+  // Event Deduplication: Implements a short-term buffer to filter out rapid, identical notification spikes (debouncing).
   const recentNotificationsRef = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
@@ -54,7 +59,7 @@ export const GlobalNotificationListener: React.FC = () => {
             async (payload: any) => {
               const newNotif = payload.new;
 
-              // Shadow Block Check
+              // Inbound Blacklist Filter: Suppresses notification propagation if the sender is present in the blocklist.
               if (blockedUserIds.has(newNotif.sender_id)) {
                 return;
               }
@@ -81,7 +86,7 @@ export const GlobalNotificationListener: React.FC = () => {
               // 새 타임스탬프 기록
               recentNotificationsRef.current.set(notifKey, now);
               
-              // 메모리 관리: 5초 이상 지난 항목 제거
+              // Cache Maintenance: Performs manual garbage collection on the tracking map after a 5-second TTL to prevent memory bloat.
               for (const [key, timestamp] of recentNotificationsRef.current.entries()) {
                 if (now - timestamp > 5000) {
                   recentNotificationsRef.current.delete(key);

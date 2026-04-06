@@ -1,3 +1,8 @@
+/**
+ * 다국어 로컬라이제이션 선택 엔진(Multilingual Localization Selector Engine):
+ * - 목적(Why): 전 세계 사용자가 자신의 모국어로 서비스를 이용할 수 있도록 인터페이스 언어를 동적으로 전환함
+ * - 방법(How): ISO 코드 기반의 국기 매핑 시스템(FlagMap), 이미지 로드 실패 시 이모지 폴백(Fallback) 처리, 그리고 i18next 연동을 통한 실시간 번역 컨텍스트 업데이트를 수행함
+ */
 import Button from '@/components/common/Buttons';
 import type { Lang } from '@/types/settings';
 import { useTranslation } from 'react-i18next';

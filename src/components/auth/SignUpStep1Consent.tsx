@@ -18,7 +18,7 @@ export default function SignUpStep1Consent({ onNext, value, onChange }: Props) {
   const [age, setAge] = useState(value?.age ?? false);
   const [marketing, setMarketing] = useState(value?.marketing ?? false);
 
-  // 외부 value 변화 동기화
+  // 외부 상태 동기화(External Sync) — 부모 컴포넌트로부터 전달받은 약관 동의 상태(Value)를 로컬 상태에 실시간 바인딩
   useEffect(() => {
     if (!value) return;
     setTerms(value.terms);
@@ -27,16 +27,18 @@ export default function SignUpStep1Consent({ onNext, value, onChange }: Props) {
     setMarketing(value.marketing);
   }, [value]);
 
-  // ✅ 입력 중에는 저장하지 않음. 부모에만 알림.
+  // 상태 전파 엔진(State Propagation) — 사용자의 인터랙션 결과를 상위 컨텍스트로 전달하여 전체 가입 프로세스의 데이터 정합성 유지
   const emit = (next: ConsentResult) => {
     onChange?.(next);
   };
 
+  // 법적 요건 검증(Compliance Validation) — 서비스 이용의 필수 약관 동의 여부를 판별하여 다음 스텝으로의 가이드라인(Guardrail) 역할 수행
   const allRequired = terms && privacy && age;
   const allSelected = terms && privacy && age && marketing;
   const anySelected = terms || privacy || age || marketing;
   const someSelected = anySelected && !allSelected;
 
+  // 벌크 액션 오케스트레이터(Bulk Action Orchestration) — '전체 동의' 선택 시 개별 약관의 상태를 일괄적으로 전환하여 사용자 편의성 제공
   const handleAll = (v: boolean) => {
     const next: ConsentResult = { terms: v, privacy: v, age: v, marketing: v };
     setTerms(next.terms);
@@ -48,7 +50,7 @@ export default function SignUpStep1Consent({ onNext, value, onChange }: Props) {
 
   const [open, setOpen] = useState<null | 'terms' | 'privacy' | 'marketing'>(null);
 
-  // 모달의 "동의하고 닫기": 열린 항목만 true로 만든 next를 반영
+  // 컨텐츠 상세 확인 및 승인 — 각 약관의 세부 전문을 확인한 후 개별 항목의 승인 상태를 확정하고 모달 라이프사이클 종료
   const acceptAndClose = () => {
     if (!open) return;
     const next: ConsentResult = { terms, privacy, age, marketing };

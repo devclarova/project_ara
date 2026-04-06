@@ -1,3 +1,8 @@
+/**
+ * 서비스 메인 배너 관리 체계(Service Main Banner Management System):
+ * - 목적(Why): 홈페이지, 스토어 등 주요 고객 접점의 마케팅 배너를 실시간으로 제어하고 순서를 관리함
+ * - 방법(How): Drag & Drop 기반의 배열 정렬 기능과 이미지 업로드, 상태 토글 UI를 제공하여 관리 영속성을 보장함
+ */
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -9,7 +14,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Upload } from 'lucide-react';
 
-// ────────────────── Types ──────────────────
+// 데이터 엔티티 및 스키마 인터페이스 정의
 interface MarketingBanner {
   id: string;
   title: string;
@@ -53,7 +58,7 @@ const TARGET_AUDIENCES = [
   { value: 'subscriber', label: '구독자' },
 ];
 
-// ────────────────── Component ──────────────────
+// 마케팅 배너 및 팝업 자산 관리 엔진 컴포넌트
 const AdminBannerManager = () => {
   const [banners, setBanners] = useState<MarketingBanner[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,7 +88,7 @@ const AdminBannerManager = () => {
     is_active: true,
   });
 
-  // ── Fetch ──
+  // 원격 배너 데이터 동기화 — 마케팅 서버 가용 자산 전체 로드 및 우선순위 정렬
   const fetchBanners = async () => {
     setLoading(true);
     try {
@@ -107,7 +112,7 @@ const AdminBannerManager = () => {
     fetchBanners();
   }, []);
 
-  // ── Form helpers ──
+  // 폼 상태 제어 및 메모리 클린업 유틸리티
   const resetForm = () => {
     setForm({
       title: '',
@@ -152,7 +157,7 @@ const AdminBannerManager = () => {
     setShowForm(true);
   };
 
-  // ── Save (Create / Update) ──
+  // 배너 데이터 영속성 처리 — 생성 및 수정 로직 통합 핸들러
   const handleSave = async () => {
     if (!form.title.trim()) {
       toast.error('배너 제목을 입력해 주세요.');
@@ -203,7 +208,7 @@ const AdminBannerManager = () => {
     }
   };
 
-  // ── Toggle Active ──
+  // 배너 노출 가시성 토글 — 서비스 전역 실시간 노출 상태 스위칭
   const handleToggleActive = async (id: string, currentActive: boolean) => {
     try {
       const { error } = await supabase
@@ -218,7 +223,7 @@ const AdminBannerManager = () => {
     }
   };
 
-  // ── Delete ──
+  // 배너 데이터 영구 삭제 — 물리 삭제 전 참조 관계 및 캐시 무효화 확인 필수
   const handleDelete = async () => {
     if (!deleteModal) return;
     try {
@@ -235,14 +240,14 @@ const AdminBannerManager = () => {
     }
   };
 
-  // ── Filtered list ──
+  // 검색 및 타입 필터링 로직 — 인터랙티브 UI 반응성 확보를 위한 클라이언트 측 연산 (O(n))
   const filtered = banners.filter(b => {
     const matchSearch = !searchTerm || b.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchType = filterType === 'all' || b.banner_type === filterType;
     return matchSearch && matchType;
   });
 
-  // ── Status helpers ──
+  // 배너 생명주기 상태 검증 유틸리티 — 예약/만료/노출 임계점 자동 판별
   const getBannerStatus = (banner: MarketingBanner) => {
     if (!banner.is_active) return { label: '비활성', color: 'text-gray-400 bg-gray-100 dark:bg-zinc-800' };
     const now = new Date();

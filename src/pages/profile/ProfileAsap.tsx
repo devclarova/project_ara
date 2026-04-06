@@ -1,3 +1,8 @@
+/**
+ * 하이엔드 사용자 프로필 엔진(High-end User Profile Engine):
+ * - 목적(Why): 사용자의 소셜 정체성을 시각화하고 구독 플랜(Premium)에 따른 차별화된 심미적 경험을 제공함
+ * - 방법(How): Supabase Realtime CDC를 연동하여 실시간 프로필 동기화를 처리하고, 제재(Ban) 상태에 따른 UI 가드 로직을 통합함
+ */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -48,7 +53,7 @@ export default function ProfileAsap() {
   const menuRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
-  // URL에서 username 추출 + 디코딩
+  // 경로 변수 파싱 — URL 세그먼트로부터 대상 식별자(Username/ID) 추출 및 디코딩 처리
   const { username } = useParams<{ username: string }>();
   const decodedUsername = username ? decodeURIComponent(username) : '';
   const isOwnProfile = user && userProfile ? user.id === userProfile.user_id : false;
@@ -62,10 +67,10 @@ export default function ProfileAsap() {
     document.title = isOwnProfile ? `내 프로필 | ARA` : `${userProfile.name} 프로필 | ARA`;
   }, [userProfile, isOwnProfile]);
 
-  // Real-time listener for profile updates (bans)
+  // 실시간 프로필 업데이트 리스너 — 계정 제재 상태 등 중요 변경사항 즉시 반영
 
   const fetchBanDetails = async (authId: string) => {
-    // Get start date of current ban
+    // 제재 이력 조회 — 현재 적용 중인 시스템 이용 제한의 시작 시점 추출
     const { data: sanctionData } = await supabase
       .from('sanction_history')
       .select('created_at')
@@ -78,7 +83,7 @@ export default function ProfileAsap() {
       setBanStartDate(sanctionData.created_at);
     }
 
-    // Get Count
+    // 누적 제재 횟수 산출 — 정지/영구정지 이력 전수 조사를 통한 누적 위반 횟수 계산
     const { count } = await supabase
       .from('sanction_history')
       .select('*', { count: 'exact', head: true })
@@ -88,7 +93,7 @@ export default function ProfileAsap() {
     setBanCount(count || 0);
   };
 
-  // 현재 프로필 정보를 추정하는 Ref (실시간 구독자 클로저 문제 해결용)
+  // 런타임 프로필 식별자 참조 — 실시간 구독(Real-time) 이벤트 핸들러 내에서 최신 상태를 참조하기 위한 Ref 캐싱
   const targetProfileIdRef = useRef<string | null>(null);
   const targetAuthIdRef = useRef<string | null>(null);
   const latestFetchProfile = useRef<() => Promise<void>>();
@@ -171,7 +176,7 @@ export default function ProfileAsap() {
     fetchProfile();
   }, [fetchProfile]);
 
-  // 2) 실시간 구독 (단 1회 구독, Ref 기반 동적 처리)
+  // 실시간 데이터 동기화(CDC) — profiles 테이블 변경 감지 시 즉시 로컬 상태 리프레시 수행
   useEffect(() => {
     const channel = supabase
       .channel(`profile-page-realtime-${Math.random().toString(36).slice(2)}`)
@@ -200,7 +205,7 @@ export default function ProfileAsap() {
       supabase.removeChannel(channel);
     };
   }, []); // Mount 시 1회 고정
-  // 외부 클릭 시 메뉴 닫기
+  // UI 이벤트 핸들링 — 메뉴 외부 영역 클릭 감지를 통한 드롭다운 인터페이스 자동 비활성화
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -210,7 +215,7 @@ export default function ProfileAsap() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-  // 프로필 저장 후 상태 갱신
+  // 상태 로컬 동기화 — 편집 모달로부터 수신된 최신 프로필 정보를 메모리 내 상태로 반영
   const handleSaveProfile = (updatedProfile: Partial<UserProfile>) => {
     setUserProfile(prev => (prev ? { ...prev, ...updatedProfile } : prev));
   };
@@ -232,7 +237,7 @@ export default function ProfileAsap() {
     );
   }
   return (
-    // 홈 피드처럼: 전체 배경 + 가운데 정렬 + 가운데 컬럼만 border-x
+    // 프로필 레이아웃 컨테이너 — 뷰포트 중앙 정렬 및 플랜별(Premium) 특화 시각 효과 적용
     <div className={`min-h-screen relative overflow-hidden ${userProfile.plan === 'premium' ? 'bg-[#0a1a14] dark:bg-[#050d0a]' : 'bg-white dark:bg-background'}`}>
       {userProfile.plan === 'premium' && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
@@ -244,7 +249,7 @@ export default function ProfileAsap() {
       <div className="flex justify-center relative z-10">
         {/* 가운데 프로필 컬럼 */}
         <div className={`w-full max-w-2xl lg:max-w-3xl border-x ${userProfile.plan === 'premium' ? 'border-[#00BFA5]/20 bg-transparent' : 'border-gray-200 dark:border-gray-700 dark:bg-background'}`}>
-          {/* 상단 스티키 헤더 (뒤로가기 + 이름) */}
+          {/* 상단 네비게이션 레이어 — 스티키 레이아웃 기반의 이름 노출 및 뒤로가기 액션 제어 */}
           <div className={`sticky top-0 backdrop-blur-md border-b p-4 z-20 ${userProfile.plan === 'premium' ? 'bg-[#0a1a14]/80 border-[#00BFA5]/20 shadow-[0_4px_20px_rgba(0,191,165,0.05)]' : 'bg-white/80 dark:bg-background/80 border-gray-200 dark:border-gray-700'}`}>
             <div className="flex items-center">
               {/* 뒤로가기 */}
@@ -306,7 +311,7 @@ export default function ProfileAsap() {
               )}
             </div>
           </div>
-          {/* 프로필 헤더 (배너, 아바타, 팔로워 수 등) */}
+          {/* 프로필 정보 요약 섹션 — 아바타, 통계, 관리 액션이 포함된 핵심 프로필 헤더 컴포넌트 */}
           <ProfileHeader
             userProfile={userProfile}
             isOwnProfile={isOwnProfile}

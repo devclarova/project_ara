@@ -1,3 +1,8 @@
+/**
+ * 계정 자격 증명 재설정 매니저(Account Credentials Reset Manager):
+ * - 목적(Why): 접근 권한을 잃은 사용자가 이메일 인증 절차를 거쳐 보안 암호를 초기화할 수 있는 안전한 플로우를 제공함
+ * - 방법(How): 사용자 입력 정규식 기반 검증 절차, Supabase resetPasswordForEmail API 및 리다이렉트 설정 옵션을 연동하여 보안 무결성을 보장함
+ */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';

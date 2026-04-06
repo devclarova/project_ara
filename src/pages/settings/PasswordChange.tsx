@@ -1,3 +1,8 @@
+/**
+ * 고확보성 비밀번호 갱신 및 보안 강화 콘솔(High-Availability Password Update & Security Reinforcement Console):
+ * - 목적(Why): 기존 사용자의 자격 증명을 갱신하거나 소셜 로그인 사용자의 이메일 기반 접근을 위한 초기 비밀번호 설정을 지원함
+ * - 방법(How): 입력 실시간 대칭 검증(Mismatch Check), 소셜 계정 여부 판별 로직(app_metadata), 그리고 Supabase Auth API를 통한 보안 자격 증명 트랜잭션을 수행함
+ */
 import Button from '@/components/common/Buttons';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';

@@ -70,6 +70,7 @@ export default function QuizMenuModal({
     document.body.style.overflow = 'hidden';
     if (scrollBarWidth > 0) document.body.style.paddingRight = `${scrollBarWidth}px`;
 
+    // 뷰포트 스크롤 제어 — 모달 활성화 시 배경 스크롤을 차단하고 레이아웃 뒤틀림 방지를 위해 스크롤바 너비를 패딩으로 보정
     return () => {
       document.body.style.overflow = prevOverflow;
       document.body.style.paddingRight = prevPaddingRight;
@@ -125,7 +126,7 @@ export default function QuizMenuModal({
           </button>
         </div>
 
-        {/* Mobile */}
+        {/* 모바일 인터페이스 — 작은 화면에서의 퀴즈 선택을 위한 스와이프 가능한 카드 레이아웃 */}
         <div className="mt-4 sm:hidden">
           <div className="relative">
             <button
@@ -191,7 +192,7 @@ export default function QuizMenuModal({
           <div className="mt-2 text-center text-xs text-gray-500">버튼으로 넘겨서 선택해요</div>
         </div>
 
-        {/* Desktop */}
+        {/* 데스크톱 인터페이스 — 대화면 대응을 위한 그리드 기반 퀴즈 선택 레이아웃 */}
         <div className="mt-5 hidden sm:grid sm:grid-cols-3 gap-4">
           {cards.map(card => {
             const dis = card.disabled;

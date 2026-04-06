@@ -1,3 +1,8 @@
+/**
+ * 통합 사용자 설정 및 프로필 제어 센터(Unified User Settings & Profile Control Center):
+ * - 목적(Why): 계정 정보, 알림, 개인정보 보호 등 서비스 전반의 사용자 환경설정을 통합 관리하는 중앙 인터페이스를 제공함
+ * - 방법(How): 아키텍처 기반의 탭 내비게이션(SettingsSidebar)과 내용 영역(SettingsContent)을 결합하고, 어댑티브 뷰포트 분석 엔진으로 모바일/데스크톱 레이아웃 전환을 동적으로 제어함
+ */
 import AlarmSettings from '@/pages/settings/AlarmSettings';
 import PrivacySettings from '@/pages/settings/PrivacySettings';
 import SupportPolicy from '@/pages/settings/SupportPolicy';
@@ -14,6 +19,7 @@ import SettingsLayout from './SettingsLayout';
 import SettingsSidebar from './SettingsSidebar';
 import { useLocation } from 'react-router-dom';
 
+// 통합 설정 센터(Unified Settings Center) — 라우팅 상태 및 검색 가시성에 따른 가변적 레이아웃 제어
 export default function ProfileSettings() {
   const { t } = useTranslation();
 
@@ -87,7 +93,7 @@ export default function ProfileSettings() {
     }
   }, [state, isMobile]);
 
-  // 화면 크기에 따라 모바일 여부 판단 (채팅 페이지랑 동일한 패턴)
+  // 어댑티브 뷰포트 분석 엔진(Adaptive Viewport Engine) — 윈도우 크기 변화를 실시간 감지하여 모바일/데스크톱 UI 전이 제어
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 768; // md 브레이크포인트 기준
@@ -116,6 +122,7 @@ export default function ProfileSettings() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // 검색어에 따른 아이템 필터링 (라벨 + 키워드 검색)
+  // 심층 검색 필터링 엔진(Deep Search Filter) — 탭 레이블 및 메타데이터 키워드에 대한 복합 매칭 수행
   const getFilteredItems = (query: string) => {
     if (!query) return items;
     const lowerQuery = query.toLowerCase();
@@ -146,6 +153,7 @@ export default function ProfileSettings() {
   const rightPanel =
     filteredItems.length === 0 ? (
       <SettingsContent>
+        {/* 검색 결과 부재 시 사용자 피드백을 위한 빈 상태(Empty State) 렌더링 로직 */}
         <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-gray-500 dark:text-gray-400">
           <p className="text-sm">{t('chat.no_result')}</p>
         </div>

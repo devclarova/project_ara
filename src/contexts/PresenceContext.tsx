@@ -35,6 +35,7 @@ const ZOMBIE_THRESHOLD_MS = 5 * 60 * 1000; // 5분
 
 const PresenceContext = createContext<PresenceContextType | undefined>(undefined);
 
+// 실시간 접속 상태 및 서비스 지표 분석 엔진(Real-time Presence & Analytics Engine) — 사용자 온라인 상태, 활성 세션 및 관리자 대시보드 통계 실시간 정규화
 export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, profileId, isAdmin } = useAuth();
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
@@ -224,6 +225,7 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // 5. 💎 좀비 방어 통합 온라인 판정 함수
   //    → 웹소켓 확인 → DB 확인 (5분 이내 활동만 인정)
   // ============================================================
+  // 지능형 온라인 판정 및 세션 클리너(Smart Presence Guard) — 웹소켓 상태와 DB 활동 임계치(5분)를 교차 분석하여 좀비 접속 방지 및 정확한 온라인 상태 산출
   const isUserOnline = useCallback((pId: string | undefined): boolean => {
     if (!pId) return false;
     // 1. 실시간 프레즌스(웹소켓)에서 확인 — 가장 확실

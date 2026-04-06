@@ -20,6 +20,11 @@ type GuardDeps = {
   setSubmitAttempted: (b: boolean) => void;
 };
 
+/**
+ * 단계별 회원가입 상태 머신(Signup Step State Machine)
+ * - 회원가입 진행 단계(Step), 가드 조건(Guard) 및 화면 전환 방향성을 총괄 관리
+ * - UI 애니메이션 방향 제어 및 최적화된 스크롤 위치 보정 로직 포함
+ */
 export function useSignupStepper(initialStep: Step = 1) {
   const [step, setStep] = useState<Step>(initialStep);
   const prevStepRef = useRef<Step>(initialStep);

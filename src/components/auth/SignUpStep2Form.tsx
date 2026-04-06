@@ -11,11 +11,12 @@ import NicknameInputField from '@/components/common/NicknameInputField';
 const EMAIL_ASCII_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 const NON_ASCII_RE = /[^\x00-\x7F]/;
 
+// 날짜 데이터 직렬화 — ISO 표준과 무관하게 로컬 타임존 기반의 YYYY-MM-DD 스트링으로 변환하여 DB 정합성 유지
 function toYMDLocal(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
-
+// 이메일 주소 유효성 정규화 — RFC 5322 표준 준수 여부 및 공백, 비ASCII 문자 포함 여부를 검증하여 식별자 무결성 확보
 function validateEmailField(raw: string, t: (key: string) => string): string {
   const s = raw ?? '';
   if (!s.trim()) return t('validation.required_email');
@@ -43,6 +44,7 @@ const PW_LETTER_RE = /[A-Za-z]/;
 const PW_NUMBER_RE = /[0-9]/;
 const PW_SPECIAL_RE = /[!@#$%^&*]/;
 
+// 비밀번호 보안 강도 검증 — 최소 길이, 영문/숫자/특수문자 조합 요건을 충족하는지 확인하여 계정 탈취 위험 방어
 function validatePasswordField(pw: string, t: (key: string) => string): string {
   const v = pw ?? '';
   if (!v) return t('validation.required_password');
@@ -54,6 +56,7 @@ function validatePasswordField(pw: string, t: (key: string) => string): string {
   return '';
 }
 
+// 법적 연령 준수 여부 판별 — 현재일 기준 만 14세 미만 여부를 계산하여 서비스 이용 약관상의 가입 가이드라인 적용
 function isAge14Plus(dateLike?: Date | string | null) {
   if (!dateLike) return false;
   const birth = dateLike instanceof Date ? dateLike : new Date(dateLike);
@@ -77,6 +80,7 @@ type Props = {
   signupKind: 'email' | 'social';
 };
 
+// 회원가입 폼 상태 모델(Source of Truth) — 입력 필드의 원천 데이터를 관리하고 스텝 간 데이터 영속성 제공
 export type FormData = {
   email: string;
   pw: string;
@@ -247,8 +251,9 @@ export default function SignUpStep2Form({
       return 'error';
     }
     try {
-      const { data, error } = await supabase.rpc('email_exists', { _email: email.trim() });
-      if (error) return 'error';
+      const { data, error: checkError } = await supabase
+        .rpc('email_exists', { _email: email.trim() });
+      if (checkError) return 'error';
       return data === true ? 'taken' : 'available';
     } catch {
       return 'error';
@@ -285,7 +290,7 @@ export default function SignUpStep2Form({
     }
   }, [nickValidator.error]);
 
-  const handleNext = async () => {
+  const handleNextStep = async () => {
     if (!validate(true)) return;
 
     const cachedEmailOK =
@@ -445,7 +450,7 @@ export default function SignUpStep2Form({
         </button>
         <button
           type="button"
-          onClick={handleNext}
+          onClick={handleNextStep}
           disabled={emailChecking || nickValidator.checking}
           className="bg-[var(--ara-primary)] text-white font-semibold py-2 px-4 rounded-lg hover:opacity-85 transition-colors disabled:opacity-50 disabled:cursor-not-allowed xs:text-[14px] xs:py-1.5"
         >

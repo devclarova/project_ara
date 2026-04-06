@@ -1,3 +1,8 @@
+/**
+ * 이메일 기반 멀티스텝 회원가입 오케스트레이터(Email Multi-step Signup Orchestrator):
+ * - 목적(Why): 이메일 가입 유저의 법적 동의, 계정 정보 입력 및 초기 프로필 설정을 유기적인 마법사 패턴으로 안내함
+ * - 방법(How): useSignupStepper 훅 상태 제어 구조, Framer Motion 기반의 뷰 전환 트랜잭션을 결합하여 단계적 검증 및 완료 로직을 통제함
+ */
 import { AnimatePresence, motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
 import { Home, X } from 'lucide-react';

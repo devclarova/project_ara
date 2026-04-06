@@ -1,8 +1,4 @@
-/**
- * 메시지 입력 (최적화)
- * - useCallback 강화
- * - 불필요한 리렌더링 제거
- */
+// 메시지 입력 인터페이스(Message Entry Interface) — 최적화된 텍스트 전처리, 다중 미디어 첨부 및 실시간 금칙어 필터링을 통합한 고성능 입력 엔진
 import { useEffect, useRef, useState, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDirectChat } from '../../../contexts/DirectChatContext';
@@ -90,6 +86,7 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
     return () => clearTimeout(timer);
   }, [chatId]);
 
+  // 메시지 고도화 발송 엔진(Dispatch Engine) — 텍스트/미디어 페이로드 구성, 보안 검증(금칙어/제재) 및 네트워크 트랜잭션 오케스트레이션
   const handleSubmit = useCallback(
     async (e: React.FormEvent | KeyboardEvent) => {
       (e as any).preventDefault?.();
@@ -147,6 +144,7 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
     [isComposing, sending, message, chatId, sendMessage, attachments, hasAttachments],
   );
 
+  // 입력 인터페이스 이벤트 정밀 제어 — 엔터키 조합에 따른 메시지 발송 또는 개행 처리 분기 (IME 엔진 충돌 방지 포함)
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (isComposing) return;
@@ -165,6 +163,7 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
     ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
   }, []);
 
+  // 다중 미디어 수용 및 전처리 — 브라우저 파일 API를 통한 유효성 검증 및 런타임 메모리 가용성을 위한 프리뷰(Blob URL) 생명주기 관리
   const handleFilesSelected = useCallback((files: FileList) => {
     const next: Attachment[] = Array.from(files).map(file => {
       let previewUrl: string | undefined;

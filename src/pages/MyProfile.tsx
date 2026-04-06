@@ -1,7 +1,12 @@
+/**
+ * 목업 프로필 레이아웃 테스트 유닛(Mock Profile Layout Test Unit):
+ * - 목적(Why): 프로필 컴포넌트의 레이아웃 무결성과 UI 인터랙션을 검증하기 위한 가상 데이터 환경을 제공함
+ * - 방법(How): 정적 목업 데이터와 소셜 미디어 컴포넌트(PostCard)를 매핑하여 프로토타이핑 속도를 최적화함
+ */
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const mockPosts = [
+const mockPosts = [ // 목업 데이터 저장소 — 프로필 레이아웃 검증 및 UI 테스트용 가상 포스트 객체 배열
   {
     id: '1',
     author: {
@@ -104,10 +109,9 @@ export function PostCard({
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [likeCount, setLikeCount] = useState(likes);
-
   const handleLike = () => {
     setIsLiked(!isLiked);
-    setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
+    setLikeCount(isLiked ? likeCount - 1 : likeCount + 1); // 상호작용 상태 토글 — 좋아요 상태 반전 및 수치 낙관적 업데이트(Optimistic Update) 수행
   };
 
   return (
@@ -216,7 +220,7 @@ export default function MyProfile() {
       <div className="flex max-w-[1920px] mx-auto">
         <main className="flex-1 min-w-0 pb-20 lg:pb-6">
           <div className="max-w-2xl mx-auto bg-white">
-            {/* Cover Image */}
+            {/* 프로필 커버 레이어 — 브랜드 정색성 부여를 위한 배경 이미지 및 심미적 그라디언트 마스킹 */}
             <div className="relative">
               <div className="h-48 bg-gradient-to-br from-[#00bdaa] to-[#14c7bb] overflow-hidden relative">
                 <img
@@ -244,7 +248,7 @@ export default function MyProfile() {
               </div>
             </div>
 
-            <div className="px-10 pt-14 pb-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
+            <div className="px-10 pt-14 pb-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]"> {/* 계정 상세 정보 섹션 — 닉네임, Bio, 링크 등 사용자의 식별 가능한 마스터 데이터 노출 */}
               <div className="mb-3">
                 <h1 className="text-2xl font-bold text-[#111827] mb-0.5">{profileData.name}</h1>
                 <p className="text-[#6b7280] text-sm">@{profileData.username}</p>
@@ -290,7 +294,7 @@ export default function MyProfile() {
               </div>
             </div>
 
-            <div className="bg-[#e2f8f5] border-b border-[#e5e7eb] sticky top-0 z-10 shadow-[0_1px_4px_rgba(0,0,0,0.05)]">
+            <div className="bg-[#e2f8f5] border-b border-[#e5e7eb] sticky top-0 z-10 shadow-[0_1px_4px_rgba(0,0,0,0.05)]"> {/* 콘텐츠 카테고리 탭 — 스티키 헤더 기반의 포스트/미디어/좋아요 목록 필터링 인터페이스 */}
               <div className="flex">
                 {tabs.map(tab => (
                   <button
@@ -311,7 +315,7 @@ export default function MyProfile() {
               </div>
             </div>
 
-            {/* Posts Feed - Improved Spacing */}
+            {/* 메인 콘텐츠 피드 그리드 — 선택된 탭에 따른 동적 리스트 렌더링 및 빈 상태 처리 */}
             <div className="bg-[#f9fafb]">
               {activeTab === 'posts' && (
                 <div className="pt-4 px-10 pb-6 bg-white">

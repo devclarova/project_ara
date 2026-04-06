@@ -1,5 +1,10 @@
 import { useEffect, useRef } from 'react';
 
+/**
+ * 지능형 레이어 스크롤 제어 엔진(Intelligent Layer Scroll Control Engine):
+ * - 목적(Why): 모달 또는 오버레이 노출 시 하단 본문의 스크롤 스택을 고정하여 UI 일관성을 유지하고 UX 간섭을 방지함
+ * - 방법(How): Body 스타일 고정 및 터치/휠 이벤트 가로채기(Recursive Check)를 통해 스크롤 가능 영역을 지능적으로 분리하여 제어함
+ */
 export function useBodyScrollLock(lock: boolean) {
   const touchStartY = useRef<number | null>(null);
   const touchStartX = useRef<number | null>(null);

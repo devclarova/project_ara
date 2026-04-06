@@ -1,3 +1,8 @@
+/**
+ * 애플리케이션 공통 404 폴백 뷰(Application Common 404 Fallback View):
+ * - 목적(Why): 유효하지 않은 경로 진입 시 사용자 이탈을 최소화하고 홈(Home) 및 이전 단계 네비게이션을 지원함
+ * - 방법(How): Framer Motion의 stagger 애니메이션 규칙 적용, 테마 호환성 처리를 포함한 시각적 글로우 효과와 함께 에러 복구 플로우를 인터페이스함
+ */
 // NotFoundPage.tsx
 import { useNavigate } from 'react-router-dom';
 import { Film, Compass, ArrowLeft, Home, Sparkles } from 'lucide-react';

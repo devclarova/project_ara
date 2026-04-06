@@ -84,6 +84,7 @@ export default function McqQuizModal({
       setCombo(0);
 
       setWrongHistory(prev => {
+        // 데이터 영속화 준비 — 오답 발생 시 해당 문항의 메타데이터(용어, 정답)를 히스토리에 기록
         const term = questions[current].term;
         const already = prev.find(p => p.term === term);
         if (already) return prev;
@@ -129,6 +130,7 @@ export default function McqQuizModal({
         <div className="flex items-center justify-between mb-4">
           <div className="text-lg font-bold text-gray-900 dark:text-white">4지선다 스피드</div>
 
+          {/* 시각적 피드백 — 오답 발생 시 상단 중앙에 페널티 시간(-2초) 팝업 및 화면 흔들림 효과 트리거 */}
           <button
             onClick={() => setConfirmClose(true)}
             className="h-9 w-9 rounded-full flex items-center justify-center

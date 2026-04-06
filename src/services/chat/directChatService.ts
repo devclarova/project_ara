@@ -1,20 +1,8 @@
 /**
- * 1 : 1 채팅 서비스 (Supabase 연동 버전)
- *  - 실제 Supabase API를 사용한 채팅 서비스
- *  - 데이터베이스 연동을 통한 실시간 채팅 기능
- *
- * 주요기능
- *  - 채팅방 생성 및 조회
- *  - 메시지 전송 및 조회
- *  - 사용자 검색
- *  - 실시간 메시지 동기화
- *
- * Supabase 테이블 구조
- *  - direct_chats: 1:1 채팅방 정보
- *  - direct_messages: 메시지 정보
- *  - auth.users: 사용자 인증 정보
+ * 1:1 실시간 채팅 오케스트레이션 서비스(Direct Chat Orchestration Service):
+ * - 목적(Why): P2P 채팅 세션 관리, 메시지 트랜잭션 처리 및 실시간 미디어 업로드 파이프라인을 총괄함
+ * - 방법(How): 쉐도우 블로킹(Shadow Blocking), 낙관적 업데이트 동기화 및 딥링크(Deep Linking) 메시지 추적 로직을 구현함
  */
-
 import { supabase } from '../../lib/supabase';
 import { ensureMyProfileId } from '../../lib/ensureMyProfileId';
 import type {
@@ -90,12 +78,9 @@ export async function getUserProfile(userId: string): Promise<ChatApiResponse<Ch
 }
 
 /**
- * 1 : 1 채팅방 생성 또는 찾기
- * - 사용자가 특정 사용자와 채팅을 시작하려고 할 때 호출
- * - 기존 채팅방이 있으면 재사용, 없으면 새로 생성함.
- * - 중복 채팅방이 생성되지 않도록
- *
- * @param participantId - 채팅방에 참여할 상대방 ID
+ * 채팅 세션 협상 및 프로비저닝(Chat Session Negotiation & Provisioning)
+ * - 두 사용자 간의 기존 세션 존재 여부(활성/비활성)를 확인하여 재사용하거나, 신규 피어 투 피어(P2P) 채널을 원자적으로 생성
+ * - 비활성 세션 재진입 시 타임라인(left_at) 초기화 및 동기화 무결성 확보
  */
 export async function findOrCreateDirectChat(
   participantId: string,
@@ -546,9 +531,9 @@ async function uploadAttachments(files: File[], chatId: string) {
 }
 
 /**
- * 메세지 전송
- *
- * @param messageData - 전송할 메시지 데이터
+ * 실시간 메시지 디스패치 및 쉐도우 블로킹(Message Dispatch & Shadow Block Logic)
+ * - 메시지 본문 및 멀티미디어 어태치먼트의 원자적 저장과 채팅방 메타데이터(last_message_at) 실시간 갱신
+ * - 차단 상태인 경우 상대방에게 알림을 발송하지 않는 무증상 전송(Shadow Send)을 통해 보안성 및 UX 유지
  */
 export async function sendMessage(
   messageData: SendMessagePayload,

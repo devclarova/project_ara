@@ -1,3 +1,8 @@
+/**
+ * 프로필 정보 통합 수정 모달(Unified Profile Edition Modal):
+ * - 목적(Why): 사용자 닉네임, 소개글, 국가, 그리고 미디어(아바타/배너) 자산을 안전하게 갱신할 수 있는 인터페이스를 제공함
+ * - 방법(How): 일회성 변경 정책(One-time Change Policy)이 적용된 닉네임/국가 유효성 검사, 배너 이미지 실시간 드래그 위치 조정, 그리고 원자적 스토리지 업로드 파이프라인을 수행함
+ */
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';

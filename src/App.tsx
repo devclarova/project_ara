@@ -1,3 +1,8 @@
+/**
+ * ARA 애플리케이션 루트 오케스트레이터(ARA Application Root Orchestrator):
+ * - 목적(Why): 전역 라우팅, 인증 상태에 따른 접근 제어(Auth Guard), 시스템 공지 및 점검 모드 등 서비스의 최상위 제어 흐름을 관리함
+ * - 방법(How): React Router를 기반으로 선언적 라우팅 구조를 구축하고, 주요 인프라 리스너(Ban, Notification, UserTracker)를 통합하여 중앙 집중식 상태 감시를 수행함
+ */
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import React, { useEffect, useState, Suspense } from 'react';
 import {

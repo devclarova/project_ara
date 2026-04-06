@@ -1,3 +1,8 @@
+/**
+ * 프리미엄 구독 및 멤버십 관리 센터(Premium Subscription & Membership Management Center):
+ * - 목적(Why): 서비스 수익 모델의 핵심 접점으로서 사용자의 구독 플랜 전환, 결제 시뮬레이션 및 혜택 조회를 담당함
+ * - 방법(How): Supabase RPC를 통한 쿠폰 검증 및 트랜잭션 처리를 수행하며, 결제 유도 UX를 위해 Framer Motion과 고급 CSS 블러 효과를 적용함
+ */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';

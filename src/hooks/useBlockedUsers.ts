@@ -10,6 +10,11 @@ export interface BlockedUser {
   avatar_url: string;
 }
 
+/**
+ * 전역 차단 사용자 동기화 엔진(Global Blocked User Sync Engine):
+ * - 목적(Why): 현재 사용자가 차단한 전체 유저 리스트 및 ID 셋(Set)을 관리하여 서비스 전역의 콘텐츠 필터링 데이터를 제공함
+ * - 방법(How): 차단 해제 시 연관 채팅방의 타임라인을 재설정하여 차단 기간 내 유입된 데이터의 가시성을 제어함
+ */
 export function useBlockedUsers() {
   const { user } = useAuth();
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);

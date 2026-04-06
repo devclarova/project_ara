@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import type { ConsentResult } from '@/types/consent';
 import { useTranslation } from 'react-i18next';
 
+// 가입 세션 영속성 모델(Draft Persistence Model) — 회원가입 중 실시간으로 수집되는 사용자 상세 프로필 데이터의 임시 상태 보관소
 export type ProfileDraft = {
   bio: string;
   file: File | null;
@@ -30,13 +31,13 @@ type Props = {
 
 const DRAFT_KEY = 'signup-profile-draft';
 
-// 로컬 기준 YYYY-MM-DD
+// 현지 시간 기반 날짜 데이터 정규화 — 타임존 오차를 보정하여 일관된 YYYY-MM-DD 형식을 생성하고 DB 스토리지와 동계화
 function toYMDLocal(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-// [추가] 오늘 기준 만 14세 이상 여부
+// 법적 보호 연령 검증 로직 — 거주 국가 및 서비스 정책에 따른 만 14세 이상 여부를 런타임에 판별하여 가입 가능여부 결정
 function isAge14Plus(dateLike?: Date | null) {
   if (!dateLike) return false;
   const birth = dateLike instanceof Date ? dateLike : new Date(dateLike);
@@ -70,6 +71,7 @@ export default function SignUpStep3Profile(props: Props) {
   const [showSuccess, setShowSuccess] = useState(false);
   const [successKind, setSuccessKind] = useState<'social' | 'email' | null>(null);
 
+  // 원자적 회원가입 트랜잭션(Atomic Enrollment Transaction) — 수집된 인증 정보와 프로필 메타데이터를 통합하여 단일 트랜잭션으로 시스템에 영속화
   const handleSubmit = async () => {
     setMsg('');
     setLoading(true);

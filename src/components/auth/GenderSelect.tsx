@@ -27,7 +27,9 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
   const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
+    // 성별 옵션 초기화 — 다국어 지원(i18n) 및 비이진 성별(Non-binary)을 포함한 포용적 서술형 선택지 구성
     const genders = [
+      { value: 'other', label: t('auth.gender_other'), icon: '✨' },
       { value: 'Male', label: t('signup.gender_male') },
       { value: 'Female', label: t('signup.gender_female') }
     ];
@@ -39,6 +41,7 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
   const isDark =
     typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
+  // 컴포넌트 외관 모델링(Styling Engine) — 시스템 테마(Dark/Light) 및 인터페이스 가동성(Viewport)에 최적화된 반응형 스타일 세트 정의
   const customStyles = {
     control: (provided: any, state: any) => {
       const isDark =
@@ -143,6 +146,7 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
 
   return (
     <div className="w-full relative">
+      {/* 성별 선택 필드 — 시각적 일관성을 위해 부동 라벨(Floating Label) 시스템과 커스텀 셀렉트 라이브러리 통합 */}
       <Select
         value={selectedOption}
         onChange={(opt: SingleValue<OptionType>) => {

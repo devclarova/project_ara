@@ -1,3 +1,8 @@
+/**
+ * 소셜 계정 연동 및 인증 수단 동기화 매니저(Social Account Link & Auth Provider Sync Manager):
+ * - 목적(Why): 이메일 계정 외에 Google, Kakao 등 타사 소셜 계정을 연결하여 다중 로그인 경로를 확보하고 편의성을 증대함
+ * - 방법(How): Supabase linkIdentity를 이용한 실시간 계정 연동, RPC 기반의 안전한 연동 해제(unlink_identity), 그리고 최소 1개 이상의 로그인 수단 유지를 강제하는 안전 장치를 적용함
+ */
 import Button from '@/components/common/Buttons';
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';

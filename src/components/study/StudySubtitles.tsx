@@ -13,7 +13,7 @@ interface SubtitleListProps {
   subscribeRealtime?: boolean; // 선택: 실시간 반영 여부
 }
 
-// 반응형 pageSize 훅: Tailwind 브레이크포인트와 동일한 기준 사용
+// 반응형 인덱싱 정책 — 뷰포트 임계치(sm/lg)를 기반으로 자막 노출 개수(PageSize)를 동적으로 산출
 const useResponsivePageSize = () => {
   const [pageSize, setPageSize] = useState(6);
 
@@ -50,7 +50,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
   const pageSize = useResponsivePageSize(); // 한번에 보여줄 자막 수
 
   useEffect(() => {
-    // studyId가 아직 준비되지 않았으면 에러를 띄우지 않고 대기 (부모 StudyPage에서 데이터 로딩 중일 수 있음)
+    // 가용성 가드 — 부모 컴포넌트의 데이터 비동기 로딩 지연에 따른 런타임 에러 방지
     if (!resolvedStudyId || !Number.isFinite(resolvedStudyId)) {
       setLoading(true);
       return;
@@ -90,7 +90,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
 
     fetchDialogues();
 
-    // 선택: 실시간 반영
+    // 실시간 동기화 엔진 — Supabase Realtime Channel을 통해 자막 데이터 변경 감지 및 자동 리프레시 수행
     const channel =
       subscribeRealtime && resolvedStudyId != null
         ? supabase
@@ -114,7 +114,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
     };
   }, [resolvedStudyId, subscribeRealtime]);
 
-  // 자막 n개씩 보여주기
+  // 가시적 숫자 그룹 내비게이션 — 현재 페이지 상태를 기준으로 자막 리스트의 윈도우 슬라이싱 수행
   const handleNextPage = () => {
     setCurrentPage(prevPage => prevPage + 1);
   };
@@ -132,16 +132,11 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
   const { t, i18n } = useTranslation();
   const targetLang = i18n.language;
 
-  // --- Batch Translation Integration ---
-  // 현재 페이지의 자막 텍스트 수집
-  // const pronTexts = currentDialogues.map(d => d.pronunciation ?? '');
-  // const pronKeys = currentDialogues.map(d => `subtitle_pron_${d.id}`);
-
+  // 배치 번역 파이프라인 — 개별 네트워크 오버헤드 최소화를 위해 현재 뷰포트 내 자막 데이터(Keys/Texts)를 번개 번역 요청
   const contentTexts = currentDialogues.map(d => d.english_subtitle ?? '');
   const contentKeys = currentDialogues.map(d => `subtitle_content_${d.id}`);
 
   // 배치 번역 훅 호출
-  // const { translatedTexts: translatedProns } = useBatchAutoTranslation(pronTexts, pronKeys, targetLang);
   const { translatedTexts: translatedContents } = useBatchAutoTranslation(
     contentTexts,
     contentKeys,

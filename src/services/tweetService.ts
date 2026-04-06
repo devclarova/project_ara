@@ -1,3 +1,8 @@
+/**
+ * SNS 피드 및 상호작용 데이터 엔진(SNS Feed & Interaction Data Engine):
+ * - 목적(Why): 트윗, 답글, 좋아요 등 핵심 소셜 데이터의 CRUD 및 복합 쿼리 페이지네이션을 처리함
+ * - 방법(How): RLS(Row Level Security) 정책과의 정합성을 유지하며 차단 유저 필터링 및 캐시 기반 데이터 병합을 수행함
+ */
 import { supabase } from '@/lib/supabase';
 import type {
   FeedItem,

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 interface Props {
   content: string;
-  idKey: string; // 고유 키
+  idKey: string; // 영속성 캐시 및 훅 식별자용 고유 키
 }
 
 const TranslatedCultureNoteItem: React.FC<Props> = ({ content, idKey }) => {

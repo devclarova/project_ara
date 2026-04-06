@@ -52,11 +52,9 @@ const ContentCard = ({
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const targetLang = i18n.language;
-
-  // Auto Translations
   const isMusic = categories?.includes('음악') || categories?.includes('Music');
 
-  // Optimization: If prop is provided, pass empty string to hook to skip internal processing
+  // 번역 최적화 파이프라인 — 외부 주입 번역 데이터(Prop) 존재 시 불필요한 자동 번역 훅(Internal Hook) 실행 스킵
   const { translatedText: translatedTitleHook } = useAutoTranslation(
     translatedTitleProp ? '' : title,
     `study_title_${id}`,
@@ -83,9 +81,8 @@ const ContentCard = ({
   const translatedDuration = translatedDurationProp || translatedDurationHook;
   const translatedEpisode = translatedEpisodeProp || translatedEpisodeHook;
 
-  // Episode & Scene: Consistency Fix
-  // Instead of auto-translating, we use static formats if possible to ensure consistency.
-  // If the value is numeric, we apply a consistent format (e.g. "Ep 1", "1화").
+  // 시각적 일관성 확보 — 자동 번역 대신 각 언어별 미리 정의된 포맷(i18n formats) 강제 적용
+  // 숫자형 데이터(화/회 등)에 대한 정규화 필터링 수행
   const formatValue = (key: string, val: string | number | null | undefined) => {
     if (!val) return '';
     const str = String(val).trim();
@@ -143,7 +140,7 @@ const ContentCard = ({
   // Helpers
   const enc = (v?: string | number | null) => encodeURIComponent(String(v ?? ''));
   
-  // NEW Badge Logic: 7 days
+  // 가시성 뱃지 로직 — 콘텐츠 생성 일자 기준 168시간(7일) 이내 여부 판별
   const isNew = useMemo(() => {
     if (!created_at) return false;
     const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
@@ -169,7 +166,7 @@ const ContentCard = ({
     if (!contents || !episode) return;
     
     if (isGuest && !isPreview) {
-      openLoginModal?.(); // 로그인 모달
+      openLoginModal?.(); // 인증 인터페이스 트리거 — 비인증 사용자의 비미리보기 콘텐츠 접근 차단
       return;
     }
 
@@ -202,7 +199,7 @@ const ContentCard = ({
             <div className="absolute inset-0 bg-gray-200 w-full h-full" />
           )}
 
-          {/* 게스트 잠금 오버레이 - 이미지 위에 은은하게 (Premium Look) */}
+          {/* 동적 권한 제어 오버레이 — 게스트 제한 또는 프리미엄 구독 등급에 따른 시각적 락(Lock) 처리 */}
           {((isGuest && !isPreview) || isPremiumLocked) && (
             <div className={`absolute inset-0 flex items-center justify-center z-10 transition-colors ${isPremiumLocked ? 'bg-black/60 backdrop-grayscale backdrop-blur-sm' : 'bg-black/40 backdrop-blur-[2px] group-hover:bg-black/50'}`}>
               <div className="relative group/lock flex flex-col items-center">
@@ -291,7 +288,7 @@ const ContentCard = ({
       <div className="pointer-events-none absolute inset-0 rounded-xl bg-white/40 md:bg-white/50 opacity-0 group-hover:opacity-100 transition duration-300 z-20"></div>
       <div className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-t from-primary/20 via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 z-20"></div>
 
-      {/* Hover 내용 — 중앙의 작은 하얀 카드 */}
+      {/* 상세 명세 오버레이 — 호버 시 노출되는 메타데이터 요약 및 숏 디스크립션 레이어 */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition z-30 dark:bg-secondary/10">
         <div
           className={`relative bg-white/95 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-[20px] w-[85%] max-w-[280px] ${isGuest && !isPreview ? 'h-[250px]' : 'h-[220px]'} p-5 text-center flex flex-col justify-between translate-y-2 group-hover:translate-y-0 transition-transform duration-300 dark:bg-gray-800 border-2 border-primary/10 dark:border-primary/20`}

@@ -1,3 +1,8 @@
+/**
+ * 계정 상태 제재 시각화 유닛(Account Sanction Status Visualization Unit):
+ * - 목적(Why): 이용 제한(Ban) 조치된 사용자의 상태를 직관적으로 노출하여 커뮤니티 투명성을 높이고 정책 준수를 유도함
+ * - 방법(How): 잔여 시간(date-fns)을 계산하여 영구/기간제 배지를 동적으로 생성하며, 툴팁을 통해 구체적인 제한 정보를 서빙함
+ */
 import React from 'react';
 import { addYears, differenceInCalendarDays } from 'date-fns';
 import { Ban } from 'lucide-react';
@@ -27,11 +32,11 @@ export const BanBadge: React.FC<BanBadgeProps> = ({
 
   if (endDate <= now) return null;
 
-  // Check for Permanent Ban (> 50 years from now)
+  // Permanent Sanction Detection: Identifies ban periods exceeding 50 years to classify as indefinite account restriction.
   const permanentThreshold = addYears(now, 50);
   const isPermanent = endDate > permanentThreshold;
 
-  // Sizes for icon-only badges (square/circle aspect)
+  // Geometric Scaling: Defines predefined dimension tokens for round badge variants to maintain layout consistency.
   const sizeStyles = {
     xs: "w-4 h-4 text-[9px]",     // Back to 16px
     sm: "w-5 h-5 text-[10px]",    // Back to 20px
@@ -68,17 +73,13 @@ export const BanBadge: React.FC<BanBadgeProps> = ({
     );
   }
 
-  // Calculate remaining days for temporary ban
+  // Temporal Delta Calculation: Computes the calendar day difference between the ban expiration and current timestamp.
   const diff = differenceInCalendarDays(endDate, now);
-  // 최소 1일 표시 (오늘 풀리더라도 "1" 또는 "D-Day"이겠지만 공간상 숫자만)
-  // 99일 초과시 99+
+  // Lower-bound Normalization: Ensures a minimum visible value of 1 day for accounts expiring within the current 24H window.
   const daysLeft = diff <= 0 ? 1 : diff; 
   const displayDays = daysLeft > 99 ? '99+' : daysLeft.toString();
 
-  // Custom "Prohibition Sign" CSS implementation
-  // Container: Bordered Circle
-  // Child 1: Centered Text
-  // Child 2: Diagonal Line (Slash)
+  // Prohibition UI Synthesis: Implements a composite visual symbol using layered CSS overlays to merge icons with residual counters.
   return (
     <TooltipProvider>
       <Tooltip delayDuration={300}>
@@ -89,10 +90,10 @@ export const BanBadge: React.FC<BanBadgeProps> = ({
             "text-orange-700 dark:text-orange-300 border border-orange-500 dark:border-orange-400 bg-orange-50 dark:bg-orange-900/20",
             className
           )}>
-            {/* The Text - z-index ensures it's readable, slash is semi-transparent over it */}
+            {/* Data Layer: Renders residual days. Positioned via origin-centering for optimal legibility beneath the slash overlay. */}
             <span className="z-0 leading-none pt-[0.5px] scale-95 origin-center">{displayDays}</span>
             
-            {/* The Slash (Diagonal Line) - Thinner and centered */}
+            {/* Geometric Prohibition Slash: 45-degree rotated overlay to complete the universal ban icon semantics. */}
             <span className="absolute top-1/2 left-1/2 w-[140%] h-[1.5px] bg-orange-500/50 dark:bg-orange-400/50 -translate-x-1/2 -translate-y-1/2 rotate-45 z-10 pointer-events-none" />
           </span>
         </TooltipTrigger>

@@ -29,10 +29,11 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
 
   const studyId = props.studyId; // 타입 내 보장됨
 
-  // DB fetch 모드
+  // 비동기 데이터 패치 파이프라인 — studyId를 식별자로 사용하여 문화 노트 원문 및 상세 콘텐츠를 순차적으로 조회
   useEffect(() => {
     if (studyId == null || !Number.isFinite(studyId)) return;
 
+    // 경합 상태 방지 플래그 — 언마운트 또는 이펙트 재실행 시 이전 비동기 요청의 상태 업데이트 차단
     let alive = true;
 
     const fetchNoteAndContents = async () => {
@@ -57,6 +58,7 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
 
       setData((notesData ?? []) as CultureNote[]);
 
+      // 데이터 무결성 체크 — 노의 조회 결과가 유효하지 않을 경우 콘텐츠 조회 단계를 생략하고 상태 초기화
       if (!notesData || notesData.length === 0) {
         setContents([]);
         setLoading(false);
@@ -119,7 +121,7 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
     );
   }
 
-  // 현재 보고 있는 문화 노트 및 그에 해당하는 콘텐츠
+  // 뷰 상태 동기화 — 현재 인덱스 및 관계형 식별자(culture_note_id)를 기반으로 렌더링 대상 데이터 필터링
   const currentNote = data[currentNoteIndex]; // 현재 보고 있는 문화 노트
   const currentContents = contents.filter(content => content.culture_note_id === currentNote.id); // 해당 문화 노트에 맞는 콘텐츠들
 

@@ -1,3 +1,8 @@
+/**
+ * 커뮤니티 전용 레이아웃 구성 엔진(Community Layout Configuration Engine):
+ * - 목적(Why): 앱의 커뮤니티 도메인에 한하여 사이드바, 메인 콘텐츠 라우팅, 실시간 트렌드 패널을 유기적으로 통합함
+ * - 방법(How): React Router의 Outlet을 통한 뷰포트 관리, SEO를 위한 Helmet 메타태그 동적 생성 및 작성 모달(TweetModal, ReplyModal)의 전역 상태를 오케스트레이션함
+ */
 import { Outlet, useLocation, matchPath } from 'react-router-dom';
 import { useState } from 'react';
 import Sidebar from './feature/Sidebar';

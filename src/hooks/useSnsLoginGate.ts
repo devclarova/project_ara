@@ -6,6 +6,11 @@ const LOGIN_MODAL_DELAY = 60 * 1000; // 60초
 const SNS_STAY_MS_KEY = 'sns-stay-ms'; // SNS/SnsDetail 실제 체류 시간(ms) 누적
 const SNS_TIMEOUT_KEY = 'sns-login-timeout'; // 이미 60초 넘긴 세션 플래그
 
+/**
+ * 비로그인 사용자 SNS 접근 제어 게이트(SNS Guest Access Gate)
+ * - 특정 페이지(SNS/SnsDetail) 체류 시간을 세션 스토리지에 누적 합산하여 60초 초과 시 로그인 유도 모달 트리거
+ * - 게스트 사용자의 콘텐츠 노출 범위를 시간 기반으로 제어하는 비즈니스 정책 구현
+ */
 export function useSnsLoginGate(user: User | null) {
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
   const navigate = useNavigate();

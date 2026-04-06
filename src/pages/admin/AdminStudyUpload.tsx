@@ -1,3 +1,8 @@
+/**
+ * 관리자 학습 업로드 에디터 (Admin Study Upload Editor):
+ * - 목적(Why): 영상 코어 메타데이터와 언어 학습 에셋(단어, 문화노트, 자막)을 동기화하여 발행함
+ * - 방법(How): 메모리 스냅샷(Local State) 파이프라인과 트랜잭션 기반 RDBMS 다단 인서트로 무결성을 확보함
+ */
 import React, { useState, useEffect, useLayoutEffect, useCallback, memo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -9,7 +14,7 @@ import {
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 
-/* ─── Types ─────────────────────────────────── */
+/* ── 데이터 구조체 정의 — 도메인 엔티티별 영속성 모델 스키마 ── */
 interface CultureNoteItem {
   id?: number;
   title: string;
@@ -37,11 +42,11 @@ interface SubtitleItem {
   subtitle_end_time: number;
 }
 
-/* ─── Shared Styles ───────────────────────── */
+/* ── 공유 UI 스타일 토큰 — 원자적 폼 디자인 일관성 유지 ── */
 const labelCls = "block text-[11px] font-semibold text-muted-foreground mb-1 uppercase tracking-wider";
 const inputCls = "w-full px-3 py-2.5 bg-secondary/50 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary/50 text-sm transition-all focus:bg-background outline-none";
 
-/* ─── Memoized Subtitle Rows ────────────────── */
+/* ── 자막 렌더링 최적화 — 빈번한 타이핑 시 리렌더링 부하 차단 (Memoization) ── */
 const MemoSubtitleMobile = memo(({ sub, idx, updateSubtitle, removeSubtitle }: any) => (
   <div className="bg-secondary/20 rounded-lg p-4 border border-gray-100 dark:border-gray-800 relative">
     <button type="button" onClick={() => removeSubtitle(idx)} className="absolute top-3 right-3 p-1 text-muted-foreground hover:text-red-500 rounded-md"><Trash2 size={14} /></button>
@@ -91,7 +96,7 @@ const AdminStudyUpload = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  /* ─── Data Persistence (Memory Cache) Init ─────── */
+  /* ── 런타임 캐시 초기화 — 탭 전환 및 예기치 않은 새로고침 대응 전략 ── */
   const CACHE_KEY = '_ara_study_upload_memory_cache';
   const getInitialCache = () => {
     const cached = typeof window !== 'undefined' ? (window as any)[CACHE_KEY] : null;
@@ -104,12 +109,13 @@ const AdminStudyUpload = () => {
   // 캐시가 유효하다면 로딩(DB Fetch) 스킵
   const [isLoading, setIsLoading] = useState(isEditMode && !cachedData);
 
+  // 폼 계층 이동 및 비동기 처리 상태 제어
   const [activeTab, setActiveTab] = useState<'basic' | 'source' | 'content'>('basic');
   const [uploadType, setUploadType] = useState<'youtube' | 'direct'>(cachedData?.uploadType || 'youtube');
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [posterFile, setPosterFile] = useState<File | null>(null);
 
-  /* ── study 테이블 데이터 ── */
+  /* ── 마스터 엔티티(Study) 기본 정보 및 전시 정책 ── */
   const [studyInfo, setStudyInfo] = useState<any>(cachedData?.studyInfo || {
     title: '',
     poster_image_url: '',
@@ -119,7 +125,7 @@ const AdminStudyUpload = () => {
     required_plan: 'free'
   });
 
-  /* ── video 테이블 데이터 ── */
+  /* ── 미디어 에셋(Video) 및 소스 메타데이터 ── */
   const [videoInfo, setVideoInfo] = useState<any>(cachedData?.videoInfo || {
     video_url: '',
     categories: '드라마',
@@ -133,16 +139,16 @@ const AdminStudyUpload = () => {
     image_url: ''
   });
 
-  /* ── culture_note + culture_note_contents ── */
+  /* ── 부가 학습 자원(문화노트) 계층형 데이터 ── */
   const [cultureNotes, setCultureNotes] = useState<CultureNoteItem[]>(cachedData?.cultureNotes || []);
 
-  /* ── words 테이블 ── */
+  /* ── 학습 어휘(Words) 관리 리스트 ── */
   const [words, setWords] = useState<WordItem[]>(cachedData?.words || []);
 
-  /* ── subtitle 테이블 ── */
+  /* ── 동기화 자막(Subtitle) 시계열 데이터 ── */
   const [subtitles, setSubtitles] = useState<SubtitleItem[]>(cachedData?.subtitles || []);
 
-  /* ─── Data Persistence (Memory Cache) Sync ─────── */
+  /* ── 런타임 캐시 동기화 전략 — 입력 시점의 메모리 스냅샷 즉시 업데이트 ── */
   // useLayoutEffect를 사용하여 DOM 페인팅 직전에 동기식으로 캐시 업데이트
   // 이렇게 하면 SPA 탭 이동/글자 입력 중 탭 이동 시 마지막 글자가 누락되는 현상 완벽 방지
   useLayoutEffect(() => {
@@ -158,7 +164,7 @@ const AdminStudyUpload = () => {
     };
   }, [id, studyInfo, videoInfo, cultureNotes, words, subtitles, uploadType, isLoading]);
 
-  /* ─── Data Fetching Logic ─────── */
+  /* ── 데이터 복구 로직 — 수정 모드 진입 시 전체 엔티티 정밀 수신 ── */
   useEffect(() => {
     // 1. 라우트 파라미터(id)가 바뀌었을 때 (Mount가 아닌 동일 컴포넌트 내 전환 시 대응)
     const cached = getInitialCache();
@@ -379,6 +385,7 @@ const AdminStudyUpload = () => {
   }, []);
 
   /* ─── Submit ──────────────────────────────── */
+  // 콘텐츠 통합 영속화 — 대용량 파일 업로드 및 객체 관계(ORM) 트랜잭션 수립
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!studyInfo.title) return toast.error('제목을 입력해주세요.');
@@ -591,7 +598,7 @@ const AdminStudyUpload = () => {
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* 입력 단계 네비게이션 — 마일스톤 기반 논리적 구분 정보 제공 */}
       <div className="bg-secondary/30 p-1 rounded-xl border border-gray-200 dark:border-gray-700 flex gap-1">
         {([['basic', '기본 정보', BookOpen], ['source', '영상 소스', Video], ['content', '학습 내용', FileText]] as const).map(([key, label, Icon]) => (
           <button
@@ -607,7 +614,7 @@ const AdminStudyUpload = () => {
         ))}
       </div>
 
-      {/* ═══════════ TAB 1: 기본 정보 ═══════════ */}
+      {/* 1단계: 마스터 정보 — 제목, 멤버십 권한 등 핵심 전시 정책 설정 */}
       <div className={activeTab === 'basic' ? 'space-y-5' : 'hidden'}>
         <div className="bg-background rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
           <h3 className="text-sm font-bold text-foreground flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-gray-800">

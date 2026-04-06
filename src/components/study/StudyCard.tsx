@@ -20,6 +20,7 @@ const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) =>
   const location = useLocation();
   const fullPath = location.pathname + location.search;
 
+  // 영속성 레이어 관리 — 마지막 학습 경로를 로컬 스토리지에 기록하여 뒤로가기 또는 복원 시 사용자 경험 유지
   useEffect(() => {
     localStorage.setItem(LAST_STUDY_KEY, fullPath);
   }, [fullPath]);
@@ -32,7 +33,7 @@ const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) =>
           {t('study.study_card_title')}
         </h3>
 
-        {/* 탭 */}
+        {/* 탐색 인터페이스 — 어휘 설명 및 문화 노트 간의 전환을 위한 탭 바 레이아웃 */}
         <div className="p-2 sm:p-3 space-y-3 sm:space-y-4">
           <div className="flex flex-wrap gap-2 sm:space-x-2 mt-1">
             <button
@@ -57,7 +58,7 @@ const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) =>
             </button>
           </div>
 
-          {/* 탭 내용 */}
+          {/* 동적 콘텐츠 렌더링 — 활성화된 탭 상태 및 데이터 가용 여부(noteText)에 따른 하위 컴포넌트 마운트 */}
           <div className="mt-2 sm:mt-3">
             {activeTab === 'words' ? (
               <StudyVoca studyId={studyId} subscribeRealtime sourceStudyPath={fullPath} />

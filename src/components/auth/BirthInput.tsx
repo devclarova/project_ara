@@ -24,6 +24,7 @@ export default function BirthInput({
 }: BirthInputProps): JSX.Element {
   const { t } = useTranslation();
   const defaultErrorMessage = errorMessage || t('signup.error_birth_required');
+  // 법정 연령 제한 상수 — 서비스 정책 및 관련 법규에 따른 만 14세 미만 가입 제한을 처리하기 위한 기준일 산출
   const maxDate14 = (() => {
     const t = new Date();
     return new Date(t.getFullYear() - 14, t.getMonth(), t.getDate());
@@ -44,6 +45,7 @@ export default function BirthInput({
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   }
 
+  // 입력 문자열 파싱 엔진 — 자유 형식의 숫자 입력값을 유효한 Date 객체로 변환하고 윤년 및 월별 일수 정합성 검증
   const parseInputToDate = (raw: string): Date | null => {
     const digits = raw.replace(/[^0-9]/g, '');
     if (digits.length < 4) return null;
@@ -81,6 +83,7 @@ export default function BirthInput({
     }
   };
 
+  // 상태 동기화 및 정규화(Normalization) — 선택된 날짜를 시스템 표준 형식(YYYY-MM-DD)으로 변환하여 상위 컨텍스트 및 스토리지 어댑터에 전달
   const handleDateClick = (d: Date) => {
     setSelectedDate(d);
     setInputValue(formatFromDate(d));
@@ -121,6 +124,7 @@ export default function BirthInput({
     return () => document.removeEventListener('mousedown', onDocClick);
   }, []);
 
+  // 캘린더 매트릭스 제네레이터 — 선택한 연/월의 1일 시작 요일 및 총 일수를 기반으로 6행 7열의 그리드 데이터 구성
   const buildDaysGrid = (year: number, month: number) => {
     const first = new Date(year, month, 1);
     const startWeekday = first.getDay();
@@ -233,7 +237,7 @@ export default function BirthInput({
             e.stopPropagation();
           }}
         >
-          {/* 헤더 */}
+          {/* 컨트롤 패널 — 연도/월 단위의 빠른 탐색 및 뷰 모드(Day/Month/Year) 전환 인터페이스 제공 */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-[#D1D5DB]">
             <button
               onClick={() => {

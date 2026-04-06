@@ -1,9 +1,14 @@
+/**
+ * 구독 플랜 및 프로모션 쿠폰 관리 센터(Subscription Plan & Promo Coupon Management Center):
+ * - 목적(Why): 현재 이용 중인 유료 멤버십 상태를 확인/해지하고, 프로모션 쿠폰을 등록하여 혜택을 적용받을 수 있는 인터페이스를 제공함
+ * - 방법(How): 실시간 구독 데이터 페칭, RPC 기반의 쿠폰 유효성 검증(validate_coupon), 멤버십 해지 유예 로직, 그리고 프리미엄 사용자를 위한 VIP 시크릿 혜택 지급 로직을 관리함
+ */
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { Ticket, Loader2, ArrowRight, CheckCircle2, History, Bird } from 'lucide-react';
+import { Ticket, Loader2, ArrowRight, CheckCircle2, History, Bird, CreditCard, CalendarClock } from 'lucide-react';
 import SeagullIcon from '@/components/common/SeagullIcon';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
@@ -11,6 +16,33 @@ import ConfirmModal from '@/components/common/ConfirmModal';
 
 interface SubscriptionCouponSettingsProps {
   onBackToMenu?: () => void;
+}
+
+function SubscriptionHistoryItem({ item }: { item: any }) {
+  const planLabel = item.plan === 'premium' ? '프리미엄' : item.plan === 'basic' ? '베이직' : '무료';
+  const statusMap: Record<string, { label: string; cls: string }> = {
+    active:    { label: '이용중', cls: 'bg-[#00BFA5]/15 text-[#00BFA5]' },
+    cancelled: { label: '해지됨', cls: 'bg-red-500/10 text-red-500' },
+    expired:   { label: '만료됨', cls: 'bg-gray-200 dark:bg-zinc-700 text-gray-500 dark:text-gray-400' },
+  };
+  const st = statusMap[item.status] ?? { label: item.status, cls: 'bg-gray-100 text-gray-500' };
+  return (
+    <div className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl border border-gray-100 dark:border-white/5 bg-white dark:bg-zinc-900">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <CreditCard size={13} className="flex-shrink-0 text-gray-400" />
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-gray-900 dark:text-white whitespace-nowrap">{planLabel} 플랜</p>
+          <p className="text-xs text-gray-400 whitespace-nowrap">
+            {format(new Date(item.created_at), 'yy.MM.dd')}
+            {item.ends_at ? ` ~ ${format(new Date(item.ends_at), 'yy.MM.dd')}` : ''}
+          </p>
+        </div>
+      </div>
+      <span className={`flex-shrink-0 text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${st.cls}`}>
+        {st.label}
+      </span>
+    </div>
+  );
 }
 
 export default function SubscriptionCouponSettings({ onBackToMenu }: SubscriptionCouponSettingsProps) {
@@ -23,9 +55,11 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
   
   // 상태 관리
   const [subscription, setSubscription] = useState<any>(null);
+  const [subscriptionHistory, setSubscriptionHistory] = useState<any[]>([]);
   const [usageHistory, setUsageHistory] = useState<any[]>([]);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isIssuingVip, setIsIssuingVip] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -47,7 +81,17 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
         
       setSubscription(subData);
 
-      // 2. 가져오기: 쿠폰 사용 내역
+      // 2. 전체 구독 이력 (active / cancelled / expired 모두)
+      const { data: historyData } = await supabase
+        .from('subscriptions')
+        .select('id, plan, status, created_at, ends_at')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      setSubscriptionHistory(historyData ?? []);
+
+      // 3. 쿠폰 사용 내역
       const { data: usageData } = await supabase
         .from('coupon_usages')
         .select(`
@@ -244,15 +288,15 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
 
   const currentPlan = subscription?.plan || 'free';
   const planDetails = {
-    free: { name: '무료 플랜 (Free)', color: 'text-gray-500', bg: 'bg-gray-100 dark:bg-zinc-800' },
-    basic: { name: '베이직 플랜 (Basic)', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-500/10' },
-    premium: { name: '프리미엄 플랜 (Premium)', color: 'text-[#D4AF37]', bg: 'bg-[#D4AF37]/10' }
+    free:    { label: '무료 플랜',    tag: 'Free',    color: 'text-gray-500',                      bg: 'bg-gray-100 dark:bg-zinc-800' },
+    basic:   { label: '베이직 플랜',  tag: 'Basic',   color: 'text-blue-600 dark:text-blue-400',  bg: 'bg-blue-100 dark:bg-blue-500/10' },
+    premium: { label: '프리미엄 플랜', tag: 'Premium', color: 'text-[#00BFA5]',                   bg: 'bg-[#00BFA5]/10' }
   };
   const uiPlan = planDetails[currentPlan as keyof typeof planDetails] || planDetails.free;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
-      {/* 헤더 + 모바일 뒤로가기 화살표 */}
+    <div className="space-y-5">
+      {/* 헤더 */}
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -262,151 +306,200 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
         >
           <i className="ri-arrow-left-line text-lg" />
         </button>
-        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           {t('settings.subscription_coupon', '구독 & 쿠폰')}
         </h3>
       </div>
 
       {/* 구독 상태 카드 */}
-      <div className={`p-6 sm:p-8 rounded-[2rem] border relative overflow-hidden group ${
+      <div className={`p-5 rounded-2xl border relative overflow-hidden ${
         currentPlan === 'premium'
-        ? 'border-[#00BFA5]/30 bg-gradient-to-br from-[#0a1a14] to-[#050d0a] shadow-[0_8px_30px_rgba(0,191,165,0.15)]'
+        ? 'border-[#00BFA5]/40 bg-gradient-to-br from-[#e8faf7] to-[#d4f5ef] dark:from-[#0a1a14] dark:to-[#050d0a] shadow-[0_4px_20px_rgba(0,191,165,0.15)] dark:shadow-[0_4px_20px_rgba(0,191,165,0.12)]'
         : 'border-gray-200 dark:border-white/10 bg-gradient-to-br from-white to-gray-50/50 dark:from-zinc-900 dark:to-zinc-900/50 shadow-sm'
       }`}>
         {currentPlan === 'premium' ? (
           <>
-            <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#00BFA5]/20 blur-[50px] rounded-full" />
-            <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-[#00E5FF]/20 blur-[50px] rounded-full" />
+            <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#00BFA5]/20 blur-[50px] rounded-full pointer-events-none" />
+            <div className="absolute -left-10 -bottom-10 w-32 h-32 bg-[#00E5FF]/15 blur-[40px] rounded-full pointer-events-none" />
           </>
         ) : (
-          <div className="absolute -right-10 -top-10 w-40 h-40 bg-gradient-to-br from-primary/10 to-violet-500/10 blur-3xl rounded-full" />
+          <div className="absolute -right-10 -top-10 w-40 h-40 bg-gradient-to-br from-primary/10 to-violet-500/10 blur-3xl rounded-full pointer-events-none" />
         )}
-        
-        <div className="relative z-10 flex flex-col sm:flex-row gap-6 justify-between items-start sm:items-center">
-          <div>
-            <div className={`inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-4 ${uiPlan.bg}`}>
-               <SeagullIcon size={24} className={uiPlan.color} />
+
+        <div className="relative z-10 flex flex-col gap-2.5">
+          {/* 아이콘 + 플랜명 */}
+          <div className="flex items-center gap-2.5">
+            <div className={`flex-shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-xl ${uiPlan.bg}`}>
+              <SeagullIcon size={17} className={uiPlan.color} />
             </div>
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">현재 이용 중인 플랜</p>
-            <div className="flex items-center gap-3">
-              <h2 className={`text-3xl font-black tracking-tight ${currentPlan === 'premium' ? 'text-[#00F0FF]' : 'text-gray-900 dark:text-white'}`}>
-                {uiPlan.name}
-              </h2>
-              {currentPlan !== 'free' && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-                  <CheckCircle2 size={12} /> 활성화됨
-                </span>
-              )}
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-gray-400 leading-none mb-0.5 whitespace-nowrap">현재 이용 중인 플랜</p>
+              <span className={`text-sm font-bold whitespace-nowrap ${
+                currentPlan === 'premium' ? 'text-[#007A6E] dark:text-[#00F0FF]' : 'text-gray-900 dark:text-white'
+              }`}>
+                {uiPlan.label}
+              </span>
             </div>
+          </div>
+
+          {/* 뱃지 + 결제일 */}
+          <div className="flex items-center gap-2 pl-[46px] flex-wrap">
+            <span className={`text-xs font-mono px-1.5 py-0.5 rounded whitespace-nowrap ${uiPlan.bg} ${uiPlan.color}`}>
+              {uiPlan.tag}
+            </span>
+            {currentPlan !== 'free' && (
+              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-bold whitespace-nowrap ${
+                currentPlan === 'premium'
+                  ? 'bg-[#00BFA5]/20 text-[#00BFA5]'
+                  : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
+              }`}>
+                <CheckCircle2 size={10} /> 활성
+              </span>
+            )}
             {subscription?.ends_at && (
-              <p className="text-sm text-gray-500 mt-2">
-                다음 결제일: {format(new Date(subscription.ends_at), 'yyyy년 MM월 dd일')}
-              </p>
+              <span className="text-xs text-gray-400 whitespace-nowrap">
+                결제일: {format(new Date(subscription.ends_at), 'yy.MM.dd')}
+              </span>
             )}
           </div>
 
-          <div className="flex flex-col gap-3 w-full sm:w-auto shrink-0">
+          {/* 버튼 영역 */}
+          <div className="flex flex-col gap-1.5 pt-1">
             <Link
               to="/subscription"
-              className={`w-full sm:w-auto px-6 py-4 rounded-2xl font-bold text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-xl flex items-center justify-center gap-2 group/btn shrink-0 ${
-                currentPlan === 'premium' 
-                ? 'bg-[#00BFA5] text-white shadow-[#00BFA5]/20 hover:bg-[#00E5FF]' 
-                : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-gray-900/20 dark:shadow-white/20'
+              className={`w-full px-4 py-2.5 rounded-xl font-bold text-sm hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-1.5 group/btn ${
+                currentPlan === 'premium'
+                ? 'bg-[#00BFA5] text-white hover:bg-[#00d4c0]'
+                : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
               }`}
             >
-              {currentPlan === 'free' ? '요금제 업그레이드' : '요금제 관리'}
-              <ArrowRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
+              <span className="whitespace-nowrap">{currentPlan === 'free' ? '요금제 업그레이드' : '요금제 관리'}</span>
+              <ArrowRight size={14} className="flex-shrink-0 group-hover/btn:translate-x-0.5 transition-transform" />
             </Link>
-
-            {currentPlan !== 'free' && (
-              <button
-                onClick={handleCancelSubscription}
-                className="w-full sm:w-auto px-6 py-3 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 group/cancel"
-              >
-                구독 해지하기
-              </button>
-            )}
 
             {currentPlan === 'premium' && (
               <button
                 onClick={handleOpenVipBox}
                 disabled={isIssuingVip}
-                className="w-full sm:w-auto px-6 py-3 bg-[#0a1a14] border border-[#00BFA5]/50 text-[#00BFA5] rounded-2xl font-bold text-sm hover:bg-[#00BFA5]/10 active:scale-95 transition-all flex items-center justify-center gap-2 group/vip disabled:opacity-50"
+                className="w-full px-4 py-2.5 bg-[#0a1a14] border border-[#00BFA5]/40 text-[#00BFA5] rounded-xl font-bold text-sm hover:bg-[#00BFA5]/10 active:scale-95 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
               >
-                {isIssuingVip ? <Loader2 size={18} className="animate-spin" /> : (
-                    <>
-                        <Bird size={20} className="ml-1 text-[#00BFA5] drop-shadow-[0_0_8px_rgba(0,191,165,0.8)]" /> 
-                        이달의 VIP 상자 열기
-                    </>
+                {isIssuingVip ? <Loader2 size={15} className="animate-spin" /> : (
+                  <>
+                    <Bird size={15} className="text-[#00BFA5] flex-shrink-0" />
+                    <span className="whitespace-nowrap">VIP 상자 열기</span>
+                  </>
                 )}
+              </button>
+            )}
+
+            {currentPlan !== 'free' && (
+              <button
+                onClick={handleCancelSubscription}
+                className="w-full px-4 py-2.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-xl font-semibold text-sm transition-all flex items-center justify-center whitespace-nowrap"
+              >
+                구독 해지하기
               </button>
             )}
           </div>
         </div>
       </div>
 
-      <hr className="border-gray-100 dark:border-white/5" />
-
-      {/* 쿠폰 등록 입력 폼 */}
-      <div className="space-y-4">
-        <div>
-          <h4 className="flex items-center gap-2 text-lg font-bold text-gray-900 dark:text-white mb-1">
-            <Ticket size={20} className="text-primary" /> 쿠폰 등록
+      {/* 구독 이력 */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h4 className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            <CalendarClock size={13} /> 구독 이력
           </h4>
-          <p className="text-sm text-gray-500">프로모션 코드나 쿠폰 번호를 입력하시면 혜택이 즉시 등록됩니다.</p>
+          {subscriptionHistory.length > 3 && (
+            <button
+              onClick={() => setIsHistoryModalOpen(true)}
+              className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors whitespace-nowrap"
+            >
+              전체 {subscriptionHistory.length}건 →
+            </button>
+          )}
         </div>
 
-        <form onSubmit={handleApplyCoupon} className="flex flex-col sm:flex-row gap-3">
+        {subscriptionHistory.length === 0 ? (
+          <div className="py-5 text-center text-xs text-gray-500 bg-gray-50 dark:bg-zinc-800/50 rounded-xl border border-gray-100 dark:border-white/5">
+            구독 이력이 없습니다.
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            {subscriptionHistory.slice(0, 3).map((item) => (
+              <SubscriptionHistoryItem key={item.id} item={item} />
+            ))}
+            {subscriptionHistory.length > 3 && (
+              <button
+                onClick={() => setIsHistoryModalOpen(true)}
+                className="w-full py-1.5 text-xs text-gray-400 hover:text-primary transition-colors rounded-xl border border-dashed border-gray-200 dark:border-white/10 hover:border-primary/30"
+              >
+                + {subscriptionHistory.length - 3}건 더 보기
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      <hr className="border-gray-100 dark:border-white/5" />
+
+      {/* 쿠폰 등록 */}
+      <div className="space-y-3">
+        <div>
+          <h4 className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+            <Ticket size={13} className="text-primary" /> 쿠폰 등록
+          </h4>
+          <p className="text-xs text-gray-500">코드를 입력하면 혜택이 즉시 등록됩니다.</p>
+        </div>
+
+        <form onSubmit={handleApplyCoupon} className="flex flex-col gap-2">
           <input
             type="text"
             value={couponCode}
             onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
             placeholder="쿠폰 코드 입력 (예: SPRING2026)"
-            className="flex-1 px-5 py-4 rounded-2xl bg-gray-50 dark:bg-zinc-800 border-2 border-transparent focus:border-primary/30 focus:bg-white dark:focus:bg-zinc-900 focus:ring-4 focus:ring-primary/10 outline-none transition-all font-mono font-bold uppercase tracking-widest text-gray-900 dark:text-white placeholder:normal-case placeholder:font-normal placeholder:tracking-normal placeholder:text-gray-400"
+            className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-white/10 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 outline-none transition-all font-mono font-bold uppercase tracking-widest text-xs text-gray-900 dark:text-white placeholder:text-xs placeholder:normal-case placeholder:font-normal placeholder:tracking-normal placeholder:text-gray-400"
           />
           <button
             type="submit"
             disabled={!couponCode.trim() || validating}
-            className="px-8 py-4 bg-primary text-white rounded-2xl font-bold text-sm hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0 flex items-center justify-center min-w-[120px]"
+            className="w-full px-5 py-3 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {validating ? <Loader2 size={18} className="animate-spin" /> : '등록하기'}
+            {validating ? <Loader2 size={16} className="animate-spin" /> : '등록하기'}
           </button>
         </form>
       </div>
 
-      {/* 쿠폰 사용/등록 내역 */}
-      <div className="space-y-4 pt-6">
-        <h4 className="flex items-center gap-2 text-sm font-bold text-gray-400 uppercase tracking-widest">
-          <History size={16} /> 최근 쿠폰 기록
+      {/* 쿠폰 사용 내역 */}
+      <div className="space-y-2">
+        <h4 className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          <History size={13} /> 최근 쿠폰 기록
         </h4>
-        
+
         {usageHistory.length === 0 ? (
-          <div className="py-8 text-center text-sm text-gray-500 bg-gray-50 dark:bg-zinc-800/50 rounded-2xl border border-gray-100 dark:border-white/5">
+          <div className="py-5 text-center text-xs text-gray-500 bg-gray-50 dark:bg-zinc-800/50 rounded-xl border border-gray-100 dark:border-white/5">
             등록된 쿠폰 내역이 없습니다.
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-1.5">
             {usageHistory.map((usage) => {
               const promo = usage.coupons?.promotions;
               if (!promo) return null;
-              
               return (
-                <div key={usage.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border border-gray-100 dark:border-white/5 bg-white dark:bg-zinc-900">
-                  <div className="flex flex-col gap-1">
-                    <span className="font-bold text-gray-900 dark:text-white">{promo.title}</span>
-                    <span className="text-xs text-gray-500 font-mono bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded w-fit">
-                      {usage.coupons.code}
-                    </span>
+                <div key={usage.id} className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl border border-gray-100 dark:border-white/5 bg-white dark:bg-zinc-900">
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <span className="font-semibold text-xs text-gray-900 dark:text-white truncate">{promo.title}</span>
+                    <span className="text-xs text-gray-400 font-mono">{usage.coupons.code}</span>
                   </div>
-                  <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-1 text-sm">
-                    <span className="font-bold text-primary">
-                      {promo.discount_type === 'percent' 
-                        ? `${promo.discount_value}% 할인 등록됨`
-                        : `₩${promo.discount_value.toLocaleString()} 혜택 등록됨`
+                  <div className="flex flex-col items-end gap-0.5 shrink-0">
+                    <span className="font-bold text-primary text-xs whitespace-nowrap">
+                      {promo.discount_type === 'percent'
+                        ? `${promo.discount_value}% 할인`
+                        : `₩${promo.discount_value.toLocaleString()} 혜택`
                       }
                     </span>
-                    <span className="text-xs text-gray-400">
-                      {format(new Date(usage.used_at), 'yyyy.MM.dd HH:mm')}
+                    <span className="text-xs text-gray-400 whitespace-nowrap">
+                      {format(new Date(usage.used_at), 'yy.MM.dd')}
                     </span>
                   </div>
                 </div>
@@ -415,6 +508,36 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
           </div>
         )}
       </div>
+
+      {/* 구독 이력 전체 모달 */}
+      {isHistoryModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={() => setIsHistoryModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-sm bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/10">
+              <h3 className="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                <CalendarClock size={15} className="text-primary" /> 구독 전체 이력
+              </h3>
+              <button
+                onClick={() => setIsHistoryModalOpen(false)}
+                className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-gray-400"
+              >
+                <i className="ri-close-line text-base" />
+              </button>
+            </div>
+            <div className="p-4 space-y-1.5 max-h-[60vh] overflow-y-auto overscroll-contain">
+              {subscriptionHistory.map((item) => (
+                <SubscriptionHistoryItem key={item.id} item={item} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <ConfirmModal
         open={isCancelModalOpen}
@@ -428,3 +551,4 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
     </div>
   );
 }
+

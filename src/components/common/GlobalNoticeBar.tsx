@@ -1,3 +1,8 @@
+/**
+ * 전역 공지 및 마케팅 배너 오케스트레이터(Global Notice & Marketing Banner Orchestrator):
+ * - 목적(Why): 긴급 점검, 주요 공지 또는 마케팅 캠페인을 사용자에게 최상단 레이어에서 효과적으로 전달함
+ * - 방법(How): 사이트 설정(SiteSettings) 및 배너 훅을 연동하여 우선순위에 따른 노출 전략을 실행하며, Framer Motion을 활용한 부드러운 전환과 세션 기반의 배너 닫기 상태를 관리함
+ */
 import React, { useEffect, useState } from 'react';
 import { useSiteSettings } from '../../contexts/SiteSettingsContext';
 import { X, Bell, Info, AlertTriangle, CheckCircle, Megaphone, ExternalLink } from 'lucide-react';
@@ -9,7 +14,7 @@ export function GlobalNoticeBar() {
     const [notice, setNotice] = useState<any>(null);
     const [isVisible, setIsVisible] = useState(false);
 
-    // 마케팅 top_bar 배너
+    // Asset Orchestration: Resolves 'top_bar' marketing units and initializes engagement telemetry (click-through/view tracking).
     const { banners: topBarBanners, trackClick, trackView } = useMarketingBanners('top_bar');
     const [dismissedBanners, setDismissedBanners] = useState<Set<string>>(new Set());
 
@@ -20,7 +25,7 @@ export function GlobalNoticeBar() {
         }
     }, [settings]);
 
-    // 세션 스토리지에서 닫은 배너 복원
+    // Persistence Hydration: Restores the excluded (dismissed) banner list from sessionStorage to prune the current render list.
     useEffect(() => {
         const dismissed = sessionStorage.getItem('ara-dismissed-banners');
         if (dismissed) {
@@ -28,7 +33,7 @@ export function GlobalNoticeBar() {
         }
     }, []);
 
-    // 배너 노출 트래킹
+    // Analytics Telemetry: Records impression events in the marketing analytics pipeline upon component visibility.
     useEffect(() => {
         topBarBanners.forEach(b => {
             if (!dismissedBanners.has(b.id)) {
@@ -53,7 +58,7 @@ export function GlobalNoticeBar() {
 
     const visibleBanners = topBarBanners.filter(b => !dismissedBanners.has(b.id));
 
-    // 기존 공지 관련 함수
+    // UI Transformation: Resolves specific color palettes and iconography based on the administrative notice severity.
     const getColorClasses = () => {
         switch (notice?.color) {
             case 'red': return 'bg-red-600 text-white';
@@ -81,7 +86,7 @@ export function GlobalNoticeBar() {
 
     return (
         <>
-            {/* 기존 시스템 공지 */}
+            {/* Notice Component Layer: Renders high-priority administrative notifications with entrance/exit transitions. */}
             <AnimatePresence>
                 {hasNotice && (
                     <motion.div 
@@ -108,7 +113,7 @@ export function GlobalNoticeBar() {
                 )}
             </AnimatePresence>
 
-            {/* 마케팅 top_bar 배너 */}
+            {/* Marketing Extension Layer: Renders contextual 'top_bar' promotional units with deep-link support. */}
             <AnimatePresence>
                 {visibleBanners.map(banner => (
                     <motion.div

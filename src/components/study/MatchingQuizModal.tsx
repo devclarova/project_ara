@@ -24,7 +24,7 @@ export default function MatchingQuizModal({
   pool: VocabItem[];
 }) {
   /* =========================
-     📱 반응형 감지
+     📱 반응형 인터페이스 — 뷰포트 너비 변화에 따른 레이아웃(세로/가로) 및 선 좌표 동적 대응
   ========================= */
   const [isMobile, setIsMobile] = useState(false);
 
@@ -58,7 +58,7 @@ export default function MatchingQuizModal({
   const rightRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   /* =========================
-     🔄 문제 세팅
+     🔄 데이터 셔플링 — 퀴즈 세션 활성화 시 문제 풀(Pool)에서 무작위 샘플링 및 선택지 분산 배치
   ========================= */
   useEffect(() => {
     if (!isOpen) return;
@@ -84,8 +84,8 @@ export default function MatchingQuizModal({
   }, [isOpen, pool, COUNT]);
 
   /* =========================
-     ✅ 선 좌표를 "matched 기준으로" 매번 재계산
-     - 레이아웃 변해도 선 안 끊김
+     ✅ 선 좌표 계산 엔진 — 'matched' 상태를 기반으로 SVG 경로(Line)의 시작/끝 좌표를 DOM 기하 구조에 맞게 재계산
+     - 윈도우 리사이즈 및 레이아웃 변경 시 좌표 무결성 유지 목적
   ========================= */
   const recomputeLines = () => {
     const wrapper = wrapperRef.current;
@@ -143,7 +143,7 @@ export default function MatchingQuizModal({
   }, [isOpen, isMobile, matched]);
 
   /* =========================
-     🔗 매칭 처리
+     🔗 매칭 무결성 처리 — 활성 선택지 간의 일치 여부 판별 및 시각적 피드백(Flash) 제어
   ========================= */
   useEffect(() => {
     if (!selectedLeft || !selectedRight) return;

@@ -23,6 +23,7 @@ const STEP_COL = 'minmax(48px, auto)';
 export default function SignUpStepper({ current, onStepChange, guard }: Props) {
   const { t } = useTranslation();
 
+  // 스텝 아키텍처 정의 — 회원가입 프로세스의 각 단계(약관/정보/프로필)와 이에 매칭되는 현지화 레이블 구성
   const steps = [
     { n: 1 as Step, label: t('signup.step_agreement') },
     { n: 2 as Step, label: t('signup.step_info') },
@@ -33,6 +34,7 @@ export default function SignUpStepper({ current, onStepChange, guard }: Props) {
   const [anim, setAnim] = useState<AnimSeq>(null);
   const [pendingTarget, setPendingTarget] = useState<Step | null>(null);
 
+  // 애니메이션 시퀀스 트리거 — 현재 스텝의 변경을 감지하고 진행 방향(Forward/Backward)에 따른 시각적 트랜잭션 경로 산출
   useEffect(() => {
     const prev = prevRef.current;
     if (prev === current) return;
@@ -48,6 +50,7 @@ export default function SignUpStepper({ current, onStepChange, guard }: Props) {
     prevRef.current = current;
   }, [current]);
 
+  // 스텝 이동 컨트롤러 — 사용자 요청 시 가드(Guard) 로직을 통한 유효성 검증을 선행하고 목적지까지의 논리적 이동 수행
   const go = async (next: Step) => {
     if (next === current) return;
 
@@ -98,7 +101,7 @@ export default function SignUpStepper({ current, onStepChange, guard }: Props) {
 
           return (
             <div key={s.n} className="contents">
-              {/* Step */}
+              {/* 스텝 인디케이터 — 현재 활성 상태, 완료 여부 및 사용자 인터랙션 가능 여부에 따른 동적 스타일링 노출 */}
               <div className="flex flex-col items-center pb-1">
                 <button
                   type="button"
@@ -150,6 +153,7 @@ export default function SignUpStepper({ current, onStepChange, guard }: Props) {
 /* ================= Connector ================= */
 
 
+// 스텝 연결 시스템(Visual Connector) — 각 단계 사이의 논리적 연결을 시각화하고 진행 방향에 따른 애니메이션 동력 제공
 function Connector({
   done,
   anim,

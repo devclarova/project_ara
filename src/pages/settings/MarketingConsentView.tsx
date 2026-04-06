@@ -1,3 +1,8 @@
+/**
+ * 마케팅 수신 동의 및 채널 관리 뷰(Marketing Consent & Channel Management View):
+ * - 목적(Why): 이벤트 소식 및 혜택 정보를 수신할 채널(Email, SMS, Push)에 대한 명시적 동의 절차를 관리함
+ * - 방법(How): 독립적인 체크박스 상태 관리를 통해 채널별 수신 여부를 정밀하게 제어하며, 법적 준거성을 위한 동의 이력을 갱신함
+ */
 import Button from '@/components/common/Buttons';
 import { useState } from 'react';
 

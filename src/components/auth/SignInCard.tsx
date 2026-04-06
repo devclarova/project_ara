@@ -8,7 +8,7 @@ import { useRelinkDetection } from '@/hooks/useRelinkDetection';
 
 const DRAFT_KEY = 'signup-profile-draft';
 
-// 안전한 로컬 드래프트 읽기
+// 로컬 스토리지 데이터 무결성 확보 — 비정상적인 JSON 구조 또는 시스템 접근 권한 부재 시 예외를 포착하여 안전하게 null 반환
 function readDraft() {
   try {
     const raw = localStorage.getItem(DRAFT_KEY);
@@ -19,10 +19,8 @@ function readDraft() {
 }
 
 /**
- * 이메일 로그인 직후에도 한 번 더 보장:
- * - 존재하지 않으면 draft 기반으로 profiles 생성 (is_onboarded=true)
- * - 생성 성공 시 draft 제거
- * - 이미 존재하면 no-op
+ * 프로필 정합성 강제화(Profile Harmonization) — 회원가입 절차 중 예기치 못한 세션 단절로 누락될 수 있는 
+ * 프로필 데이터를 로컬 드래프트(Draft)를 참조하여 자동 복구 및 생성 보장
  */
 async function ensureProfileFromDraftAfterSignIn(userId: string, email?: string | null) {
   const { data: exists, error: exErr } = await supabase
@@ -65,9 +63,9 @@ async function ensureProfileFromDraftAfterSignIn(userId: string, email?: string 
   }
 }
 
-/** 로그인 성공 후 라우팅 분기
- * - 프로필 존재 & is_onboarded=true → /social
- * - 그 외 → /signup (소셜은 콜백에서 이동, 이메일은 여기서 이미 보장됨)
+/** 
+ * 인증 후 조건부 라우팅(Conditional Routing Orchestration) — 사용자 세션의 유효성을 최종 검증하고 
+ * 온보딩(Onboarding) 완료 여부에 따라 최적의 서비스 진입점(Main vs Signup) 결정
  */
 async function postSignInRoute(navigate: ReturnType<typeof useNavigate>) {
   // 세션/유저 확보
@@ -230,7 +228,7 @@ function SignInCard() {
       return;
     }
 
-    // 성공 → 프로필/온보딩 상태에 따라 분기 (프로필 먼저 보장)
+    // 인증 후처리 워크플로우 — 정상 로그인이 확인되면 프로필 상태에 따른 라우팅 엔진(postSignInRoute) 가동
     try {
       await postSignInRoute(navigate);
     } catch (e) {
@@ -243,7 +241,7 @@ function SignInCard() {
 
   return (
     <div className="bg-white dark:bg-secondary rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 sm:p-8 md:p-10 lg:p-12 w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl text-gray-900 dark:text-gray-100">
-      {/* 로고 및 제목 */}
+      {/* 브랜드 비주얼 아이덴티티 — 사용자에게 일관된 브랜드 경험을 제공하기 위한 고해상도 벡터 로고 및 대화형 홈 링크 배치 */}
       <div className="flex flex-col justify-center items-center text-center mb-6">
         <button
           type="button"
@@ -356,7 +354,7 @@ function SignInCard() {
       </form>
 
       <div className="mt-5 flex flex-row items-center justify-between gap-2 px-3 flex-wrap">
-        {/* 자동 로그인 체크박스 (CheckboxSquare 스타일 적용, UI 전용) */}
+        {/* 영속적 세션 관리(Persistent Session Management) — 사용자의 로그인 상태 유지 의사를 로컬 스토리지에 기록하여 스토리지 어댑터에서 참조하도록 구성 */}
         {/* 자동 로그인 체크박스 (CheckboxSquare 내부에서 label/input 처리) */}
         <div
           style={

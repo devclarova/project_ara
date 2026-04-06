@@ -4,9 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { retryWithBackoff, isOnline } from '@/utils/networkUtils';
 
 /**
- * GlobalUserStatusTracker
- * - 사용자의 접속 상태(is_online)와 마지막 활동 시간(last_active_at)을 실시간으로 업데이트합니다.
- * - 이 정보는 관리자 페이지 및 다른 사용자에게 '현재 접속 중' 여부를 알려주는 데 사용됩니다.
+ * 전역 사용자 활동 및 접속 상태 추적 엔진(Global User Activity & Presence Tracking Engine):
+ * - 목적(Why): 서비스 내 사용자의 실시간 접속 여부(is_online)와 마지막 활동 시간을 동기화하여 커뮤니티 활성도를 가시화함
+ * - 방법(How): 30초 단위의 하트비트(Heartbeat), 가시성 API(Visibility API), 그리고 언로드(BeforeUnload) 이벤트를 바인딩하여 프로필 테이블의 메타데이터를 원자적으로 업데이트함
  */
 export const GlobalUserStatusTracker = () => {
   const { user } = useAuth();
@@ -17,7 +17,7 @@ export const GlobalUserStatusTracker = () => {
   useEffect(() => {
     if (!user) return;
 
-    // 1. 상태 업데이트 함수
+    // Synchronization Engine: Dispatches remote updates to the profile table to synchronize 'is_online' and 'last_active_at' metadata.
     const updateStatus = async (online: boolean, force = false) => {
       // 오프라인이거나 사용자가 없거나 이미 재시도 중이면 중단
       if (!isOnline() || !user || isRetryingRef.current) return;
@@ -72,12 +72,12 @@ export const GlobalUserStatusTracker = () => {
     // 초기 온라인 설정 (강제)
     updateStatus(true, true);
 
-    // 2. 주기적인 하트비트 (30초마다 갱신)
+    // Availability Heartbeat: Executes a 30-second periodic update to maintain real-time presence accuracy.
     const heartbeatInterval = setInterval(() => {
       updateStatus(true);
     }, 1000 * 30); 
 
-    // 3. 브라우저/가시성 이벤트 기반 업데이트
+    // Page Visibility Binding: Synchronizes state immediately upon window focus or document visibility transitions.
     const handleFocus = () => updateStatus(true);
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {

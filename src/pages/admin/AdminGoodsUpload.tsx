@@ -1,3 +1,8 @@
+/**
+ * 관리자 굿즈 상품 에디터 (Admin Goods Upload Editor):
+ * - 목적(Why): 실물/디지털 상품의 재고, 가격, 다국어 설명 등 커머스 원천 데이터를 신규 등록 및 수정함
+ * - 방법(How): 폼 데이터 바인딩과 Supabase Storage 이미지 다중 업로드 파이프라인을 병렬 처리함
+ */
 import React, { useState, useEffect } from 'react';
 import { 
   Plus, 
@@ -21,7 +26,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { goodsService } from '@/services/goodsService';
 import type { Product, ProductVariant as ServiceVariant } from '@/services/goodsService';
 
-// Local UI Types
+// 지역 UI 데이터 모델 정의 — 마스터 데이터와 연동되는 인터페이스 규약
 interface ProductOptionUI {
   id: string;
   name: string;
@@ -44,7 +49,7 @@ const AdminGoodsUpload = () => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   
-  // State
+  // 상품 원시 속성 및 에셋(이미지/텍스트) 상태 데이터 스토어
   const [productName, setProductName] = useState('');
   const [category, setCategory] = useState('clothing');
   const [basePrice, setBasePrice] = useState('0');
@@ -58,7 +63,7 @@ const AdminGoodsUpload = () => {
   const [shippingFee, setShippingFee] = useState('0');
   const [freeShippingThreshold, setFreeShippingThreshold] = useState('0');
   
-  // Settings
+  // 정책 설정 — 전시 가시성 및 특화 태그(Badges) 상태 제어
   const [isHidden, setIsHidden] = useState(false);
   const [badgeNew, setBadgeNew] = useState(false);
   const [badgeBest, setBadgeBest] = useState(false);
@@ -70,7 +75,7 @@ const AdminGoodsUpload = () => {
   ]);
   const [variants, setVariants] = useState<ProductVariantUI[]>([]);
 
-  // Calculate sale price
+  // 판매 가격 자동 정규화 — 정가와 할인율 기반 실시간 산출 프로세스
   useEffect(() => {
     const price = Number(basePrice);
     const disc = Number(discountPercent);
@@ -81,7 +86,7 @@ const AdminGoodsUpload = () => {
     }
   }, [basePrice, discountPercent]);
 
-  // Fetch data if edit mode
+  // 기성 데이터 로드 — 수정 모드 진입 시 식별자 기반 엔티티 동기화 수행
   useEffect(() => {
     if (id) {
       const fetchProductData = async () => {
@@ -181,6 +186,7 @@ const AdminGoodsUpload = () => {
     }
   };
 
+  // 마크다운 문법 주입 — 에디터 내 텍스트 스타일 자동 래핑 알고리즘
   const applyTextStyle = (style: 'bold' | 'h1') => {
     const textarea = document.getElementById('description-editor') as HTMLTextAreaElement;
     if (!textarea) return;
@@ -208,6 +214,7 @@ const AdminGoodsUpload = () => {
     generateVariants(newGroups);
   };
 
+  // 옵션 조합 변종(Variant) 자동 생성 — 그룹간 데카르트 곱 기반 데이터 매트릭스 생성
   const generateVariants = (groups: ProductOptionUI[]) => {
     const group1 = groups[0]?.values || [];
     const group2 = groups[1]?.values || [];
@@ -250,6 +257,7 @@ const AdminGoodsUpload = () => {
     setVariants(prev => prev.map(v => v.id === id ? { ...v, [field]: value } : v));
   };
 
+  // 상품 통합 무결성 저장 — 기본 제원, 옵션 그룹, 하위 변종 간 트랜잭션 수립 및 영속화
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!productName) {
@@ -313,7 +321,7 @@ const AdminGoodsUpload = () => {
   return (
     <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#0a0a0a] pb-20">
       <div className="max-w-7xl mx-auto px-4 pt-12 space-y-8">
-        {/* Header Section */}
+        {/* 상단 액션 바 — 네비게이션 복구 및 통합 저장 인터럽트 */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-white/20 dark:border-white/5 shadow-2xl">
           <div className="flex items-center gap-5">
             <button 
@@ -346,7 +354,7 @@ const AdminGoodsUpload = () => {
           
           {/* Sidebar */}
           <div className="lg:col-span-3 space-y-6">
-            {/* Preview Card - Even Smaller & Responsive */}
+            {/* 실시간 렌더링 시뮬레이션 카드 — 현재 입력 상태를 최종 UI와 대조 피드백 */}
             <div className="p-3 sm:p-4 rounded-[2rem] bg-white dark:bg-zinc-900 border border-white/20 dark:border-white/5 space-y-2 shadow-xl max-w-[280px] mx-auto lg:max-w-none">
                <div className="flex items-center gap-2 mb-1">
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -368,7 +376,7 @@ const AdminGoodsUpload = () => {
                </div>
             </div>
 
-            {/* Navigation Tabs - Now below Preview */}
+            {/* 폼 계층 이동 네비게이션 — 논리적 단계별 입력 전환 유도 */}
             <div className="p-3 rounded-[2rem] bg-white dark:bg-zinc-900 border border-white/20 dark:border-white/5 space-y-2 shadow-sm">
               <TabButtonUI active={activeTab === 'basic'} onClick={() => setActiveTab('basic')} label="기본 정보 및 가격" icon={Package} />
               <TabButtonUI active={activeTab === 'detail'} onClick={() => setActiveTab('detail')} label="상세 설명 편집" icon={Type} />
@@ -381,7 +389,7 @@ const AdminGoodsUpload = () => {
             <div className="p-10">
               <form onSubmit={handleSubmit} className="space-y-8">
                 
-                {/* STEP 1: Basic & Pricing */}
+                {/* 1단계: 마스터 제원 및 가격 정책 정의 — 상품의 핵심 데이터 설정 */}
                 <div className={activeTab === 'basic' ? 'space-y-8' : 'hidden'}>
                   <section className="space-y-6">
                     <div className="flex flex-col gap-1">
@@ -475,7 +483,7 @@ const AdminGoodsUpload = () => {
                   </section>
                 </div>
 
-                {/* STEP 2: Detail Editor */}
+                {/* 2단계: 에셋 에디팅 — 마케팅 스토리와 고해상도 시각적 에셋 구성 */}
                 <div className={activeTab === 'detail' ? 'space-y-8' : 'hidden'}>
                   <div className="flex flex-col gap-1">
                     <h3 className="text-lg font-black text-gray-900 dark:text-white">상세 내용 및 에디터</h3>
@@ -530,7 +538,7 @@ const AdminGoodsUpload = () => {
                   </div>
                 </div>
 
-                {/* STEP 3: Options */}
+                {/* 3단계: 공급망 연동 설정 — 하위 옵션 조합 및 물류 재고 제어 정책 */}
                 <div className={activeTab === 'options' ? 'space-y-8' : 'hidden'}>
                   <div className="flex flex-col gap-1">
                     <h3 className="text-lg font-black text-gray-900 dark:text-white">배송 및 옵션 설정</h3>

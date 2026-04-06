@@ -1,4 +1,8 @@
-
+/**
+ * 관리자 분석 대시보드(Admin Analytics Dashboard):
+ * - 목적(Why): 서비스 전반의 핵심 지표(MAU, 매출, 퍼널) 및 인프라 보안 위협을 실시간 수집·분석하여 의사결정 데이터를 제공함
+ * - 방법(How): Google Analytics 4(GA4) 연동 및 자체 트래픽 로그(Hybrid Tracking)를 결합한 통합 대시보드 오케스트레이션을 수행함
+ */
 import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Activity, Users, Database, DollarSign, TrendingUp, Zap, Filter, Download, BarChart2, AlertTriangle, CheckCircle2, XCircle, Search, Layers, Globe, ShieldCheck, Lock, Eye, ShieldAlert, X, ChevronRight, Server, Ticket } from 'lucide-react';
@@ -8,7 +12,7 @@ import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simp
 import { usePresence } from '../../contexts/PresenceContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Types
+// 데이터 구조 및 인터페이스 정의
 interface StatsData {
   totalUsers: number;
   cumulativeUsers: number;
@@ -49,9 +53,9 @@ interface StatsData {
 
 type Tab = 'overview' | 'acquisition' | 'retention' | 'marketing' | 'dataops';
 
-// --- 하위 컴포넌트 (렌더링 최적화 대상) ---
+// --- 서브 컴포넌트 — 불필요한 리렌더링 방지를 위한 React.memo 적용 대상 ---
 
-// 1. 실시간 시스템 상태 및 보안 관제 패널 (리렌더링 격리 최적화)
+// 실시간 시스템 상태 및 보안 모니터링 대시보드 — 성능 최적화를 위한 리렌더링 격리 레이어
 const RealtimeHealthCard = React.memo(({ health, onOpenDetails }: { health: any, onOpenDetails: () => void }) => {
    const isCritical = health.dbStatus.includes('오류') || health.latency > 1000 || health.anomalies.some((a: any) => a.type === '위험');
    const [timeAgo, setTimeAgo] = React.useState('방금 전');
@@ -138,7 +142,7 @@ const RealtimeHealthCard = React.memo(({ health, onOpenDetails }: { health: any,
    );
 });
 
-// 퍼널 단계 시각화 컴포넌트
+// 사용자 전환 유입 단계(Funnel) 시각화 인터페이스
 const FunnelStep = ({ label, count, percentage, color }: { label: string, count: number, percentage: number, color: string }) => (
    <div className="space-y-2">
       <div className="flex justify-between items-end">
@@ -159,7 +163,7 @@ const FunnelStep = ({ label, count, percentage, color }: { label: string, count:
    </div>
 );
 
-// 보안 상태 상세보기 모달
+// 보안 위협 정밀 분석 및 사고 관리 모달
 const SecurityDetailsModal = React.memo(({ health, onClose }: { health: any, onClose: () => void }) => {
    const isCritical = health.anomalies.some((a: any) => a.type === '위험');
 
@@ -192,7 +196,7 @@ const SecurityDetailsModal = React.memo(({ health, onClose }: { health: any, onC
 
             {/* Modal Content */}
             <div className="p-6 space-y-8 max-h-[70vh] overflow-y-auto overscroll-contain">
-               {/* 1. 핵심 위협 및 인프라 정밀 분석 (Always-on UI for Management Confidence) */}
+               {/* 1. 핵심 위협 및 인프라 정밀 분석 — 관리자 신뢰성 확보를 위한 상시 노출 UI */}
                <div className="space-y-4">
                   <h3 className="text-sm font-black text-foreground/70 flex items-center gap-2 uppercase tracking-widest">
                      <AlertTriangle size={16} className={isCritical ? 'text-red-500' : 'text-emerald-500'} /> 🛡️ 실시간 보안 및 인프라 매트릭스 분석
@@ -254,7 +258,7 @@ const SecurityDetailsModal = React.memo(({ health, onClose }: { health: any, onC
                      </div>
                   )}
 
-                  {/* Latency & Resource Detail Analysis */}
+                  {/* 레이먼시 및 리소스 상세 데이터 분석 섹션 */}
                   <div className={`p-4 rounded-xl border ${health.latency > 500 ? 'bg-amber-50 border-amber-200 dark:bg-amber-950/20' : 'bg-gray-50 border-gray-100 dark:bg-gray-900/40'}`}>
                      <div className="flex justify-between items-center mb-3">
                         <div className="text-xs font-bold text-foreground/60 flex items-center gap-1.5 uppercase tracking-tighter">
@@ -336,7 +340,7 @@ const SecurityDetailsModal = React.memo(({ health, onClose }: { health: any, onC
    );
 });
 
-// 하위 컴포넌트: 보안 지표
+// 보안 성능 지표 데이터 카드 컴포넌트
 const SecurityMetric = ({ title, value, sub, icon: Icon, color }: any) => {
    const colorClass = color === 'emerald' ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30' : 'text-amber-600 bg-amber-50 dark:bg-amber-950/30';
    return (
@@ -351,7 +355,7 @@ const SecurityMetric = ({ title, value, sub, icon: Icon, color }: any) => {
    );
 };
 
-// 하위 컴포넌트: 계층 상태 아이템
+// 시스템 인프라 계층별 모니터링 데이터 아이템
 const LayerStatusItem = ({ label, status, desc }: any) => (
    <div className="p-3 bg-gray-50/50 dark:bg-gray-900/40 rounded-xl border border-gray-100 dark:border-gray-800 flex flex-col gap-1">
       <div className="flex justify-between items-center">
@@ -362,7 +366,7 @@ const LayerStatusItem = ({ label, status, desc }: any) => (
    </div>
 );
 
-// 하위 컴포넌트: 보안 레이어 배지
+// 보안 레이어 활성화 상태 표시 배지
 const SecurityLayerBadge = ({ label, active, icon: Icon }: any) => (
    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm transition-all border ${active ? 'bg-white border-emerald-100 text-emerald-700' : 'bg-gray-50 border-gray-100 text-gray-400 opacity-50'}`}>
       <Icon size={12} className={active ? 'text-emerald-500' : 'text-gray-300'} />
@@ -370,10 +374,10 @@ const SecurityLayerBadge = ({ label, active, icon: Icon }: any) => (
    </div>
 );
 
-// Constants
+// 전역 기술 설정 및 지리 정보 상수
 const GEO_URL = "/countries-110m.json";
 
-// 숫자 코드·전체 이름·world-atlas 명칭 등을 ISO 2자리 코드로 정규화
+// 다국적 지점 정규화 로직 — 데이터 일관성 확보를 위해 국가 식별 데이터를 ISO 2자리 코드로 표준화
 const getCanonicalCode = (raw: string): string => {
   if (!raw || raw === 'Unknown' || raw === 'unknown') return 'Unknown';
   const trimmed = raw.trim();
@@ -563,7 +567,7 @@ const AdminAnalytics = () => {
   const [isStatesModalOpen, setIsStatesModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Tab Scroll Logic
+  // 탭 메뉴 가로 스크롤 및 그래디언트 오버레이 상호작용 로직
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
   const mapContainerRef = React.useRef<HTMLDivElement>(null);
   const [showLeftGradient, setShowLeftGradient] = useState(false);
@@ -615,7 +619,7 @@ const AdminAnalytics = () => {
      return () => window.removeEventListener('resize', handleScroll);
   }, []);
 
-  // 지도 휠 이벤트: 최대/최소 줌 경계에서 페이지 스크롤 전파 차단
+  // 인앱 맵 인터랙션 최적화 — 줌 임계값 도달 시 페이지 스크롤 전파(Propagation) 차단
   useEffect(() => {
     const el = mapContainerRef.current;
     if (!el) return;
@@ -627,7 +631,7 @@ const AdminAnalytics = () => {
     return () => { if (el) el.removeEventListener('wheel', onMapWheel); };
   }, [isMounted]);
 
-  // Map Color Scale - 모드에 따라 유연한 임계값 적용
+  // 데이터 밀도별 맵 컬러 스케일링 — 지표 모드(Total/Online)별 임계값 가변 적용
   const colorScale = useMemo(() => {
      const isOnlineMode = mapMode === 'online';
      const getThresholdColor = (count: number) => {
@@ -648,7 +652,7 @@ const AdminAnalytics = () => {
   }, [mapMode]);
 
 
-   // Map Mount Delay (once only)
+   // 맵 렌더링 동기화 지연 — 브라우저 페인팅 순서 조율 및 렌더링 안정성 확보
    useEffect(() => {
      setTimeout(() => setIsMounted(true), 200);
    }, []);
@@ -752,7 +756,7 @@ const AdminAnalytics = () => {
      }
    };
 
-    // 실시간 시스템 상태 및 보안 감지 로직 (1분 주기 갱신)
+    // 실시간 인프라 무결성 검증 및 위협 탐지 알고리즘: 60초 주기 실행 정책 적용
     const fetchHealth = async () => {
        try {
           const pingStart = performance.now();

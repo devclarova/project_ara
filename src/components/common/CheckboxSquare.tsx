@@ -1,3 +1,8 @@
+/**
+ * 스퀘어 타입 체크박스 데이터 입력 유닛(Square Checkbox Input Unit):
+ * - 목적(Why): 사용자로부터 불리언(Boolean) 입력을 받기 위한 고유한 시각적 아이덴티티를 가진 선택 도구를 제공함
+ * - 방법(How): 숨겨진 네이티브 체크박스와 연동된 SVG 시각적 상태(Checked, Indeterminate)를 제어하여 웹 표준 접근성과 심미성을 동시에 확보함
+ */
 import React, { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -47,7 +52,7 @@ export default function CheckboxSquare({
       ].join(' ')}
       style={vars}
     >
-      {/* ✅ input에 peer 부여 (포커스 전달용) */}
+      {/* Accessibility Bridge: Hidden native checkbox synchronizes state while allowing peer-based visual focus styling. */}
       <input
         id={inputId}
         type="checkbox"
@@ -56,9 +61,7 @@ export default function CheckboxSquare({
         className="sr-only peer"
       />
 
-      {/* ✅ 시각 박스는 절대 포커스 못 받게: tabindex 제거 + pointer-events-none
-             ✅ 포커스 링은 peer-focus-visible로 그림
-             ✅ aria-hidden으로 스크린리더 숨김 (이제 포커스 불가라 안전) */}
+      {/* Custom Visual Surface: Renders deterministic SVG states (checked, indeterminate) while preventing redundant screen reader announcements via aria-hidden. */}
       <span
         className="mt-0.5 w-5 h-5 xs:w-[18px] xs:h-[18px] rounded-[6px] border grid place-items-center flex-shrink-0
                    bg-[var(--ara-checkbox-bg)] border-[var(--ara-checkbox-border)]

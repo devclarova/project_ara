@@ -15,6 +15,11 @@ if (GA_MEASUREMENT_ID) {
   }]);
 }
 
+/**
+ * 사용자 행동 트래킹 및 마케팅 지표 분석기(User Behavior & Traffic Analytics)
+ * - GA4 기반의 페이지뷰 추적 및 UTM 파라미터를 활용한 유입 경로(Source/Medium/Campaign) 영속성 관리
+ * - 인하우스 트래픽 로그 서버와 동기화하여 DAU 및 광고 성과 지표 산출의 기초 데이터 제공
+ */
 export function useUserTracker() {
   const location = useLocation();
   const { session } = useAuth();

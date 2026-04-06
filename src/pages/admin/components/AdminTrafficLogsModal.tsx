@@ -1,3 +1,8 @@
+/**
+ * 하이브리드 트래픽 분석 및 Ad-block 우회 로깅
+ * - 목적: 서비스 유입 경로(UTM), 실시간 유저 활동 및 트래픽 추이를 시각화하여 마케팅 효율성 및 인프라 부하를 정밀 분석
+ * - 방식: Ad-block을 우회하는 자체 수집 엔진(Hybrid Tracking)의 로그 데이터를 실시간 폴링(Polling) 및 Recharts 시각화 통합
+ */
 import React, { useEffect, useState, useMemo } from 'react';
 import { 
   X, 

@@ -23,6 +23,11 @@ export interface MarketingBanner {
 }
 
 // ────────────────── Hook ──────────────────
+/**
+ * 오디언스 타겟팅 마케팅 배너 엔진(Audience-Targeted Banner Engine)
+ * - 사용자 플랜(Free/Premium), 접속 국가 및 타겟 페이지별 정밀 필터링을 통해 최적화된 마케팅 콘텐츠 노출
+ * - 배너 노출(View) 및 클릭(Click) 지표를 실시간 트래킹하여 프로모션 성과 분석 데이터 수집
+ */
 export function useMarketingBanners(
   bannerType?: MarketingBanner['banner_type'],
   targetPage?: string

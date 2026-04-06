@@ -1,3 +1,8 @@
+/**
+ * 굿즈 스토어 목업 데이터(Goods Store Mock Data):
+ * - 목적(Why): 카테고리 필터링 및 프로토타이핑을 위한 초기 정적 데이터 셋을 제공함
+ * - 방법(How): 상품 카테고리(CATEGORIES) 및 MOCK_PRODUCTS 배열을 상수로 정의하여 UI 컴포넌트에 공급함
+ */
 export const CATEGORIES = ['all', 'clothing', 'accessories', 'stationery'];
 
 export const MOCK_PRODUCTS = [

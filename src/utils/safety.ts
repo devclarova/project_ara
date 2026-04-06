@@ -1,4 +1,9 @@
-// src/utils/profanity.ts
+/**
+ * 지능형 콘텐츠 안전성 및 비속어 필터링 엔진(Intelligent Content Safety & Profanity Filtering Engine):
+ * - 목적(Why): 커뮤니티 내 유해 콘텐츠 전파를 방지하고 사용자 간 건전한 상호작용 환경을 유지함
+ * - 방법(How): Leo-profanity 기반의 다국어 사전과 커스텀 블록 리스트를 결합하여 실시간 메시지 정규화, 마스킹 및 강제 차단 처리를 수행함
+ */
+// src/utils/safety.ts
 
 // ✅ ESM/CJS 호환 래퍼
 import * as LEO_RAW from 'leo-profanity';

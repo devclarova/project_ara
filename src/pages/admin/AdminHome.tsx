@@ -1,3 +1,8 @@
+/**
+ * 어드민 대시보드 인텔리전스(Admin Dashboard Intelligence):
+ * - 목적(Why): 서비스 핵심 운영 지표(KPI), 실시간 트래픽 및 매출 현황을 통합 시각화하여 운영 의사결정을 지원함
+ * - 방법(How): 하이브리드 트래킹(Ad-block 우회) 데이터 수집 및 실시간 Presence 동기화를 통한 정밀한 사용자 활동 분석을 수행함
+ */
 import React, { useEffect, useState } from 'react';
 import { 
   Users, 
@@ -110,6 +115,7 @@ const AdminHome = () => {
 
     fetchStats();
     setIsMounted(true);
+    // 데이터 동기화 인터벌 — 60초 주기 갱신 정책 적용
     const interval = setInterval(fetchStats, 60000); 
     return () => clearInterval(interval);
   }, []);

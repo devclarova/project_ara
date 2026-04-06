@@ -1,3 +1,8 @@
+/**
+ * 사용자 차단 인터페이스 엔진(User Blocking Interface Engine):
+ * - 목적(Why): 특정 사용자로부터 자신의 데이터와 소통 채널을 분리하여 안전한 커뮤니티 환경을 유지함
+ * - 방법(How): 차단 시 발생하는 연쇄적인 정책(메시지 차단, 게시글 숨김, 댓글 마스킹 등)을 안내하는 컨텍스트 모달을 제공하고 원자적 차단 트랜잭션을 실행함
+ */
 import { useState } from 'react';
 import { useBlock } from '@/hooks/useBlock';
 import { useTranslation } from 'react-i18next';
@@ -25,9 +30,9 @@ export default function BlockButton({ targetProfileId, onClose, onChanged }: Blo
   };
 
   const handleAction = async () => {
-    const wasBlocked = isBlocked; // 토글 전 상태 저장
-    await toggleBlock(); // DB 트리거가 후처리(언팔 등) 수행
-    const nextBlocked = !wasBlocked; // 토글 후 상태 직접 계산
+    const wasBlocked = isBlocked; // State Snapshot: Preserves the pre-request block status to ensure optimistic UI consistency.
+    await toggleBlock(); // Relationship Severance: Triggers a backend process to force-terminate mutual following/sharing relations.
+    const nextBlocked = !wasBlocked; // Optimistic State Derivation: Calculates the toggle result immediately for instant UI feedback.
 
     onChanged?.(nextBlocked); // 부모에서 목록/카운트/blockedIds 갱신
     setShowConfirm(false);
@@ -60,7 +65,7 @@ export default function BlockButton({ targetProfileId, onClose, onChanged }: Blo
       >
         <div className="flex flex-col gap-6 py-4 px-6 text-left">
           <div className="flex flex-col gap-5">
-            {/* Notice 1: Chat Exit */}
+            {/* Advisory 1: Notifies the user of immediate chat room eviction and inbound message suppression. */}
             <div className="flex items-center gap-4 group">
               <div className="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-sm">
                 <i className="ri-logout-box-r-line text-orange-500 text-2xl" />
@@ -75,7 +80,7 @@ export default function BlockButton({ targetProfileId, onClose, onChanged }: Blo
               </div>
             </div>
 
-            {/* Notice 2: Block Messages */}
+            {/* Advisory 2: Warns of total prohibition on new conversation requests and inbound push notifications. */}
             <div className="flex items-center gap-4 group">
               <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-sm">
                 <i className="ri-mail-forbid-line text-blue-500 text-2xl" />
@@ -90,7 +95,7 @@ export default function BlockButton({ targetProfileId, onClose, onChanged }: Blo
               </div>
             </div>
 
-            {/* Notice 3: Hide Posts */}
+            {/* Advisory 3: Communicates the immediate concealment of the target user assets from feeds and timelines. */}
             <div className="flex items-center gap-4 group">
               <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-sm">
                 <i className="ri-eye-off-line text-purple-500 text-2xl" />
@@ -105,7 +110,7 @@ export default function BlockButton({ targetProfileId, onClose, onChanged }: Blo
               </div>
             </div>
 
-            {/* Notice 4: Mask Comments */}
+            {/* Advisory 4: Explains the masking strategy for existing interactions (comments/replies) in shared threads. */}
             <div className="flex items-center gap-4 group">
               <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-sm">
                 <i className="ri-chat-private-line text-emerald-500 text-2xl" />

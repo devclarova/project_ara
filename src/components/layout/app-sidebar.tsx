@@ -1,4 +1,8 @@
-// src\components\app-sidebar.tsx
+/**
+ * 지능형 반응형 사이드바 시스템(Intelligent Responsive Sidebar System):
+ * - 목적(Why): 애플리케이션 전반의 서비스 맵을 구조화하여 제공하고 사용자 역할에 따른 최적화된 경로를 안내함
+ * - 방법(How): Radix UI Sidebar 프리셋을 확장하여 가변형(Collapsible) 레이아웃 및 다중 팀 전환(Team Switcher) 기능을 통합함
+ */
 import * as React from 'react';
 import {
   AudioWaveform,

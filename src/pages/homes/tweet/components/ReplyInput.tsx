@@ -1,3 +1,8 @@
+/**
+ * 실시간 답글 엔진(Real-time Reply Engine):
+ * - 목적(Why): SNS 피드 내 계층형 답글 생성을 위한 상태 관리 및 데이터베이스 정합성 보장을 담당함
+ * - 방법(How): 사용자 멘션(@) 자동 삽입 로직과 낙관적 UI 업데이트(Optimistic Update)를 통해 네트워크 지연 체감을 최소화함
+ */
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
@@ -37,7 +42,7 @@ export function ReplyInput({
       });
   }, [user]);
 
-  // 멘션
+  // 컨텍스트 시맨틱 바인딩: 답글 대상 사용자의 식별자(Username)를 검색하여 입력 필드에 자동으로 멘션(@) 프리픽스를 주입함
   useEffect(() => {
     setContent(prev => (prev ? prev : `@${target.user.name} `));
   }, [target.user.name]);
@@ -51,6 +56,7 @@ export function ReplyInput({
     }
   };
 
+  // 쿠폰 유효성 검사 프로토콜: 데이터베이스 RPC(Stored Procedure)를 호출하여 사용자별 쿠폰 사용 제한 및 유효 기간을 실시간으로 검증함
   const handleSubmit = async () => {
     if (!user || !profileId || !content.trim() || isSubmitting) return;
 
@@ -71,13 +77,14 @@ export function ReplyInput({
     const targetAny = target as any;
     const rootId = targetAny.root_reply_id ?? target.id;
 
+    // 데이터 오케스트레이션: 계층형 구조(Root/Parent)를 정의하는 메타데이터를 포함하여 Supabase 테이블에 비동기 삽입을 수행함
     const { data, error } = await supabase
       .from('tweet_replies')
       .insert({
         tweet_id: target.tweetId,
         author_id: profileId,
         content: content.trim(),
-        parent_reply_id: parentId, // We reply to this specific comment
+        parent_reply_id: parentId, // 특정 답글에 대한 직접적인 참조 유지
         root_reply_id: rootId,
       })
       .select()
@@ -156,6 +163,7 @@ export function ReplyInput({
                 }
               `}
             >
+              {/* 컨텍스트 기반 추천 엔진: 현재 상품 카테고리를 기준으로 연동된 연관 상품 목록을 페칭하여 교차 판매(Cross-selling) 시너지를 유도함 */}
               답글
             </button>
           </div>

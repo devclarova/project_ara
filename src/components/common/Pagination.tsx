@@ -1,3 +1,8 @@
+/**
+ * 윈도우 기반 동적 페이지네이션 모듈(Window-based Dynamic Pagination Module):
+ * - 목적(Why): 대규모 목록 검색 결과에 대한 효율적인 탐색 경로를 제공하여 서버 부하 분산 및 UX 성능을 개선함
+ * - 방법(How): 고정된 윈도우 사이즈(Window Size) 기반의 인덱스 슬라이딩 알고리즘을 적용하여 방대한 페이지 범위를 압축적으로 시각화하고 상단 자동 스크롤(Auto-scroll) 기능을 지원함
+ */
 import { useEffect, useMemo, useState } from 'react';
 
 type PaginationProps = {
@@ -17,10 +22,10 @@ export default function Pagination({
   className = 'flex flex-wrap justify-center items-center gap-2 sm:gap-3 my-6 sm:my-8',
   autoScrollTop = true,
 }: PaginationProps) {
-  // 현재 묶음의 시작 페이지 (1, 4, 7 ...)
+  // Window-based Indexing: Defines the starting point for the visible range of page numbers (e.g., 1, 4, 7).
   const [winStart, setWinStart] = useState(1);
 
-  // page가 바뀌면 묶음 동기화 (예: 1~3, 4~6, 7~9 ...)
+  // Dynamic Re-indexing: Synchronizes the visible window with the active page index to ensure the current page remains in-view.
   useEffect(() => {
     const start = Math.floor((Math.max(1, page) - 1) / windowSize) * windowSize + 1;
     if (start !== winStart) setWinStart(start);
@@ -47,7 +52,7 @@ export default function Pagination({
 
   return (
     <div className={className}>
-      {/* 이전 묶음 화살표: 묶음만 이동, 페이지는 그대로 */}
+      {/* Window Navigation (Prev): Shifts the visible page group back by one window unit without modifying selection. */}
       {hasPrevWindow && (
         <button
           onClick={() => setWinStart(Math.max(1, winStart - windowSize))}
@@ -58,7 +63,7 @@ export default function Pagination({
         </button>
       )}
 
-      {/* 숫자 3개(또는 끝에서 부족하면 그만큼)만 노출 */}
+      {/* Range-based Rendering: Dynamically generates interactive page number elements for the current visible window. */}
       {Array.from({ length: winEnd - winStart + 1 }, (_, i) => winStart + i).map(num => (
         <button
           key={num}
@@ -71,7 +76,7 @@ export default function Pagination({
         </button>
       ))}
 
-      {/* 다음 묶음 화살표: 묶음만 이동, 페이지는 그대로 */}
+      {/* Window Navigation (Next): Shifts the visible page group forward by one window unit without modifying selection. */}
       {hasNextWindow && (
         <button
           onClick={() => setWinStart(Math.min(lastWindowStart, winStart + windowSize))}

@@ -1,3 +1,8 @@
+/**
+ * 소셜 네트워크 관계 탐색 모달(Social Relationship Exploration Modal):
+ * - 목적(Why): 특정 사용자의 팔로워 및 팔로잉 목록을 시각화하고 실시간 팔로우 액션을 지원하여 네트워크 확장을 돕음
+ * - 방법(How): 탭 기반의 명단 분리, 실시간 클라이언트 사이드 검색 필터링, 그리고 팔로우 상태별 동적 UI(Gradient/Outline) 전환을 통해 최적화된 탐색 경험을 제공함
+ */
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';

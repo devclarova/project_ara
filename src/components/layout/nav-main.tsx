@@ -1,3 +1,8 @@
+/**
+ * 계층형 메인 네비게이션 트리(Hierarchical Main Navigation Tree):
+ * - 목적(Why): 서비스의 주요 플랫폼 기능을 논리적인 그룹으로 시각화하여 사용자의 기능 탐색 비용을 최소화함
+ * - 방법(How): Radix UI의 Collapsible 프리미엄 패턴을 활용하여 계층적 메뉴 구조를 구현하고, Lucide 아이콘과 연동된 직관적 인터페이스를 제공함
+ */
 "use client"
 
 import { ChevronRight, type LucideIcon } from "lucide-react"

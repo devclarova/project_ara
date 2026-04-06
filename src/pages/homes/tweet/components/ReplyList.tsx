@@ -1,3 +1,8 @@
+/**
+ * 무한 스크롤 답글 리스트 모듈(Infinite Scroll Reply List Module):
+ * - 목적(Why): 트윗에 달린 전체 답글 목록을 점진적으로 렌더링하여 앱의 메모리 오버헤드를 막음
+ * - 방법(How): react-infinite-scroll-component의 Threshold 프로퍼티를 통해 페이징 이벤트를 지연 없이 호출하고 비어있는 상태에 대한 Fallback UI를 처리함
+ */
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { useTranslation } from 'react-i18next';
 import { ReplyCard } from './ReplyCard';

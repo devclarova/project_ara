@@ -1,9 +1,20 @@
+/**
+ * 지능형 답글 유닛(Intelligent Reply Unit):
+ * - 목적(Why): 답글 본문, 프로필, 상호작용 및 보안 정책(차단/마스킹)을 캡슐화하여 개별 컴포넌트의 신뢰성을 보장함
+ * - 방법(How): DOMPurify로 XSS를 방지하고 번역, 좋아요, 멀티미디어 오버레이 기능을 내장하여 확장된 경험을 제공함
+ */
 import BlockButton from '@/components/common/BlockButton';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import ReportButton from '@/components/common/ReportButton';
 import TranslateButton from '@/components/common/TranslateButton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+/**
+ * 무한 스크롤 답글 컨테이너(Infinite Scroll Reply Container):
+ * - 목적(Why): 대규모 데이터셋 렌더링 시 브라우저 성능 저하를 방지하기 위해 가상화를 적용함
+ * - 방법(How): react-infinite-scroll-component를 활용하여 실시간 페이징 처리 및 계층형 답글의 가시성 스크롤을 제어함
+ */
+import InfiniteScroll from 'react-infinite-scroll-component';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBlockedUsers } from '@/hooks/useBlockedUsers';
 import { supabase } from '@/lib/supabase';
@@ -208,7 +219,7 @@ export function ReplyCard({
     fetchAuthorCountry();
   }, [reply.user.username]);
 
-  // 댓글 삭제
+  // 권한 검증 기반 삭제 프로토콜: 현재 세션의 소유권(Ownership)을 검증한 후, Supabase RLS 정책에 부합하는 트랜잭션을 실행하여 데이터를 제거함
   const handleDelete = async () => {
     if (!profileId) {
       toast.error(t('auth.login_needed'));

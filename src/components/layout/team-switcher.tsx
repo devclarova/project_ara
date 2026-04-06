@@ -1,3 +1,8 @@
+/**
+ * 멀티 테넌트 팀 전환 오케스트레이터(Multi-tenant Team Switcher Orchestrator):
+ * - 목적(Why): 다중 커뮤니티나 조직에 소속된 사용자가 계정 전환 없이 작업 환경(Context)을 즉각적으로 변경할 수 있도록 지원함
+ * - 방법(How): 활성 팀 상태(Active Team)의 원자적 변경을 통해 사이드바 전체 스토리지와 네비게이션 트리를 실시간으로 재구성함
+ */
 import * as React from "react"
 import { ChevronsUpDown, Plus } from "lucide-react"
 

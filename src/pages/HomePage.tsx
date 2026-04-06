@@ -1,12 +1,14 @@
+/**
+ * 학습 대시보드 및 데일리 성과 관리 홈(Learning Dashboard & Daily Stats Home):
+ * - 목적(Why): 사용자의 학습 진척도, 추천 콘텐츠, 주간 통계를 시각화하여 개인화된 학습 경험을 제공함
+ * - 방법(How): i18next를 활용한 다국어 지원 및 시간대별 동적 인사말 시스템을 통합하여 사용자 경험 최적화
+ */
 import { Clock, Flame, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 type Stats = {
-  due: number; // 오늘 복습 예정 개수
-  newWords: number; // 오늘 추가한 단어 수
-  streak: number; // 연속 학습 일수
-  dailyGoal: number; // 오늘 목표(단어 수)
-  completedToday: number; // 오늘 완료(단어 수)
+  dailyGoal: number; // 당일 학습 목표치
+  completedToday: number; // 당일 학습 완료 수량
 };
 
 const Greeting = ({ userName = '미정', stats }: { userName?: string; stats?: Partial<Stats> }) => {

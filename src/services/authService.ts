@@ -11,7 +11,11 @@ export const PROFILE_DRAFT_KEY = 'signup-profile-draft';
 const isDupeErr = (msg?: string) =>
   !!msg && (msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique'));
 
-/** auth.users → public.users 미러 보장 (멱등, 서버 RPC 없으면 경고만) */
+/**
+ * 전역 인증 및 계정 프로비저닝 엔진(Global Authentication & Account Provisioning Engine):
+ * - 목적(Why): 사용자 가입 유형(Email/Social)에 따른 프로필 자동 생성 및 개인정보 동기화 오케스트레이션을 수행함
+ * - 방법(How): 멱등성(Idempotency) 보장을 위한 ensure_app_user RPC 호출 및 로컬 드래프트 복구 로직을 통합하여 사용자 온보딩 무결성을 보장함
+ */
 export async function ensureAppUser() {
   const { error } = await supabase.rpc('ensure_app_user');
   if (error) {

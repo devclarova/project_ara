@@ -1,3 +1,8 @@
+/**
+ * 실시간 푸시 알림 인터랙티브 토스트(Real-time Push Notification Interactive Toast):
+ * - 목적(Why): 서비스 내 주요 이벤트(메시지, 좋아요, 팔로우 등)를 사용자에게 즉각 알리고 관련 컨텍스트로의 빠른 이동을 지원함
+ * - 방법(How): Sonner 기반의 커스텀 레이아웃, 대소문자 및 텍스트 정규화, 그리고 사용자 인터랙션(Hover) 시 타이머 일시 정지 로직을 통해 최적화된 알림 경험을 구현함
+ */
 import React, { useEffect, useState, useRef } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useTranslation } from 'react-i18next';
@@ -33,7 +38,7 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
   const timerId = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Start timer on mount
+    // Lifecycle Orchestration: Initializes the auto-dismissal timer upon mounting and registers a cleanup routine.
     startTimer();
     return () => clearTimer();
   }, []);
@@ -55,7 +60,7 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
   const handleMouseEnter = () => {
     setIsPaused(true);
     clearTimer();
-    // Calculate remaining time
+    // Temporal Calculation: Re-calculates the remaining TTL by subtracting elapsed time during interaction interrupts.
     const elapsed = Date.now() - startTime.current;
     remainingTime.current = Math.max(0, remainingTime.current - elapsed);
   };
@@ -66,7 +71,7 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
   };
 
   const getStyles = () => {
-    // ... (existing getStyles logic, keep it same)
+    // Asset Mapping: Dynamically assigns visual properties (icons, semantic colors, labels) based on notification categories.
     switch (type) {
       case 'chat': return {
         icon: '💬',
@@ -142,7 +147,7 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
       onClick={onClick}
       className={`flex items-start space-x-3 w-full group animate-in fade-in slide-in-from-right-4 duration-300 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 p-2 rounded-2xl transition-all active:scale-[0.98] ${onClick ? '' : 'pointer-events-none'}`}
     >
-       {/* ... content ... */}
+       {/* Layout Composition: Implements a hierarchical arrangement of avatar assets, status indicators, and notification payloads. */}
        <div className="flex-shrink-0 relative">
         <div className={`absolute -inset-1 rounded-full opacity-10 blur-[2px] transition-opacity group-hover:opacity-20 ${styles.iconBg}`}></div>
         <Avatar className="w-10 h-10 border border-white/20 dark:border-white/10 shadow-sm relative z-10">

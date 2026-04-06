@@ -1,3 +1,8 @@
+/**
+ * 고성능 실시간 메시징 및 미디어 오케스트레이션 엔진(High-Performance Real-time Messaging & Media Orchestration Engine):
+ * - 목적(Why): 일대일 대화 환경에서 텍스트 메시지, 멀티미디어 에셋(이미지, 비디오, 파일)의 실시간 교환 및 번역, 신고, 차단 등 핵심 비즈니스 로직을 통합 제공함
+ * - 방법(How): 무한 스크롤(Infinite Scroll) 및 뷰포트 스크롤 보정 알고리즘(useLayoutEffect), 지연 로딩 이미지 엔진(Intersection Observer), 그리고 Supabase Realtime 채널을 연동하여 끊김 없는 사용자 경험을 보장함
+ */
 import { BanBadge } from '@/components/common/BanBadge';
 import BlockButton from '@/components/common/BlockButton';
 import Modal from '@/components/common/Modal';
@@ -30,7 +35,7 @@ interface DirectChatRoomProps {
   onBackToList?: () => void;
   highlightMessageId?: string;
 }
-// 전역 이미지 캐시
+// 범용 이미지 캐시 매커니즘 — 중복 네트워크 요청을 방지하고 메모리 내 에셋 재사용을 통해 렌더링 성능 최적화
 const imageCache = new Map<string, string>();
 const loadingImages = new Map<string, Promise<string>>();
 const loadImage = (url: string): Promise<string> => {
@@ -56,7 +61,7 @@ const loadImage = (url: string): Promise<string> => {
   loadingImages.set(url, promise);
   return promise;
 };
-// LazyImage 최적화
+// 지연 로딩 이미지 엔진(Lazy Loading Engine) — 교차 관찰자(Intersection Observer)를 활용하여 뷰포트 근접 시점에만 리소스를 페칭함으로써 초기 대역폭 절감
 const LazyImage = memo(
   ({
     src,
@@ -142,7 +147,7 @@ const CachedAvatar = memo(
 );
 CachedAvatar.displayName = 'CachedAvatar';
 
-// 메시지 아이템 최적화
+// 원자적 메시지 유닛(Atomic Message Unit) — 메시지 유형(시스템, 사용자, 미디어) 및 권한 상태에 따라 최적화된 서브 컴포넌트를 분기 렌더링
 const MessageItem = memo(
   ({
     message,
@@ -152,7 +157,7 @@ const MessageItem = memo(
     isCurrent,
     searchQuery,
     onImageLoad,
-    onViewMedia, // 미디어(이미지/동영상) 크게보기 핸들러
+    onViewMedia,
     onReport,
     isSelectionMode,
     isSelected,
@@ -567,10 +572,7 @@ const DirectChatRoom = ({
     const selectedContent: string[] = [];
 
     // Iterate over messageGroups to find messages
-    // This is inefficient but functional for reasonable chat sizes.
-    // Better: Create a map or lookup if needed, but array iteration is fine for client side list.
-    // We only have messages in `messageGroups`.
-    // Iterate over messages
+    // 원천 데이터 스캔 및 포맷팅 — 선택된 메시지의 식별자를 기반으로 전체 리스트에서 해당 데이터를 추적하여 신고용 스냅샷 생성
     (messages || []).forEach(msg => {
       if (selectedMessages.has(msg.id)) {
         const content = typeof msg.content === 'string' ? msg.content : '(Media/File)';
@@ -606,7 +608,7 @@ const DirectChatRoom = ({
     setIsReportModalOpen(true);
   }, []);
 
-  // 현재 로드된 메시지에서 미디어 추출 (Memoized)
+  // 런타임 미디어 추출 및 동적 정렬 — 현재 로드된 메시지 파이프라인에서 시각적 자산(이미지, 비디오)만을 필터링하여 갤러리 탐색 시퀀스 구성
   const allCurrentMedia = useMemo(() => {
     const media: MediaItem[] = [];
 
@@ -742,34 +744,38 @@ const DirectChatRoom = ({
   const { user } = useAuth();
   const currentUserId = user?.id ?? '';
   const menuRef = useRef<HTMLDivElement>(null);
-  const scrollToBottom = useCallback((force = false) => {
-    // History Restore 중에는 절대 스크롤 간섭 금지 (비디오/이미지 로드 등 방어)
-    if (isRestoringHistoryRef.current) return;
+  // 뷰포트 정렬 엔진(Viewport Alignment) — 신규 메시지 유입 또는 데이터 로드 시 사용자 흐름을 유지하기 위해 스크롤 포지션을 최하단으로 보정
+  const scrollToBottom = useCallback(
+    (force = false) => {
+      // History Restore 중에는 절대 스크롤 간섭 금지 (비디오/이미지 로드 등 방어)
+      if (isRestoringHistoryRef.current) return;
 
-    const doScroll = () => {
-      const el = containerRef.current;
-      if (el) {
-        if (force) {
-          el.scrollTop = el.scrollHeight;
-          isUserNearBottomRef.current = true; // Sync update to handle rapid image loads
+      const doScroll = () => {
+        const el = containerRef.current;
+        if (el) {
+          if (force) {
+            el.scrollTop = el.scrollHeight;
+            isUserNearBottomRef.current = true; // Sync update to handle rapid image loads
+          } else {
+            el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+          }
         } else {
-          el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+          // Fallback for initial render safety
+          messageEndRef.current?.scrollIntoView({
+            behavior: force ? 'auto' : 'smooth',
+            block: 'nearest',
+          });
         }
-      } else {
-        // Fallback for initial render safety
-        messageEndRef.current?.scrollIntoView({
-          behavior: force ? 'auto' : 'smooth',
-          block: 'nearest',
-        });
-      }
-    };
+      };
 
-    if (force) {
-      doScroll();
-    } else {
-      requestAnimationFrame(doScroll);
-    }
-  }, []);
+      if (force) {
+        doScroll();
+      } else {
+        requestAnimationFrame(doScroll);
+      }
+    },
+    [],
+  );
 
   const handleImageLoad = useCallback(() => {
     // History Restore 중이면 무시
@@ -779,7 +785,7 @@ const DirectChatRoom = ({
       scrollToBottom(true);
     }
   }, [scrollToBottom]);
-  // 메시지 변경 시 스크롤 제어 (떨림 방지를 위해 useLayoutEffect 사용)
+  // 레이아웃 동기화 및 스크롤 떨림 방지(Jitter Prevention) — 무한 스크롤로 인한 과거 기록 로드 시 렌더링 직전 높이 변화를 감지하여 오프셋 역산
   useLayoutEffect(() => {
     if (!messages || messages.length === 0) return;
     const lastMessage = messages[messages.length - 1];

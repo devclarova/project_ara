@@ -1,3 +1,8 @@
+/**
+ * 통합 단어 학습 및 개인화 데이터 엔진(Unified Vocabulary Learning & Personalization Engine):
+ * - 목적(Why): 사용자가 저장한 단어 자산의 학습 상태(unknown, learning, known) 및 오답 이력을 영속적으로 관리함
+ * - 방법(How): Supabase RPC 및 조인 쿼리를 통해 사용자 단어 데이터와 마스터 단어 메타데이터(이미지, 발음 등)를 실시간 매핑함
+ */
 import { supabase } from '@/lib/supabase';
 
 export type VocaStatus = 'unknown' | 'learning' | 'known';

@@ -77,7 +77,7 @@ export default function OxQuizModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  // 타이머
+  // 타이머 엔진 — 세션 내 잔여 시간(Timeleft) 관리 및 만료 시 종료 상태(Finished) 전이 제어
   useEffect(() => {
     if (!isOpen || finished) return;
 
@@ -117,7 +117,7 @@ export default function OxQuizModal({
         return newTime;
       });
 
-      // ❌ 패널티 표시 (상단 중앙)
+      // 시각적 피드백 — 오답 발생 시 상단 중앙에 페널티 시간(-2초) 팝업 및 화면 흔들림 효과 트리거
       setPenaltyFlash(true);
       setTimeout(() => setPenaltyFlash(false), 650);
 
@@ -125,7 +125,7 @@ export default function OxQuizModal({
       setShake(true);
       setTimeout(() => setShake(false), 400);
 
-      // ❌ 틀린 문제 기록
+      // 오답 데이터 영속화 준비 — 틀린 문제의 메타데이터(용어, 제시어, 정답)를 결과 리스트에 기록
       setWrongHistory(prev => [
         ...prev,
         {

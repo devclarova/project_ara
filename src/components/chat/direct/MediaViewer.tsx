@@ -12,6 +12,11 @@ export interface MediaItem {
   type: 'image' | 'video';
 }
 
+/**
+ * 고성능 미디어 레이어(Media Content Layer):
+ * - SNS 및 채팅 내 대용량 이미지/비디오를 뷰포트에 최적화하여 렌더링함
+ * - 하드웨어 가속 기반의 스와이프 제스처 및 멀티터치 줌 알고리즘을 포함함
+ */
 interface MediaViewerProps {
   isOpen: boolean;
   onClose: () => void;
