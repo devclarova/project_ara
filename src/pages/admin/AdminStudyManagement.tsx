@@ -1,3 +1,8 @@
+/**
+ * 관리자 학습 콘텐츠 매니저 (Admin Study Management):
+ * - 목적(Why): 학습 비디오 리소스, 대본 분절 데이터 및 단어장 세트의 상태를 한눈에 통제하기 위함
+ * - 방법(How): 복합 필터(난이도, 카테고리) 기반의 데이터 조회와 하위 에셋 일괄 삭제 무결성 처리를 수행함
+ */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   Search, Edit, Trash2, Eye, EyeOff, ChevronDown, Calendar, BookOpen, 
@@ -47,19 +52,19 @@ const AdminStudyManagement = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  // Data
+  // 메인 콘텐츠 리스트 및 통계 데이터 상태 관리
   const [studies, setStudies] = useState<StudyItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [featuredCount, setFeaturedCount] = useState(0);
 
-  // Filters & Pagination
+  // 검색, 필터링 및 페이지네이션 제어 상태 관리
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('전체');
   const [filterLevel, setFilterLevel] = useState('전체');
   const [page, setPage] = useState(1);
 
-  // Modal
+  // 모달 제어 상태 — 상세 미리보기 및 삭제 확약 레이어 관리
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [selectedStudy, setSelectedStudy] = useState<StudyItem | null>(null);
@@ -71,6 +76,7 @@ const AdminStudyManagement = () => {
   const [previewDataLoading, setPreviewDataLoading] = useState(false);
 
   // ─── Fetch Data ────────────────────────────────────────────
+  // 학습 콘텐츠 목록 수신 — 검색/카테고리/난이도 복합 필터링 및 고성능 페이지네이션 적용
   const fetchStudies = useCallback(async () => {
     setLoading(true);
     try {
@@ -121,7 +127,7 @@ const AdminStudyManagement = () => {
     }
   }, [page, searchTerm, filterCategory, filterLevel]);
 
-  // Fetch featured count separately
+  // 추천 콘텐츠 통계 지표 별도 수신 — 대시보드 요약 정보 동시성 확보
   const fetchStats = useCallback(async () => {
     const { count } = await supabase
       .from('study')
@@ -138,7 +144,7 @@ const AdminStudyManagement = () => {
     fetchStats();
   }, [fetchStats]);
 
-  // Prevent background scroll when modal is open
+  // 모달 활성화 시 배경 레이아웃 고정 — 스크롤 잠금을 통한 UX 안정성 확보
   useEffect(() => {
     if (previewModalOpen || deleteModalOpen) {
       document.body.style.overflow = 'hidden';
@@ -156,6 +162,7 @@ const AdminStudyManagement = () => {
     setPage(1);
   };
 
+  // 추천(Featured) 상태 실시간 전환 — 메인 큐레이션 노출 정책 제어
   const handleToggleFeatured = async (study: StudyItem) => {
     const newValue = !study.is_featured;
     const { error } = await supabase
@@ -178,6 +185,7 @@ const AdminStudyManagement = () => {
     });
   };
 
+  // 콘텐츠 가시성(Hidden) 제어 및 낙관적 UI 업데이트(Optimistic Update) 적용
   const handleToggleHidden = async (study: StudyItem) => {
     const newValue = !study.is_hidden;
     
@@ -211,6 +219,7 @@ const AdminStudyManagement = () => {
     setDeleteModalOpen(true);
   };
 
+  // 콘텐츠 완전 폐기 — 연관 엔티티(단어, 문화노트, 영상) 통합 삭제 트랜잭션 수행
   const handleDeleteConfirm = async () => {
     if (!selectedStudy) return;
     setDeleteLoading(true);
@@ -246,6 +255,7 @@ const AdminStudyManagement = () => {
     }
   };
 
+  // 콘텐츠 상세 미리보기 로드 — 연관 데이터(단어/노트/자막) 비동기 병렬 수신
   const handlePreviewClick = async (study: StudyItem) => {
     setPreviewStudy(study);
     setPreviewModalOpen(true);
@@ -295,7 +305,7 @@ const AdminStudyManagement = () => {
   // ─── Render ────────────────────────────────────────────────
   return (
     <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
-      {/* Header */}
+      {/* 관리자 헤더 — 페이지 정체성 확립 및 전역 액션(등록/새로고침) 버튼 배치 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">학습 콘텐츠 관리</h1>
@@ -320,7 +330,7 @@ const AdminStudyManagement = () => {
         </div>
       </div>
 
-      {/* Stats Banner */}
+      {/* 현황 요약 배너 — 인벤토리 핵심 지표 실시간 모니터링 */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div className="bg-secondary rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4">
           <div className="flex items-center gap-2 mb-1">
@@ -345,7 +355,7 @@ const AdminStudyManagement = () => {
         </div>
       </div>
 
-      {/* Search & Filter Bar */}
+      {/* 검색 및 정밀 필터링 인터페이스 — 다차원 조건을 통한 콘텐츠 조회 가속화 */}
       <div className="bg-secondary rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4">
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Search */}
@@ -411,7 +421,7 @@ const AdminStudyManagement = () => {
         </div>
       ) : (
         <>
-          {/* Desktop Table (md+) */}
+          {/* 데스크탑 데이터 그리드 — 상세 속성 가시성 확보를 위한 테이블 레이아웃 */}
           <div className="hidden md:block bg-secondary rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[800px]">
@@ -543,7 +553,7 @@ const AdminStudyManagement = () => {
             </div>
           </div>
 
-          {/* Mobile Card Layout (<md) */}
+          {/* 모바일 카드 리스트 — 터치 기반 탐색 및 가독성 최적화 스택 레이아웃 */}
           <div className="md:hidden space-y-3">
             {studies.map((study) => {
               const video = getFirstVideo(study);
@@ -657,7 +667,7 @@ const AdminStudyManagement = () => {
         </>
       )}
 
-      {/* Pagination */}
+      {/* 하단 페이지네이션 — 대량 인벤토리 탐색을 위한 동적 컨트롤러 */}
       {totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <span className="text-xs text-muted-foreground">
@@ -707,7 +717,7 @@ const AdminStudyManagement = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* 데이터 폐기 최종 확인 레이어 — 물리적 삭제 전 무결성 손실 방지용 확약 모달 */}
       {deleteModalOpen && selectedStudy && (
         <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-background rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-2xl border border-gray-200 dark:border-gray-700">
@@ -742,7 +752,7 @@ const AdminStudyManagement = () => {
         </div>
       )}
 
-      {/* Preview Modal */}
+      {/* 전역 미리보기 모달 — 사용자 페이지(SNS/Study)와 동일한 형태의 결과값 검증 환경 제공 */}
       {previewModalOpen && previewStudy && (
         <div className="fixed inset-0 bg-black/60 dark:bg-black/80 flex items-center justify-center z-[100] p-2 sm:p-4 animate-in fade-in duration-300">
           <div className="bg-background rounded-[2rem] max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col scale-in animate-in zoom-in-95 duration-300">

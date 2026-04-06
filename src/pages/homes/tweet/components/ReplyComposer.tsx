@@ -1,3 +1,8 @@
+/**
+ * 답글 컴포저 모듈(Reply Composer Module):
+ * - 목적(Why): 가벼운 답글 작성을 위해 글자 수 제한, 보조 액션(이미지, 이모지 등) 허브를 통합 제공함
+ * - 방법(How): 사용자 입력 바이트 수에 따라 다이내믹 링(동적 서클 게이지) 인디케이터를 렌더링하여 시작적 피드백을 제공함
+ */
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

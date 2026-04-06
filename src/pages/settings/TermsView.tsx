@@ -1,3 +1,8 @@
+/**
+ * 서비스 이용약관 요약 및 법적 고지 뷰(Service Terms of Use & Legal Notice View):
+ * - 목적(Why): 사용자가 서비스 이용과 관련된 권리, 의무, 책임 및 분쟁 해결 절차를 명확히 인지하도록 정보를 제공함
+ * - 방법(How): 서비스 제공, 회원가입, 금지행위 등 핵심 약관 항목을 체계적으로 분류하여 텍스트 기반의 구조화된 뷰를 렌더링함
+ */
 // 이용약관
 
 import Button from '@/components/common/Buttons';

@@ -1,3 +1,8 @@
+/**
+ * 커뮤니티 글로벌 홈 피드 뷰(Community Global Home Feed View):
+ * - 목적(Why): 사용자 간 실시간 소통, 트윗 검색, 그리고 최신 피드 조회를 위한 핵심 SNS 인터페이스를 제공함
+ * - 방법(How): Supabase Realtime CDC를 활용한 양방향 데이터 바인딩, useInfiniteScroll 플러그인과 세션 스토리지 기반의 스크롤 위치 복원 알고리즘을 적용하여 UX를 극대화함
+ */
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { useOutletContext, useNavigationType } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';

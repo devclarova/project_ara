@@ -1,3 +1,8 @@
+/**
+ * 라우팅 연동 자동 스크롤 관리자(Routing-linked Auto-scroll Manager):
+ * - 목적(Why): 페이지 전환(Navigation)이나 해시 라우팅 시 사용자에게 최적화된 뷰포트 시작 지점을 제공함
+ * - 방법(How): React Router의 위치(Location) 변화 및 탐색 유형(POP/PUSH)을 감지하여 뷰포트를 원점으로 리셋하거나 특정 앵커로 부드럽게 이동시킴
+ */
 import React, { useEffect, useRef } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
 
@@ -8,7 +13,7 @@ function ScrollToTop() {
   const prevPathname = useRef(pathname);
 
   useEffect(() => {
-    // 1. 해시가 있으면 해당 위치로 스크롤 (댓글 하이라이트 등)
+    // Anchor Routing: Smoothly scrolls to the target element if a valid ID hash is present in the URL.
     const isValidIdHash = /^#[A-Za-z][\w-]*$/.test(hash || '');
     if (isValidIdHash) {
       const el = document.querySelector(hash!);
@@ -18,15 +23,13 @@ function ScrollToTop() {
       }
     }
 
-    // 2. 뒤로가기(POP)거나 단순 상태 변경(REPLACE)인 경우 스크롤 무시
-    // 이렇게 해야 브라우저/Home.tsx의 복원 로직과 충돌하지 않음
+    // History Normalization: Preserves custom scroll offsets for POP and REPLACE navigation types to maintain UX consistency during back/forward actions.
     if (navType === 'POP' || navType === 'REPLACE') {
       prevPathname.current = pathname;
       return;
     }
 
-    // 3. 새로운 경로로 이동(PUSH)할 때만 최상단으로 이동
-    // 단, 관리자 페이지 등에서 내부 스크롤 로직을 가지고 넘어온 경우(fromAdmin)는 생략
+    // Viewport Reset: Forces the scroll position back to the origin upon PUSH navigation to a fresh route.
     if (navType === 'PUSH' && pathname !== prevPathname.current) {
       const state = (location.state as any);
       // Only skip if we have a specific element to jump to (comment highlight)

@@ -100,6 +100,7 @@ export default function EpisodeVocaModal({
     setImgError(false);
   }, [index, isOpen]);
 
+  // 뷰포트 고정 — 모달 활성화 시 배경 스크롤을 차단하고 현재 스크롤 위치를 고정 (Scroll Jump 방지)
   useEffect(() => {
     if (!isOpen) return;
 
@@ -165,6 +166,7 @@ export default function EpisodeVocaModal({
     }
   };
 
+  // 이미지 프리로딩 파이프라인 — 사용자 인터랙션 전 가용 범위(현재 인덱스 기준 정방향 2개, 역방향 1개)의 이미지를 메모리에 캐싱
   useEffect(() => {
     if (!isOpen || !hasWords) return;
 
@@ -242,6 +244,7 @@ export default function EpisodeVocaModal({
     setIndex(prev => prev - 1);
   };
 
+  // 키보드 접근성 인터페이스 — Escape(닫기), Arrow(이동), Space(원문 전환) 등 전역 단축키 이벤트 바인딩
   useEffect(() => {
     if (!isOpen) return;
 

@@ -35,6 +35,7 @@ const TranslatedCultureNoteView: React.FC<Props> = ({ note, contents }) => {
     targetLang,
   );
 
+  // 다국어 제목 합성 엔진 — 가독성 확보를 위해 원문 대비 유의미한 번역 결과 도출 시 '원문 - 번역문' 복합 포맷 생성
   let displayTitle = note.title || '문화 노트';
   if (translatedTitle && translatedTitle !== note.title) {
     displayTitle = `${note.title} - ${translatedTitle}`;

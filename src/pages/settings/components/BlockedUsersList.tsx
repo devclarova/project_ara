@@ -1,3 +1,8 @@
+/**
+ * 차단 사용자 관리 및 해제 리스트(Blocked Users Management & Unblock List):
+ * - 목적(Why): 사용자가 이전에 차단한 계정 목록을 확인하고, 필요 시 차단을 해제하여 소통 가능한 상태로 복구함
+ * - 방법(How): useBlockedUsers 커스텀 훅을 통해 실시간 차단 목록을 페칭하고, Avatar 컴포넌트와 unblockMutation을 연동하여 즉각적인 UI 업데이트 및 데이터 정합성을 유지함
+ */
 import { useTranslation } from 'react-i18next';
 import { useBlockedUsers } from '@/hooks/useBlockedUsers';
 

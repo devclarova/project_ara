@@ -1,3 +1,8 @@
+/**
+ * 서비스 운영 정책 및 고객 지원 통합 허브(Service Policy & Support Integration Hub):
+ * - 목적(Why): 서비스 이용 약관, 개인정보 처리방침, 마케팅 수신 동의 및 고객센터 접근을 위한 통합 내비게이션을 제공함
+ * - 방법(How): 각 정책 항목을 개별 Row로 구성하고, 선택 시 전용 하위 뷰(TermsView, PrivacyPolicyView 등)를 모달 기반으로 렌더링함
+ */
 import Modal from '@/components/common/Modal';
 import CustomerCenterView from '@/components/settings/CustomerCenterView';
 import MarketingConsentView from '@/components/settings/MarketingConsentView';

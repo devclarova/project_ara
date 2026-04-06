@@ -12,8 +12,9 @@ interface UseBlockReturn {
 }
 
 /**
- * Hook for managing user blocks with Supabase
- * Uses soft delete pattern (ended_at) - same as follows
+ * 사용자 차단 관계 관리 엔진(User Block Relationship Engine):
+ * - 목적(Why): 유해 사용자로부터 회원을 보호하고 커뮤니티 정화 및 안전한 상호작용 환경을 보장함
+ * - 방법(How): Supabase Soft Delete 패턴으로 차단 상태를 관리하며, 차단 시 채팅방 퇴장 및 알림 읽음 처리 등 연쇄적인 데이터 정량화(Cleanup) 프로세스를 오케스트레이션함
  */
 export function useBlock(targetProfileId?: string): UseBlockReturn {
   const { user } = useAuth();
@@ -78,7 +79,7 @@ export function useBlock(targetProfileId?: string): UseBlockReturn {
     return () => window.removeEventListener('REFRESH_BLOCKED_USERS', handler);
   }, [checkBlockStatus]);
 
-  // Toggle block/unblock
+  // 차단/해제 트랜잭션 오케스트레이션(Block Transaction Orchestration) — 관계 상태의 원자적(Atomic) 전환 및 실시간 전역 이벤트 전파를 통한 UI 동기화
   const toggleBlock = async () => {
     if (!user) {
       toast.error(t('auth.login_needed', '로그인이 필요합니다'));

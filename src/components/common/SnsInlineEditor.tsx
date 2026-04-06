@@ -1,3 +1,8 @@
+/**
+ * 실시간 SNS 콘텐츠 저작 엔진(Real-time SNS Content Authoring Engine):
+ * - 목적(Why): 트윗 및 댓글 작성 시 리치 텍스트와 미디어 자산의 통합 업로드 파이프라인을 제공함
+ * - 방법(How): 클라이언트 사이드 이미지 압축(browser-image-compression) 및 비동기 스토리지 트랜잭션을 통해 성능을 최적화함
+ */
 import { forwardRef, useImperativeHandle, useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -83,12 +88,12 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
     },
   }));
 
-  // 미리보기용 URL
+  // Virtual Resource Management: Oversees local Object URL lifecycle for pre-upload previews, ensuring memory release.
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  // 한글 IME 조합 상태
+  // Input Synchronization: Tracks IME composition states to prevent duplicate submission triggers during multi-byte character entry.
   const [isComposing, setIsComposing] = useState(false);
 
-  // 내 프로필 정보 불러오기
+  // Contextual Metadata Sync: Asynchronously fetches active user profile attributes for consistent content attribution.
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
@@ -134,7 +139,7 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
     setFiles(selected);
   };
 
-  // 이미지 업로드 + <img> 태그 문자열 생성
+  // Media Orchestration: Implements a multi-stage pipeline encompassing client-side compression and storage ingestion.
   const uploadImagesAndBuildTags = async () => {
     if (!user || files.length === 0) return '';
     const imgTags: string[] = [];
@@ -356,7 +361,7 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
 
   const disabled = (!value.trim() && files.length === 0) || isSubmitting;
 
-  // Enter / Shift+Enter 처리
+  // Keyboard Interaction Schema: Handles conditional dispatching for the 'Enter' key while preserving default IME behaviors.
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (isComposing) return; // 한글 조합 중일 땐 무시
 
@@ -397,14 +402,14 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
             ref={textareaRef}
             value={value}
             onChange={e => {
-              setValue(e.target.value);
-              props.onChange?.();
+               setValue(e.target.value);
+               props.onChange?.();
             }}
             onKeyDown={handleKeyDown}
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={(e) => {
-              setIsComposing(false);
-              props.onCompositionEnd?.();
+               setIsComposing(false);
+               props.onCompositionEnd?.();
             }}
             onFocus={props.onFocus}
             onInput={props.onInput}

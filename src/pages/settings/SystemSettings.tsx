@@ -1,4 +1,9 @@
 import Modal from '@/components/common/Modal';
+/**
+ * 시스템 환경설정 및 거버넌스 오케스트레이터(System Configuration & Governance Orchestrator):
+ * - 목적(Why): 언어(Localization) 및 테마(Aesthetics) 등 애플리케이션의 핵심 시스템 파라미터를 통합적으로 제어함
+ * - 방법(How): 임시 상태(Draft)와 확정 상태(Committed)를 분리하여 사용자 취소 시 즉각적인 롤백을 지원하고, i18next 및 테마 프로바이더와 연동하여 실시간 전역 상태를 동기화함
+ */
 import { Row } from '@/components/settings/Row';
 import type { ActiveSystem, Lang, Mode } from '@/types/settings';
 import { getSystemTitle } from '@/utils/getTitle';

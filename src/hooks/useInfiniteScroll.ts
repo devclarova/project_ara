@@ -1,11 +1,9 @@
 import { useEffect, useRef, useCallback } from 'react';
 
 /**
- * 무한 스크롤을 위한 훅
- * @param callback 교차 시 실행할 함수
- * @param hasMore 더 불러올 데이터가 있는지 여부
- * @param isLoading 현재 로딩 중인지 여부
- * @param threshold 교차 임계값 (0.0 ~ 1.0)
+ * 고성능 무한 스크롤 인터페이스(High-performance Infinite Scroll Interface):
+ * - 목적(Why): 뷰포트 하단 도달을 감지하여 대규모 데이터 페칭을 최적화하고 사용자 경험을 개선함
+ * - 방법(How): Intersection Observer API를 활용하여 메인 스레드 부하를 최소화하고 관찰자 연결을 효율적으로 제어함
  */
 export function useInfiniteScroll(
   callback: () => void,
@@ -31,8 +29,8 @@ export function useInfiniteScroll(
     if (!element) return;
 
     observerRef.current = new IntersectionObserver(handleObserver, {
-      root: null, // viewport 기준
-      rootMargin: '20px', // 미리 로드하기 위해 약간의 여유를 둠
+      root: null, // 뷰포트를 기준으로 관찰
+      rootMargin: '20px', // 데이터 페칭 시점을 앞당기기 위한 여유 마진 설정
       threshold,
     });
 

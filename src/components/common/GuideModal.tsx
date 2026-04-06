@@ -1,3 +1,8 @@
+/**
+ * 사용자 온보딩 가이드 및 슬라이드 시스템(User Onboarding Guide & Slide System):
+ * - 목적(Why): 신규 기능이나 서비스 이용 방법 등 핵심 가이드를 사용자에게 시각적으로 전달하여 학습 곡선을 최소화함
+ * - 방법(How): Framer Motion을 활용한 하드웨어 가속 터치 스냅 스크롤(Snap Scroll), 뷰포트 정규화(ResizeObserver), 그리고 로컬 스토리지를 통한 '다시 보지 않기' 상태 영속화를 지원함
+ */
 import { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { AnimatePresence, motion, type PanInfo, useAnimationControls } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -23,7 +28,7 @@ interface GuideModalProps {
 
 const DEFAULT_STORAGE_KEY = 'ara-guide-modal-dismissed';
 
-// 🔹 아주 미세한 좌우 이동 + 페이드
+// Animation Orchestration: Defines translation (X-axis) and opacity interpolations for hardware-accelerated slide transitions.
 const slideVariants = {
   enter: (direction: number) => ({
     x: direction > 0 ? 12 : -12,
@@ -69,7 +74,7 @@ export default function GuideModal({
   const isLast = index === total - 1;
   const primaryLabel = isLast ? finalCompleteLabel : finalNextLabel;
 
-  // 트랙용
+  // Motion Orchestration: Uses Framer-motion controls to implement touch-responsive snap-scrolling based on viewport dimensions.
   const viewportRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const controls = useAnimationControls();
@@ -125,7 +130,7 @@ export default function GuideModal({
     };
   }, [isOpen]);
 
-  // index 변경 시 자연스럽게 스냅
+  // Coordinate Normalization: Forces the scroll-track to re-align with the current index upon viewport resize or state initialization.
   useEffect(() => {
     if (!isOpen || !width) return;
     controls.set({ x: -index * width }); // 열릴 때/리사이즈 때만 즉시 맞춤

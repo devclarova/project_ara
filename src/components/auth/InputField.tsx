@@ -1,3 +1,8 @@
+/**
+ * 고도화된 시맨틱 입력 엔진(Advanced Semantic Input Engine):
+ * - 목적(Why): 인증 및 폼 입력 시 사용자 데이터를 정밀하게 수집하고 실시간 유효성 피드백을 제공하여 데이터 품질을 극대화함
+ * - 방법(How): 부동 라벨(Floating Label) 애니메이션, 비밀번호 가시성 토글, 그리고 실시간 중복 확인(onCheck) 로직을 결합하여 고품질 UX를 구현함
+ */
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
@@ -13,13 +18,13 @@ export type InputFieldProps = {
   error?: string;
   disabled?: boolean;
 
-  // 추가된 선택 props (중복확인/블러)
+  // 확장 인터페이스(Extended Props) — 중복 확인(onCheck) 및 포커스 해제(onBlur) 등 비즈니스 로직 연동을 위한 선택적 속성 정의
   onBlur?: React.FocusEventHandler<HTMLInputElement>;
   onCheck?: () => void;
   isChecking?: boolean;
   checkResult?: CheckResult;
 
-  // (선택) 커스터마이즈 여지를 위해
+  // 스타일 확장성 — 외부 컨테이너 클래스 주입 및 기본 input 속성(HTMLAttributes)의 투과적 전달 지원
   className?: string;
   inputProps?: React.InputHTMLAttributes<HTMLInputElement>;
 };
@@ -49,7 +54,7 @@ const InputField: React.FC<InputFieldProps> = ({
 
   return (
     <div className={`relative ${className ?? ''}`}>
-      {/* 인풋 전용 고정 높이 래퍼 */}
+      {/* 입력 요소 래퍼 — 부동 라벨(Floating Label)의 절대 위치(Absolute) 기준점 제공 및 고정 레이아웃 유지 */}
       <div className="relative">
         <input
           id={id}
@@ -74,7 +79,7 @@ const InputField: React.FC<InputFieldProps> = ({
           {...inputProps}
         />
 
-        {/* 라벨: 포커스/값 있을 때 동일 위치(더 위)로 고정 */}
+        {/* 동적 부동 라벨(Semantic Floating Label) — 값의 유무 및 포커스 상태에 따라 트랜지션 애니메이션과 레이어 깊이(Z-index) 조정 */}
         <label
           htmlFor={id}
           className={`
@@ -90,7 +95,7 @@ const InputField: React.FC<InputFieldProps> = ({
           {label}
         </label>
 
-        {/* 비밀번호 표시/숨기기 아이콘 */}
+        {/* 비밀번호 가시성 토글 — 민감한 데이터 노출 여부를 실시간으로 전환하여 사용자 편의성 제공 */}
         {isPasswordField && !disabled && (
           <button
             type="button"

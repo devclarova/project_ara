@@ -18,6 +18,7 @@ export default function RecoveryReminderModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // 모달 노출 로직 제어(Modal Visibility Control) — 사용자 세션, 현재 경로, 마지막 노출 시점을 종합하여 계정 복구 설정 권고 모달의 활성화 여부 결정
   useEffect(() => {
     // 1. Initial safety checks
     if (authLoading || !user) {
@@ -32,6 +33,7 @@ export default function RecoveryReminderModal() {
       return;
     }
 
+    // 복구 정보 무결성 검증 — 소셜/이메일 복구 수단이 모두 부재한 경우에만 필터링하여 사용자에게 설정 유도
     const checkRecoveryInfo = async () => {
       try {
         // 3. Daily frequency check (Per-user)
@@ -75,6 +77,7 @@ export default function RecoveryReminderModal() {
     checkRecoveryInfo();
   }, [user, authLoading, pathname]);
 
+  // 설정 페이지 다이렉트 앵커링 — 사용자를 환경설정 내 복구 설정 섹션으로 즉시 유도하여 전환율 최적화
   const handleGoToSettings = () => {
     setIsOpen(false);
     navigate('/settings', { state: { activeTab: 'privacy', openSetting: 'recovery' } });

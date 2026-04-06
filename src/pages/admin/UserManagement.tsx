@@ -1,3 +1,8 @@
+/**
+ * 관리자 유저 인벤토리 센터 (Admin User Management):
+ * - 목적(Why): 전역 유저 베이스의 활동성 감시, 멤버십 권한 통제 및 악성 트래픽 제한(Ban)을 수행함
+ * - 방법(How): 실시간 Presence 기반 온라인 현황 파악 및 SQL RPC 기반의 대량 데이터 고급 필터링을 구축함
+ */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -90,7 +95,7 @@ const UserManagement = () => {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [trackedUserIds, setTrackedUserIds] = useState<Set<string>>(new Set());
   
-  // Ban Dialog State
+  // 제재 및 관리 전용 모달(제재/신고/이력/활동/프로필) 상태 제어 센터
   const [showBanDialog, setShowBanDialog] = useState(false);
   const [showReportsModal, setShowReportsModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -117,10 +122,7 @@ const UserManagement = () => {
       setShowBanDialog(true);
   };
 
-  // Filters & Pagination
-
-
-  // Filters & Pagination
+  // 사용자 인벤토리 조회용 검색 및 정밀 필터링 상태 스토어
   const [page, setPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
   const [filteredTotalCount, setFilteredTotalCount] = useState(0);
@@ -144,18 +146,18 @@ const UserManagement = () => {
     nickname: targetUser.nickname 
   } : null, [targetUser?.id]);
 
-  // 💎 통합 온라인 판별: PresenceContext의 isUserOnline(웹소켓+DB 5분 임계치) + RPC 스냅샷 폴백
+  // 실시간 접속 상태 검증 — 웹소켓 프레즌스(Primary)와 DB 타임스탬프(Secondary) 하이브리드 판별 알고리즘
   const checkIsOnline = useCallback((u: AdminUser) => {
-    // 1. PresenceContext 기반 (웹소켓 + DB 실시간 구독, 좀비 방어 내장)
+    // 1. PresenceContext 기반 (웹소켓 + DB 실시간 구독, 좀비 상태 필터링 내장)
     if (isUserOnline(u.profile_id)) return true;
-    // 2. RPC에서 받아온 is_online 스냅샷 폴백 (초기 로드 직후, 아직 DB 구독이 안 먹었을 때)
+    // 2. RPC 수신 데이터 스냅샷 폴백 (초기 로드 단계에서 DB 구독 지연에 대응)
     if (u.is_online && u.last_active_at) {
       return (Date.now() - new Date(u.last_active_at).getTime()) < 5 * 60 * 1000;
     }
     return false;
   }, [isUserOnline]);
 
-  // Stable sorting: Online first, then by ID (to keep internal order fixed)
+  // 가나다순/활동순 정렬 로직 — 온라인 상태에 우선순위를 부여한 안정 정렬(Stable Sort) 수행
   const sortedUsers = useMemo(() => {
     return [...users].sort((a, b) => {
       const aOnline = checkIsOnline(a);
@@ -179,6 +181,7 @@ const UserManagement = () => {
     });
   }, [users, isUserOnline]);
 
+  // 사용자 마스터 데이터 수신 — RPC 연동을 통한 대량 데이터 조회 및 복합 필터링 최적화
   const fetchUsers = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
@@ -232,7 +235,7 @@ const UserManagement = () => {
     fetchCountries();
   }, []);
 
-  // 자동 갱신 기능 (30초마다 데이터 리프레시)
+  // 실시간 데이터 정합성 보존 — 30초 주기 무음 리프레시(Silent Refresh) 수행
   useEffect(() => {
     fetchUsers(); // 초기 로드
 
@@ -245,6 +248,7 @@ const UserManagement = () => {
 
   // Real-time status subscription is now handled globally by PresenceContext.
   // We only need to listen for profile updates that might affect nickname/avatar etc.
+  // 실시간 프로필 변경 구독(CDC) — 닉네임, 아바타 등 기본 속성 업데이트 시 목록 즉시 동기화
   useEffect(() => {
     const channel = supabase
       .channel('admin-users-profile-updates')
@@ -333,6 +337,7 @@ const UserManagement = () => {
     }
   };
 
+  // 데이터 인벤토리 내보내기 — 필터링된 사용자 리스트(최대 1000건) CSV 포맷팅 및 다운로드 처리
   const handleExportCSV = async () => {
     setExportLoading(true);
     try {
@@ -417,7 +422,7 @@ const UserManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
+      {/* 페이지 헤더 — 전체 유저 규모 현황 및 핵심 액션(내보내기/추가) 트리거 배치 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">사용자 관리</h1>
@@ -449,6 +454,7 @@ const UserManagement = () => {
         </div>
       </div>
 
+      {/* 유저 핵심 지표 배너 — 멤버십 분포, 위반 상태, 유입 패턴 등 실시간 통계 가시화 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4">
         {[
           { label: '전체 사용자', value: globalStats.totalUsers.toLocaleString(), trend: '누적', color: 'blue' },
@@ -476,10 +482,10 @@ const UserManagement = () => {
         ))}
       </div>
 
-      {/* Main Content Card */}
+      {/* 유저 데이터 센터 — 검색, 필터링 및 관리 도구를 집약한 통합 컨테이너 */}
       <div className="bg-secondary rounded-2xl border-2 border-gray-300 dark:border-gray-500 shadow-sm overflow-hidden">
 
-        {/* Filters Toolbar */}
+        {/* 유저 검색 및 정밀 필터링 툴바 — 다변수 복합 조건을 활용한 타켓 유저 식별 인터페이스 */}
         <div className="p-5 border-b border-gray-300 dark:border-gray-600 flex flex-col lg:flex-row gap-4 lg:items-center justify-between">
           <div className="relative max-w-md w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
@@ -697,7 +703,7 @@ const UserManagement = () => {
           </div>
         </div>
 
-        {/* Table */}
+        {/* 사용자 데이터 테이블 — 인벤토리 상세 속성(국적, 성별, 권한, 상태) 가시화 및 제어 로직 집약 */}
         <div className="overflow-x-auto">
           <table className="w-full min-w-[600px] text-left border-collapse">
             <thead>

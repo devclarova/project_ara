@@ -1,3 +1,8 @@
+/**
+ * 관리자 프로모션 매니저 (Admin Promotions Manager):
+ * - 목적(Why): 사용자 획득 및 리텐션 강화를 위한 마케팅 쿠폰 및 이벤트 프로모션을 통합 관리함
+ * - 방법(How): 쿠폰 코드 생성/유효기간 설정 로직 및 DB 연동을 통해 동적인 프로모션 캠페인을 제공함
+ */
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
@@ -63,7 +68,7 @@ const AdminPromotionsPage = () => {
     perUserLimit: 1,
   });
 
-  // --- Promotions CRUD ---
+  // 프로모션 캠페인 데이터 라이프사이클 관리 (CRUD 기반 영속성 처리)
 
   const fetchPromotions = async () => {
     try {
@@ -184,7 +189,7 @@ const AdminPromotionsPage = () => {
     setIsPromoModalOpen(true);
   };
 
-  // --- Coupons CRUD ---
+  // 프로모션 연계 쿠폰 코드 발행 및 트랜잭션 관리 (고유 코드 생성 포함)
 
   const handleManageCoupons = async (promo: Promotion) => {
     setSelectedPromoForCoupons(promo);
@@ -210,6 +215,7 @@ const AdminPromotionsPage = () => {
     }
   };
 
+  // 쿠폰 식별 난수 생성 알고리즘 — 데이터 고유성 확보를 위한 엔트로피 기반 문자열 조합
   const generateRandomCode = (length = 8) => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let result = '';
@@ -217,7 +223,7 @@ const AdminPromotionsPage = () => {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
-  }
+  };
 
   const handleGenerateCoupons = async () => {
     if (!selectedPromoForCoupons) return;
@@ -303,7 +309,7 @@ const AdminPromotionsPage = () => {
       </div>
 
       {!selectedPromoForCoupons ? (
-          /* PROMOTIONS LIST */
+          /* 프로모션 캠페인 현황 테이블 — 운영 중인 마케팅 이벤트 상시 모니터링 레이아웃 */
           <div className="bg-background rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               {loading ? (
@@ -394,7 +400,7 @@ const AdminPromotionsPage = () => {
             </div>
           </div>
       ) : (
-          /* COUPONS VIEW */
+          /* 개별 캠페인 하위 쿠폰 관리 뷰 — 발급 현황 추적 및 사용 데이터 실시간 감사 */
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
              <div className="bg-secondary/30 p-4 rounded-xl border border-border flex items-center justify-between">
                 <div>

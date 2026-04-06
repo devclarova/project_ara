@@ -1,3 +1,8 @@
+/**
+ * 텍스트 입력 필드(Input)
+ * - 목적: 애플리케이션 전반에서 일관된 입력 폼 경험을 제공하고, 테마(Light/Dark)에 따른 시각적 피드백을 통합 관리하기 위함
+ * - 방식: HTML5 input 엘리먼트를 래핑하여 디자인 시스템의 포커스(Ring), 보더, 비활성 상태 스타일을 강제 적용
+ */
 import * as React from "react"
 
 import { cn } from "@/lib/utils"

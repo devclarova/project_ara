@@ -1,3 +1,8 @@
+/**
+ * 지능형 다국어 번역 브릿지(Intelligent Multilingual Translation Bridge):
+ * - 목적(Why): 글로벌 사용자 간의 언어 장벽을 해소하고 콘텐츠의 접근성을 기술적으로 확장함
+ * - 방법(How): 캐시 우선 정책(Cache-first) 및 게스트 속도 제한(Rate-limiting)을 적용한 서버리스 LLM API 연동을 수행함
+ */
 import { supabase } from '@/lib/supabase';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -42,13 +47,13 @@ export default function TranslateButton({
     },
   };
 
-  // 사용자 타겟 언어 가져오기 (언어 선택 기반)
+  // Localization Sync: Identifies the active user language via the i18n engine for translation target resolution.
   const getUserTargetLang = async () => {
     // i18n에서 선택된 언어 사용
     return i18n.language || 'en';
   };
 
-  // 의미 없는 문자 감지
+  // Content Validation: Interfaces with the server API to assess semantic suitability for translation.
   const detectLanguage = async (inputText: string) => {
     // 서버리스/로컬 API 사용 (보안 강화)
     try {
@@ -102,10 +107,10 @@ export default function TranslateButton({
       const authUser = (await supabase.auth.getUser()).data.user;
       const userId = authUser?.id;
 
-      // (1) 타깃 언어 가져오기
+      // (1) Target Language Acquisition: Determines the recipient language based on current i18n context.
       const targetLang = await getUserTargetLang();
 
-      // (2) 캐시 확인 (로그인 사용자만)
+      // (2) Translation Cache Strategy: Checks for pre-existing translation records to reduce redundant API overhead.
       if (userId) {
         const { data: existing } = await supabase
           .from('translations')
@@ -122,17 +127,17 @@ export default function TranslateButton({
         }
       }
 
-      // (3) 의미 없는 문장 검출
+      // (3) Input Sanitization: Filters out semantically invalid content using the serverless detection engine.
       const validation = await detectLanguage(text);
       if (validation !== 'valid') {
         setTranslated('의미를 파악할 수 없어 번역할 수 없는 문장입니다.');
         return;
       }
 
-      // (4) URL 추출
+      // (4) Metadata Extraction: Identifies URL patterns to be excluded or handled separately during translation.
       const urls = text.match(/https?:\/\/\S+/g) || [];
 
-      // (5) 번역 API 요청
+      // (5) Proxy-based Translation: Orchestrates remote translation engine (LLM) calls via an API Gateway.
       let translatedText: string;
 
       // 서버리스/로컬 API 사용 (항상)
@@ -155,7 +160,7 @@ export default function TranslateButton({
       const data = await response.json();
       translatedText = data.translatedText;
 
-      // (6) 번역 결과 저장 (로그인 사용자만)
+      // (6) Persistence Layer: Commits translated assets to the database for localized caching and performance scaling.
       if (userId) {
         await supabase.from('translations').upsert(
           {

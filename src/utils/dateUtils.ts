@@ -1,3 +1,8 @@
+/**
+ * 다국어 특화 시공간 데이터 분석 유틸리티(Multilingual Temporal Data Analyzer):
+ * - 글로벌 환경(ko, en, ja 등)에 대응하는 날짜 포맷팅 및 상대적 시간 계산(Relative Time)을 수행함
+ * - 채팅, 피드, 알림 등 도메인별 시각적 표준 언어 팩을 관리함
+ */
 import { format, formatDistanceToNow, isToday, isYesterday, isSameYear } from 'date-fns';
 import {
   ko,

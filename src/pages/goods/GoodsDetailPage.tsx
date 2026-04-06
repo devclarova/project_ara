@@ -1,3 +1,8 @@
+/**
+ * 프리미엄 굿즈 상세 경험(Premium Goods Detail Experience):
+ * - 목적(Why): 상품 메타데이터, 다이내믹 가격 산출, 실시간 재고 및 리뷰 시스템을 통합 관리하여 구매 전환율을 극대화함
+ * - 방법(How): Framer Motion 애니메이션과 Skeleton Placeholder 로딩 전략을 병용하며, 실구매자 한정 리뷰 등록 기능을 통해 신뢰도를 보장함
+ */
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -29,7 +34,7 @@ export default function GoodsDetailPage() {
   const [loading, setLoading] = useState(true);
   const { session } = useAuth();
   
-  // Review Writing State
+  // 인터랙티브 상태 오케스트레이션 — 사용자 리뷰 작성 다이얼로그의 라이프사이클(오픈/닫기) 및 폼 데이터 정합성 관리
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [newRating, setNewRating] = useState(5);
   const [newContent, setNewContent] = useState('');
@@ -54,7 +59,7 @@ export default function GoodsDetailPage() {
         const data = await goodsService.fetchProductById(id);
         if (data) {
           setProduct(data);
-          // 기본 옵션 선택
+          // 초기 환경 설정(Initialization) — 상품 메타데이터 로드 직후 첫 번째 가용한 옵션을 기본값으로 바인딩하여 UX 즉시성 확보
           const initialOptions: Record<string, string> = {};
           data.options?.forEach((opt: any) => {
             if (opt.values?.length > 0) {
@@ -63,13 +68,13 @@ export default function GoodsDetailPage() {
           });
           setSelectedOptions(initialOptions);
 
-          // Fetch reviews and related products in parallel
+          // 네트워크 병렬화(Concurrency) — 워포트 가시성과 무관한 리뷰 및 연관 상품 데이터를 병렬로 페칭하여 로딩 타임 최소화
           const [reviewsData, relatedData] = await Promise.all([
             goodsService.fetchReviews(id, reviewsPerPage, 0),
             goodsService.fetchRelatedProducts(id, data.category)
           ]);
 
-          // 실구매 내역 및 추천 내역 확인
+          // 사용자 권한 및 관계 검증 — 활성 세션을 기반으로 구매 이력 및 리뷰 추천(좋아요) 상태를 동기화하여 인터페이스 개인화
           if (session?.user) {
             const [purchased, likedIds] = await Promise.all([
                 goodsService.checkUserPurchased(session.user.id, id),
@@ -111,7 +116,7 @@ export default function GoodsDetailPage() {
     );
   }
 
-  // Derived State
+  // 파생 상태 엔진(Derived State) — 기본가, 할인가, 쿠폰 적용 여부를 기반으로 런타임 결제 금액 실시간 산출
   const hasOptions = product.options && product.options.length > 0;
   const itemPrice = product.sale_price || product.price;
   const [finalPrice, setFinalPrice] = useState(itemPrice);
@@ -156,7 +161,7 @@ export default function GoodsDetailPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-gray-100 pb-20">
-      {/* Notice Banner - Brand Color applied */}
+      {/* 브랜드 아이덴티티 레이어 — 서비스 런칭 준비 상태를 알리는 최상단 고정 공지 배너 */}
       <div className="bg-primary/10 dark:bg-primary/20 border-b border-primary/20 dark:border-primary/40 py-2.5 relative z-50">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-2.5 text-primary font-semibold tracking-tight text-[11px] sm:text-xs md:text-sm">
           <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
@@ -164,7 +169,7 @@ export default function GoodsDetailPage() {
           <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 hidden sm:block shrink-0 opacity-70" />
         </div>
       </div>
-      {/* Header */}
+      {/* 내비게이션 컨트롤러 — 뒤로가기 스택 처리 및 공유/장바구니 액션 허브 */}
       <div className="sticky top-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
@@ -186,8 +191,7 @@ export default function GoodsDetailPage() {
 
       <main className="max-w-7xl mx-auto px-4 py-8 lg:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
-          
-          {/* Image Section */}
+          {/* 비주얼 에셋 갤러리 — 메인 이미지 렌더링 및 상품 상태(New/Best/Disc)를 시각화하는 다이내믹 배지 시스템 */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -216,7 +220,7 @@ export default function GoodsDetailPage() {
                 )}
               </div>
             </div>
-            {/* Thumbnails */}
+            {/* 멀티플 뷰 디렉토리 — 상품의 세부 디테일을 확인하기 위한 썸네일 탐색 인터페이스 */}
              <div className="grid grid-cols-4 gap-4">
                <div className="aspect-square rounded-xl overflow-hidden cursor-pointer border-2 border-black dark:border-white">
                     <img src={product.main_image_url || 'https://images.unsplash.com/photo-1583573636246-18cb2246697f?q=80&w=200'} className="w-full h-full object-cover" alt="main" />
@@ -229,7 +233,7 @@ export default function GoodsDetailPage() {
             </div>
           </motion.div>
 
-          {/* Details Section */}
+          {/* 커머스 정보 엔진 — 카테고리, 상품명, 평점 및 다이내믹 가격 산출 결과 노출 */}
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -270,7 +274,7 @@ export default function GoodsDetailPage() {
               {product.summary}
             </p>
 
-            {/* Options */}
+            {/* 옵션 매트릭스 렌더러 — 상품 SKU별 가용 옵션을 동적으로 매핑하여 사용자 선택 유도 */}
             {hasOptions && (
               <div className="space-y-6 mb-8 border-t border-b border-gray-100 dark:border-gray-800 py-6">
                 {product.options.map((option: any) => (
@@ -346,7 +350,7 @@ export default function GoodsDetailPage() {
                 </div>
             </div>
 
-            {/* Actions */}
+            {/* 구매 전환 액션 허브 — 수량 제어 및 직접 구매/위시리스트 저장 트랜잭션 처리 */}
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
                <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-full px-4 h-14 w-fit bg-gray-50 dark:bg-gray-900">
                   <button onClick={() => setQuantity(Math.max(1, quantity-1))} className="px-2 hover:text-primary">-</button>
@@ -411,7 +415,7 @@ export default function GoodsDetailPage() {
         </div>
 
 
-        {/* Related */}
+        {/* 컨텍스트 기반 추천 엔진 — 현재 상품 카테고리를 기준으로 연관 상품 목록을 페칭하여 교차 판매(Cross-selling) 유도 */}
         <div className="mt-24">
             <div className="mt-20">
            <div className="flex items-center justify-between mb-8">
@@ -529,7 +533,7 @@ export default function GoodsDetailPage() {
              </div>
            )}
 
-           {/* Review List */}
+           {/* 소셜 증거(Social Proof) 레이어 — 실구매자 인증 마크 및 사용자 피드백 목록 렌더링 */}
            <div className="space-y-8">
               {reviews.length > 0 ? reviews
                 .filter(r => photoOnly ? r.image_urls && r.image_urls.length > 0 : true)
@@ -582,7 +586,7 @@ export default function GoodsDetailPage() {
                             }
                             try {
                                 const { action } = await goodsService.toggleReviewLike(review.id, session.user.id);
-                                // 낙관적 업데이트 또는 상태 갱신
+                                 // 낙관적 업데이트(Optimistic Update) — 서버 응답 전 클라이언트 UI 상태를 즉시 반영하여 인터랙션 반응성 극대화
                                 if (action === 'liked') {
                                     setMyLikes(prev => [...prev, review.id]);
                                     setReviews(prev => prev.map(r => r.id === review.id ? { ...r, likes: (r.likes || 0) + 1 } : r));
@@ -638,7 +642,7 @@ export default function GoodsDetailPage() {
 
       </main>
 
-      {/* Review Writing Modal */}
+      {/* 리뷰 작성 오케스트레이터 — 별점 평가, 텍스트 후기, 멀티미디어 업로드를 통합 제공하는 모달 다이얼로그 */}
       <AnimatePresence>
         {isReviewModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -743,7 +747,7 @@ export default function GoodsDetailPage() {
                         try {
                             if (!session?.user) throw new Error("로그인이 필요합니다.");
                             
-                            // 1. Upload images if any
+                            // 미디어 직렬화 업로드 — 이미지 안정성 확보를 위해 개별 파일을 독립적으로 스토리지에 업로드하고 식별자 정규화
                             const imageUrls: string[] = [];
                             for (const file of reviewImages) {
                                 try {
@@ -754,7 +758,7 @@ export default function GoodsDetailPage() {
                                 }
                             }
 
-                            // 2. Fetch profile for user_name/avatar
+                            // 데이터 정합성 바인딩 — 게시자의 프로필 메타데이터(닉네임, 아바타)를 현재 세션 정보와 동기화하여 리뷰 속성 정의
                             const { data: profile } = await supabase
                                 .from('profiles')
                                 .select('nickname, avatar_url')
@@ -775,7 +779,7 @@ export default function GoodsDetailPage() {
                             setIsReviewModalOpen(false);
                             setNewContent('');
                             setReviewImages([]);
-                            // Refresh reviews
+                            // 뷰 스테이트 동기화 — 신규 리뷰 등록 후 데이터 무결성을 위해 최신 목록을 강제 재페칭(Refetch)
                             const rData = await goodsService.fetchReviews(product.id);
                             setReviews(rData);
                         } catch (err: any) {

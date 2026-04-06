@@ -1,3 +1,8 @@
+/**
+ * 심미적 다크/라이트 테마 오케스트레이터(Aesthetic Dark/Light Theme Orchestrator):
+ * - 목적(Why): 사용자 선호도 및 주변 조도 환경에 최적화된 시각적 테마를 제공하여 눈의 피로를 최소화하고 몰입감을 높임
+ * - 방법(How): ThemeProvider와 연동된 런타임 클래스(Class) 전환, 시스템 설정 추적, 그리고 글래스모피즘(Glassmorphism) 텍스처를 적용한 프리미엄 드롭다운 UI를 통해 제어함
+ */
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -35,7 +40,7 @@ export default function ThemeSwitcher({ open, onOpenChange }: Props) {
           <div className={`relative w-7 h-7 rounded-full shadow-md overflow-hidden group-hover:scale-110 transition-transform duration-300 flex items-center justify-center
             ${theme === 'light' ? 'bg-amber-100' : theme === 'dark' ? 'bg-indigo-950' : 'bg-slate-200 dark:bg-slate-800'}
           `}>
-             {/* 아이콘 */}
+             {/* State Visualization: Renders a semantic icon (Sun/Moon/Laptop) corresponding to the active theme context. */}
              {theme === 'dark' ? (
                  <Moon className="h-4 w-4 text-indigo-200 z-10 relative" />
               ) : theme === 'light' ? (
@@ -44,7 +49,7 @@ export default function ThemeSwitcher({ open, onOpenChange }: Props) {
                  <Laptop className="h-4 w-4 text-slate-600 dark:text-slate-300 z-10 relative" />
               )}
              
-             {/* 배경 그라데이션 (Glossy Effect) */}
+             {/* Aesthetic Treatment: Implements a multilayered gradient stack to achieve a premium glassmorphic texture. */}
              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-black/10 via-transparent to-white/40 pointer-events-none" />
              {/* 상단 하이라이트 */}
              <div className="absolute inset-0 rounded-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.6)] pointer-events-none" />

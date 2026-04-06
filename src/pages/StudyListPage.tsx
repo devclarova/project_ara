@@ -1,3 +1,8 @@
+/**
+ * 지능형 학습 콘텐츠 큐레이션 리스트(Intelligent Study Content Curation List):
+ * - 목적(Why): 방대한 K-콘텐츠 라이브러리에서 사용자의 수준과 관심사에 맞는 학습 유닛을 탐색 및 필터링함
+ * - 방법(How): 서버 측 페이지네이션(Server-side Pagination)과 인라인 마케팅 배너 삽입 엔진을 결합하여 가독성과 비즈니스 가치를 동시에 확보함
+ */
 import GuideModal, { isGuideModalDismissed } from '@/components/common/GuideModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import Pagination from '@/components/common/Pagination';
@@ -41,7 +46,7 @@ const StudyListPage = () => {
   const [showSignIn, setShowSignIn] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
 
-  // Ad-free users (Premium/Basic)
+  // 광고 노출 정책 제어 — 유료 플랜(Premium/Basic) 및 관리자 계정 식별을 통한 인라인 광고 제거 판별
   const isAdFree = userPlan === 'premium' || userPlan === 'basic' || (isAdmin && userPlan !== 'free');
   const [pageSize, setPageSize] = useState(isAdFree ? 12 : 10);
   const limit = pageSize;
@@ -64,7 +69,7 @@ const StudyListPage = () => {
   const categoryScrollRef = useRef<HTMLDivElement>(null);
   const [isScrollable, setIsScrollable] = useState(false);
 
-  // Translation Hooks
+  // 메타데이터 배치 번역 — 대량의 학습 콘텐츠 제목 및 설명을 타겟 언어로 일괄 변환 처리
   const { translatedTexts: trTitles } = useBatchAutoTranslation(clips.map(c => c.title), clips.map(c => `study_title_${c.id}`), targetLang);
   const { translatedTexts: trDescs } = useBatchAutoTranslation(clips.map(c => c.short_description || ''), clips.map(c => `study_desc_${c.id}`), targetLang);
 
@@ -128,7 +133,7 @@ const StudyListPage = () => {
       <div className="flex justify-center min-h-screen">
         <div className="flex w-full max-w-7xl">
           <main className="flex-1 min-w-0 overflow-y-auto overflow-x-auto bg-white dark:bg-background">
-            {/* 탭 + 검색 섹션 (26-zzeon 기반 고도화) */}
+            {/* 탐색 인터페이스 — 카테고리 필터 및 검색 바를 포함한 스티키 네비게이션 레이어 */}
             <div className="flex flex-row justify-between items-center gap-1 md:gap-3 bg-white dark:bg-background sticky top-0 z-20 pb-2 pl-6 pt-8 pr-5">
               <div
                 className={`flex-1 min-w-0 overflow-x-auto no-scrollbar ${isScrollable ? 'mask-gradient' : ''}`}
@@ -145,7 +150,7 @@ const StudyListPage = () => {
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
                 <div className="flex items-center h-11 gap-2">
-                  {/* 단어장 버튼 (26-zzeon) */}
+                  {/* 마이 보카 단축 경로 — 인증 유저 전용 단어장 페이지 이동 인터페이스 */}
                   {user && (
                     <button
                       onClick={() => navigate('/voca')}
@@ -169,7 +174,7 @@ const StudyListPage = () => {
                   />
                 </div>
 
-                {/* 모바일 전용 검색 버튼 */}
+                {/* 컴팩트 검색 토글 — 모바일 환경에서의 검색 입력창 노출 제어 */}
                 <button
                   onClick={() => setShowSearch(true)}
                   className="hidden mobile-search-btn-900 shrink-0 h-11 w-11 items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-secondary transition"
@@ -177,7 +182,7 @@ const StudyListPage = () => {
                   <i className="ri-search-line text-[20px] sm:text-[24px] text-gray-600 dark:text-gray-200" />
                 </button>
 
-                {/* 데스크톱 검색바 */}
+                {/* 전역 콘텐츠 검색 — 키워드 기반 학습 데이터 필터링 입력 폼 */}
                 <div className="hidden desktop-search-900 items-center h-11">
                   <SearchBar
                     placeholder={t('study.search_placeholder')}
@@ -216,7 +221,7 @@ const StudyListPage = () => {
                       />
                     );
 
-                    // 광고 로직 (main 기반)
+                    {/* 프로모션 삽입 엔진 — 콘텐츠 리스트 사이의 마케팅 배너 동적 배치 및 유입 트래킹 */}
                     if (!isAdFree && (index + 1) % 5 === 0) {
                       const globalIndex = ((page - 1) * limit) + index;
                       const hasBanners = inlineBanners.length > 0;

@@ -1,3 +1,8 @@
+/**
+ * 다중 행 리치 텍스트 입력 유닛(Multi-line Rich Text Input Unit):
+ * - 목적(Why): 게시글 작성이나 프로필 소개와 같은 장문 데이터 입력 시 가독성과 입력 편의성을 보장함
+ * - 방법(How): 글자 수 카운팅(MaxLength) 레이어와 부동 라벨 트랜지션을 통합하여 제한된 영역 내에서 명확한 입력 가이드를 실시간으로 제공함
+ */
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -32,6 +37,7 @@ const TextAreaField: React.FC<TextAreaFieldProps> = ({
 }) => {
   return (
     <div className={`relative ${containerClassName ?? ''}`}>
+      {/* 다중 행 입력 엔진(Multi-line Input Engine) — 사용자 바이오(Bio) 등 긴 텍스트 수집을 위한 가변적 텍스트 영역 및 스타일링 구성 */}
       <div className="relative">
         <textarea
           id={id}
@@ -46,6 +52,7 @@ const TextAreaField: React.FC<TextAreaFieldProps> = ({
           {...inputProps}
         />
 
+        {/* 부동 라벨 제어(Floating Label Control) — 입력 가시성에 따라 라벨의 위치와 크기를 동적으로 조정하여 UX 직관성 확보 */}
         <label
           htmlFor={id}
           className={`
@@ -58,7 +65,7 @@ const TextAreaField: React.FC<TextAreaFieldProps> = ({
           {label}
         </label>
 
-        {/* Character count floating inside at bottom right */}
+        {/* 입력 제한 모니터링 — 실시간 글자 수 카운팅 및 최대 길이(MaxLength) 가이드를 사용자에게 시각적으로 제공 */}
         {maxLength && (
           <div className="absolute bottom-2 right-3 text-xs text-gray-400 pointer-events-none bg-white/80 dark:bg-secondary/80 px-1 rounded">
             {value.length}/{maxLength}

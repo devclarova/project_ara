@@ -1,3 +1,8 @@
+/**
+ * 관리자 로그인 매니저 (Admin Login Manager):
+ * - 목적(Why): 최고 권한 계정에 대한 접근 제어 및 시스템 보호 보안 관문을 제공함
+ * - 방법(How): Supabase Auth 기반의 JWT 토큰 발급 및 로컬 스토리지 상태 관리를 통해 세션을 검증함
+ */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
@@ -17,7 +22,7 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      // Supabase 로그인
+      // Supabase Auth 서비스 연동 — 이메일/비밀번호 기반 관리자 인증 시도
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -25,7 +30,7 @@ const AdminLogin = () => {
 
       if (authError) throw authError;
 
-      // 로그인 성공 후 is_admin 확인
+      // 인증 후 인가 처리(Authorization) — 관리자 전용 권한 레벨(is_admin) 교차 검증 수행
       await checkAdminAndNavigate(authData.user.id);
     } catch (error: any) {
       console.error('Login error:', error);
@@ -64,14 +69,14 @@ const AdminLogin = () => {
       if (userError) throw userError;
 
       if (!userData?.is_admin) {
-        // 관리자가 아닌 경우
+        // 비인가 접근 거부 — 보안 정책에 따른 세션 즉시 취소 및 비인가 피드백 제공
         await supabase.auth.signOut();
         toast.error(t('admin.no_permission'));
         setIsLoading(false);
         return;
       }
 
-      // 관리자 확인 완료
+      // 최종 인가 승인 — 권한 검증 완료 후 관리 시스템 메인 진입
       toast.success(t('admin.login_success'));
       navigate('/admin');
     } catch (error: any) {
@@ -83,7 +88,7 @@ const AdminLogin = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
-      {/* Background Aurora Effect - Floating Across Screen */}
+      {/* 배경 오로라 시각 효과 — 관리자 인터페이스의 전문성 및 심미성 확보를 위한 동적 모션 레이어 */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointing-events-none">
         <div className="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] rounded-full bg-gradient-to-tr from-cyan-200/60 to-blue-300/60 blur-3xl animate-[float1_12s_ease-in-out_infinite]" />
         <div className="absolute top-[30%] -right-[10%] w-[60%] h-[60%] rounded-full bg-gradient-to-bl from-emerald-200/60 to-teal-300/60 blur-3xl animate-[float2_15s_ease-in-out_infinite]" />
@@ -247,7 +252,7 @@ const AdminLogin = () => {
               )}
             </button>
 
-            {/* Divider */}
+            {/* 소셜 계정 연동 및 레거시 로그인 구분 인터페이스 */}
             <div className="flex items-center py-4">
               <div className="flex-1 border-t border-gray-100 dark:border-zinc-800"></div>
               <span className="px-4 text-[11px] font-black text-muted-foreground/40 uppercase tracking-widest whitespace-nowrap">
@@ -256,7 +261,7 @@ const AdminLogin = () => {
               <div className="flex-1 border-t border-gray-100 dark:border-zinc-800"></div>
             </div>
 
-            {/* Social Login Buttons */}
+            {/* 소셜 계정 연동(OAuth) 인증 섹션 — Google/Kakao API 브릿지 */}
             <div className="space-y-3">
               <button
                 type="button"
@@ -299,7 +304,7 @@ const AdminLogin = () => {
             </div>
           </form>
 
-          {/* Integrated Footer Link */}
+          {/* 통합 서비스 복귀 네비게이션 — 샌드박스 환경 이탈 경로 제공 */}
           <div className="mt-10 pt-6 border-t border-gray-100 dark:border-zinc-800/50 text-center">
             <button 
               onClick={() => navigate('/')}

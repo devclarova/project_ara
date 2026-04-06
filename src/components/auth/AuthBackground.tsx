@@ -1,3 +1,8 @@
+/**
+ * 인증 경험 몰입형 배경 엔진(Immersive Auth Background Engine):
+ * - 목적(Why): 로그인/회원가입 단계에서 서비스의 프리미엄 브랜드 이미지를 전달하고 사용자 몰입감을 증대함
+ * - 방법(How): Framer Motion을 활용한 다중 레이어 앰비언트 그라디언트와 GPU 가속 파티클 시스템을 결합하여 동적인 공간감을 창출함
+ */
 import React from 'react';
 import { motion } from 'framer-motion';
 
@@ -9,13 +14,13 @@ const AuthBackground: React.FC<AuthBackgroundProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#fdfdfd] dark:bg-[#020204] relative overflow-hidden transition-colors duration-1000">
       
-      {/* 🌌 Aurora v5.5: Optimized for Performance (GPU-Accelerated) */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+      {/* 공간적 미학 구성(Atmospheric Layering) — 다중 그라디언트 레이어와 모션 에셋을 결합하여 몰입감 있는 인증 환경 조성 */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         
-        {/* Layer 1: Global Ambient Glow - Static (No animation for performance) */}
+        {/* 앰비언트 베이스 레이어 — 전체적인 색감의 톤을 결정하는 정적 방사형 그라디언트 */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(56,189,248,0.12),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(14,165,233,0.1),transparent_70%)]" />
 
-        {/* Layer 2: Top-Left Radiant Curtain - GPU Optimized */}
+        {/* 다이내믹 래디언트 커튼(Top-Left) — GPU 가속 애니메이션을 활용한 부드러운 색상 전이 효과 적용 */}
         <motion.div 
           animate={{
             x: ['-20%', '10%', '-5%'],
@@ -31,7 +36,7 @@ const AuthBackground: React.FC<AuthBackgroundProps> = ({ children }) => {
           className="absolute -top-[10%] -left-[15%] w-[100%] h-[70%] bg-gradient-to-br from-cyan-400/50 via-blue-500/30 to-transparent dark:from-cyan-500/40 dark:via-blue-600/20 dark:to-transparent blur-[100px] origin-top-left"
         />
 
-        {/* Layer 3: Bottom-Right Deep Wave - GPU Optimized */}
+        {/* 다이내믹 래디언트 웨이브(Bottom-Right) — 화면 하단의 시각적 무게감을 조절하는 유기적 모션 레이어 */}
         <motion.div 
           animate={{
             x: ['20%', '-5%', '15%'],
@@ -78,7 +83,7 @@ const AuthBackground: React.FC<AuthBackgroundProps> = ({ children }) => {
           className="absolute -top-[10%] -right-[10%] w-[70%] h-[60%] bg-gradient-to-bl from-pink-400/40 via-amber-300/20 to-transparent dark:from-pink-600/15 dark:via-amber-600/5 dark:to-transparent blur-[90px]"
         />
 
-        {/* ✨ Optimized Particle Mist: Reduced count for performance (40 -> 15) */}
+        {/* 파티클 미스트 엔진(Particle Mist Engine) — 런타임 성능을 고려하여 최적화된 수의 미세 입자를 랜덤하게 배치 및 애니메이션화 */}
         <div className="absolute inset-0 opacity-60">
           {[...Array(15)].map((_, i) => (
             <motion.div

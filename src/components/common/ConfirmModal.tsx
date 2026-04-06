@@ -1,3 +1,8 @@
+/**
+ * 범용 의사결정 확인 모달(Universal Decision Confirmation Modal):
+ * - 목적(Why): 파괴적인 작업(삭제, 로그아웃 등) 전 사용자에게 한 단계 더 높은 주의를 환기하여 오조작을 방지함
+ * - 방법(How): 포탈 레이어 위에서 키보드(Escape) 인지 및 백드롭 클릭 이벤트를 관리하여 직관적인 하이-피델리티 인터랙션을 구현함
+ */
 import { useEffect } from 'react';
 
 type ConfirmModalProps = {
@@ -23,6 +28,7 @@ export default function ConfirmModal({
     if (!open) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Accessibility Interaction: Listens for the Escape key to trigger the cancellation callback, ensuring modal dismissibility.
       if (e.key === 'Escape') {
         onCancel();
       }

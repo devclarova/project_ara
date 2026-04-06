@@ -1,3 +1,8 @@
+/**
+ * 운영자 커뮤니티 콘텐츠 검수 툴(Admin Content Moderation Tool):
+ * - 목적(Why): 부적절한 게시글 및 이미지를 격리 조치하여 건강한 커뮤니티 생태계를 유지함
+ * - 방법(How): 사용자 신고 누적 데이터와 필터링 결과를 바탕으로 게시물 숨김 및 영구 삭제 처리를 수행함
+ */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -70,21 +75,21 @@ const AdminContentModeration = () => {
   const isInitialMount = useRef(true);
   const scrollContainerRef = useRef<HTMLElement | null>(null);
   
-  // Profile Modal State
+  // 사용자 프로필 상세 모달 상태 관리
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
-  // Media Modal State
+  // 미디어(이미지) 확대 보기 모달 상태 관리
   const [showMediaModal, setShowMediaModal] = useState(false);
   const [mediaList, setMediaList] = useState<string[]>([]);
   const [mediaIndex, setMediaIndex] = useState(0);
 
-  // Deletion Modal State
+  // 콘텐츠 영구 삭제 확인 모달 상태 관리
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Debounce search
+  // 검색어 디바운싱 및 캐싱 — API 과호출 방지 및 상태 영속성 확보
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);
@@ -99,7 +104,7 @@ const AdminContentModeration = () => {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Force 'post' tab and clear state on fresh mount (entry)
+  // 컴포넌트 마운트 초기화 — 진입 시 탭/검색어/페이지 번호 기본값 강제 설정
   useEffect(() => {
     setActiveTab('post');
     setSearchTerm('');
@@ -107,14 +112,14 @@ const AdminContentModeration = () => {
     fetchContent();
   }, []);
 
-  // Sync all state to storage immediately
+  // 브라우징 컨텍스트 영속화 — 현재 상태를 sessionStorage에 실시간 동기화하여 탐색 경험 유지
   useEffect(() => {
     sessionStorage.setItem('admin-mod-tab', activeTab);
     sessionStorage.setItem('admin-mod-page', page.toString());
     sessionStorage.setItem('admin-mod-search', searchTerm);
   }, [activeTab, page, searchTerm]);
 
-  // Real-time scroll tracking (Dual Target)
+  // 스크롤 위치 실시간 추적 — 메인 컨테이너 및 윈도우 스크롤 상태 이중 감시 (Cross-target Tracking)
   useEffect(() => {
     const scrollContainer = document.querySelector('main.overflow-y-auto') || document.querySelector('main');
     
@@ -172,7 +177,7 @@ const AdminContentModeration = () => {
     fetchContent();
   }, [fetchContent]);
 
-  // Handle Scroll Restoration after content is loaded
+  // 데이터 로드 후 스크롤 복구 — 비동기 렌더링 완료 시점의 뷰포트 위치 보정 로직
   useEffect(() => {
     if (!loading && !restoredRef.current) {
       const savedScroll = sessionStorage.getItem('admin-mod-scroll');
@@ -217,7 +222,7 @@ const AdminContentModeration = () => {
     }
   }, [loading, content]);
 
-  // Reset scroll to top when page changes (internally in moderation)
+  // 페이지네이션 이동 시 뷰포트 최상단 초기화 — 내부 네비게이션 일관성 확보
   useEffect(() => {
     if (restoredRef.current) {
       const scrollContainer = scrollContainerRef.current || document.querySelector('main');
@@ -260,7 +265,7 @@ const AdminContentModeration = () => {
     const originalStatus = !!item.is_hidden;
     const newHiddenStatus = !originalStatus;
     
-    // 1. Optimistic UI Update
+    // 1. 낙관적 업데이트(Optimistic Update) — 즉각적인 UI 반응성 제공을 위한 선행 상태 변경
     setContent(prev => prev.map(c => c.id === item.id ? { ...c, is_hidden: newHiddenStatus } : c));
     
     try {
@@ -271,7 +276,7 @@ const AdminContentModeration = () => {
       });
 
       if (error) {
-        // 2. Rollback on error
+        // 2. 예외 처리 — API 서버 통신 실패 시 이전 상태로 정밀 롤백 수행
         setContent(prev => prev.map(c => c.id === item.id ? { ...c, is_hidden: originalStatus } : c));
         throw error;
       }
@@ -285,7 +290,7 @@ const AdminContentModeration = () => {
 
   const handleUserClick = async (item: ModerationItem) => {
     try {
-      // First fetch basic profile
+      // 기본 식별 데이터 로드 — 대상 사용자 기본 정보 수신
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -298,7 +303,7 @@ const AdminContentModeration = () => {
         return;
       }
 
-      // Then fetch country separately if it exists to avoid relationship errors (400)
+      // 국가 데이터 계층 로드 — 데이터 무결성 확보를 위한 별도 검색 (Relation Error 방지)
       let countryData = null;
       if (profile.country) {
         const { data: country } = await supabase
@@ -309,7 +314,7 @@ const AdminContentModeration = () => {
         countryData = country;
       }
 
-      // Map data for UserProfileModal
+      // 전역 모달 주입용 데이터 정규화 및 매핑
       const enrichedUser = {
         ...profile,
         profile_id: profile.id,
@@ -326,7 +331,7 @@ const AdminContentModeration = () => {
   };
 
   const handleContentClick = (item: ModerationItem, type: ContentType) => {
-    // Explicitly save everything right before navigation
+    // 페이지 이탈 직전 런타임 브라우징 컨텍스트 강제 저장
     const scrollContainer = scrollContainerRef.current || document.querySelector('main');
     const mainScroll = scrollContainer ? scrollContainer.scrollTop : 0;
     const windowScroll = window.scrollY;
@@ -355,13 +360,13 @@ const AdminContentModeration = () => {
         } 
       });
     } else if (type === 'comment') {
-      // parent_id (tweet_id)가 없으면 이동 불가
+      // 데이터 무결성 검증 — 참조 식별자(parent_id) 누락 시 예외 처리 및 탐색 차단
       if (!item.parent_id) {
         toast.error('원문 게시글 정보를 찾을 수 없습니다. (SQL 마이그레이션 적용이 필요합니다)');
         return;
       }
 
-      // For comments, navigate to the parent post and pass the comment ID for scrolling
+      // 댓글 상세 이동 전략 — 원문 게시글로 이동 후 특정 식별자(ID) 강조 및 앵커 스크롤 수행
       navigate(`/sns/${item.parent_id}`, { 
         state: { 
           fromAdmin: true, 

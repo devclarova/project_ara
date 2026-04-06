@@ -1,6 +1,12 @@
-import { Search } from 'lucide-react'; // lucide 아이콘
+import { Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import React from 'react';
 
+/**
+ * 고정 레이어 실시간 검색 인터페이스(Fixed-layer Real-time Search Interface):
+ * - 목적(Why): 전역 검색 및 모달 내 데이터 필터링 시 사용자 입력에 즉각적으로 반응하여 정보 탐색 속도를 극대화함
+ * - 방법(How): 제어 컴포넌트(Controlled Component) 패턴과 폼 서브밋 엔진을 결합하여 가변적 검색 쿼리를 처리하고, 반응형 테마 스타일링을 적용함
+ */
 interface SearchBarProps {
   placeholder?: string;
   value: string;

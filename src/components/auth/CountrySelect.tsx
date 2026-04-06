@@ -42,6 +42,7 @@ export default function CountrySelect({ value, onChange, error = false, isDisabl
   const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
+    // 외부 엔티티 동기화 — Supabase 저장소에서 국가 메타데이터(ISO 코드, 국기 URL, 전화 코드)를 비동기적으로 페칭하여 옵션 인벤토리 구성
     const fetchCountries = async () => {
       const { data, error } = await supabase
         .from('countries')
@@ -53,6 +54,7 @@ export default function CountrySelect({ value, onChange, error = false, isDisabl
     fetchCountries();
   }, []);
 
+  // 데이터 가공 및 정규화(Adaptation) — 스토리지 모델을 UI 셀렉트 라이브러리 호환 규격으로 변환하고 국제화(i18n) 레이블 바인딩
   const options: Option[] = countries.map(c => ({
     value: String(c.id),
     label: c.name,
@@ -66,7 +68,7 @@ export default function CountrySelect({ value, onChange, error = false, isDisabl
   const isDark =
     typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
-  // ✅ InputField/GenderSelect와 동일한 톤 적용 (다크만)
+  // 테마 대응형 스타일 엔진 — 시스템 테마(Light/Dark) 및 유효성 검사 상태에 따라 입력 필드의 시각적 어포던스(Affordance) 정밀 제어
   const customStyles: StylesConfig<Option, false> = {
     control: (provided, state) => {
       const baseBorder = state.isFocused
@@ -191,18 +193,7 @@ export default function CountrySelect({ value, onChange, error = false, isDisabl
         }}
         options={options}
         isDisabled={isDisabled}
-        formatOptionLabel={(opt: Option) => (
-          <div className="flex items-center gap-2">
-            <img
-              src={opt.flag_url ?? '/images/flag_placeholder.svg'}
-              alt=""
-              className="w-5 h-4 rounded-sm object-cover"
-            />
-            <span>
-              {opt.label} (+{opt.phone_code})
-            </span>
-          </div>
-        )}
+        // 렌더링 템플릿 — 국가별 아이콘(Flag)과 명칭, 국제전화 식별번호를 통합하여 가독성 및 사용자 인지 능력 향상
         styles={customStyles}
         components={{ DropdownIndicator: CustomDropdownIndicator }}
         className="w-full"

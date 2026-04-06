@@ -1,3 +1,8 @@
+/**
+ * 프로필 콘텐츠 카테고리 내비게이터(Profile Content Category Navigator):
+ * - 목적(Why): 사용자가 작성한 게시글, 답글, 좋아요 등 활동 이력을 세부 카테고리별로 분리하여 접근성을 높임
+ * - 방법(How): 상태 기반의 탭 전환 로직과 애니메이션 인디케이터(Primary Color)를 결합하여 현재 활성화된 활동 컨텍스트를 명확히 전달함
+ */
 import { useTranslation } from 'react-i18next';
 
 export type ProfileTabKey = 'posts' | 'replies' | 'likes';

@@ -37,15 +37,15 @@ const FilterDropdown = ({
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // 드롭다운 안에서만 쓰는 '초안' 난이도 상태
+  // 드래프트 상태 관리 — '적용' 버튼 클릭 전까지 사용자 선택값을 임시 유지하는 초안 상태 정의
   const [draft, setDraft] = useState<FilterValue>(value);
 
   useEffect(() => {
     if (open) setDraft(value);
   }, [open, value]);
 
+  // 외부 클릭 감지 — 드롭다운 영역 외부 클릭 시 활성 상태 해제 및 인터페이스 폐쇄
   useEffect(() => {
-    if (!open) return;
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setOpen(false);
@@ -154,7 +154,7 @@ const FilterDropdown = ({
                 onClick={() => {
                   onApply(draft);
                   setOpen(false);
-                }} // 적용하기: onApply 호출 + 닫기
+                }} // 상태 확정 — 선택된 드래프트 값을 상위 상태로 동기화 및 인터페이스 폐쇄
                 type="button"
               >
                 {t('common.apply')}

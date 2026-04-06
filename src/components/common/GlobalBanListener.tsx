@@ -1,3 +1,8 @@
+/**
+ * 전역 계정 제재 실시간 감시 엔진(Global Account Sanction Real-time Monitor):
+ * - 목적(Why): 서비스 이용 중 관리자에 의해 계정이 정지될 경우 이를 즉각적으로 감지하여 부적절한 활동을 차단함
+ * - 방법(How): Supabase Realtime 채널을 통해 프로필 테이블의 제재 상태(banned_until) 변화를 구독하고, 탐지 시 세션 종료(signOut) 또는 강제 리로드로 보안 가드를 실행함
+ */
 import React, { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,7 +19,7 @@ export const GlobalBanListener: React.FC = () => {
        return;
     }
     
-    // 유저가 바뀌었을 때 (로그인 등) 초기화
+    // Session State Sync: Synchronizes the ban reference pointer upon authentication state transitions.
     lastNotifiedBanRef.current = initialBannedUntil;
 
     const channel = supabase
@@ -30,13 +35,13 @@ export const GlobalBanListener: React.FC = () => {
         async (payload: any) => {
           const newProfile = payload.new;
           if (newProfile && newProfile.banned_until) {
-            // 이미 동일한 제재 건으로 알림을 보냈거나 새로고침 했다면 스킵
+            // Deduplication Logic: Prevents redundant notifications for identical ban timestamps to improve UX.
             if (lastNotifiedBanRef.current === newProfile.banned_until) return;
 
             const bannedUntil = new Date(newProfile.banned_until);
             const now = new Date();
             
-            // If ban is expired, ignore
+            // Stale Record Filtering: Ignores notifications if the ban period has already concluded at the time of update.
             if (bannedUntil <= now) {
                lastNotifiedBanRef.current = newProfile.banned_until;
                return;
@@ -44,7 +49,7 @@ export const GlobalBanListener: React.FC = () => {
 
             lastNotifiedBanRef.current = newProfile.banned_until;
 
-            // Check for Permanent Ban (> 50 years)
+            // Indefinite Restriction Logic: Discriminates persistent bans (50Y+ threshold) from temporary suspensions.
             const permanentThreshold = addYears(now, 50);
             const isPermanent = bannedUntil > permanentThreshold;
 
@@ -59,7 +64,7 @@ export const GlobalBanListener: React.FC = () => {
                  signOut();
               }, 1000);
             } else {
-              // Temporary Ban
+              // Temporary Suspension Workflow: Notifies the user and triggers a global UI refresh to enforce permission constraints.
               toast.warning('계정 이용이 제한되었습니다.', {
                  description: `관리자에 의해 ${bannedUntil.toLocaleDateString()}까지 이용이 제한됩니다.`,
                  duration: 5000,

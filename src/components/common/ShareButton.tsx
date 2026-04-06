@@ -1,3 +1,8 @@
+/**
+ * 유니버설 콘텐츠 공유 엔진(Universal Content Sharing Engine):
+ * - 목적(Why): 서비스 내 주요 콘텐츠를 외부 소셜 플랫폼이나 클립보드로 전파하여 유입 경로를 확장함
+ * - 방법(How): Web Share API를 통한 네이티브 공유 환경을 우선 제공하고, 미지원 브라우저에서는 클립보드 복사(Clipboard API) 및 정규화된 URL 추출 알고리즘으로 대체 실행함
+ */
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -31,7 +36,7 @@ export default function ShareButton({
   const canUseShare =
     typeof navigator !== 'undefined' && typeof (navigator as any).share === 'function';
 
-  // 공유 URL 결정
+  // Canonical Analysis: Extracts the optimal shared URL by prioritizing props, canonical tags, and window location.
   const shareUrl = useMemo(() => {
     return url ?? getCanonicalUrl() ?? window.location.href;
   }, [url]);
@@ -45,7 +50,7 @@ export default function ShareButton({
     };
   }, [title, text, shareUrl]);
 
-  // URL 복사 공통 함수
+  // Clipboard Bridge: Interfaces with the navigator.clipboard API for link copying, with a prompt-based fallback.
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
@@ -57,7 +62,7 @@ export default function ShareButton({
     }
   };
 
-  // 공유 실행
+  // Native Intent Invocation: Leverages the Web Share API for native OS sharing, failing back to clipboard operations in unsupported environments.
   const share = async () => {
     if (canUseShare) {
       try {

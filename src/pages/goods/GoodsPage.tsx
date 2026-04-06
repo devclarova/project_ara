@@ -1,3 +1,8 @@
+/**
+ * 굿즈 스토어 메인 뷰(Goods Store Main View):
+ * - 목적(Why): 사용자에게 공식 굿즈 상품 목록을 카테고리별로 제공하고 마케팅 배너를 노출하여 구매 액션을 유도함
+ * - 방법(How): Framer Motion 애니메이션을 통한 상품 데이터 렌더링, 무한 캐러셀 배너(useMarketingBanners) 연동 및 낙관적 UI 로딩을 수행함
+ */
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';

@@ -1,8 +1,14 @@
+/**
+ * 사용자 맞춤형 실시간 알림 구성 엔진(Customizable Real-time Notification Configuration Engine):
+ * - 목적(Why): 댓글, 좋아요, 팔로우, 채팅 등 개별 소셜 액션에 대한 푸시/인앱 알림 수신 여부를 사용자가 직접 제어함
+ * - 방법(How): 낙관적 업데이트(Optimistic UI) 기법을 적용하여 즉각적인 피드백을 제공하고, Supabase를 통해 실시간 프로필 설정 동기화를 수행함
+ */
 import { useState, useEffect } from 'react';
 import Switch from './Switch';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 interface PrivacySettingsProps {
   onBackToMenu?: () => void;
@@ -83,18 +89,11 @@ export default function AlarmSettings({ onBackToMenu, searchQuery }: PrivacySett
     }
   };
 
-  if (loading) {
-     return (
-        <div className="space-y-4 animate-pulse">
-           {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-20 bg-gray-100 dark:bg-gray-800 rounded-xl" />
-           ))}
-        </div>
-     );
-  }
+  // 탭 간 일관성을 위해 애니메이션 제거
+  const containerClass = "space-y-4";
 
   return (
-    <div>
+    <div className={containerClass}>
       {/* 헤더 + 모바일 화살표 */}
       <div className="flex items-center gap-2 mb-4">
         <button
@@ -105,10 +104,13 @@ export default function AlarmSettings({ onBackToMenu, searchQuery }: PrivacySett
         >
           <i className="ri-arrow-left-line text-lg" />
         </button>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('settings.notifications')}</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          {t('settings.notifications')}
+          {loading && <Loader2 className="inline-block ml-2 w-4 h-4 animate-spin opacity-30" />}
+        </h3>
       </div>
 
-      <div className="space-y-2">
+      <div className={`space-y-2 ${loading ? 'opacity-50 pointer-events-none' : ''}`}>
         <Switch
           checked={settings.notify_comment}
           onChange={(v) => handleToggle('notify_comment', v)}

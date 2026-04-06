@@ -1,3 +1,8 @@
+/**
+ * 계정 접근 복구 수단 설정 엔진(Account Recovery Method Configuration Engine):
+ * - 목적(Why): 사용자가 비밀번호를 분실했을 경우를 대비하여 보안 질문 및 복구 이메일 등 대체 인증 수단을 구성함
+ * - 방법(How): 답변의 안전한 저장을 위한 해싱 로직(hashRecoveryAnswer), 복구 이메일의 유효성 및 중복 검사(email_exists RPC), 그리고 필수 필드 검증을 통한 보안 무결성을 확보함
+ */
 import Button from '@/components/common/Buttons';
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';

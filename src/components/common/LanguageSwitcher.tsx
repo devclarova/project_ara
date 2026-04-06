@@ -1,3 +1,8 @@
+/**
+ * 지능형 국제화 언어 전환 오케스트레이터(Intelligent I18n Language Switcher Orchestrator):
+ * - 목적(Why): 다각적인 로케일 설정을 지원하여 글로벌 사용자의 자국어 접근성을 보장함
+ * - 방법(How): i18next 표준에 따른 런타임 언어 전환, Supabase 연동 국기 에셋 매핑, 그리고 하단 스크롤 샤틀(Scroll-shuttle) 패턴을 통한 최적화된 드롭다운 인터페이스를 제공함
+ */
 import { LANGUAGES } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import {
@@ -90,7 +95,7 @@ export default function LanguageSwitcher({ open, onOpenChange }: LanguageSwitche
           size="icon" 
           className="rounded-full w-10 h-10 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 ring-0 outline-none border-none group"
         >
-          {/* Globe 아이콘 대신 현재 언어 국기 표시 (Glossy Effect) */}
+          {/* Visual Indicator: Replaces the generic globe icon with a glossy flag asset corresponding to the active locale. */}
           {(() => {
             // 언어 코드 정규화: 'ko-KR' -> 'ko', 'en-US' -> 'en'
             const normalizedLang = i18n.language.split('-')[0];
@@ -143,7 +148,7 @@ export default function LanguageSwitcher({ open, onOpenChange }: LanguageSwitche
           </p>
         </div>
         
-        {/* 스크롤 영역 - 끝에 도달하면 외부 스크롤 허용 */}
+        {/* Scroll Containment: Implements a scroll-boundary-shuttle pattern to prevent parent scrolling while the menu is active. */}
         <div 
           className="max-h-[350px] overflow-y-auto custom-scrollbar pr-1"
           onWheel={(e) => {
@@ -151,7 +156,7 @@ export default function LanguageSwitcher({ open, onOpenChange }: LanguageSwitche
             const isScrolledToBottom = element.scrollHeight - element.scrollTop === element.clientHeight;
             const isScrolledToTop = element.scrollTop === 0;
             
-            // 스크롤이 끝에 도달하면 이벤트 전파 허용
+            // Event Propagation Control: Permits scroll events to bubble up only when the internal container reaches its vertical thresholds.
             if ((isScrolledToBottom && e.deltaY > 0) || (isScrolledToTop && e.deltaY < 0)) {
               return; // 이벤트 전파
             }

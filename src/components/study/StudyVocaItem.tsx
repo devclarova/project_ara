@@ -37,12 +37,12 @@ const StudyVocaItem = ({ item, id }: StudyVocaItemProps) => {
     targetLang,
   );
 
-  // 한국어면 원문 유지, 아니면 번역문으로 대체
+  // 지역화 렌더링 정책 — 로컬 언어(Korean)일 경우 원문 렌더링, 타 언어 환경에서는 번역 파이프라인 데이터로 대체
   const displayMeaning = isKorean ? meaningSrc : normalize(translatedMeaning) || meaningSrc;
   const displayExample = isKorean ? exampleSrc : normalize(translatedExample) || exampleSrc;
   const displayPos = isKorean ? posSrc : normalize(translatedPos) || posSrc;
 
-  // 발음은 항상 원문 그대로 유지
+  // 발음 데이터 무결성 정책 — 음성 상동성 유지를 위해 자동 번역 대상에서 제외하고 원출처 데이터(Original) 강제 고정
   const displayPron = pronSrc;
 
   return (

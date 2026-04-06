@@ -1,3 +1,8 @@
+/**
+ * 트윗 상세 모듈(Tweet Detail Module):
+ * - 목적(Why): 특정 트윗의 내용, 통계 데이터 및 실시간 답글 스레드를 제공하여 사용자 참여를 유도함
+ * - 방법(How): Supabase 실시간 구독(Realtime)을 활용하여 조회수, 삭제 상태를 동기화하고, Magnet Scroll 알고리즘을 통해 특정 댓글에 부드럽게 초기 진입함
+ */
 import SnsInlineEditor, { type SnsInlineEditorHandle } from '@/components/common/SnsInlineEditor';
 import type { Database } from '@/types/database';
 import { useAuth } from '@/contexts/AuthContext';

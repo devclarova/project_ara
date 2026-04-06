@@ -1,13 +1,17 @@
+/**
+ * 게시글 통합 수정 오케스트레이터(Unified Post Edition Orchestrator):
+ * - 목적(Why): 기존 게시글의 텍스트 및 미디어 자산을 안전하게 수정하고 변경 사항을 영속화함
+ * - 방법(How): 포탈(Portal) 기반의 모달 레이어에서 정교한 스크롤 잠금 및 복원 알고리즘(useLayoutEffect)을 적용하여 UI 일관성을 유지하고 이미지 업로드 파이프라인을 관리함
+ */
 import React, { useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 function findActiveScroller(): HTMLElement {
-  // 1) window 스크롤이 실제로 움직이고 있으면 document 스크롤러 사용
+  // Global Scroll State Validation: Detects active scroll state on the window object to identify the primary scroller.
   const docScroller = (document.scrollingElement as HTMLElement) ?? document.documentElement;
   if (window.scrollY > 0) return docScroller;
 
-  // 2) window.scrollY가 0인데 화면은 스크롤된 상태라면
-  //    보통 overflow-y-auto/scroll인 "컨테이너 스크롤" 구조임 → 현재 scrollTop>0인 스크롤러 탐색
+  // Container Scroll Heuristics: Traverses the DOM tree for overflow-y containers with active scroll offsets outside the modal root.
   const all = Array.from(document.querySelectorAll<HTMLElement>('body *'));
   let best: HTMLElement | null = null;
 
@@ -18,7 +22,7 @@ function findActiveScroller(): HTMLElement {
     if (el.scrollHeight <= el.clientHeight + 1) continue;
     if (el.scrollTop <= 0) continue;
 
-    // 가장 많이 스크롤된(=메인일 확률 높은) 놈 우선
+    // Priority Resolution: Designates the element with the highest scroll offset as the primary scrolling target.
     if (!best || el.scrollTop > best.scrollTop) best = el;
   }
 
@@ -65,10 +69,11 @@ export default function EditTweetModal({
 
     const modalEl = dialogRef.current;
 
+    // Event Target Sanitization: Identifies whether event propagation occurs within the modal context to defer scroll-lock logic.
     const inModal = (t: EventTarget | null) =>
       !!modalEl && t instanceof Node && modalEl.contains(t);
 
-    // 모달 열릴 때 현재 위치 저장 (window + "배경" 스크롤러들만)
+    // State Capture: Snapshots current viewport and container scroll positions to maintain visual stability during the modal lifecycle.
     const savedWindowY = window.scrollY;
 
     const scrollables = Array.from(document.querySelectorAll<HTMLElement>('body *')).filter(el => {
@@ -83,13 +88,13 @@ export default function EditTweetModal({
     const savedTops = new Map<HTMLElement, number>();
     for (const el of scrollables) savedTops.set(el, el.scrollTop);
 
-    // 1) 휠/터치로 배경 스크롤 못하게
+    // Input Suppression: Intercepts wheel and touch events to inhibit background layer movement (overscroll prevention).
     const blockWheelTouch = (e: Event) => {
       if (inModal(e.target)) return; // 모달 안은 허용
       e.preventDefault();
     };
 
-    // 2) 키보드로 배경 스크롤 못하게
+    // Interaction Control: Blocks default behaviors for scroll-triggering keys while maintaining modal accessibility (Escape key).
     const blockKeys = (e: KeyboardEvent) => {
       if (inModal(e.target)) return;
 
@@ -98,7 +103,7 @@ export default function EditTweetModal({
       if (e.key === 'Escape') onClose();
     };
 
-    // 3) 어떤 스크롤이 일어나도(배경) 즉시 원상복구
+    // Remedial Recalibration: Re-applies captured scroll coordinates to counteract layout shifts caused by unauthorized DOM mutations.
     const restoreScroll = (e: Event) => {
       // 모달 내부 스크롤(textarea 포함)은 건드리지 않음
       if (inModal(e.target)) return;

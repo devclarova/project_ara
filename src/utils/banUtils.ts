@@ -1,12 +1,7 @@
 /**
- * 제재 관련 유틸리티 함수들
- */
-
-/**
- * 제재 기간을 계산하고 포맷팅된 문자열을 반환
- * @param banStartDate 제재 시작 일시 (ISO string)
- * @param banEndDate 제재 종료 일시 (ISO string)
- * @returns 포맷팅된 제재 기간 정보
+ * 계정 제재 및 이용 제한 관리 유틸리티
+ * - 목적: 서비스 운영 정책에 따라 사용자의 활동 제한 기간을 계산하고, 사용자에게 명확한 제재 안내 메시지를 제공함
+ * - 방식: ISO 8601 날짜 객체 간의 시간 차이를 연산하여 잔여 기간을 산출하고, 한국 로케일(ko-KR) 기반의 날짜 포맷팅을 적용함
  */
 export function formatBanPeriod(banStartDate: string, banEndDate: string): {
   duration: string;
@@ -46,7 +41,9 @@ export function formatBanPeriod(banStartDate: string, banEndDate: string): {
 }
 
 /**
- * 사용자가 현재 제재 중인지 확인
+ * 사용자의 현재 제재 상태 확인
+ * - 목적: 특정 시점에 사용자가 서비스 이용 제한 상태인지 판별
+ * - 방식: 제재 종료 일시와 현재 시간을 비교하여 불리언(Boolean) 값을 반환
  * @param bannedUntil 제재 종료 일시 (ISO string | null)
  * @returns 제재 중이면 true
  */
@@ -56,7 +53,9 @@ export function isBanned(bannedUntil: string | null | undefined): boolean {
 }
 
 /**
- * 제재 메시지 생성
+ * 제재 안내 메시지 생성
+ * - 목적: 제재 대상 사용자에게 이용 제한 사유 및 잔여 기간을 포함한 안내 문구 생성
+ * - 방식: 제재 종료 일시를 로케일 포맷으로 변환하고, 잔여 일수를 계산하여 가독성 높은 텍스트로 조합
  * @param bannedUntil 제재 종료 일시
  * @returns 제재 안내 메시지
  */

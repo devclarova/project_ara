@@ -1,3 +1,8 @@
+/**
+ * 계정 이메일 탐색 콘솔(Account Email Discovery Console):
+ * - 목적(Why): 사용자가 닉네임과 복구 이메일, 혹은 복구 질문 검증을 통해 잊어버린 계정 이메일을 확인할 수 있도록 지원함
+ * - 방법(How): Supabase RPC 프로시저를 통한 내부 데이터 조회, 양문형 인증 방식을 분기 처리하여 보안을 강화함
+ */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';

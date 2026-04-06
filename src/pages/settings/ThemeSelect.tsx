@@ -1,3 +1,8 @@
+/**
+ * 시각적 테마 정체성 선택 엔진(Visual Theme Identity Selection Engine):
+ * - 목적(Why): 사용자의 시각적 선호도에 맞춰 라이트, 다크, 또는 시스템 설정 기반의 UI 테마를 전환함
+ * - 방법(How): Lucide 아이콘과 결합된 옵션 리스트, 그라데이션 기반의 활성 상태 표시, 그리고 테마 프로바이더와의 연동을 통한 실시간 프리뷰 및 확정 상태를 관리함
+ */
 import Button from '@/components/common/Buttons';
 import type { Mode } from '@/types/settings';
 import { Monitor, Moon, Sun } from 'lucide-react';

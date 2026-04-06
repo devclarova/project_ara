@@ -16,6 +16,11 @@ interface RelinkData {
 
 const STORAGE_KEY = 'ara_relink_block_data';
 
+/**
+ * 계정 소유권 전이 및 SNS 재연결 엔진(SNS Identity Relink Engine)
+ * - 소셜 계정 연동 시 기존 이메일 계정과의 신원 매칭을 검증하고 보안 정책(Bypass/Block)에 따른 가입/연결 워크플로우를 제어
+ * - 블로킹 발생 시 세션 브릿지를 통해 사용자에게 명확한 조치 가이드를 제공
+ */
 export function useRelinkDetection() {
   const navigate = useNavigate();
   const [relinkData, setRelinkData] = useState<RelinkData>({ isOpen: false });

@@ -1,3 +1,8 @@
+/**
+ * 공식 굿즈 재고 및 라인업 관리 콘솔(Official Goods Inventory & Lineup Console):
+ * - 목적(Why): 실물 상품의 판매 상태(New, Best, Sold Out)와 할인율, 가격 등을 통합적으로 운영함
+ * - 방법(How): 상품 테이블 CRUD 쿼리 연동과 함께 뱃지 토글, 일괄 수정 및 검색/상태 복합 필터 기능을 지원함
+ */
 import React, { useState } from 'react';
 import { Search, Edit, Trash2, Eye, EyeOff, ChevronDown, Calendar, Package, DollarSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +26,7 @@ const AdminGoodsManagement = () => {
 
   const [categoryFilter, setCategoryFilter] = useState('all');
 
+  // 상품 마스터 데이터 로드 — 검색어/상태/카테고리 복합 필터링 적용 연산
   const fetchGoods = async () => {
     setLoading(true);
     try {
@@ -42,6 +48,7 @@ const AdminGoodsManagement = () => {
     fetchGoods();
   }, [searchTerm, filterStatus, categoryFilter]);
 
+  // 상품 가시성(Visibility) 토글 — 스토어 노출 여부 즉시 제어 및 캐시 무효화
   const handleToggleHide = async (id: string, currentHidden: boolean) => {
     try {
       await goodsService.updateProductFields(id, { is_hidden: !currentHidden });
@@ -61,6 +68,7 @@ const AdminGoodsManagement = () => {
     setDeleteModalOpen(true);
   };
 
+  // 데이터 영구 삭제 — 참조 무결성을 고려한 상품 엔티티 물리적 제거
   const handleDeleteConfirm = async () => {
     if (!selectedProduct) return;
 
@@ -76,6 +84,7 @@ const AdminGoodsManagement = () => {
     }
   };
 
+  // 재고 및 판매 상태별 시각적 식별 뱃지 매핑 로직
   const getStatusBadge = (status: string, stock: number) => {
     if (status === 'draft') {
       return (
@@ -105,7 +114,7 @@ const AdminGoodsManagement = () => {
     <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#0a0a0a] pb-20">
       <div className="max-w-7xl mx-auto px-4 pt-12 space-y-8">
         
-        {/* Header with Premium Feel */}
+        {/* 프리미엄 헤더 — 대시보드 정체성 확립 및 핵심 등록 액션 집약 */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-8 rounded-[2rem] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/20 dark:border-white/5 shadow-2xl shadow-black/5">
           <div>
             <h1 className="text-3xl font-black tracking-tight text-gray-900 dark:text-white">상품 목록 관리</h1>
@@ -120,7 +129,7 @@ const AdminGoodsManagement = () => {
           </button>
         </div>
 
-        {/* Global Search and Filter Canvas */}
+        {/* 복합 필터링 캔버스 — 검색 및 상태 기반 인벤토리 정밀 조회 인터페이스 */}
         <div className="p-6 rounded-[2.5rem] bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md border border-white/20 dark:border-white/5 shadow-lg">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 relative group">
@@ -166,7 +175,7 @@ const AdminGoodsManagement = () => {
           </div>
         </div>
 
-        {/* Goods Inventory Table Area */}
+        {/* 인벤토리 데이터 그리드 — 실시간 재고 및 판매 지표 실적 가시화 */}
         <div className="rounded-[2.5rem] bg-white dark:bg-zinc-900 shadow-2xl shadow-black/5 border border-white/20 dark:border-white/5 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left table-fixed min-w-[1000px]">
@@ -305,7 +314,7 @@ const AdminGoodsManagement = () => {
         </div>
       </div>
 
-      {/* Modern Soft Delete Modal */}
+      {/* 상품 폐기 확인 레이어 — 데이터 소실 방지를 위한 이중 확약 프로세스 */}
       {deleteModalOpen && (
         <div className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-6 animate-in fade-in duration-300">
           <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-10 max-w-sm w-full shadow-2xl space-y-8 animate-in zoom-in-95 duration-300 border border-white/10">
@@ -339,7 +348,7 @@ const AdminGoodsManagement = () => {
   );
 };
 
-// Internal Atomic Components
+// 내부 원자적 UI 컴포넌트(Atomic Components) — 고수준 재사용성을 확보한 하위 조각들
 const PageButton = ({ label, icon: Icon, active, disabled, rotate }: { label?: string, icon?: any, active?: boolean, disabled?: boolean, rotate?: number }) => (
   <button 
     disabled={disabled}

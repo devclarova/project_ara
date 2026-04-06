@@ -1,3 +1,8 @@
+/**
+ * 고성능 대량 자동 번역 엔진(High-Performance Batch Auto-Translation Engine):
+ * - 목적(Why): 다수의 텍스트 항목을 한 번의 API 호출로 번역하여 네트워크 오버헤드를 최소화하고 사용자 경험을 개선함
+ * - 방법(How): Supabase DB 캐시를 선제적으로 조회하여 불필요한 API 호출을 방지하고, 로컬 서버의 배치 번역 엔드포인트를 통해 원자적 번역 처리를 수행함
+ */
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 

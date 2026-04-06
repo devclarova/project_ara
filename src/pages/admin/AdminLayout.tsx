@@ -1,3 +1,8 @@
+/**
+ * 관리자 통합 레이아웃 엔진(Administrative Unit Layout Engine):
+ * - 목적(Why): 대규모 운영 도구의 내비게이션 일관성을 유지하고 권한 기반의 접근 제어(RBAC) 레이어를 제공함
+ * - 방법(How): 실시간 권한 실시간 검증(Auth Guard) 및 해상도별 가변 사이드바 아키텍처를 통해 보안과 사용성을 동시에 확보함
+ */
 import React, { useState, useEffect } from 'react';
 import {
   BarChart,
@@ -56,7 +61,7 @@ const AdminLayout = () => {
     document.title = `${pageTitle} | ARA Admin`;
   }, [window.location.pathname]);
 
-  // Fetch admin profile data
+  // 관리자 계정 식별 데이터 로드 — 세션 유효성 검증 및 프로필 정보 동기화
   useEffect(() => {
     const fetchAdminProfile = async () => {
       if (!user) return;
@@ -88,7 +93,7 @@ const AdminLayout = () => {
 
     fetchAdminProfile();
 
-    // Realtime Check for Admin Status Revocation
+    // 실시간 권한 무결성 검사 — 관리자 권한 박탈 시 즉시 세션 종료 및 피드백 제공
     const channel = supabase
       .channel(`admin_check_${user!.id}`)
       .on(
@@ -116,14 +121,14 @@ const AdminLayout = () => {
 
   const handleLogout = async () => {
     try {
-      // 1. DB에 오프라인 상태를 즉시 반영 (다른 관리자 화면에 실시간 전파)
+      // 1. 데이터베이스 내 활성 상태(Online Status) 즉시 해제 — 실시간 상호작용 피드백 동기화
       if (user) {
         await supabase
           .from('profiles')
           .update({ is_online: false, last_active_at: new Date().toISOString() })
           .eq('user_id', user.id);
       }
-      // 2. 세션 파기
+      // 2. 인증 서버 세션 파기 — 보안 무결성 확보를 위한 클라우드 로그아웃 수행
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Logout error:', error);
@@ -132,7 +137,7 @@ const AdminLayout = () => {
     }
   };
 
-  // Prevent background scroll when mobile sidebar is open
+  // 모바일 사이드바 활성화 시 뷰포트 배경 스크롤 억제 정책 적용
   useEffect(() => {
     if (sidebarOpen) {
       document.body.style.overflow = 'hidden';
@@ -146,7 +151,7 @@ const AdminLayout = () => {
 
   return (
     <div className="h-full w-full flex-1 min-h-0 flex bg-background font-sans text-foreground overflow-hidden">
-      {/* Sidebar - Hidden on mobile, always visible on desktop */}
+      {/* 사이드바 네비게이션 — 해상도별 가변 레이아웃(Mobile: Drawer, Desktop: Fixed) 적용 */}
       <aside 
         className={`fixed inset-y-0 left-0 z-[120] w-64 bg-secondary border-r border-gray-300 dark:border-gray-600 transform transition-transform duration-300 ease-in-out select-none [-webkit-tap-highlight-color:transparent] ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -305,7 +310,7 @@ const AdminLayout = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden">
-        {/* Header - Truly fixed at top */}
+        {/* 상단 고정 헤더 — 뷰포트 최상단 레이어 정책 및 불투명도 가공(Backdrop-blur) 적용 */}
         <header className="h-14 sm:h-16 bg-secondary/80 backdrop-blur-md border-b border-gray-300 dark:border-gray-600 flex items-center justify-between px-3 sm:px-4 md:px-6 sticky top-0 z-[110] shadow-sm flex-shrink-0">
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-1">
             <button
@@ -315,7 +320,7 @@ const AdminLayout = () => {
               <Menu size={18} className="sm:w-5 sm:h-5" />
             </button>
 
-            {/* Search - Hidden on very small screens */}
+            {/* 전역 검색 인터페이스 — 가용 뷰포트 해상도에 따른 조건부 노출 제어 */}
             <div className="hidden min-[500px]:flex items-center flex-1 max-w-xl">
               <div className="relative w-full">
                 <Search
@@ -337,7 +342,7 @@ const AdminLayout = () => {
               <ThemeSwitcher />
             </div>
 
-            {/* Notifications */}
+            {/* 시스템 통합 알림 센터 — 미확인 이벤트 및 위협 징후 실시간 인디케이터 */}
             <button className="relative p-1.5 sm:p-2 hover:bg-muted rounded-lg transition-colors flex-shrink-0">
               <Bell size={18} className="sm:w-5 sm:h-5 text-muted-foreground" />
               <span className="absolute top-1 right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-red-500 rounded-full" />
@@ -345,13 +350,13 @@ const AdminLayout = () => {
           </div>
         </header>
 
-        {/* Dynamic Content Area - Scrollable */}
+        {/* 동적 콘텐츠 렌더링 영역 — 템플릿 아키텍처 기반 중첩 라우트(Outlet) 주입 지점 */}
         <main className="flex-1 overflow-y-auto px-3 py-4 sm:px-4 sm:py-6 md:p-6 lg:p-8 bg-background relative z-0 overscroll-contain">
           <Outlet />
         </main>
       </div>
 
-      {/* Mobile Overlay - Only show on mobile when sidebar is open */}
+      {/* 모바일 전용 블로킹 오버레이 — 사이드바 활성 시 인터랙션 격리 레이어 */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[115] md:hidden"
@@ -363,7 +368,7 @@ const AdminLayout = () => {
   );
 };
 
-// Subcomponent for nav items
+// 네비게이션 메뉴 아이템 — 경로 활성 상태 매칭 및 인터페이스 바인딩 엔진
 function NavItem({
   icon: Icon,
   label,

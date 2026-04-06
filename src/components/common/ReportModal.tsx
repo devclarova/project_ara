@@ -1,3 +1,8 @@
+/**
+ * 통합 신고 시스템 오케스트레이터(Unified Reporting System Orchestrator):
+ * - 목적(Why): 게시글, 댓글, 사용자, 채팅 등 다양한 타겟에 대한 신고 데이터를 수집하여 안전한 커뮤니티 가이드라인을 집행함
+ * - 방법(How): 컨텍스트 기반의 사유 선택(React-Select), 동적 상세 입력 필드, 그리고 신고 시점의 콘텐츠 스냅샷(Snapshot)을 포함한 원자적 트랜잭션을 수행함
+ */
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import Modal from '@/components/common/Modal'; // 공용 모달 사용
@@ -36,7 +41,7 @@ type ReasonOption = {
   label: string;
 };
 
-// React-Select Custom Indicator
+// Component Customization: Overrides the default React-Select indicator with a contextual chevron and state-driven animations.
 const CustomDropdownIndicator = (props: any) => {
   const { selectProps } = props;
   const isOpen = selectProps.menuIsOpen;
@@ -56,10 +61,10 @@ export default function ReportModal({ isOpen, onClose, targetType, targetId, pre
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
-  // 다크 모드 감지 (CountrySelect와 동일 방식)
+  // Theme Synchronization: Dynamically adjusts Select component visual attributes by observing the global DOM theme state.
   const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
-  // React-Select Styles (CountrySelect 스타일 차용)
+  // Style Configuration: Defines structural and aesthetic specifications for React-Select sub-components across themes.
   const customStyles: StylesConfig<ReasonOption, false> = {
     control: (provided, state) => {
       const baseBorder = state.isFocused
@@ -164,7 +169,7 @@ export default function ReportModal({ isOpen, onClose, targetType, targetId, pre
       if (!profile) throw new Error('Profile not found');
 
       const finalDescription = targetType === 'chat' 
-        ? (reason === 'other' ? description : null) // 채팅 신고는 additionalInfo 포함 안 함
+        ? (reason === 'other' ? description : null) // Payload Normalization: Formats the final description string by selectively combining reason and context.
         : [
             (reason === 'other' ? description : ''), 
             additionalInfo
@@ -198,7 +203,7 @@ export default function ReportModal({ isOpen, onClose, targetType, targetId, pre
     }
   };
 
-  // Reset state when modal opens
+  // Instance Sanitization: Resets local state (reason, description) upon modal re-engagement to prevent stale data persistence.
   useEffect(() => {
     if (isOpen) {
       setReason('');
@@ -219,14 +224,14 @@ export default function ReportModal({ isOpen, onClose, targetType, targetId, pre
           {t('report.desc', '신고 사유를 선택해 주세요. 타당한 사유가 없을 경우 처리가 지연될 수 있습니다.')}
         </p>
 
-        {/* Preview Content (e.g. Selected Chat Messages) */}
+        {/* Content Snapshotting: Renders a read-only preview of the target resource at the time of the report for moderator context. */}
         {previewContent && (
           <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 text-sm text-gray-700 dark:text-gray-300 max-h-40 overflow-y-auto border border-gray-100 dark:border-gray-700">
             {previewContent}
           </div>
         )}
 
-        {/* Reason Select (Floating Label) */}
+        {/* Fluid Label Interface: Implements a floating label pattern that responds to the Select component focus and selection states. */}
         <div className="relative">
           <Select
             options={reasonOptions}

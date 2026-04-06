@@ -1,3 +1,8 @@
+/**
+ * 전역 미디어 오버레이(Global Media Overlay):
+ * - 목적(Why): 이미지 원본 가시성을 확보하기 위해 전역 뷰포트를 활용하는 모달 슬라이더를 제공함
+ * - 방법(How): Framer Motion 하드웨어 가속, 바디 스크롤 잠금 프로토콜, 그리고 ESC 키 바인딩으로 접근성(A11y) 기준을 충족함
+ */
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';

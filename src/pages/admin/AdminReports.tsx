@@ -1,3 +1,8 @@
+/**
+ * 관리자 신고 문의 관리자 (Admin Reports Manager):
+ * - 목적(Why): 서비스 내 악성 유저, 불건전 콘텐츠 등 플랫폼 건전성을 위협하는 요소를 대응함
+ * - 방법(How): 신고 접수 목록 조회, 상세 사유 확인 및 제재 처리를 위한 상태 변경 기능을 제공함
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   AlertTriangle, 
@@ -49,7 +54,7 @@ const AdminReports = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  // Debounce search term
+  // 검색어 입력 지연 처리(Debounce) — 성능 최적화 및 비동기 API 부하 경감 정책 적용
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);
@@ -81,13 +86,13 @@ const AdminReports = () => {
         query = query.eq('status', filterStatus);
       }
 
-      // debouncedSearch 서버 필터링 제거 (클라이언트 필터에서 번역문/닉네임 통합 검색 수행)
+      // 필터링 정책 — 다국어 지원 및 복합 데이터(닉네임/번역문) 매칭을 위한 클라이언트 측 통합 필터 적용
 
       const { data: reportsData, error } = await query;
 
       if (error) throw error;
 
-      // Enhance Chat & User Reports with Suspect Info
+      // 신고 대상(Suspect) 식별 정보 보강 — 채팅 참여자 및 대상 프로필 대조 알고리즘 수행
       const enhancedReports = await Promise.all(reportsData.map(async (report: any) => {
         if (report.target_type === 'chat') {
             try {
@@ -236,17 +241,17 @@ const AdminReports = () => {
                   if (!debouncedSearch) return true;
                   const lowerSearch = debouncedSearch.toLowerCase();
                   
-                  // 번역된 사유가 검색어에 포함되는지 확인
+                  // 다국어 사유 로컬 매칭 — i18n 번역 결과 기반 텍스트 가시성 검색 수행
                   const translatedReason = t(`report.reasons.${report.reason}`, { defaultValue: report.reason }).toLowerCase();
                   if (translatedReason.includes(lowerSearch)) return true;
 
-                  // 닉네임(신고자/피신고자) 확인
+                  // 사용자 식별 데이터 매칭 — 신고자 및 피신고자 닉네임 교차 검색
                   if (report.reporter?.nickname?.toLowerCase().includes(lowerSearch)) return true;
                   if (report.suspect_profile?.nickname?.toLowerCase().includes(lowerSearch)) return true;
                   if (report.content_snapshot?.user?.nickname?.toLowerCase().includes(lowerSearch)) return true;
                   if (report.content_snapshot?.user?.name?.toLowerCase().includes(lowerSearch)) return true;
 
-                  // 기본 필드(원본 사유, 설명) 확인
+                  // 원시 데이터 키워드 매칭 — DB 필드(Reason, Description) 기반 직접 검색
                   if (report.reason.toLowerCase().includes(lowerSearch)) return true;
                   if (report.description?.toLowerCase().includes(lowerSearch)) return true;
 

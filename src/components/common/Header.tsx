@@ -1,3 +1,8 @@
+/**
+ * 전역 네비게이션 및 세션 오케스트레이터(Global Navigation & Session Orchestrator):
+ * - 목적(Why): 애플리케이션 전반의 일관된 경로 이동을 보장하고 실시간 알림/채팅 상태를 사용자에게 즉각 피드백함
+ * - 방법(How): Supabase Presence/Realtime을 연동하여 미읽음 카운트를 동기화하고, 반응형 드로어 및 드롭다운 시스템을 통합함
+ */
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -19,6 +24,7 @@ import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 import { OnlineIndicator } from './OnlineIndicator';
+
 function Header() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -35,7 +41,7 @@ function Header() {
   const langRef = useRef<HTMLDivElement>(null); // 언어 선택 영역 ref
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const profileButtonRef = useRef<HTMLButtonElement>(null);
-  // profiles 테이블 기반 프로필 정보
+  // Profile Metadata Synchronization: Orchestrates real-time updates (nickname, avatar, permissions) from the Supabase profiles table.
   const [profileNickname, setProfileNickname] = useState<string | null>(null);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
@@ -103,7 +109,7 @@ function Header() {
     if (item.key === 'home') return path === '/' || path === '/home';
     return item.matchPaths.some(p => path.startsWith(p));
   };
-  // 메뉴 이름별 아이콘 매핑 (모바일용)
+  // Iconography Selection: Assigns contextual Lucide markers for navigation items within the mobile responsive drawer.
   const getMenuIcon = (key: string) => {
     switch (key) {
       // case 'voca':
@@ -124,7 +130,7 @@ function Header() {
         return null;
     }
   };
-  // 로고 클릭: 홈이 아니면 홈으로 이동, 이미 홈이면 아무 동작 없음
+  // Root Navigation Logic: Handles the primary logo interaction while preventing redundant routing cycles for the active path.
   const handleLogoClick = () => {
     const isOnHome = location.pathname === homePath;
     if (!isOnHome) {
@@ -198,7 +204,7 @@ function Header() {
       setUnreadNotificationCount(validCount);
     };
     fetchUnreadCount();
-    // 실시간 업데이트 구독 (알림 INSERT/UPDATE 시 다시 카운트)
+    // Real-time Presence Sync: Leverages Postgres CDC (Change Data Capture) via Supabase to synchronize notification states.
     const channel = supabase
       .channel(`header-notifications-${profileId}`)
       .on(
@@ -242,7 +248,7 @@ function Header() {
       window.removeEventListener('profile:updated', handleProfileUpdated as EventListener);
     };
   }, []);
-  // 외부 클릭 시 드롭다운 / 햄버거 닫기
+  // Outside Interaction Guard: Implements global mousedown detection to dismiss all active overlay layers (menus/drawers) upon user distraction.
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;

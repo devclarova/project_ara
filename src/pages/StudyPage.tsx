@@ -1,3 +1,8 @@
+/**
+ * 몰입형 비디오 학습 시네라마(Immersive Video Learning Cinerama):
+ * - 목적(Why): 비디오 콘텐츠와 실시간 동기화된 자막 및 인터랙티브 학습 카드를 통해 실제 맥락 속 언어 습득을 지원함
+ * - 방법(How): VideoPlayer API와 자막 데이터 스트림을 유기적으로 결합하고, SEO 최적화를 위한 다국어 메타데이터 동적 주입을 수행함
+ */
 import SignInModal from '@/components/auth/SignInModal';
 import ShareButton from '@/components/common/ShareButton';
 import { InfoItem } from '@/components/study/ContentCard';
@@ -13,7 +18,7 @@ import VideoPlayer, { type VideoPlayerHandle } from '../components/study/VideoPl
 import { supabase } from '../lib/supabase';
 import type { Subtitle } from '../types/study';
 
-// 이 페이지에서 실제로 사용하는 video 행 타입을 로컬로 정의(컬럼명과 일치)
+// 비디오 데이터 매핑을 위한 로컬 타입 정의 — DB 스키마 컬럼과 동기화
 type VideoRow = {
   id: number;
   study_id: number;
@@ -48,7 +53,7 @@ const StudyPage = () => {
   const isGuest = !user;
   const [showSignIn, setShowSignIn] = useState(false);
 
-  // Auto Translation Hooks
+  // 텍스트 자동 번역 훅 — 설정 언어별 실시간 데이터 변환 적용
   const { i18n, t } = useTranslation();
   const targetLang = i18n.language;
 
@@ -58,7 +63,7 @@ const StudyPage = () => {
   const dec = (v?: string | null) => (v == null ? v : decodeURIComponent(v));
   const enc = (v?: string | number | null) => encodeURIComponent(String(v ?? ''));
 
-  // 페이지 메타
+  // SEO 전용 페이지 메타 데이터 및 기본 타이틀 구성
   const baseTitle = 'ARA - Learn Korean with K-Content';
   const pageTitleOriginal = study
     ? `${study.contents ?? 'ARA Study'}${study.episode ? ` ${study.episode}` : ''}${
@@ -66,9 +71,9 @@ const StudyPage = () => {
       } | ${baseTitle}`
     : `Study | ${baseTitle}`;
 
-  // Title Logic (Korean Mode & Auto Translation)
+  // 페이지 타이틀 생성 로직 — 언어 모드 및 번역 데이터 조합 처리
   const isKoreanTitle = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(study?.contents ?? '');
-  // Study List와 동일한 제목(부모 Study의 title)을 우선 사용
+  // 데이터 일관성 확보를 위해 부모 Study 레코드의 제목을 최우선 바인딩
   const parentTitle = study?.study && !Array.isArray(study.study) 
     ? study.study.title 
     : (Array.isArray(study?.study) ? study?.study[0]?.title : null);
@@ -101,12 +106,12 @@ const StudyPage = () => {
   const displayEpisode = formatValue('episode', study?.episode);
   const displayScene = formatValue('scene', study?.scene);
 
-  // 음악 카테고리 여부 (제목 표시 및 에피소드 노출 여부에 사용)
+  // 제품 분류 판별 — 음악 카테고리 특화 레이아웃(에피소드 숨김 등) 적용 유무 결정
   const isMusic = study?.categories?.includes('음악') || study?.categories?.includes('Music') || study?.categories?.includes(t('study.category.music'));
 
   let displayTitle = effectiveTitle || t('study.no_title');
 
-  // 번역 적용 로직
+  // 번역 렌더링 로직 — 타겟 언어별 포맷 분기 처리
   if (translatedTitle && effectiveTitle && translatedTitle !== effectiveTitle) {
     if (targetLang.startsWith('ko')) {
       displayTitle = effectiveTitle;
@@ -147,7 +152,7 @@ const StudyPage = () => {
 
   const ogImage = study?.image_url ?? '/images/font_slogan_logo.png';
 
-  // URL 생성기: scene이 없으면 세그먼트 생략
+  // 시네마틱 경로 생성 헬퍼 — 씬(Scene) 정보 부재 시 해당 세그먼트 자동 제외
   const buildStudyUrl = (row: {
     contents?: string | null;
     episode?: string | null;
@@ -168,7 +173,7 @@ const StudyPage = () => {
       const c = dec(contents);
       const e = dec(episode);
 
-      // CASE 1: scene 존재하는 경우
+      // CASE 1: 씬(Scene) 지정 접근 — 정밀 필터링 기반 데이터 단일 조회
       if (scene != null) {
         const s = dec(scene);
 
@@ -203,7 +208,7 @@ const StudyPage = () => {
         return;
       }
 
-      // CASE 2: scene 없이 들어온 경우 → 첫 scene 선택
+      // CASE 2: 씬(Scene) 미지정 접근 — 에피소드 내 첫 번째 씬 자동 인덱싱
       const { data } = await supabase
         .from('video')
         .select(
@@ -231,7 +236,7 @@ const StudyPage = () => {
 
       setStudy(row);
 
-      // URL 정규화
+      // URL 정규화 — 씬 정보 누적 시 Canonical URL로 강제 리다이렉션 수행
       if (row) {
         const canonical = buildStudyUrl(row);
         if (canonical !== location.pathname) navigate(canonical, { replace: true });
@@ -243,7 +248,7 @@ const StudyPage = () => {
     void fetchStudy();
   }, [contents, episode, scene, navigate]);
 
-  // Next/Prev 이동 보호 처리
+  // 인접 콘텐츠 이동 간 세션 권한 및 유효성 검증 로직
   const goToByStudyId = async (targetStudyId: number) => {
     const { data } = await supabase
       .from('video')
@@ -271,7 +276,7 @@ const StudyPage = () => {
     const next = data?.[0]?.study_id;
     if (!next) return;
 
-    // 게스트 보호조건
+    // 게스트 권한 제어 — 비로그인 사용자 대상 추천 콘텐츠(is_featured) 외 접근 제한
     if (isGuest) {
       const { data: sData } = await supabase
         .from('study')
@@ -301,7 +306,7 @@ const StudyPage = () => {
     const prev = data?.[0]?.study_id;
     if (!prev) return;
 
-    // 게스트 보호조건
+    // 게스트 권한 제어 — 이전 콘텐츠 열람 시 featured 필드 검증을 통한 접근 권한 확인
     if (isGuest) {
       const { data: sData } = await supabase
         .from('study')
@@ -332,7 +337,7 @@ const StudyPage = () => {
 
         <meta name="description" content={description} />
 
-        {/* Open Graph */}
+        {/* SNS 공유 최적화를 위한 Open Graph 메타 데이터 섹션 */}
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={description} />
         <meta property="og:image" content={ogImage} />
@@ -346,7 +351,7 @@ const StudyPage = () => {
         />
         <meta property="og:type" content="article" />
 
-        {/* Twitter */}
+        {/* 트위터(X) 카드 최적화 메타 데이터 섹션 */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={description} />
@@ -362,7 +367,7 @@ const StudyPage = () => {
 
             <div className="max-w-4xl mx-auto space-y-6 overflow-y-auto hide-scrollbar flex-1">
               <div className="p-1 max-w-5xl mx-auto">
-                {/* 링크 */}
+                {/* 브레드크럼(Breadcrumb) 네비게이션 — 경로 추적 인터페이스 */}
                 <nav aria-label="Breadcrumb" className="mb-4">
                   <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 py-2 backdrop-blur">
                     {/* 1) Studylist */}
@@ -479,7 +484,7 @@ const StudyPage = () => {
                   </div>
                 </nav>
 
-                {/* 콘텐츠명 */}
+                {/* 에피소드 네비게이션 헤더 — 타겟 콘텐츠 간 빠른 전환 인터페이스 */}
                 <div className="flex justify-between items-center mb-3">
                   {/* 이전 버튼 */}
                   <button
@@ -529,7 +534,7 @@ const StudyPage = () => {
                   </button>
                 </div>
                 
-                {/* 설명글 */}
+                {/* 콘텐츠 상세 요약 정보 노출 영역 — 다국어 설명 지원 */}
                 {!loading && (translatedDescription || parentShortDesc) && (
                   <div className="mt-3 px-4 sm:px-6 md:px-8">
                     <p className="text-center text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed max-w-3xl mx-auto">
@@ -539,7 +544,7 @@ const StudyPage = () => {
                 )}
               </div>
 
-              {/* 메타 정보 라인: 시간/난이도/카테고리 */}
+              {/* 콘텐츠 메타 정보 대시보드 — 런타임/레벨/실시간 통계 데이터 */}
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600 dark:text-gray-300 px-1">
                 <span className="flex items-center gap-1 shrink-0">
                   {/* 시간(runtime) */}
@@ -569,10 +574,10 @@ const StudyPage = () => {
                 )}
               </div>
 
-              {/* 영상 플레이어 */}
+              {/* 메인 프레임 비디오 재생 엔진 */}
               <VideoPlayer key={`${contents}-${episode}-${scene}`} ref={vref} />
 
-              {/* 자막 리스트 */}
+              {/* 실시간 동기화 지원 자막 스트림 레이어 */}
               <StudySubtitles
                 onSelectDialogue={handleSelectDialogue}
                 studyId={study?.study_id}
@@ -582,7 +587,7 @@ const StudyPage = () => {
                 }}
               />
 
-              {/* 학습 카드 */}
+              {/* 인터랙티브 학습 데이터 카드 섹션 — 자막 연동 */}
               {study?.study_id !== undefined && (
                 <StudyCard subtitle={selectedSubtitle} studyId={study?.study_id} />
               )}

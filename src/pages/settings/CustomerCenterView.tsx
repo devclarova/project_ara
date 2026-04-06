@@ -1,3 +1,8 @@
+/**
+ * 고객 지원 및 FAQ 가이드 인터페이스(Customer Support & FAQ Guide Interface):
+ * - 목적(Why): 서비스 이용 중 발생하는 문제 해결을 위한 안내 및 1:1 상담 채널 정보를 제공함
+ * - 방법(How): 카테고리별(계정/결제/보안) FAQ 요약 카드와 직접 문의 채널(Email/Call)을 구조화하여 사용자 접근성을 강화함
+ */
 // 고객센터
 
 export function CustomerCenterView() {

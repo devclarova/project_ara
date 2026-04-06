@@ -30,8 +30,7 @@ export default function RelinkAccountModal({
 
   const providerName = provider === 'google' ? 'Google' : provider === 'kakao' ? 'Kakao' : provider;
 
-
-  // Case 1: Same email (Identity was previously unlinked from THIS account)
+  // 식별자 중복 시나리오(Same Email) — 현재 소셜 계정이 기존 계정과 동일한 이메일을 사용하는 경우, 보안을 위해 이메일 인증 로그인을 강제하는 가이드 노출
   if (reason === 'same_email') {
     return (
       <Modal
@@ -80,7 +79,7 @@ export default function RelinkAccountModal({
     );
   }
 
-  // Case 2: Different email (Identity was linked to a DIFFERENT account)
+  // 다중 계정 연결 시나리오(Cross-account Identity) — 소셜 계정이 이미 다른 이메일 계정에 연결되어 있는 경우, 계정 통합 또는 신규 가입을 선택할 수 있는 분기점 제공
   return (
     <Modal
       isOpen={isOpen}
@@ -152,5 +151,3 @@ export default function RelinkAccountModal({
     </Modal>
   );
 }
-
-

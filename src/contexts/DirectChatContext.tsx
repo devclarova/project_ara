@@ -1,9 +1,8 @@
 /**
- * 1:1 채팅 Context Provider (무한루프 완전 수정)
- * - 모든 useCallback 의존성 배열 최적화
- * - ref 사용으로 불필요한 재생성 방지
+ * 1:1 실시간 채팅 오케스트레이션 엔진(Direct Chat Orchestration Engine):
+ * - 목적(Why): 데이터 정규화, 실시간 상태 동기화 및 무한 스크롤 버퍼 관리를 총괄함
+ * - 방법(How): 낙관적 업데이트(Optimistic UI) 및 네트워크 안정성 확보를 위한 자동 재시도 프로토콜을 구현함
  */
-
 import {
   createContext,
   useCallback,
@@ -293,6 +292,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     }
   }, []);
 
+  // 메시지 로딩 및 뷰포트 상태 정규화 — 지정된 채팅방의 메시지 이력을 가져오고 미읽음 상태 및 배지 카운트 실시간 동기화
   const loadMessages = useCallback(
     async (chatId: string, targetId?: string) => {
       try {
@@ -448,6 +448,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     }
   }, [hasNewerMessages, messages]);
 
+  // 메시지 전송 및 낙관적 업데이트(Optimistic UI) — 네트워크 트랜잭션 전 로컬 UI 즉시 반영 및 전송 결과에 따른 상태 확정 처리
   const sendMessage = useCallback(
     async (messageData: CreateMessageData) => {
       if (
@@ -776,7 +777,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     setUsers([]);
   }, []);
 
-  // Realtime 메시지 처리
+  // 실시간 메시지 구독 및 파이프라인(Realtime Processing Pipeline) — Supabase Realtime을 통한 유입 메시지 감지, 이미지 지연 로딩 처리 및 멀티 탭 동기화
   useEffect(() => {
     if (!currentUserId) return;
 

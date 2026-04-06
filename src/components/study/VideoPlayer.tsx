@@ -6,7 +6,7 @@ import { supabase } from '../../lib/supabase';
 export type VideoPlayerHandle = {
   /** 절대초 시킹 (autoplay 기본 true) */
   seekTo: (sec: number, autoplay?: boolean) => void;
-  /** 자막 구간 재생: 전역 경계 내로 자동 클램프 */
+  /** 자막 세그먼트 재생 — 지정된 시간 구간(Start to End) 내에서 재생을 수행하며 전역 비디오 경계 내로 자동 클램프(Clamp) 수행 */
   playDialogue: (start: number, end?: number) => void;
 };
 
@@ -106,7 +106,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
 
   useImperativeHandle(ref, () => ({ seekTo, playDialogue }), [seekTo, playDialogue]);
 
-  // 조회수 증가
+  // 데이터 무결성 인터페이스 — RPC 호출을 통한 조회수 증가 수행 및 네트워크 응답 상태에 따른 성공 여부 반환
   const registerView = async (rowId: number) => {
     if (!rowId || Number.isNaN(rowId)) {
       console.warn('[VIEW] invalid rowId:', rowId);
@@ -121,7 +121,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
     return typeof data === 'number' ? data > 0 : true;
   };
 
-  // 영상 불러오기: contents, episode, scene 기준
+  // 비디오 리소스 로더 — URL 파라미터(CES 규격)를 기반으로 Supabase 영속성 레이어에서 비디오 메타데이터 및 스트리밍 엔드포인트 조회
   useEffect(() => {
     const fetchByCES = async () => {
       const c = dec(contents);
@@ -224,14 +224,14 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
     // 썸네일 먼저 보이기 위한 seekTo는 onReady 내부로 일원화 (에러 원인: 초기 렌더링 직후 무리한 HTML5 video 접근 시 재생 불능화)
   }, [contents, episode, scene]);
 
-  // 영상이 준비되면 시작 지점으로 이동 (단, 이미 0초일 때 불필요하게 0초로 seekTo()를 호출하면 Pending Play() Promise와 충돌하여 무한루프를 발생시키므로 0보다 클 때만 이동)
+  // 브라우저 정책 대응 — 초기 렌더링 시 HTML5 video 엔진의 Pending Promise 충돌 방지를 위한 준비 상태 일원화 및 시작 지점 강제 시킹(Seeking)
   const handleReady = () => {
     if (videoStartSec && videoStartSec > 0) {
       playerRef.current?.seekTo(videoStartSec, 'seconds');
     }
   };
 
-  // 누적 시청 시간 및 조회수 반영
+  // 시청 분석 엔진 — 실시간 재생 지점을 감속하여 자막 세그먼트 이탈 여부를 감시하고 유효 시청 시간(5초 이상) 도달 시 조화수 RPC 트리거
   const handleProgress = (state: { playedSeconds: number }) => {
     const now = state.playedSeconds;
 
@@ -316,7 +316,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
         {/* 반응형 높이: 모바일 높이↓, 데스크톱 높이↑ */}
         <div className="w-full pt-[72%] xs:pt-[68%] sm:pt-[62%] md:pt-[56.25%] lg:pt-[52%]" />
 
-        {/* 실제 플레이어/오버레이는 비율 상자 위에 절대배치 */}
+        {/* 레이아웃 무결성 오버레이 — 유튜브 연동 시에는 포인터 이벤트를 차단하고 커스텀 컨트롤로 대체, MP4 직업 업로드 건은 네이티브 인터랙션 허용 */}
         <div className="absolute inset-0">
           <ReactPlayer
             ref={playerRef}

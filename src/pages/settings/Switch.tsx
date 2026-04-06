@@ -1,3 +1,8 @@
+/**
+ * 검색을 지원하는 고가역성 토글 스위치(High-Reversibility Toggle Switch with Search Support):
+ * - 목적(Why): 설정 항목의 활성화/비활성화 상태를 직관적으로 제어하고 검색 쿼리에 따른 키워드 강조를 지원함
+ * - 방법(How): 상태(checked)에 따른 배경색 및 노브(Knob) 위치 애니메이션, 그리고 HighlightText 컴포넌트를 통한 레이블/설명 텍스트 필터링을 수행함
+ */
 import HighlightText from '@/components/common/HighlightText';
 
 type SwitchProps = {

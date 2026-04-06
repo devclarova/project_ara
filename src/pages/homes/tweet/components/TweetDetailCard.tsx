@@ -1,3 +1,8 @@
+/**
+ * 확장형 피드 상세 카드(Extended Feed Detail Card):
+ * - 목적(Why): 특정 트윗의 상세 정보, 미디어 자산, 사용자 상호작용 및 관리자 권한 제어 로직을 UI에 통합함
+ * - 방법(How): sessionStorage를 활용해 뷰포트 전환 시 트래킹을 유지하고, SnsStore와 반응형으로 통계 무결성을 보장함
+ */
 
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
@@ -94,7 +99,7 @@ export default function TweetDetailCard({
     views: tweet.stats.views || 0,
   };
 
-  // Load current user's profile ID
+  // 세션 무결성 검증: 활성 인증 객체(Auth User)로부터 식별자를 추출하여 현재 사용자의 프로필 컨텍스트를 인메모리에 바인딩함
   useEffect(() => {
     const loadProfileId = async () => {
       if (!authUser) return;
@@ -303,7 +308,7 @@ export default function TweetDetailCard({
     }
   };
 
-  // 트윗 삭제 Handle (Combined Logic)
+  // 트랜잭션 수명 주기 관리: 게시물 삭제 요청 시 데이터베이스 레벨의 영구 삭제를 수행하고, SnsStore 및 내비게이션 스택을 즉시 동기화하여 UI 정합성을 확보함
   const handleDeleteTweet = async () => {
     if (!profileId) {
       toast.error(t('auth.login_needed'));

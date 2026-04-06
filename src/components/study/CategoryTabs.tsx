@@ -31,7 +31,7 @@ const CategoryTabs = ({ active, onChange, className = '', categories = DEFAULT_C
 
   return (
     <div className={`w-full ${className}`}>
-      {/* 모바일 가로 스크롤 + 탭 롤 */}
+      {/* 수평 스크롤 박스 — 모발 가로 스크롤 대응 및 탭 리스트 인터페이스 구성 */}
       <div
         role="tablist"
         aria-label="콘텐츠 카테고리"
@@ -49,8 +49,8 @@ const CategoryTabs = ({ active, onChange, className = '', categories = DEFAULT_C
               aria-selected={isActive}
               aria-controls={`panel-${c}`}
               onClick={() => onChange(c)}
-              // 밑줄 absolute를 위해 relative 필요, 높이 확보로 레이아웃 점프 방지
               className={[
+                // 레이아웃 무결성 — 활성 표시기(Underline) 배치를 위한 위치 지정 및 탭 높이 고정
                 'relative px-3 xs:px-3 sm:px-4 md:px-5 lg:px-6 py-2 xs:py-2 sm:py-2.5 md:py-3',
                 'text-xs sm:text-sm md:text-base font-extrabold whitespace-nowrap',
                 'transition-colors duration-300',
@@ -60,7 +60,7 @@ const CategoryTabs = ({ active, onChange, className = '', categories = DEFAULT_C
               ].join(' ')}
             >
               <span className="inline-block">{label}</span>
-              {/* 밑줄: 높이 고정, bottom:-2px로 살짝 내려 깔끔 */}
+              {/* 활성 표시기 — 트랜지션 애니메이션이 적용된 하단 밑줄 UI 렌더링 */}
               <span
                 className={[
                   'pointer-events-none absolute left-0 bottom-0 h-[3px] rounded-full',

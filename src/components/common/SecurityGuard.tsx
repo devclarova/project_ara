@@ -1,3 +1,8 @@
+/**
+ * 관리자 영역 물리 보안 가드(Administrative Area Physical Security Guard):
+ * - 목적(Why): 관리자 페이지(/admin)에 대해 허가되지 않은 네트워크의 접근을 원천 차단하여 인프라 보안을 강화함
+ * - 방법(How): 사이트 설정의 IP 화이트리스트 정책을 기반으로 접속자의 공인 IP를 대조하고, 비인가 접속 시 고해상도 차단 오버레이 레이어를 렌더링함
+ */
 import React, { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -13,7 +18,7 @@ export const SecurityGuard = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         const checkSecurity = async () => {
-            // settings가 로드되기 전에는 체크를 보류합니다.
+            // Configuration Synchronization: Defers security checks until site settings and global configuration are fully resolved.
             if (!settings || !settings.security_config) return;
 
             const config = settings.security_config;
@@ -49,7 +54,7 @@ export const SecurityGuard = ({ children }: { children: ReactNode }) => {
         checkSecurity();
     }, [location.pathname, settings]); // settings 객체 자체를 감시하여 로드 완료 시 체크 수행
 
-    // 차단 화면은 오직 관리자 경로인 경우에만 렌더링하도록 강제 (일반 페이지 간섭 방지)
+    // Hierarchical Access Enforcement: Activates strict IP restriction layers exclusively for administrative routes (/admin) to ensure zero interference with public-facing paths.
     if (isBlocked && location.pathname.startsWith('/admin')) {
         return (
             <div className="fixed inset-0 z-[9999] bg-background/95 backdrop-blur-md flex items-center justify-center p-6 text-center">

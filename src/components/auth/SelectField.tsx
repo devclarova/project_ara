@@ -17,6 +17,7 @@ export type SelectFieldProps = {
   placeholder?: string;
 };
 
+// 커스텀 드롭다운 인디케이터 — 메뉴 개폐 상태에 따라 화살표 방향과 색상을 동적으로 전환하여 메타데이터 시각화
 const CustomDropdownIndicator = (props: any) => {
   const { selectProps } = props;
   const isOpen = selectProps.menuIsOpen;
@@ -45,6 +46,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
 
   const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
+  // 테마 대응형 스타일 엔진 — 시스템 테마(Light/Dark)와 포커스 및 에러 상태를 결합하여 입력 필드의 시각적 정체성 정의
   const customStyles: StylesConfig<OptionType, false> = {
     control: (provided, state) => {
       const isFocusedInternal = state.isFocused || isFocused;
@@ -134,6 +136,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
 
   return (
     <div className={`relative ${className ?? ''}`}>
+      {/* 범용 선택 필드(Controlled Select) — 부동 라벨(Floating Label) 시스템과 외부 라이브러리(React-Select)를 통합하여 일관된 폼 UI 제공 */}
       <Select
         id={id}
         instanceId={id}

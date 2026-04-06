@@ -1,3 +1,8 @@
+/**
+ * 개인화된 스마트 단어장 관리 시스템(Personalized Smart Vocabulary Management System):
+ * - 목적(Why): 학습 중 수집된 단어 자산을 관리하고 복습 퀴즈(MCQ, OX, Matching)를 통해 장기 기억 전이를 돕음
+ * - 방법(How): 로컬 상태와 서버 동기화(fetchMyVoca)를 병행하며, 다국어 자동 번역 훅을 연동하여 학습 편의성을 극대화함
+ */
 import type { EpisodeWord } from '@/components/study/EpisodeVocaModal';
 import EpisodeVocabModal from '@/components/study/EpisodeVocaModal';
 import MatchingQuizModal from '@/components/study/MatchingQuizModal';

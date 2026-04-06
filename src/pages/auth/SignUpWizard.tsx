@@ -1,3 +1,8 @@
+/**
+ * 소셜 연동 기반 확장 가입 위자드(Social Extension Signup Wizard):
+ * - 목적(Why): 소셜 로그인(OAuth)으로 진입한 사용자의 필수 약관 동의 및 선택적 프로필 추가 정보를 보강함
+ * - 방법(How): Supabase 세션의 앱 메타데이터 파싱 로직, 프로필 CDC(Change Data Capture) 연동 플로우로 불필요한 입력을 최소화함
+ */
 import { AnimatePresence, motion } from 'framer-motion';
 import { useMemo, useState, useEffect } from 'react';
 import AuthBackground from '@/components/auth/AuthBackground';

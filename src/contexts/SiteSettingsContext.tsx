@@ -1,3 +1,8 @@
+/**
+ * 플랫폼 동적 환경 설정 컨텍스트(Platform Dynamic Settings Context):
+ * - 목적(Why): 서비스 공지, 점검 모드, 보안 정책 등 플랫폼 전역의 동적 파라미터를 실시간으로 관리하고 전파함
+ * - 방법(How): Supabase Realtime 구독을 통해 DB 변경 사항을 즉각 수신하며, 브라우저 포커스 시 최신 상태를 강제 동기화함
+ */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
@@ -42,6 +47,7 @@ interface SiteSettingsContextType {
 
 const SiteSettingsContext = createContext<SiteSettingsContextType | undefined>(undefined);
 
+// 글로벌 정책 및 플랫폼 환경 설정 동기화(Platform Config Orchestrator) — 점검 모드, 공지사항 이슈 및 보안 정책 실시간 전파 및 캐시 동기화
 export const SiteSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);

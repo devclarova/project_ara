@@ -222,11 +222,11 @@ export default function ChatWelcomeSearch({ onChatSelect }: Props) {
         </div>
       ) : (
         // 기본 환영 뷰
-        <div className="flex-1 flex flex-col items-center justify-start animte-in fade-in duration-700">
+        <div className="flex-1 flex flex-col items-center justify-start animate-in fade-in duration-700">
           {/* 
              타이틀 및 설명 컨테이너
              - pt 수치를 줄여서 위로 올림 (pt-[35vh] -> pt-[30vh])
-           */}
+          */}
           <div className="w-full max-w-2xl px-6 text-center space-y-12 pt-[30vh] transition-all duration-500 opacity-100 translate-y-0 transform">
             <div className="space-y-4">
               <h2 className="text-4xl font-bold text-foreground font-nanum tracking-tight">

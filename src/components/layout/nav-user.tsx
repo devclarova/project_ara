@@ -1,4 +1,9 @@
-// src\components\app-sidebar.tsx
+/**
+ * 사용자 세션 및 프로필 데이터 동기화 관리자(User Session & Profile Metadata Synchronizer):
+ * - 목적(Why): 현재 로그인된 사용자의 실시간 정체성(Identity)을 사이드바에 투영하고 계정 설정 및 로그아웃 프로세스를 안전하게 오케스트레이션함
+ * - 방법(How): Supabase Auth 및 Profiles 테이블의 실시간 하이드레이션을 통해 아바타/닉네임 상태를 정합성 있게 렌더링하고, 테마 및 다국어 지원이 통합된 드롭다운 메뉴를 연동함
+ */
+// src/components/app-sidebar.tsx
 import { useEffect, useState } from 'react';
 import { BadgeCheck, Bell, ChevronsUpDown, CreditCard, LogOut, Sparkles } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

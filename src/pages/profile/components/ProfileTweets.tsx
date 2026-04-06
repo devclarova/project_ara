@@ -1,3 +1,8 @@
+/**
+ * 무한 스크롤 기반 프로필 활동 피드(Infinite Scroll-based Profile Activity Feed):
+ * - 목적(Why): 사용자의 과거 활동 데이터를 페이지네이션 기반으로 효율적으로 로드하여 성능과 탐색 편의성을 동시에 확보함
+ * - 방법(How): 탭 컨텍스트(Posts/Replies/Likes)별 비동기 데이터 페칭, 실시간 통계 업데이트(Supabase Realtime), 그리고 차단 유저 필터링 엔진을 통합하여 무결성 있는 피드를 렌더링함
+ */
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';

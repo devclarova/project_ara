@@ -1,3 +1,8 @@
+/**
+ * 신규 자격 증명 확정 및 갱신 뷰(New Credentials Confirmation View):
+ * - 목적(Why): 비밀번호 초기화 메일 링크 또는 본인 인증 완료 후 새로운 보안 비밀번호 체계를 스토리지에 확정 지음
+ * - 방법(How): 수신된 Recovery 세션 토큰을 이용한 권한 인증, 클라이언트 단 강력한 무결성 유효성 체크, 그리고 updateUser 로직을 결합함
+ */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';

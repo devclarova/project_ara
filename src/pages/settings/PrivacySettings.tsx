@@ -1,3 +1,8 @@
+/**
+ * 계정 보안 및 개인정보 관리 통합 콘솔(Integrated Security & Privacy Management Console):
+ * - 목적(Why): 비밀번호, SNS 연동, 계정 복구, 차단 목록 등 계정의 핵심 보안 설정을 한곳에서 제어하고 최종적으로 계정 탈퇴를 처리함
+ * - 방법(How): 하위 설정 모달 시스템(Password/Recovery/SNS/Blocked/Withdraw)을 오케스트레이션하며, 탈퇴 시 7일 유예 정책(Soft Delete) 및 사용자 피드백 수집 기능을 수행함
+ */
 import Modal from '@/components/common/Modal';
 import InputField from '@/components/auth/InputField';
 import type { ActiveSetting } from '@/types/settings';

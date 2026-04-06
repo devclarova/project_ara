@@ -1,3 +1,8 @@
+/**
+ * 고밀도 프로필 아이덴티티 헤더(High-Density Profile Identity Header):
+ * - 목적(Why): 사용자의 시각적 브랜드(배너/아바타)와 핵심 소셜 지표(팔로우/차단 상태)를 최상단에서 통합적으로 시각화함
+ * - 방법(How): 실시간 접속 상태 감지(OnlineIndicator), 배너 위치 동적 조정(Drag-to-Reposition), 지능형 번역 브릿지, 그리고 관계형 훅(useFollow, useBlock)을 연동하여 인터랙티브한 경험을 구현함
+ */
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';

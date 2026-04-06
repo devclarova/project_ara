@@ -1,3 +1,8 @@
+/**
+ * 인라인 미디어 슬라이더(Inline Media Slider):
+ * - 목적(Why): 게시물 내 멀티미디어 자산을 직관적인 제스처로 탐색할 수 있는 모듈을 제공함
+ * - 방법(How): Framer Motion 가속을 활용하여 런타임 이미지 전환 대기 시간을 줄이고 부드러운 드래그/터치 제스처를 구현함
+ */
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
 

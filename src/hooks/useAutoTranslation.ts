@@ -1,3 +1,8 @@
+/**
+ * 지능형 자동 번역 및 캐싱 엔진(Intelligent Auto-Translation & Caching Engine):
+ * - 목적(Why): 다국어 학습 환경에서 학습 콘텐츠와 사용자 메시지를 실시간으로 번역하여 언어 장벽을 해소함
+ * - 방법(How): 로컬 서버 API와 Supabase 번역 DB를 연동한 2단계 캐싱(Memory/Session/DB)을 수행하며, 동시성 제어(Concurrency Limiter)를 통해 API 과호출을 방지함
+ */
 import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
 

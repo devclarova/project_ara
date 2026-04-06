@@ -1,3 +1,8 @@
+/**
+ * 전역 인증 및 소셜 신원 관리 엔진(Global Authentication & Social Identity Engine):
+ * - 목적(Why): 사용자 세션 생명주기 제어, 프로필 데이터 직렬화 및 구독 모델(Plan) 관리의 브레인 역할을 수행함
+ * - 방법(How): 보안 무결성을 위해 계정 탈퇴 유예 기간 확인 및 실시간 제재(Ban) 상태 동기화 프로토콜을 내장함
+ */
 import type { Session, User } from '@supabase/supabase-js';
 import React, {
   createContext,
@@ -40,6 +45,11 @@ function readProfileDraftSafe() {
   }
 }
 
+/**
+ * 프로필 자동 프로비저닝 프로토콜(Profile Auto-Provisioning Protocol):
+ * - 목적(Why): 신규 가입 사용자의 메타데이터를 기반으로 기본 프로필을 생성하며, 이메일/소셜 로그인 범용 규격을 준수함
+ * - 방법(How): 가입 중단 시 데이터 유실 방지를 위해 로컬 드래프트(Local Draft) 복구 전략을 활용함
+ */
 async function createProfileFromDraftIfMissing(u: User) {
   const provider = (u.app_metadata?.provider as string | undefined) ?? 'email';
 
@@ -107,6 +117,11 @@ async function createProfileFromDraftIfMissing(u: User) {
 import RestoreAccountModal from '@/components/auth/RestoreAccountModal';
 import { differenceInDays, parseISO, addYears } from 'date-fns';
 
+/**
+ * 사용자 인증 공급자(Authentication Provider):
+ * - 목적(Why): 브라우저 세션 생명주기 관리, 계정 복구 워크플로우 및 전역 신원 상태 동기화의 오케스트레이션 수행
+ * - 방법(How): 계정 보안 상태 무결성 검증 — 탈퇴 유예 기간 확인 및 서비스 제재(Ban) 상태를 실시간으로 분석하여 접근 권한 결정
+ */
 export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -129,6 +144,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [userPlan, setUserPlan] = useState<'free' | 'basic' | 'premium'>('free');
 
   // 계정 삭제 상태 확인 함수
+  // 계정 보안 상태 무결성 검증 — 탈퇴 유예 기간 확인 및 서비스 제재(Ban) 상태를 실시간으로 분석하여 접근 권한 결정
   const checkAccountStatus = async (userId: string) => {
     const { data, error } = await supabase
       .from('profiles')
@@ -190,6 +206,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
   };
 
+  // 인증 세션 및 실시간 데이터 동기화 파이프라인 — 초기 세션 확보, 상태 변화(Auth Switch) 감지 및 프로필 데이터의 반응형 업데이트 처리
   useEffect(() => {
     let mounted = true;
 
@@ -344,6 +361,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     return { error: error?.message };
   };
 
+  // 서비스 종료 프로토콜 — 사용자 명시적 로그아웃 요청 시 실시간 오프라인 상태(Presence) 전파 및 로컬 세션 자원 완전 소멸 처리
   const signOut: AuthContextType['signOut'] = async () => {
     const timeout = (ms: number) =>
       new Promise<never>((_, reject) => setTimeout(() => reject(new Error('signOut:timeout')), ms));

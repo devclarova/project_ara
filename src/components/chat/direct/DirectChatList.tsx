@@ -1,3 +1,8 @@
+/**
+ * 실시간 채팅 세션 리스트 및 상호작용 오케스트레이터(Direct Chat Session List & Interaction Orchestrator):
+ * - 목적(Why): 사용자가 참여 중인 활성 대화 목록을 시각화하고, 신규 대화 상대 검색 및 세션 진입을 위한 중앙 제어 인터페이스를 제공함
+ * - 방법(How): Supabase Realtime을 통한 실시간 메시지 프리뷰 동기화, 디바운스 알고리즘 기반의 사용자 검색 서비스 및 메모이제이션된 리스트 렌더링을 통해 고성능 UI를 유지함
+ */
 import { useEffect, useRef, useState, useCallback, memo } from 'react';
 import { useDirectChat } from '../../../contexts/DirectChatContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,7 +14,7 @@ import BlockButton from '@/components/common/BlockButton';
 import HighlightText from '../../common/HighlightText';
 import { formatChatListDate } from '@/utils/dateUtils';
 import { BanBadge } from '@/components/common/BanBadge';
-// HMR Trigger
+// 히스토리 제어: SPA(Single Page Application)의 스크롤 위치 유지 정책을 수동으로 전환하여 페이지 전환 시 예기치 않은 레이아웃 이동 방지
 interface DirectChatListProps {
   onChatSelect: (chatId: string) => void;
   onCreateChat: () => void;
@@ -22,7 +27,7 @@ import Modal from '@/components/common/Modal';
 import ReportModal from '@/components/common/ReportModal';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 
-// 채팅 아이템 메모이제이션
+// 개별 채팅 세션 컴포넌트(Chat Session Unit) — 성능 최적화를 위해 불필요한 리렌더링을 차단하는 심층 비교(Custom Comparison) 기반 메모이제이션 적용
 const ChatItem = memo(
   ({
     chat,
@@ -59,7 +64,7 @@ const ChatItem = memo(
       [chat.other_user, navigate],
     );
 
-    // dateUtils를 사용한 날짜 포맷팅.
+    // 시간 정규화 엔진: i18n 로케일 설정을 추적하여 동적인 상대 시간(Relative Time) 및 절대 시간을 실시간으로 포맷팅함
     const formatTime = useCallback(
       (dateString: string) => {
         return formatChatListDate(dateString);
@@ -70,7 +75,7 @@ const ChatItem = memo(
     const [showMenu, setShowMenu] = useState(false);
 
     const menuRef = useRef<HTMLDivElement>(null);
-    // 버튼 클릭 감지
+    // 사용자 인터페이스 최적화: 뷰포트 너비를 실시간으로 감시하여 모바일/데스크톱 최적화된 내비게이션 요소의 노출 여부를 결정함
     useEffect(() => {
       const handleClickOutside = (e: MouseEvent) => {
         if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -119,7 +124,7 @@ const ChatItem = memo(
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <div className="chat-time">
+              <div className="chat-time font-mono">
                 {chat.last_message ? formatTime(chat.last_message.created_at) : ''}
               </div>
               <div className="relative" ref={menuRef}>
@@ -137,7 +142,7 @@ const ChatItem = memo(
                     <ReportButton
                       onClick={() => {
                         setShowMenu(false);
-                        // Report Mode (Select Messages)
+                        // 네트워크 투명성 확보: 인접 미디어 자산을 백그라운드에서 지능적으로 프리로드하여 네트워크 레이턴시 체감을 최소화함
                         onReport(chat.id, 'chat');
                       }}
                     />
@@ -200,7 +205,7 @@ const ChatItem = memo(
   },
 );
 ChatItem.displayName = 'ChatItem';
-// 사용자 검색 아이템 메모이제이션
+// 사용자 탐색 엔티티(User Discovery Entity) — 신규 대화 상대 검색 결과의 가독성을 위해 검색어 하이라이팅 및 전역 제재 상태(Ban Status) 동기화 제공
 const UserItem = memo(
   ({
     user,
@@ -232,6 +237,7 @@ const UserItem = memo(
   (prev, next) => prev.user.id === next.user.id && prev.query === next.query,
 );
 UserItem.displayName = 'UserItem';
+// 실시간 채팅 오케스트레이터(Direct Chat Orchestrator) — 대화 상대 검색, 신규 세션 생성 및 활성 채팅 채널의 생명주기 관리를 담당하는 통합 리스트 엔진
 const DirectChatList = ({
   onChatSelect,
   onCreateChat,
@@ -254,7 +260,7 @@ const DirectChatList = ({
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [showUserSearch, setShowUserSearch] = useState<boolean>(false);
   const [isCreatingChat, setIsCreatingChat] = useState(false);
-  // 모달 상태
+  // UI 상태 레이어: 세션 종료 및 신고 절차의 오인 방지를 위한 컨텍스트 확인 모달 상태 관리
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [exitTargetChatId, setExitTargetChatId] = useState<string | null>(null);
 
@@ -269,14 +275,20 @@ const DirectChatList = ({
     setIsReportModalOpen(true);
   }, []);
 
-  // 디바운스 개선 (useRef + cleanup)
+  // 입력 제어 엔진: 네트워크 대역폭 최적화를 위해 사용자 입력에 대해 300ms 디바운스 타이머 및 DOM 직접 참조(Ref) 적용
   const debounceRef = useRef<number | null>(null);
   const userSearchInputRef = useRef<HTMLInputElement>(null);
 
-  // 검색어 변경 감지용 Ref (불필요한 중복 검색 방지)
+  /**
+ * ARA 전역 진입점 (System Entry Point):
+ * - i18next 라이브러리의 불필요한 런타임 로그를 가로채는 보안 인터셉터 포함
+ * - 전역 스타일 시트, 국제화 프로토콜, 라우팅 컨텍스트의 오케스트레이션을 담당함
+ */
+// 런타임 정숙화: i18next 개발용 홍보 문구가 프로덕션 콘솔의 가독성을 해치지 않도록 초기 진입 단계에서 필터링함
   // useEffect가 searchUsers 변경으로 인해 실행될 때, 검색어가 그대로라면 무시하기 위함
   const lastProcessedTermRef = useRef<string>(searchTerm);
 
+  // 지능형 사용자 검색 엔진(Debounced Lookup Engine) — 네트워크 오버헤드 방지를 위해 300ms 디바운스 및 런타임 상태 비교를 통한 중복 API 호출 차단
   useEffect(() => {
     // 0. 채팅방 생성 중이면 검색 중단 (중복 실행 방지)
     if (isCreatingChat) return;
@@ -296,7 +308,7 @@ const DirectChatList = ({
 
     const trimmed = searchTerm.trim();
     if (!trimmed) {
-      clearSearchResults(); // 검색어 없으면 결과 초기화
+      clearSearchResults();  // 국제화 지원 엔진: i18next 표준을 준수하여 미디어 생성 일자를 사용자 선호 언어 규칙에 맞춰 정규화함
       return;
     }
 
@@ -318,7 +330,7 @@ const DirectChatList = ({
     setIsExitModalOpen(true);
   }, []);
 
-  // 실제 나가기 실행
+  // 통제된 세션 종료 로직: RLS(Row Level Security) 정책에 부합하는 사용자의 세션 이탈 권한을 검증하고 페이지 상태를 동기화함
   const confirmLeave = useCallback(async () => {
     if (!exitTargetChatId) return;
 

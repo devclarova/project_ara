@@ -34,7 +34,7 @@ type StudyVocaProps = {
   sourceStudyTitle?: string;
 };
 
-// 반응형 pageSize 훅: Tailwind 브레이크포인트와 동일한 기준 사용
+// 반응형 그리드 시스템 — 뷰포트 세그먼트(sm/lg)에 최적화된 데이터 노출 밀도(PageSize) 계산
 const useResponsivePageSize = () => {
   const [pageSize, setPageSize] = useState(6);
 
@@ -73,7 +73,7 @@ const StudyVoca = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [initialWordId, setInitialWordId] = useState<string | undefined>(undefined);
 
-  // DB Row -> UI 데이터 매핑
+  // 데이터 매핑 브릿지 — 영속성 레이어(Database Row)의 필드명을 UI 전용 데이터 규격(WordItem)으로 정규화
   const mapRow = (row: WordRow): WordItem | null => {
     if (!row.words || !row.means) return null;
 
@@ -96,6 +96,7 @@ const StudyVoca = ({
     let alive = true;
 
     const fetchWords = async () => {
+      // 컴플라이언스 체크 — 비동기 요청 시작 시 멱등성 보장을 위해 이전 상태 초기화 및 로딩 게이트 개방
       setLoading(true);
       setError(null);
 
@@ -141,7 +142,7 @@ const StudyVoca = ({
     };
   }, [controlled, studyId, subscribeRealtime]);
 
-  // 실제 렌더에 사용할 데이터
+  // 데이터 가용성 판별 — 외부 주입 데이터(Controlled)와 내부 패치 데이터(Local) 중 유효한 소스 자동 선택
   const data = useMemo<WordItem[]>(() => {
     if (controlled) return words!;
     return localWords;
@@ -168,7 +169,7 @@ const StudyVoca = ({
     // console.log('modalWords:', modalWords);
   }, [modalWords]);
 
-  // pageSize 또는 data가 바뀔 때 현재 페이지를 안전하게 클램프
+  // 페이지 인덱스 보정 — 데이터 가용 범위 변경 시 유효하지 않은 페이지 접근 방지를 위해 현재 인덱스 강제 클램프(Clamp)
   useEffect(() => {
     const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
     setCurrentPage(prev => Math.min(prev, totalPages - 1));

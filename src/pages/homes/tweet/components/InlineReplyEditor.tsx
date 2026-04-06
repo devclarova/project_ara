@@ -1,5 +1,8 @@
-// src/pages/homes/feature/InlineReplyEditor.tsx
-
+/**
+ * 지능형 인라인 답글 에디터(Intelligent Inline Reply Editor):
+ * - 목적(Why): 게시물 하단에서 멀티미디어 업로드를 포함한 즉각적인 답글 작성을 지원하여 상호작용을 촉진함
+ * - 방법(How): Supabase Storage 연동으로 미디어 자산을 영속화하고, 생성된 답글을 실시간으로 뷰에 동기화함
+ */
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';

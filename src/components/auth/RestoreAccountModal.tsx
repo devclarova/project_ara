@@ -22,7 +22,7 @@ export default function RestoreAccountModal({
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-xl shadow-2xl overflow-hidden border border-gray-100 dark:border-zinc-800 animate-in fade-in zoom-in-95 duration-200">
         
-        {/* Header */}
+        {/* 계정 복구 가이드 헤더 — 탈퇴 유예 기간 확인 및 복구 의사 확인을 위한 정보 노출 */}
         <div className="p-6 text-center space-y-2">
           <div className="mx-auto w-12 h-12 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-500 rounded-full flex items-center justify-center mb-4">
             <i className="ri-time-line text-2xl" />
@@ -42,7 +42,7 @@ export default function RestoreAccountModal({
           )}
         </div>
 
-        {/* Action Buttons */}
+        {/* 트랜잭션 분기 — 취소(로그아웃) 또는 복구(Restore) 액션을 통한 계정 상태 결정 */}
         <div className="flex border-t border-gray-100 dark:border-zinc-800">
           <button
             onClick={onCancel} // 로그아웃

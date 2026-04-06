@@ -1,3 +1,8 @@
+/**
+ * 커머스 메타데이터 및 트랜잭션 핸들러(Commerce Metadata & Transaction Handler):
+ * - 목적(Why): 상품 정보, 옵션/변체 관리 및 구매 인증 기반의 리뷰 시스템을 총괄함
+ * - 방법(How): 복합 데이터 구조(옵션/변체)의 원자적 Upsert 및 스토리지 연동 미디어 자산 관리를 수행함
+ */
 import { supabase } from '@/lib/supabase';
 
 export interface Product {

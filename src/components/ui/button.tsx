@@ -1,3 +1,8 @@
+/**
+ * 범용 액션 인터페이스 유닛(Universal Action Interface Unit):
+ * - 목적(Why): 디자인 시스템의 시각적 일관성을 보장하고 사용자 상호작용의 표준화된 엔트리 포인트를 제공함
+ * - 방법(How): CVA(Class Variance Authority) 기반의 스타일 변종 관리 및 Polymorphic Slot을 통한 유연한 마크업 구조를 지원함
+ */
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"

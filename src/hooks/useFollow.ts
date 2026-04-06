@@ -15,8 +15,9 @@ interface UseFollowReturn {
 }
 
 /**
- * Hook for managing follow relationships with Supabase
- * Uses soft delete pattern (ended_at) - NEVER hard deletes
+ * 팔로우 관계 트랜잭션 엔진(Follow Relationship Transaction Engine):
+ * - 목적(Why): 상호 팔로우 상태의 Soft Delete 관리 및 실시간 팔로워/팔로잉 카운트 분석을 수행함
+ * - 방법(How): 팔로우 유입 시 비즈니스 알림 생성 및 전역 상태 전파를 통한 컴포넌트 간 일관성을 유지함
  */
 export function useFollow(targetProfileId: string): UseFollowReturn {
   const { user } = useAuth();
@@ -117,7 +118,7 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
     refreshCounts();
   }, [checkFollowStatus, refreshCounts]);
 
-  // Toggle follow/unfollow
+  // 팔로우 상태 원자적 전환 및 알림 파이프라인 — 관계 설정 시 Soft Delete 데이터 재활용 또는 신규 삽입 및 실시간 알림 이벤트 유발
   const toggleFollow = async () => {
     if (!user) {
       toast.error(t('auth.login_needed', '로그인이 필요합니다'));

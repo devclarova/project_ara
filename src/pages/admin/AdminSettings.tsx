@@ -1,3 +1,8 @@
+/**
+ * 관리자 설정 매니저 (Admin Settings Manager):
+ * - 목적(Why): 서비스 전역 운영 모드, 보안 정책, 외부 연동(GA4 등) 환경 변수를 통제함
+ * - 방법(How): 사이트 기초정보 및 IP 화이트리스트, 유지보수 모드 등 하이레벨 상태를 DB에 영속화함
+ */
 import { 
   Bell, 
   Lock, 
@@ -19,14 +24,14 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-// Design: Sidebar specific to settings page (tabs)
+// 설정 페이지 전용 사이드바 및 탭 레이아웃 정의 — 논리적 기능 단위별 인터페이스 격리 연산
 const AdminSettings = () => {
   const [activeTab, setActiveTab] = useState('general');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [userIp, setUserIp] = useState<string | null>(null);
 
-  // Settings State
+  // 전역 설정 상태 데이터 스토어 — 사이트 메타데이터, 보안, 알림 및 시스템 환경 변수 통합 관리
   const [settings, setSettings] = useState<any>({
     global_notice: { enabled: false, text: '', color: 'blue' },
     maintenance_mode: { enabled: false, message: '', end_time: null },
@@ -41,6 +46,7 @@ const AdminSettings = () => {
     detectIp();
   }, []);
 
+  // 현재 접속 IP 식별 — 보안 화이트리스트 설정 시 본인 차단 방지를 위한 참조 데이터 수집
   const detectIp = async () => {
     try {
       const response = await fetch('https://api.ipify.org?format=json');
@@ -51,6 +57,7 @@ const AdminSettings = () => {
     }
   };
 
+  // 사이트 전역 설정 데이터 수신 — DB 키-밸류 저장소로부터 실시간 동기화 수행
   const fetchSettings = async () => {
     try {
       setLoading(true);
@@ -72,6 +79,7 @@ const AdminSettings = () => {
     }
   };
 
+  // 설정 일괄 영속화 — 비동기 병렬 처리를 통한 설정값 트랜잭션 업데이트
   const handleSave = async () => {
     try {
       setSaving(true);
@@ -104,6 +112,7 @@ const AdminSettings = () => {
     }));
   };
 
+  // 유지보수 명령 실행 — RPC 호출을 통한 인덱스 최적화 및 캐시 초기화 등 백엔드 작업 자동화
   const handleMaintenance = async (action: string) => {
     try {
       setSaving(true);
@@ -128,7 +137,7 @@ const AdminSettings = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-32 animate-in fade-in duration-700">
-      {/* Header with Glassmorphism */}
+      {/* 프리미엄 헤더 세션 — 글래스모피즘 기반의 페이지 정체성 수립 및 시스템 요약 정보 가시화 */}
       <div className="relative mb-10 p-8 rounded-3xl bg-gradient-to-r from-primary/10 via-background to-background border border-primary/20 overflow-hidden shadow-2xl shadow-primary/5">
         <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
           <Shield size={120} className="text-primary" />
@@ -145,7 +154,7 @@ const AdminSettings = () => {
       </div>
 
       <div className="flex flex-col xl:flex-row gap-10">
-        {/* Advanced Sidebar Nav */}
+        {/* 고급 사이드바 네비게이션 — 설정 카테고리 전환 및 시스템 무결성 수치 실시간 모니터링 */}
         <aside className="w-full xl:w-80 flex-shrink-0">
           <div className="sticky top-24 space-y-4">
              <div className="bg-secondary/50 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xl p-3">
@@ -188,10 +197,10 @@ const AdminSettings = () => {
           </div>
         </aside>
 
-        {/* Main Content Area */}
+        {/* 메인 콘텐츠 영역 — 액티브 탭에 따른 동적 설정 인터페이스 렌더링 */}
         <div className="flex-1 space-y-6">
           
-          {/* General Settings Tab */}
+          {/* 1. 일반 설정 탭 — 서비스 점검 모드 및 글로벌 브랜딩/공지 정책 제어 */}
           {activeTab === 'general' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <SectionCard title="서비스 운영 상태" icon={Activity} description="서비스의 실시간 운영 스테이터스를 전역적으로 통제합니다.">
@@ -333,7 +342,7 @@ const AdminSettings = () => {
             </div>
           )}
 
-          {/* Security Settings Tab */}
+          {/* 2. 보안 설정 탭 — IP 화이트리스트 및 세션 만료 주기 등 계층적 보안 레이어 관리 */}
           {activeTab === 'security' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                <SectionCard title="지능형 접근 제어" icon={Shield} description="시스템 무결성을 보호하기위한 고급 보안 레이어를 설정합니다.">
@@ -410,7 +419,7 @@ const AdminSettings = () => {
             </div>
           )}
 
-           {/* Notifications Settings Tab */}
+           {/* 3. 알림 설정 탭 — 이메일/인앱 푸시 채널별 운영 이벤트 알바 정책 수립 */}
            {activeTab === 'notifications' && (
              <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                 <SectionCard title="관리자 채널 알림" icon={Bell} description="시스템 이벤트 발생 시 관리자에게 전달되는 알람 경로를 구성합니다.">
@@ -461,7 +470,7 @@ const AdminSettings = () => {
              </div>
            )}
 
-           {/* Integrations Settings Tab (NEW) */}
+           {/* 4. 외부 플랫폼 연동 — 인프라(Supabase) 및 분석(GA4) 식별자 동기화 정책 */}
            {activeTab === 'integrations' && (
              <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                 <SectionCard title="백엔드 인프라 (Supabase)" icon={Database} description="애플리케이션의 척추가 되는 데이터베이스 및 엔진 연동 설정입니다.">
@@ -536,7 +545,7 @@ const AdminSettings = () => {
              </div>
            )}
            
-            {/* Global Save Action */}
+            {/* 전역 저장 액션바 — 변경사항 수동 검출 및 영속화 최종 트리거 */}
             <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-300 dark:border-gray-600 mt-8">
               <button 
                 onClick={fetchSettings}
@@ -565,7 +574,7 @@ const AdminSettings = () => {
   );
 };
 
-// --- Helper Components for Clean Code ---
+// 내부 보조 컴포넌트(Helper Components) — 코드 가독성 및 UI 일관성을 위한 원자적 디자인 단위
 
 function SystemToolButton({ icon: Icon, label, desc, onClick }: { icon: any, label: string, desc: string, onClick?: () => void }) {
   return (

@@ -1,3 +1,8 @@
+/**
+ * OAuth 기반 소셜 인증 콜백 매니저(OAuth Social Authentication Callback Manager):
+ * - 목적(Why): 외부 소셜 로그인 인증 코드를 세션으로 교환하고, 신규 및 기존 가입자를 분기 투명하게 처리함
+ * - 방법(How): URL Hash 파싱 기반의 PKCE 플로우, 프로필 셸(Shell) 생성 패턴 지원, 그리고 useRelinkDetection 훅을 연동한 소셜 연결 관리를 수행함
+ */
 import { supabase } from '@/lib/supabase';
 import { Timer as TimerIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';

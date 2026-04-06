@@ -1,9 +1,14 @@
+/**
+ * 고도화된 닉네임 입력 및 유효성 검사 필드(Advanced Nickname Input & Validation Field):
+ * - 목적(Why): 사용자 가입 및 프로필 수정 시 닉네임의 중복 여부와 언어별 정책을 실시간으로 안내하여 데이터 무결성을 보장함
+ * - 방법(How): 공통 InputField를 기반으로 언어 감지(Language Detection) 및 닉네임 가용성 체크(Availability Check) 결과를 시각적 힌트와 결합하여 제공함
+ */
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Lang } from '@/hooks/useNicknameValidator';
 import InputField, { type InputFieldProps } from '@/components/auth/InputField';
 
-// This helper is duplicated from SignUpStep2Form.tsx to be self-contained in this display component
+// Localization Utility: Maps detected language codes to their translated display names for consistent UX across onboarding modules.
 function useLangLabel() {
   const { t } = useTranslation();
   return (l?: Lang | null): string => {

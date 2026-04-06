@@ -1,3 +1,8 @@
+/**
+ * SNS 통합 레이아웃(SNS Integrated Layout):
+ * - 목적(Why): 메인 피드, 트렌드 패널, 마케팅 배너를 효율적으로 배치하여 사용자 경험을 보호하고 광고 수익을 창출함
+ * - 방법(How): 다중 컬럼 스태틱 그리드 시스템과 반응형 뷰포트 분기점(Breakpoint)을 설정하여 모바일 및 데스크톱 환경에 최적화함
+ */
 import type { ReactNode } from 'react';
 import TrendsPanel from '../community/feature/TrendsPanel';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';

@@ -1,3 +1,8 @@
+/**
+ * 서비스 하단 정보 아카이브 및 네비게이터(Service Footer Archive & Navigator):
+ * - 목적(Why): 기업 정보, 약관, SNS 링크 등 서비스의 부가적인 엔트리 포인트를 구조화하여 접근성을 제공함
+ * - 방법(How): 다국어 대응 국기 에셋 매핑 및 테마/언어 전환 오케스트레이션을 통합하여 일관된 하단 환경을 유지함
+ */
 import { Facebook, Instagram, Youtube, ArrowRight, Globe, ChevronDown, AtSign, Moon, Sun, Laptop } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/components/theme-provider';
@@ -17,7 +22,7 @@ import PrivacyPolicyView from '@/components/settings/PrivacyPolicyView';
 import CustomerCenterView from '@/components/settings/CustomerCenterView';
 import { type ConsentKey } from '@/components/auth/consent/consentContent';
 
-// Language code to ISO code mapping
+// Localization-Country Mapping: Translates i18next language segments into ISO 3166-1 identifiers for flag asset resolution.
 const LANG_TO_ISO: Record<string, string> = {
   ko: 'KR', en: 'US', ja: 'JP', zh: 'CN',
   ru: 'RU', vi: 'VN', bn: 'BD', ar: 'SA',
@@ -25,7 +30,7 @@ const LANG_TO_ISO: Record<string, string> = {
   pt: 'PT', 'pt-br': 'BR', de: 'DE', fi: 'FI',
 };
 
-// Fallback emoji flags
+// Fallback Iconography: Provides unicode emoji flags as a resilient secondary layer for failed image resources.
 const EMOJI_FLAGS: Record<string, string> = {
   ko: '🇰🇷', en: '🇺🇸', ja: '🇯🇵', zh: '🇨🇳',
   ru: '🇷🇺', vi: '🇻🇳', bn: '🇧🇩', ar: '🇸🇦',
@@ -62,7 +67,7 @@ export default function Footer() {
   const [flagMap, setFlagMap] = useState<Record<string, string>>({});
   const [loadingFlags, setLoadingFlags] = useState(true);
   
-  // Hydration mismatch 방지
+  // Hydration Guard: Tracks component mount state to prevent SSR-Client mismatches during theme initialization.
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -105,7 +110,7 @@ export default function Footer() {
     } else if (type === 'policy' && value) {
       setPolicyModalOpen(value as ConsentKey);
     } else if (type === 'impl' && value) {
-      // 충돌 해결: 메인 브랜치의 스토리지 초기화 로직과 현재 브랜치의 중복 이동 방지 로직 통합
+    // State & Routing Optimization: Orchestrates session cleanup and scroll resets to ensure a fresh UI state upon navigation.
       if (value === '/sns') {
         sessionStorage.removeItem('sns-last-tweet-id');
         // SNS 탭은 같은 페이지여도 스크롤 초기화를 위해 이동 허용
@@ -126,7 +131,7 @@ export default function Footer() {
             {/* 1. Brand (2칸 차지) */}
             <div className="col-span-2 flex flex-col items-start gap-3 pr-6">
               <Link to="/" className="inline-flex items-center gap-2 group">
-                 {/* 로고: Primary Solid Color로 변경하여 강력한 인상 */}
+                 {/* Visual Identity: High-contrast solid logo with scaling transitions for brand visibility. */}
                 <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-black text-base shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all duration-300">
                   A
                 </div>
