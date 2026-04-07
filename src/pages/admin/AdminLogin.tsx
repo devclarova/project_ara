@@ -43,10 +43,14 @@ const AdminLogin = () => {
     try {
       setIsLoading(true);
 
+      // AuthCallback에서 정상적으로 리다이렉트 분기를 탈 수 있도록 목적지 플래그 저장
+      sessionStorage.setItem('admin_oauth_redirect', '/admin/callback');
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/admin/callback`,
+          // 등록이 보장된 일반 유저 콜백 라우트를 경유하여 배포 환경의 localhost 폴백을 방지함
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 

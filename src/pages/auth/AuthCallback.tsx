@@ -334,6 +334,14 @@ export default function AuthCallback() {
         return;
       }
 
+      // [관리자 플로우 우선 우회] 관리자 로그인 등으로 지정된 목적지 플래그가 있는 경우
+      const adminRedirect = sessionStorage.getItem('admin_oauth_redirect');
+      if (adminRedirect) {
+        sessionStorage.removeItem('admin_oauth_redirect');
+        navigate(adminRedirect, { replace: true });
+        return;
+      }
+
       // (B) 이미 온보딩 완료된 유저 → 메인으로
       if (existingProfile?.is_onboarded) {
         navigate('/studyList', { replace: true });
