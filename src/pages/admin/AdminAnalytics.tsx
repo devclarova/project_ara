@@ -29,7 +29,12 @@ interface StatsData {
   marketing: {
     active_coupons: number;
     total_clicks: number;
+    total_views: number;
     avg_ctr: number;
+    cvr: number;
+    cac: number;
+    roas: number;
+    total_spend: number;
     banner_data: Array<{ name: string; clicks: number; conversions: number }>;
   };
   funnel?: {
@@ -542,6 +547,7 @@ const AdminAnalytics = () => {
   const [selectedSegment, setSelectedSegment] = useState('전체 사용자');
   const [showCumulative, setShowCumulative] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [marketingRateType, setMarketingRateType] = useState<'CTR' | 'CVR'>('CTR');
   
   const [stats, setStats] = useState<StatsData | null>(null);
   const [gaData, setGaData] = useState<any[]>([]);
@@ -876,6 +882,7 @@ const AdminAnalytics = () => {
              <TabButton label="인사이트 오버뷰" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} icon={Activity} />
              <TabButton label="획득 및 참여" active={activeTab === 'acquisition'} onClick={() => setActiveTab('acquisition')} icon={Users} />
              <TabButton label="리텐션 및 퍼널" active={activeTab === 'retention'} onClick={() => setActiveTab('retention')} icon={Layers} />
+             <TabButton label="마케팅 캠페인" active={activeTab === 'marketing'} onClick={() => setActiveTab('marketing')} icon={Ticket} />
              <TabButton label="데이터 운영 (Ops)" active={activeTab === 'dataops'} onClick={() => setActiveTab('dataops')} icon={Database} />
              <div className="w-4 shrink-0" />
           </div>
@@ -1369,9 +1376,17 @@ const AdminAnalytics = () => {
 
           {activeTab === 'marketing' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
-               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                   {/* Marketing Summary Cards */}
-                  <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 rounded-3xl">
+                  <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 rounded-3xl flex flex-col justify-between">
+                     <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-pink-100 text-pink-600 rounded-xl"><DollarSign size={20} /></div>
+                        <h4 className="font-bold text-gray-500 uppercase text-[10px] tracking-widest">누적 마케팅 예산</h4>
+                     </div>
+                     <p className="text-3xl font-black">₩{(stats?.marketing?.total_spend || 0).toLocaleString()}</p>
+                     <p className="text-xs text-muted-foreground mt-2">전체 캠페인 집행 비용</p>
+                  </div>
+                  <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 rounded-3xl flex flex-col justify-between">
                      <div className="flex items-center gap-3 mb-4">
                         <div className="p-2 bg-orange-100 text-orange-600 rounded-xl"><Ticket size={20} /></div>
                         <h4 className="font-bold text-gray-500 uppercase text-[10px] tracking-widest">활성 쿠폰</h4>
@@ -1379,21 +1394,39 @@ const AdminAnalytics = () => {
                      <p className="text-3xl font-black">{stats?.marketing?.active_coupons || 0}</p>
                      <p className="text-xs text-muted-foreground mt-2">등록 및 사용 가능 상태</p>
                   </div>
-                  <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 rounded-3xl">
-                     <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-blue-100 text-blue-600 rounded-xl"><Eye size={20} /></div>
-                        <h4 className="font-bold text-gray-500 uppercase text-[10px] tracking-widest">배너 클릭률 (CTR)</h4>
+                  <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 rounded-3xl flex flex-col justify-between">
+                     <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                           <div className={`p-2 rounded-xl transition-colors ${marketingRateType === 'CTR' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                              {marketingRateType === 'CTR' ? <Eye size={20} /> : <TrendingUp size={20} />}
+                           </div>
+                           <h4 className="font-bold text-gray-500 uppercase text-[10px] tracking-widest">
+                              {marketingRateType === 'CTR' ? '배너 클릭률 (CTR)' : '유입 전환율 (CVR)'}
+                           </h4>
+                        </div>
+                        <div className="flex p-0.5 bg-gray-100 dark:bg-gray-800/50 rounded-full border border-gray-200 dark:border-gray-700">
+                           <button onClick={() => setMarketingRateType('CTR')} className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all ${marketingRateType === 'CTR' ? 'bg-white dark:bg-gray-700 text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>CTR</button>
+                           <button onClick={() => setMarketingRateType('CVR')} className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all ${marketingRateType === 'CVR' ? 'bg-white dark:bg-gray-700 text-emerald-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>CVR</button>
+                        </div>
                      </div>
-                     <p className="text-3xl font-black">{stats?.marketing?.avg_ctr?.toFixed(2) || '0.00'}%</p>
-                     <p className="text-xs text-muted-foreground mt-2">전체 배너 광고 평균 성과</p>
+                     <div>
+                        <p className="text-3xl font-black">
+                           {marketingRateType === 'CTR' 
+                              ? `${stats?.marketing?.avg_ctr?.toFixed(2) || '0.00'}%` 
+                              : `${stats?.marketing?.cvr?.toFixed(2) || '0.00'}%`}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                           {marketingRateType === 'CTR' ? '전체 광고 배너 평균 성과' : '광고 유입 유저의 유료 구독 전환'}
+                        </p>
+                     </div>
                   </div>
-                  <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 rounded-3xl">
+                  <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 rounded-3xl flex flex-col justify-between">
                      <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-emerald-100 text-emerald-600 rounded-xl"><TrendingUp size={20} /></div>
-                        <h4 className="font-bold text-gray-500 uppercase text-[10px] tracking-widest">구독 전환율</h4>
+                        <div className="p-2 bg-purple-100 text-purple-600 rounded-xl"><DollarSign size={20} /></div>
+                        <h4 className="font-bold text-gray-500 uppercase text-[10px] tracking-widest">고객 획득 비용 (CAC)</h4>
                      </div>
-                     <p className="text-3xl font-black">{stats?.conversionRate ? (stats.conversionRate * 1.5).toFixed(2) : '0.00'}%</p>
-                     <p className="text-xs text-muted-foreground mt-2">광고 유입 유저의 유료 구독 전환</p>
+                     <p className="text-3xl font-black">₩{(stats?.marketing?.cac || 0).toLocaleString()}</p>
+                     <p className="text-xs text-muted-foreground mt-2">유료 결제 유저 1명당 마케팅 비용</p>
                   </div>
                </div>
 
