@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, DollarSign, Calendar, Loader2, List, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import dayjs from 'dayjs';
+import { format } from 'date-fns';
 import { getErrorMessage } from '@/utils/errorMessage';
 
 interface SpendHistory {
@@ -230,7 +230,7 @@ const MarketingSpendModal: React.FC<MarketingSpendModalProps> = ({ isOpen, onClo
                           <div key={record.id} className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 rounded-xl flex items-center justify-between group">
                              <div>
                                <div className="text-sm font-bold truncate pr-2 max-w-[200px]">{record.campaign_name}</div>
-                               <div className="text-[10px] text-gray-500 mt-0.5">{dayjs(record.recorded_at).format('YYYY-MM-DD HH:mm')}</div>
+                               <div className="text-[10px] text-gray-500 mt-0.5">{format(new Date(record.recorded_at), 'yyyy-MM-dd HH:mm')}</div>
                              </div>
                              <div className="flex flex-col items-end gap-1">
                                <span className="font-black text-sm text-purple-600">₩{record.spend_amount.toLocaleString()}</span>
