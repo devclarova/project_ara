@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 /* ── 데이터 구조체 정의 — 도메인 엔티티별 영속성 모델 스키마 ── */
 interface CultureNoteItem {
@@ -42,12 +43,51 @@ interface SubtitleItem {
   subtitle_end_time: number;
 }
 
+interface StudyInfo {
+  title: string;
+  poster_image_url: string;
+  short_description: string;
+  is_featured: boolean;
+  is_hidden: boolean;
+  required_plan: 'free' | 'basic' | 'premium';
+}
+
+interface VideoInfo {
+  video_url: string;
+  categories: string;
+  contents: string;
+  episode: string;
+  scene: string;
+  level: string;
+  runtime: number;
+  video_start_time: number;
+  video_end_time: number;
+  image_url: string;
+}
+
+interface CacheData {
+  id: string | undefined;
+  studyInfo: StudyInfo;
+  videoInfo: VideoInfo;
+  cultureNotes: CultureNoteItem[];
+  words: WordItem[];
+  subtitles: SubtitleItem[];
+  uploadType: 'youtube' | 'direct';
+}
+
+interface SubtitleProps {
+  sub: SubtitleItem;
+  idx: number;
+  updateSubtitle: (i: number, field: keyof SubtitleItem, value: string | number) => void;
+  removeSubtitle: (i: number) => void;
+}
+
 /* ── 공유 UI 스타일 토큰 — 원자적 폼 디자인 일관성 유지 ── */
 const labelCls = "block text-[11px] font-semibold text-muted-foreground mb-1 uppercase tracking-wider";
 const inputCls = "w-full px-3 py-2.5 bg-secondary/50 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary/50 text-sm transition-all focus:bg-background outline-none";
 
 /* ── 자막 렌더링 최적화 — 빈번한 타이핑 시 리렌더링 부하 차단 (Memoization) ── */
-const MemoSubtitleMobile = memo(({ sub, idx, updateSubtitle, removeSubtitle }: any) => (
+const MemoSubtitleMobile = memo(({ sub, idx, updateSubtitle, removeSubtitle }: SubtitleProps) => (
   <div className="bg-secondary/20 rounded-lg p-4 border border-gray-100 dark:border-gray-800 relative">
     <button type="button" onClick={() => removeSubtitle(idx)} className="absolute top-3 right-3 p-1 text-muted-foreground hover:text-red-500 rounded-md"><Trash2 size={14} /></button>
     <div className="space-y-3 mt-4">
@@ -77,7 +117,7 @@ const MemoSubtitleMobile = memo(({ sub, idx, updateSubtitle, removeSubtitle }: a
   </div>
 ), (prev, next) => prev.sub === next.sub && prev.idx === next.idx);
 
-const MemoSubtitleDesktop = memo(({ sub, idx, updateSubtitle, removeSubtitle }: any) => (
+const MemoSubtitleDesktop = memo(({ sub, idx, updateSubtitle, removeSubtitle }: SubtitleProps) => (
   <tr className="hover:bg-primary/[0.02] group">
     <td className="px-3 py-2"><input type="number" step="0.1" value={sub.subtitle_start_time} onChange={(e) => updateSubtitle(idx, 'subtitle_start_time', Number(e.target.value))} className="w-full px-2 py-1.5 text-sm font-mono text-center bg-transparent border border-transparent hover:border-gray-200 focus:border-primary/50 focus:bg-background rounded-md outline-none" /></td>
     <td className="px-3 py-2"><input type="number" step="0.1" value={sub.subtitle_end_time} onChange={(e) => updateSubtitle(idx, 'subtitle_end_time', Number(e.target.value))} className="w-full px-2 py-1.5 text-sm font-mono text-center bg-transparent border border-transparent hover:border-gray-200 focus:border-primary/50 focus:bg-background rounded-md outline-none" /></td>
@@ -98,8 +138,8 @@ const AdminStudyUpload = () => {
   
   /* ── 런타임 캐시 초기화 — 탭 전환 및 예기치 않은 새로고침 대응 전략 ── */
   const CACHE_KEY = '_ara_study_upload_memory_cache';
-  const getInitialCache = () => {
-    const cached = typeof window !== 'undefined' ? (window as any)[CACHE_KEY] : null;
+  const getInitialCache = (): CacheData | null => {
+    const cached = typeof window !== 'undefined' ? (window as any)[CACHE_KEY] as CacheData | undefined : null;
     // id가 같을 때만 (신규 업로드면 둘 다 undefined이므로 일치) 캐시 적용
     if (cached && cached.id === id) return cached;
     return null;
@@ -116,7 +156,7 @@ const AdminStudyUpload = () => {
   const [posterFile, setPosterFile] = useState<File | null>(null);
 
   /* ── 마스터 엔티티(Study) 기본 정보 및 전시 정책 ── */
-  const [studyInfo, setStudyInfo] = useState<any>(cachedData?.studyInfo || {
+  const [studyInfo, setStudyInfo] = useState<StudyInfo>(cachedData?.studyInfo || {
     title: '',
     poster_image_url: '',
     short_description: '',
@@ -126,7 +166,7 @@ const AdminStudyUpload = () => {
   });
 
   /* ── 미디어 에셋(Video) 및 소스 메타데이터 ── */
-  const [videoInfo, setVideoInfo] = useState<any>(cachedData?.videoInfo || {
+  const [videoInfo, setVideoInfo] = useState<VideoInfo>(cachedData?.videoInfo || {
     video_url: '',
     categories: '드라마',
     contents: '',
@@ -234,8 +274,7 @@ const AdminStudyUpload = () => {
       const parsedId = studyId.includes(':') ? studyId.split(':')[1] : studyId;
 
       // 1. study
-      const { data: study, error: studyError } = await supabase
-        .from('study').select('*').eq('id', parsedId).single();
+      const { data: study, error: studyError } = await (supabase.from('study') as any).select('*').eq('id', parsedId).single();
       if (studyError) throw studyError;
 
       setStudyInfo({
@@ -248,8 +287,7 @@ const AdminStudyUpload = () => {
       });
 
       // 2. video
-      const { data: video } = await supabase
-        .from('video').select('*').eq('study_id', parsedId).single();
+      const { data: video } = await (supabase.from('video') as any).select('*').eq('study_id', parsedId).single();
       if (video) {
         // Detect upload type based on URL
         if (video.video_url?.includes('youtube.com') || video.video_url?.includes('youtu.be')) {
@@ -273,33 +311,30 @@ const AdminStudyUpload = () => {
       }
 
       // 3. culture_note → culture_note_contents
-      const { data: notes } = await supabase
-        .from('culture_note').select('*').eq('study_id', parsedId).order('id');
+      const { data: notes } = await (supabase.from('culture_note') as any).select('*').eq('study_id', parsedId).order('id');
 
       if (notes && notes.length > 0) {
-        const noteIds = notes.map(n => n.id);
-        const { data: noteContents } = await supabase
-          .from('culture_note_contents')
+        const noteIds = notes.map((n: any) => n.id);
+        const { data: noteContents } = await (supabase.from('culture_note_contents') as any)
           .select('*')
           .in('culture_note_id', noteIds);
 
-        const mapped: CultureNoteItem[] = notes.map(n => ({
+        const mapped: CultureNoteItem[] = notes.map((n: any) => ({
           id: n.id,
           title: n.title || '',
           subtitle: n.subtitle || '',
           contents: n.contents || '',
           contentRows: (noteContents || [])
-            .filter(c => c.culture_note_id === n.id)
-            .map(c => ({ id: c.id, content_value: c.content_value || '' }))
+            .filter((c: any) => c.culture_note_id === n.id)
+            .map((c: any) => ({ id: c.id, content_value: c.content_value || '' }))
         }));
         setCultureNotes(mapped);
       }
 
       // 4. word
-      const { data: wordData } = await supabase
-        .from('word').select('*').eq('study_id', parsedId).order('id');
+      const { data: wordData } = await (supabase.from('word') as any).select('*').eq('study_id', parsedId).order('id');
       if (wordData) {
-        setWords(wordData.map(w => ({
+        setWords(wordData.map((w: any) => ({
           id: w.id,
           words: w.words || '',
           means: w.means || '',
@@ -311,10 +346,9 @@ const AdminStudyUpload = () => {
       }
 
       // 5. subtitle
-      const { data: subData } = await supabase
-        .from('subtitle').select('*').eq('study_id', parsedId).order('subtitle_start_time');
+      const { data: subData } = await (supabase.from('subtitle') as any).select('*').eq('study_id', parsedId).order('subtitle_start_time');
       if (subData) {
-        setSubtitles(subData.map(s => ({
+        setSubtitles(subData.map((s: any) => ({
           id: s.id,
           english_subtitle: s.english_subtitle || '',
           korean_subtitle: s.korean_subtitle || '',
@@ -324,9 +358,9 @@ const AdminStudyUpload = () => {
         })));
       }
 
-    } catch (error: any) {
-      console.error('Fetch error:', error);
-      toast.error('데이터를 불러오는 중 오류: ' + error.message);
+    } catch (error: unknown) {
+      console.error('Fetch error:', getErrorMessage(error));
+      toast.error('데이터를 불러오는 중 오류: ' + getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -342,16 +376,16 @@ const AdminStudyUpload = () => {
 
   const handleStudyChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setStudyInfo((prev: any) => ({ ...prev, [name]: value }));
+    setStudyInfo((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setVideoInfo((prev: any) => ({ ...prev, [name]: name === 'runtime' || name === 'video_start_time' || name === 'video_end_time' ? Number(value) : value }));
+    setVideoInfo((prev) => ({ ...prev, [name]: name === 'runtime' || name === 'video_start_time' || name === 'video_end_time' ? Number(value) : value }));
   };
 
-  const handleCheckbox = (name: string, checked: boolean) => {
-    setStudyInfo((prev: any) => ({ ...prev, [name]: checked }));
+  const handleCheckbox = (name: keyof StudyInfo, checked: boolean) => {
+    setStudyInfo((prev) => ({ ...prev, [name]: checked }));
   };
 
   // Culture Notes
@@ -449,10 +483,10 @@ const AdminStudyUpload = () => {
       };
 
       if (isEditMode) {
-        const { error } = await supabase.from('study').update(studyData).eq('id', studyId);
+        const { error } = await (supabase.from('study') as any).update(studyData).eq('id', studyId);
         if (error) throw error;
       } else {
-        const { data: newStudy, error } = await supabase.from('study').insert([studyData]).select().single();
+        const { data: newStudy, error } = await (supabase.from('study') as any).insert([studyData]).select().single();
         if (error) throw error;
         studyId = newStudy.id;
       }
@@ -473,29 +507,28 @@ const AdminStudyUpload = () => {
       };
 
       if (isEditMode) {
-        const { error: vErr } = await supabase.from('video').update(videoData).eq('study_id', studyId);
+        const { error: vErr } = await (supabase.from('video') as any).update(videoData).eq('study_id', studyId);
         if (vErr) throw vErr;
       } else {
-        const { error: vErr } = await supabase.from('video').insert([videoData]);
+        const { error: vErr } = await (supabase.from('video') as any).insert([videoData]);
         if (vErr) throw vErr;
       }
 
       // 3. culture_note → culture_note_contents (2단계)
       if (isEditMode) {
-        const { data: existingNotes } = await supabase.from('culture_note').select('id').eq('study_id', studyId);
+        const { data: existingNotes } = await (supabase.from('culture_note') as any).select('id').eq('study_id', studyId);
         if (existingNotes && existingNotes.length > 0) {
-          const existingIds = existingNotes.map(n => n.id);
-          await supabase.from('culture_note_contents').delete().in('culture_note_id', existingIds);
+          const existingIds = existingNotes.map((n: any) => n.id);
+          await (supabase.from('culture_note_contents') as any).delete().in('culture_note_id', existingIds);
         }
-        await supabase.from('culture_note').delete().eq('study_id', studyId);
+        await (supabase.from('culture_note') as any).delete().eq('study_id', studyId);
       }
 
       for (const note of cultureNotes) {
         // Skip empty notes but process if any field exists
         if (!note.title && !note.subtitle && !note.contents && note.contentRows.every(r => !r.content_value)) continue;
 
-        const { data: inserted, error: noteErr } = await supabase
-          .from('culture_note')
+        const { data: inserted, error: noteErr } = await (supabase.from('culture_note') as any)
           .insert([{ study_id: studyId, title: note.title, subtitle: note.subtitle, contents: note.contents }])
           .select().single();
         if (noteErr) throw noteErr;
@@ -506,16 +539,16 @@ const AdminStudyUpload = () => {
             culture_note_id: inserted.id,
             content_value: r.content_value
           }));
-          const { error: cErr } = await supabase.from('culture_note_contents').insert(rows);
+          const { error: cErr } = await (supabase.from('culture_note_contents') as any).insert(rows);
           if (cErr) throw cErr;
         }
       }
 
       // 4. word 테이블
-      if (isEditMode) await supabase.from('word').delete().eq('study_id', studyId);
+      if (isEditMode) await (supabase.from('word') as any).delete().eq('study_id', studyId);
       const validWords = words.filter(w => w.words.trim() !== '');
       if (validWords.length > 0) {
-        const { error: wErr } = await supabase.from('word').insert(
+        const { error: wErr } = await (supabase.from('word') as any).insert(
           validWords.map((w) => ({ 
             study_id: studyId, 
             words: w.words, 
@@ -529,10 +562,10 @@ const AdminStudyUpload = () => {
       }
 
       // 5. subtitle 테이블
-      if (isEditMode) await supabase.from('subtitle').delete().eq('study_id', studyId);
+      if (isEditMode) await (supabase.from('subtitle') as any).delete().eq('study_id', studyId);
       const validSubs = subtitles.filter(s => s.korean_subtitle.trim() !== '' || s.english_subtitle.trim() !== '');
       if (validSubs.length > 0) {
-        const { error: subErr } = await supabase.from('subtitle').insert(
+        const { error: subErr } = await (supabase.from('subtitle') as any).insert(
           validSubs.map(s => ({
             study_id: studyId,
             english_subtitle: s.english_subtitle,
@@ -549,9 +582,9 @@ const AdminStudyUpload = () => {
       // 저장 성공 시 메모리 캐시 비움
       delete (window as any)[CACHE_KEY];
       navigate('/admin/study/manage');
-    } catch (error: any) {
-      console.error('Save error:', error);
-      toast.error('저장 오류: ' + error.message);
+    } catch (error: unknown) {
+      console.error('Save error:', getErrorMessage(error));
+      toast.error('저장 오류: ' + getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -604,7 +637,7 @@ const AdminStudyUpload = () => {
           <button
             key={key}
             type="button"
-            onClick={() => setActiveTab(key as any)}
+            onClick={() => setActiveTab(key as 'basic' | 'source' | 'content')}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-xs sm:text-sm font-medium transition-all ${
               activeTab === key ? 'bg-background text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
@@ -699,7 +732,7 @@ const AdminStudyUpload = () => {
                 <p className="text-xs text-muted-foreground mt-0.5">사용자에게 콘텐츠를 노출하지 않습니다</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" name="is_hidden" checked={studyInfo.is_hidden} onChange={(e) => setStudyInfo((prev: any) => ({ ...prev, is_hidden: e.target.checked }))} className="sr-only peer" />
+                <input type="checkbox" name="is_hidden" checked={studyInfo.is_hidden} onChange={(e) => setStudyInfo((prev) => ({ ...prev, is_hidden: e.target.checked }))} className="sr-only peer" />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#00BFA5]/20 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#00BFA5]"></div>
               </label>
             </div>
@@ -710,7 +743,7 @@ const AdminStudyUpload = () => {
                 <p className="text-xs text-muted-foreground mt-0.5">메인 상단 추천 영역에 표시합니다</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" name="is_featured" checked={studyInfo.is_featured} onChange={(e) => setStudyInfo((prev: any) => ({ ...prev, is_featured: e.target.checked }))} className="sr-only peer" />
+                <input type="checkbox" name="is_featured" checked={studyInfo.is_featured} onChange={(e) => setStudyInfo((prev) => ({ ...prev, is_featured: e.target.checked }))} className="sr-only peer" />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#00BFA5]/20 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#00BFA5]"></div>
               </label>
             </div>
@@ -742,7 +775,7 @@ const AdminStudyUpload = () => {
                     const file = e.target.files?.[0];
                     if (file) {
                       setPosterFile(file);
-                      setStudyInfo((prev: any) => ({ ...prev, poster_image_url: URL.createObjectURL(file) }));
+                      setStudyInfo((prev) => ({ ...prev, poster_image_url: URL.createObjectURL(file) }));
                     }
                     e.target.value = '';
                   }}
@@ -832,7 +865,7 @@ const AdminStudyUpload = () => {
               </div>
               <div>
                 <label className={labelCls}>YouTube URL</label>
-                <input value={videoInfo.video_url} onChange={(e) => setVideoInfo((p: any) => ({...p, video_url: e.target.value}))} className={inputCls} placeholder="https://www.youtube.com/watch?v=..." />
+                <input value={videoInfo.video_url} onChange={(e) => setVideoInfo((p: VideoInfo) => ({...p, video_url: e.target.value}))} className={inputCls} placeholder="https://www.youtube.com/watch?v=..." />
               </div>
             </div>
           ) : (
@@ -847,7 +880,7 @@ const AdminStudyUpload = () => {
                 <label className={labelCls}>비디오 파일</label>
                 <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-8 text-center hover:border-primary/50 transition-all cursor-pointer">
                   <input type="file" accept="video/*" className="sr-only" id="video-upload"
-                    onChange={(e) => { const f = e.target.files?.[0]; if (f) { setVideoFile(f); setVideoInfo((p: any) => ({...p, video_url: f.name})); } e.target.value = ''; }}
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) { setVideoFile(f); setVideoInfo((p: VideoInfo) => ({...p, video_url: f.name})); } e.target.value = ''; }}
                   />
                   <label htmlFor="video-upload" className="cursor-pointer flex flex-col items-center gap-2">
                     <Upload size={24} className={videoFile ? "text-primary" : (isEditMode && videoInfo.video_url && uploadType === 'direct' ? "text-green-500" : "text-muted-foreground")} />
@@ -869,11 +902,11 @@ const AdminStudyUpload = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>구간 시작 (초)</label>
-              <input type="number" value={videoInfo.video_start_time} onChange={(e) => setVideoInfo((p: any) => ({...p, video_start_time: Number(e.target.value)}))} className={inputCls} />
+              <input type="number" value={videoInfo.video_start_time} onChange={(e) => setVideoInfo((p: VideoInfo) => ({...p, video_start_time: Number(e.target.value)}))} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>구간 종료 (초)</label>
-              <input type="number" value={videoInfo.video_end_time} onChange={(e) => setVideoInfo((p: any) => ({...p, video_end_time: Number(e.target.value)}))} className={inputCls} />
+              <input type="number" value={videoInfo.video_end_time} onChange={(e) => setVideoInfo((p: VideoInfo) => ({...p, video_end_time: Number(e.target.value)}))} className={inputCls} />
             </div>
           </div>
         </div>

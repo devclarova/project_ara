@@ -4,6 +4,7 @@ import { X, DollarSign, Calendar, Loader2, List, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import dayjs from 'dayjs';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 interface SpendHistory {
   id: string;
@@ -42,8 +43,7 @@ const MarketingSpendModal: React.FC<MarketingSpendModalProps> = ({ isOpen, onClo
   const fetchHistory = async () => {
     try {
       setFetching(true);
-      const { data, error } = await supabase
-        .from('marketing_spends')
+      const { data, error } = await (supabase.from('marketing_spends') as any)
         .select('*')
         .order('recorded_at', { ascending: false });
 
@@ -57,8 +57,8 @@ const MarketingSpendModal: React.FC<MarketingSpendModalProps> = ({ isOpen, onClo
       setHistory(data || []);
       const total = (data || []).reduce((acc: number, cur: SpendHistory) => acc + Number(cur.spend_amount), 0);
       setTotalSpendStr(total.toLocaleString());
-    } catch (err: any) {
-      console.error(err);
+    } catch (error: unknown) {
+      console.error('Error fetching spend history:', getErrorMessage(error));
     } finally {
       setFetching(false);
     }
@@ -69,12 +69,13 @@ const MarketingSpendModal: React.FC<MarketingSpendModalProps> = ({ isOpen, onClo
     if (!window.confirm('기록을 삭제할까요? (CAC, ROAS 통계에서 즉시 차감됩니다)')) return;
     
     try {
-      const { error } = await supabase.from('marketing_spends').delete().eq('id', id);
+      const { error } = await (supabase.from('marketing_spends') as any).delete().eq('id', id);
       if (error) throw error;
       toast.success('제거되었습니다.');
       fetchHistory();
       if (onSuccess) onSuccess();
-    } catch (err) {
+    } catch (error: unknown) {
+      console.error('Delete spend error:', getErrorMessage(error));
       toast.error('삭제 실패');
     }
   };
@@ -90,7 +91,7 @@ const MarketingSpendModal: React.FC<MarketingSpendModalProps> = ({ isOpen, onClo
       setLoading(true);
       const { data: userData } = await supabase.auth.getUser();
       
-      const { error } = await supabase.from('marketing_spends').insert([{
+      const { error } = await (supabase.from('marketing_spends') as any).insert([{
         campaign_name: formData.campaign_name,
         spend_amount: Number(formData.spend_amount),
         note: formData.note,
@@ -102,10 +103,9 @@ const MarketingSpendModal: React.FC<MarketingSpendModalProps> = ({ isOpen, onClo
       toast.success('마케팅 지출 내역이 안전하게 기록되었습니다.');
       setFormData({ campaign_name: '', spend_amount: '', note: '' });
       fetchHistory();
-      setActiveTab('history');
       if (onSuccess) onSuccess();
-    } catch (err: any) {
-      console.error(err);
+    } catch (error: unknown) {
+      console.error('Submit spend error:', getErrorMessage(error));
       toast.error('지출 내역 기록 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);

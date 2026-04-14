@@ -31,7 +31,7 @@ function ScrollToTop() {
 
     // Viewport Reset: Forces the scroll position back to the origin upon PUSH navigation to a fresh route.
     if (navType === 'PUSH' && pathname !== prevPathname.current) {
-      const state = (location.state as any);
+      const state = location.state as { fromAdmin?: boolean; highlightCommentId?: string } | null;
       // Only skip if we have a specific element to jump to (comment highlight)
       if (!state?.fromAdmin || !state?.highlightCommentId) {
         window.scrollTo({ top: 0, left: 0, behavior: 'auto' });

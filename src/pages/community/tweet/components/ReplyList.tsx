@@ -169,7 +169,8 @@ export default function ReplyList({
 
     map.forEach(node => {
       // Use parent_reply_id to build tree
-      const parentId = (node as any).parent_reply_id as string | null | undefined;
+      const replyNode = node as UIReply;
+      const parentId = replyNode.parent_reply_id as string | null | undefined;
 
       if (parentId && map.has(parentId)) {
         map.get(parentId)!.children.push(node);

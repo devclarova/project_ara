@@ -41,8 +41,7 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
       setError(null);
 
       // 1) study_id를 기준으로 여러 개의 culture_note 조회
-      const { data: notesData, error: notesError } = await supabase
-        .from('culture_note')
+      const { data: notesData, error: notesError } = await (supabase.from('culture_note') as any)
         .select('id, study_id, title, subtitle')
         .eq('study_id', studyId); // study_id 기준으로 여러 개의 culture_note 조회
 
@@ -66,9 +65,8 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
       }
 
       // 2) 여러 개의 culture_note_id에 해당하는 culture_note_contents 조회
-      const noteIds = notesData.map(note => note.id); // 여러 개의 culture_note_id 추출
-      const { data: contentsData, error: contentsError } = await supabase
-        .from('culture_note_contents')
+      const noteIds = notesData.map((note: any) => note.id); // 여러 개의 culture_note_id 추출
+      const { data: contentsData, error: contentsError } = await (supabase.from('culture_note_contents') as any)
         .select('content_value, culture_note_id')
         .in('culture_note_id', noteIds); // 여러 개의 culture_note_id로 콘텐츠 조회
 

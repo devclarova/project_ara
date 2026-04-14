@@ -22,8 +22,7 @@ export async function ensureMyProfileId(): Promise<string> {
   }
 
   // 2️⃣ profiles 테이블에서 user_id = authId 검색
-  const { data: prof, error: selErr } = await supabase
-    .from('profiles')
+  const { data: prof, error: selErr } = await (supabase.from('profiles') as any)
     .select('id, user_id')
     .eq('user_id', authId)
     .maybeSingle();
@@ -50,8 +49,7 @@ export async function ensureMyProfileId(): Promise<string> {
   };
 
   // Trigger 충돌 방지를 위해, INSERT 실패시 무시하고 재조회
-  const { data: created, error: insErr } = await supabase
-    .from('profiles')
+  const { data: created, error: insErr } = await (supabase.from('profiles') as any)
     .upsert(insertRow, { onConflict: 'user_id', ignoreDuplicates: true })
     .select('id')
     .maybeSingle(); // .single() 대신 maybeSingle 사용
@@ -69,8 +67,7 @@ export async function ensureMyProfileId(): Promise<string> {
   }
 
   // 재조회
-  const { data: retryProf } = await supabase
-    .from('profiles')
+  const { data: retryProf } = await (supabase.from('profiles') as any)
     .select('id')
     .eq('user_id', authId)
     .maybeSingle();

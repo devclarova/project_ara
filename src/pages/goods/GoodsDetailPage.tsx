@@ -14,6 +14,28 @@ import { Progress } from '@/components/ui/progress';
 import { goodsService } from '@/services/goodsService';
 import type { Product, ProductOption, ProductVariant } from '@/services/goodsService';
 import { Loader2, Send } from 'lucide-react';
+import { getErrorMessage } from '@/utils/errorMessage';
+
+interface Review {
+  id: string;
+  product_id: string;
+  user_id: string;
+  user_name: string;
+  user_avatar_url: string;
+  rating: number;
+  content: string;
+  image_urls: string[];
+  likes?: number;
+  created_at: string;
+}
+
+interface Promotion {
+  id: string;
+  name: string;
+  code: string;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+}
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -28,9 +50,9 @@ export default function GoodsDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [product, setProduct] = useState<any>(null);
-  const [reviews, setReviews] = useState<any[]>([]);
-  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { session } = useAuth();
   
@@ -47,9 +69,27 @@ export default function GoodsDetailPage() {
   const [offset, setOffset] = useState(0);
   const reviewsPerPage = 5;
   const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<Promotion | null>(null);
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
   const [couponError, setCouponError] = useState('');
+  
+  // 파생 상태 엔진(Derived State) — 기본가, 할인가, 쿠폰 적용 여부를 기반으로 런타임 결제 금액 실시간 산출
+  const [finalPrice, setFinalPrice] = useState(0);
+
+  useEffect(() => {
+    if (!product) return;
+    const itemPrice = product.sale_price || product.price;
+    if (appliedCoupon) {
+      if (appliedCoupon.discount_type === 'percentage') {
+        const discount = itemPrice * (appliedCoupon.discount_value / 100);
+        setFinalPrice(Math.max(0, itemPrice - discount));
+      } else {
+        setFinalPrice(Math.max(0, itemPrice - appliedCoupon.discount_value));
+      }
+    } else {
+      setFinalPrice(itemPrice);
+    }
+  }, [appliedCoupon, product]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,7 +101,7 @@ export default function GoodsDetailPage() {
           setProduct(data);
           // 초기 환경 설정(Initialization) — 상품 메타데이터 로드 직후 첫 번째 가용한 옵션을 기본값으로 바인딩하여 UX 즉시성 확보
           const initialOptions: Record<string, string> = {};
-          data.options?.forEach((opt: any) => {
+          data.options?.forEach((opt: ProductOption) => {
             if (opt.values?.length > 0) {
               initialOptions[opt.name] = opt.values[0];
             }
@@ -116,43 +156,29 @@ export default function GoodsDetailPage() {
     );
   }
 
-  // 파생 상태 엔진(Derived State) — 기본가, 할인가, 쿠폰 적용 여부를 기반으로 런타임 결제 금액 실시간 산출
   const hasOptions = product.options && product.options.length > 0;
   const itemPrice = product.sale_price || product.price;
-  const [finalPrice, setFinalPrice] = useState(itemPrice);
-
-  useEffect(() => {
-    if (appliedCoupon) {
-      if (appliedCoupon.discount_type === 'percentage') {
-        const discount = itemPrice * (appliedCoupon.discount_value / 100);
-        setFinalPrice(Math.max(0, itemPrice - discount));
-      } else {
-        setFinalPrice(Math.max(0, itemPrice - appliedCoupon.discount_value));
-      }
-    } else {
-      setFinalPrice(itemPrice);
-    }
-  }, [appliedCoupon, itemPrice]);
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
     setIsValidatingCoupon(true);
     setCouponError('');
     try {
-      const { data, error } = await supabase.rpc('validate_coupon', { 
+      const { data, error } = await (supabase as any).rpc('validate_coupon', { 
         p_code: couponCode.trim(),
         p_user_id: session?.user?.id || null
       });
       if (error) throw error;
-      if (data && data.is_valid) {
-        setAppliedCoupon(data.promotion);
+      const rpcData = data as any;
+      if (rpcData && rpcData.is_valid) {
+        setAppliedCoupon(rpcData.promotion);
         toast.success(t('goods.coupon_applied', '쿠폰이 적용되었습니다!'));
       } else {
-        setCouponError(data?.reason || t('goods.coupon_invalid', '유효하지 않은 쿠폰입니다.'));
+        setCouponError(rpcData?.reason || t('goods.coupon_invalid', '유효하지 않은 쿠폰입니다.'));
         setAppliedCoupon(null);
       }
-    } catch (err: any) {
-      console.error('Coupon validation fail:', err);
+    } catch (err: unknown) {
+      console.error('Coupon validation fail:', getErrorMessage(err));
       setCouponError(t('goods.coupon_error', '쿠폰 확인 중 오류가 발생했습니다.'));
     } finally {
       setIsValidatingCoupon(false);
@@ -275,9 +301,9 @@ export default function GoodsDetailPage() {
             </p>
 
             {/* 옵션 매트릭스 렌더러 — 상품 SKU별 가용 옵션을 동적으로 매핑하여 사용자 선택 유도 */}
-            {hasOptions && (
+            {hasOptions && product.options && (
               <div className="space-y-6 mb-8 border-t border-b border-gray-100 dark:border-gray-800 py-6">
-                {product.options.map((option: any) => (
+                {product.options.map((option: ProductOption) => (
                   <div key={option.name}>
                     <label className="block text-sm font-bold mb-3">{option.name}</label>
                     <div className="flex flex-wrap gap-3">
@@ -423,7 +449,7 @@ export default function GoodsDetailPage() {
            </div>
            
            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-             {relatedProducts.length > 0 ? relatedProducts.map(p => (
+             {relatedProducts.length > 0 ? relatedProducts.map((p: any) => (
                <div key={p.id} onClick={() => navigate(`/goods/${p.id}`)} className="cursor-pointer group">
                   <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 mb-3 relative">
                      <img src={p.main_image_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform" alt={p.name} />
@@ -759,8 +785,7 @@ export default function GoodsDetailPage() {
                             }
 
                             // 데이터 정합성 바인딩 — 게시자의 프로필 메타데이터(닉네임, 아바타)를 현재 세션 정보와 동기화하여 리뷰 속성 정의
-                            const { data: profile } = await supabase
-                                .from('profiles')
+                            const { data: profile } = await (supabase.from('profiles') as any)
                                 .select('nickname, avatar_url')
                                 .eq('user_id', session.user.id)
                                 .single();
@@ -780,10 +805,10 @@ export default function GoodsDetailPage() {
                             setNewContent('');
                             setReviewImages([]);
                             // 뷰 스테이트 동기화 — 신규 리뷰 등록 후 데이터 무결성을 위해 최신 목록을 강제 재페칭(Refetch)
-                            const rData = await goodsService.fetchReviews(product.id);
-                            setReviews(rData);
-                        } catch (err: any) {
-                            toast.error(err.message);
+                            const freshReviews = await goodsService.fetchReviews(product.id, reviewsPerPage, 0);
+                            setReviews(freshReviews as Review[]);
+                        } catch (err: unknown) {
+                            toast.error(getErrorMessage(err));
                         } finally {
                             setIsSubmittingReview(false);
                         }

@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Check, X, ArrowLeft, Loader2, Zap, ShieldCheck, Sparkles } from 'lucide-react';
 import SeagullIcon from '@/components/common/SeagullIcon';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import { getErrorMessage } from '@/lib/utils';
 
 const PLANS = [
   {
@@ -75,7 +76,13 @@ export default function SubscriptionPage() {
 
   // Coupon State
   const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  interface Promotion {
+    id: string;
+    name: string;
+    discount_type: 'percentage' | 'fixed';
+    discount_value: number;
+  }
+  const [appliedCoupon, setAppliedCoupon] = useState<Promotion | null>(null);
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
   const [couponError, setCouponError] = useState('');
 
@@ -108,8 +115,7 @@ export default function SubscriptionPage() {
     setLoadingPlan('free');
     try {
       // 기존 구독 모두 취소
-      const { error } = await supabase
-        .from('subscriptions')
+      const { error } = await (supabase.from('subscriptions') as any)
         .update({ status: 'cancelled' })
         .eq('user_id', session.user.id)
         .eq('status', 'active');
@@ -117,16 +123,15 @@ export default function SubscriptionPage() {
       if (error) throw error;
       
       // 프로필 요금제도 'free'로 동기화
-      await supabase
-        .from('profiles')
+      await (supabase.from('profiles') as any)
         .update({ plan: 'free' })
         .eq('user_id', session.user.id);
 
       toast.success('구독이 해지되었습니다. 무료 플랜으로 전환됩니다.');
       // 리프레시를 통해 UI 즉시 반영
       await refreshUserPlan();
-    } catch (err: any) {
-      toast.error('해지 처리 중 오류가 발생했습니다: ' + err.message);
+    } catch (err: unknown) {
+      toast.error('해지 처리 중 오류가 발생했습니다: ' + getErrorMessage(err));
     } finally {
       setLoadingPlan(null);
     }
@@ -139,8 +144,7 @@ export default function SubscriptionPage() {
     setLoadingPlan(selectedPlan);
     try {
       // 1. 기존 구독 취소 처리 (간단 구현을 위해 바로 덮어쓰기)
-      await supabase
-        .from('subscriptions')
+      await (supabase.from('subscriptions') as any)
         .update({ status: 'cancelled' })
         .eq('user_id', session.user.id)
         .eq('status', 'active');
@@ -149,8 +153,7 @@ export default function SubscriptionPage() {
       const nextMonth = new Date();
       nextMonth.setMonth(nextMonth.getMonth() + 1);
 
-      const { error: subError } = await supabase
-        .from('subscriptions')
+      const { error: subError } = await (supabase.from('subscriptions') as any)
         .insert({
           user_id: session.user.id,
           plan: selectedPlan,
@@ -164,8 +167,7 @@ export default function SubscriptionPage() {
       if (subError) throw subError;
 
       // 3. Profiles 테이블에 plan 업데이트
-      const { error: profileError } = await supabase
-        .from('profiles')
+      const { error: profileError } = await (supabase.from('profiles') as any)
         .update({ plan: selectedPlan })
         .eq('user_id', session.user.id);
 
@@ -178,11 +180,12 @@ export default function SubscriptionPage() {
         </div>
       );
       
+      
       await refreshUserPlan();
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Subscription error:', err);
-      toast.error(`결제 처리 실패: ${err.message || '알 수 없는 오류가 발생했습니다.'}`);
+      toast.error(`결제 처리 실패: ${getErrorMessage(err)}`);
     } finally {
       setIsPaymentModalOpen(false);
       setLoadingPlan(null);
@@ -197,19 +200,20 @@ export default function SubscriptionPage() {
     setIsValidatingCoupon(true);
     setCouponError('');
     try {
-      const { data, error } = await supabase.rpc('validate_coupon', { 
+      const { data, error } = await (supabase as any).rpc('validate_coupon', { 
         p_code: couponCode.trim().toUpperCase(),
         p_user_id: session.user.id
       });
       if (error) throw error;
-      if (data && data.is_valid) {
-        setAppliedCoupon(data.promotion);
+      const rpcData = data as any;
+      if (rpcData && rpcData.is_valid) {
+        setAppliedCoupon(rpcData.promotion);
         toast.success('쿠폰이 적용되었습니다!');
       } else {
-        setCouponError(data?.reason || '유효하지 않은 쿠폰입니다.');
+        setCouponError(rpcData?.reason || '유효하지 않은 쿠폰입니다.');
         setAppliedCoupon(null);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Coupon validation fail:', err);
       setCouponError('쿠폰 확인 중 오류가 발생했습니다.');
     } finally {
@@ -406,7 +410,7 @@ export default function SubscriptionPage() {
                       <Sparkles size={20} />
                     </div>
                     <div>
-                      <h4 className="font-bold text-gray-900 dark:text-white text-lg">{PLANS.find(p => p.id === selectedPlan)?.name}</h4>
+                      <h4 className="font-bold text-gray-900 dark:text-white text-lg">{PLANS.find((p: any) => p.id === selectedPlan)?.name}</h4>
                       <p className="text-xs text-gray-500 dark:text-gray-400 font-medium tracking-wide">Monthly Billing</p>
                     </div>
                   </div>
@@ -414,7 +418,7 @@ export default function SubscriptionPage() {
                   <div className="mt-8 space-y-3">
                     <div className="flex justify-between items-center text-sm font-medium">
                       <span className="text-gray-500">Subtotal</span>
-                      <span className="text-gray-900 dark:text-white">{PLANS.find(p => p.id === selectedPlan)?.price}</span>
+                      <span className="text-gray-900 dark:text-white">{PLANS.find((p: any) => p.id === selectedPlan)?.price}</span>
                     </div>
                     {appliedCoupon && (
                       <div className="flex justify-between items-center text-sm font-bold text-emerald-500">
@@ -426,7 +430,7 @@ export default function SubscriptionPage() {
                     <div className="flex justify-between items-center font-black text-xl">
                       <span className="text-gray-900 dark:text-white">Total</span>
                       <span className="text-violet-600 dark:text-violet-400">
-                        {getCalculatedPrice(PLANS.find(p => p.id === selectedPlan)?.price || '₩0')}
+                        {getCalculatedPrice(PLANS.find((p: any) => p.id === selectedPlan)?.price || '₩0')}
                       </span>
                     </div>
                   </div>
@@ -493,7 +497,7 @@ export default function SubscriptionPage() {
                 >
                   {loadingPlan !== null ? <Loader2 size={20} className="animate-spin" /> : (
                     <span className="flex items-center gap-2">
-                      {getCalculatedPrice(PLANS.find(p => p.id === selectedPlan)?.price || '₩0')} 결제하기
+                      {getCalculatedPrice(PLANS.find((p: any) => p.id === selectedPlan)?.price || '₩0')} 결제하기
                     </span>
                   )}
                 </button>

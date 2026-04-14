@@ -58,6 +58,7 @@ import AdminUserActivityModal from './components/AdminUserActivityModal';
 import UserProfileModal from './components/UserProfileModal';
 import CheckboxSquare from '@/components/common/CheckboxSquare';
 import AddUserModal from './components/AddUserModal';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 interface AdminUser {
   id: string;
@@ -185,7 +186,7 @@ const UserManagement = () => {
   const fetchUsers = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('get_admin_users_list', {
+      const { data, error } = await (supabase as any).rpc('get_admin_users_list', {
         page: page,
         per_page: ITEMS_PER_PAGE,
         search_term: searchTerm,
@@ -209,8 +210,8 @@ const UserManagement = () => {
         setUsers([]);
         setFilteredTotalCount(0);
       }
-    } catch (error) {
-      console.error('Error fetching users:', error);
+    } catch (error: unknown) {
+      console.error('Error fetching users:', getErrorMessage(error));
       toast.error('사용자 목록을 불러오지 못했습니다.');
     } finally {
       if (!silent) setLoading(false);
@@ -224,12 +225,12 @@ const UserManagement = () => {
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const { data } = await supabase.from('countries').select('iso_code, name').order('name');
+        const { data } = await (supabase.from('countries') as any).select('iso_code, name').order('name');
         if (data) {
           setAvailableCountries(data);
         }
-      } catch (e) {
-        console.error('국적 목록 로드 실패:', e);
+      } catch (err: unknown) {
+        console.error('국적 목록 로드 실패:', getErrorMessage(err));
       }
     };
     fetchCountries();
@@ -255,16 +256,16 @@ const UserManagement = () => {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'profiles' },
-        (payload: any) => {
+        (payload: { new: Partial<AdminUser> }) => {
           // Update local list if profile details change
           setUsers(currentUsers =>
-            currentUsers.map(u => {
+            currentUsers.map((u: any) => {
               if (u.profile_id === payload.new.id) {
                 return {
                   ...u,
                   nickname: payload.new.nickname || u.nickname,
                   avatar_url: payload.new.avatar_url || u.avatar_url,
-                  banned_until: 'banned_until' in payload.new ? payload.new.banned_until : u.banned_until,
+                  banned_until: payload.new.banned_until !== undefined ? payload.new.banned_until : u.banned_until,
                   is_admin: payload.new.is_admin !== undefined ? payload.new.is_admin : u.is_admin
                 };
               }
@@ -302,13 +303,13 @@ const UserManagement = () => {
             return;
         }
 
-        const { error } = await supabase.rpc('toggle_admin_role', { target_user_id: userId });
+        const { error } = await (supabase as any).rpc('toggle_admin_role', { target_user_id: userId });
         if (error) throw error;
 
         toast.success(currentIsAdmin ? '관리자 권한이 해제되었습니다.' : '관리자 권한이 부여되었습니다.');
-        setUsers(users.map(u => u.id === userId ? { ...u, is_admin: !currentIsAdmin } : u));
-    } catch (error) {
-        console.error('Error toggling role:', error);
+        setUsers(users.map((u: any) => u.id === userId ? { ...u, is_admin: !currentIsAdmin } : u));
+    } catch (error: unknown) {
+        console.error('Error toggling role:', getErrorMessage(error));
         toast.error('권한 변경에 실패했습니다.');
     }
   };
@@ -323,16 +324,16 @@ const UserManagement = () => {
     }
 
     try {
-        const { error } = await supabase.rpc('delete_user', { target_user_id: userId });
+        const { error } = await (supabase as any).rpc('delete_user', { target_user_id: userId });
 
         if (error) throw error;
 
         toast.success('사용자가 삭제되었습니다.');
         // Remove from list
-        setUsers(users.filter(u => u.id !== userId));
+        setUsers(users.filter((u: any) => u.id !== userId));
         setFilteredTotalCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
-        console.error('Error deleting user:', error);
+    } catch (error: unknown) {
+        console.error('Error deleting user:', getErrorMessage(error));
         toast.error('사용자 삭제에 실패했습니다.');
     }
   };
@@ -342,7 +343,7 @@ const UserManagement = () => {
     setExportLoading(true);
     try {
       // Fetch all users matching current filters but without pagination (max 1000)
-      const { data, error } = await supabase.rpc('get_admin_users_list', {
+      const { data, error } = await (supabase as any).rpc('get_admin_users_list', {
         page: 1,
         per_page: 1000, // Reasonable limit for CSV export
         search_term: searchTerm,
@@ -366,7 +367,7 @@ const UserManagement = () => {
       const headers = ['ID', 'Email', 'Nickname', 'Role', 'Status', 'CreatedAt', 'LastActive', 'Country', 'Gender', 'Birthday', 'Reports'];
       const csvRows = [headers.join(',')];
 
-      data.forEach((u: any) => {
+      data.forEach((u: AdminUser) => {
         const row = [
           u.id,
           u.email,
@@ -393,9 +394,9 @@ const UserManagement = () => {
       link.click();
       document.body.removeChild(link);
       
-      toast.success('사용자 목록을 CSV로 내보냈습니다.');
-    } catch (err) {
-      console.error('Export error:', err);
+      toast.success('사용자가 목록을 CSV로 내보냈습니다.');
+    } catch (err: unknown) {
+      console.error('Export error:', getErrorMessage(err));
       toast.error('내보내기 중 오류가 발생했습니다.');
     } finally {
       setExportLoading(false);
@@ -575,7 +576,7 @@ const UserManagement = () => {
                       try {
                         return new Intl.DisplayNames(['ko'], { type: 'region' }).of(filterCountry.toUpperCase()) || filterCountry;
                       } catch {
-                        return availableCountries.find(c => c.iso_code === filterCountry)?.name || filterCountry;
+                        return availableCountries.find((c: any) => c.iso_code === filterCountry)?.name || filterCountry;
                       }
                     })()}</span>
                   </button>
@@ -712,7 +713,7 @@ const UserManagement = () => {
                   <CheckboxSquare
                     checked={selectedUsers.length === users.length && users.length > 0}
                     onChange={(checked) => {
-                      if (checked) setSelectedUsers(users.map(u => u.id));
+                      if (checked) setSelectedUsers(users.map((u: any) => u.id));
                       else setSelectedUsers([]);
                     }}
                   />
@@ -1043,7 +1044,7 @@ const UserManagement = () => {
         mode={sanctionMode}
         onSuccess={(bannedUntil) => {
           if (targetUser) {
-            setUsers(users.map(u => u.id === targetUser.id ? { ...u, banned_until: bannedUntil } : u));
+            setUsers(users.map((u: any) => u.id === targetUser.id ? { ...u, banned_until: bannedUntil } : u));
           }
         }}
       />

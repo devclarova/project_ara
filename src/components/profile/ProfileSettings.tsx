@@ -76,7 +76,7 @@ export default function ProfileSettings() {
   const [showMenuOnMobile, setShowMenuOnMobile] = useState(true);
 
   const location = useLocation();
-  const state = location.state as { activeTab?: MenuId; openSetting?: any } | null;
+  const state = location.state as { activeTab?: MenuId; openSetting?: import('@/types/settings').ActiveSetting } | null;
 
   const [activeId, setActiveId] = useState<MenuId>(state?.activeTab || 'alarm');
 
@@ -126,9 +126,9 @@ export default function ProfileSettings() {
   const getFilteredItems = (query: string) => {
     if (!query) return items;
     const lowerQuery = query.toLowerCase();
-    return items.filter(item => {
+    return items.filter((item: any) => {
       const labelMatch = item.label.toLowerCase().includes(lowerQuery);
-      const keywordMatch = item.keywords?.some(k => k.toLowerCase().includes(lowerQuery));
+      const keywordMatch = item.keywords?.some((k: any) => k.toLowerCase().includes(lowerQuery));
       return labelMatch || keywordMatch;
     });
   };
@@ -143,7 +143,7 @@ export default function ProfileSettings() {
     // 검색 결과가 존재하고, 현재 활성화된 탭이 결과에 포함되지 않을 경우
     // 결과 중 첫 번째 항목으로 자동 이동하여 오른쪽 화면 갱신
     if (newFilteredItems.length > 0) {
-      const isCurrentActive = newFilteredItems.some(item => item.id === activeId);
+      const isCurrentActive = newFilteredItems.some((item: any) => item.id === activeId);
       if (!isCurrentActive) {
         setActiveId(newFilteredItems[0].id);
       }

@@ -8,8 +8,8 @@ export async function retryWithBackoff<T>(
     initialDelay?: number;
     maxDelay?: number;
     factor?: number;
-    shouldRetry?: (error: any) => boolean;
-    onRetry?: (error: any, attempt: number) => void;
+    shouldRetry?: (error: unknown) => boolean;
+    onRetry?: (error: unknown, attempt: number) => void;
   } = {}
 ): Promise<T> {
   const {
@@ -17,15 +17,17 @@ export async function retryWithBackoff<T>(
     initialDelay = 1000,
     maxDelay = 10000,
     factor = 2,
-    shouldRetry = (err) => {
+    shouldRetry = (err: unknown) => {
       // 기본적으로 네트워크 오류(Failed to fetch)나 5xx 에러에 대해 재시도
-      const msg = err?.message?.toLowerCase() || '';
-      return msg.includes('fetch') || msg.includes('network') || msg.includes('timeout') || (err?.status && err.status >= 500);
+      const e = err as Record<string, unknown> | null;
+      const msg = (e?.message as string | undefined)?.toLowerCase() ?? '';
+      const status = typeof e?.status === 'number' ? e.status : 0;
+      return msg.includes('fetch') || msg.includes('network') || msg.includes('timeout') || status >= 500;
     },
     onRetry = () => {},
   } = options;
 
-  let lastError: any;
+  let lastError: unknown;
   let delay = initialDelay;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {

@@ -96,8 +96,7 @@ export function useAutoTranslation(text: string, contentId: string, targetLang: 
 
           // 5. If logged in, check Supabase first
           if (user) {
-            const { data: existing } = await supabase
-              .from('translations')
+            const { data: existing } = await (supabase.from('translations') as any)
               .select('translated_text')
               .eq('content_id', uniqueId)
               .eq('target_lang', targetLang)
@@ -139,13 +138,13 @@ export function useAutoTranslation(text: string, contentId: string, targetLang: 
           if (result) {
             // 7. Save to DB
             if (user) {
-               supabase.from('translations').upsert({
+               (supabase.from('translations') as any).upsert({
                   user_id: user.id,
                   content_id: uniqueId,
                   original_text: text,
                   translated_text: result,
                   target_lang: targetLang,
-               }, { onConflict: 'user_id,content_id,target_lang' }).then(({ error }) => {
+               }, { onConflict: 'user_id,content_id,target_lang' }).then(({ error }: any) => {
                    if (error) console.error('Failed to save translation', error);
                });
             }

@@ -44,8 +44,7 @@ export function useMarketingBanners(
     const fetchBanners = async () => {
       try {
         setLoading(true);
-        let query = supabase
-          .from('marketing_banners')
+        let query = (supabase.from('marketing_banners') as any)
           .select('*')
           .eq('is_active', true)
           .order('priority', { ascending: true });
@@ -58,7 +57,7 @@ export function useMarketingBanners(
         if (error) throw error;
 
         const now = new Date();
-        const filtered = (data || []).filter(b => {
+        const filtered = (data || []).filter((b: any) => {
           // 1. 기간 필터
           if (b.starts_at && new Date(b.starts_at) > now) return false;
           if (b.ends_at && new Date(b.ends_at) < now) return false;
@@ -100,10 +99,9 @@ export function useMarketingBanners(
   // 클릭 카운트 증가
   const trackClick = useCallback(async (bannerId: string) => {
     try {
-      const banner = banners.find(b => b.id === bannerId);
+      const banner = banners.find((b: any) => b.id === bannerId);
       if (banner) {
-        await supabase
-          .from('marketing_banners')
+        await (supabase.from('marketing_banners') as any)
           .update({ click_count: (banner.click_count || 0) + 1 })
           .eq('id', bannerId);
       }
@@ -113,10 +111,9 @@ export function useMarketingBanners(
   // 노출 카운트 증가
   const trackView = useCallback(async (bannerId: string) => {
     try {
-      const banner = banners.find(b => b.id === bannerId);
+      const banner = banners.find((b: any) => b.id === bannerId);
       if (banner) {
-        await supabase
-          .from('marketing_banners')
+        await (supabase.from('marketing_banners') as any)
           .update({ view_count: (banner.view_count || 0) + 1 })
           .eq('id', bannerId);
       }

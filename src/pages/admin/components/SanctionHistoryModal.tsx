@@ -12,7 +12,17 @@ interface SanctionHistoryModalProps {
   user: { id: string; profile_id: string; nickname: string } | null;
 }
 
-const renderSanctionReason = (reason: any) => {
+interface SanctionHistoryItem {
+  sanction_id: string;
+  report_id: string | null;
+  sanction_type: 'ban' | 'permanent_ban' | 'unban' | string;
+  duration_days: number | null;
+  reason: string | null;
+  admin_nickname: string;
+  created_at: string;
+}
+
+const renderSanctionReason = (reason: unknown) => {
   if (!reason) return '입력된 사유가 없습니다.';
   const r = String(reason).trim();
   if (!r) return '입력된 사유가 없습니다.';
@@ -41,20 +51,20 @@ const renderSanctionReason = (reason: any) => {
 };
 
 const SanctionHistoryModal: React.FC<SanctionHistoryModalProps> = React.memo(({ isOpen, onClose, user }) => {
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<SanctionHistoryItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedReport, setSelectedReport] = useState<any | null>(null);
+  const [selectedReport, setSelectedReport] = useState<Record<string, unknown> | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
 
   const fetchHistory = async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('get_user_sanction_history_v2', { 
+      const { data, error } = await (supabase as any).rpc('get_user_sanction_history_v2', { 
         p_target_user_id: user.id 
       });
       if (error) throw error;
-      setHistory(data || []);
+      setHistory((data as unknown as SanctionHistoryItem[]) || []);
     } catch (err) {
       console.error(err);
       toast.error('이용제한 이력을 불러오는 중 오류가 발생했습니다.');
@@ -75,8 +85,7 @@ const SanctionHistoryModal: React.FC<SanctionHistoryModalProps> = React.memo(({ 
   const handleViewReport = async (reportId: string) => {
     setReportLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('reports')
+      const { data, error } = await supabase.from('reports')
         .select(`
           *,
           reporter:profiles!reports_reporter_id_fkey(id, nickname, avatar_url, user_id)
@@ -89,7 +98,7 @@ const SanctionHistoryModal: React.FC<SanctionHistoryModalProps> = React.memo(({ 
         toast.error('해당 신고 내역을 찾을 수 없습니다.');
         return;
       }
-      setSelectedReport(data);
+      setSelectedReport(data as Record<string, unknown>);
     } catch (err) {
       console.error(err);
       toast.error('신고 정보를 불러오지 못했습니다.');
@@ -152,7 +161,7 @@ const SanctionHistoryModal: React.FC<SanctionHistoryModalProps> = React.memo(({ 
                            item.sanction_type === 'permanent_ban' ? '영구 이용 정지' : `${item.duration_days}일 이용 정지`}
                         </h4>
                         <p className="text-xs font-bold text-zinc-400 mt-0.5">
-                          {format(new Date(item.created_at), 'yyyy년 MM월 dd일 HH:mm')}
+                          {format(new Date(item.created_at as any), 'yyyy년 MM월 dd일 HH:mm')}
                         </p>
                       </div>
                     </div>
@@ -202,9 +211,8 @@ const SanctionHistoryModal: React.FC<SanctionHistoryModalProps> = React.memo(({ 
         </div>
       </Modal>
 
-      {/* Pop up the report modal as requested */}
       <ReportActionModal 
-        report={selectedReport} 
+        report={selectedReport as any} 
         isOpen={!!selectedReport} 
         onClose={() => setSelectedReport(null)} 
         onResolve={fetchHistory}

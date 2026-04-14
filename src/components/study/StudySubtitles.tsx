@@ -63,8 +63,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
       setError(null);
 
       // 기존 id=eq(id) → study_id 기준 조회로 수정
-      const { data, error } = await supabase
-        .from('subtitle')
+      const { data, error } = await (supabase.from('subtitle') as any)
         .select(
           'id, study_id, korean_subtitle, pronunciation, english_subtitle, subtitle_start_time',
         )
@@ -77,7 +76,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
         setError(error.message);
         setDialogues([]);
       } else {
-        const list = (data ?? []).filter((r): r is Subtitle => r.study_id !== null);
+        const list = (data ?? []).filter((r: any): r is Subtitle => r.study_id !== null);
 
         setDialogues(list);
 

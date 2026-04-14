@@ -46,8 +46,7 @@ function LanguageSelect({ value, onChange, onClose, onSave, onCancel }: Language
   // DB에서 국기 이미지 로드
   useEffect(() => {
     async function loadFlags() {
-      const { data, error } = await supabase
-        .from('countries')
+      const { data, error } = await (supabase.from('countries') as any)
         .select('iso_code, flag_url')
         .not('iso_code', 'is', null)
         .not('flag_url', 'is', null);

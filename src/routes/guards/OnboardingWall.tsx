@@ -19,8 +19,7 @@ export default function OnboardingWall() {
 
       const provider = (u.app_metadata?.provider as string | undefined) ?? 'email';
       if (provider !== 'email') {
-        const { data: prof } = await supabase
-          .from('profiles')
+        const { data: prof } = await (supabase.from('profiles') as any)
           .select('is_onboarded')
           .eq('user_id', u.id)
           .maybeSingle();

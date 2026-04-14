@@ -63,14 +63,13 @@ export function useUserTracker() {
           const today = new Date().toISOString().split('T')[0];
           
           // Check if already logged TODAY for this user
-          const { count } = await supabase
-            .from('traffic_logs')
+          const { count } = await (supabase.from('traffic_logs') as any)
             .select('*', { count: 'exact', head: true })
             .eq('user_id', session.user.id)
             .gte('created_at', today);
 
           if (count === 0) {
-            await supabase.from('traffic_logs').insert({
+            await (supabase.from('traffic_logs') as any).insert({
               user_id: session.user.id,
               utm_source: source || 'direct',
               utm_medium: medium || 'none',

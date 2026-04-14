@@ -31,7 +31,7 @@ export const SecurityGuard = ({ children }: { children: ReactNode }) => {
                     const currentIp = data.ip;
                     setUserIp(currentIp);
 
-                    const rawWhitelist = config.ip_whitelist as any;
+                    const rawWhitelist = config.ip_whitelist as string | string[] | undefined;
                     const whitelist = typeof rawWhitelist === 'string' 
                         ? rawWhitelist.split(/[,\n]/).map((ip: string) => ip.trim()).filter(Boolean)
                         : (Array.isArray(rawWhitelist) ? rawWhitelist : []);

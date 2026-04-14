@@ -23,8 +23,19 @@ import {
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 // 설정 페이지 전용 사이드바 및 탭 레이아웃 정의 — 논리적 기능 단위별 인터페이스 격리 연산
+// 설정 데이터 구조 인터페이스 정의
+interface SiteSettings {
+  global_notice: { enabled: boolean; text: string; color: 'blue' | 'red' | 'amber' | 'emerald' };
+  maintenance_mode: { enabled: boolean; message: string; end_time: string | null };
+  site_metadata: { title: string; description: string; logo_url: string | null; primary_color: string };
+  security_config: { ip_restriction: boolean; ip_whitelist: string; multi_login_limit: boolean; brute_force_protection: boolean; tfa_required: boolean; session_timeout: number };
+  notifications: { email_daily_report: boolean; email_security_alert: boolean; push_new_report: boolean; push_resource_warning: boolean };
+  integrations: { supabase_url: string; ga4_id: string };
+}
+
 const AdminSettings = () => {
   const [activeTab, setActiveTab] = useState('general');
   const [loading, setLoading] = useState(true);
@@ -32,7 +43,7 @@ const AdminSettings = () => {
   const [userIp, setUserIp] = useState<string | null>(null);
 
   // 전역 설정 상태 데이터 스토어 — 사이트 메타데이터, 보안, 알림 및 시스템 환경 변수 통합 관리
-  const [settings, setSettings] = useState<any>({
+  const [settings, setSettings] = useState<SiteSettings>({
     global_notice: { enabled: false, text: '', color: 'blue' },
     maintenance_mode: { enabled: false, message: '', end_time: null },
     site_metadata: { title: 'Project Ara', description: '', logo_url: null, primary_color: '#6366f1' },
@@ -61,18 +72,18 @@ const AdminSettings = () => {
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.from('site_settings').select('*');
+      const { data, error } = await (supabase.from('site_settings') as any).select('*');
       if (error) throw error;
 
       if (data) {
         const newSettings = { ...settings };
-        data.forEach(item => {
-          newSettings[item.key] = item.value;
+        data.forEach((item: any) => {
+          (newSettings as any)[item.key] = item.value;
         });
         setSettings(newSettings);
       }
-    } catch (error) {
-      console.error('Error fetching settings:', error);
+    } catch (error: unknown) {
+      console.error('Error fetching settings:', getErrorMessage(error));
       toast.error('설정을 불러오는 데 실패했습니다.');
     } finally {
       setLoading(false);
@@ -84,29 +95,57 @@ const AdminSettings = () => {
     try {
       setSaving(true);
       
-      const updatePromises = Object.entries(settings).map(([key, value]) => 
-        supabase.from('site_settings').upsert({ key, value })
-      );
+      // Step A: Hybrid Migration Logic - Check for modernized 'site_config' table existence
+      const { error: probeError } = await (supabase.from('site_config') as any).select('id').limit(1).maybeSingle();
+      const hasModernTable = !probeError || (probeError as unknown as { code: string }).code !== 'PGRST205';
 
-      const results = await Promise.all(updatePromises);
-      const errors = results.filter(r => r.error);
+      if (hasModernTable) {
+        // Update the formalized single-row configuration
+        const { error } = await (supabase.from('site_config') as any).upsert({
+          id: 1,
+          notice_enabled: settings.global_notice.enabled,
+          notice_text: settings.global_notice.text,
+          notice_color: settings.global_notice.color,
+          maintenance_enabled: settings.maintenance_mode.enabled,
+          maintenance_message: settings.maintenance_mode.message,
+          maintenance_end_time: settings.maintenance_mode.end_time,
+          site_title: settings.site_metadata.title,
+          site_description: settings.site_metadata.description,
+          site_logo_url: settings.site_metadata.logo_url,
+          sec_ip_restriction: settings.security_config.ip_restriction,
+          sec_ip_whitelist: settings.security_config.ip_whitelist.split(',').map(s => s.trim()).filter(Boolean),
+          updated_at: new Date().toISOString()
+        });
+        if (error) throw error;
+      } else {
+        // Fallback: Individual Key-Value updates for legacy schema compatibility
+        const updatePromises = Object.entries(settings).map(([key, value]) => 
+          (supabase.from('site_settings') as any).upsert({ key, value })
+        );
 
-      if (errors.length > 0) throw errors[0].error;
+        const results = await Promise.all(updatePromises);
+        const errors = results.filter(r => r.error);
+        if (errors.length > 0) throw errors[0].error;
+      }
 
       toast.success('설정이 성공적으로 저장되었습니다.');
-    } catch (error) {
-      console.error('Error saving settings:', error);
+    } catch (error: unknown) {
+      console.error('Error saving settings:', getErrorMessage(error));
       toast.error('설정 저장 중 오류가 발생했습니다.');
     } finally {
       setSaving(false);
     }
   };
 
-  const updateNestedSetting = (key: string, subKey: string, value: any) => {
-    setSettings((prev: any) => ({
+  const updateNestedSetting = <K extends keyof SiteSettings, SK extends keyof SiteSettings[K]>(
+    key: K, 
+    subKey: SK, 
+    value: SiteSettings[K][SK]
+  ) => {
+    setSettings((prev: SiteSettings) => ({
       ...prev,
       [key]: {
-        ...(prev[key] || {}), // Ensure prev[key] is an object
+        ...prev[key],
         [subKey]: value
       }
     }));
@@ -116,12 +155,12 @@ const AdminSettings = () => {
   const handleMaintenance = async (action: string) => {
     try {
       setSaving(true);
-      const { data, error } = await supabase.rpc('admin_perform_maintenance', { p_action: action });
+      const { data, error } = await (supabase as any).rpc('admin_perform_maintenance', { p_action: action });
       if (error) throw error;
-      toast.success(data.message || '요청하신 유지보수 작업이 완료되었습니다.');
-    } catch (error: any) {
-      console.error('Maintenance error:', error);
-      toast.error('유지보수 작업 실패: ' + (error.message || '알 수 없는 오류가 발생했습니다.'));
+      toast.success((data as any).message || '요청하신 유지보수 작업이 완료되었습니다.');
+    } catch (error: unknown) {
+      console.error('Maintenance error:', getErrorMessage(error));
+      toast.error(`유지보수 작업 실패: ${getErrorMessage(error)}`);
     } finally {
       setSaving(false);
     }
@@ -325,7 +364,7 @@ const AdminSettings = () => {
                         <div>
                           <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 ml-1">테마 종류</label>
                           <div className="flex gap-3">
-                            {['blue', 'red', 'amber', 'emerald'].map(c => (
+                            {['blue', 'red', 'amber', 'emerald'].map((c: any) => (
                               <button 
                                 key={c}
                                 onClick={() => updateNestedSetting('global_notice', 'color', c)}
@@ -575,8 +614,7 @@ const AdminSettings = () => {
 };
 
 // 내부 보조 컴포넌트(Helper Components) — 코드 가독성 및 UI 일관성을 위한 원자적 디자인 단위
-
-function SystemToolButton({ icon: Icon, label, desc, onClick }: { icon: any, label: string, desc: string, onClick?: () => void }) {
+function SystemToolButton({ icon: Icon, label, desc, onClick }: { icon: React.ElementType, label: string, desc: string, onClick?: () => void }) {
   return (
     <button 
       onClick={onClick}
@@ -593,7 +631,7 @@ function SystemToolButton({ icon: Icon, label, desc, onClick }: { icon: any, lab
   );
 }
 
-function SectionCard({ title, description, icon: Icon, children }: { title: string, description?: string, icon?: any, children: React.ReactNode }) {
+function SectionCard({ title, description, icon: Icon, children }: { title: string, description?: string, icon?: React.ElementType, children: React.ReactNode }) {
   return (
     <div className="bg-secondary/40 backdrop-blur-md rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm overflow-hidden transition-all hover:shadow-lg hover:border-primary/20">
       <div className="p-6 md:p-8">
@@ -663,7 +701,7 @@ function StatusOption({ label, color, selected, onClick }: { label: string, colo
   );
 }
 
-function ThemeOption({ icon: Icon, label, selected }: { icon: any, label: string, selected?: boolean }) {
+function ThemeOption({ icon: Icon, label, selected }: { icon: React.ElementType, label: string, selected?: boolean }) {
   return (
     <button className={`flex flex-col items-center justify-center gap-4 p-6 rounded-2xl border-2 transition-all ${
       selected ? 'border-primary bg-primary/5 text-primary shadow-lg shadow-primary/10' : 'border-border hover:border-primary/20 text-muted-foreground hover:bg-muted/30'

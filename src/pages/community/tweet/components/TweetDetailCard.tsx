@@ -21,6 +21,7 @@ import { BanBadge } from '@/components/common/BanBadge';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import EditButton from '@/components/common/EditButton';
 import EditTweetModal from '@/components/common/EditTweetModal';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 function htmlToEditorText(html: string) {
   const doc = new DOMParser().parseFromString(html || '', 'text/html');
@@ -133,8 +134,7 @@ export default function TweetDetailCard({
   useEffect(() => {
     const loadProfileId = async () => {
       if (!authUser) return;
-      const { data, error } = await supabase
-        .from('profiles')
+      const { data, error } = await (supabase.from('profiles') as any)
         .select('id')
         .eq('user_id', authUser.id)
         .maybeSingle();
@@ -156,8 +156,7 @@ export default function TweetDetailCard({
     const fetchAuthorCountry = async () => {
       try {
         if (!tweet.user.username || tweet.user.username === 'anonymous') return;
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
+        const { data: profile, error: profileError } = await (supabase.from('profiles') as any)
           .select('id, country')
           .eq('user_id', tweet.user.username)
           .maybeSingle();
@@ -176,8 +175,7 @@ export default function TweetDetailCard({
           return;
         }
 
-        const { data: country, error: countryError } = await supabase
-          .from('countries')
+        const { data: country, error: countryError } = await (supabase.from('countries') as any)
           .select('name, flag_url')
           .eq('id', profile.country)
           .maybeSingle();
@@ -262,8 +260,7 @@ export default function TweetDetailCard({
 
     const loadLiked = async () => {
       try {
-        const { data, error } = await supabase
-          .from('tweet_likes')
+        const { data, error } = await (supabase.from('tweet_likes') as any)
           .select('id')
           .eq('tweet_id', tweet.id)
           .eq('user_id', profileId)
@@ -292,8 +289,7 @@ export default function TweetDetailCard({
     }
 
     try {
-      const { data: existing, error: existingError } = await supabase
-        .from('tweet_likes')
+      const { data: existing, error: existingError } = await (supabase.from('tweet_likes') as any)
         .select('id')
         .eq('tweet_id', tweet.id)
         .eq('user_id', profileId)
@@ -304,8 +300,7 @@ export default function TweetDetailCard({
       }
 
       if (existing) {
-        const { error: deleteError } = await supabase
-          .from('tweet_likes')
+        const { error: deleteError } = await (supabase.from('tweet_likes') as any)
           .delete()
           .eq('id', existing.id);
 
@@ -317,7 +312,7 @@ export default function TweetDetailCard({
         return;
       }
 
-      const { error: insertError } = await supabase.from('tweet_likes').insert({
+      const { error: insertError } = await (supabase.from('tweet_likes') as any).insert({
         tweet_id: tweet.id,
         user_id: profileId,
       });
@@ -330,7 +325,7 @@ export default function TweetDetailCard({
 
       // 알림 생성 (본인 게시글이 아닐 때만, 작성자 없으면 스킵)
       if (authorProfileId && !isDeletedUser && authorProfileId !== profileId) {
-        await supabase.from('notifications').insert({
+        await (supabase.from('notifications') as any).insert({
           type: 'like',
           content: '당신의 피드를 좋아합니다.',
           is_read: false,
@@ -345,7 +340,7 @@ export default function TweetDetailCard({
       SnsStore.updateStats(tweet.id, {
         likes: (tweet.stats.likes || 0) + 1,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(t('common.error_like'));
     }
   };
@@ -358,8 +353,7 @@ export default function TweetDetailCard({
     }
 
     try {
-      const { error } = await supabase
-        .from('tweets')
+      const { error } = await (supabase.from('tweets') as any)
         .delete()
         .eq('id', tweet.id)
         .eq('author_id', profileId);
@@ -386,7 +380,7 @@ export default function TweetDetailCard({
       } else {
         navigate('/sns');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(t('tweet.delete_failed', '삭제 중 오류가 발생했습니다.'));
     }
   };
@@ -488,8 +482,8 @@ export default function TweetDetailCard({
       } else {
         toast.error('이미지 업로드 실패');
       }
-    } catch (err: any) {
-      console.error(err);
+    } catch (err: unknown) {
+      console.error(getErrorMessage(err));
       toast.error('이미지 업로드 실패');
     } finally {
       setIsUploading(false);
@@ -511,8 +505,7 @@ export default function TweetDetailCard({
     const finalHtml = buildHtmlWithImages(textHtml, editImages);
     const nowIso = new Date().toISOString();
 
-    const { error } = await supabase
-      .from('tweets')
+    const { error } = await (supabase.from('tweets') as any)
       .update({ content: finalHtml, updated_at: nowIso })
       .eq('id', tweet.id);
 
@@ -611,14 +604,15 @@ export default function TweetDetailCard({
             <span className="text-gray-500 dark:text-gray-400 text-sm">
               {formatSmartDate(tweet.timestamp)}
               {(() => {
-                const toMs = (v: any) => {
+                const toMs = (v: unknown) => {
                   if (!v) return null;
-                  const ms = new Date(v).getTime();
+                  const ms = new Date(v as string | number).getTime();
                   return Number.isFinite(ms) ? ms : null;
                 };
+                const tweetRecord = tweet as any;
                 const created =
-                  (tweet as any).createdAt || (tweet as any).created_at || tweet.timestamp;
-                const edited = currentUpdatedAt || (tweet as any).updatedAt;
+                  tweetRecord.createdAt || tweetRecord.created_at || tweet.timestamp;
+                const edited = currentUpdatedAt || tweetRecord.updatedAt;
                 const createdMs = toMs(created);
                 const editedMs = toMs(edited);
                 const isEdited =

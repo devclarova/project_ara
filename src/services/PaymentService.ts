@@ -9,6 +9,8 @@
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
+import { getErrorMessage } from '@/utils/errorMessage';
+
 export type PaymentMethod = 'virtual_card' | 'stripe' | 'portone';
 export type PaymentItemType = 'subscription' | 'goods';
 
@@ -19,7 +21,7 @@ interface PaymentRequest {
   itemId: string; // plan_id or product_id
   method: PaymentMethod;
   couponId?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 class PaymentService {
@@ -44,8 +46,8 @@ class PaymentService {
       }
 
       // 2. 결제 내역 DB 기록 (payments 테이블)
-      const { data, error: payError } = await supabase
-        .from('payments') // payments 테이블이 존재한다고 가정
+      const { data, error: payError } = await (supabase
+        .from('payments') as any) // payments 테이블이 존재한다고 가정
         .insert({
           user_id: req.userId,
           amount: req.amount,
@@ -56,7 +58,7 @@ class PaymentService {
           status: 'completed',
           coupon_id: req.couponId,
           metadata: req.metadata
-        })
+        } as any)
         .select()
         .single();
 
@@ -67,20 +69,20 @@ class PaymentService {
 
       // 3. 쿠폰 사용 처리
       if (req.couponId) {
-        await supabase
-          .from('coupon_usages')
+        await (supabase
+          .from('coupon_usages') as any)
           .insert({
             user_id: req.userId,
             coupon_id: req.couponId,
             discount_applied: req.metadata?.discount || 0
-          });
+          } as any);
       }
 
       return { success: true, transactionId };
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[PaymentService] Payment failed:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: getErrorMessage(err) };
     }
   }
 
@@ -88,22 +90,22 @@ class PaymentService {
    * 구독 갱신 처리
    */
   async updateSubscription(userId: string, planId: string, startsAt: Date, endsAt: Date) {
-     const { error } = await supabase
-       .from('subscriptions')
+     const { error } = await (supabase
+       .from('subscriptions') as any)
        .update({
          plan: planId,
          status: 'active',
          starts_at: startsAt.toISOString(),
          ends_at: endsAt.toISOString()
-       })
+       } as any)
        .eq('user_id', userId);
      
      if (error) throw error;
      
      // 프로필 업데이트
-     await supabase
-       .from('profiles')
-       .update({ plan: planId })
+     await (supabase
+       .from('profiles') as any)
+       .update({ plan: planId } as any)
        .eq('user_id', userId);
   }
 }

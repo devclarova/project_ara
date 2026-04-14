@@ -14,7 +14,7 @@ export function MarketingPopup() {
     const dismissed = sessionStorage.getItem('ara-dismissed-popups');
     const dismissedSet = dismissed ? new Set(JSON.parse(dismissed)) : new Set();
 
-    const firstUnshown = popups.find(p => !dismissedSet.has(p.id));
+    const firstUnshown = popups.find((p: any) => !dismissedSet.has(p.id));
     if (firstUnshown) {
       setCurrentPopup(firstUnshown);
       trackView(firstUnshown.id);

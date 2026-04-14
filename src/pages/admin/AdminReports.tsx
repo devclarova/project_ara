@@ -21,6 +21,7 @@ import { supabase } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
 import ReportActionModal from './components/ReportActionModal';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 interface Report {
   id: string;
@@ -31,7 +32,17 @@ interface Report {
   description?: string;
   created_at: string;
   status: 'pending' | 'resolved' | 'dismissed' | 'reviewed';
-  content_snapshot?: any;
+  content_snapshot?: {
+    user?: {
+      name?: string;
+      nickname?: string;
+      avatar?: string;
+      avatar_url?: string;
+      username?: string;
+    };
+    text?: string;
+    body?: string;
+  };
   reporter?: {
     nickname: string;
     user_id: string;
@@ -65,8 +76,7 @@ const AdminReports = () => {
   const fetchReports = useCallback(async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('reports')
+      let query = (supabase.from('reports') as any)
         .select(`
           id,
           reporter_id,
@@ -91,62 +101,61 @@ const AdminReports = () => {
       const { data: reportsData, error } = await query;
 
       if (error) throw error;
+      
+      const rawData = (reportsData || []) as (Report & { reporter_id: string })[];
 
       // 신고 대상(Suspect) 식별 정보 보강 — 채팅 참여자 및 대상 프로필 대조 알고리즘 수행
-      const enhancedReports = await Promise.all(reportsData.map(async (report: any) => {
+      const enhancedReports = await Promise.all(rawData.map(async (report) => {
         if (report.target_type === 'chat') {
             try {
-                const { data: room } = await supabase
-                    .from('direct_chats')
+                const { data: room } = await (supabase.from('direct_chats') as any)
                     .select('user1_id, user2_id')
                     .eq('id', report.target_id)
                     .maybeSingle();
                 
                 if (room) {
                     const reporterId = report.reporter_id;
-                    const suspectId = room.user1_id === reporterId ? room.user2_id : room.user1_id;
+                    const suspectId = (room.user1_id as string) === reporterId ? (room.user2_id as string) : (room.user1_id as string);
 
                     if (suspectId) {
-                        const { data: suspect } = await supabase
-                            .from('profiles')
+                        const { data: suspect } = await (supabase.from('profiles') as any)
                             .select('nickname, user_id, avatar_url')
                             .eq('id', suspectId)
                             .maybeSingle();
                         
                         if (suspect) {
-                            return { ...report, suspect_profile: suspect };
+                            return { ...report, suspect_profile: suspect as { nickname: string; user_id: string; avatar_url: string } };
                         }
                     }
                 }
-            } catch (err) {
-                console.error('Error fetching chat suspect', err);
+            } catch (err: unknown) {
+                console.error('Error fetching chat suspect', getErrorMessage(err));
             }
         } else if (report.target_type === 'user') {
             try {
-                const { data: suspect } = await supabase
-                    .from('profiles')
+                const { data: suspect } = await (supabase.from('profiles') as any)
                     .select('nickname, user_id, avatar_url')
                     .eq('id', report.target_id)
                     .maybeSingle();
                 
                 if (suspect) {
-                    return { ...report, suspect_profile: suspect };
+                    return { ...report, suspect_profile: suspect as { nickname: string; user_id: string; avatar_url: string } };
                 }
-            } catch (err) {
-                console.error('Error fetching user suspect', err);
+            } catch (err: unknown) {
+                console.error('Error fetching user suspect', getErrorMessage(err));
             }
         }
         return report;
       }));
 
-      setReports(enhancedReports as Report[]);
-    } catch (error) {
-      console.error('Error fetching reports:', error);
+      setReports(enhancedReports);
+    } catch (error: unknown) {
+      console.error('Error fetching reports:', getErrorMessage(error));
       toast.error('신고 목록을 불러오는 데 실패했습니다.');
     } finally {
       setLoading(false);
     }
-  }, [filterStatus, debouncedSearch]);
+  }, [filterStatus, debouncedSearch, t]);
 
   useEffect(() => {
     fetchReports();
@@ -237,7 +246,7 @@ const AdminReports = () => {
             </thead>
             <tbody className="divide-y divide-border">
               {reports
-                .filter((report: any) => {
+                .filter((report) => {
                   if (!debouncedSearch) return true;
                   const lowerSearch = debouncedSearch.toLowerCase();
                   
@@ -257,13 +266,13 @@ const AdminReports = () => {
 
                   return false;
                 })
-                .map((report: any) => {
+                .map((report) => {
                  let targetName = '-';
                  let targetAvatar = null;
                  let targetSub = null;
                  
                  if (report.content_snapshot?.user) {
-                     targetName = report.content_snapshot.user.name || report.content_snapshot.user.nickname;
+                     targetName = (report.content_snapshot.user.name || report.content_snapshot.user.nickname) ?? '';
                      targetAvatar = report.content_snapshot.user.avatar || report.content_snapshot.user.avatar_url;
                      targetSub = report.content_snapshot.user.username ? `@${report.content_snapshot.user.username}` : null;
                  } else if (report.suspect_profile) {

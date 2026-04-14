@@ -27,6 +27,7 @@ import { ko } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/utils/errorMessage';
 import UserProfileModal from './components/UserProfileModal';
 import MarketingSpendModal from './components/MarketingSpendModal';
 import { usePresence } from '@/contexts/PresenceContext';
@@ -85,7 +86,7 @@ const AdminHome = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [revenueType, setRevenueType] = useState<'total' | 'subscription' | 'shop'>('total');
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [selectedUser, setSelectedUser] = useState<DashboardStats['recent_users'][number] | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showTrafficModal, setShowTrafficModal] = useState(false);
   const [showCVR, setShowCVR] = useState(false);
@@ -97,14 +98,16 @@ const AdminHome = () => {
   useEffect(() => {
      const fetchHybridLogs = async () => {
         try {
-           const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
+           const { data, error } = await (supabase as any).rpc('get_admin_dashboard_stats');
            if (!error && data) {
               setHybridData({ 
-                 totalLogs: data.total_traffic_count || 0, 
-                 distinctUsers: data.active_user_count || 0 
+                 totalLogs: (data as any).total_traffic_count || 0, 
+                 distinctUsers: (data as any).active_user_count || 0 
               });
            }
-        } catch (e) { console.error(e); }
+        } catch (error) { 
+           console.error('Error fetching hybrid logs:', getErrorMessage(error)); 
+        }
      };
      fetchHybridLogs();
   }, []);
@@ -112,11 +115,11 @@ const AdminHome = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
+        const { data, error } = await (supabase as any).rpc('get_admin_dashboard_stats');
         if (error) throw error;
         setStats(data);
-      } catch (err: any) {
-        console.error('Error fetching dashboard stats:', err);
+      } catch (error: unknown) {
+        console.error('Error fetching dashboard stats:', getErrorMessage(error));
       } finally {
         setLoading(false);
       }
@@ -415,7 +418,7 @@ const AdminHome = () => {
         initialTotalLogs={hybridData.totalLogs}
         initialDistinctUsers={hybridData.distinctUsers}
         onSelectUser={(user) => {
-          setSelectedUser(user);
+          setSelectedUser(user as any);
           setShowProfileModal(true);
         }}
       />

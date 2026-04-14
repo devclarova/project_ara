@@ -18,7 +18,7 @@ export type SelectFieldProps = {
 };
 
 // 커스텀 드롭다운 인디케이터 — 메뉴 개폐 상태에 따라 화살표 방향과 색상을 동적으로 전환하여 메타데이터 시각화
-const CustomDropdownIndicator = (props: any) => {
+const CustomDropdownIndicator = (props: import('react-select').DropdownIndicatorProps<OptionType, false>) => {
   const { selectProps } = props;
   const isOpen = selectProps.menuIsOpen;
   return (

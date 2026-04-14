@@ -175,15 +175,14 @@ const StudyPage = () => {
 
       // CASE 1: 씬(Scene) 지정 접근 — 정밀 필터링 기반 데이터 단일 조회
       if (scene != null) {
-        const s = dec(scene);
+        const s = dec(scene) ?? '';
 
-        const { data, error } = await supabase
-          .from('video')
+        const { data, error } = await (supabase.from('video') as any)
           .select(
             'id,study_id,categories,contents,episode,scene,level,runtime,runtime_bucket,image_url,view_count, study:study_id(title,short_description,is_featured)',
           )
-          .eq('contents', c)
-          .eq('episode', e)
+          .eq('contents', c || '')
+          .eq('episode', e || '')
           .eq('scene', s)
           .limit(1)
           .maybeSingle();
@@ -192,7 +191,7 @@ const StudyPage = () => {
 
         // 보호처리 — 게스트 접근 차단 (추천 콘텐츠는 통과)
         if (isGuest && data) {
-          const studyData = data.study as any;
+          const studyData = data.study as { is_featured?: boolean } | { is_featured?: boolean }[] | null;
           const isFeatured = Array.isArray(studyData) ? studyData[0]?.is_featured : studyData?.is_featured;
           
           if (!isFeatured) {
@@ -209,13 +208,12 @@ const StudyPage = () => {
       }
 
       // CASE 2: 씬(Scene) 미지정 접근 — 에피소드 내 첫 번째 씬 자동 인덱싱
-      const { data } = await supabase
-        .from('video')
+      const { data } = await (supabase.from('video') as any)
         .select(
           'id,study_id,categories,contents,episode,scene,level,runtime,runtime_bucket,image_url,view_count, study:study_id(title,short_description,is_featured)',
         )
-        .eq('contents', c)
-        .eq('episode', e)
+        .eq('contents', c || '')
+        .eq('episode', e || '')
         .order('scene', { ascending: true })
         .limit(1);
 
@@ -223,7 +221,7 @@ const StudyPage = () => {
 
       // 게스트 보호 처리 (추천 콘텐츠는 통과)
       if (isGuest && row) {
-        const studyData = row.study as any;
+        const studyData = row.study as { is_featured?: boolean } | { is_featured?: boolean }[] | null;
         const isFeatured = Array.isArray(studyData) ? studyData[0]?.is_featured : studyData?.is_featured;
 
         if (!isFeatured) {
@@ -250,8 +248,7 @@ const StudyPage = () => {
 
   // 인접 콘텐츠 이동 간 세션 권한 및 유효성 검증 로직
   const goToByStudyId = async (targetStudyId: number) => {
-    const { data } = await supabase
-      .from('video')
+    const { data } = await (supabase.from('video') as any)
       .select('contents,episode,scene')
       .eq('study_id', targetStudyId)
       .order('id', { ascending: true })
@@ -266,8 +263,7 @@ const StudyPage = () => {
   const gotoNextExisting = async () => {
     if (!study?.study_id) return;
 
-    const { data } = await supabase
-      .from('video')
+    const { data } = await (supabase.from('video') as any)
       .select('study_id')
       .gt('study_id', study.study_id)
       .order('study_id', { ascending: true })
@@ -278,8 +274,7 @@ const StudyPage = () => {
 
     // 게스트 권한 제어 — 비로그인 사용자 대상 추천 콘텐츠(is_featured) 외 접근 제한
     if (isGuest) {
-      const { data: sData } = await supabase
-        .from('study')
+      const { data: sData } = await (supabase.from('study') as any)
         .select('is_featured')
         .eq('id', next)
         .maybeSingle();
@@ -296,8 +291,7 @@ const StudyPage = () => {
   const gotoPrevExisting = async () => {
     if (!study?.study_id) return;
 
-    const { data } = await supabase
-      .from('video')
+    const { data } = await (supabase.from('video') as any)
       .select('study_id')
       .lt('study_id', study.study_id)
       .order('study_id', { ascending: false })
@@ -308,8 +302,7 @@ const StudyPage = () => {
 
     // 게스트 권한 제어 — 이전 콘텐츠 열람 시 featured 필드 검증을 통한 접근 권한 확인
     if (isGuest) {
-      const { data: sData } = await supabase
-        .from('study')
+      const { data: sData } = await (supabase.from('study') as any)
         .select('is_featured')
         .eq('id', prev)
         .maybeSingle();

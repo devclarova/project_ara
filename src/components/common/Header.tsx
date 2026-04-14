@@ -107,7 +107,7 @@ function Header() {
   const isRouteActive = (item: (typeof menuItems)[number]) => {
     const path = location.pathname;
     if (item.key === 'home') return path === '/' || path === '/home';
-    return item.matchPaths.some(p => path.startsWith(p));
+    return item.matchPaths.some((p: any) => path.startsWith(p));
   };
   // Iconography Selection: Assigns contextual Lucide markers for navigation items within the mobile responsive drawer.
   const getMenuIcon = (key: string) => {
@@ -140,9 +140,8 @@ function Header() {
   };
   // 1차 기본 닉네임: user_metadata → 이메일 → 기본문구
   const rawNickname =
-    (user?.user_metadata as Record<string, unknown> | undefined)?.nickname &&
-    typeof (user?.user_metadata as any).nickname === 'string'
-      ? ((user!.user_metadata as any).nickname as string)
+    typeof (user?.user_metadata as { nickname?: unknown } | undefined)?.nickname === 'string'
+      ? (user!.user_metadata as { nickname: string }).nickname
       : undefined;
   const fallbackNickname =
     rawNickname ?? (user?.email ? user.email.split('@')[0] : t('auth.please_login'));
@@ -156,8 +155,7 @@ function Header() {
         setIsAdmin(false);
         return;
       }
-      const { data, error } = await supabase
-        .from('profiles')
+      const { data, error } = await (supabase.from('profiles') as any)
         .select('id, nickname, avatar_url, is_admin')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -182,8 +180,7 @@ function Header() {
     }
     const fetchUnreadCount = async () => {
       // 1. 모든 미이미 읽은 알림 가져오기 (필터링을 위해 sender_id 포함)
-      const { data: unreadNotis, error } = await supabase
-        .from('notifications')
+      const { data: unreadNotis, error } = await (supabase.from('notifications') as any)
         .select('id, sender_id')
         .eq('receiver_id', profileId)
         .eq('is_read', false);
@@ -193,14 +190,14 @@ function Header() {
       }
       // 2. 차단한 사용자의 알림 필터링 + 자동 읽음 처리
       const blockedNotiIds = (unreadNotis || [])
-        .filter(n => blockedUserIds.has(n.sender_id))
-        .map(n => n.id);
+        .filter((n: any) => blockedUserIds.has(n.sender_id))
+        .map((n: any) => n.id);
       if (blockedNotiIds.length > 0) {
         // 차단된 알림은 백그라운드에서 읽음 처리
-        await supabase.from('notifications').update({ is_read: true }).in('id', blockedNotiIds);
+        await (supabase.from('notifications') as any).update({ is_read: true }).in('id', blockedNotiIds);
       }
       // 3. 실제 표시될 숫자 계산
-      const validCount = (unreadNotis || []).filter(n => !blockedUserIds.has(n.sender_id)).length;
+      const validCount = (unreadNotis || []).filter((n: any) => !blockedUserIds.has(n.sender_id)).length;
       setUnreadNotificationCount(validCount);
     };
     fetchUnreadCount();
@@ -234,7 +231,7 @@ function Header() {
       setUnreadNotificationCount(prev => Math.max(0, prev - 1));
     };
     // 프로필 업데이트 이벤트 감지
-    const handleProfileUpdated = (event: CustomEvent<any>) => {
+    const handleProfileUpdated = (event: CustomEvent<{ nickname: string; avatar_url: string | null }>) => {
       const { nickname, avatar_url } = event.detail;
       if (nickname) setProfileNickname(nickname);
       if (avatar_url) setProfileAvatar(avatar_url);
@@ -310,8 +307,8 @@ function Header() {
         {/* 데스크탑 메뉴 (설정은 제거: 프로필 드롭다운에서만 접근) */}
         <div className="hidden lg:flex gap-2 lg:gap-4 xl:gap-5 2xl:gap-6">
           {menuItems
-            .filter(item => item.key !== 'settings')
-            .map(item => {
+            .filter((item: any) => item.key !== 'settings')
+            .map((item: any) => {
               const active = isRouteActive(item);
               const target = targetOf(item);
               const isChat = item.key === 'chat';
@@ -708,8 +705,8 @@ function Header() {
         {/* 메뉴 리스트: 아이콘 포함 */}
         <div className="flex flex-col">
           {mobileMenuItems
-            .filter(item => item.key !== 'settings' || !!user)
-            .map(item => {
+            .filter((item: any) => item.key !== 'settings' || !!user)
+            .map((item: any) => {
               const active = isRouteActive(item);
               const target = targetOf(item);
               const icon = getMenuIcon(item.key);

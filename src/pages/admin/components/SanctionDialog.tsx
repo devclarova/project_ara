@@ -7,13 +7,14 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 interface SanctionDialogProps {
   isOpen: boolean;
   onClose: () => void;
   targetUser: {
-    id: string; // auth.user.id
-    profile_id?: string; // profiles.id (Required for foreign keys)
+    id: string;
+    profile_id?: string;
     nickname: string;
   } | null;
   onSuccess: (bannedUntil: string | null) => void;
@@ -78,26 +79,21 @@ const SanctionDialog: React.FC<SanctionDialogProps> = ({
         durationDays = 0;
       }
 
-      // Update Profile
-      const { error: updateError } = await supabase
-        .from('profiles')
+      const { error: updateError } = await (supabase.from('profiles') as any)
         .update({ banned_until: until })
         .eq('user_id', targetUser.id);
 
       if (updateError) throw updateError;
 
-      // Log to Sanction History
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (currentUser?.id) {
-        const { data: adminP } = await supabase
-          .from('profiles')
+        const { data: adminP } = await (supabase.from('profiles') as any)
           .select('id')
           .eq('user_id', currentUser.id)
           .maybeSingle();
 
         if (adminP) {
-          // 409 Conflict 방지를 위해 방어적으로 처리
-          const { error: historyError } = await supabase.from('sanction_history').insert({
+          const { error: historyError } = await (supabase.from('sanction_history') as any).insert({
             target_user_id: targetUser.profile_id || targetUser.id, 
             sanction_type: mode === 'ban' ? (banDuration === 'permanent' ? 'permanent_ban' : 'ban') : 'unban',
             duration_days: durationDays,
@@ -107,29 +103,17 @@ const SanctionDialog: React.FC<SanctionDialogProps> = ({
           });
 
           if (historyError) {
-             // 이력 기록 실패 시에도 정지 처리는 성공했으므로 계속 진행 (마이그레이션 적용 전 대비)
+             console.error('History log failed:', historyError);
           }
           
-          // 4. Insert Notification for Target User
-          // receiver_id must be Profile UUID
           const receiverId = targetUser.profile_id || targetUser.id;
           
-          const currentLocale = i18n.language === 'ko' ? ko : enUS;
-          const untilDateStr = until 
-            ? format(new Date(until), 'yyyy. MM. dd. HH:mm', { locale: currentLocale })
-            : t('common.permanent', '영구');
-          const durationStr = banDuration === 'permanent' 
-            ? t('common.permanent', '영구') 
-            : `${durationDays}${t('common.days', '일')}`;
-
           let notificationContent = '';
           
           if (mode === 'ban') {
             if (reportId) {
-              // 4-1. 신고 기반 제재 시 상세 안내 (신고 사유 + 운영팀 의견)
               try {
-                const { data: reportData } = await supabase
-                  .from('reports')
+                const { data: reportData } = await (supabase.from('reports') as any)
                   .select('reason')
                   .eq('id', reportId)
                   .maybeSingle();
@@ -148,9 +132,7 @@ const SanctionDialog: React.FC<SanctionDialogProps> = ({
                 };
                 notificationContent = JSON.stringify(notificationPayload);
                 
-                // 5. 신고자(Reporter)에게 상세 알림 발송
-                const { data: reportBase } = await supabase
-                  .from('reports')
+                const { data: reportBase } = await (supabase.from('reports') as any)
                   .select('reporter_id, target_type, reason')
                   .eq('id', reportId)
                   .maybeSingle();
@@ -176,13 +158,12 @@ const SanctionDialog: React.FC<SanctionDialogProps> = ({
                      receiver_id: reportBase.reporter_id,
                      is_read: false
                    };
-                   await supabase.from('notifications').insert(reporterPayloadData);
+                   await (supabase.from('notifications') as any).insert(reporterPayloadData);
                 }
               } catch (err) {
                 console.error('Reporter notification failed:', err);
               }
             } else {
-              // 4-2. 단순 직접 제재 시 안내
               const directBanPayload = {
                 type: 'system_ban_direct',
                 data: {
@@ -195,7 +176,6 @@ const SanctionDialog: React.FC<SanctionDialogProps> = ({
               notificationContent = JSON.stringify(directBanPayload);
             }
           } else {
-            // Unban 알림
             const unbanPayload = {
               type: 'system_unban',
               data: {}
@@ -209,18 +189,8 @@ const SanctionDialog: React.FC<SanctionDialogProps> = ({
             receiver_id: receiverId,
             is_read: false
           };
-          await supabase.from('notifications').insert(payload);
+          await (supabase.from('notifications') as any).insert(payload);
         }
-      }
-
-      function getDefaultBanContent(rTxt: string, dTxt: string, uTxt: string) {
-        return `<strong>${t('notification.system.ban_title')}</strong><br/><br/>` +
-               `${t('notification.system.ban_prefix')}<br/><br/>` +
-               `${t('notification.system.ban_reason', { reason: rTxt.trim() })}<br/>` +
-               `${t('notification.system.ban_duration', { duration: dTxt })}<br/>` +
-               `${t('notification.system.ban_until', { until: uTxt })}<br/>` +
-               `${t('notification.system.ban_features')}<br/><br/>` +
-               `${t('notification.system.ban_footer')}`;
       }
 
       const successMsg = mode === 'ban' 
@@ -230,8 +200,8 @@ const SanctionDialog: React.FC<SanctionDialogProps> = ({
       toast.success(successMsg);
       onSuccess(until);
       onClose();
-    } catch (err: any) {
-      toast.error('처리 실패: ' + (err.message || '알 수 없는 오류가 발생했습니다.'));
+    } catch (error: unknown) {
+      toast.error('처리 실패: ' + getErrorMessage(error));
     } finally {
       setIsProcessing(false);
     }

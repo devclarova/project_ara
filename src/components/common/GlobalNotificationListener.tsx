@@ -6,6 +6,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import type { Database } from '@/types/database';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDirectChat } from '@/contexts/DirectChatContext';
 import { toast } from 'sonner';
@@ -31,13 +32,12 @@ export const GlobalNotificationListener: React.FC = () => {
     if (!user) return;
 
     let isMounted = true;
-    let notifChannel: ReturnType<typeof supabase.channel> | null = null;
-    let chatChannel: ReturnType<typeof supabase.channel> | null = null;
+    let notifChannel: any = null;
+    let chatChannel: any = null;
 
     const setupSubscriptions = async () => {
       // 1. Fetch profile ID
-      const { data: profile } = await supabase
-        .from('profiles')
+      const { data: profile } = await (supabase.from('profiles') as any)
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -56,16 +56,15 @@ export const GlobalNotificationListener: React.FC = () => {
               table: 'notifications',
               filter: `receiver_id=eq.${profile.id}`,
             },
-            async (payload: any) => {
+            async (payload: import('@supabase/supabase-js').RealtimePostgresInsertPayload<import('../../types/database').Database['public']['Tables']['notifications']['Row']>) => {
               const newNotif = payload.new;
 
               // Inbound Blacklist Filter: Suppresses notification propagation if the sender is present in the blocklist.
-              if (blockedUserIds.has(newNotif.sender_id)) {
+              if (blockedUserIds.has(newNotif.sender_id as string)) {
                 return;
               }
               
-              const { data: senderProfile } = await supabase
-                .from('profiles')
+              const { data: senderProfile } = await (supabase.from('profiles') as any)
                 .select('id, nickname, avatar_url, username, bio')
                 .eq('id', newNotif.sender_id)
                 .maybeSingle();
@@ -96,7 +95,7 @@ export const GlobalNotificationListener: React.FC = () => {
               // 프로필이 없어도 알림은 띄움 (Fallback)
               toast.custom((t) => (
                 <NotificationToast
-                  type={newNotif.type}
+                  type={newNotif.type as any}
                   sender={{
                     nickname: senderProfile?.nickname ?? '알 수 없는 사용자',
                     avatar_url: senderProfile?.avatar_url ?? null,
@@ -140,7 +139,7 @@ export const GlobalNotificationListener: React.FC = () => {
             schema: 'public',
             table: 'direct_messages',
           },
-          async (payload: any) => {
+          async (payload: import('@supabase/supabase-js').RealtimePostgresInsertPayload<import('../../types/database').Database['public']['Tables']['direct_messages']['Row']>) => {
             const newMessage = payload.new;
 
             // Shadow Block Check
@@ -150,14 +149,13 @@ export const GlobalNotificationListener: React.FC = () => {
 
             if (newMessage.sender_id === user.id) return;
             // 시스템 메시지(예: 나가기 알림 등)는 글로벌 토스트 띄우지 않음
-            if (newMessage.is_system_message) return;
+            if ((newMessage as any).is_system_message) return;
             if (!profile?.id) return;
             if (currentChatRef.current === newMessage.chat_id) return;
 
             // 채팅 알림 설정 확인 (토스트용)
             try {
-              const { data: chatSettings } = await supabase
-                .from('profiles')
+              const { data: chatSettings } = await (supabase.from('profiles') as any)
                 .select('notify_chat')
                 .eq('user_id', user.id)
                 .single();
@@ -172,8 +170,7 @@ export const GlobalNotificationListener: React.FC = () => {
             }
 
             // active 상태도 같이 조회하여, 내가 나간 채팅방인지 확인
-            const { data: chatInfo, error: chatError } = await supabase
-               .from('direct_chats')
+            const { data: chatInfo, error: chatError } = await (supabase.from('direct_chats') as any)
                .select('user1_id, user2_id, user1_active, user2_active')
                .eq('id', newMessage.chat_id)
                .single();
@@ -192,8 +189,7 @@ export const GlobalNotificationListener: React.FC = () => {
               return; // 내 채팅방 아님
             }
 
-            const { data: senderProfile } = await supabase
-              .from('profiles')
+            const { data: senderProfile } = await (supabase.from('profiles') as any)
               .select('nickname, avatar_url')
               .eq('user_id', newMessage.sender_id)
               .maybeSingle();
@@ -201,14 +197,13 @@ export const GlobalNotificationListener: React.FC = () => {
             // Realtime Payload에는 Relation 데이터(attachments 등)가 포함되지 않음.
             // 따라서 첨부파일이 있는 메시지일 경우, 별도로 전체 데이터를 조회해야 함.
             let contentWithMedia = newMessage.content || '';
-            const { data: fullMessage } = await supabase
-              .from('direct_messages')
+            const { data: fullMessage } = await (supabase.from('direct_messages') as any)
               .select(`*, attachments:direct_message_attachments(*)`)
               .eq('id', newMessage.id)
               .maybeSingle();
 
-            if (fullMessage?.attachments && fullMessage.attachments.length > 0) {
-              const types = fullMessage.attachments.map((a: any) => a.type);
+            if ((fullMessage as any)?.attachments && (fullMessage as any).attachments.length > 0) {
+              const types = ((fullMessage as any).attachments || []).map((a: any) => a.type);
               let prefix = '';
               if (types.includes('video')) prefix = `[${t('notification.media_video', '동영상')}] `;
               else if (types.includes('file')) prefix = `[${t('notification.media_file', '파일')}] `;
@@ -228,7 +223,7 @@ export const GlobalNotificationListener: React.FC = () => {
                   avatar_url: senderProfile?.avatar_url ?? null,
                 }}
                 content={contentWithMedia}
-                timestamp={newMessage.created_at}
+                timestamp={newMessage.created_at ?? ''}
                 onClick={() => {
                    toast.dismiss(t);
                    navigate('/chat', { 

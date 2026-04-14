@@ -9,7 +9,7 @@ import { getBanMessage } from '@/utils/banUtils';
 
 interface TweetModalProps {
   onClose: () => void;
-  onTweetCreated?: (tweet: any) => void;
+  onTweetCreated?: (tweet: import('@/types/sns').FeedItem) => void;
 }
 
 export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps) {
@@ -85,8 +85,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
       }
 
       // 프로필 ID 조회 (user.id → profiles.id)
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
+      const { data: profile, error: profileError } = await (supabase.from('profiles') as any)
         .select('id, nickname, user_id, avatar_url')
         .eq('user_id', user.id)
         .single();
@@ -98,8 +97,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
       }
 
       // tweets 테이블에 저장
-      const { data, error: insertError } = await supabase
-        .from('tweets')
+      const { data, error: insertError } = await (supabase.from('tweets') as any)
         .insert([
           {
             author_id: profile.id,
@@ -113,6 +111,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
           created_at,
           image_url,
           profiles:author_id (
+            id,
             nickname,
             user_id,
             avatar_url
@@ -131,6 +130,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
       const newTweet = {
         id: data.id,
         user: {
+          id: data.profiles?.id || '',
           name: data.profiles?.nickname || 'Unknown',
           username: data.profiles?.user_id || 'anonymous',
           avatar: data.profiles?.avatar_url || '/default-avatar.svg',

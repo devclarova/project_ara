@@ -70,15 +70,14 @@ const StudyListPage = () => {
   const [isScrollable, setIsScrollable] = useState(false);
 
   // 메타데이터 배치 번역 — 대량의 학습 콘텐츠 제목 및 설명을 타겟 언어로 일괄 변환 처리
-  const { translatedTexts: trTitles } = useBatchAutoTranslation(clips.map(c => c.title), clips.map(c => `study_title_${c.id}`), targetLang);
-  const { translatedTexts: trDescs } = useBatchAutoTranslation(clips.map(c => c.short_description || ''), clips.map(c => `study_desc_${c.id}`), targetLang);
+  const { translatedTexts: trTitles } = useBatchAutoTranslation(clips.map((c: any) => c.title), clips.map((c: any) => `study_title_${c.id}`), targetLang);
+  const { translatedTexts: trDescs } = useBatchAutoTranslation(clips.map((c: any) => c.short_description || ''), clips.map((c: any) => `study_desc_${c.id}`), targetLang);
 
   useEffect(() => {
     let ignore = false;
     const fetchClips = async () => {
       const needsVideoFilter = activeCategory !== '전체' || levelFilter !== '';
-      let query = supabase
-        .from('study')
+      let query = (supabase.from('study') as any)
         .select(needsVideoFilter ? '*, video!inner(*)' : '*, video(*)', { count: 'exact' });
       
       query = query.eq('is_hidden', false);
@@ -142,9 +141,9 @@ const StudyListPage = () => {
                 <CategoryTabs
                   active={activeCategory}
                   onChange={handleCategoryChange}
-                  categories={ALL_CATEGORIES.map(c => ({
+                  categories={ALL_CATEGORIES.map((c: any) => ({
                     value: c,
-                    label: c === '전체' ? t('study.category.all') : t(`study.category.${c.toLowerCase()}`, c)
+                    label: String(c === '전체' ? t('study.category.all') : t(`study.category.${c.toLowerCase()}`, c))
                   }))}
                 />
               </div>

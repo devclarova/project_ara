@@ -34,8 +34,7 @@ export function useBlockedUsers() {
       setIsLoading(true);
       
       // 1. Get my profile ID first
-      const { data: myProfile } = await supabase
-        .from('profiles')
+      const { data: myProfile } = await (supabase.from('profiles') as any)
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -47,8 +46,7 @@ export function useBlockedUsers() {
       }
 
       // 2. Query blocks using profile ID
-      const { data, error } = await supabase
-        .from('user_blocks')
+      const { data, error } = await (supabase.from('user_blocks') as any)
         .select(`
           blocked_id,
           profiles:blocked_id (
@@ -65,20 +63,27 @@ export function useBlockedUsers() {
         throw error;
       }
 
-      // Type assertion and mapping
-      const mappedUsers = (data || []).map((row: any) => ({
+      // Supabase join 응답 row 타입 — profiles가 단일 객체로 반환됨
+      type BlockRow = {
+        blocked_id: string;
+        profiles: { id: string; user_id: string; nickname: string; avatar_url: string } | null;
+      };
+      const mappedUsers = (data as BlockRow[] || []).map((row) => ({
         id: row.profiles?.id,
         user_id: row.profiles?.user_id,
         nickname: row.profiles?.nickname,
         avatar_url: row.profiles?.avatar_url,
-      })).filter(u => u.id && u.user_id) as BlockedUser[];
+      })).filter((u: any) => u.id && u.user_id) as BlockedUser[];
 
       setBlockedUsers(mappedUsers);
-      setBlockedIds(mappedUsers.map(u => u.id));
+      setBlockedIds(mappedUsers.map((u: any) => u.id));
       setError(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching blocked users:', err);
-      setError(err);
+      // PostgrestError 구조를 가진 경우만 setError에 전달
+      if (err && typeof err === 'object' && 'code' in err) {
+        setError(err as PostgrestError);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -102,16 +107,14 @@ export function useBlockedUsers() {
       // Need profile ID for mutation too, but we can rely on fetch reload or fetch it again
       // Easier to fetch profile ID inside mutation or store it in state
       // For now let's just fetch it again to be safe
-      const { data: myProfile } = await supabase
-        .from('profiles')
+      const { data: myProfile } = await (supabase.from('profiles') as any)
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
       
       if (!myProfile) return;
 
-      const { error } = await supabase
-        .from('user_blocks')
+      const { error } = await (supabase.from('user_blocks') as any)
         .update({ ended_at: new Date().toISOString() })
         .eq('blocker_id', myProfile.id)
         .eq('blocked_id', targetId);
@@ -121,16 +124,14 @@ export function useBlockedUsers() {
       } else {
         // ✅ 차단 해제 시 해당 유저와의 채팅방이 있다면, 
         // 내 '나간 시점(left_at)'을 지금으로 갱신하여 차단 기간 중 쌓인 메시지를 보지 않도록 함.
-        const { data: chatData } = await supabase
-          .from('direct_chats')
+        const { data: chatData } = await (supabase.from('direct_chats') as any)
           .select('id, user1_id, user2_id')
           .or(`and(user1_id.eq.${myProfile.id},user2_id.eq.${targetId}),and(user1_id.eq.${targetId},user2_id.eq.${myProfile.id})`)
           .maybeSingle();
 
         if (chatData) {
           const isUser1 = chatData.user1_id === myProfile.id;
-          await supabase
-            .from('direct_chats')
+          await (supabase.from('direct_chats') as any)
             .update({ 
                [isUser1 ? 'user1_left_at' : 'user2_left_at']: new Date().toISOString() 
             })

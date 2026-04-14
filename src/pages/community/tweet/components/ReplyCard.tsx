@@ -16,6 +16,8 @@ import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import ReportModal from '@/components/common/ReportModal';
 import { useBlockedUsers } from '@/hooks/useBlockedUsers';
 import { formatSmartDate } from '@/utils/dateUtils';
+import { getErrorMessage } from '@/utils/errorMessage';
+
 import ModalImageSlider from './ModalImageSlider';
 
 function linkifyMentions(html: string) {
@@ -120,15 +122,13 @@ export function ReplyCard({
     const fetchAuthorCountry = async () => {
       try {
         if (!reply.user.username || reply.user.username === 'anonymous') return;
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
+        const { data: profile, error: profileError } = await (supabase.from('profiles') as any)
           .select('id, country')
           .eq('user_id', reply.user.username)
           .maybeSingle();
         if (profileError || !profile || !profile.country) return;
 
-        const { data: country, error: countryError } = await supabase
-          .from('countries')
+        const { data: country, error: countryError } = await (supabase.from('countries') as any)
           .select('name, flag_url')
           .eq('id', profile.country)
           .maybeSingle();
@@ -221,8 +221,7 @@ export function ReplyCard({
   useEffect(() => {
     const loadProfileId = async () => {
       if (!authUser) return;
-      const { data, error } = await supabase
-        .from('profiles')
+      const { data, error } = await (supabase.from('profiles') as any)
         .select('id')
         .eq('user_id', authUser.id)
         .maybeSingle();
@@ -236,8 +235,7 @@ export function ReplyCard({
     if (!authUser || !profileId) return;
     const loadLiked = async () => {
       try {
-        const { data, error } = await supabase
-          .from('tweet_replies_likes')
+        const { data, error } = await (supabase.from('tweet_replies_likes') as any)
           .select('id')
           .eq('reply_id', reply.id)
           .eq('user_id', profileId)
@@ -315,8 +313,7 @@ export function ReplyCard({
       return;
     }
     try {
-      const { error } = await supabase
-        .from('tweet_replies')
+      const { error } = await (supabase.from('tweet_replies') as any)
         .delete()
         .eq('id', reply.id)
         .eq('author_id', profileId);
@@ -326,7 +323,7 @@ export function ReplyCard({
       setShowDialog(false);
       setShowMenu(false);
       onDeleted?.(reply.id);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(t('common.error_delete'));
     }
   };
@@ -362,8 +359,7 @@ export function ReplyCard({
     try {
       if (!nextLiked) {
         // 좋아요 취소
-        const { error: deleteError } = await supabase
-          .from('tweet_replies_likes')
+        const { error: deleteError } = await (supabase.from('tweet_replies_likes') as any)
           .delete()
           .eq('reply_id', reply.id)
           .eq('user_id', profileId);
@@ -372,7 +368,7 @@ export function ReplyCard({
         toast.info(t('common.cancel_like', '좋아요를 취소했습니다'));
       } else {
         // 좋아요 추가
-        const { error: insertError } = await supabase.from('tweet_replies_likes').insert({
+        const { error: insertError } = await (supabase.from('tweet_replies_likes') as any).insert({
           reply_id: reply.id,
           user_id: profileId,
         });
@@ -383,16 +379,14 @@ export function ReplyCard({
 
         // 알림 생성 (본인 댓글이 아닐 때만)
         if (reply.user.username !== authUser.id) {
-          const { data: receiverProfile, error: receiverError } = await supabase
-            .from('profiles')
+          const { data: receiverProfile, error: receiverError } = await (supabase.from('profiles') as any)
             .select('id')
             .eq('user_id', reply.user.username)
             .maybeSingle();
 
           if (!receiverError && receiverProfile && receiverProfile.id !== profileId) {
             // 중복 알림 체크
-            const { data: existingNoti } = await supabase
-              .from('notifications')
+            const { data: existingNoti } = await (supabase.from('notifications') as any)
               .select('id')
               .eq('receiver_id', receiverProfile.id)
               .eq('type', 'like')
@@ -400,7 +394,7 @@ export function ReplyCard({
               .maybeSingle();
 
             if (!existingNoti) {
-              await supabase.from('notifications').insert({
+              await (supabase.from('notifications') as any).insert({
                 receiver_id: receiverProfile.id,
                 sender_id: profileId,
                 type: 'like',
@@ -412,8 +406,8 @@ export function ReplyCard({
           }
         }
       }
-    } catch (err: any) {
-      console.error('좋아요 처리 실패:', err.message);
+    } catch (err: unknown) {
+      console.error('좋아요 처리 실패:', getErrorMessage(err));
       toast.error(t('common.error_like'));
       // Rollback
       setLiked(!nextLiked);
@@ -513,8 +507,7 @@ export function ReplyCard({
     const finalHtml = buildHtmlWithImages(textHtml, editImages);
     const nowIso = new Date().toISOString();
 
-    const { data, error } = await supabase
-      .from('tweet_replies')
+    const { data, error } = await (supabase.from('tweet_replies') as any)
       .update({ content: finalHtml, updated_at: nowIso })
       .eq('id', reply.id)
       .eq('author_id', profileId)
@@ -536,13 +529,9 @@ export function ReplyCard({
   const isMyReply = authUser?.id === reply.user.username;
   const isChildReply = Boolean(reply.parent_reply_id);
 
-  const createdAt =
-    reply.timestamp ||
-    (reply as any).created_at ||
-    (reply as any).createdAt ||
-    new Date().toISOString();
+  const createdAt = (reply.timestamp || (reply as any).created_at || (reply as any).createdAt || new Date().toISOString()) as string;
 
-  const incomingUpdatedAt = (reply as any).updated_at || (reply as any).updatedAt || null;
+  const incomingUpdatedAt = ((reply as any).updated_at || (reply as any).updatedAt || null) as string | null;
 
   const [localUpdatedAt, setLocalUpdatedAt] = useState<string | null>(incomingUpdatedAt);
 
@@ -550,17 +539,17 @@ export function ReplyCard({
     setLocalUpdatedAt(incomingUpdatedAt);
   }, [reply.id, incomingUpdatedAt]);
 
-  const toMs = (v: any) => {
+  const toMs = (v: unknown) => {
     if (!v) return null;
-    const ms = new Date(v).getTime();
+    const ms = new Date(v as string | number).getTime();
     return Number.isFinite(ms) ? ms : null;
   };
 
-  const created = (reply as any).created_at || (reply as any).createdAt || reply.timestamp || null;
-  const edited = (reply as any).updated_at || (reply as any).updatedAt || localUpdatedAt || null;
+  const created = ((reply as any).created_at || (reply as any).createdAt || reply.timestamp || null) as string | null;
+  const edited = ((reply as any).updated_at || (reply as any).updatedAt || localUpdatedAt || null) as string | null;
 
-  const createdMs = toMs(created);
-  const editedMs = toMs(edited);
+  const createdMs = toMs((reply as any).created_at || (reply as any).createdAt || reply.timestamp || null);
+  const editedMs = toMs((reply as any).updated_at || (reply as any).updatedAt || localUpdatedAt || null);
 
   const isEdited = createdMs != null && editedMs != null && editedMs > createdMs + 1000;
 
@@ -616,8 +605,8 @@ export function ReplyCard({
       } else {
         toast.error('이미지 업로드 실패');
       }
-    } catch (err: any) {
-      console.error(err);
+    } catch (err: unknown) {
+      console.error(getErrorMessage(err));
       toast.error('이미지 업로드 실패');
     } finally {
       setIsUploading(false);

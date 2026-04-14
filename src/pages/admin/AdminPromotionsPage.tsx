@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 import { Edit2, Plus, Trash2, Ticket, Play, Square, Loader2, Copy } from 'lucide-react';
 import Modal from '../../components/common/Modal';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 // Types
 interface Promotion {
@@ -73,15 +74,14 @@ const AdminPromotionsPage = () => {
   const fetchPromotions = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('promotions')
+      const { data, error } = await (supabase.from('promotions') as any)
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       setPromotions(data || []);
-    } catch (error) {
-      console.error('Error fetching promotions:', error);
+    } catch (error: unknown) {
+      console.error('Error fetching promotions:', getErrorMessage(error));
       toast.error('프로모션 목록을 불러오는 데 실패했습니다.');
     } finally {
       setLoading(false);
@@ -113,23 +113,21 @@ const AdminPromotionsPage = () => {
       };
 
       if (editingPromo) {
-        const { error } = await supabase
-          .from('promotions')
+        const { error } = await (supabase.from('promotions') as any)
           .update(payload)
           .eq('id', editingPromo.id);
         if (error) throw error;
         toast.success('프로모션이 수정되었습니다.');
       } else {
-        const { error } = await supabase
-          .from('promotions')
+        const { error } = await (supabase.from('promotions') as any)
           .insert([payload]);
         if (error) throw error;
         toast.success('새 프로모션이 생성되었습니다.');
       }
       setIsPromoModalOpen(false);
       fetchPromotions();
-    } catch (error) {
-      console.error('Error saving promotion:', error);
+    } catch (error: unknown) {
+      console.error('Error saving promotion:', getErrorMessage(error));
       toast.error('저장에 실패했습니다.');
     }
   };
@@ -137,27 +135,26 @@ const AdminPromotionsPage = () => {
   const handleDeletePromo = async (id: string) => {
     if (!confirm('정말 이 프로모션과 관련 쿠폰을 모두 삭제하시겠습니까?')) return;
     try {
-      const { error } = await supabase.from('promotions').delete().eq('id', id);
+      const { error } = await (supabase.from('promotions') as any).delete().eq('id', id);
       if (error) throw error;
       toast.success('삭제되었습니다.');
       fetchPromotions();
-    } catch (error) {
-      console.error('Error deleting promotion:', error);
+    } catch (error: unknown) {
+      console.error('Error deleting promotion:', getErrorMessage(error));
       toast.error('삭제에 실패했습니다.');
     }
   };
 
   const togglePromoStatus = async (id: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('promotions')
+      const { error } = await (supabase.from('promotions') as any)
         .update({ is_active: !currentStatus })
         .eq('id', id);
       if (error) throw error;
       toast.success(`상태가 ${!currentStatus ? '활성화' : '비활성화'} 되었습니다.`);
       fetchPromotions();
-    } catch (error) {
-      console.error('Error toggling promo status:', error);
+    } catch (error: unknown) {
+      console.error('Error toggling promo status:', getErrorMessage(error));
       toast.error('상태 변경에 실패했습니다.');
     }
   };
@@ -199,16 +196,15 @@ const AdminPromotionsPage = () => {
   const fetchCoupons = async (promoId: string) => {
     setLoadingCoupons(true);
     try {
-      const { data, error } = await supabase
-        .from('coupons')
+      const { data, error } = await (supabase.from('coupons') as any)
         .select('*')
         .eq('promotion_id', promoId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       setCoupons(data || []);
-    } catch (error) {
-      console.error('Fetch coupons error:', error);
+    } catch (error: unknown) {
+      console.error('Fetch coupons error:', getErrorMessage(error));
       toast.error('쿠폰 목록을 불러오는 데 실패했습니다.');
     } finally {
       setLoadingCoupons(false);
@@ -246,7 +242,7 @@ const AdminPromotionsPage = () => {
         newCoupons[0].code = couponForm.codePrefix.toUpperCase();
       }
 
-      const { error } = await supabase.from('coupons').insert(newCoupons);
+      const { error } = await (supabase.from('coupons') as any).insert(newCoupons);
       if (error) {
           if (error.code === '23505') {
             throw new Error('중복된 쿠폰 코드가 존재합니다.');
@@ -257,36 +253,35 @@ const AdminPromotionsPage = () => {
       toast.success(`${couponForm.count}개의 쿠폰이 생성되었습니다.`);
       setIsCouponModalOpen(false);
       fetchCoupons(selectedPromoForCoupons.id);
-    } catch (error: any) {
-      console.error('Error generating coupons:', error);
-      toast.error(error.message || '쿠폰 생성에 실패했습니다.');
+    } catch (error: unknown) {
+      console.error('Error generating coupons:', getErrorMessage(error));
+      toast.error(getErrorMessage(error) || '쿠폰 생성에 실패했습니다.');
     }
   };
 
   const handleDeleteCoupon = async (id: string) => {
     if (!confirm('정말 이 쿠폰을 취소하시겠습니까?')) return;
     try {
-      const { error } = await supabase.from('coupons').delete().eq('id', id);
+      const { error } = await (supabase.from('coupons') as any).delete().eq('id', id);
       if (error) throw error;
-      setCoupons(prev => prev.filter(c => c.id !== id));
+      setCoupons(prev => prev.filter((c: any) => c.id !== id));
       toast.success('쿠폰이 삭제되었습니다.');
-    } catch (error) {
-      console.error('Delete coupon error:', error);
+    } catch (error: unknown) {
+      console.error('Delete coupon error:', getErrorMessage(error));
       toast.error('쿠폰 삭제에 실패했습니다.');
     }
   };
 
   const toggleCouponStatus = async (id: string, currentStatus: boolean) => {
     try {
-        const { error } = await supabase
-          .from('coupons')
+        const { error } = await (supabase.from('coupons') as any)
           .update({ is_active: !currentStatus })
           .eq('id', id);
         if (error) throw error;
         toast.success(`상태가 변경되었습니다.`);
-        setCoupons(prev => prev.map(c => c.id === id ? { ...c, is_active: !currentStatus } : c));
-      } catch (error) {
-        console.error('Error toggling status:', error);
+        setCoupons(prev => prev.map((c: any) => c.id === id ? { ...c, is_active: !currentStatus } : c));
+      } catch (error: unknown) {
+        console.error('Error toggling status:', getErrorMessage(error));
         toast.error('상태 변경에 실패했습니다.');
       }
   }
@@ -498,7 +493,7 @@ const AdminPromotionsPage = () => {
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-muted-foreground mb-1">할인 방식</label>
-                    <select value={promoForm.discount_type} onChange={e => setPromoForm({...promoForm, discount_type: e.target.value as any})} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                    <select value={promoForm.discount_type} onChange={e => setPromoForm({...promoForm, discount_type: e.target.value as 'percent' | 'fixed'})} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
                         <option value="percent">퍼센트 할인 (%)</option>
                         <option value="fixed">고정 금액 할인 (₩)</option>
                     </select>
@@ -513,7 +508,7 @@ const AdminPromotionsPage = () => {
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-muted-foreground mb-1">지원 대상</label>
-                    <select value={promoForm.target_type} onChange={e => setPromoForm({...promoForm, target_type: e.target.value as any})} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                    <select value={promoForm.target_type} onChange={e => setPromoForm({...promoForm, target_type: e.target.value as 'all' | 'new_user' | 'subscriber'})} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
                         <option value="all">모든 사용자</option>
                         <option value="new_user">신규 가입자 (첫주문)</option>
                         <option value="subscriber">프리미엄 구독자 전용</option>

@@ -53,8 +53,7 @@ function readProfileDraftSafe() {
 async function createProfileFromDraftIfMissing(u: User) {
   const provider = (u.app_metadata?.provider as string | undefined) ?? 'email';
 
-  const { data: exists, error: exErr } = await supabase
-    .from('profiles')
+  const { data: exists, error: exErr } = await (supabase.from('profiles') as any)
     .select('user_id')
     .eq('user_id', u.id)
     .maybeSingle();
@@ -102,8 +101,7 @@ async function createProfileFromDraftIfMissing(u: User) {
     is_public: true,
   };
 
-  const { error: pErr } = await supabase
-    .from('profiles')
+  const { error: pErr } = await (supabase.from('profiles') as any)
     .upsert(payload, { onConflict: 'user_id', ignoreDuplicates: true });
   if (pErr) {
     console.error('profiles insert error:', pErr);
@@ -146,8 +144,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   // 계정 삭제 상태 확인 함수
   // 계정 보안 상태 무결성 검증 — 탈퇴 유예 기간 확인 및 서비스 제재(Ban) 상태를 실시간으로 분석하여 접근 권한 결정
   const checkAccountStatus = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
+    const { data, error } = await (supabase.from('profiles') as any)
       .select('deleted_at, banned_until, is_admin, plan')
       .eq('user_id', userId)
       .maybeSingle();
@@ -222,7 +219,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         setLoading(true);
         Promise.all([
           checkAccountStatus(initialUser.id),
-          supabase.from('profiles').select('id').eq('user_id', initialUser.id).maybeSingle()
+          (supabase.from('profiles') as any).select('id').eq('user_id', initialUser.id).maybeSingle()
         ]).then(([_, profileRes]) => {
           if (!mounted) return;
           if (profileRes.data) setProfileId(profileRes.data.id);
@@ -260,7 +257,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
           Promise.all([
             checkAccountStatus(u.id),
-            supabase.from('profiles').select('id').eq('user_id', u.id).maybeSingle()
+            (supabase.from('profiles') as any).select('id').eq('user_id', u.id).maybeSingle()
           ]).then(([_, profileRes]) => {
             if (!mounted) return;
             if (profileRes.data) setProfileId(profileRes.data.id);
@@ -289,7 +286,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
     // 3) 실시간 프로필 변동 구독 (제재 상태 실시간 반영용)
     const userIdRefForSub = { current: user?.id };
-    let profileSub: any = null;
+    let profileSub: import('@supabase/supabase-js').RealtimeChannel | null = null;
 
     if (user?.id) {
       profileSub = supabase
@@ -302,7 +299,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
             table: 'profiles',
             // 필터 제거: 때로는 ID 타입 매칭 문제로 필터링된 이벤트가 오지 않을 수 있음
           },
-          (payload: any) => {
+          (payload: import('@supabase/supabase-js').RealtimePostgresUpdatePayload<import('../types/database').Profile>) => {
             const updated = payload.new;
             if (updated && String(updated.user_id) === String(userIdRefForSub.current)) {
               if ('banned_until' in updated) {
@@ -369,8 +366,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     // 로그아웃 전 명시적으로 오프라인 상태 설정 (실시간 반영 위함)
     if (user) {
       try {
-        await supabase
-          .from('profiles')
+        await (supabase.from('profiles') as any)
           .update({
             is_online: false,
             last_active_at: new Date().toISOString(),
@@ -408,8 +404,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     if (!restoreUser) return;
 
     // 복구 로직: deleted_at을 NULL로 초기화
-    const { error } = await supabase
-      .from('profiles')
+    const { error } = await (supabase.from('profiles') as any)
       .update({ deleted_at: null })
       .eq('user_id', restoreUser.id);
 

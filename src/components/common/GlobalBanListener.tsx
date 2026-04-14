@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { addYears } from 'date-fns';
 import { toast } from 'sonner';
+import type { Database } from '@/types/database';
 
 export const GlobalBanListener: React.FC = () => {
   const { user, signOut, bannedUntil: initialBannedUntil } = useAuth();
@@ -32,7 +33,7 @@ export const GlobalBanListener: React.FC = () => {
           table: 'profiles',
           filter: `user_id=eq.${user.id}`,
         },
-        async (payload: any) => {
+        async (payload: import('@supabase/supabase-js').RealtimePostgresUpdatePayload<import('../../types/database').Database['public']['Tables']['profiles']['Row']>) => {
           const newProfile = payload.new;
           if (newProfile && newProfile.banned_until) {
             // Deduplication Logic: Prevents redundant notifications for identical ban timestamps to improve UX.

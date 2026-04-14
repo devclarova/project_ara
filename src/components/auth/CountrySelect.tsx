@@ -1,4 +1,4 @@
-import Select, { components, type SingleValue, type StylesConfig } from 'react-select';
+import Select, { components, type SingleValue, type StylesConfig, type DropdownIndicatorProps } from 'react-select';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { ChevronDown, ChevronUp } from 'lucide-react';
@@ -26,7 +26,7 @@ interface CountrySelectProps {
   isDisabled?: boolean;
 }
 
-const CustomDropdownIndicator = (props: any) => {
+const CustomDropdownIndicator = (props: DropdownIndicatorProps<Option, false>) => {
   const { selectProps } = props;
   const isOpen = selectProps.menuIsOpen;
   return (
@@ -44,8 +44,7 @@ export default function CountrySelect({ value, onChange, error = false, isDisabl
   useEffect(() => {
     // 외부 엔티티 동기화 — Supabase 저장소에서 국가 메타데이터(ISO 코드, 국기 URL, 전화 코드)를 비동기적으로 페칭하여 옵션 인벤토리 구성
     const fetchCountries = async () => {
-      const { data, error } = await supabase
-        .from('countries')
+      const { data, error } = await (supabase.from('countries') as any)
         .select('id, name, phone_code, iso_code, flag_url')
         .order('id', { ascending: true });
       if (!error && data) setCountries(data);
@@ -55,7 +54,7 @@ export default function CountrySelect({ value, onChange, error = false, isDisabl
   }, []);
 
   // 데이터 가공 및 정규화(Adaptation) — 스토리지 모델을 UI 셀렉트 라이브러리 호환 규격으로 변환하고 국제화(i18n) 레이블 바인딩
-  const options: Option[] = countries.map(c => ({
+  const options: Option[] = countries.map((c: any) => ({
     value: String(c.id),
     label: c.name,
     flag_url: c.flag_url,

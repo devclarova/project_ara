@@ -27,3 +27,5 @@ dist-ssr
 .vercel
 .env*.local
 ga-credentials.json
+
+.dist/*

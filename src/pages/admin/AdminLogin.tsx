@@ -9,6 +9,7 @@ import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Mail, Lock, Home } from 'lucide-react';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 const AdminLogin = () => {
   const { t } = useTranslation();
@@ -32,9 +33,9 @@ const AdminLogin = () => {
 
       // 인증 후 인가 처리(Authorization) — 관리자 전용 권한 레벨(is_admin) 교차 검증 수행
       await checkAdminAndNavigate(authData.user.id);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
-      toast.error(error.message || '인증에 실패했습니다. 계정 정보를 다시 확인해 주세요.');
+      toast.error(getErrorMessage(error));
       setIsLoading(false);
     }
   };
@@ -55,17 +56,16 @@ const AdminLogin = () => {
       });
 
       if (error) throw error;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Social login error:', error);
-      toast.error(error.message || t('auth.auth_failed'));
+      toast.error(getErrorMessage(error));
       setIsLoading(false);
     }
   };
 
   const checkAdminAndNavigate = async (userId: string) => {
     try {
-      const { data: userData, error: userError } = await supabase
-        .from('profiles')
+      const { data: userData, error: userError } = await (supabase.from('profiles') as any)
         .select('is_admin')
         .eq('user_id', userId)
         .single();
@@ -83,7 +83,7 @@ const AdminLogin = () => {
       // 최종 인가 승인 — 권한 검증 완료 후 관리 시스템 메인 진입
       toast.success(t('admin.login_success'));
       navigate('/admin');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Admin check error:', error);
       toast.error(t('admin.permission_check_error'));
       setIsLoading(false);

@@ -36,7 +36,7 @@ export default function BaseCarousel({
             ? {
                 delay: 4500,
                 disableOnInteraction: false,
-                pauseOnMouseEnter: true, // ✅ 바로 이 기능!
+                pauseOnMouseEnter: true,
               }
             : undefined
         }
@@ -45,9 +45,7 @@ export default function BaseCarousel({
         observeSlideChildren
         onResize={swiper => swiper.update()}
         style={
-          {
-            '--swiper-pagination-color': 'rgb(0,191,165)',
-          } as any
+            { '--swiper-pagination-color': 'rgb(0,191,165)' } as React.CSSProperties
         }
         className={`w-full max-w-full landing-swiper ${swiperClassName}`}
       >

@@ -111,7 +111,7 @@ export default function ChatWelcomeSearch({ onChatSelect }: Props) {
                       </span>
                     </div>
                     <div className="bg-secondary border border-gray-300 dark:border-gray-600 rounded-xl overflow-hidden divide-y divide-gray-200 dark:divide-gray-700">
-                      {historySearchResults.users.map(chat => {
+                      {historySearchResults.users.map((chat: any) => {
                         const otherUser = chat.other_user;
                         if (!otherUser) return null;
 
@@ -169,7 +169,7 @@ export default function ChatWelcomeSearch({ onChatSelect }: Props) {
                       </span>
                     </div>
                     <div className="bg-secondary border border-gray-300 dark:border-gray-600 rounded-xl overflow-hidden divide-y divide-gray-200 dark:divide-gray-700">
-                      {historySearchResults.messages.map(msg => (
+                      {historySearchResults.messages.map((msg: any) => (
                         <div
                           key={msg.id}
                           className="hover:bg-primary/5 transition-colors cursor-pointer p-5 group"

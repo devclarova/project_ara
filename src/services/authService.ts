@@ -25,28 +25,27 @@ export async function ensureAppUser() {
 
 /** 드래프트 로드 (없으면 기본값) */
 function readProfileDraftFallback(u: User) {
-  let draft: any = null;
+  let draft: Record<string, unknown> | null = null;
   try {
     const raw = localStorage.getItem(PROFILE_DRAFT_KEY);
-    if (raw) draft = JSON.parse(raw);
+    if (raw) draft = JSON.parse(raw) as Record<string, unknown>;
   } catch {
     /* ignore */
   }
 
-  const nickname = (draft?.nickname ?? u.email?.split('@')[0] ?? 'user').toString().trim();
-  const gender = (draft?.gender ?? 'Male').toString().trim();
-  const birth = (draft?.birthday ?? '2000-01-01').toString().trim();
+  const nickname = ((draft?.nickname as string | undefined) ?? u.email?.split('@')[0] ?? 'user').toString().trim();
+  const gender = ((draft?.gender as string | undefined) ?? 'Male').toString().trim();
+  const birth = ((draft?.birthday as string | undefined) ?? '2000-01-01').toString().trim();
   const country = draft?.country ? String(draft.country).trim() : null;
-  const bio = (draft?.bio ?? '').toString().trim() || null;
-  const avatar_url = draft?.pendingAvatarUrl ?? null;
+  const bio = ((draft?.bio as string | undefined) ?? '').toString().trim() || null;
+  const avatar_url = (draft?.pendingAvatarUrl as string | undefined) ?? null;
 
   return { nickname, gender, birth, country, bio, avatar_url };
 }
 
 /** 공통: 이미 프로필 있는지 체크 */
 async function profileExists(userId: string) {
-  const { data, error } = await supabase
-    .from('profiles')
+  const { data, error } = await (supabase.from('profiles') as any)
     .select('user_id')
     .eq('user_id', userId)
     .maybeSingle();
@@ -73,14 +72,14 @@ export async function createEmailProfileIfMissing(u: User) {
 
   // profiles에 동의 칼럼이 이미 있다면 포함 (없으면 PostgREST 에러 → 아래서 무시)
   if (consent) {
-    (payload as any).tos_agreed = !!consent.tos_agreed;
-    (payload as any).privacy_agreed = !!consent.privacy_agreed;
+    payload.tos_agreed = !!consent.tos_agreed;
+    payload.privacy_agreed = !!consent.privacy_agreed;
     if (typeof consent.marketing_agreed !== 'undefined') {
-      (payload as any).marketing_agreed = !!consent.marketing_agreed;
+      payload.marketing_agreed = !!consent.marketing_agreed;
     }
   }
 
-  const { error } = await supabase.from('profiles').insert(payload);
+  const { error } = await (supabase.from('profiles') as any).insert(payload as any);
   if (error && !isDupeErr(error.message)) {
     console.error('[profiles insert(email)]', error);
   } else {
@@ -116,14 +115,14 @@ export async function createSocialProfileDefaultsIfMissing(u: User) {
   // 소셜도 동의 드래프트가 이미 있다면 붙여 저장(없으면 무시)
   const consent = readConsentDraft();
   if (consent) {
-    (payload as any).tos_agreed = !!consent.tos_agreed;
-    (payload as any).privacy_agreed = !!consent.privacy_agreed;
+    payload.tos_agreed = !!consent.tos_agreed;
+    payload.privacy_agreed = !!consent.privacy_agreed;
     if (typeof consent.marketing_agreed !== 'undefined') {
-      (payload as any).marketing_agreed = !!consent.marketing_agreed;
+      payload.marketing_agreed = !!consent.marketing_agreed;
     }
   }
 
-  const { error } = await supabase.from('profiles').insert(payload);
+  const { error } = await (supabase.from('profiles') as any).insert(payload as any);
   if (error && !isDupeErr(error.message)) {
     console.error('[profiles insert(social)]', error);
   } else {

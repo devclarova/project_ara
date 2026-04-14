@@ -20,6 +20,7 @@ type VideoFetchRow = {
   contents?: string | null;
   episode?: string | null;
   scene?: string | number | null;
+  study?: { poster_image_url: string | null } | { poster_image_url: string | null }[] | null;
 };
 
 const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
@@ -112,7 +113,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
       console.warn('[VIEW] invalid rowId:', rowId);
       return false;
     }
-    const { data, error } = await supabase.rpc('increment_video_view', { _video_id: rowId });
+    const { data, error } = await (supabase.rpc as any)('increment_video_view', { _video_id: rowId });
     if (error) {
       console.error('[RPC] increment_video_view ERROR:', error);
       return false;
@@ -135,8 +136,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
 
       // scene 지정 시 정확 매칭
       if (s != null) {
-        const { data, error } = await supabase
-          .from('video')
+        const { data, error } = await (supabase.from('video') as any)
           .select('id,study_id,video_url,video_start_time,video_end_time,image_url, study(poster_image_url)')
           .eq('contents', c)
           .eq('episode', e)
@@ -165,7 +165,8 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
         setSegStartSec(startSec);
         setSegEndSec(endSec);
         
-        const fallbackUrl = (row as any).study?.poster_image_url;
+        const studyData = row.study;
+        const fallbackUrl = Array.isArray(studyData) ? studyData[0]?.poster_image_url : studyData?.poster_image_url;
         setImageUrl(row.image_url || fallbackUrl || null);
         
         setViewRecorded(false);
@@ -174,8 +175,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
       }
 
       // scene 미지정 시 첫 장면 선택
-      const { data, error } = await supabase
-        .from('video')
+      const { data, error } = await (supabase.from('video') as any)
         .select('id,study_id,video_url,video_start_time,video_end_time,image_url,scene, study(poster_image_url)')
         .eq('contents', c)
         .eq('episode', e)
@@ -204,7 +204,8 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
       setSegStartSec(startSec);
       setSegEndSec(endSec);
       
-      const fallbackUrl = (first as any).study?.poster_image_url;
+      const studyData = first.study;
+      const fallbackUrl = Array.isArray(studyData) ? studyData[0]?.poster_image_url : studyData?.poster_image_url;
       setImageUrl(first.image_url || fallbackUrl || null);
       
       setViewRecorded(false);
@@ -347,7 +348,8 @@ const VideoPlayer = forwardRef<VideoPlayerHandle>((_, ref) => {
             config={{
               youtube: {
                 playerVars: {
-                  origin: typeof window !== 'undefined' ? window.location.origin : undefined,
+                  origin: window.location.origin,
+                  widget_referrer: window.location.origin,
                   enablejsapi: 1,
                   rel: 0,
                   modestbranding: 1,

@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner'; // Add import
 import { getBanMessage } from '@/utils/banUtils'; // Add import
+import { getErrorMessage } from '@/utils/errorMessage';
 
 interface ComposeBoxProps {
 // ... existing interface ...
@@ -84,8 +85,7 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
       }
 
       // ✅ DB에 트윗 추가
-      const { data, error } = await supabase
-        .from('tweets')
+      const { data, error } = await (supabase.from('tweets') as any)
         .insert([
           {
             author_id: user.id, // RLS 정책에 따라 auth.uid()와 매칭
@@ -141,8 +141,8 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
       setSelectedImage(null);
       setPreviewImage(null);
       setShowOptions(false);
-    } catch (err: any) {
-      console.error('❌ 트윗 업로드 실패:', err.message);
+    } catch (err: unknown) {
+      console.error('❌ 트윗 업로드 실패:', getErrorMessage(err));
       alert('트윗을 업로드하는 중 오류가 발생했습니다.');
     } finally {
       setUploading(false);

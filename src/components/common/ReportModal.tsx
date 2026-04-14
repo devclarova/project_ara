@@ -24,8 +24,8 @@ interface ReportModalProps {
   previewContent?: React.ReactNode; // UI에 표시할 미리보기 컨텐츠
   additionalInfo?: string; // DB description에 추가할 텍스트
   onSuccess?: () => void;
-  metadata?: Record<string, any>;
-  contentSnapshot?: any; // Snapshot of the content at time of reporting
+  metadata?: Record<string, unknown>;
+  contentSnapshot?: unknown; // Snapshot of the content at time of reporting
 }
 
 const REPORT_REASONS = [
@@ -42,7 +42,7 @@ type ReasonOption = {
 };
 
 // Component Customization: Overrides the default React-Select indicator with a contextual chevron and state-driven animations.
-const CustomDropdownIndicator = (props: any) => {
+const CustomDropdownIndicator = (props: import('react-select').DropdownIndicatorProps<ReasonOption, false>) => {
   const { selectProps } = props;
   const isOpen = selectProps.menuIsOpen;
   return (
@@ -160,8 +160,7 @@ export default function ReportModal({ isOpen, onClose, targetType, targetId, pre
 
     try {
       setIsSubmitting(true);
-      const { data: profile } = await supabase
-        .from('profiles')
+      const { data: profile } = await (supabase.from('profiles') as any)
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -175,8 +174,7 @@ export default function ReportModal({ isOpen, onClose, targetType, targetId, pre
             additionalInfo
           ].filter(Boolean).join('\n\n---\n');
 
-      const { error } = await supabase
-        .from('reports')
+      const { error } = await (supabase.from('reports') as any)
         .insert({
           reporter_id: profile.id,
           target_type: targetType,

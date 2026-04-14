@@ -38,12 +38,12 @@ export function useRelinkDetection() {
     }
   }, []);
 
-  const checkForRelink = async (user: any, skipSignOut: boolean = false) => {
+  const checkForRelink = async (user: import('@supabase/supabase-js').User | null, skipSignOut: boolean = false) => {
     try {
       if (!user || !user.identities || user.identities.length === 0) return false;
 
-      const latestIdentity = user.identities.sort(
-        (a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+      const latestIdentity = [...(user.identities || [])].sort(
+        (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
       )[0];
 
       if (!['google', 'kakao'].includes(latestIdentity.provider || '')) return;
@@ -55,19 +55,19 @@ export function useRelinkDetection() {
         current_email_param: user.email || ''
       };
 
-      const { data: checkResult, error } = await supabase.rpc('check_unlinked_identity', rpcParams);
+      const { data: checkResult, error } = await (supabase.rpc as any)('check_unlinked_identity', rpcParams);
 
       if (error) {
         console.error('[Relink] Check error:', error);
         return false;
       }
 
-      if (checkResult?.should_block) {
+      if ((checkResult as any)?.should_block) {
         const blockData = {
           isOpen: true,
-          reason: checkResult.reason as 'same_email' | 'different_email',
+          reason: (checkResult as any).reason as 'same_email' | 'different_email',
           provider: latestIdentity.provider as 'google' | 'kakao',
-          originalEmailMasked: checkResult.original_email_masked,
+          originalEmailMasked: (checkResult as any).original_email_masked,
           currentUserId: user.id,
           identityId: latestIdentity.id,
           providerName: latestIdentity.provider

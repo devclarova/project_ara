@@ -68,8 +68,7 @@ export default function ReplyModal({ tweetId, onClose }: ReplyModalProps) {
       }
 
       // profiles.id 조회
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
+      const { data: profile, error: profileError } = await (supabase.from('profiles') as any)
         .select('id')
         .eq('user_id', user.id)
         .single();
@@ -81,7 +80,7 @@ export default function ReplyModal({ tweetId, onClose }: ReplyModalProps) {
       }
 
       // 댓글 저장 (onReplyCreated 제거)
-      const { error: insertError } = await supabase.from('tweet_replies').insert([
+      const { error: insertError } = await (supabase.from('tweet_replies') as any).insert([
         {
           tweet_id: tweetId,
           author_id: profile.id,

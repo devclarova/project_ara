@@ -34,7 +34,9 @@ export interface TweetQueryResponse {
     banned_until?: string | null;
     plan?: 'free' | 'basic' | 'premium';
   } | null;
+  deleted_at?: string | null;
   is_hidden?: boolean;
+  updated_at?: string | null;
 }
 
 export interface ReplyQueryResponse {
@@ -57,7 +59,8 @@ export interface ReplyQueryResponse {
     content: string;
     author_id: string;
   } | null;
-  updated_at?: string;
+  updated_at?: string | null;
+  deleted_at?: string | null;
   is_hidden?: boolean;
 }
 

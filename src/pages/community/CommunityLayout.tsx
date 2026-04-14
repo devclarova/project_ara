@@ -10,11 +10,12 @@ import TrendsPanel from './feature/TrendsPanel';
 import TweetModal from './feature/TweetModal';
 import ReplyModal from './feature/ReplyModal';
 import { Helmet } from 'react-helmet-async';
+import type { FeedItem } from '@/types/sns';
 
 export default function CommunityLayout() {
   const [showTweetModal, setShowTweetModal] = useState(false);
   const [showReplyModal, setShowReplyModal] = useState(false);
-  const [newTweet, setNewTweet] = useState(null);
+  const [newTweet, setNewTweet] = useState<FeedItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const location = useLocation();

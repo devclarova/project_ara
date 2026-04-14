@@ -12,6 +12,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { getErrorMessage } from '@/utils/errorMessage';
 import { Upload } from 'lucide-react';
 
 // 데이터 엔티티 및 스키마 인터페이스 정의
@@ -92,16 +93,15 @@ const AdminBannerManager = () => {
   const fetchBanners = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('marketing_banners')
+      const { data, error } = await (supabase.from('marketing_banners') as any)
         .select('*')
         .order('priority', { ascending: true })
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       setBanners(data || []);
-    } catch (err: any) {
-      console.error('Fetch banners error:', err);
+    } catch (error: unknown) {
+      console.error('Fetch banners error:', getErrorMessage(error));
       toast.error('배너 목록을 불러오는 데 실패했습니다.');
     } finally {
       setLoading(false);
@@ -183,15 +183,13 @@ const AdminBannerManager = () => {
       };
 
       if (editingBanner) {
-        const { error } = await supabase
-          .from('marketing_banners')
+        const { error } = await (supabase.from('marketing_banners') as any)
           .update(payload)
           .eq('id', editingBanner.id);
         if (error) throw error;
         toast.success('배너가 수정되었습니다.');
       } else {
-        const { error } = await supabase
-          .from('marketing_banners')
+        const { error } = await (supabase.from('marketing_banners') as any)
           .insert(payload);
         if (error) throw error;
         toast.success('배너가 생성되었습니다.');
@@ -200,8 +198,8 @@ const AdminBannerManager = () => {
       setShowForm(false);
       resetForm();
       fetchBanners();
-    } catch (err: any) {
-      console.error('Save banner error:', err);
+    } catch (error: unknown) {
+      console.error('Save banner error:', getErrorMessage(error));
       toast.error('배너 저장에 실패했습니다.');
     } finally {
       setSaving(false);
@@ -211,14 +209,14 @@ const AdminBannerManager = () => {
   // 배너 노출 가시성 토글 — 서비스 전역 실시간 노출 상태 스위칭
   const handleToggleActive = async (id: string, currentActive: boolean) => {
     try {
-      const { error } = await supabase
-        .from('marketing_banners')
+      const { error } = await (supabase.from('marketing_banners') as any)
         .update({ is_active: !currentActive })
         .eq('id', id);
       if (error) throw error;
-      setBanners(prev => prev.map(b => b.id === id ? { ...b, is_active: !currentActive } : b));
+      setBanners(prev => prev.map((b: any) => b.id === id ? { ...b, is_active: !currentActive } : b));
       toast.success(!currentActive ? '배너가 활성화되었습니다.' : '배너가 비활성화되었습니다.');
-    } catch (err: any) {
+    } catch (error: unknown) {
+      console.error('Toggle active error:', getErrorMessage(error));
       toast.error('상태 변경에 실패했습니다.');
     }
   };
@@ -227,21 +225,21 @@ const AdminBannerManager = () => {
   const handleDelete = async () => {
     if (!deleteModal) return;
     try {
-      const { error } = await supabase
-        .from('marketing_banners')
+      const { error } = await (supabase.from('marketing_banners') as any)
         .delete()
         .eq('id', deleteModal);
       if (error) throw error;
-      setBanners(prev => prev.filter(b => b.id !== deleteModal));
+      setBanners(prev => prev.filter((b: any) => b.id !== deleteModal));
       toast.success('배너가 삭제되었습니다.');
       setDeleteModal(null);
-    } catch (err: any) {
+    } catch (error: unknown) {
+      console.error('Delete banner error:', getErrorMessage(error));
       toast.error('삭제에 실패했습니다.');
     }
   };
 
   // 검색 및 타입 필터링 로직 — 인터랙티브 UI 반응성 확보를 위한 클라이언트 측 연산 (O(n))
-  const filtered = banners.filter(b => {
+  const filtered = banners.filter((b: any) => {
     const matchSearch = !searchTerm || b.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchType = filterType === 'all' || b.banner_type === filterType;
     return matchSearch && matchType;
@@ -286,7 +284,7 @@ const AdminBannerManager = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: '전체 배너', value: banners.length, icon: Image },
-            { label: '활성 배너', value: banners.filter(b => b.is_active).length, icon: Eye },
+            { label: '활성 배너', value: banners.filter((b: any) => b.is_active).length, icon: Eye },
             { label: '총 클릭 수', value: banners.reduce((s, b) => s + b.click_count, 0).toLocaleString(), icon: ExternalLink },
             { label: '총 노출 수', value: banners.reduce((s, b) => s + b.view_count, 0).toLocaleString(), icon: BarChart3 },
           ].map((stat, i) => (
@@ -382,7 +380,7 @@ const AdminBannerManager = () => {
                         <span className="inline-flex items-center gap-1">
                           <Monitor size={12} /> {typeInfo?.icon} {typeInfo?.label}
                         </span>
-                        <span>대상: {TARGET_PAGES.find(p => p.value === banner.target_page)?.label}</span>
+                        <span>대상: {TARGET_PAGES.find((p: any) => p.value === banner.target_page)?.label}</span>
                         {banner.starts_at && (
                           <span className="inline-flex items-center gap-1">
                             <Calendar size={12} />
@@ -494,7 +492,7 @@ const AdminBannerManager = () => {
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">배너 타입 *</label>
                   <select
                     value={form.banner_type}
-                    onChange={e => setForm(f => ({ ...f, banner_type: e.target.value as any }))}
+                    onChange={e => setForm(f => ({ ...f, banner_type: e.target.value as MarketingBanner['banner_type'] }))}
                     className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-zinc-800 border border-transparent focus:border-primary/20 outline-none text-sm"
                   >
                     {BANNER_TYPES.map(t => (
@@ -630,8 +628,8 @@ const AdminBannerManager = () => {
                               const { data } = supabase.storage.from('products').getPublicUrl(fileName);
                               setForm(f => ({ ...f, image_url: data.publicUrl }));
                               toast.success('이미지가 업로드되었습니다.');
-                            } catch (err: any) {
-                              console.error('Upload error:', err);
+                            } catch (error: unknown) {
+                              console.error('Upload error:', getErrorMessage(error));
                               toast.error('이미지 업로드에 실패했습니다.');
                             } finally {
                               setUploading(false);

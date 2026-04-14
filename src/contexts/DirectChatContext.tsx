@@ -125,8 +125,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       if (currentUserProfileRef.current) {
         myProfId = currentUserProfileRef.current.id;
       } else {
-        const { data: pData } = await supabase
-          .from('profiles')
+        const { data: pData } = await (supabase.from('profiles') as any)
           .select('id')
           .eq('user_id', currentUserId)
           .maybeSingle();
@@ -135,14 +134,13 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
 
       if (!myProfId) return;
 
-      const { data } = await supabase
-        .from('user_blocks')
+      const { data } = await (supabase.from('user_blocks') as any)
         .select('blocked_id')
         .eq('blocker_id', myProfId)
         .is('ended_at', null);
 
       if (data) {
-        const newSet = new Set(data.map(b => b.blocked_id));
+        const newSet = new Set<string>(data.map((b: any) => b.blocked_id));
         blockedIdsRef.current = newSet;
         setBlockedUserIds(newSet);
       }
@@ -170,7 +168,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         const response = await getChatList();
         if (response.success && response.data) {
           setChats(response.data);
-          const unreadChatsCount = response.data.filter(chat => {
+          const unreadChatsCount = response.data.filter((chat: any) => {
             // Ref를 사용하여 최신 차단 정보 보되 의존성 제거
             if (blockedIdsRef.current.has(chat.other_user.id)) return false;
             return (chat.unread_count || 0) > 0;
@@ -179,8 +177,8 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         } else {
           handleError(response.error || '채팅방 목록을 불러올 수 없습니다.');
         }
-      } catch (err: any) {
-        if (err.message === '사용자가 로그인되지 않았습니다.') return;
+      } catch (err: unknown) {
+        if (err instanceof Error && err.message === '사용자가 로그인되지 않았습니다.') return;
         handleError('채팅방 목록 로드 중 오류가 발생했습니다.');
       } finally {
         isLoadingChatsRef.current = false;
@@ -225,8 +223,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       const cached = profileCache.current.get(authUserId);
       if (cached) return cached;
 
-      const { data } = await supabase
-        .from('profiles')
+      const { data } = await (supabase.from('profiles') as any)
         .select('id, nickname, avatar_url, username, is_online')
         .eq('user_id', authUserId)
         .maybeSingle();
@@ -281,7 +278,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       const response = await clearNewChatNotification(chatId);
       if (response.success) {
         setChats(prev =>
-          prev.map(chat => (chat.id === chatId ? { ...chat, is_new_chat: false } : chat)),
+          prev.map((chat: any) => (chat.id === chatId ? { ...chat, is_new_chat: false } : chat)),
         );
         return true;
       }
@@ -301,7 +298,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         setMessages([]);
         setHasMoreMessages(false);
 
-        let chatInfo = chatsRef.current.find(chat => chat.id === chatId) || null;
+        let chatInfo = chatsRef.current.find((chat: any) => chat.id === chatId) || null;
 
         if (!chatInfo) {
           try {
@@ -324,10 +321,10 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         const response = await getMessages(chatId, 30, undefined, targetId);
         if (response.success && response.data) {
           const incoming = response.data.messages;
-          const filteredIncoming = incoming.filter(m => !blockedUserIds.has(m.sender_id));
+          const filteredIncoming = incoming.filter((m: any) => !blockedUserIds.has(m.sender_id));
           const sorted = targetId ? filteredIncoming : [...filteredIncoming].reverse();
 
-          const unique = Array.from(new Map(sorted.map(m => [m.id, m])).values());
+          const unique = Array.from(new Map(sorted.map((m: any) => [m.id, m])).values());
           unique.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
           setMessages(unique);
@@ -342,8 +339,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
 
           // DB에서도 해당 채팅방의 미읽음 메시지를 일괄 읽음 처리 (await으로 완료 대기)
           if (currentUserId) {
-            const { error: readError } = await supabase
-              .from('direct_messages')
+            const { error: readError } = await (supabase.from('direct_messages') as any)
               .update({ is_read: true, read_at: new Date().toISOString() })
               .eq('chat_id', chatId)
               .neq('sender_id', currentUserId)
@@ -356,9 +352,9 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
 
           // 로컬 상태 즉시 반영
           setChats(prev => {
-            const updated = prev.map(chat => (chat.id === chatId ? { ...chat, unread_count: 0 } : chat));
+            const updated = prev.map((chat: any) => (chat.id === chatId ? { ...chat, unread_count: 0 } : chat));
             // 헤더 배지도 동기화: 나머지 채팅방의 미읽음 수 재계산
-            const totalUnread = updated.filter(c => {
+            const totalUnread = updated.filter((c: any) => {
               if (blockedIdsRef.current.has(c.other_user.id)) return false;
               return (c.unread_count || 0) > 0;
             }).length;
@@ -394,7 +390,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           const sortedOlder = [...olderMessages].reverse();
           setMessages(prev => {
             const combined = [...sortedOlder, ...prev];
-            const unique = Array.from(new Map(combined.map(m => [m.id, m])).values());
+            const unique = Array.from(new Map(combined.map((m: any) => [m.id, m])).values());
             unique.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
             return unique;
           });
@@ -430,7 +426,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         if (newerMessages.length > 0) {
           setMessages(prev => {
             const combined = [...prev, ...newerMessages];
-            const unique = Array.from(new Map(combined.map(m => [m.id, m])).values());
+            const unique = Array.from(new Map(combined.map((m: any) => [m.id, m])).values());
             unique.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
             return unique;
           });
@@ -529,7 +525,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           const sent = response.data;
           if (currentChatId.current === messageData.chat_id) {
             setMessages(prev =>
-              prev.map(msg => {
+              prev.map((msg: any) => {
                 if (msg.id !== tempId) return msg;
                 return {
                   ...sent,
@@ -563,14 +559,14 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           return true;
         } else {
           if (currentChatId.current === messageData.chat_id) {
-            setMessages(prev => prev.filter(msg => msg.id !== tempId));
+            setMessages(prev => prev.filter((msg: any) => msg.id !== tempId));
           }
           handleError(response.error || '메시지 전송에 실패했습니다.');
           return false;
         }
       } catch (err) {
         if (currentChatId.current === messageData.chat_id) {
-          setMessages(prev => prev.filter(msg => msg.id !== tempId));
+          setMessages(prev => prev.filter((msg: any) => msg.id !== tempId));
         }
         handleError('메시지 전송 중 오류가 발생했습니다.');
         return false;
@@ -595,7 +591,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       setIsHistorySearching(true);
       try {
         const lowerQuery = query.toLowerCase();
-        const matchedChats = chats.filter(chat =>
+        const matchedChats = chats.filter((chat: any) =>
           chat.other_user?.nickname?.toLowerCase().includes(lowerQuery),
         );
 
@@ -665,23 +661,21 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     async (chatId: string): Promise<boolean> => {
       try {
         setLoading(true);
-        const targetChat = chatsRef.current.find(c => c.id === chatId);
+        const targetChat = chatsRef.current.find((c: any) => c.id === chatId);
         const otherProfileId = targetChat?.other_user?.id;
         const myProfileId = currentUserProfileRef.current?.id;
 
         const response = await exitDirectChat(chatId);
 
         if (response.success) {
-          await supabase
-            .from('direct_messages')
+          await (supabase.from('direct_messages') as any)
             .update({ is_read: true, read_at: new Date().toISOString() })
             .eq('chat_id', chatId)
             .neq('sender_id', currentUserId)
             .eq('is_read', false);
 
           if (otherProfileId && myProfileId) {
-            await supabase
-              .from('notifications')
+            await (supabase.from('notifications') as any)
               .update({ is_read: true })
               .eq('sender_id', otherProfileId)
               .eq('receiver_id', myProfileId)
@@ -716,8 +710,8 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       } else {
         handleError(response.error || '비활성화된 채팅방 목록을 불러올 수 없습니다.');
       }
-    } catch (err: any) {
-      if (err.message === '사용자가 로그인되지 않았습니다.') return;
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message === '사용자가 로그인되지 않았습니다.') return;
       handleError('비활성화된 채팅방 목록 로딩 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
@@ -737,7 +731,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         setLoading(true);
         const response = await restoreDirectChat(chatId);
         if (response.success) {
-          setInactiveChats(prev => prev.filter(chat => chat.id !== chatId));
+          setInactiveChats(prev => prev.filter((chat: any) => chat.id !== chatId));
           await loadChats();
           return true;
         } else {
@@ -781,8 +775,8 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
   useEffect(() => {
     if (!currentUserId) return;
 
-    const handleNewMessage = async (payload: any) => {
-      let newMessage = payload.new;
+    const handleNewMessage = async (payload: import('@supabase/supabase-js').RealtimePostgresInsertPayload<import('../types/database').MessagesRow>) => {
+      let newMessage = payload.new as any;
       const chatId = newMessage.chat_id;
       
       if (blockedUserIds.has(newMessage.sender_id)) return;
@@ -790,8 +784,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
       for (let i = 0; i < 3; i++) {
         try {
-          const { data: fullMessage } = await supabase
-            .from('direct_messages')
+          const { data: fullMessage } = await (supabase.from('direct_messages') as any)
             .select(`*, attachments:direct_message_attachments(*)`)
             .eq('id', newMessage.id)
             .maybeSingle();
@@ -809,7 +802,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         const msgWithSender = { ...newMessage, sender: senderProfile };
 
         setMessages(prev => {
-          if (prev.some(msg => msg.id === newMessage.id)) return prev;
+          if (prev.some((msg: any) => msg.id === newMessage.id)) return prev;
           const tempIndex = prev.findIndex(msg =>
             msg.id.startsWith('temp-') &&
             msg.sender_id === newMessage.sender_id &&
@@ -830,7 +823,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         });
 
         if (newMessage.sender_id !== currentUserId) {
-          supabase.from('direct_messages').update({ is_read: true, read_at: new Date().toISOString() }).eq('id', newMessage.id).then();
+          (supabase.from('direct_messages') as any).update({ is_read: true, read_at: new Date().toISOString() }).eq('id', newMessage.id).then();
         }
       }
 
@@ -843,7 +836,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
             created_at: newMessage.created_at,
             sender_id: newMessage.sender_id,
             sender_nickname: '',
-            attachments: newMessage.attachments ?? [],
+            attachments: (newMessage as any).attachments ?? [],
           };
           updatedChat.last_message_at = newMessage.created_at;
 
@@ -864,7 +857,8 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
 
     const channel = supabase
       .channel(`direct_chat_unified_${currentUserId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages' }, payload => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages' }, 
+        (payload: any) => {
         if (payload.eventType === 'INSERT') {
           handleNewMessage(payload);
         } else if (payload.eventType === 'UPDATE') {
@@ -873,11 +867,11 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           const isDeleted = !!updatedMsg.deleted_at || (updatedMsg.content && updatedMsg.content.includes('관리자에 의해 삭제된 메시지입니다'));
 
           if (currentChatId.current === chatId) {
-            setMessages(prev => prev.map(msg => msg.id === updatedMsg.id ? { ...msg, content: updatedMsg.content, deleted_at: isDeleted ? updatedMsg.deleted_at || new Date().toISOString() : updatedMsg.deleted_at, attachments: isDeleted ? [] : msg.attachments } : msg));
+            setMessages(prev => prev.map((msg: any) => msg.id === updatedMsg.id ? { ...msg, content: updatedMsg.content, deleted_at: isDeleted ? updatedMsg.deleted_at || new Date().toISOString() : updatedMsg.deleted_at, attachments: isDeleted ? [] : msg.attachments } : msg));
           }
 
-          setChats(prev => prev.map(chat => {
-            if (chat.id === chatId && chat.last_message && (chat.last_message.created_at === updatedMsg.created_at || (chat.last_message as any).id === updatedMsg.id)) {
+          setChats(prev => prev.map((chat: any) => {
+            if (chat.id === chatId && chat.last_message && (chat.last_message.created_at === updatedMsg.created_at || (chat.last_message as Record<string, any>).id === updatedMsg.id)) {
               return { ...chat, last_message: { ...chat.last_message, content: updatedMsg.content, attachments: isDeleted ? [] : chat.last_message.attachments } };
             }
             return chat;
@@ -890,24 +884,25 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
   }, [currentUserId, loadChats, fetchProfileByAuthId, blockedUserIds]);
 
   const hasNewChatNotification = useMemo(
-    () => chats.some(chat => !blockedUserIds.has(chat.other_user.id) && (chat.unread_count || 0) > 0),
+    () => chats.some((chat: any) => !blockedUserIds.has(chat.other_user.id) && (chat.unread_count || 0) > 0),
     [chats, blockedUserIds],
   );
 
   useEffect(() => {
     const channel = supabase
       .channel('global-profile-updates')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
-        const updated = payload.new as any;
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, 
+        (payload: import('@supabase/supabase-js').RealtimePostgresUpdatePayload<import('../types/database').Profile>) => {
+          const updated = payload.new;
         if (!updated) return;
         const authId = updated.user_id;
         if (authId && profileCache.current.has(authId)) {
           const existing = profileCache.current.get(authId)!;
           profileCache.current.set(authId, { ...existing, nickname: updated.nickname ?? existing.nickname, avatar_url: updated.avatar_url ?? existing.avatar_url, banned_until: updated.banned_until });
         }
-        setChats(prev => prev.map(chat => chat.other_user?.id === updated.id ? { ...chat, other_user: { ...chat.other_user, nickname: updated.nickname ?? chat.other_user.nickname, avatar_url: updated.avatar_url ?? chat.other_user.avatar_url, banned_until: updated.banned_until } } : chat));
+        setChats(prev => prev.map((chat: any) => chat.other_user?.id === updated.id ? { ...chat, other_user: { ...chat.other_user, nickname: updated.nickname ?? chat.other_user.nickname, avatar_url: updated.avatar_url ?? chat.other_user.avatar_url, banned_until: updated.banned_until } } : chat));
         setCurrentChat(prev => (prev && prev.other_user?.id === updated.id) ? { ...prev, other_user: { ...prev.other_user, nickname: updated.nickname ?? prev.other_user.nickname, avatar_url: updated.avatar_url ?? prev.other_user.avatar_url, banned_until: updated.banned_until } } : prev);
-        setMessages(prev => prev.map(msg => (msg.sender?.id === updated.id || msg.sender_id === updated.user_id) ? { ...msg, sender: { ...(msg.sender || {}), nickname: updated.nickname ?? msg.sender?.nickname, avatar_url: updated.avatar_url ?? msg.sender?.avatar_url, banned_until: updated.banned_until } as ChatUser } : msg));
+        setMessages(prev => prev.map((msg: any) => (msg.sender?.id === updated.id || msg.sender_id === updated.user_id) ? { ...msg, sender: { ...(msg.sender || {}), nickname: updated.nickname ?? msg.sender?.nickname, avatar_url: updated.avatar_url ?? msg.sender?.avatar_url, banned_until: updated.banned_until } as ChatUser } : msg));
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -915,7 +910,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
 
   useEffect(() => {
     if (!messages || messages.length === 0) return;
-    const needFill = messages.filter(m => !m.sender && m.sender_id);
+    const needFill = messages.filter((m: any) => !m.sender && m.sender_id);
     if (needFill.length === 0) return;
     let cancelled = false;
     (async () => {
@@ -924,8 +919,8 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       }));
       if (cancelled) return;
       const map = new Map<string, ChatUser>();
-      pairs.filter(Boolean).forEach(p => map.set((p as any).id, (p as any).sender));
-      setMessages(prev => prev.map(m => (m.sender || !map.has(m.id)) ? m : { ...m, sender: map.get(m.id)! }));
+      pairs.filter((p): p is { id: string; sender: ChatUser } => !!p).forEach((p: any) => map.set(p.id, p.sender));
+      setMessages(prev => prev.map((m: any) => (m.sender || !map.has(m.id)) ? m : { ...m, sender: map.get(m.id)! }));
     })();
     return () => { cancelled = true; };
   }, [messages, fetchProfileByAuthId]);

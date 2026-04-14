@@ -85,7 +85,7 @@ export default function ChatGlobalSearch({ onChatSelect, onCreateChat }: Props) 
                       </span>
                     </div>
                     <ul className="divide-y divide-gray-100 dark:divide-slate-700">
-                      {historySearchResults.users.map(chat => {
+                      {historySearchResults.users.map((chat: any) => {
                         const user = chat.other_user;
                         return (
                           <li
@@ -126,7 +126,7 @@ export default function ChatGlobalSearch({ onChatSelect, onCreateChat }: Props) 
                       </span>
                     </div>
                     <ul className="divide-y divide-gray-100 dark:divide-slate-700">
-                      {historySearchResults.messages.map(msg => (
+                      {historySearchResults.messages.map((msg: any) => (
                         <li
                           key={msg.id}
                           className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer p-4"

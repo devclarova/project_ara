@@ -28,8 +28,7 @@ export function useBlock(targetProfileId?: string): UseBlockReturn {
     if (!user) return;
 
     const loadProfile = async () => {
-      const { data } = await supabase
-        .from('profiles')
+      const { data } = await (supabase.from('profiles') as any)
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -47,8 +46,7 @@ export function useBlock(targetProfileId?: string): UseBlockReturn {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('user_blocks')
+    const { data, error } = await (supabase.from('user_blocks') as any)
       .select('id')
       .eq('blocker_id', myProfileId)
       .eq('blocked_id', targetProfileId)
@@ -101,8 +99,7 @@ export function useBlock(targetProfileId?: string): UseBlockReturn {
     try {
       if (isBlocked) {
         // Unblock: Soft delete (set ended_at)
-        const { error } = await supabase
-          .from('user_blocks')
+        const { error } = await (supabase.from('user_blocks') as any)
           .update({ ended_at: new Date().toISOString() })
           .eq('blocker_id', myProfileId)
           .eq('blocked_id', targetProfileId);
@@ -113,8 +110,7 @@ export function useBlock(targetProfileId?: string): UseBlockReturn {
         toast.success(t('profile.unblocked', '차단 해제'));
       } else {
         // Block: Check if soft-deleted row exists
-        const { data: existing } = await supabase
-          .from('user_blocks')
+        const { data: existing } = await (supabase.from('user_blocks') as any)
           .select('id, ended_at')
           .eq('blocker_id', myProfileId)
           .eq('blocked_id', targetProfileId)
@@ -124,14 +120,13 @@ export function useBlock(targetProfileId?: string): UseBlockReturn {
 
         if (existing && existing.ended_at !== null) {
           // Reactivate soft-deleted block
-          ({ error } = await supabase
-            .from('user_blocks')
+          ({ error } = await (supabase.from('user_blocks') as any)
             .update({ ended_at: null })
             .eq('blocker_id', myProfileId)
             .eq('blocked_id', targetProfileId));
         } else if (!existing) {
           // Create new block
-          ({ error } = await supabase.from('user_blocks').insert({
+          ({ error } = await (supabase.from('user_blocks') as any).insert({
             blocker_id: myProfileId,
             blocked_id: targetProfileId,
             ended_at: null,
@@ -151,31 +146,27 @@ export function useBlock(targetProfileId?: string): UseBlockReturn {
         // 1:1 채팅방 나가기 처리 및 기존 미읽음 메시지/알림 읽음 처리 (자동화)
         try {
           // 1-1. 미읽음 메시지 읽음 처리
-          const { data: targetProfile } = await supabase
-            .from('profiles')
+          const { data: targetProfile } = await (supabase.from('profiles') as any)
             .select('user_id')
             .eq('id', targetProfileId)
             .maybeSingle();
 
           if (targetProfile?.user_id) {
-            await supabase
-              .from('direct_messages')
+            await (supabase.from('direct_messages') as any)
               .update({ is_read: true, read_at: new Date().toISOString() })
               .eq('sender_id', targetProfile.user_id)
               .eq('is_read', false);
           }
 
           // 1-2. 미읽음 알림 읽음 처리
-          await supabase
-            .from('notifications')
+          await (supabase.from('notifications') as any)
             .update({ is_read: true })
             .eq('sender_id', targetProfileId)
             .eq('receiver_id', myProfileId)
             .eq('is_read', false);
 
           // 1-3. 상대방과의 채팅방 찾기 및 나가기
-          const { data: chat } = await supabase
-            .from('direct_chats')
+          const { data: chat } = await (supabase.from('direct_chats') as any)
             .select('id, user1_id, user2_id, user1_active, user2_active')
             .or(
               `and(user1_id.eq.${myProfileId},user2_id.eq.${targetProfileId}),and(user1_id.eq.${targetProfileId},user2_id.eq.${myProfileId})`,

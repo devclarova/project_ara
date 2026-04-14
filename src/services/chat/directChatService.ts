@@ -45,8 +45,7 @@ async function getCurrentUser() {
  */
 export async function getUserProfile(userId: string): Promise<ChatApiResponse<ChatUser>> {
   try {
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
+    const { data: profileData, error: profileError } = await (supabase.from('profiles') as any)
       .select('id, nickname, avatar_url, username, is_online')
       .eq('user_id', userId)
       .maybeSingle();
@@ -92,8 +91,8 @@ export async function findOrCreateDirectChat(
     }
 
     // 1단계: 기존 채팅방 찾기 (활성/비활성 모두 포함)
-    const { data: existingChats, error: findError } = await supabase
-      .from('direct_chats')
+    const { data: existingChats, error: findError } = await (supabase
+      .from('direct_chats') as any)
       .select('*')
       .or(
         `and(user1_id.eq.${currentUser.profileId},user2_id.eq.${participantId}),and(user1_id.eq.${participantId},user2_id.eq.${currentUser.profileId})`,
@@ -120,10 +119,10 @@ export async function findOrCreateDirectChat(
           ? { user1_active: true, user1_left_at: null }
           : { user2_active: true, user2_left_at: null };
 
-        const { data: reactivatedChat, error: reactivateError } = await supabase
-          .from('direct_chats')
+        const { data: reactivatedChat, error: reactivateError } = await (supabase
+          .from('direct_chats') as any)
           .update(updateData)
-          .eq('id', existingChat.id)
+          .eq('id', (existingChat as any).id)
           .select()
           .single();
 
@@ -174,8 +173,8 @@ export async function findOrCreateDirectChat(
     //   console.warn('users 테이블 업서트 실패:', userError);
     // }
 
-    const { data: newChat, error: createError } = await supabase
-      .from('direct_chats')
+    const { data: newChat, error: createError } = await (supabase
+      .from('direct_chats') as any)
       .insert({
         user1_id: currentUser.profileId,
         user2_id: participantId,
@@ -183,15 +182,14 @@ export async function findOrCreateDirectChat(
         user2_active: true,
         user1_notified: false, // 생성자는 알림 불필요
         user2_notified: true, // 상대방에게 새 채팅방 알림
-      })
+      } as any)
       .select()
       .single();
 
     if (createError) {
       // 중복 에러인 경우 기존 채팅방 다시 찾기
       if (createError.code === '23505') {
-        const { data: existingChat } = await supabase
-          .from('direct_chats')
+        const { data: existingChat } = await (supabase.from('direct_chats') as any)
           .select('*')
           .or(
             `and(user1_id.eq.${currentUser.profileId},user2_id.eq.${participantId}),and(user1_id.eq.${participantId},user2_id.eq.${currentUser.profileId})`,
@@ -208,8 +206,7 @@ export async function findOrCreateDirectChat(
           if (!isCurrentUserActive) {
             const updateData = isCurrentUserUser1 ? { user1_active: true } : { user2_active: true };
 
-            const { data: reactivatedChat } = await supabase
-              .from('direct_chats')
+            const { data: reactivatedChat } = await (supabase.from('direct_chats') as any)
               .update(updateData)
               .eq('id', existingChat.id)
               .select()
@@ -246,8 +243,8 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
     }
 
     // 사용자의 활성화된 채팅방 목록 조회 (최신 메시지 순)
-    const { data: chats, error: chatsError } = await supabase
-      .from('direct_chats')
+    const { data: chats, error: chatsError } = await (supabase
+      .from('direct_chats') as any)
       .select('*')
       .or(
         `and(user1_id.eq.${currentUser.profileId},user1_active.eq.true),and(user2_id.eq.${currentUser.profileId},user2_active.eq.true)`,
@@ -266,7 +263,7 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
     // 1단계: 모든 채팅방의 상대방 ID 수집
     const otherUserIds = Array.from(
       new Set(
-        chats.map(chat =>
+        chats.map((chat: any) =>
           chat.user1_id === currentUser.profileId ? chat.user2_id : chat.user1_id,
         ),
       ),
@@ -275,13 +272,13 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
     // 2단계: 상대방 프로필 일괄 조회 (Batch Fetch)
     let profileMap = new Map<string, ChatUser>();
     if (otherUserIds.length > 0) {
-      const { data: profiles, error: profileError } = await supabase
-        .from('profiles')
+      const { data: profiles, error: profileError } = await (supabase
+        .from('profiles') as any)
         .select('id, nickname, avatar_url, username, banned_until, is_online')
         .in('id', otherUserIds);
 
       if (!profileError && profiles) {
-        profiles.forEach(p => {
+        profiles.forEach((p: any) => {
           profileMap.set(p.id, {
             id: p.id,
             email: `user-${p.id}@example.com`,
@@ -299,7 +296,7 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
     // - 메시지 조회는 각 채팅방마다 최신 1개만 필요하므로, 복잡한 쿼리 대신 병렬 실행 유지
     //   (Batch로 하려면 window function이 필요한데, 현재 Supabase 클라이언트로는 복잡함)
     const chatListItems: ChatListItem[] = await Promise.all(
-      chats.map(async chat => {
+      chats.map(async (chat: any) => {
         // 상대방 사용자 ID
         const otherUserId = chat.user1_id === currentUser.profileId ? chat.user2_id : chat.user1_id;
 
@@ -314,8 +311,7 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
         // 마지막 메시지 조회
         let lastMessage = null;
         try {
-          const { data: lastMessageData } = await supabase
-            .from('direct_messages')
+          const { data: lastMessageData } = await (supabase.from('direct_messages') as any)
             .select('content, created_at, sender_id, attachments:direct_message_attachments(type)')
             .eq('chat_id', chat.id)
             .order('created_at', { ascending: false })
@@ -332,10 +328,10 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
         let unreadCount = 0;
         try {
           // count만 빠르게 가져오도록 최적화
-          const { count } = await supabase
-            .from('direct_messages')
+          const { count } = await (supabase
+            .from('direct_messages') as any)
             .select('*', { count: 'exact', head: true })
-            .eq('chat_id', chat.id)
+            .eq('chat_id', (chat as any).id)
             .eq('is_read', false)
             .neq('sender_id', currentUser.id);
 
@@ -392,8 +388,8 @@ export async function getDirectChat(chatId: string): Promise<ChatApiResponse<Cha
     }
 
     // 채팅방 정보 조회
-    const { data: chat, error: chatError } = await supabase
-      .from('direct_chats')
+    const { data: chat, error: chatError } = await (supabase
+      .from('direct_chats') as any)
       .select('*, user1:profiles!user1_id(is_online), user2:profiles!user2_id(is_online)')
       .eq('id', chatId)
       .single();
@@ -406,8 +402,7 @@ export async function getDirectChat(chatId: string): Promise<ChatApiResponse<Cha
     const otherUserId = chat.user1_id === currentUser.profileId ? chat.user2_id : chat.user1_id;
 
     // 상대방 프로필 조회
-    const { data: profile } = await supabase
-      .from('profiles')
+    const { data: profile } = await (supabase.from('profiles') as any)
       .select('id, nickname, avatar_url, username, banned_until')
       .eq('id', otherUserId)
       .single();
@@ -432,10 +427,10 @@ export async function getDirectChat(chatId: string): Promise<ChatApiResponse<Cha
     // 마지막 메시지 조회
     let lastMessage = null;
     try {
-      const { data: lastMessageData } = await supabase
-        .from('direct_messages')
+      const { data: lastMessageData } = await (supabase
+        .from('direct_messages') as any)
         .select('content, created_at, sender_id, attachments:direct_message_attachments(type)')
-        .eq('chat_id', chat.id)
+        .eq('chat_id', (chat as any).id)
         .order('created_at', { ascending: false })
         .limit(1);
 
@@ -449,10 +444,10 @@ export async function getDirectChat(chatId: string): Promise<ChatApiResponse<Cha
     // 읽지 않은 메시지 수 조회
     let unreadCount = 0;
     try {
-      const { count } = await supabase
-        .from('direct_messages')
+      const { count } = await (supabase
+        .from('direct_messages') as any)
         .select('*', { count: 'exact', head: true })
-        .eq('chat_id', chat.id)
+        .eq('chat_id', (chat as any).id)
         .eq('is_read', false)
         .neq('sender_id', currentUser.id);
 
@@ -545,8 +540,8 @@ export async function sendMessage(
     }
 
     // 0단계: 채팅방 존재 여부 확인 및 상대방 정보 조회
-    const { data: chat, error: chatError } = await supabase
-      .from('direct_chats')
+    const { data: chat, error: chatError } = await (supabase
+      .from('direct_chats') as any)
       .select('id, user1_id, user2_id, user1_active, user2_active, user1_notified, user2_notified')
       .eq('id', messageData.chat_id)
       .single();
@@ -564,8 +559,7 @@ export async function sendMessage(
 
     if (otherUserId) {
       // active block only (ended_at is null)
-      const { data: blockData } = await supabase
-        .from('user_blocks')
+      const { data: blockData } = await (supabase.from('user_blocks') as any)
         .select('id, blocker_id')
         .or(
           `and(blocker_id.eq.${currentUser.profileId},blocked_id.eq.${otherUserId}),and(blocker_id.eq.${otherUserId},blocked_id.eq.${currentUser.profileId})`,
@@ -599,8 +593,7 @@ export async function sendMessage(
           [otherUserNotifiedField]: true, // 새 메시지 알림 설정
         };
 
-        const { error: activateError } = await supabase
-          .from('direct_chats')
+        const { error: activateError } = await (supabase.from('direct_chats') as any)
           .update(updateData)
           .eq('id', messageData.chat_id);
 
@@ -611,15 +604,15 @@ export async function sendMessage(
     }
 
     // 1단계: 메시지 저장
-    const { data: newMessage, error: messageError } = await supabase
-      .from('direct_messages')
+    const { data: newMessage, error: messageError } = await (supabase
+      .from('direct_messages') as any)
       .insert({
         chat_id: messageData.chat_id,
         sender_id: currentUser.id,
         content: messageData.content,
         is_read: isBlockedByOther,
         read_at: isBlockedByOther ? new Date().toISOString() : null,
-      })
+      } as any)
       .select()
       .single();
 
@@ -636,14 +629,14 @@ export async function sendMessage(
     if (messageData.attachments?.length) {
       const uploadedFiles = await uploadAttachments(messageData.attachments, messageData.chat_id);
 
-      const rows = uploadedFiles.map(file => ({
+      const rows = uploadedFiles.map((file: any) => ({
         message_id: newMessage.id,
         type: file.type,
         url: file.url,
         name: file.name, // 파일명 저장
       }));
 
-      const { error: attachError } = await supabase.from('direct_message_attachments').insert(rows);
+      const { error: attachError } = await (supabase.from('direct_message_attachments') as any).insert(rows as any);
 
       if (attachError) {
         console.error('attachment 저장 실패', attachError);
@@ -651,8 +644,7 @@ export async function sendMessage(
     }
 
     // 2단계: 채팅방의 마지막 메시지 시간 업데이트
-    const { error: updateError } = await supabase
-      .from('direct_chats')
+    const { error: updateError } = await (supabase.from('direct_chats') as any)
       .update({ last_message_at: new Date().toISOString() })
       .eq('id', messageData.chat_id);
 
@@ -662,8 +654,7 @@ export async function sendMessage(
     }
 
     // attachment 조회
-    const { data: attachments } = await supabase
-      .from('direct_message_attachments')
+    const { data: attachments } = await (supabase.from('direct_message_attachments') as any)
       .select('id, type, url, width, height, name')
       .eq('message_id', newMessage.id);
 
@@ -709,8 +700,7 @@ export async function getMessages(
     }
 
     // 0단계: 채팅방 정보 조회 (사용자가 나간 시점 확인)
-    const { data: chatInfo, error: chatError } = await supabase
-      .from('direct_chats')
+    const { data: chatInfo, error: chatError } = await (supabase.from('direct_chats') as any)
       .select('user1_id, user2_id, user1_left_at, user2_left_at')
       .eq('id', chatId)
       .single();
@@ -725,8 +715,8 @@ export async function getMessages(
     const userLeftAt = isCurrentUserUser1 ? chatInfo.user1_left_at : chatInfo.user2_left_at;
 
     // 쿼리 구성 시작
-    let query = supabase
-      .from('direct_messages')
+    let query = (supabase
+      .from('direct_messages') as any)
       .select(`*, attachments:direct_message_attachments (id, type, url, width, height, name)`)
       .eq('chat_id', chatId);
 
@@ -739,8 +729,7 @@ export async function getMessages(
     // with Context: 타겟 메시지 이전의 대화(맥락)도 일부 가져옴
     if (targetId) {
       // 1. 타겟 메시지의 시간 조회
-      const { data: targetMsg, error: targetError } = await supabase
-        .from('direct_messages')
+      const { data: targetMsg, error: targetError } = await (supabase.from('direct_messages') as any)
         .select('created_at')
         .eq('id', targetId)
         .single();
@@ -748,8 +737,7 @@ export async function getMessages(
       if (!targetError && targetMsg) {
         // 2-1. 이전 메시지 (Context) 조회 (예: 5개)
         const contextLimit = 5;
-        const { data: prevMessages } = await supabase
-          .from('direct_messages')
+        const { data: prevMessages } = await (supabase.from('direct_messages') as any)
           .select(`*, attachments:direct_message_attachments ( id, type, url, width, height, name)`)
           .eq('chat_id', chatId)
           .lt('created_at', targetMsg.created_at) // 타겟보다 과거
@@ -758,8 +746,7 @@ export async function getMessages(
 
         // 2-2. 타겟 포함 이후 메시지 조회
         const nextLimit = limit - (prevMessages?.length || 0); // 나머지 개수만큼
-        const { data: nextMessages, error: nextError } = await supabase
-          .from('direct_messages')
+        const { data: nextMessages, error: nextError } = await (supabase.from('direct_messages') as any)
           .select(`*, attachments:direct_message_attachments ( id, type, url, width, height, name)`)
           .eq('chat_id', chatId)
           .gte('created_at', targetMsg.created_at)
@@ -793,20 +780,19 @@ export async function getMessages(
         const finalMessages = [...sortedPrev, ...effectiveNextMessages];
 
         // 최종 시간순 정렬 (이미 merge로 되어있지만 안전하게)
-        finalMessages.sort(
-          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        finalMessages.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
         );
 
         // 읽음 처리 (비동기)
         (async () => {
           try {
             const unreadIds = finalMessages
-              .filter(m => !m.is_read && m.sender_id !== currentUser.id)
-              .map(m => m.id);
+              .filter((m: any) => !m.is_read && m.sender_id !== currentUser.id)
+              .map((m: any) => m.id);
 
             if (unreadIds.length > 0) {
-              await supabase
-                .from('direct_messages')
+              await (supabase
+                .from('direct_messages') as any)
                 .update({ is_read: true, read_at: new Date().toISOString() })
                 .in('id', unreadIds);
             }
@@ -874,7 +860,7 @@ export async function getMessages(
     // targetId/afterAt -> ASC (오래된 -> 최신) -> 그대로 둠 (or 다시 정렬해도 무방)
     // 기본/beforeAt -> DESC (최신 -> 오래된) -> 시간순(오래된 -> 최신) 정렬 필요
     if (!targetId && !afterAt) {
-      messages.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      messages.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
     }
     // targetId/afterAt의 경우 쿼리 단계에서 이미 ASC이므로 순서가 맞음 (가장 가까운 미래부터 limit개)
 
@@ -882,12 +868,12 @@ export async function getMessages(
     (async () => {
       try {
         const unreadIds = messages
-          .filter(m => !m.is_read && m.sender_id !== currentUser.id)
-          .map(m => m.id);
+          .filter((m: any) => !m.is_read && m.sender_id !== currentUser.id)
+          .map((m: any) => m.id);
 
         if (unreadIds.length > 0) {
-          await supabase
-            .from('direct_messages')
+          await (supabase
+            .from('direct_messages') as any)
             .update({
               is_read: true,
               read_at: new Date().toISOString(),
@@ -900,11 +886,11 @@ export async function getMessages(
     })();
 
     // 2단계: 발신자 정보 일괄 조회 (Batch Fetching)
-    const senderIds = Array.from(new Set(messages.map(m => m.sender_id)));
+    const senderIds = Array.from(new Set(messages.map((m: any) => m.sender_id)));
 
     // 프로필 정보 조회
-    const { data: profiles } = await supabase
-      .from('profiles')
+    const { data: profiles } = await (supabase
+      .from('profiles') as any)
       .select('id, nickname, avatar_url, user_id, username')
       .in('user_id', senderIds);
 
@@ -919,7 +905,7 @@ export async function getMessages(
     });
 
     if (profiles) {
-      profiles.forEach(p => {
+      profiles.forEach((p: any) => {
         profileMap.set(p.user_id, {
           id: p.id,
           email: `user-${p.id}@example.com`,
@@ -930,7 +916,7 @@ export async function getMessages(
       });
     }
 
-    const messageDetails: DirectMessage[] = messages.map(message => {
+    const messageDetails: DirectMessage[] = messages.map((message: any) => {
       let senderInfo = profileMap.get(message.sender_id);
 
       if (!senderInfo) {
@@ -984,8 +970,8 @@ export async function searchMessagesGlobal(
     }
 
     // 1. 내가 참여 중인 채팅방 ID 목록 가져오기
-    const { data: myChats, error: chatError } = await supabase
-      .from('direct_chats')
+    const { data: myChats, error: chatError } = await (supabase
+      .from('direct_chats') as any)
       .select('id')
       .or(
         `and(user1_id.eq.${currentUser.profileId},user1_active.eq.true),and(user2_id.eq.${currentUser.profileId},user2_active.eq.true)`,
@@ -1000,11 +986,11 @@ export async function searchMessagesGlobal(
       return { success: true, data: [] };
     }
 
-    const chatIds = myChats.map(c => c.id);
+    const chatIds = myChats.map((c: any) => c.id);
 
     // 2. 해당 채팅방들의 메시지 중에서 검색
-    const { data: messages, error } = await supabase
-      .from('direct_messages')
+    const { data: messages, error } = await (supabase
+      .from('direct_messages') as any)
       .select(
         `
         *,
@@ -1026,18 +1012,18 @@ export async function searchMessagesGlobal(
       return { success: true, data: [] };
     }
 
-    const senderIds = Array.from(new Set(messages.map((msg: any) => msg.sender_id)));
+    const senderIds = Array.from(new Set((messages as any[] || []).map((msg: any) => msg.sender_id)));
 
     // 4. profiles 테이블에서 발신자 정보 일괄 조회
-    let profilesMap = new Map<string, any>();
+    let profilesMap = new Map<string, import('../../types/database').Profile>();
     if (senderIds.length > 0) {
-      const { data: profiles, error: profileError } = await supabase
-        .from('profiles')
+      const { data: profiles, error: profileError } = await (supabase
+        .from('profiles') as any)
         .select('id, nickname, avatar_url, user_id, banned_until')
         .in('user_id', senderIds); // user_id 컬럼으로 검색 (auth.uid와 매핑)
 
       if (!profileError && profiles) {
-        profiles.forEach(p => {
+        profiles.forEach((p: any) => {
           // user_id를 키로 사용 (메시지의 sender_id가 auth.uid이므로)
           profilesMap.set(p.user_id, p);
         });
@@ -1099,8 +1085,8 @@ export async function searchUsers(searchTerm: string): Promise<ChatApiResponse<C
     }
 
     // 현재 사용자와 이미 채팅 중인 사용자들 조회
-    const { data: existingChats, error: chatError } = await supabase
-      .from('direct_chats')
+    const { data: existingChats, error: chatError } = await (supabase
+      .from('direct_chats') as any)
       .select('user1_id, user2_id')
       .or(
         `and(user1_id.eq.${currentUser.profileId},user1_active.eq.true),and(user2_id.eq.${currentUser.profileId},user2_active.eq.true)`,
@@ -1114,7 +1100,7 @@ export async function searchUsers(searchTerm: string): Promise<ChatApiResponse<C
     // 이미 채팅 중인 사용자 ID 목록 생성
     const existingUserIds = new Set<string>();
     if (existingChats) {
-      existingChats.forEach(chat => {
+      existingChats.forEach((chat: any) => {
         if (chat.user1_id === currentUser.profileId) {
           existingUserIds.add(chat.user2_id);
         } else {
@@ -1124,8 +1110,8 @@ export async function searchUsers(searchTerm: string): Promise<ChatApiResponse<C
     }
 
     // 사용자 검색 (profiles 테이블에서 검색, 현재 사용자와 이미 채팅 중인 사용자 제외)
-    const { data: profiles, error: searchError } = await supabase
-      .from('profiles')
+    const { data: profiles, error: searchError } = await (supabase
+      .from('profiles') as any)
       .select('id, nickname, avatar_url, created_at, banned_until')
       .ilike('nickname', `%${searchTerm}%`)
       .neq('user_id', currentUser.id) // user_id로 현재 사용자 제외
@@ -1144,10 +1130,10 @@ export async function searchUsers(searchTerm: string): Promise<ChatApiResponse<C
     }
 
     // 이미 채팅 중인 사용자들을 제외하고 필터링
-    const filteredProfiles = profiles.filter(profile => !existingUserIds.has(profile.id));
+    const filteredProfiles = profiles.filter((profile: any) => !existingUserIds.has(profile.id));
 
     // 사용자 데이터를 ChatUser 형태로 변환 (최대 10명)
-    const chatUsers: ChatUser[] = filteredProfiles.slice(0, 10).map(profile => ({
+    const chatUsers: ChatUser[] = filteredProfiles.slice(0, 10).map((profile: any) => ({
       id: profile.id,
       email: `user-${profile.id}@example.com`, // email 필드가 없으므로 기본값 사용
       nickname: profile.nickname,
@@ -1180,8 +1166,8 @@ export async function clearNewChatNotification(chatId: string): Promise<ChatApiR
     }
 
     // 채팅방 정보 조회
-    const { data: chat, error: chatError } = await supabase
-      .from('direct_chats')
+    const { data: chat, error: chatError } = await (supabase
+      .from('direct_chats') as any)
       .select('user1_id, user2_id')
       .eq('id', chatId)
       .single();
@@ -1195,8 +1181,7 @@ export async function clearNewChatNotification(chatId: string): Promise<ChatApiR
     const isCurrentUserUser1 = chat.user1_id === currentUser.profileId;
     const updateData = isCurrentUserUser1 ? { user1_notified: false } : { user2_notified: false };
 
-    const { error: updateError } = await supabase
-      .from('direct_chats')
+    const { error: updateError } = await (supabase.from('direct_chats') as any)
       .update(updateData)
       .eq('id', chatId);
 
@@ -1224,15 +1209,15 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
 
     // [Refactor] Split complex OR/AND query into two simple queries to avoid 502/CORS errors
     // Query 1: user1_id matches current user and user1_active is false
-    const { data: chats1, error: error1 } = await supabase
-      .from('direct_chats')
+    const { data: chats1, error: error1 } = await (supabase
+      .from('direct_chats') as any)
       .select('*')
       .eq('user1_id', currentUser.profileId)
       .eq('user1_active', false);
 
     // Query 2: user2_id matches current user and user2_active is false
-    const { data: chats2, error: error2 } = await supabase
-      .from('direct_chats')
+    const { data: chats2, error: error2 } = await (supabase
+      .from('direct_chats') as any)
       .select('*')
       .eq('user2_id', currentUser.profileId)
       .eq('user2_active', false);
@@ -1242,7 +1227,7 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
       return { success: false, error: '채팅방 목록을 불러올 수 없습니다.' };
     }
 
-    const chats = [...(chats1 || []), ...(chats2 || [])].sort((a, b) => {
+    const chats = [...(chats1 || []), ...(chats2 || [])].sort((a: any, b: any) => {
       const timeA = new Date(a.last_message_at || a.created_at).getTime();
       const timeB = new Date(b.last_message_at || b.created_at).getTime();
       return timeB - timeA;
@@ -1255,7 +1240,7 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
     // 1단계: 모든 채팅방의 상대방 ID 수집
     const otherUserIds = Array.from(
       new Set(
-        chats.map(chat =>
+        chats.map((chat: any) =>
           chat.user1_id === currentUser.profileId ? chat.user2_id : chat.user1_id,
         ),
       ),
@@ -1264,13 +1249,13 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
     // 2단계: 상대방 프로필 일괄 조회 (getChatList와 동일한 Batch Fetch 방식 적용)
     let profileMap = new Map<string, ChatUser>();
     if (otherUserIds.length > 0) {
-      const { data: profiles, error: profileError } = await supabase
-        .from('profiles')
+      const { data: profiles, error: profileError } = await (supabase
+        .from('profiles') as any)
         .select('id, nickname, avatar_url, username, is_online')
         .in('id', otherUserIds);
 
       if (!profileError && profiles) {
-        profiles.forEach(p => {
+        profiles.forEach((p: any) => {
           profileMap.set(p.id, {
             id: p.id,
             email: `user-${p.id}@example.com`,
@@ -1285,7 +1270,7 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
 
     // 3단계: 채팅방 정보 조립
     const chatListItems: ChatListItem[] = await Promise.all(
-      chats.map(async chat => {
+      (chats as any[]).map(async chat => {
         const otherUserId = chat.user1_id === currentUser.profileId ? chat.user2_id : chat.user1_id;
         const otherUserInfo: ChatUser = profileMap.get(otherUserId) || {
           id: otherUserId,
@@ -1297,8 +1282,7 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
         // 마지막 메시지 조회
         let lastMessage = null;
         try {
-          const { data: lastMessageData } = await supabase
-            .from('direct_messages')
+          const { data: lastMessageData } = await (supabase.from('direct_messages') as any)
             .select('content, created_at, sender_id, attachments:direct_message_attachments(type)')
             .eq('chat_id', chat.id)
             .order('created_at', { ascending: false })
@@ -1312,10 +1296,10 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
         // 읽지 않은 메시지 수 조회
         let unreadCount = 0;
         try {
-          const { count } = await supabase
-            .from('direct_messages')
+          const { count } = await (supabase
+            .from('direct_messages') as any)
             .select('*', { count: 'exact', head: true })
-            .eq('chat_id', chat.id)
+            .eq('chat_id', (chat as any).id)
             .eq('is_read', false)
             .neq('sender_id', currentUser.id);
           if (count !== null) unreadCount = count;
@@ -1363,8 +1347,7 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
     }
 
     // 1단계: 채팅방 소유권 확인
-    const { data: chat, error: chatError } = await supabase
-      .from('direct_chats')
+    const { data: chat, error: chatError } = await (supabase.from('direct_chats') as any)
       .select('*')
       .eq('id', chatId)
       .single();
@@ -1391,8 +1374,7 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
     // 현재 사용자의 닉네임 조회
     let currentUserNickname = '사용자';
     try {
-      const { data: currentUserProfile } = await supabase
-        .from('profiles')
+      const { data: currentUserProfile } = await (supabase.from('profiles') as any)
         .select('nickname')
         .eq('id', currentUser.profileId)
         .single();
@@ -1409,8 +1391,7 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
     // 상대방의 auth.users.id 조회 (시스템 메시지 전송용)
     let otherUserAuthId = null;
     try {
-      const { data: otherUserProfile } = await supabase
-        .from('profiles')
+      const { data: otherUserProfile } = await (supabase.from('profiles') as any)
         .select('user_id')
         .eq('id', otherUserId)
         .single();
@@ -1423,8 +1404,7 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
     }
 
     // 시스템 메시지 전송 (상대방의 auth.users.id를 sender_id로 사용)
-    const { data: systemMessageData, error: systemMessageError } = await supabase
-      .from('direct_messages')
+    const { data: systemMessageData, error: systemMessageError } = await (supabase.from('direct_messages') as any)
       .insert({
         chat_id: chatId,
         sender_id: otherUserAuthId || currentUser.id, // 상대방의 auth.users.id 사용, 없으면 현재 사용자 ID 사용
@@ -1448,8 +1428,7 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
       ? { user1_active: false, user1_left_at: currentTime }
       : { user2_active: false, user2_left_at: currentTime };
 
-    const { error: updateError } = await supabase
-      .from('direct_chats')
+    const { error: updateError } = await (supabase.from('direct_chats') as any)
       .update(updateData)
       .eq('id', chatId);
 
@@ -1459,8 +1438,8 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
     }
 
     // 4단계: 두 사용자가 모두 나갔는지 확인하고 채팅방 완전 삭제
-    const { data: updatedChat, error: checkError } = await supabase
-      .from('direct_chats')
+    const { data: updatedChat, error: checkError } = await (supabase
+      .from('direct_chats') as any)
       .select('user1_active, user2_active')
       .eq('id', chatId)
       .single();
@@ -1469,8 +1448,8 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
       // 두 사용자가 모두 나간 경우 (user1_active = false AND user2_active = false)
       if (!updatedChat.user1_active && !updatedChat.user2_active) {
         // 채팅방과 관련된 모든 메시지도 함께 삭제
-        const { error: deleteMessagesError } = await supabase
-          .from('direct_messages')
+        const { error: deleteMessagesError } = await (supabase
+          .from('direct_messages') as any)
           .delete()
           .eq('chat_id', chatId);
 
@@ -1479,8 +1458,8 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
         }
 
         // 채팅방 삭제
-        const { error: deleteChatError } = await supabase
-          .from('direct_chats')
+        const { error: deleteChatError } = await (supabase
+          .from('direct_chats') as any)
           .delete()
           .eq('id', chatId);
 
@@ -1492,8 +1471,7 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
 
     /* [단체 대화방 구현을 위한 예약 코드 - 현재 비활성화]
     // 4단계: 채팅방의 마지막 메시지 시간 업데이트
-    const { error: timestampError } = await supabase
-      .from('direct_chats')
+    const { error: timestampError } = await (supabase.from('direct_chats') as any)
       .update({ last_message_at: new Date().toISOString() })
       .eq('id', chatId);
 
@@ -1528,8 +1506,7 @@ export async function restoreDirectChat(chatId: string): Promise<ChatApiResponse
     }
 
     // 1단계: 채팅방 소유권 확인
-    const { data: chat, error: chatError } = await supabase
-      .from('direct_chats')
+    const { data: chat, error: chatError } = await (supabase.from('direct_chats') as any)
       .select('*')
       .eq('id', chatId)
       .single();
@@ -1552,8 +1529,7 @@ export async function restoreDirectChat(chatId: string): Promise<ChatApiResponse
     const isCurrentUserUser1 = chat.user1_id === currentUser.profileId;
     const updateData = isCurrentUserUser1 ? { user1_active: true } : { user2_active: true };
 
-    const { error: updateError } = await supabase
-      .from('direct_chats')
+    const { error: updateError } = await (supabase.from('direct_chats') as any)
       .update(updateData)
       .eq('id', chatId);
 
@@ -1586,8 +1562,8 @@ export async function searchMessagesInChat(
       return { success: true, data: [] };
     }
 
-    const { data: messages, error } = await supabase
-      .from('direct_messages')
+    const { data: messages, error } = await (supabase
+      .from('direct_messages') as any)
       .select('id, content, created_at, sender_id')
       .eq('chat_id', chatId)
       .ilike('content', `%${query}%`)
@@ -1600,7 +1576,7 @@ export async function searchMessagesInChat(
     }
 
     // 간단한 데이터 매핑 (필요한 필드만)
-    const result: DirectMessage[] = messages.map((msg: any) => ({
+    const result: DirectMessage[] = (messages as any[]).map((msg: any) => ({
       id: msg.id,
       chat_id: chatId,
       sender_id: msg.sender_id,
@@ -1635,8 +1611,8 @@ export async function getMediaInChat(chatId: string): Promise<ChatApiResponse<Di
     }
 
     // 채팅방 정보 조회 (사용자가 나간 시점 확인)
-    const { data: chatInfo, error: chatError } = await supabase
-      .from('direct_chats')
+    const { data: chatInfo, error: chatError } = await (supabase
+      .from('direct_chats') as any)
       .select('user1_id, user2_id, user1_left_at, user2_left_at')
       .eq('id', chatId)
       .single();
@@ -1651,8 +1627,8 @@ export async function getMediaInChat(chatId: string): Promise<ChatApiResponse<Di
     const userLeftAt = isCurrentUserUser1 ? chatInfo.user1_left_at : chatInfo.user2_left_at;
 
     // 미디어가 있는 메시지만 조회
-    const { data: rawMessages, error } = await supabase
-      .from('direct_messages')
+    const { data: rawMessages, error } = await (supabase
+      .from('direct_messages') as any)
       .select(
         `
         id,
@@ -1681,8 +1657,8 @@ export async function getMediaInChat(chatId: string): Promise<ChatApiResponse<Di
     }
 
     // attachments가 실제로 있는 메시지만 필터링
-    const messagesWithMedia = (rawMessages || []).filter(
-      msg => msg.attachments && msg.attachments.length > 0,
+    const messagesWithMedia = (rawMessages as any[] || []).filter(
+      (msg: any) => msg.attachments && msg.attachments.length > 0,
     );
 
     if (messagesWithMedia.length === 0) {
@@ -1690,17 +1666,17 @@ export async function getMediaInChat(chatId: string): Promise<ChatApiResponse<Di
     }
 
     // 발신자 정보 일괄 조회 (Batch Fetching)
-    const senderIds = Array.from(new Set(messagesWithMedia.map(m => m.sender_id)));
+    const senderIds = Array.from(new Set(messagesWithMedia.map((m: any) => m.sender_id)));
 
-    const { data: profiles } = await supabase
-      .from('profiles')
+    const { data: profiles } = await (supabase
+      .from('profiles') as any)
       .select('id, nickname, avatar_url, user_id')
       .in('user_id', senderIds);
 
     const profileMap = new Map<string, ChatUser>();
 
     if (profiles) {
-      profiles.forEach(p => {
+      (profiles as any[]).forEach((p: any) => {
         profileMap.set(p.user_id, {
           id: p.id,
           email: `user-${p.id}@example.com`,
@@ -1711,7 +1687,7 @@ export async function getMediaInChat(chatId: string): Promise<ChatApiResponse<Di
     }
 
     // 데이터 변환
-    const messages: DirectMessage[] = messagesWithMedia.map(msg => {
+    const messages: DirectMessage[] = messagesWithMedia.map((msg: any) => {
       let senderInfo = profileMap.get(msg.sender_id);
 
       if (!senderInfo) {

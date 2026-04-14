@@ -34,7 +34,7 @@ export default function ShareButton({
   const [copied, setCopied] = useState(false);
 
   const canUseShare =
-    typeof navigator !== 'undefined' && typeof (navigator as any).share === 'function';
+    typeof navigator !== 'undefined' && 'share' in navigator;
 
   // Canonical Analysis: Extracts the optimal shared URL by prioritizing props, canonical tags, and window location.
   const shareUrl = useMemo(() => {
@@ -66,7 +66,7 @@ export default function ShareButton({
   const share = async () => {
     if (canUseShare) {
       try {
-        await (navigator as any).share(shareData);
+        await (navigator as Navigator & { share: (data: ShareData) => Promise<void> }).share(shareData);
         onShared?.();
         return;
       } catch {

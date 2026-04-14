@@ -238,7 +238,7 @@ export default function MatchingQuizModal({
                   <>
                     {/* 📱 단어 3열 */}
                     <div className="grid grid-cols-3 gap-3 mb-8">
-                      {leftItems.map(item => {
+                      {leftItems.map((item: any) => {
                         const isMatched = matched.includes(item.id);
                         const isSelected = selectedLeft === item.id;
 
@@ -261,7 +261,7 @@ export default function MatchingQuizModal({
 
                     {/* 📱 뜻 3열 */}
                     <div className="grid grid-cols-3 gap-3">
-                      {rightItems.map(item => {
+                      {rightItems.map((item: any) => {
                         const isMatched = matched.includes(item.id);
                         const isSelected = selectedRight === item.id;
 
@@ -286,7 +286,7 @@ export default function MatchingQuizModal({
                   /* 💻 PC: 좌/우 flex로 고정 */
                   <div className="flex justify-between items-start gap-16">
                     <div className="space-y-3 flex flex-col items-start">
-                      {leftItems.map(item => {
+                      {leftItems.map((item: any) => {
                         const isMatched = matched.includes(item.id);
                         const isSelected = selectedLeft === item.id;
 
@@ -308,7 +308,7 @@ export default function MatchingQuizModal({
                     </div>
 
                     <div className="space-y-3 flex flex-col items-end">
-                      {rightItems.map(item => {
+                      {rightItems.map((item: any) => {
                         const isMatched = matched.includes(item.id);
                         const isSelected = selectedRight === item.id;
 

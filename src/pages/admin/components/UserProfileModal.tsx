@@ -15,28 +15,56 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import { usePresence } from '@/contexts/PresenceContext';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 interface UserProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user: any; // User data from get_admin_users_list
+  user: {
+    id: string;
+    profile_id?: string;
+    nickname: string;
+    avatar_url: string | null;
+    banner_url: string | null;
+    email: string;
+    is_admin: boolean;
+    followers_count: number;
+    following_count: number;
+    bio: string | null;
+    country: string | null;
+    country_name: string | null;
+    country_flag_url: string | null;
+    gender: string | null;
+    birthday: string | null;
+    last_active_at: string | null;
+    last_sign_in_at: string | null;
+    created_at: string;
+    location: string | null;
+  } | null;
 }
 
 const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, user }) => {
   const { isUserOnline } = usePresence();
-  const [tracking, setTracking] = React.useState<any>(null);
+  const [tracking, setTracking] = React.useState<any>(null); // Keeping any for complex traffic log
   const [trackingLoading, setTrackingLoading] = React.useState(false);
   
   React.useEffect(() => {
     const fetchTracking = async () => {
       if (!user?.profile_id && !user?.id) return;
       setTrackingLoading(true);
-      const targetId = user.profile_id || user.id;
-      const { supabase } = await import('@/lib/supabase');
-      const { data } = await supabase.from('traffic_logs').select('*').eq('user_id', targetId).order('created_at', { ascending: true }).limit(1).maybeSingle();
-      setTracking(data);
-      setTrackingLoading(false);
+      try {
+        const targetId = user.profile_id || user.id;
+        const { supabase } = await import('@/lib/supabase');
+        const { data, error } = await (supabase.from('traffic_logs') as any).select('*').eq('user_id', targetId).order('created_at', { ascending: true }).limit(1).maybeSingle();
+        if (error) throw error;
+        setTracking(data);
+      } catch (error: unknown) {
+        console.error('Error fetching tracking data:', getErrorMessage(error));
+      } finally {
+        setTrackingLoading(false);
+      }
     };
     if (isOpen) fetchTracking();
   }, [user, isOpen]);
@@ -49,7 +77,8 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
     if (!dateString) return '정보 없음';
     try {
       return format(new Date(dateString), 'yyyy년 MM월 dd일 HH:mm', { locale: ko });
-    } catch (e) {
+    } catch (error: unknown) {
+      console.warn('Date formatting error:', getErrorMessage(error));
       return dateString;
     }
   };

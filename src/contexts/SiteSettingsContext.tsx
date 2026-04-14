@@ -6,7 +6,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
-interface SiteSettings {
+export interface SiteSettings {
   global_notice: {
     enabled: boolean;
     text: string;
@@ -54,20 +54,85 @@ export const SiteSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const fetchSettings = async () => {
     try {
-      const { data, error } = await supabase
-        .from('site_settings')
-        .select('*');
+      setLoading(true);
       
+      // Structured Table Access: Attempts to fetch from the normalized 'site_config' table first.
+      let { data, error } = await (supabase.from('site_config') as any)
+        .select('*')
+        .eq('id', 1)
+        .maybeSingle();
+      
+      // Legacy Fallback Logic: Detects if the structured table is missing (PGRST205) and bridges to the legacy key-value store.
+      if (error && (error as unknown as { code: string }).code === 'PGRST205') {
+        const { data: legacyData, error: legacyError } = await (supabase.from('site_settings') as any)
+          .select('*');
+        
+        if (legacyError) throw legacyError;
+        
+        if (legacyData) {
+          const legacyMap = legacyData.reduce((acc: Record<string, unknown>, item: any) => {
+            acc[item.key] = item.value;
+            return acc;
+          }, {});
+
+          const formatted: SiteSettings = {
+            global_notice: (legacyMap.global_notice as SiteSettings['global_notice']) || { enabled: false, text: '', color: 'blue' },
+            maintenance_mode: (legacyMap.maintenance_mode as SiteSettings['maintenance_mode']) || { enabled: false, message: '', end_time: null },
+            site_metadata: (legacyMap.site_metadata as SiteSettings['site_metadata']) || { title: 'Project Ara', description: '', logo_url: null },
+            security_config: (legacyMap.security_config as SiteSettings['security_config']) || { 
+              ip_restriction: false, 
+              ip_whitelist: [], 
+              multi_login_limit: false, 
+              brute_force_protection: true, 
+              tfa_required: false 
+            },
+            integrations: { supabase_url: '', ga4_id: '' },
+            banner_messages: { sns_top: '', search_placeholder: '' },
+          };
+          setSettings(formatted);
+          return;
+        }
+      }
+
       if (error) throw error;
       
       if (data) {
-        const formatted: any = {};
-        data.forEach(item => {
-          formatted[item.key] = item.value;
-        });
-        setSettings(formatted as SiteSettings);
+        // Map normalized database columns back to the UI-friendly nested interface
+        const formatted: SiteSettings = {
+          global_notice: {
+            enabled: data.notice_enabled ?? false,
+            text: data.notice_text ?? '',
+            color: (data.notice_color as 'blue' | 'red' | 'amber' | 'emerald') ?? 'blue',
+          },
+          maintenance_mode: {
+            enabled: data.maintenance_enabled ?? false,
+            message: data.maintenance_message ?? '',
+            end_time: data.maintenance_end_time,
+          },
+          site_metadata: {
+            title: data.site_title ?? 'Project Ara',
+            description: data.site_description ?? '',
+            logo_url: data.site_logo_url,
+          },
+          security_config: {
+            ip_restriction: data.sec_ip_restriction ?? false,
+            ip_whitelist: data.sec_ip_whitelist ?? [],
+            multi_login_limit: false, 
+            brute_force_protection: true,
+            tfa_required: false,
+          },
+          integrations: {
+            supabase_url: '',
+            ga4_id: '',
+          },
+          banner_messages: {
+            sns_top: '',
+            search_placeholder: '',
+          },
+        };
+        setSettings(formatted);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('[SiteSettingsContext] Failed to fetch settings:', err);
     } finally {
       setLoading(false);
@@ -77,15 +142,14 @@ export const SiteSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ 
   useEffect(() => {
     fetchSettings();
 
-    // Subscribe to all site_settings changes
+    // Subscribe to all site_config changes
     const channel = supabase
-      .channel('public_site_settings')
+      .channel('public_site_config')
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
-        table: 'site_settings' 
+        table: 'site_config' 
       }, () => {
-        // Simple strategy: re-fetch everything on any change
         fetchSettings();
       })
       .subscribe();

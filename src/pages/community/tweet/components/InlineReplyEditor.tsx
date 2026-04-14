@@ -26,8 +26,7 @@ export default function InlineReplyEditor({ tweetId, onReplyCreated }: InlineRep
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
-      const { data, error } = await supabase
-        .from('profiles')
+      const { data, error } = await (supabase.from('profiles') as any)
         .select('avatar_url')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -70,8 +69,7 @@ export default function InlineReplyEditor({ tweetId, onReplyCreated }: InlineRep
     setIsSubmitting(true);
     try {
       // profiles.id 조회
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
+      const { data: profile, error: profileError } = await (supabase.from('profiles') as any)
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -133,8 +131,7 @@ export default function InlineReplyEditor({ tweetId, onReplyCreated }: InlineRep
       }
 
       // 댓글 insert 시 새로 생성된 id까지 함께 받아오기 (수정 포인트 ①)
-      const { data: inserted, error: insertError } = await supabase
-        .from('tweet_replies')
+      const { data: inserted, error: insertError } = await (supabase.from('tweet_replies') as any)
         .insert({
           tweet_id: tweetId,
           author_id: profile.id,

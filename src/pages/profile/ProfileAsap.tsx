@@ -19,6 +19,7 @@ import BlockButton from '@/components/common/BlockButton';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import { formatBanPeriod, isBanned } from '@/utils/banUtils';
 import { addYears } from 'date-fns';
+import { getErrorMessage } from '@/utils/errorMessage';
 export interface UserProfile {
   id: string;
   user_id: string;
@@ -71,8 +72,7 @@ export default function ProfileAsap() {
 
   const fetchBanDetails = async (authId: string) => {
     // 제재 이력 조회 — 현재 적용 중인 시스템 이용 제한의 시작 시점 추출
-    const { data: sanctionData } = await supabase
-      .from('sanction_history')
+    const { data: sanctionData } = await (supabase.from('sanction_history') as any)
       .select('created_at')
       .eq('target_user_id', authId)
       .order('created_at', { ascending: false })
@@ -84,8 +84,7 @@ export default function ProfileAsap() {
     }
 
     // 누적 제재 횟수 산출 — 정지/영구정지 이력 전수 조사를 통한 누적 위반 횟수 계산
-    const { count } = await supabase
-      .from('sanction_history')
+    const { count } = await (supabase.from('sanction_history') as any)
       .select('*', { count: 'exact', head: true })
       .eq('target_user_id', authId)
       .in('sanction_type', ['ban', 'permanent_ban']);
@@ -101,7 +100,7 @@ export default function ProfileAsap() {
   const fetchProfile = useCallback(async () => {
     if (!decodedUsername && !user) return;
     try {
-      let baseQuery = supabase.from('profiles').select(`
+      let baseQuery = (supabase.from('profiles') as any).select(`
         id, user_id, nickname, avatar_url, banner_url, banner_position_y,
         bio, country, followers_count, following_count, created_at,
         nickname_updated_at, country_updated_at, banned_until, plan
@@ -126,8 +125,7 @@ export default function ProfileAsap() {
       let countryName: string | null = null;
       let countryFlagUrl: string | null = null;
       if (profile.country) {
-        const { data: countryRow } = await supabase
-          .from('countries')
+        const { data: countryRow } = await (supabase.from('countries') as any)
           .select('id, name, flag_url')
           .eq('id', profile.country)
           .maybeSingle();
@@ -162,7 +160,8 @@ export default function ProfileAsap() {
       });
 
       if (profile.banned_until) fetchBanDetails(profile.user_id);
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error('Failed to fetch profile:', getErrorMessage(err));
       setUserProfile(null);
     }
   }, [decodedUsername, user, i18n.language, t]);
@@ -188,7 +187,8 @@ export default function ProfileAsap() {
           table: 'profiles',
         },
         payload => {
-          const updated = payload.new as any;
+          type ProfileUpdatePayload = { id: string; user_id: string };
+          const updated = payload.new as ProfileUpdatePayload;
           const isMatch =
             updated &&
             (String(updated.id) === String(targetProfileIdRef.current) ||

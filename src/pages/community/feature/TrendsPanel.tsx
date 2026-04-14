@@ -53,13 +53,13 @@ export default function TrendsPanel({
     const subscription = supabase
       .channel('trending-tweets-realtime')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tweets' }, payload => {
-        const o = payload.old as any;
-        const n = payload.new as any;
+        const o = payload.old as import('@/types/database').Database['public']['Tables']['tweets']['Row'];
+        const n = payload.new as import('@/types/database').Database['public']['Tables']['tweets']['Row'];
         if (
           o.like_count !== n.like_count ||
           o.reply_count !== n.reply_count ||
           o.view_count !== n.view_count ||
-          o.is_hidden !== n.is_hidden // [추가] 숨김 상태 변화 감지
+          (o as any).is_hidden !== (n as any).is_hidden // [추가] 숨김 상태 변화 감지
         ) {
           fetchTrendingTweets();
         }
@@ -67,9 +67,9 @@ export default function TrendsPanel({
       .subscribe();
 
     const profileChannel = supabase
-      .channel('profiles-update-realtime')
+      .channel('profile-sync-realtime')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
-        const updatedProfile = payload.new as any;
+        const updatedProfile = payload.new as import('@/types/database').Database['public']['Tables']['profiles']['Row'];
 
         setTrendingTweets(prev => {
           const hasProfile = prev.some(t => t.profiles?.nickname === updatedProfile.nickname);

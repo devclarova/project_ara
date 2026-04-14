@@ -15,7 +15,7 @@ const leo: {
   list: () => string[];
   check: (text: string) => boolean;
   clean: (text: string) => string;
-} = (LEO_RAW as any).default ?? (LEO_RAW as any);
+} = ((LEO_RAW as Record<string, unknown>).default ?? LEO_RAW) as typeof leo;
 
 // ---------- 유틸/정규화 ----------
 const L33T_MAP: Record<string, string> = {
@@ -30,10 +30,7 @@ const NON_WORD_RE =
   SUPPORTS_UNICODE_PROPS ? /[^\p{L}\p{N}\s]/gu : /[^A-Za-z0-9가-힣ㄱ-ㅎㅏ-ㅣ\s]/g;
 
 function safeNormalize(s: string, form: 'NFKC' | 'NFC' = 'NFKC'): string {
-  const anyStr = s as any;
-  if (anyStr && typeof anyStr.normalize === 'function') {
-    try { return anyStr.normalize(form); } catch {}
-  }
+  try { return s.normalize(form); } catch {}
   return s;
 }
 

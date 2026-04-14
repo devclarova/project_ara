@@ -12,8 +12,17 @@ import { RECOVERY_QUESTIONS, type RecoveryQuestion } from '@/types/signup';
 import { hashRecoveryAnswer } from '@/utils/recovery';
 import InputField from '@/components/auth/InputField';
 import SelectField from '@/components/auth/SelectField';
+import type { TFunction } from 'i18next';
+import { getErrorMessage } from '@/utils/errorMessage';
 
-const validateEmailField = (email: string, t: any) => {
+interface ProfileRecoveryUpdate {
+  updated_at: string;
+  recovery_question?: RecoveryQuestion;
+  recovery_answer_hash?: string;
+  recovery_email?: string;
+}
+
+const validateEmailField = (email: string, t: TFunction) => {
   const EMAIL_ASCII_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
   if (!email.trim()) return null; // Allow empty as it's partial
   if (!EMAIL_ASCII_RE.test(email)) return t('validation.email_invalid');
@@ -48,8 +57,7 @@ function RecoverySettings({ onDone, onClose }: RecoverySettingsProps) {
         if (!user) return;
         setPrimaryEmail(user.email || '');
 
-        const { data, error } = await supabase
-          .from('profiles')
+        const { data, error } = await (supabase.from('profiles') as any)
           .select('recovery_question, recovery_email, recovery_answer_hash')
           .eq('user_id', user.id)
           .maybeSingle();
@@ -93,14 +101,14 @@ function RecoverySettings({ onDone, onClose }: RecoverySettingsProps) {
     setEmailChecking(true);
     setErr(null);
     try {
-      const { data, error } = await supabase.rpc('email_exists', { _email: recoveryEmail.trim() });
+      const { data, error } = await (supabase as any).rpc('email_exists', { _email: recoveryEmail.trim() });
       if (error) throw error;
       setEmailCheckResult(data === true ? 'taken' : 'available');
       if (data === true) {
         setErr(t('signup.error_email_taken'));
       }
-    } catch (err: any) {
-      console.error('Email check error:', err);
+    } catch (err: unknown) {
+      console.error('Email check error:', getErrorMessage(err));
       setErr(t('signup.error_email_check_retry'));
     } finally {
       setEmailChecking(false);
@@ -129,7 +137,7 @@ function RecoverySettings({ onDone, onClose }: RecoverySettingsProps) {
         return;
       }
 
-      const updateData: any = {
+      const updateData: ProfileRecoveryUpdate = {
         updated_at: new Date().toISOString(),
       };
 
@@ -142,8 +150,7 @@ function RecoverySettings({ onDone, onClose }: RecoverySettingsProps) {
         updateData.recovery_email = recoveryEmail.trim();
       }
 
-      const { error: updateError } = await supabase
-        .from('profiles')
+      const { error: updateError } = await (supabase.from('profiles') as any)
         .update(updateData)
         .eq('user_id', user.id);
 
@@ -152,9 +159,10 @@ function RecoverySettings({ onDone, onClose }: RecoverySettingsProps) {
       toast.success(t('settings.saved', '설정이 저장되었습니다.'));
       onDone?.();
       onClose?.();
-    } catch (error: any) {
-      console.error('Recovery update error:', error);
-      setErr(error.message || t('common.error'));
+    } catch (error: unknown) {
+      const message = getErrorMessage(error);
+      console.error('Recovery update error:', message);
+      setErr(message);
     } finally {
       setLoading(false);
     }

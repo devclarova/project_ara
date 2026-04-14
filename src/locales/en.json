@@ -994,6 +994,10 @@
       }
     },
     "product_not_found": "Product not found",
+    "buy_now": "Buy Now",
+    "coupon_applied": "Coupon applied!",
+    "coupon_invalid": "Invalid coupon.",
+    "coupon_error": "Error checking coupon.",
     "reviews_count": "{{count}} reviews",
     "free_shipping": "Free Shipping over $50",
     "authentic_guarantee": "Authentic Guarantee",

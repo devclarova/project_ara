@@ -22,8 +22,7 @@ export const tweetService = {
     const from = page * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
-    const { data, error } = await supabase
-      .from('tweets')
+    const { data, error } = await (supabase.from('tweets') as any)
       .select(
         `id, content, image_url, created_at, deleted_at, is_hidden,
         reply_count, like_count, view_count,
@@ -33,9 +32,9 @@ export const tweetService = {
       .order('created_at', { ascending: false })
       .range(from, to);
 
-    if (error) throw error;
+    const posts = (data as unknown as TweetQueryResponse[]) ?? [];
 
-    return ((data as unknown as TweetQueryResponse[]) ?? [])
+    return posts
       // .filter(t => !t.is_hidden) // RLS에서 처리 (작성자/관리자는 보이게)
       .filter(t => !blockedUserIds.includes(t.profiles?.id ?? ''))
       .map(t => ({
@@ -51,7 +50,7 @@ export const tweetService = {
         content: t.content,
         image: t.image_url || undefined,
         timestamp: t.created_at,
-        deleted_at: (t as any).deleted_at,
+        deleted_at: t.deleted_at,
         is_hidden: t.is_hidden,
         stats: {
           replies: t.reply_count ?? 0,
@@ -73,8 +72,7 @@ export const tweetService = {
     const from = page * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
-    const { data, error } = await supabase
-      .from('tweet_replies')
+    const { data, error } = await (supabase.from('tweet_replies') as any)
       .select(
         `id,
         content,
@@ -123,7 +121,7 @@ export const tweetService = {
             timestamp: r.created_at,
             createdAt: r.created_at,
             updatedAt: r.updated_at ?? undefined,
-            deleted_at: (r as any).deleted_at,
+            deleted_at: r.deleted_at,
             is_hidden: r.is_hidden,
             stats: {
               replies: 0,
@@ -154,16 +152,14 @@ export const tweetService = {
     // If no cache provided or it's the first page request and we want to refresh, fetch all IDs
     if (!cachedItems || cachedItems.length === 0) {
       // 1. Fetch Post Likes
-      const { data: postLikes, error: pErr } = await supabase
-        .from('tweet_likes')
+      const { data: postLikes, error: pErr } = await (supabase.from('tweet_likes') as any)
         .select('tweet_id, created_at')
         .eq('user_id', userId);
 
       if (pErr) throw pErr;
 
       // 2. Fetch Reply Likes
-      const { data: replyLikes, error: rErr } = await supabase
-        .from('tweet_replies_likes')
+      const { data: replyLikes, error: rErr } = await (supabase.from('tweet_replies_likes') as any)
         .select('reply_id, created_at')
         .eq('user_id', userId);
 
@@ -204,8 +200,7 @@ export const tweetService = {
     const queries = [];
     if (postIds.length > 0) {
       queries.push(
-        supabase
-          .from('tweets')
+        (supabase.from('tweets') as any)
           .select(
             `
             id, content, image_url, created_at, deleted_at, is_hidden,
@@ -213,13 +208,12 @@ export const tweetService = {
             profiles(id, nickname, user_id, avatar_url, banned_until)
         `,
           )
-          .in('id', postIds),
+          .in('id', postIds)
       );
     }
     if (replyIds.length > 0) {
       queries.push(
-        supabase
-          .from('tweet_replies')
+        (supabase.from('tweet_replies') as any)
           .select(
             `
             id, content, created_at, updated_at, tweet_id, deleted_at, is_hidden, parent_reply_id, root_reply_id,
@@ -228,7 +222,7 @@ export const tweetService = {
             tweets(content, author_id)
         `,
           )
-          .in('id', replyIds),
+          .in('id', replyIds)
       );
     }
 
@@ -251,7 +245,7 @@ export const tweetService = {
 
     // Map back to FeedItem maintaining sort order
     const mappedItems = currentSlice
-      .map(item => {
+      .map((item: any) => {
         if (item.type === 'post') {
           const p = fetchedPosts.find(x => x.id === item.id);
           if (!p) return null;
@@ -269,7 +263,7 @@ export const tweetService = {
             content: p.content,
             image: p.image_url,
             timestamp: p.created_at,
-            deleted_at: (p as any).deleted_at,
+            deleted_at: p.deleted_at,
             is_hidden: p.is_hidden,
             stats: {
               replies: p.reply_count ?? 0,
@@ -300,7 +294,7 @@ export const tweetService = {
             parentTweet: r.tweets?.content,
             timestamp: r.created_at,
             createdAt: r.created_at,
-            deleted_at: (r as any).deleted_at,
+            deleted_at: r.deleted_at,
             is_hidden: r.is_hidden,
             updatedAt: r.updated_at ?? undefined,
             stats: {
@@ -314,7 +308,7 @@ export const tweetService = {
         }
       })
       .filter((item): item is FeedItem => item !== null);
-      // .filter((item): item is FeedItem => item !== null && !(item as any).is_hidden); // RLS에서 처리
+      // .filter((item): item is FeedItem => item !== null && !item.is_hidden); // RLS에서 처리
 
     return { items: mappedItems, allLikedItems: allItems };
   },
@@ -323,8 +317,7 @@ export const tweetService = {
    * Fetch a single tweet by ID
    */
   async getTweetById(tweetId: string): Promise<UIPost | null> {
-    const { data, error } = await supabase
-      .from('tweets')
+    const { data, error } = await (supabase.from('tweets') as any)
       .select(
         `
         id, content, image_url, created_at, updated_at, deleted_at, is_hidden,
@@ -355,12 +348,12 @@ export const tweetService = {
       },
       content: tweet.content,
       image: tweet.image_url,
-      deleted_at: (tweet as any).deleted_at,
+      deleted_at: tweet.deleted_at,
 
       timestamp: tweet.created_at,
       createdAt,
       is_hidden: tweet.is_hidden,
-      updatedAt: (tweet as any).updated_at ?? undefined,
+      updatedAt: tweet.updated_at ?? undefined,
       stats: {
         replies: tweet.reply_count ?? 0,
         retweets: tweet.repost_count ?? 0,
@@ -376,8 +369,7 @@ export const tweetService = {
    * supports pagination or loading all (for jumping to a comment)
    */
   async getRepliesByTweetId(tweetId: string, page: number, loadAll = false): Promise<UIReply[]> {
-    let query = supabase
-      .from('tweet_replies')
+    let query = (supabase.from('tweet_replies') as any)
       .select(
         `id, content, created_at, updated_at, deleted_at, is_hidden, parent_reply_id, root_reply_id, profiles:author_id (id, nickname, user_id, avatar_url, banned_until), tweet_replies_likes (count)`,
       )
@@ -397,7 +389,7 @@ export const tweetService = {
     const { data, error } = await query;
     if (error) throw error;
 
-    const replies = (data as unknown as ReplyQueryResponse[]) ?? [];
+    const replies = (data || []) as unknown as ReplyQueryResponse[];
 
     return replies.map(
       r =>
@@ -415,7 +407,7 @@ export const tweetService = {
             banned_until: r.profiles?.banned_until ?? null,
           },
           content: r.content,
-          deleted_at: (r as any).deleted_at,
+          deleted_at: r.deleted_at,
           is_hidden: r.is_hidden,
           timestamp: r.created_at,
           createdAt: r.created_at, // for sorting
@@ -437,8 +429,7 @@ export const tweetService = {
    * Kept from jh-93 just in case, though main might handle nesting via parent_reply_id in getAll
    */
   async getRepliesByParentId(parentId: string): Promise<UIReply[]> {
-    const { data, error } = await supabase
-      .from('tweet_replies')
+    const { data, error } = await (supabase.from('tweet_replies') as any)
       .select(
         `id, content, created_at, tweet_id, deleted_at, is_hidden, parent_reply_id, root_reply_id, profiles:author_id (id, nickname, user_id, avatar_url, banned_until), tweet_replies_likes (count), updated_at`,
       )
@@ -448,7 +439,7 @@ export const tweetService = {
 
     if (error) throw error;
 
-    const replies = (data as unknown as ReplyQueryResponse[]) ?? [];
+    const replies = (data || []) as unknown as ReplyQueryResponse[];
 
     return replies.map(
       r =>
@@ -466,7 +457,7 @@ export const tweetService = {
             banned_until: r.profiles?.banned_until ?? null,
           },
           content: r.content,
-          deleted_at: (r as any).deleted_at,
+          deleted_at: r.deleted_at,
           is_hidden: r.is_hidden,
           timestamp: r.created_at,
           createdAt: r.created_at,

@@ -97,8 +97,7 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
-      const { data, error } = await supabase
-        .from('profiles')
+      const { data, error } = await (supabase.from('profiles') as any)
         .select('id, avatar_url, nickname, user_id')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -229,8 +228,7 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
       // ================= 댓글 모드 =================
       if (mode === 'reply') {
         const { tweetId, onReplyCreated, parentReplyId } = props as ReplyModeProps;
-        const { data: inserted, error: insertError } = await supabase
-          .from('tweet_replies')
+        const { data: inserted, error: insertError } = await (supabase.from('tweet_replies') as any)
           .insert({
             tweet_id: tweetId,
             author_id: profileId,
@@ -285,8 +283,7 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
       // ================= 트윗 모드 =================
       if (mode === 'tweet') {
         const { onTweetCreated } = props as TweetModeProps;
-        const { data: inserted, error: insertError } = await supabase
-          .from('tweets')
+        const { data: inserted, error: insertError } = await (supabase.from('tweets') as any)
           .insert({
             author_id: profileId,
             content: finalContent,

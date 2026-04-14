@@ -1,4 +1,4 @@
-import Select, { components, type SingleValue } from 'react-select';
+import Select, { components, type SingleValue, type StylesConfig, type DropdownIndicatorProps } from 'react-select';
 import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +11,7 @@ interface GenderSelectProps {
   error?: boolean;
 }
 
-const CustomDropdownIndicator = (props: any) => {
+const CustomDropdownIndicator = (props: DropdownIndicatorProps<OptionType, false>) => {
   const { selectProps } = props;
   const isOpen = selectProps.menuIsOpen;
   return (
@@ -42,8 +42,8 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
     typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
   // 컴포넌트 외관 모델링(Styling Engine) — 시스템 테마(Dark/Light) 및 인터페이스 가동성(Viewport)에 최적화된 반응형 스타일 세트 정의
-  const customStyles = {
-    control: (provided: any, state: any) => {
+  const customStyles: StylesConfig<OptionType, false> = {
+    control: (provided, state) => {
       const isDark =
         typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
@@ -81,7 +81,7 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
       };
     },
 
-    valueContainer: (provided: any) => {
+    valueContainer: (provided) => {
       const isXs = typeof window !== 'undefined' && window.innerWidth < 450;
       return {
         ...provided,
@@ -91,31 +91,31 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
         alignItems: 'center',
       };
     },
-    input: (provided: any) => ({
+    input: (provided) => ({
       ...provided,
       margin: 0,
       padding: 0,
       color: isDark ? '#9CA3AF' : '#111827',
     }),
-    singleValue: (provided: any) => ({
+    singleValue: (provided) => ({
       ...provided,
       color: isDark ? '#F3F4F6' : '#111827',
     }),
-    indicatorsContainer: (provided: any) => {
+    indicatorsContainer: (provided) => {
       const isXs = typeof window !== 'undefined' && window.innerWidth < 450;
       return {
         ...provided,
         height: isXs ? 44 : 48,
       };
     },
-    dropdownIndicator: (provided: any) => ({
+    dropdownIndicator: (provided) => ({
       ...provided,
       marginLeft: 8,
     }),
-    indicatorSeparator: (provided: any) => ({
+    indicatorSeparator: (provided) => ({
       ...provided,
     }),
-    menu: (provided: any) => ({
+    menu: (provided) => ({
       ...provided,
       backgroundColor: isDark ? 'hsl(var(--secondary))' : '#FFFFFF',
       color: isDark ? 'hsl(var(--secondary-foreground))' : '#111827',
@@ -125,7 +125,7 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
       boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.1)',
       zIndex: 50,
     }),
-    option: (provided: any, state: any) => ({
+    option: (provided, state) => ({
       ...provided,
       backgroundColor: state.isSelected
         ? isDark

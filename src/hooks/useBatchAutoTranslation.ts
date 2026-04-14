@@ -63,13 +63,12 @@ export const useBatchAutoTranslation = (
         let cacheMap: Record<string, string> = {};
 
         if (user) {
-             const { data: cachedData } = await supabase
-               .from('translations')
+             const { data: cachedData } = await (supabase.from('translations') as any)
                .select('content_id, translated_text')
                .in('content_id', uniqueKeys)
                .eq('target_lang', targetLang);
              
-             cacheMap = (cachedData || []).reduce((acc, curr) => {
+             cacheMap = (cachedData || []).reduce((acc: Record<string, string>, curr: any) => {
                acc[curr.content_id] = curr.translated_text; 
                return acc;
              }, {} as Record<string, string>);
@@ -148,9 +147,9 @@ export const useBatchAutoTranslation = (
 
              // 4. Save to DB
              if (upsertData.length > 0) {
-                 supabase.from('translations').upsert(upsertData, { 
+                 (supabase.from('translations') as any).upsert(upsertData, { 
                      onConflict: 'user_id,content_id,target_lang' 
-                 }).then(({ error }) => {
+                 }).then(({ error }: any) => {
                      if (error) console.error('Batch save error:', error);
                  });
              }

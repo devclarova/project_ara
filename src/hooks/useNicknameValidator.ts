@@ -212,7 +212,7 @@ export function useNicknameValidator() {
     setChecking(true);
     try {
       // 2a. Server Policy (reserved words, profanity, etc.)
-      const { data: policyErr, error: rpcErr } = await supabase.rpc('validate_nickname_policy', {
+      const { data: policyErr, error: rpcErr } = await (supabase.rpc as any)('validate_nickname_policy', {
         in_nick: trimmed,
         in_lang: lang,
       });
@@ -231,7 +231,7 @@ export function useNicknameValidator() {
       }
 
       // 2b. Duplication Check
-      const { data: exists, error: dupErr } = await supabase.rpc('nickname_exists', {
+      const { data: exists, error: dupErr } = await (supabase.rpc as any)('nickname_exists', {
         _nickname: trimmed,
         _lang: lang,
       });

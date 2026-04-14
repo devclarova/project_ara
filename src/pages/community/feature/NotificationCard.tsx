@@ -102,7 +102,7 @@ export default function NotificationCard({
 
       const { type, data } = payload;
       
-      const localeMap: Record<string, any> = {
+      const localeMap: Record<string, import('date-fns').Locale> = {
         'ko': ko, 'en': enUS, 'ja': ja, 'zh': zhCN, 'fr': fr, 'de': de, 
         'es': es, 'pt': pt, 'pt-br': ptBR, 'ru': ru, 'fi': fi,
         'vi': vi, 'th': th, 'hi': hi, 'bn': bn, 'ar': arSA
@@ -116,7 +116,7 @@ export default function NotificationCard({
         return format(new Date(until), 'yyyy. MM. dd. HH:mm', { locale: currentDateLocale });
       };
 
-      const formatBanDuration = (duration: any, days: number | null) => {
+      const formatBanDuration = (duration: string | null, days: number | null) => {
         if (duration === 'permanent') return t('common.permanent', '영구');
         return `${days}${t('common.days', '일')}`;
       };
@@ -206,7 +206,7 @@ export default function NotificationCard({
     let text = '';
 
     if (paragraphs.length > 0) {
-      text = paragraphs.map(p => p.textContent?.trim() || '').join('\n');
+      text = paragraphs.map((p: any) => p.textContent?.trim() || '').join('\n');
     } else {
       text = doc.body.textContent?.trim() || '';
     }
@@ -288,8 +288,7 @@ export default function NotificationCard({
     // 댓글/댓글 좋아요 알림: tweetId + replyId 둘 다 있을 때 -> 실제 DB 존재 여부 확인
     if (notification.tweetId && notification.replyId) {
       // 1. 실제로 댓글이 존재하는지 확인 (DB 체크)
-      const { data: replyExists } = await supabase
-        .from('tweet_replies')
+      const { data: replyExists } = await (supabase.from('tweet_replies') as any)
         .select('id')
         .eq('id', notification.replyId)
         .maybeSingle();

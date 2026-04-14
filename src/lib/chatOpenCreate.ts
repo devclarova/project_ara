@@ -9,8 +9,7 @@ export async function chatOpenCreate(currentUserId: string, targetUserId: string
   const u2 = currentUserId < targetUserId ? targetUserId : currentUserId;
 
   // 1) 기존 방 조회
-  const { data: exists, error: selErr } = await supabase
-    .from('chats')
+  const { data: exists, error: selErr } = await (supabase.from('chats') as any)
     .select('id')
     .eq('user1_id', u1)
     .eq('user2_id', u2)
@@ -19,8 +18,7 @@ export async function chatOpenCreate(currentUserId: string, targetUserId: string
   if (selErr) throw selErr;
 
   // 2) 없으면 생성
-  const { data: created, error: insErr } = await supabase
-    .from('chats')
+  const { data: created, error: insErr } = await (supabase.from('chats') as any)
     .insert([{ user1_id: u1, user2_id: u2 }])
     .select('id')
     .single();

@@ -260,14 +260,14 @@ export default function SignUpStep3Profile(props: Props) {
         return;
       }
 
-      const { error: upErr } = await supabase.from('profiles').upsert(
+      const { error: upErr } = await (supabase.from('profiles') as any).upsert(
         {
           user_id: uid,
           nickname: nickname.trim(),
           avatar_url: finalAvatarUrl,
           banner_url: finalBannerUrl,
           birthday: birthdayStr,
-          gender: gender.trim() as any,
+          gender: gender.trim() as 'Male' | 'Female' | 'other',
           country: country.trim(),
           bio: (draft.bio ?? '').toString(),
           tos_agreed: !!consents?.terms,
@@ -288,7 +288,7 @@ export default function SignUpStep3Profile(props: Props) {
 
       setSuccessKind('social');
       setShowSuccess(true);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[handleSubmit:exception]', e);
       setMsg(t('auth.network_error'));
     } finally {

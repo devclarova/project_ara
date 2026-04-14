@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
+import { getErrorMessage } from '@/utils/errorMessage';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { 
@@ -62,7 +63,7 @@ interface AdminTrafficLogsModalProps {
   onClose: () => void;
   initialTotalLogs: number;
   initialDistinctUsers: number;
-  onSelectUser: (user: any) => void;
+  onSelectUser: (user: TrafficLog['profiles']) => void;
 }
 
 const COLORS = ['#10B981', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899', '#F59E0B'];
@@ -111,8 +112,7 @@ const AdminTrafficLogsModal: React.FC<AdminTrafficLogsModalProps> = ({
       // 이미 데이터가 있다면 로딩 스피너를 보이지 않음 (부드러운 업데이트)
       if (logs.length === 0) setLoading(true);
       
-      const { data: logData, error: logError } = await supabase
-        .from('traffic_logs')
+      const { data: logData, error: logError } = await (supabase.from('traffic_logs') as any)
         .select('*')
         .order('created_at', { ascending: false })
         .limit(200); // 더 많은 데이터를 가져와서 상세 분석에 활용
@@ -120,17 +120,16 @@ const AdminTrafficLogsModal: React.FC<AdminTrafficLogsModalProps> = ({
       if (logError) throw logError;
       if (!logData) { setLogs([]); return; }
 
-      const userIds = [...new Set(logData.map(l => l.user_id).filter(id => !!id))];
+      const userIds = [...new Set(logData.map((l: any) => l.user_id).filter((id: any) => !!id))];
       
       if (userIds.length > 0) {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
+        const { data: profileData, error: profileError } = await (supabase.from('profiles') as any)
           .select('user_id, nickname, avatar_url')
           .in('user_id', userIds);
         
         if (!profileError && profileData) {
-          const profileMap = new Map(profileData.map(p => [p.user_id, p]));
-          const merged = logData.map(l => ({
+          const profileMap = new Map(profileData.map((p: any) => [p.user_id, p]));
+          const merged = logData.map((l: any) => ({
             ...l,
             profiles: l.user_id ? profileMap.get(l.user_id) : undefined
           }));
@@ -141,8 +140,8 @@ const AdminTrafficLogsModal: React.FC<AdminTrafficLogsModalProps> = ({
       } else {
         setLogs(logData as TrafficLog[]);
       }
-    } catch (err) {
-      console.error('Error fetching traffic logs:', err);
+    } catch (error: unknown) {
+      console.error('Error fetching traffic logs:', getErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -163,7 +162,7 @@ const AdminTrafficLogsModal: React.FC<AdminTrafficLogsModalProps> = ({
   // 상세 분석 데이터 계산
   const analysisData = useMemo(() => {
     const sourceMap = new Map<string, { count: number, lastSeen: string, mediums: Set<string> }>();
-    const userMap = new Map<string, { count: number, lastSeen: string, profile?: any, topSource: string }>();
+    const userMap = new Map<string, { count: number, lastSeen: string, profile?: TrafficLog['profiles'], topSource: string }>();
     const hourlyDataMap = new Map<string, number>();
     
     logs.forEach(log => {
@@ -724,7 +723,7 @@ interface MetricCardProps {
   title: string;
   value: string;
   subtitle: string;
-  icon: any;
+  icon: React.ElementType;
   color: 'emerald' | 'blue' | 'amber' | 'indigo';
 }
 

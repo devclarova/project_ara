@@ -11,7 +11,7 @@ import { useMarketingBanners } from '@/hooks/useMarketingBanners';
 
 export function GlobalNoticeBar() {
     const { settings } = useSiteSettings();
-    const [notice, setNotice] = useState<any>(null);
+    const [notice, setNotice] = useState<import('../../contexts/SiteSettingsContext').SiteSettings['global_notice'] | null>(null);
     const [isVisible, setIsVisible] = useState(false);
 
     // Asset Orchestration: Resolves 'top_bar' marketing units and initializes engagement telemetry (click-through/view tracking).
@@ -35,7 +35,7 @@ export function GlobalNoticeBar() {
 
     // Analytics Telemetry: Records impression events in the marketing analytics pipeline upon component visibility.
     useEffect(() => {
-        topBarBanners.forEach(b => {
+        topBarBanners.forEach((b: any) => {
             if (!dismissedBanners.has(b.id)) {
                 trackView(b.id);
             }
@@ -56,7 +56,7 @@ export function GlobalNoticeBar() {
         }
     };
 
-    const visibleBanners = topBarBanners.filter(b => !dismissedBanners.has(b.id));
+    const visibleBanners = topBarBanners.filter((b: any) => !dismissedBanners.has(b.id));
 
     // UI Transformation: Resolves specific color palettes and iconography based on the administrative notice severity.
     const getColorClasses = () => {
