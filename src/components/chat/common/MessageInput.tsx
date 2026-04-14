@@ -95,7 +95,7 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
       
       // 제재 중인 사용자는 메시지 전송 불가
       if (isBanned && bannedUntil) {
-        toast.error(getBanMessage(bannedUntil, '메시지를 전송'));
+        toast.error(getBanMessage(bannedUntil, t('chat.action_send_message', '메시지를 전송')));
         return;
       }
       
@@ -316,7 +316,7 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
               type="button"
               className="attach-button group"
               onClick={() => setShowAddMenu(prev => !prev)}
-              aria-label="더보기"
+              aria-label={t('common.more', '더보기')}
             >
               <i 
                 className={`${showAddMenu ? 'ri-close-line' : 'ri-add-line'} text-xl transition-all duration-300 ease-out ${
@@ -385,7 +385,7 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
             type="submit"
             className="send-button"
             disabled={(!message.trim() && !hasAttachments) || sending}
-            aria-label="메시지 전송"
+            aria-label={t('chat.aria_send_message', '메시지 전송')}
           >
             {sending ? (
               <div className="loading-spinner" />

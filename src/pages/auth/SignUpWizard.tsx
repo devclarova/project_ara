@@ -6,6 +6,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useMemo, useState, useEffect } from 'react';
 import AuthBackground from '@/components/auth/AuthBackground';
+import { useTranslation } from 'react-i18next';
 import SignUpStep1Consent from '@/components/auth/SignUpStep1Consent';
 import SignUpStep2Form, { type FormData } from '@/components/auth/SignUpStep2Form';
 import SignUpStep3Profile from '@/components/auth/SignUpStep3Profile';
@@ -19,6 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function SignUpWizard({ mode = 'social' }: { mode?: 'social' }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { signOut } = useAuth();
 
@@ -166,7 +168,7 @@ export default function SignUpWizard({ mode = 'social' }: { mode?: 'social' }) {
     <AuthBackground>
       <div className="w-full max-w-md sm:max-w-lg md:max-w-2xl px-4 sm:px-6 md:px-8 py-10">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-emerald-600 mb-6 drop-shadow-sm">
-          소셜 회원가입
+          {t('signup.title_social')}
         </h1>
 
         <div className="mb-2 flex justify-end">
@@ -176,7 +178,7 @@ export default function SignUpWizard({ mode = 'social' }: { mode?: 'social' }) {
             className="rounded-lg px-3 py-1.5 text-sm font-medium border border-black/10 dark:border-white/10
                text-gray-800 dark:text-gray-200 hover:bg-black/5 dark:hover:bg-white/5 transition"
           >
-            다음에 하기
+            {t('signup.later')}
           </button>
         </div>
 

@@ -113,7 +113,7 @@ export default function ReplyModal({ tweetId, onClose }: ReplyModalProps) {
       <div className="bg-white dark:bg-background rounded-2xl w-full max-w-lg mx-auto shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Reply to Tweet</h2>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">{t('tweet.reply_to_tweet', 'Reply to Tweet')}</h2>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 flex items-center justify-center"
@@ -128,7 +128,7 @@ export default function ReplyModal({ tweetId, onClose }: ReplyModalProps) {
             value={content}
             onChange={setContent}
             onImagesChange={handleImagesChange}
-            placeholder="Write your reply..."
+            placeholder={t('tweets.placeholder_reply', 'Write your reply...')}
           />
 
           {/* 하단 버튼 */}
@@ -141,10 +141,10 @@ export default function ReplyModal({ tweetId, onClose }: ReplyModalProps) {
               {isSubmitting ? (
                 <div className="flex items-center space-x-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Posting...</span>
+                  <span>{t('tweets.btn_replying', 'Posting...')}</span>
                 </div>
               ) : (
-                'Reply'
+                t('tweets.btn_reply', 'Reply')
               )}
             </button>
           </div>

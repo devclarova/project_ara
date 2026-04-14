@@ -45,10 +45,10 @@ export default function ShareButton({
   const shareData = useMemo(() => {
     return {
       title: (title ?? document.title).slice(0, 80),
-      text: (text ?? '재미있게 한국어를 배워요! ARA에서 학습 장면을 공유합니다.').slice(0, 200),
+      text: (text ?? t('common.share_default_text', '재미있게 한국어를 배워요! ARA에서 학습 장면을 공유합니다.')).slice(0, 200),
       url: shareUrl,
     };
-  }, [title, text, shareUrl]);
+  }, [title, text, shareUrl, t]);
 
   // Clipboard Bridge: Interfaces with the navigator.clipboard API for link copying, with a prompt-based fallback.
   const copyToClipboard = async () => {
@@ -58,7 +58,7 @@ export default function ShareButton({
       onShared?.();
       setTimeout(() => setCopied(false), 1600);
     } catch {
-      window.prompt('아래 링크를 복사하세요:', shareUrl);
+      window.prompt(t('common.copy_link_prompt', '아래 링크를 복사하세요:'), shareUrl);
     }
   };
 
@@ -87,7 +87,7 @@ export default function ShareButton({
         >
           <img
             src={thumbnailUrl}
-            alt="thumbnail"
+            alt={t('common.thumbnail', '썸네일')}
             className="w-full h-full object-cover group-hover:opacity-90 transition"
           />
         </a>

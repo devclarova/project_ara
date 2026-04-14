@@ -313,7 +313,7 @@ export default function SignUpStep3Profile(props: Props) {
           {draft.preview ? (
             <img
               src={draft.preview}
-              alt="미리보기"
+              alt={t('auth.preview_alt', '미리보기')}
               className="absolute inset-0 w-full h-full object-cover"
             />
           ) : (
@@ -348,7 +348,7 @@ export default function SignUpStep3Profile(props: Props) {
           {draft.coverPreview ? (
             <img
               src={draft.coverPreview}
-              alt="커버 미리보기"
+              alt={t('auth.cover_preview_alt', '커버 미리보기')}
               className="w-full h-full object-cover"
             />
           ) : (

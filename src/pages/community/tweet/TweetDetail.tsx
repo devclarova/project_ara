@@ -107,7 +107,7 @@ export default function TweetDetail() {
     setReplies(prev => prev.filter(r => !blockedIds.includes(r.user.username)));
     // 트윗 본문 작성자가 차단된 경우 처리 (선택)
     if (tweet && blockedIds.includes(tweet.user.username)) {
-      toast.info(t('tweet.author_blocked', '차단된 사용자의 트윗입니다.'));
+      toast.info(t('tweet.author_blocked', '차단한 사용자의 게시물입니다.'));
       navigate(-1);
     }
   }, [blockedIds, tweet]);
@@ -427,8 +427,8 @@ export default function TweetDetail() {
             parent_reply_id: newReply.parent_reply_id ?? null,
             root_reply_id: newReply.root_reply_id ?? null,
             user: {
-              name: profile?.nickname ?? 'Unknown',
-              username: profile?.user_id ?? 'anonymous',
+              name: profile?.nickname ?? t('common.unknown', 'Unknown'),
+              username: profile?.user_id ?? t('common.anonymous', 'anonymous'),
               avatar: profile?.avatar_url ?? '/default-avatar.svg',
             },
             content: newReply.content,
@@ -684,10 +684,7 @@ export default function TweetDetail() {
               {t('tweet.login_to_reply', '댓글은 로그인 후 작성하실 수 있어요.')}
             </span>
             <span className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              {t(
-                'tweet.join_community_desc',
-                '커뮤니티에 참여하려면 로그인 또는 회원가입을 진행해주세요.',
-              )}
+              {t('tweet.join_community_desc', '커뮤니티에 참여하려면 로그인 또는 회원가입을 진행해주세요.')}
             </span>
           </div>
           <div className="flex gap-2">

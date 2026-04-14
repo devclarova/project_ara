@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 import { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner'; // Add import
-import { getBanMessage } from '@/utils/banUtils'; // Add import
+import { toast } from 'sonner';
+import { getBanMessage } from '@/utils/banUtils';
 import { getErrorMessage } from '@/utils/errorMessage';
+import { useTranslation } from 'react-i18next';
 
 interface ComposeBoxProps {
 // ... existing interface ...
@@ -29,6 +30,7 @@ interface ComposeBoxProps {
 }
 
 export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
+  const { t } = useTranslation();
   const [tweetText, setTweetText] = useState('');
   const [showOptions, setShowOptions] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -113,8 +115,8 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
       const newTweet = {
         id: data.id,
         user: {
-          name: data.profiles?.nickname ?? 'Unknown',
-          username: data.profiles?.username ?? data.profiles?.nickname ?? 'user',
+          name: data.profiles?.nickname ?? t('common.unknown', 'Unknown'),
+          username: data.profiles?.username ?? data.profiles?.nickname ?? t('common.anonymous', 'user'),
           avatar: data.profiles?.avatar_url ?? '/default-avatar.svg',
         },
         content: data.content,
@@ -143,7 +145,7 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
       setShowOptions(false);
     } catch (err: unknown) {
       console.error('❌ 트윗 업로드 실패:', getErrorMessage(err));
-      alert('트윗을 업로드하는 중 오류가 발생했습니다.');
+      toast.error(t('tweets.error_general', '트윗을 업로드하는 중 오류가 발생했습니다.'));
     } finally {
       setUploading(false);
     }
@@ -159,8 +161,8 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
         {/* ✅ 프로필 아바타 */}
         <div className="flex-shrink-0">
           <Avatar className="w-10 h-10">
-            <AvatarImage src="/default-avatar.svg" alt="User avatar" />
-            <AvatarFallback>U</AvatarFallback>
+            <AvatarImage src="/default-avatar.svg" alt={t('common.avatar', 'User avatar')} />
+            <AvatarFallback>{t('common.user_initials', 'U')}</AvatarFallback>
           </Avatar>
         </div>
 
@@ -169,7 +171,7 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
           <textarea
             value={tweetText}
             onChange={e => setTweetText(e.target.value)}
-            placeholder="What's happening?"
+            placeholder={t('tweets.placeholder_tweet', "What's happening?")}
             className="w-full text-xl placeholder-gray-500 border-none resize-none focus:outline-none bg-transparent"
             rows={3}
             maxLength={maxLength}
@@ -179,7 +181,7 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
           {/* ✅ 이미지 미리보기 */}
           {previewImage && (
             <div className="mt-3 relative rounded-xl overflow-hidden border border-gray-200">
-              <img src={previewImage} alt="Preview" className="w-full h-48 object-cover" />
+              <img src={previewImage} alt={t('common.preview', 'Preview')} className="w-full h-48 object-cover" />
               <button
                 onClick={() => {
                   setSelectedImage(null);
@@ -231,7 +233,7 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
                     disabled={!tweetText.trim() || uploading}
                     className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white px-4 py-1.5 rounded-full font-bold text-sm transition-colors"
                   >
-                    {uploading ? 'Posting...' : 'Tweet'}
+                    {uploading ? t('tweets.btn_posting', 'Posting...') : t('tweets.btn_post', 'Tweet')}
                   </Button>
                 </div>
               </div>

@@ -179,7 +179,7 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
       const { data: urlData } = await supabase.storage.from('tweet_media').getPublicUrl(filePath);
       const publicUrl = urlData.publicUrl;
       imgTags.push(
-        `<img src="${publicUrl}" alt="${mode === 'reply' ? 'reply' : 'tweet'} image" />`,
+        `<img src="${publicUrl}" alt="${t(mode === 'reply' ? 'common.image_reply' : 'common.image_tweet', mode === 'reply' ? 'reply image' : 'tweet image')}" />`,
       );
     }
     if (imgTags.length === 0) return '';
@@ -252,8 +252,8 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
            parent_reply_id: parentReplyId || null,
            root_reply_id: null,
            user: {
-               id: profileId, // Keeping id from jh-93 as it is more complete
-               name: profileNickname || 'Unknown',
+               id: profileId,
+               name: profileNickname || t('common.unknown', 'Unknown'),
                username: profileUserId || user.id,
                avatar: profileAvatar ?? '/default-avatar.svg'
            },
@@ -313,7 +313,7 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
           id: inserted.id,
           user: {
             id: profileId,
-            name: profileNickname || 'Unknown',
+            name: profileNickname || t('common.unknown', 'Unknown'),
             username: profileUserId || user.id,
             avatar: profileAvatar ?? '/default-avatar.svg',
           },
@@ -391,7 +391,7 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
         {/* 내 아바타 */}
         <Avatar>
           <AvatarImage src={profileAvatar || '/default-avatar.svg'} alt="me" />
-          <AvatarFallback>ME</AvatarFallback>
+          <AvatarFallback>{t('common.me', 'ME')}</AvatarFallback>
         </Avatar>
         {/* 입력 영역 */}
         <div className="flex-1">

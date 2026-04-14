@@ -233,7 +233,7 @@ export default function TweetDetailCard({
 
   const displayContent =
     (isSoftDeleted || isHiddenContent)
-      ? (isSoftDeleted ? '관리자에 의해 삭제된 메시지입니다.' : '관리자에 의해 숨김 처리된 콘텐츠입니다.') 
+      ? (isSoftDeleted ? t('community.deleted_post') : t('community.hidden_content')) 
       : currentContent;
 
   const safeContent = DOMPurify.sanitize(displayContent, {
@@ -327,7 +327,7 @@ export default function TweetDetailCard({
       if (authorProfileId && !isDeletedUser && authorProfileId !== profileId) {
         await (supabase.from('notifications') as any).insert({
           type: 'like',
-          content: '당신의 피드를 좋아합니다.',
+          content: t('tweet.liked_feed'),
           is_read: false,
           tweet_id: tweet.id,
           comment_id: null,
@@ -360,7 +360,7 @@ export default function TweetDetailCard({
 
       if (error) throw error;
 
-      toast.success(t('tweet.delete_success', '피드가 삭제되었습니다.'));
+      toast.success(t('tweet.delete_success'));
       setShowDeleteDialog(false);
       setShowMenu(false);
 
@@ -381,7 +381,7 @@ export default function TweetDetailCard({
         navigate('/sns');
       }
     } catch (err: unknown) {
-      toast.error(t('tweet.delete_failed', '삭제 중 오류가 발생했습니다.'));
+      toast.error(t('tweet.delete_failed'));
     }
   };
 
@@ -478,13 +478,13 @@ export default function TweetDetailCard({
 
       if (uploadedUrls.length > 0) {
         setEditImages(prev => [...prev, ...uploadedUrls]);
-        toast.success('이미지 추가 완료!');
+        toast.success(t('common.upload_success'));
       } else {
-        toast.error('이미지 업로드 실패');
+        toast.error(t('common.upload_failed'));
       }
     } catch (err: unknown) {
       console.error(getErrorMessage(err));
-      toast.error('이미지 업로드 실패');
+      toast.error(t('common.upload_failed'));
     } finally {
       setIsUploading(false);
     }
@@ -498,7 +498,7 @@ export default function TweetDetailCard({
 
     const textHtml = plainTextToHtml(editText.trim());
     if (!textHtml && editImages.length === 0) {
-      toast.error(t('tweets.error_empty', '내용을 입력해주세요'));
+      toast.error(t('tweets.error_empty'));
       return;
     }
 
@@ -596,7 +596,7 @@ export default function TweetDetailCard({
                 className="flex items-center px-1 py-0.5 ml-2"
                 title={authorCountryName}
               >
-                <span className="text-xs">🌐</span>
+                <span>{t('common.loading')}</span>
               </Badge>
             )}
 
@@ -617,12 +617,12 @@ export default function TweetDetailCard({
                 const editedMs = toMs(edited);
                 const isEdited =
                   createdMs != null && editedMs != null && editedMs > createdMs + 1000;
-                return isEdited ? <span className="ml-1 text-xs text-gray-400">수정됨</span> : null;
+                return isEdited ? <span className="ml-1 text-xs text-gray-400">{t('common.edited')}</span> : null;
               })()}
             </span>
             {isAdmin && tweet.is_hidden && (
               <Badge variant="outline" className="ml-2 border-amber-500 text-amber-500 text-[10px] py-0 h-4">
-                숨김
+                {t('common.hidden')}
               </Badge>
             )}
           </div>
@@ -683,13 +683,10 @@ export default function TweetDetailCard({
             onClick={e => e.stopPropagation()}
           >
             <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
-              {t('tweet.delete_msg_title', '이 게시글을 삭제하시겠어요?')}
+              {t('tweet.delete_msg_title')}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-              {t(
-                'tweet.delete_msg_desc',
-                '삭제한 게시글은 되돌릴 수 없습니다. 정말 삭제하시겠습니까?',
-              )}
+              {t('tweet.delete_msg_desc')}
             </p>
 
             <div className="flex justify-end space-x-2">

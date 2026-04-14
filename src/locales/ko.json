@@ -5,8 +5,8 @@
     "community": "커뮤니티",
     "chat": "채팅",
     "notifications": "알림",
-    "more": "더보기",
     "settings": "설정",
+    "more": "더보기",
     "voca": "단어장",
     "profile": "프로필",
     "post": "게시하기",
@@ -75,6 +75,7 @@
     "decline": "거절",
     "tab_system": "시스템",
     "system_notice": "시스템 알림",
+    "no_content_available": "내용을 불러올 수 없습니다",
     "system": {
       "ban_title": "[ARA 운영팀] 서비스 이용 제한 안내",
       "ban_prefix": "안녕하세요, ARA 운영팀입니다.<br/>회원님의 계정에 대한 이용 제한 조치가 적용되어 안내드립니다.",
@@ -90,23 +91,27 @@
       "reporter_target": "<strong>• 신고 대상:</strong> {{target}}",
       "reporter_reason": "<strong>• 신고 사유:</strong> {{reason}}",
       "reporter_action": "<strong>• 조치 내용:</strong> {{action}}",
-      "reporter_footer": "<br/>앞으로도 많은 관심 부탁드립니다."
+      "reporter_footer": "쾌적하고 건전한 커뮤니티를 위해 힘써주셔서 감사합니다.",
+      "security_contact_admin": "잘못된 차단이라고 생각되면 시스템 관리자에게 문의하세요.",
+      "identifier_label": "접속 식별자",
+      "ban_permanent": "계정이 영구적으로 정지되었습니다.",
+      "ban_permanent_desc": "관리자에 의해 계정 사용이 영구적으로 제한되었습니다.",
+      "ban_temporary_title": "계정 이용이 제한되었습니다.",
+      "ban_temporary_desc": "관리자에 의해 {{date}}까지 이용이 제한됩니다."
     }
   },
   "study": {
     "studylist": "학습 목록",
-    "search_placeholder": "검색...",
-    "no_content": "콘텐츠가 없습니다.",
     "category": {
       "all": "전체",
       "drama": "드라마",
       "movie": "영화",
-      "entertainment": "예능",
+      "show": "예능",
       "music": "음악"
     },
     "level": {
-      "title": "난이도",
-      "all": "전체",
+      "title": "레벨",
+      "all": "전체 레벨",
       "beginner": "초급",
       "intermediate": "중급",
       "advanced": "고급"
@@ -118,14 +123,53 @@
       "close": "닫기",
       "never_show": "다시 보지 않기"
     },
+    "search_placeholder": "검색어를 입력하세요",
+    "no_content": "해당 조건의 학습 콘텐츠가 없습니다.",
+    "no_title": "제목 없음",
+    "no_episode": "에피소드 정보 없음",
+    "episode_label": "에피소드",
+    "scene_label": "장면",
+    "voca_btn": "나의 단어장",
+    "share_text_prefix": "ARA에서 함께 공부해요!",
+    "meta_desc_default": "K-콘텐츠로 배우는 스마트한 한국어 학습, ARA",
+    "meta_desc_scene": "{{contents}} {{episode}} {{scene}} 장면으로 한국어 리스닝과 표현을 익혀보세요.",
+    "aria_prev_episode": "이전 에피소드",
+    "aria_next_episode": "다음 에피소드",
     "formats": {
       "episode": "제{{val}}화",
       "scene": "장면 {{val}}"
     },
-    "no_title": "제목 없음",
-    "no_episode": "에피소드 없음",
-    "share_text_prefix": "K-콘텐츠로 배우기: ",
-    "meta_desc_default": "ARA에서 즐겁게 한국어를 배워보세요",
+    "promotion": {
+      "premium_title": "Project ARA 프리미엄",
+      "premium_desc": "광고 없는 쾌적한 학습과 독점 에피소드를 만나보세요.",
+      "ad_badge": "AD",
+      "promo_badge": "PROMO",
+      "guide_alt_1": "ARA Study 이용 방법 안내 1",
+      "guide_alt_2": "ARA Study 이용 방법 안내 2",
+      "guide_alt_3": "ARA Study 이용 방법 안내 3",
+      "guide_alt_4": "ARA Study 이용 방법 안내 4",
+      "guide_alt_5": "ARA Study 이용 방법 안내 5"
+    },
+    "voca": {
+      "title": "단어장",
+      "description": "저장한 단어를 모아볼 수 있어요.",
+      "btn_quiz": "퀴즈",
+      "btn_back_to_study": "학습으로",
+      "search_placeholder": "단어/뜻/예문/품사/발음 검색",
+      "status_title": "학습 상태",
+      "status_all": "전체",
+      "btn_delete_all": "전체 삭제",
+      "btn_delete_all_title": "단어장 초기화",
+      "empty_message": "저장된 단어가 없어요.",
+      "empty_cta": "학습 페이지에서 단어를 저장해보아요.",
+      "modal_cta": "에피소드로",
+      "delete_confirm": {
+        "title_single": "단어 삭제",
+        "title_all": "전체 삭제",
+        "desc_single": "단어를 삭제하시겠습니까?",
+        "desc_all": "전체 단어를 삭제하시겠습니까?"
+      }
+    },
     "study_card_title": "학습 카드",
     "vocab_explanation": "단어 설명",
     "culture_note": "문화 노트",
@@ -134,10 +178,7 @@
     "subtitle_no_data": "자막 데이터가 없습니다.",
     "login_required": "로그인 필요",
     "preview": "미리보기",
-    "meta_title": "ARA - K-콘텐츠 기반 한국어 학습 플랫폼",
-    "meta_desc_scene": "K-콘텐츠 장면으로 한국어 공부하기: {{contents}} {{episode}} {{scene}}",
-    "aria_prev_episode": "이전 에피소드",
-    "aria_next_episode": "다음 에피소드"
+    "meta_title": "ARA - K-콘텐츠 기반 한국어 학습 플랫폼"
   },
   "auth": {
     "login": "로그인",
@@ -183,7 +224,18 @@
     "restore_remaining": "영구 삭제까지 {{days}}일 남았습니다.",
     "restore_confirm": "계정 복구하기",
     "profile_not_found_contact_admin": "프로필이 생성되지 않았습니다. 관리자에게 문의하세요.",
-    "auth_failed": "인증에 실패했습니다."
+    "auth_failed": "인증에 실패했습니다.",
+    "relink_notice_title": "SNS 재연결 안내",
+    "relink_previously_unlinked": "이전에 해제된 SNS 계정입니다",
+    "relink_security_guide": "보안을 위해 이메일로 로그인하신 후, [설정 > SNS 연결 관리]에서 직접 다시 연결해 주세요.",
+    "relink_cross_account_desc": "이 {{provider}} 계정은 이전에 <span class=\"font-bold text-primary\">{{email}}</span> 계정에 연결되어 있었습니다.",
+    "relink_manual_guide": "보안을 위해 이메일로 로그인 후 [설정]에서 다시 연결해 주세요.",
+    "choose_start_method": "어떤 이메일로 시작할까요?",
+    "login_with_email": "이메일로 로그인",
+    "duplicate_prevent_title": "SNS 계정 중복 방지 안내",
+    "preview_alt": "미리보기",
+    "cover_preview_alt": "커버 미리보기",
+    "ban_message_template": "이용제한 상태에서는 {{action}}할 수 없습니다.\n이용제한 기간: ~{{date}} ({{days}}일 남음)"
   },
   "find_email": {
     "title": "이메일 찾기",
@@ -370,6 +422,7 @@
     "ara_team": "ARA 운영팀",
     "online": "온라인",
     "offline": "오프라인",
+    "more": "더보기",
     "save": "저장",
     "saving": "저장 중...",
     "apply": "적용하기",
@@ -391,7 +444,14 @@
     "search_placeholder": "검색...",
     "back": "뒤로가기",
     "loading": "로딩 중...",
+    "checking": "확인 중...",
+    "error_label": "오류",
     "error": "오류가 발생했습니다",
+    "retry": "다시 시도",
+    "today": "오늘",
+    "yesterday": "어제",
+    "just_now": "방금 전",
+    "date_format_short": "M월 d일",
     "error_profile_load": "프로필 정보를 불러오지 못했습니다",
     "error_profile_missing": "프로필 정보가 없습니다. 다시 로그인해 주세요",
     "error_profile_loading": "프로필 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요",
@@ -399,6 +459,7 @@
     "error_profile_not_load": "프로필 정보를 불러올 수 없습니다",
     "error_like": "좋아요 처리 중 오류가 발생했습니다",
     "error_delete": "삭제 중 오류가 발생했습니다",
+    "error_image_size": "{{name}} 파일의 크기가 {{size}}를 초과합니다.",
     "success_delete": "삭제되었습니다",
     "success_report": "신고가 접수되었습니다",
     "success_block": "해당 유저를 차단했습니다",
@@ -434,7 +495,52 @@
     "block_modal_notice_3": "커뮤니티에서 상대방의 게시글이 숨겨집니다.",
     "block_modal_notice_4": "상대방의 댓글이 마스킹 처리되어 표시됩니다.",
     "block_modal_warning": "차단 정보는 '설정 > 차단된 사용자'에서 관리할 수 있습니다.",
-    "anonymous": "익명"
+    "anonymous": "익명",
+    "share_default_text": "재미있게 한국어를 배워요! ARA에서 학습 장면을 공유합니다.",
+    "copy_link_prompt": "아래 링크를 복사하세요:",
+    "submitting": "제출 중...",
+    "thumbnail": "썸네일",
+    "scroll_to_top": "맨 위로 스크롤",
+    "user": "사용자",
+    "unknown": "알 수 없음",
+    "premium_member": "프리미엄 멤버",
+    "country": "국가",
+    "edited": "수정됨",
+    "hidden": "숨김",
+    "show_more": "더보기",
+    "collapse": "접기",
+    "hidden_content": "숨겨진 콘텐츠",
+    "deleted_post": "삭제된 게시글",
+    "edit_post": "게시글 수정",
+    "upload_success": "업로드 완료!",
+    "upload_failed": "업로드 실패",
+    "remask": "다시 숨기기",
+    "add_image": "이미지 추가",
+    "uploading": "업로드 중...",
+    "prompt_image_url": "이미지 URL을 입력하세요",
+    "add_url": "URL 추가",
+    "image_count": "이미지 {{count}}개",
+    "image_reply": "답글 이미지",
+    "image_tweet": "게시글 이미지",
+    "me": "나",
+    "avatar": "아바타",
+    "preview": "미리보기",
+    "user_initials": "사용자",
+    "advertisement": "광고",
+    "sponsored": "스폰서",
+    "replies": "댓글",
+    "likes": "좋아요",
+    "views": "조회수"
+  },
+  "not_found": {
+    "discovery": "길을 잃은 페이지를 발견했어요",
+    "title": "아직 스크립트가 쓰이지 않은 장면이에요",
+    "description": "이 주소에는 아직 ARA의 에피소드가 준비되어 있지 않아요. 홈으로 돌아가서 다른 K-콘텐츠로 한국어와 문화를 계속 즐겨보실까요?",
+    "quote_part1": "“언젠가 이 페이지도",
+    "quote_accent": "하나의 장면",
+    "quote_part2": "으로 채워질 거예요.”",
+    "feedback_prefix": "이 페이지에서 기대하셨던 기능이나 아이디어가 있다면 ARA 안의 피드백 메뉴에서 편하게 남겨주시거나",
+    "feedback_suffix": "으로 연락해주세요."
   },
   "recovery_reminder": {
     "title": "계정 보안 강화 안내",
@@ -456,6 +562,8 @@
     "theme_light": "라이트",
     "theme_dark": "다크",
     "theme_system": "시스템 설정",
+    "language_select_aria": "언어 선택",
+    "theme_select_aria": "테마 선택",
     "title_language": "언어 변경",
     "title_theme": "테마 변경",
     "title_password_change": "비밀번호 변경",
@@ -512,16 +620,74 @@
     "pw_check_req": "비밀번호를 확인해주세요 (최소 8자 & 일치).",
     "hide": "숨기기",
     "show": "보이기",
-    "sns_connect_desc": "소셜 로그인으로 계정을 연결하면 더 쉽게 접속하고 복구할 수 있습니다.",
+    "sns_connect_desc": "소셜 계정을 연결하여 여러 방법으로 로그인할 수 있습니다.",
     "connect_google": "Google 계정 연결",
     "connect_kakao": "Kakao 계정 연결",
-    "sns_connect_note": "연결된 계정은 설정 > 개인정보에서 언제든지 연결 해제할 수 있습니다.",
+    "privacy_policy": {
+      "summary": "회사는 서비스 제공을 위해 최소한의 개인정보를 수집·이용하며, 수집 목적 달성 후 지체 없이 파기합니다.",
+      "items_title": "핵심 항목",
+      "item_1": "수집 항목, 수집·이용 목적, 보유·이용 기간",
+      "item_2": "개인정보 제3자 제공 및 처리위탁 현황",
+      "item_3": "이용자 권리(열람, 정정, 삭제, 처리정지)와 행사 방법",
+      "item_4": "개인정보 보호책임자 및 연락처",
+      "close": "닫기"
+    },
+    "sns_connect_failed": "SNS 연결에 실패했습니다.",
+    "sns_unlink_last_method": "최소 1개의 로그인 방법이 필요합니다.",
+    "sns_unlink_failed": "SNS 연결 해제에 실패했습니다.",
+    "sns_unlink_success": "SNS 연결이 해제되었습니다.",
+    "linked_accounts": "연결된 계정",
+    "connected": "연결됨",
+    "not_connected": "미연결",
+    "social_login_active": "소셜 로그인 사용 가능",
+    "unlink": "해제",
+    "connect": "연결",
+    "sns_connect_note": "여러 계정을 연결하면 모든 방법으로 로그인할 수 있습니다.",
+    "unlink_confirm_title": "계정 연결 해제",
+    "sns_unlink_confirm_msg": "계정 연결을 해제하시겠습니까?",
+    "sns_unlink_warning": "연결을 해제하면 해당 방법으로 로그인할 수 없습니다.",
+    "email": "이메일",
     "account_settings": "설정",
     "support_policy": "지원 및 정책",
     "help_center": "도움말 센터",
     "terms": "이용약관",
-    "privacy_policy": "개인정보 처리방침",
-    "marketing_consent": "마케팅 동의",
+    "privacy_policy_title": "개인정보 처리방침",
+    "marketing_consent": {
+      "title": "마케팅 동의",
+      "email": "이메일 수신",
+      "sms": "SMS 수신",
+      "push": "푸시 알림"
+    },
+    "customer_center": {
+      "faq_title": "자주 묻는 질문(FAQ)",
+      "faq_desc": "계정, 결제, 보안 등 주요 질문을 확인하세요.",
+      "contact_1on1_title": "1:1 문의",
+      "contact_1on1_desc": "평일 09:00~18:00 (공휴일 제외)"
+    },
+    "coupons": {
+      "history_title": "구독 및 쿠폰 내역",
+      "no_history": "내역이 없습니다.",
+      "plan_label": "{{plan}} 플랜",
+      "status": {
+        "active": "이용중",
+        "cancelled": "해지됨",
+        "expired": "만료됨"
+      },
+      "redeem_title": "쿠폰 등록",
+      "redeem_placeholder": "쿠폰 코드를 입력하세요",
+      "btn_redeem": "쿠폰 등록",
+      "vip_benefit_title": "이달의 VIP 혜택",
+      "vip_benefit_desc": "프리미엄 이상 회원을 위한 특별한 쿠폰을 확인하세요.",
+      "btn_claim_vip": "VIP 쿠폰 받기",
+      "vip_already_claimed": "이번 달 VIP 혜택을 이미 받으셨습니다. 다음 달을 기다려 주세요!",
+      "redeem_success": "쿠폰 등록 성공!",
+      "redeem_success_desc": "{{name}} ({{discount}} 할인)",
+      "redeem_fail": "유효하지 않은 쿠폰입니다.",
+      "redeem_error": "쿠폰 확인 중 오류가 발생했습니다.",
+      "cancel_success": "구독이 성공적으로 해지되었습니다.",
+      "cancel_error": "해지 중 오류 발생: {{error}}",
+      "no_subscription": "구독 정보가 없습니다."
+    },
     "email_info_missing": "이메일 정보를 찾을 수 없습니다. 고객센터로 문의해주세요.",
     "password_incorrect": "비밀번호가 올바르지 않습니다.",
     "email_mismatch_error": "입력하신 이메일 주소가 올바르지 않습니다.",
@@ -600,33 +766,35 @@
     "btn_reply": "답글",
     "btn_replying": "답글 작성 중...",
     "error_profile": "프로필 정보를 불러오는 중입니다. 나중에 다시 시도해주세요.",
-    "error_general": "오류가 발생했습니다.",
+    "error_general": "처리 중 오류가 발생했습니다.",
     "add_photo": "사진 추가",
     "images_selected": "{{count}}개의 이미지 선택됨",
     "preview_alt": "미리보기 {{index}}",
     "success_tweet": "게시글이 정상적으로 등록되었습니다.",
     "success_reply": "댓글이 성공적으로 업로드되었습니다!",
     "success_reply_posted": "댓글이 등록되었습니다",
-    "error_reply_save": "댓글 저장 중 오류가 발생했습니다",
-    "error_tweet_save": "게시글 저장 중 오류가 발생했습니다",
-    "error_reply_upload": "댓글 업로드 중 문제가 발생했습니다",
-    "error_tweet_upload": "게시글 업로드 중 문제가 발생했습니다",
+    "error_reply_save": "답글 저장에 실패했습니다.",
+    "error_tweet_save": "게시글 저장에 실패했습니다.",
+    "error_reply_upload": "답글 업로드 중 오류가 발생했습니다.",
+    "error_tweet_upload": "게시글 업로드 중 오류가 발생했습니다.",
     "error_login": "로그인이 필요합니다",
-    "error_empty": "내용이 비어 있습니다"
+    "error_empty": "내용을 입력해주세요."
   },
   "tweet": {
     "delete_msg_title": "삭제하시겠습니까?",
     "delete_msg_desc": "이 동작은 되돌릴 수 없습니다.",
     "delete_success": "삭제되었습니다.",
     "delete_failed": "삭제에 실패했습니다.",
-    "no_replies": "답글이 없습니다",
-    "be_first": "가장 먼저 답글을 남겨보세요!",
+    "no_replies": "아직 댓글이 없습니다.",
+    "be_first": "첫 번째 댓글의 주인공이 되어보세요!",
     "cannot_delete": "본인이 작성한 게시글만 삭제할 수 있습니다.",
     "deleted_reply": "삭제된 댓글입니다",
     "deleted_or_not_exist": "삭제된 게시글이거나 존재하지 않는 게시글입니다",
     "deleted_while_viewing": "게시글이 삭제되었습니다.",
-    "login_to_reply": "댓글은 로그인 후 작성하실 수 있어요.",
-    "join_community_desc": "커뮤니티에 참여하려면 로그인 또는 회원가입을 진행해주세요."
+    "join_community_desc": "커뮤니티에 참여하려면 로그인 또는 회원가입을 진행해주세요.",
+    "liked_feed": "당신의 게시물을 좋아합니다.",
+    "reply_to_tweet": "게시글에 답글 달기",
+    "compose_tweet": "새 게시글 작성"
   },
   "trending": {
     "title": "실시간 인기 게시글",
@@ -691,7 +859,29 @@
     "confirm_exit_title": "채팅방을 나가시겠습니까?",
     "confirm_exit_desc": "나가면 대화 목록으로 돌아갑니다.",
     "exit_success": "채팅방에서 나갔습니다.",
-    "creating_chat": "채팅방 생성 중..."
+    "creating_chat": "채팅방 생성 중...",
+    "translate_error_untranslatable": "의미를 파악할 수 없어 번역할 수 없는 문장입니다.",
+    "translate_error_generic": "번역 중 오류가 발생했습니다.",
+    "translate_error_api": "API 요청 실패",
+    "scroll_to_bottom": "맨 아래로 스크롤",
+    "deleted_message": "관리자에 의해 삭제된 메시지입니다.",
+    "aria_send_message": "메시지 전송"
+  },
+  "community": {
+    "title": "커뮤니티",
+    "no_results": "검색 결과가 없습니다.",
+    "no_posts": "아직 공유된 소식이 없습니다.",
+    "all_posts_loaded": "모든 소식을 확인했습니다.",
+    "hidden_content": "관리자에 의해 숨김 처리된 게시물입니다.",
+    "deleted_post": "이 게시물은 정책 위반으로 인해 삭제되었습니다.",
+    "edit_post": "게시글 수정",
+    "seo": {
+      "title": "커뮤니티 | ARA - K-콘텐츠로 배우는 한국어",
+      "description": "전 세계 학습자들이 함께하는 ARA 커뮤니티입니다. K-콘텐츠를 통해 한국어를 배우고, 친구들과 소통하며 각국의 문화를 즐겨보세요.",
+      "keywords": "ARA, 한국어 학습, Learn Korean, Korean culture, K-POP, K-Drama, K-Culture, language exchange, feed, global learners",
+      "og_title": "ARA 커뮤니티 - K-콘텐츠 기반 글로벌 학습 플랫폼",
+      "og_description": "K-콘텐츠로 한국어를 배우고, 세계 각국 학습자들과 소통하는 글로벌 홈 피드 ARA."
+    }
   },
   "policy": {
     "close": "닫기",
@@ -918,7 +1108,96 @@
     },
     "how_it_works_badge": "HOW IT WORKS",
     "how_it_works_title": "ARA 학습 흐름이 이렇게 진행돼요",
-    "guide_alt": "ARA 가이드 {{index}}"
+    "guide_alt": "ARA 가이드 {{index}}",
+    "popular": {
+      "title": "이런 콘텐츠로 배우게 돼요",
+      "description": "전래동화와 설화를 바탕으로 한 자체 애니메이션 콘텐츠를 중심으로 학습 흐름이 구성됩니다.",
+      "loading": "인기 콘텐츠를 불러오는 중이에요..."
+    },
+    "solution": {
+      "title": "왜 ARA인가요?",
+      "description": [
+        "단어만 외우는 학습이 아니라, 콘텐츠 속 흐름과 감정까지",
+        "함께 기억되는 학습을 목표로 만들었습니다.",
+        "학습과 커뮤니티, 두 가지 경험이 한 화면 안에서 자연스럽게 이어지도록 설계했어요."
+      ],
+      "features": {
+        "1": {
+          "title": "이야기 기반 학습",
+          "desc": "전래동화·설화 애니메이션 한 에피소드를 따라가며 어휘, 표현, 문화적 맥락을 함께 익힙니다."
+        },
+        "2": {
+          "title": "사용하면서 배우는 구조",
+          "desc": "학습 후 바로 표현을 써보고, 예시 문장과 피드백으로 더 자연스러운 표현을 익힙니다."
+        },
+        "3": {
+          "title": "글로벌 커뮤니티",
+          "desc": "서로 다른 언어와 배경을 가진 학습자들이 모여, 이야기로 연결되는 한국어 사용 경험을 나눕니다."
+        }
+      }
+    },
+    "testimonials": {
+      "title": {
+        "line1": "ARA는 이런 학습자들을",
+        "line2": "떠올리며 설계되고 있어요"
+      },
+      "description": {
+        "intro": "아직 정식 출시 전이지만, ARA는 한 명의 전형적인 학습자를 떠올리기보다",
+        "highlight": "여러 타입의 학습자",
+        "body": "를 함께 상상하며 만들어지고 있습니다.",
+        "detail": [
+          "한국어를 막 시작한 사람부터 워홀·유학을 준비하는 사람,",
+          "일상이나 업무에서 한국어를 써야 하는 직장인까지.",
+          "좋아하는 콘텐츠와 커뮤니티를 함께 사용할 때 학습이 더 오래,",
+          "자연스럽게 이어지도록 플로우를 설계하고 있어요."
+        ]
+      },
+      "stats": {
+        "duration": {
+          "label": "학습 지속 시간",
+          "desc": "혼자 교재로만 공부할 때보다 더 오래 머무를 수 있도록 플로우를 설계하고 있습니다."
+        },
+        "persona": {
+          "label": "페르소나 타입",
+          "desc": "여러 나라·여러 목표를 가진 학습자 타입을 상정하고 화면과 기능을 검토하고 있어요."
+        },
+        "scenario": {
+          "label": "학습 시나리오",
+          "desc": "어떠한 상황에서 ARA를 켜게 될지 장면 단위로 학습 시나리오를 계속 쌓아가고 있습니다."
+        }
+      },
+      "reviews": {
+        "sarah": {
+          "country": "미국 · US",
+          "persona": "드라마로 한국어를 시작한 초급 학습자",
+          "text": "그동안은 자막에만 의존해서 이야기를 보다 보니 중요한 표현을 자주 놓쳤어요. ARA에서는 한 장면씩 나눠서 핵심 표현을 짚어줘서 “아, 이 상황에서 이 말을 쓰는구나” 하고 이해가 됩니다. 같은 에피소드를 다시 보면서 자막을 하나씩 줄여가는 재미도 생겼어요."
+        },
+        "diego": {
+          "country": "스페인 · ES",
+          "persona": "워홀·유학 준비 중인 실전형 학습자",
+          "text": "워홀 가기 전에 실제로 쓸 표현 위주로 공부하고 싶었어요. 애니메이션 속 대화가 상황별로 정리되어 있어서, “일상에서 쓰는 말”, “조심해서 써야 하는 표현”을 구분해서 익힐 수 있었던 게 좋았습니다."
+        },
+        "meilin": {
+          "country": "싱가포르 · SG",
+          "persona": "말문을 트이고 싶은 중·고급 학습자",
+          "text": "문법이나 단어는 어느 정도 아는데, 말로 풀어내는 게 항상 어려웠어요. ARA에서 이야기를 보고 짧게 감상이나 리액션을 쓰면, 더 자연스러운 표현으로 고쳐줘요. 그 문장을 그대로 피드나 DM에서 써보면서 말하는 감각이 조금씩 살아나는 느낌을 받았습니다."
+        },
+        "alexey": {
+          "country": "러시아 · RU",
+          "persona": "비즈니스 표현이 필요한 직장인 학습자",
+          "text": "한국 파트너와 소통할 일이 많아서 비즈니스 표현이 필요했습니다.  애니메이션 속 어른과 아이, 윗사람과 아랫사람의 말투를 비교해보면서, 상황에 맞는 표현을 자연스럽게 익힐 수 있었어요. 단순 번역이 아니라 맥락을 이해하게 되는 점이 인상적이었습니다."
+        },
+        "hana": {
+          "country": "일본 · JP",
+          "persona": "루틴이 잘 끊기는 자기계발형 학습자",
+          "text": "교재로 공부할 때는 며칠만 지나도 흐름이 끊겼어요. ARA에서는 짧은 이야기 한 편만 봐도 학습이 되다 보니 부담이 없어요. “오늘은 이 장면까지만” 하고 들어왔다가, 자연스럽게 매일 접속하는 루틴이 생겼습니다."
+        }
+      },
+      "notice": {
+        "mobile": "지금 보시는 후기는 ARA가 상정한 학습자 페르소나를 바탕으로 구성한 시나리오형 예시 리뷰입니다.",
+        "desktop": "지금 보시는 후기는 실제 사용자 데이터가 아닌, ARA가 타깃으로 삼고 있는 학습자 페르소나를 바탕으로 구성한 시나리오형 리뷰입니다. 정식 런칭 이후에는 실제 학습자들의 이야기와 함께 이 섹션이 계속 업데이트될 예정이에요."
+      }
+    }
   },
   "footer": {
     "brand": {
@@ -945,6 +1224,7 @@
         "documentation": "문서",
         "api": "API 레퍼런스",
         "community": "커뮤니티",
+        "webinars": "웨비나",
         "help_center": "도움말 센터"
       },
       "company": {
@@ -952,22 +1232,24 @@
         "about": "회사 소개",
         "careers": "채용",
         "blog": "블로그",
-        "contact": "문의하기"
+        "contact": "문의하기",
+        "office": "오피스"
       }
     },
     "newsletter": {
       "title": "최신 소식 받기",
-      "desc": "최신 기능과 업데이트 소식을 받아보세요.",
-      "placeholder": "이메일 주소"
+      "desc": "10,000명 이상의 학습자와 함께 서비스 팁과 업데이트 소식을 놓치지 마세요.",
+      "placeholder": "이메일 주소 입력"
     },
     "bottom": {
-      "rights": "© {{year}} Ara Inc.",
+      "rights": "© {{year}} Ara Inc. All rights reserved.",
       "terms": "이용약관",
       "privacy": "개인정보처리방침",
       "cookies": "쿠키"
     },
     "office": {
-      "address": "서울특별시 강남구",
+      "address_name": "서울 본사",
+      "address": "서울특별시 강남구 테헤란로 123",
       "tel": "Tel: +82 2-1234-5678",
       "registration": "사업자등록번호: 123-45-67890"
     }

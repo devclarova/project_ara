@@ -154,9 +154,9 @@ export default function TweetCard({
   // 본문에서는 img 태그는 제거 (슬라이드에서만 보여줌)
   // Soft Delete 되면 Placeholder 사용
   const displayContent = isSoftDeleted 
-    ? '관리자에 의해 삭제된 메시지입니다.' 
+    ? t('community.deleted_post', '관리자에 의해 삭제된 메시지입니다.') 
     : isHiddenContent 
-      ? '관리자에 의해 숨김 처리된 콘텐츠입니다.' 
+      ? t('community.hidden_content', '관리자에 의해 숨김 처리된 콘텐츠입니다.') 
       : currentContent;
 
   const safeContent = DOMPurify.sanitize(displayContent, {
@@ -460,7 +460,7 @@ export default function TweetCard({
           newImages.push(data.publicUrl);
         } catch (err) {
           console.error('이미지 업로드 실패:', err);
-          toast.error('일부 이미지 업로드에 실패했습니다.');
+          toast.error(t('common.upload_failed_some', '일부 이미지 업로드에 실패했습니다.'));
         }
       }
 
@@ -661,7 +661,7 @@ export default function TweetCard({
               </AvatarFallback>
             </Avatar>
             {user.plan === 'premium' && !isDeletedUser && (
-              <div className="absolute -top-1.5 -left-1.5 z-10 p-[2px] bg-white dark:bg-background rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.1)] transition-transform hover:scale-110 -rotate-12" title="Premium Member">
+              <div className="absolute -top-1.5 -left-1.5 z-10 p-[2px] bg-white dark:bg-background rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.1)] transition-transform hover:scale-110 -rotate-12" title={t('common.premium_member', 'Premium Member')}>
                 <div className="bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] w-[15px] h-[15px] rounded-full flex items-center justify-center shadow-[inset_0_1px_3px_rgba(255,255,255,0.5)]">
                   <SeagullIcon size={12} className="text-white drop-shadow-sm" />
                 </div>
@@ -693,7 +693,7 @@ export default function TweetCard({
               <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 ml-1 h-5">
                 <img
                   src={authorCountryFlagUrl}
-                  alt={authorCountryName ?? '국가'}
+                  alt={authorCountryName ?? t('common.country', '국가')}
                   title={authorCountryName ?? ''}
                   className="w-5 h-3.5 rounded-[2px] object-cover"
                   loading="lazy"
@@ -718,12 +718,12 @@ export default function TweetCard({
                 const edited = currentUpdatedAt;
                 const toMs = (v: any) => v ? new Date(v).getTime() : 0;
                 const isEdited = edited && toMs(edited) > toMs(created) + 1000;
-                return isEdited ? <span className="ml-1 text-xs text-gray-400">수정됨</span> : null;
+                return isEdited ? <span className="ml-1 text-xs text-gray-400">{t('common.edited', '수정됨')}</span> : null;
               })()}
             </span>
             {isAdmin && isHiddenProp && (
               <Badge variant="outline" className="ml-2 border-amber-500 text-amber-500 text-[10px] py-0 h-4">
-                숨김
+                {t('common.hidden', '숨김')}
               </Badge>
             )}
           </div>
@@ -885,7 +885,7 @@ export default function TweetCard({
               setExpanded(prev => !prev);
             }}
           >
-            {expanded ? '접기' : '더보기'}
+            {expanded ? t('common.collapse', '접기') : t('common.show_more', '더보기')}
           </button>
         )}
 
@@ -1061,7 +1061,7 @@ export default function TweetCard({
       )}
       <EditTweetModal
         open={isEditModalOpen}
-        title="게시글 수정"
+        title={t('community.edit_post', '게시글 수정')}
         editText={editText}
         setEditText={setEditText}
         editImages={editImages}

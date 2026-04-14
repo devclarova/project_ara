@@ -5,6 +5,7 @@
  */
 import { useEffect, useState } from 'react';
 import { ArrowUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ScrollToTopButtonProps {
   className?: string;
@@ -12,6 +13,7 @@ interface ScrollToTopButtonProps {
 
 export default function ScrollToTopButton({ className }: ScrollToTopButtonProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const toggleVisibility = () => {
@@ -50,7 +52,7 @@ export default function ScrollToTopButton({ className }: ScrollToTopButtonProps)
         hover:-translate-y-1
         ${className || 'bottom-10 right-10'}
       `}
-      aria-label="맨 위로 스크롤"
+      aria-label={t('common.scroll_to_top', '맨 위로 스크롤')}
     >
       {/* Render Integrity: Employs a static Lucide icon path for consistent visual weight and zero-runtime-latency rendering. */}
       <ArrowUp className="w-6 h-6" />

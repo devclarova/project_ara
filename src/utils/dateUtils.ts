@@ -88,29 +88,7 @@ export const formatRelativeTime = (dateString: string): string => {
 
     // Less than 1 minute
     if (diff < 60000 && diff >= 0) {
-      const lang = i18n.language || 'en';
-      const baseLang = lang.split('-')[0];
-
-      const justNowMap: Record<string, string> = {
-        ko: '방금 전',
-        en: 'Just now',
-        ja: 'たった今',
-        zh: '刚刚',
-        es: 'Justo ahora',
-        fr: "À l'instant",
-        de: 'Gerade eben',
-        ru: 'Только что',
-        pt: 'Agora mesmo',
-        vi: 'Vừa xong',
-        th: 'เมื่อกี้',
-        id: 'Baru saja',
-        ar: 'للتو',
-        hi: 'अभी',
-        bn: 'এইমাত্র',
-        fi: 'Juuri nyt',
-      };
-
-      return justNowMap[lang] || justNowMap[baseLang] || justNowMap['en'];
+      return i18n.t('common.just_now', '방금 전');
     }
 
     return formatDistanceToNow(date, { addSuffix: true, locale: getLocale() });
@@ -156,14 +134,13 @@ export const formatChatListDate = (dateString: string): string => {
     }
 
     if (isYesterday(date)) {
-      return locale === ko ? '어제' : 'Yesterday';
+      return i18n.t('common.yesterday', '어제');
     }
 
     if (isSameYear(date, new Date())) {
-      if (locale === ko) {
-        return format(date, 'M월 d일', { locale });
-      }
-      return format(date, 'MMM d', { locale }); // Oct 5
+      // Use i18next translation for date format patterns if needed, 
+      // but MMM d is generally fine for English date-fns
+      return format(date, i18n.t('common.date_format_short', 'M월 d일'), { locale });
     }
 
     return format(date, 'yyyy. M. d.', { locale }); // Standard short date
@@ -224,7 +201,7 @@ export const formatDividerDate = (dateString: string): string => {
     const locale = getLocale();
 
     if (isToday(date)) {
-      return locale === ko ? '오늘' : 'Today';
+      return i18n.t('common.today', '오늘');
     }
 
     // PPP: Oct 5th, 2024 / 2024년 10월 5일

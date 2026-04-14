@@ -7,8 +7,10 @@
 import { useNavigate } from 'react-router-dom';
 import { Film, Compass, ArrowLeft, Home, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 export default function NotFoundPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const handleGoHome = () => navigate('/');
@@ -59,7 +61,7 @@ export default function NotFoundPage() {
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-[12px] font-semibold text-primary">
               404
             </span>
-            <span>길을 잃은 페이지를 발견했어요</span>
+            <span>{t('not_found.discovery')}</span>
             <Sparkles className="h-4 w-4 text-yellow-400/80 dark:text-yellow-300/90" />
           </div>
         </div>
@@ -75,11 +77,10 @@ export default function NotFoundPage() {
 
         {/* 타이틀 / 서브 타이틀 – 줄내림 전부 자동 */}
         <h1 className="text-2xl sm:text-[1.7rem] md:text-3xl font-semibold text-gray-900 dark:text-gray-50 break-keep whitespace-normal">
-          아직 스크립트가 쓰이지 않은 장면이에요
+          {t('not_found.title')}
         </h1>
         <p className="mt-3 text-sm sm:text-base leading-relaxed text-gray-500 dark:text-gray-300">
-          이 주소에는 아직 ARA의 에피소드가 준비되어 있지 않아요. 홈으로 돌아가서 다른 K-콘텐츠로
-          한국어와 문화를 계속 즐겨보실까요?
+          {t('not_found.description')}
         </p>
 
         {/* 인용문 스타일 서브 카피 */}
@@ -90,9 +91,11 @@ export default function NotFoundPage() {
             <span className="h-px w-6 bg-gray-200 dark:bg-gray-700" />
           </div>
           <p className="italic text-center">
-            “언젠가 이 페이지도
-            <span className="mx-1 font-medium text-primary dark:text-teal-300">하나의 장면</span>
-            으로 채워질 거예요.”
+            {t('not_found.quote_part1')}
+            <span className="mx-1 font-medium text-primary dark:text-teal-300">
+              {t('not_found.quote_accent')}
+            </span>
+            {t('not_found.quote_part2')}
           </p>
         </div>
 
@@ -104,7 +107,7 @@ export default function NotFoundPage() {
             className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm sm:text-base font-medium text-white shadow-lg shadow-primary/35 transition hover:bg-primary/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:ring-offset-[#020617]"
           >
             <Home className="h-4 w-4" />
-            홈으로 가기
+            {t('auth.go_home')}
           </button>
 
           <button
@@ -113,21 +116,20 @@ export default function NotFoundPage() {
             className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full border border-border bg-background/80 px-7 py-3.5 text-sm sm:text-base font-medium text-gray-700 dark:text-gray-100 hover:bg-muted/70 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 dark:ring-offset-[#020617]"
           >
             <ArrowLeft className="h-4 w-4" />
-            이전 페이지로
+            {t('common.back')}
           </button>
         </div>
 
         {/* 피드백 + 이메일 문구 – 한 문단, 자동 줄내림 */}
         <p className="mt-7 text-[11px] sm:text-xs text-gray-400 dark:text-gray-500 break-words">
-          이 페이지에서 기대하셨던 기능이나 아이디어가 있다면 ARA 안의 피드백 메뉴에서 편하게
-          남겨주시거나{' '}
+          {t('not_found.feedback_prefix')}{' '}
           <a
             href="mailto:koreara25@gmail.com"
             className="font-medium text-primary dark:text-teal-300 underline-offset-2 hover:underline"
           >
             koreara25@gmail.com
           </a>
-          으로 연락해주세요.
+          {t('not_found.feedback_suffix')}
         </p>
 
         <div className="mt-6 h-px w-24 mx-auto bg-gradient-to-r from-transparent via-primary/40 to-transparent" />

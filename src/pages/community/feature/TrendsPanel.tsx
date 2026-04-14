@@ -160,7 +160,7 @@ export default function TrendsPanel({
                       <Avatar className="w-9 h-9 border border-black/5 dark:border-white/10">
                         <AvatarImage
                           src={tweet.profiles?.avatar_url || '/default-avatar.svg'}
-                          alt={tweet.profiles?.nickname || 'User'}
+                          alt={tweet.profiles?.nickname || t('common.user', 'User')}
                         />
                         <AvatarFallback>
                           {tweet.profiles?.nickname
@@ -186,7 +186,7 @@ export default function TrendsPanel({
                           <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 border border-black/5 dark:border-white/10 shadow-sm group-hover:shadow transition-all group-hover:scale-105">
                             <img 
                               src={firstImg} 
-                              alt="thumbnail" 
+                              alt={t('common.thumbnail', 'thumbnail')} 
                               className="w-full h-full object-cover" 
                               loading="lazy"
                             />
@@ -195,15 +195,15 @@ export default function TrendsPanel({
                       </div>
 
                       <div className="flex gap-3 mt-2 text-xs text-gray-400 dark:text-gray-500 font-medium">
-                        <span className="flex items-center gap-1 group-hover:text-blue-500 transition-colors" title="Replies">
+                        <span className="flex items-center gap-1 group-hover:text-blue-500 transition-colors" title={t('common.replies', 'Replies')}>
                           <i className="ri-chat-3-line" />
                           {tweet.reply_count}
                         </span>
-                        <span className="flex items-center gap-1 group-hover:text-red-500 transition-colors" title="Likes">
+                        <span className="flex items-center gap-1 group-hover:text-red-500 transition-colors" title={t('common.likes', 'Likes')}>
                           <i className="ri-heart-line" />
                           {tweet.like_count}
                         </span>
-                        <span className="flex items-center gap-1 group-hover:text-emerald-500 transition-colors" title="Views">
+                        <span className="flex items-center gap-1 group-hover:text-emerald-500 transition-colors" title={t('common.views', 'Views')}>
                           <i className="ri-eye-line" />
                           {tweet.view_count}
                         </span>

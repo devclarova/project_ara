@@ -386,7 +386,7 @@ const DirectChatList = ({
     return (
       <div className="chat-list">
         <div className="error-message">
-          <p>오류 : {error}</p>
+          <p>{t('common.error', '오류')} : {error}</p>
         </div>
       </div>
     );
@@ -424,7 +424,7 @@ const DirectChatList = ({
           <div className="flex items-center w-full px-4 h-10 bg-background border border-border rounded-full focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all duration-200 shadow-sm">
             <img
               src="/images/searchT.svg"
-              alt="검색"
+              alt={t('common.search', '검색')}
               className="chat-room-search-input-icon mr-2"
             />
             <input

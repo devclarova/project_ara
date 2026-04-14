@@ -129,7 +129,7 @@ export default function TranslateButton({
       // (3) Input Sanitization: Filters out semantically invalid content using the serverless detection engine.
       const validation = await detectLanguage(text);
       if (validation !== 'valid') {
-        setTranslated('의미를 파악할 수 없어 번역할 수 없는 문장입니다.');
+        setTranslated(t('chat.translate_error_untranslatable', '의미를 파악할 수 없어 번역할 수 없는 문장입니다.'));
         return;
       }
 
@@ -153,7 +153,7 @@ export default function TranslateButton({
       });
 
       if (!response.ok) {
-        throw new Error('API 요청 실패');
+        throw new Error(t('chat.translate_error_api', 'API 요청 실패'));
       }
 
       const data = await response.json();
@@ -184,7 +184,7 @@ export default function TranslateButton({
       }
     } catch (err) {
       console.error(err);
-      setTranslated('번역 중 오류가 발생했습니다.');
+      setTranslated(t('chat.translate_error_generic', '번역 중 오류가 발생했습니다.'));
     } finally {
       setIsLoading(false);
     }

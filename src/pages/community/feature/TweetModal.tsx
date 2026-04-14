@@ -35,7 +35,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
   const handleSubmit = async () => {
     if (!content.trim() || isSubmitting) return;
     if (!user) {
-      alert('로그인이 필요합니다.');
+      toast.error(t('tweets.error_login', '로그인이 필요합니다.'));
       return;
     }
 
@@ -91,7 +91,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
         .single();
 
       if (profileError || !profile) {
-        alert('⚠️ 프로필이 존재하지 않습니다. 먼저 프로필을 생성해주세요.');
+        toast.error(t('tweets.error_profile', '⚠️ 프로필이 존재하지 않습니다. 먼저 프로필을 생성해주세요.'));
         setIsSubmitting(false);
         return;
       }
@@ -122,7 +122,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
 
       if (insertError) {
         console.error('❌ 트윗 저장 실패:', insertError.message);
-        alert('트윗 저장 중 오류가 발생했습니다.');
+        toast.error(t('tweets.error_tweet_save', '트윗 저장 중 오류가 발생했습니다.'));
         return;
       }
 
@@ -131,8 +131,8 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
         id: data.id,
         user: {
           id: data.profiles?.id || '',
-          name: data.profiles?.nickname || 'Unknown',
-          username: data.profiles?.user_id || 'anonymous',
+          name: data.profiles?.nickname || t('common.unknown', 'Unknown'),
+          username: data.profiles?.user_id || t('common.anonymous', 'anonymous'),
           avatar: data.profiles?.avatar_url || '/default-avatar.svg',
         },
         content: data.content,
@@ -152,7 +152,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
       onClose();
     } catch (err) {
       console.error('⚠️ 트윗 업로드 오류:', err);
-      alert('트윗 업로드 중 문제가 발생했습니다.');
+      toast.error(t('tweets.error_tweet_upload', '트윗 업로드 중 문제가 발생했습니다.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -166,7 +166,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
       <div className="bg-white dark:bg-secondary rounded-2xl w-full max-w-lg mx-auto shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Compose Tweet</h2>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">{t('tweet.compose_tweet', 'Compose Tweet')}</h2>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 flex items-center justify-center"
@@ -181,7 +181,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
             value={content}
             onChange={setContent}
             onImagesChange={handleImagesChange}
-            placeholder="What's happening?"
+            placeholder={t('tweets.placeholder_tweet', "What's happening?")}
           />
 
           {/* Submit Button */}
@@ -194,10 +194,10 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
               {isSubmitting ? (
                 <div className="flex items-center space-x-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Posting...</span>
+                  <span>{t('tweets.btn_posting', 'Posting...')}</span>
                 </div>
               ) : (
-                'Tweet'
+                t('tweets.btn_post', 'Tweet')
               )}
             </button>
           </div>

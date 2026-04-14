@@ -439,7 +439,7 @@ export default function NotificationCard({
               {imageUrl && (
                 <img 
                   src={imageUrl} 
-                  alt="preview" 
+                  alt={t('common.preview', 'preview')} 
                   className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover flex-shrink-0 border border-black/5 dark:border-white/5 bg-gray-200 dark:bg-gray-800"
                 />
               )}

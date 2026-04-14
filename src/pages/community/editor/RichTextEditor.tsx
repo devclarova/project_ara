@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import ReactQuill, { type Value } from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import '@/styles/rich-text-editor.css';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 // 임시 미리보기 이미지의 데이터 형태
 interface TempImageFile {
@@ -27,6 +29,7 @@ const RichTextEditor = ({
   disabled = false,
   onImagesChange, // 외부로 이미지를 전달하는 함수
 }: RichTextEditorProps) => {
+  const { t } = useTranslation();
   // ref 변수들을 저장해둠.
   // ReactQuill 을 보관둡니다.
   const quilRef = useRef<ReactQuill | null>(null);
@@ -72,7 +75,7 @@ const RichTextEditor = ({
         const file = files[i];
         // 파일 크기를 보통 5MB 바이트로 제한
         if (file.size > 5 * 1024 * 1024) {
-          alert(`${file.name}은 이미지 파일 크기는 5MB 이하여야 합니다.`);
+          toast.error(t('common.error_image_size', { name: file.name, size: '5MB' }));
           continue; // 이 파일은 건너띄어서 계속 실행
         }
         // 임시 주소 생성

@@ -25,12 +25,12 @@ const ALL_CATEGORIES: TCategory[] = ['전체', '드라마', '영화', '예능', 
 const ALL_LEVELS: TDifficulty[] = ['', '초급', '중급', '고급'];
 const LEANING_GUIDE_KEY = 'ara-leaning-guide';
 
-const LEANING_GUIDE_SLIDES = [
-  { id: 'leaning-1', image: '/images/leaning_guide_1.gif', alt: 'ARA Study 이용 방법 안내 1' },
-  { id: 'leaning-2', image: '/images/leaning_guide_2.gif', alt: 'ARA Study 이용 방법 안내 2' },
-  { id: 'leaning-3', image: '/images/leaning_guide_3.gif', alt: 'ARA Study 이용 방법 안내 3' },
-  { id: 'leaning-4', image: '/images/leaning_guide_4.gif', alt: 'ARA Study 이용 방법 안내 4' },
-  { id: 'leaning-5', image: '/images/leaning_guide_5.gif', alt: 'ARA Study 이용 방법 안내 5' },
+const LEANING_GUIDE_SLIDES = (t: any) => [
+  { id: 'leaning-1', image: '/images/leaning_guide_1.gif', alt: t('study.promotion.guide_alt_1') },
+  { id: 'leaning-2', image: '/images/leaning_guide_2.gif', alt: t('study.promotion.guide_alt_2') },
+  { id: 'leaning-3', image: '/images/leaning_guide_3.gif', alt: t('study.promotion.guide_alt_3') },
+  { id: 'leaning-4', image: '/images/leaning_guide_4.gif', alt: t('study.promotion.guide_alt_4') },
+  { id: 'leaning-5', image: '/images/leaning_guide_5.gif', alt: t('study.promotion.guide_alt_5') },
 ];
 
 const StudyListPage = () => {
@@ -127,7 +127,7 @@ const StudyListPage = () => {
 
   return (
     <div className="study-page relative min-h-screen bg-white dark:bg-background">
-      <GuideModal isOpen={showGuide} onClose={() => setShowGuide(false)} slides={LEANING_GUIDE_SLIDES} storageKey={LEANING_GUIDE_KEY} />
+      <GuideModal isOpen={showGuide} onClose={() => setShowGuide(false)} slides={LEANING_GUIDE_SLIDES(t)} storageKey={LEANING_GUIDE_KEY} />
       
       <div className="flex justify-center min-h-screen">
         <div className="flex w-full max-w-7xl">
@@ -156,7 +156,7 @@ const StudyListPage = () => {
                       className="shrink-0 h-11 px-3.5 inline-flex items-center justify-center gap-1.5 rounded-full ring-1 ring-gray-200 dark:ring-white/10 bg-white/70 dark:bg-white/5 text-gray-700 dark:text-gray-200 hover:ring-primary/50 hover:bg-primary/20 dark:hover:bg-primary/25 hover:text-primary transition-all"
                     >
                       <BookOpen size={19} />
-                      <span className="hidden md:inline text-sm font-semibold">단어장</span>
+                      <span className="hidden md:inline text-sm font-semibold">{t('study.voca_btn')}</span>
                     </button>
                   )}
 
@@ -251,20 +251,24 @@ const StudyListPage = () => {
                               <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 border border-white/20">
                                 <span className="text-xl font-black text-[#00BFA5]">A</span>
                               </div>
-                              <h4 className="text-lg font-black text-gray-900 dark:text-white mb-2 leading-tight">광고 없는 아라 프리미엄</h4>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">지금 프리미엄으로 업그레이드하고<br/>모든 혜택을 누려보세요!</p>
+                              <h4 className="text-lg font-black text-gray-900 dark:text-white mb-2 leading-tight">
+                                {t('study.promotion.premium_title')}
+                              </h4>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                                {t('study.promotion.premium_desc')}
+                              </p>
                             </div>
                           )}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
                           <div className="absolute inset-0 p-6 flex flex-col justify-end">
                             <div className="flex items-center gap-2 mb-2">
                               <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-md text-[10px] font-black text-white tracking-widest border border-white/10 uppercase">
-                                {banner ? 'AD' : 'PROMOTION'}
+                                {banner ? t('study.promotion.ad_badge') : t('study.promotion.promo_badge')}
                               </span>
                               {(banner?.link_url || !banner) && <ExternalLink size={14} className="text-white/60" />}
                             </div>
                             <h4 className="text-xl font-black text-white leading-tight tracking-tight">
-                              {banner?.title || 'ARA Premium Academy'}
+                              {banner?.title || t('study.promotion.premium_title')}
                             </h4>
                           </div>
                         </motion.div>

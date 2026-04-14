@@ -186,7 +186,7 @@ export default function PrivacySettings({ onBackToMenu, searchQuery, initialActi
     if (provider === 'email') {
       const email = user.email;
       if (!email) {
-        setWithdrawError(t('settings.email_info_missing', '이메일 정보를 찾을 수 없습니다. 고객센터로 문의해주세요.'));
+        setWithdrawError(t('settings.email_info_missing'));
         setWithdrawing(false);
         return;
       }
@@ -196,14 +196,14 @@ export default function PrivacySettings({ onBackToMenu, searchQuery, initialActi
       });
       if (pwError) {
         console.error('withdraw reauth error:', pwError);
-        setWithdrawError(t('settings.password_incorrect', '비밀번호가 올바르지 않습니다.'));
+        setWithdrawError(t('settings.password_incorrect'));
         setWithdrawing(false);
         return;
       }
     } else {
       // 소셜 로그인: 입력한 이메일이 본인 이메일과 일치하는지 확인
       if (password !== user.email) {
-        setWithdrawError(t('settings.email_mismatch_error', '입력하신 이메일 주소가 올바르지 않습니다.'));
+        setWithdrawError(t('settings.email_mismatch_error'));
         setWithdrawing(false);
         return;
       }
@@ -238,7 +238,7 @@ export default function PrivacySettings({ onBackToMenu, searchQuery, initialActi
 
     if (profileErr) {
       console.error('withdraw profile error:', profileErr);
-      setWithdrawError(t('settings.withdraw_error', '탈퇴 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'));
+      setWithdrawError(t('settings.withdraw_error'));
       setWithdrawing(false);
       return;
     }
@@ -274,11 +274,11 @@ export default function PrivacySettings({ onBackToMenu, searchQuery, initialActi
             <Row label={t('settings.change_password')} onClick={() => open('password')} searchQuery={searchQuery} />
           ) : (
             // 소셜 가입자: 비밀번호 설정
-            <Row label={t('settings.set_password', '비밀번호 설정')} onClick={() => open('password')} searchQuery={searchQuery} />
+            <Row label={t('settings.set_password')} onClick={() => open('password')} searchQuery={searchQuery} />
           )}
           <Row label={t('settings.title_recovery')} onClick={() => open('recovery')} searchQuery={searchQuery} />
           <Row label={t('settings.connect_sns')} onClick={() => open('sns')} searchQuery={searchQuery} />
-          <Row label={t('settings.blocked_users', '차단된 사용자')} onClick={() => open('blocked_users')} searchQuery={searchQuery} />
+          <Row label={t('settings.blocked_users')} onClick={() => open('blocked_users')} searchQuery={searchQuery} />
         </div>
 
         {/* 하단 탈퇴 버튼 */}
@@ -311,9 +311,9 @@ export default function PrivacySettings({ onBackToMenu, searchQuery, initialActi
             <div className="rounded-md bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900 px-3 py-2 text-sm text-red-700 dark:text-red-300">
               <p className="font-semibold mb-1">{t('settings.withdraw_modal_title')}</p>
               <ul className="list-disc list-inside space-y-0.5">
-                <li>{t('settings.withdraw_grace_period_1', '탈퇴 신청 시 7일간 유예 기간이 적용됩니다.')}</li>
-                <li>{t('settings.withdraw_grace_period_2', '7일 이내 로그인 시 계정을 즉시 복구할 수 있습니다.')}</li>
-                <li>{t('settings.withdraw_grace_period_3', '7일이 지나면 계정 복구가 불가능하며, 30일 후 데이터가 완전히 삭제됩니다.')}</li>
+                <li>{t('settings.withdraw_grace_period_1')}</li>
+                <li>{t('settings.withdraw_grace_period_2')}</li>
+                <li>{t('settings.withdraw_grace_period_3')}</li>
                 <li>{t('settings.withdraw_warning_4')}</li>
               </ul>
             </div>
@@ -403,7 +403,7 @@ export default function PrivacySettings({ onBackToMenu, searchQuery, initialActi
                 <InputField
                   id="confirm-email"
                   type="text"
-                  label={t('settings.confirm_email', '이메일 주소 확인')}
+                  label={t('settings.confirm_email')}
                   value={password} // 재사용 (여기서는 이메일 입력값으로 사용)
                   onChange={setPassword}
                   inputProps={{
@@ -411,7 +411,7 @@ export default function PrivacySettings({ onBackToMenu, searchQuery, initialActi
                   }}
                 />
                 <p className="text-sm text-gray-400 dark:text-gray-500 pl-1 mt-1">
-                  {t('settings.confirm_email_desc', '본인 확인을 위해 이메일 주소를 정확히 입력해주세요.')}
+                  {t('settings.confirm_email_desc')}
                 </p>
               </div>
             )}

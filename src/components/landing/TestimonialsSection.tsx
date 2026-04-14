@@ -1,23 +1,25 @@
 import { motion } from 'framer-motion';
 import { SwiperSlide } from 'swiper/react';
+import { useTranslation } from 'react-i18next';
 
 import BaseCarousel from './BaseCarousel';
 
 export default function TestimonialsSection() {
+  const { t } = useTranslation();
   const LEARNER_INTRO = {
     title: {
-      line1: 'ARA는 이런 학습자들을',
-      line2: '떠올리며 설계되고 있어요',
+      line1: t('landing.testimonials.title.line1'),
+      line2: t('landing.testimonials.title.line2'),
     },
     description: {
-      intro: '아직 정식 출시 전이지만, ARA는 한 명의 전형적인 학습자를 떠올리기보다',
-      highlight: '여러 타입의 학습자',
-      body: '를 함께 상상하며 만들어지고 있습니다.',
+      intro: t('landing.testimonials.description.intro'),
+      highlight: t('landing.testimonials.description.highlight'),
+      body: t('landing.testimonials.description.body'),
       detail: [
-        '한국어를 막 시작한 사람부터 워홀·유학을 준비하는 사람,',
-        '일상이나 업무에서 한국어를 써야 하는 직장인까지.',
-        '좋아하는 콘텐츠와 커뮤니티를 함께 사용할 때 학습이 더 오래,',
-        '자연스럽게 이어지도록 플로우를 설계하고 있어요.',
+        t('landing.testimonials.description.detail.0'),
+        t('landing.testimonials.description.detail.1'),
+        t('landing.testimonials.description.detail.2'),
+        t('landing.testimonials.description.detail.3'),
       ],
     },
   };
@@ -25,60 +27,57 @@ export default function TestimonialsSection() {
   const reviews = [
     {
       name: 'Sarah Johnson',
-      country: '미국 · US',
-      persona: '드라마로 한국어를 시작한 초급 학습자',
-      text: '그동안은 자막에만 의존해서 이야기를 보다 보니 중요한 표현을 자주 놓쳤어요. ARA에서는 한 장면씩 나눠서 핵심 표현을 짚어줘서 “아, 이 상황에서 이 말을 쓰는구나” 하고 이해가 됩니다. 같은 에피소드를 다시 보면서 자막을 하나씩 줄여가는 재미도 생겼어요.',
+      country: t('landing.testimonials.reviews.sarah.country'),
+      persona: t('landing.testimonials.reviews.sarah.persona'),
+      text: t('landing.testimonials.reviews.sarah.text'),
     },
     {
       name: 'Diego Martínez',
-      country: '스페인 · ES',
-      persona: '워홀·유학 준비 중인 실전형 학습자',
-      text: '워홀 가기 전에 실제로 쓸 표현 위주로 공부하고 싶었어요. 애니메이션 속 대화가 상황별로 정리되어 있어서, “일상에서 쓰는 말”, “조심해서 써야 하는 표현”을 구분해서 익힐 수 있었던 게 좋았습니다.',
+      country: t('landing.testimonials.reviews.diego.country'),
+      persona: t('landing.testimonials.reviews.diego.persona'),
+      text: t('landing.testimonials.reviews.diego.text'),
     },
     {
       name: 'Mei Lin',
-      country: '싱가포르 · SG',
-      persona: '말문을 트이고 싶은 중·고급 학습자',
-
-      text: '문법이나 단어는 어느 정도 아는데, 말로 풀어내는 게 항상 어려웠어요. ARA에서 이야기를 보고 짧게 감상이나 리액션을 쓰면, 더 자연스러운 표현으로 고쳐줘요. 그 문장을 그대로 피드나 DM에서 써보면서 말하는 감각이 조금씩 살아나는 느낌을 받았습니다.',
+      country: t('landing.testimonials.reviews.meilin.country'),
+      persona: t('landing.testimonials.reviews.meilin.persona'),
+      text: t('landing.testimonials.reviews.meilin.text'),
     },
     {
       name: 'Alexey Petrov',
-      country: '러시아 · RU',
-      persona: '비즈니스 표현이 필요한 직장인 학습자',
-      text: '한국 파트너와 소통할 일이 많아서 비즈니스 표현이 필요했습니다.  애니메이션 속 어른과 아이, 윗사람과 아랫사람의 말투를 비교해보면서, 상황에 맞는 표현을 자연스럽게 익힐 수 있었어요. 단순 번역이 아니라 맥락을 이해하게 되는 점이 인상적이었습니다.',
+      country: t('landing.testimonials.reviews.alexey.country'),
+      persona: t('landing.testimonials.reviews.alexey.persona'),
+      text: t('landing.testimonials.reviews.alexey.text'),
     },
     {
       name: 'Hana Ito',
-      country: '일본 · JP',
-      persona: '루틴이 잘 끊기는 자기계발형 학습자',
-      text: '교재로 공부할 때는 며칠만 지나도 흐름이 끊겼어요. ARA에서는 짧은 이야기 한 편만 봐도 학습이 되다 보니 부담이 없어요. “오늘은 이 장면까지만” 하고 들어왔다가, 자연스럽게 매일 접속하는 루틴이 생겼습니다.',
+      country: t('landing.testimonials.reviews.hana.country'),
+      persona: t('landing.testimonials.reviews.hana.persona'),
+      text: t('landing.testimonials.reviews.hana.text'),
     },
   ];
 
   const stats = [
     {
-      label: '학습 지속 시간',
+      label: t('landing.testimonials.stats.duration.label'),
       value: '2.1배',
-      desc: '혼자 교재로만 공부할 때보다 더 오래 머무를 수 있도록 플로우를 설계하고 있습니다.',
+      desc: t('landing.testimonials.stats.duration.desc'),
     },
     {
-      label: '페르소나 타입',
+      label: t('landing.testimonials.stats.persona.label'),
       value: '15명+',
-      desc: '여러 나라·여러 목표를 가진 학습자 타입을 상정하고 화면과 기능을 검토하고 있어요.',
+      desc: t('landing.testimonials.stats.persona.desc'),
     },
     {
-      label: '학습 시나리오',
+      label: t('landing.testimonials.stats.scenario.label'),
       value: '20개+',
-      desc: '어떤 상황에서 ARA를 켜게 될지 장면 단위로 학습 시나리오를 계속 쌓아가고 있습니다.',
+      desc: t('landing.testimonials.stats.scenario.desc'),
     },
   ];
 
   const REVIEW_NOTICE = {
-    mobile:
-      '지금 보시는 후기는 ARA가 상정한 학습자 페르소나를 바탕으로 구성한 시나리오형 예시 리뷰입니다.',
-    desktop:
-      '지금 보시는 후기는 실제 사용자 데이터가 아닌, ARA가 타깃으로 삼고 있는 학습자 페르소나를 바탕으로 구성한 시나리오형 리뷰입니다. 정식 런칭 이후에는 실제 학습자들의 이야기와 함께 이 섹션이 계속 업데이트될 예정이에요.',
+    mobile: t('landing.testimonials.notice.mobile'),
+    desktop: t('landing.testimonials.notice.desktop'),
   };
 
   return (

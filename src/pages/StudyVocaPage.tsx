@@ -78,7 +78,7 @@ type VocabCardProps = {
 };
 
 function VocabCard({ v, onOpen, onDelete, onChangeStatus }: VocabCardProps) {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const targetLang = i18n.language || 'en';
   const isKorean = targetLang.toLowerCase().startsWith('ko');
 
@@ -142,8 +142,8 @@ function VocabCard({ v, onOpen, onDelete, onChangeStatus }: VocabCardProps) {
             onDelete();
           }}
           className="p-1.5 rounded-md ring-1 ring-gray-200 hover:bg-gray-50 dark:hover:bg-gray-900 transition"
-          aria-label="삭제"
-          title="삭제"
+          aria-label={t('study.voca.aria_delete')}
+          title={t('study.voca.aria_delete')}
         >
           <Trash2 size={14} className="text-gray-500" />
         </button>
@@ -151,7 +151,7 @@ function VocabCard({ v, onOpen, onDelete, onChangeStatus }: VocabCardProps) {
 
       {displayExample && (
         <div className="mt-3 text-xs text-gray-500 space-y-1">
-          <div>예문: {displayExample}</div>
+          <div>{t('study.voca.example_label')}: {displayExample}</div>
         </div>
       )}
 
@@ -178,6 +178,7 @@ function VocabCard({ v, onOpen, onDelete, onChangeStatus }: VocabCardProps) {
 }
 
 export default function StudyVocaPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [items, setItems] = useState<VocabItem[]>([]);
@@ -200,8 +201,8 @@ export default function StudyVocaPage() {
   const [pageSize, setPageSize] = useState(9);
 
   useEffect(() => {
-    document.title = '단어장 | ARA';
-  }, []);
+    document.title = `${t('study.voca.title')} | ARA`;
+  }, [t]);
 
   const reload = async () => {
     const rows = await fetchMyVoca();
@@ -373,9 +374,9 @@ export default function StudyVocaPage() {
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">단어장</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('study.voca.title')}</h1>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              저장한 단어를 모아볼 수 있어요.
+              {t('study.voca.description')}
             </p>
           </div>
 
@@ -385,7 +386,7 @@ export default function StudyVocaPage() {
               className="shrink-0 px-4 py-2 rounded-xl ring-1 ring-gray-200 hover:ring-primary/50 hover:bg-primary/20 transition text-sm flex items-center gap-2"
             >
               <Gamepad2 size={16} />
-              퀴즈
+              {t('study.voca.btn_quiz')}
             </button>
 
             <button
@@ -393,7 +394,7 @@ export default function StudyVocaPage() {
               className="shrink-0 px-4 py-2 rounded-xl ring-1 ring-gray-200 hover:ring-primary/50 hover:bg-primary/20 transition text-sm flex items-center gap-2"
             >
               <ArrowLeft size={16} />
-              학습으로
+              {t('study.voca.btn_back_to_study')}
             </button>
           </div>
         </div>
@@ -402,15 +403,15 @@ export default function StudyVocaPage() {
           <input
             value={q}
             onChange={e => setQ(e.target.value)}
-            placeholder="단어/뜻/예문/품사/발음 검색"
+            placeholder={t('study.voca.search_placeholder')}
             className="flex-1 px-3 py-2 rounded-xl ring-1 ring-gray-200 bg-white dark:bg-secondary"
           />
           <FilterDropdown
             value={status}
             onApply={value => setStatus(value as 'all' | 'unknown' | 'learning' | 'known')}
-            title="학습 상태"
+            title={t('study.voca.status_title')}
             options={[
-              { label: '전체', value: 'all' },
+              { label: t('study.voca.status_all'), value: 'all' },
               { label: 'unknown', value: 'unknown' },
               { label: 'learning', value: 'learning' },
               { label: 'known', value: 'known' },
@@ -420,22 +421,22 @@ export default function StudyVocaPage() {
           <button
             onClick={openDeleteAllConfirm}
             className="px-3 py-2 rounded-xl ring-1 ring-gray-200 hover:bg-gray-50 dark:hover:bg-gray-900 transition text-sm"
-            title="단어장 초기화"
+            title={t('study.voca.btn_delete_all_title')}
           >
-            전체 삭제
+            {t('study.voca.btn_delete_all')}
           </button>
         </div>
 
         {filtered.length === 0 ? (
           <div className="py-16 text-center text-gray-500">
-            저장된 단어가 없어요.
+            {t('study.voca.empty_message')}
             <Link
               to="/studylist"
               className="text-primary font-medium underline underline-offset-2 hover:text-primary/80"
             >
-              학습 페이지
+              {t('study.studylist')}
             </Link>
-            에서 단어를 저장해보아요.
+            {t('study.voca.empty_cta')}
           </div>
         ) : (
           <>
@@ -477,7 +478,7 @@ export default function StudyVocaPage() {
         words={modalWords}
         initialWordId={initialWordId}
         getEpisodeHref={getEpisodeHref}
-        episodeCtaLabel="에피소드로"
+        episodeCtaLabel={t('study.voca.episode_cta')}
       />
 
       <QuizMenuModal
@@ -502,12 +503,12 @@ export default function StudyVocaPage() {
 
       <ConfirmModal
         open={confirmOpen}
-        title={confirmType === 'single' ? '단어 삭제' : '전체 삭제'}
+        title={confirmType === 'single' ? t('study.voca.delete_confirm.title_single') : t('study.voca.delete_confirm.title_all')}
         description={
-          confirmType === 'single' ? '단어를 삭제하시겠습니까?' : '전체 단어를 삭제하시겠습니까?'
+          confirmType === 'single' ? t('study.voca.delete_confirm.desc_single') : t('study.voca.delete_confirm.desc_all')
         }
-        confirmText="삭제"
-        cancelText="취소"
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         onConfirm={handleConfirmDelete}
         onCancel={closeConfirm}
       />

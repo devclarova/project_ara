@@ -177,8 +177,7 @@ const MessageItem = memo(
     onToggleSelection?: (messageId: string) => void;
   }) => {
     const isMyMessage = message.sender_id === currentUserId;
-    const isSystemMessage =
-      typeof message.content === 'string' && message.content.includes('님이 채팅방을 나갔습니다');
+    const isSystemMessage = !!message.is_system_message;
     const [translated, setTranslated] = useState<string>('');
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
@@ -228,10 +227,7 @@ const MessageItem = memo(
 
     // Check Content Existence (Moved from above, logic refined)
     // Use includes for robustness against whitespace
-    const isDeleted =
-      !!message.deleted_at ||
-      (typeof message.content === 'string' &&
-        message.content.includes('관리자에 의해 삭제된 메시지입니다'));
+    const isDeleted = !!message.deleted_at;
 
     // Force hide attachments if deleted
     const hasImages = !isDeleted && message.attachments && message.attachments.length > 0;
@@ -354,7 +350,7 @@ const MessageItem = memo(
                   className={`message-text whitespace-pre-wrap break-words break-all ${isDeleted ? 'italic opacity-60 text-gray-500' : ''}`}
                 >
                   <HighlightText
-                    text={isDeleted ? '관리자에 의해 삭제된 메시지입니다.' : message.content || ''}
+                    text={isDeleted ? t('chat.deleted_message', '관리자에 의해 삭제된 메시지입니다.') : message.content || ''}
                     query={searchQuery}
                     className="bg-white/90 text-primary font-medium"
                   />
@@ -478,7 +474,7 @@ const MessageItem = memo(
                   >
                     <HighlightText
                       text={
-                        isDeleted ? '관리자에 의해 삭제된 메시지입니다.' : message.content || ''
+                        isDeleted ? t('chat.deleted_message', '관리자에 의해 삭제된 메시지입니다.') : message.content || ''
                       }
                       query={searchQuery}
                     />
@@ -1190,8 +1186,8 @@ const DirectChatRoom = ({
     return (
       <div className="chat-room">
         <div className="error-message">
-          <p>오류 : {error}</p>
-          <button onClick={() => loadMessages(chatId)}>다시 시도</button>
+          <p>{t('common.error', '오류')} : {error}</p>
+          <button onClick={() => loadMessages(chatId)}>{t('common.retry', '다시 시도')}</button>
         </div>
       </div>
     );
@@ -1232,7 +1228,7 @@ const DirectChatRoom = ({
             aria-pressed={showSearch}
             className="inline-flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800"
           >
-            <img src="/images/searchT.svg" alt="검색" className="chat-room-search-icon" />
+            <img src="/images/searchT.svg" alt={t('common.search', '검색')} className="chat-room-search-icon" />
           </button>
 
           <div className="relative" ref={menuRef}>
@@ -1348,7 +1344,7 @@ const DirectChatRoom = ({
             <div
               className={`chat-room-search-input-wrap transition-all duration-200 border border-transparent rounded-full focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary focus-within:bg-background`}
             >
-              <img src="/images/searchT.svg" alt="검색" className="chat-room-search-input-icon" />
+              <img src="/images/searchT.svg" alt={t('common.search', '검색')} className="chat-room-search-input-icon" />
               <input
                 type="text"
                 placeholder={t('chat.search_placeholder')}
@@ -1496,7 +1492,7 @@ const DirectChatRoom = ({
           <button
             className="scroll-bottom-btn"
             onClick={() => scrollToBottom(false)}
-            aria-label="맨 아래로 스크롤"
+            aria-label={t('chat.scroll_to_bottom', '맨 아래로 스크롤')}
           >
             <ArrowDown className="w-5 h-5" />
           </button>

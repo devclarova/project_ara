@@ -61,11 +61,11 @@ export default function ProfileAsap() {
 
   useEffect(() => {
     if (!userProfile) {
-      document.title = '프로필 | ARA';
+      document.title = `${t('profile.title')} | ARA`;
       return;
     }
 
-    document.title = isOwnProfile ? `내 프로필 | ARA` : `${userProfile.name} 프로필 | ARA`;
+    document.title = isOwnProfile ? `${t('profile.my_profile')} | ARA` : t('profile.title_named', { name: userProfile.name });
   }, [userProfile, isOwnProfile]);
 
   // 실시간 프로필 업데이트 리스너 — 계정 제재 상태 등 중요 변경사항 즉시 반영
@@ -138,10 +138,10 @@ export default function ProfileAsap() {
       setUserProfile({
         id: profile.id,
         user_id: profile.user_id,
-        name: profile.nickname ?? 'Unknown',
+        name: profile.nickname ?? t('common.unknown'),
         username: profile.user_id,
         avatar: profile.avatar_url ?? '/default-avatar.svg',
-        bio: profile.bio ?? t('profile.no_bio_placeholder', 'No bio yet.'),
+        bio: profile.bio ?? t('profile.no_bio_placeholder'),
         country: countryName,
         countryFlagUrl: countryFlagUrl,
         joinDate: new Date(profile.created_at).toLocaleDateString(i18n.language, {
@@ -228,7 +228,7 @@ export default function ProfileAsap() {
             <div className="flex items-center justify-center py-20">
               <div className="text-center text-gray-500 dark:text-gray-400">
                 <i className="ri-user-line text-6xl text-gray-300 dark:text-gray-600 mb-4" />
-                <p>{t('common.error_loading_profile', 'Unable to load profile.')}</p>
+                <p>{t('common.error_loading_profile')}</p>
               </div>
             </div>
           </div>
@@ -269,7 +269,7 @@ export default function ProfileAsap() {
                 </h1>
                 {userProfile.plan === 'premium' && (
                   <span className="text-[10px] font-black tracking-widest uppercase text-[#00BFA5] opacity-80 leading-none mt-0.5">
-                    Premium Member
+                    {t('profile.premium_member')}
                   </span>
                 )}
               </div>
@@ -339,13 +339,13 @@ export default function ProfileAsap() {
                       <h3 className="text-sm font-bold text-red-700 dark:text-red-300 mb-2 flex flex-wrap items-center gap-2">
                         {isPermanent ? (
                           <>
-                            <span>🚫 이 사용자는 영구 이용 제재되었습니다</span>
+                            <span>🚫 {t('profile.sanction_permanent')}</span>
                             <span className="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">
                               Permanent Ban
                             </span>
                           </>
                         ) : (
-                          <span>🚫 이 사용자는 현재 이용 제한 중입니다</span>
+                          <span>🚫 {t('profile.sanction_temporary')}</span>
                         )}
                       </h3>
                       {!isPermanent && (
@@ -354,7 +354,7 @@ export default function ProfileAsap() {
                             <div className="space-y-1.5">
                               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
                                 <span className="font-semibold text-red-600 dark:text-red-400">
-                                  이용제한 기간({banInfo.duration}):
+                                  {t('profile.sanction_period', { duration: banInfo.duration })}:
                                 </span>
                                 <span className="text-red-700 dark:text-red-300 font-mono text-[11px] bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded">
                                   {banInfo.startFormatted}
@@ -365,20 +365,19 @@ export default function ProfileAsap() {
                                 </span>
                                 {banCount > 0 && (
                                   <span className="font-bold text-red-700 dark:text-red-300 ml-1">
-                                    ({banCount}번째 이용제한)
+                                    {t('profile.sanction_count', { count: banCount })}
                                   </span>
                                 )}
                               </div>
                               <p className="text-[11px] text-red-600/80 dark:text-red-400/80">
-                                • 남은 기간:{' '}
-                                <span className="font-semibold">{banInfo.daysRemaining}일</span>
+                                • {t('profile.sanction_remaining', { days: banInfo.daysRemaining })}
                               </p>
                             </div>
                           ) : (
                             <p className="text-xs text-red-600 dark:text-red-400">
-                              이용 제한 종료:{' '}
+                              {t('profile.sanction_ends')}:{' '}
                               {new Date(userProfile.banned_until!)
-                                .toLocaleString('ko-KR', {
+                                .toLocaleString(i18n.language === 'ko' ? 'ko-KR' : 'en-US', {
                                   year: 'numeric',
                                   month: '2-digit',
                                   day: '2-digit',

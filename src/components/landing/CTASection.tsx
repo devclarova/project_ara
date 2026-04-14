@@ -41,7 +41,7 @@ export default function CTASection({ onSignup }: CTAProps) {
       <div className="w-full max-w-screen-xl mx-auto px-6 pt-8 pb-12 md:pt-10 md:pb-14 lg:pt-12 lg:pb-16 flex justify-center">
         <div className="w-full max-w-3xl text-center px-6 sm:px-10 py-10 sm:py-12">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-secondary/80 px-3 py-1 text-xs text-gray-500 dark:text-gray-300 border border-gray-100/60 dark:border-slate-700 mb-4 shadow-sm">
-            {t('landing.cta_badge_text', '오늘 가입한 학습자')} <span className="font-semibold text-primary">+42</span>
+            {t('landing.cta_badge_text')} <span className="font-semibold text-primary">+42</span>
           </div>
 
           <h2 className="text-2xl md:text-3xl font-bold mb-3 text-slate-900 dark:text-gray-100 break-keep">
@@ -60,7 +60,7 @@ export default function CTASection({ onSignup }: CTAProps) {
             onClick={handleClick}
             className="inline-flex items-center justify-center rounded-[10px] bg-primary px-9 py-3 text-base font-semibold text-white shadow-md shadow-primary/30 transition hover:-translate-y-[1px] hover:bg-primary/90"
           >
-            {t('landing.cta_start_free', '무료로 시작하기')}
+            {t('landing.cta_start_free')}
           </button>
         </div>
       </div>

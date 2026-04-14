@@ -8,65 +8,67 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { Check, X, ArrowLeft, Loader2, Zap, ShieldCheck, Sparkles } from 'lucide-react';
 import SeagullIcon from '@/components/common/SeagullIcon';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import { getErrorMessage } from '@/lib/utils';
 
-const PLANS = [
-  {
-    id: 'free',
-    name: 'Free',
-    price: '₩0',
-    interval: '평생 무료',
-    description: '기본적인 학습 기능과 커뮤니티 활동',
-    icon: ShieldCheck,
-    color: 'slate',
-    features: [
-      { name: '기본 단어장 및 학습 영상', active: true },
-      { name: '커뮤니티 게시글 읽기/쓰기', active: true },
-      { name: '전용 프리미엄 배지', active: false },
-      { name: '광고 완벽 제거', active: false },
-      { name: '독점 프로모션 혜택', active: false },
-    ],
-  },
-  {
-    id: 'basic',
-    name: 'Basic',
-    price: '₩4,900',
-    interval: '월',
-    description: '모든 학습 콘텐츠 해금 및 광고 제거',
-    icon: Zap,
-    color: 'blue',
-    features: [
-      { name: '모든 단어장 및 고급 학습 영상', active: true },
-      { name: '커뮤니티 무제한 이용', active: true },
-      { name: '광고 완벽 제거', active: true },
-      { name: '전용 프리미엄 배지', active: false },
-      { name: '독점 프로모션 혜택', active: false },
-    ],
-  },
-  {
-    id: 'premium',
-    name: 'Premium',
-    price: '₩9,900',
-    interval: '월',
-    description: 'Project ARA의 모든 혜택을 제한 없이',
-    icon: SeagullIcon,
-    color: 'violet',
-    popular: true,
-    features: [
-      { name: '슈퍼 프리미엄 학습 코스', active: true },
-      { name: '커뮤니티 내 강조 프로필', active: true },
-      { name: '광고 완벽 제거', active: true },
-      { name: '전용 프리미엄 배지', active: true },
-      { name: '매월 시크릿 쿠폰팩 제공', active: true },
-    ],
-  },
-];
-
 export default function SubscriptionPage() {
+  const { t } = useTranslation();
   const { session, userPlan, refreshUserPlan } = useAuth();
+
+  const PLANS = [
+    {
+      id: 'free',
+      name: 'Free',
+      price: '₩0',
+      interval: t('subscription.plans.free.interval'),
+      description: t('subscription.plans.free.desc'),
+      icon: ShieldCheck,
+      color: 'slate',
+      features: [
+        { name: t('subscription.plans.free.feature_voca'), active: true },
+        { name: t('subscription.plans.free.feature_community'), active: true },
+        { name: t('subscription.plans.free.feature_badge'), active: false },
+        { name: t('subscription.plans.free.feature_ads'), active: false },
+        { name: t('subscription.plans.free.feature_promo'), active: false },
+      ],
+    },
+    {
+      id: 'basic',
+      name: 'Basic',
+      price: '₩4,900',
+      interval: t('subscription.plans.basic.interval'),
+      description: t('subscription.plans.basic.desc'),
+      icon: Zap,
+      color: 'blue',
+      features: [
+        { name: t('subscription.plans.basic.feature_voca'), active: true },
+        { name: t('subscription.plans.basic.feature_community'), active: true },
+        { name: t('subscription.plans.basic.feature_ads'), active: true },
+        { name: t('subscription.plans.basic.feature_badge'), active: false },
+        { name: t('subscription.plans.basic.feature_promo'), active: false },
+      ],
+    },
+    {
+      id: 'premium',
+      name: 'Premium',
+      price: '₩9,900',
+      interval: t('subscription.plans.premium.interval'),
+      description: t('subscription.plans.premium.desc'),
+      icon: SeagullIcon,
+      color: 'violet',
+      popular: true,
+      features: [
+        { name: t('subscription.plans.premium.feature_course'), active: true },
+        { name: t('subscription.plans.premium.feature_profile'), active: true },
+        { name: t('subscription.plans.premium.feature_ads'), active: true },
+        { name: t('subscription.plans.premium.feature_badge'), active: true },
+        { name: t('subscription.plans.premium.feature_coupon'), active: true },
+      ],
+    },
+  ];
   const navigate = useNavigate();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
@@ -89,14 +91,14 @@ export default function SubscriptionPage() {
   // 1단계: 구독 버튼 클릭 시 모달 열기
   const handleSubscribeClick = (planId: string) => {
     if (!session?.user?.id) {
-      toast.error('로그인이 필요한 서비스입니다.');
+      toast.error(t('subscription.errors.login_required'));
       navigate('/signin?redirect=/subscription');
       return;
     }
 
     if (planId === 'free') {
       if (userPlan === 'free') {
-        toast.info('이미 무료 플랜을 이용 중입니다!');
+        toast.info(t('subscription.errors.already_free'));
         return;
       }
       
@@ -123,15 +125,17 @@ export default function SubscriptionPage() {
       if (error) throw error;
       
       // 프로필 요금제도 'free'로 동기화
-      await (supabase.from('profiles') as any)
+      const { error: profileError } = await (supabase.from('profiles') as any)
         .update({ plan: 'free' })
         .eq('user_id', session.user.id);
+        
+      if (profileError) throw profileError;
 
-      toast.success('구독이 해지되었습니다. 무료 플랜으로 전환됩니다.');
+      toast.success(t('subscription.errors.cancel_success'));
       // 리프레시를 통해 UI 즉시 반영
       await refreshUserPlan();
     } catch (err: unknown) {
-      toast.error('해지 처리 중 오류가 발생했습니다: ' + getErrorMessage(err));
+      toast.error(t('subscription.errors.cancel_fail', { error: getErrorMessage(err) }));
     } finally {
       setLoadingPlan(null);
     }
@@ -175,8 +179,8 @@ export default function SubscriptionPage() {
       
       toast.success(
         <div className="flex flex-col gap-1">
-          <span className="font-bold">결제가 완료되었습니다!</span>
-          <span className="text-sm opacity-90">{selectedPlan.toUpperCase()} 플랜 혜택이 즉시 적용됩니다.</span>
+          <span className="font-bold">{t('subscription.payment_modal.payment_success')}</span>
+          <span className="text-sm opacity-90">{t('subscription.payment_modal.plan_applied', { plan: selectedPlan.toUpperCase() })}</span>
         </div>
       );
       
@@ -185,7 +189,7 @@ export default function SubscriptionPage() {
       
     } catch (err: unknown) {
       console.error('Subscription error:', err);
-      toast.error(`결제 처리 실패: ${getErrorMessage(err)}`);
+      toast.error(t('subscription.payment_modal.payment_fail', { error: getErrorMessage(err) }));
     } finally {
       setIsPaymentModalOpen(false);
       setLoadingPlan(null);
@@ -208,14 +212,14 @@ export default function SubscriptionPage() {
       const rpcData = data as any;
       if (rpcData && rpcData.is_valid) {
         setAppliedCoupon(rpcData.promotion);
-        toast.success('쿠폰이 적용되었습니다!');
+        toast.success(t('subscription.errors.coupon_success'));
       } else {
-        setCouponError(rpcData?.reason || '유효하지 않은 쿠폰입니다.');
+        setCouponError(rpcData?.reason || t('subscription.errors.coupon_invalid'));
         setAppliedCoupon(null);
       }
     } catch (err: unknown) {
       console.error('Coupon validation fail:', err);
-      setCouponError('쿠폰 확인 중 오류가 발생했습니다.');
+      setCouponError(t('subscription.errors.coupon_error'));
     } finally {
       setIsValidatingCoupon(false);
     }
@@ -250,16 +254,16 @@ export default function SubscriptionPage() {
             onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors mb-12"
           >
-            <ArrowLeft size={16} /> 돌아가기
+            <ArrowLeft size={16} /> {t('subscription.back')}
           </button>
 
           {/* Header Title */}
           <div className="text-center mb-20">
             <h1 className="text-4xl md:text-6xl font-black text-gray-900 dark:text-white mb-6 tracking-tight">
-              당신에게 꼭 맞는 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00E5FF] to-[#00BFA5]">프리미엄 혜택</span>
+              {t('subscription.title_prefix')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00E5FF] to-[#00BFA5]">{t('subscription.title_highlight')}</span>
             </h1>
             <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto">
-              광고 없는 쾌적한 학습 환경, 독점 커뮤니티 기능, 그리고 매월 제공되는 시크릿 혜택까지 모두 만나보세요.
+              {t('subscription.description')}
             </p>
           </div>
 
@@ -280,7 +284,7 @@ export default function SubscriptionPage() {
                 >
                   {isPopular && (
                     <div className="absolute -top-5 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-[#00E5FF] to-[#00BFA5] text-white text-xs font-black uppercase tracking-widest rounded-full shadow-lg">
-                      가장 인기있는 플랜
+                      {t('subscription.popular_badge')}
                     </div>
                   )}
 
@@ -323,9 +327,9 @@ export default function SubscriptionPage() {
                     {loadingPlan === plan.id ? (
                       <Loader2 size={20} className="animate-spin" />
                     ) : userPlan === plan.id ? (
-                      '현재 사용 중'
+                      t('subscription.current_plan')
                     ) : (
-                      '지금 구독하기'
+                      t('subscription.subscribe_now')
                     )}
                   </button>
 
@@ -359,16 +363,16 @@ export default function SubscriptionPage() {
 
           {/* FAQ or Info Section */}
           <div className="mt-24 text-center">
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">안심하고 결제하세요</p>
+            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">{t('subscription.guaranteed_payment')}</p>
             <div className="flex flex-wrap justify-center gap-8 opacity-70">
               <span className="flex items-center gap-2 text-sm text-gray-500 font-medium">
-                🔒 안전한 결제 시스템
+                🔒 {t('subscription.secure_payment')}
               </span>
               <span className="flex items-center gap-2 text-sm text-gray-500 font-medium">
-                🔄 언제든 해지 가능
+                🔄 {t('subscription.cancel_anytime')}
               </span>
               <span className="flex items-center gap-2 text-sm text-gray-500 font-medium">
-                💳 모든 주요 카드 지원
+                💳 {t('subscription.all_cards_supported')}
               </span>
             </div>
           </div>
@@ -379,10 +383,10 @@ export default function SubscriptionPage() {
       {/* 구독 해지 확인 모달 */}
       <ConfirmModal
         open={isCancelModalOpen}
-        title="구독을 해지하시겠습니까?"
-        description="해지 시 프리미엄 혜택이 즉시 중단되며, 남은 기간과 상관없이 무료 플랜으로 전환됩니다. 정말 진행하시겠습니까?"
-        confirmText="해지하기"
-        cancelText="계속 유지"
+        title={t('subscription.cancel_confirm.title')}
+        description={t('subscription.cancel_confirm.desc')}
+        confirmText={t('subscription.cancel_confirm.btn_confirm')}
+        cancelText={t('subscription.cancel_confirm.btn_cancel')}
         onConfirm={() => {
           setIsCancelModalOpen(false);
           handleConfirmDowngradeToFree();
@@ -438,7 +442,7 @@ export default function SubscriptionPage() {
 
                 <div className="mt-8">
                   <div className="p-4 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-700 dark:text-violet-300 text-[10px] font-semibold leading-relaxed">
-                    이 결제창은 테스트용입니다. 안심하고 결제를 진행해도 실제 청구가 발생하지 않습니다.
+                    {t('subscription.payment_modal.test_warning')}
                   </div>
                 </div>
               </div>
@@ -446,16 +450,16 @@ export default function SubscriptionPage() {
 
             {/* Right Side: Payment Form */}
             <div className="w-full md:w-3/5 p-8 pb-10">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">결제 정보</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t('subscription.payment_modal.title')}</h3>
               
               <div className="space-y-6">
                 {/* Coupon Input */}
                 <div>
-                   <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">프로모션 코드</h4>
+                   <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">{t('subscription.payment_modal.promo_code')}</h4>
                    <div className="flex gap-2">
                         <input 
                             type="text" 
-                            placeholder="쿠폰 코드" 
+                            placeholder={t('subscription.payment_modal.coupon_placeholder')} 
                             value={couponCode}
                             onChange={(e) => setCouponCode(e.target.value)}
                             className="flex-1 bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest outline-none focus:ring-2 focus:ring-violet-500" 
@@ -465,27 +469,27 @@ export default function SubscriptionPage() {
                             disabled={isValidatingCoupon || !couponCode.trim()}
                             className="px-4 py-2 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
                         >
-                            {isValidatingCoupon ? <Loader2 size={14} className="animate-spin" /> : '적용'}
+                            {isValidatingCoupon ? <Loader2 size={14} className="animate-spin" /> : t('subscription.payment_modal.apply')}
                         </button>
                    </div>
                    {couponError && <p className="text-red-500 text-[10px] mt-2 font-bold">{couponError}</p>}
                    {appliedCoupon && (
                        <p className="text-emerald-500 text-[10px] mt-2 font-bold flex items-center gap-1">
-                           <Check size={12} /> {appliedCoupon.name} 쿠폰 적용됨
+                           <Check size={12} /> {t('subscription.payment_modal.coupon_applied', { name: appliedCoupon.name })}
                        </p>
                    )}
                 </div>
 
                 {/* Card Info */}
                 <div>
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">카드 정보</h4>
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">{t('subscription.payment_modal.card_info')}</h4>
                   <div className="rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white dark:bg-[#0a0a0a]">
                     <div className="relative border-b border-gray-200 dark:border-white/10">
-                      <input type="text" placeholder="카드 번호" className="w-full bg-transparent px-4 py-3.5 text-sm font-medium outline-none" />
+                      <input type="text" placeholder={t('subscription.payment_modal.card_number')} className="w-full bg-transparent px-4 py-3.5 text-sm font-medium outline-none" />
                     </div>
                     <div className="grid grid-cols-2">
-                      <input type="text" placeholder="MM/YY" className="w-full bg-transparent px-4 py-3.5 text-sm font-medium border-r border-gray-200 dark:border-white/10 outline-none" />
-                      <input type="text" placeholder="CVC" className="w-full bg-transparent px-4 py-3.5 text-sm font-medium outline-none" />
+                      <input type="text" placeholder={t('subscription.payment_modal.expiry')} className="w-full bg-transparent px-4 py-3.5 text-sm font-medium border-r border-gray-200 dark:border-white/10 outline-none" />
+                      <input type="text" placeholder={t('subscription.payment_modal.cvc')} className="w-full bg-transparent px-4 py-3.5 text-sm font-medium outline-none" />
                     </div>
                   </div>
                 </div>
@@ -497,7 +501,7 @@ export default function SubscriptionPage() {
                 >
                   {loadingPlan !== null ? <Loader2 size={20} className="animate-spin" /> : (
                     <span className="flex items-center gap-2">
-                      {getCalculatedPrice(PLANS.find((p: any) => p.id === selectedPlan)?.price || '₩0')} 결제하기
+                      {t('subscription.payment_modal.pay_now', { price: getCalculatedPrice(PLANS.find((p: any) => p.id === selectedPlan)?.price || '₩0') })}
                     </span>
                   )}
                 </button>
