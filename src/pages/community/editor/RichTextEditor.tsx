@@ -163,7 +163,7 @@ const RichTextEditor = ({
     // 실제로 비교를 실행
     // const matchs = valueRef.current.match(tempUrlRegex);
     // if (matchs) {
-    //   matchs.forEach(item => usedTempUrls.add(item));
+    //   matchs.forEach((item: any) => usedTempUrls.add(item));
     // }
 
     // 오류개선
@@ -172,7 +172,7 @@ const RichTextEditor = ({
     // 순서대로 표시된 이미지를 재정렬
     const orderdImages: TempImageFile[] = [];
     matchs?.forEach(tempUrl => {
-      const foundImage = tempImagesRef.current.find(item => item.tempUrl === tempUrl);
+      const foundImage = tempImagesRef.current.find((item: any) => item.tempUrl === tempUrl);
       if (foundImage && !usedTempUrls.has(tempUrl)) {
         orderdImages.push(foundImage);
         usedTempUrls.add(tempUrl);
@@ -181,7 +181,7 @@ const RichTextEditor = ({
 
     // 사용하지 않는 임시 이미지들 정리
     // 메모리 누수를 막아주기 위해서
-    // tempImagesRef.current = tempImagesRef.current.filter(item => {
+    // tempImagesRef.current = tempImagesRef.current.filter((item: any) => {
     //   const isUsed = usedTempUrls.has(item.tempUrl);
     //   // 내용에 임시 미리보기 URL 글자가 없다면 삭제해야 한다.
     //   if (!isUsed) {
@@ -193,7 +193,7 @@ const RichTextEditor = ({
 
     // 개선된 코드 : 사용하지 않는 임시 이미지들을 정리
     // 메모리 누수를 막아주기 위해서
-    tempImagesRef.current.forEach(item => {
+    tempImagesRef.current.forEach((item: any) => {
       if (!usedTempUrls.has(item.tempUrl)) {
         // 사용하지 않는 blob url 을 정리하기
         URL.revokeObjectURL(item.tempUrl);
@@ -253,7 +253,7 @@ const RichTextEditor = ({
   useEffect(() => {
     if (onImagesChange) {
       // 실제 화면에 보이는 파일만 배열요소로 추출
-      const imageFiles = tempImagesRef.current.map(item => item.file);
+      const imageFiles = tempImagesRef.current.map((item: any) => item.file);
       onImagesChange(imageFiles);
     }
   }, [onImagesChange, value]); // 에디터에 내용이 바뀔때마다 이미지 목록 업데이트
@@ -265,7 +265,7 @@ const RichTextEditor = ({
     const timer = setTimeout(() => {
       const quill = quilRef.current?.getEditor();
       if (quill) {
-        const toolbar = quill.getModule('toolbar') as any;
+        const toolbar = quill.getModule('toolbar') as { addHandler: (name: string, handler: (...args: unknown[]) => void) => void } | undefined;
         if (toolbar && toolbar.addHandler) {
           // 우리가 원하는 핸들러 등록
           toolbar.addHandler('image', imageHandler);

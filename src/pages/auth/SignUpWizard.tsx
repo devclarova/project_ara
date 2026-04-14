@@ -33,8 +33,7 @@ export default function SignUpWizard({ mode = 'social' }: { mode?: 'social' }) {
         navigate('/signin', { replace: true });
         return;
       }
-      const { data: prof } = await supabase
-        .from('profiles')
+      const { data: prof } = await (supabase.from('profiles') as any)
         .select('is_onboarded, avatar_url')
         .eq('user_id', u.id)
         .maybeSingle();

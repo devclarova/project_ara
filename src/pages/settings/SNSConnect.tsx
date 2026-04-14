@@ -111,14 +111,15 @@ function SNSConnect({ onClose }: SNSConnectProps) {
 
     try {
       // Use custom RPC function with user_id, provider, and identity_id
-      const { data, error } = await supabase.rpc('unlink_identity', {
+      const { data, error } = await (supabase as any).rpc('unlink_identity', {
         target_user_id: identity.user_id,
         provider_param: identity.provider,
         identity_id_param: identity.id  // Use provider's ID, not identity_id
       });
 
-      if (error || !data?.success) {
-        console.error(`Failed to unlink ${providerToUnlink}:`, error || data?.error);
+      const rpcData = data as any;
+      if (error || !rpcData?.success) {
+        console.error(`Failed to unlink ${providerToUnlink}:`, error || rpcData?.error);
         toast.error(t('settings.sns_unlink_failed', 'SNS 연결 해제에 실패했습니다.'));
       } else {
         toast.success(t('settings.sns_unlink_success', 'SNS 연결이 해제되었습니다.'));

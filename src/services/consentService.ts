@@ -22,25 +22,26 @@ const DEFAULTS: ConsentDraft = {
   age_ok: false,
 };
 
-function isBool(x: any): x is boolean {
+function isBool(x: unknown): x is boolean {
   return typeof x === 'boolean';
 }
 
 /**
  * 과거 스키마(예: age, ageOk 등)와도 호환되게 안전 파서
  */
-function coerceDraft(raw: any): ConsentDraft {
+function coerceDraft(raw: unknown): ConsentDraft {
   if (!raw || typeof raw !== 'object') return { ...DEFAULTS };
+  const r = raw as Record<string, unknown>;
 
-  const tos_agreed = isBool(raw.tos_agreed) ? raw.tos_agreed : false;
-  const privacy_agreed = isBool(raw.privacy_agreed) ? raw.privacy_agreed : false;
-  const marketing_agreed = isBool(raw.marketing_agreed) ? raw.marketing_agreed : false;
+  const tos_agreed = isBool(r.tos_agreed) ? r.tos_agreed : false;
+  const privacy_agreed = isBool(r.privacy_agreed) ? r.privacy_agreed : false;
+  const marketing_agreed = isBool(r.marketing_agreed) ? r.marketing_agreed : false;
 
-  // ✅ 이전 키 호환 처리: age / ageOk / age_ok 중 존재하는 값 사용
+  // 이전 키 호환 처리: age / ageOk / age_ok 중 존재하는 값 사용
   const age_ok =
-    isBool(raw.age_ok) ? raw.age_ok :
-    isBool(raw.age) ? raw.age :
-    isBool(raw.ageOk) ? raw.ageOk :
+    isBool(r.age_ok) ? r.age_ok :
+    isBool(r.age) ? r.age :
+    isBool(r.ageOk) ? r.ageOk :
     false;
 
   return { tos_agreed, privacy_agreed, marketing_agreed, age_ok };

@@ -25,7 +25,7 @@ export default function McqQuizModal({
   const [wrongHistory, setWrongHistory] = useState<{ term: string; correct: string }[]>([]);
   const [confirmClose, setConfirmClose] = useState(false);
 
-  const shuffle = (arr: any[]) => [...arr].sort(() => Math.random() - 0.5);
+  const shuffle = <T,>(arr: T[]): T[] => [...arr].sort(() => Math.random() - 0.5);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -47,7 +47,7 @@ export default function McqQuizModal({
     if (!questions[current]) return;
 
     const correct = questions[current].meaning;
-    const wrongPool = pool.filter(p => p.meaning !== correct).map(p => p.meaning);
+    const wrongPool = pool.filter((p: any) => p.meaning !== correct).map((p: any) => p.meaning);
 
     const wrongs =
       wrongPool.length >= 3
@@ -86,7 +86,7 @@ export default function McqQuizModal({
       setWrongHistory(prev => {
         // 데이터 영속화 준비 — 오답 발생 시 해당 문항의 메타데이터(용어, 정답)를 히스토리에 기록
         const term = questions[current].term;
-        const already = prev.find(p => p.term === term);
+        const already = prev.find((p: any) => p.term === term);
         if (already) return prev;
         return [...prev, { term, correct }];
       });

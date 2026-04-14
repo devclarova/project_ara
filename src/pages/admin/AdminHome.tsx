@@ -18,7 +18,8 @@ import {
   BarChart3,
   ChevronRight,
   ShieldCheck,
-  Ticket
+  Ticket,
+  Zap
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
@@ -26,7 +27,9 @@ import { ko } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/utils/errorMessage';
 import UserProfileModal from './components/UserProfileModal';
+import MarketingSpendModal from './components/MarketingSpendModal';
 import { usePresence } from '@/contexts/PresenceContext';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -45,7 +48,12 @@ interface DashboardStats {
   marketing: {
     active_coupons: number;
     total_clicks: number;
+    total_views: number;
     avg_ctr: number;
+    cvr: number;
+    cac: number;
+    roas: number;
+    total_spend: number;
   };
   recent_users: {
     id: string;
@@ -78,9 +86,11 @@ const AdminHome = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [revenueType, setRevenueType] = useState<'total' | 'subscription' | 'shop'>('total');
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [selectedUser, setSelectedUser] = useState<DashboardStats['recent_users'][number] | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showTrafficModal, setShowTrafficModal] = useState(false);
+  const [showCVR, setShowCVR] = useState(false);
+  const [showMarketingModal, setShowMarketingModal] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [hybridData, setHybridData] = useState({ totalLogs: 0, distinctUsers: 0 });
   const { onlineCount, sessionCount, isUserOnline, stats: globalStats } = usePresence();
@@ -88,14 +98,16 @@ const AdminHome = () => {
   useEffect(() => {
      const fetchHybridLogs = async () => {
         try {
-           const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
+           const { data, error } = await (supabase as any).rpc('get_admin_dashboard_stats');
            if (!error && data) {
               setHybridData({ 
-                 totalLogs: data.total_traffic_count || 0, 
-                 distinctUsers: data.active_user_count || 0 
+                 totalLogs: (data as any).total_traffic_count || 0, 
+                 distinctUsers: (data as any).active_user_count || 0 
               });
            }
-        } catch (e) { console.error(e); }
+        } catch (error) { 
+           console.error('Error fetching hybrid logs:', getErrorMessage(error)); 
+        }
      };
      fetchHybridLogs();
   }, []);
@@ -103,11 +115,11 @@ const AdminHome = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
+        const { data, error } = await (supabase as any).rpc('get_admin_dashboard_stats');
         if (error) throw error;
         setStats(data);
-      } catch (err: any) {
-        console.error('Error fetching dashboard stats:', err);
+      } catch (error: unknown) {
+        console.error('Error fetching dashboard stats:', getErrorMessage(error));
       } finally {
         setLoading(false);
       }
@@ -151,8 +163,39 @@ const AdminHome = () => {
     { title: '상점 수익', value: `₩${displayStats.shop_revenue.toLocaleString()}`, icon: ShoppingBag, color: 'text-emerald-500', bg: 'bg-emerald-50' },
     { title: '신고 대기', value: displayStats.pending_reports.toLocaleString(), icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-50' },
     { title: '이탈률 (Bounce)', value: `${displayStats.bounce_rate}%`, icon: TrendingUp, color: 'text-slate-500', bg: 'bg-slate-50', trend: 'Low', trendUp: false },
-    { title: '활성 쿠폰', value: stats?.marketing?.active_coupons?.toLocaleString() || '0', icon: Ticket, color: 'text-orange-500', bg: 'bg-orange-50' },
-    { title: '광고 CTR', value: `${stats?.marketing?.avg_ctr?.toFixed(2) || '0.00'}%`, icon: BarChart3, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { 
+      title: '총 마케팅 지출', 
+      value: `₩${(stats?.marketing?.total_spend || 0).toLocaleString()}`, 
+      icon: DollarSign, 
+      color: 'text-pink-600', 
+      bg: 'bg-pink-50',
+      actionTitle: '내역 관리',
+      onClick: () => setShowMarketingModal(true)
+    },
+    { 
+      title: showCVR ? '광고 CVR (전환율)' : '광고 CTR (클릭률)', 
+      value: showCVR ? `${stats?.marketing?.cvr?.toFixed(2) || '0.00'}%` : `${stats?.marketing?.avg_ctr?.toFixed(2) || '0.00'}%`, 
+      icon: showCVR ? Zap : BarChart3, 
+      color: showCVR ? 'text-emerald-600' : 'text-blue-600', 
+      bg: showCVR ? 'bg-emerald-50' : 'bg-blue-50', 
+      isToggle: true 
+    },
+    { 
+      title: '고객 획득 비용 (CAC)', 
+      value: `₩${(stats?.marketing?.cac || 0).toLocaleString()}`, 
+      subtitle: '유저 1명당 유치 비용', 
+      icon: Users, 
+      color: 'text-purple-600', 
+      bg: 'bg-purple-50'
+    },
+    { 
+      title: '평균 광고 수익률 (ROAS)', 
+      value: `${(stats?.marketing?.roas || 0).toFixed(1)}%`, 
+      subtitle: '마케팅 지출 대비 매출', 
+      icon: TrendingUp, 
+      color: 'text-indigo-600', 
+      bg: 'bg-indigo-50'
+    },
   ];
 
   return (
@@ -187,6 +230,18 @@ const AdminHome = () => {
                   </span>
                   실시간
                 </span>
+              )}
+              {stat.isToggle && (
+                 <div className="flex p-0.5 bg-gray-100 dark:bg-gray-800/50 rounded-full border border-gray-200 dark:border-gray-700 cursor-pointer" onClick={(e) => { e.stopPropagation(); setShowCVR(!showCVR); }}>
+                    <button className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all ${!showCVR ? 'bg-white dark:bg-gray-700 text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>CTR</button>
+                    <button className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all ${showCVR ? 'bg-white dark:bg-gray-700 text-emerald-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>CVR</button>
+                 </div>
+              )}
+              {stat.actionTitle && stat.onClick && (
+                 <button onClick={(e) => { e.stopPropagation(); stat.onClick(); }} className="px-2 py-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-[10px] font-bold text-gray-500 dark:text-gray-400 rounded-full transition-colors flex items-center gap-1">
+                    <DollarSign size={10} />
+                    {stat.actionTitle}
+                 </button>
               )}
             </div>
             <div>
@@ -363,8 +418,20 @@ const AdminHome = () => {
         initialTotalLogs={hybridData.totalLogs}
         initialDistinctUsers={hybridData.distinctUsers}
         onSelectUser={(user) => {
-          setSelectedUser(user);
+          setSelectedUser(user as any);
           setShowProfileModal(true);
+        }}
+      />
+      <MarketingSpendModal 
+        isOpen={showMarketingModal} 
+        onClose={() => setShowMarketingModal(false)}
+        onSuccess={() => {
+          // 마케팅 지출 입력 성공 시 대시보드 통계 즉각 리프레시
+          const fetchStats = async () => {
+            const { data } = await supabase.rpc('get_admin_dashboard_stats');
+            if (data) setStats(data);
+          };
+          fetchStats();
         }}
       />
     </div>

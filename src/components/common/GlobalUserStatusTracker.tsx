@@ -29,8 +29,7 @@ export const GlobalUserStatusTracker = () => {
       }
 
       const performUpdate = async () => {
-        const { error } = await supabase
-          .from('profiles')
+        const { error } = await (supabase.from('profiles') as any)
           .update({ 
             is_online: online,
             last_active_at: new Date().toISOString(),
@@ -49,19 +48,21 @@ export const GlobalUserStatusTracker = () => {
           isRetryingRef.current = true;
           await retryWithBackoff(performUpdate, {
             maxAttempts: 2,
-            shouldRetry: (err) => {
+            shouldRetry: (err: any) => {
               const msg = err?.message?.toLowerCase() || '';
               return msg.includes('fetch') || msg.includes('network');
             }
           });
         }
         lastUpdateRef.current = { time: now, status: online };
-      } catch (err: any) {
+      } catch (err: unknown) {
         // 네트워크 페치 실패(Failed to fetch) 등은 하트비트 수준에서는 무시 (다음 주기에 다시 시도)
         if (!isUnloadingRef.current) {
-          const isNetworkError = err?.message?.includes('fetch') || err?.message?.includes('network');
-          if (!isNetworkError && err?.code !== 'PGRST116') {
-             console.warn('[StatusTracker] Update failed:', err.message || err);
+          const error = err as Error;
+          const isNetworkError = error?.message?.includes('fetch') || error?.message?.includes('network');
+          const isPostgrestError = (error as unknown as { code: string })?.code === 'PGRST116';
+          if (!isNetworkError && !isPostgrestError) {
+             console.warn('[StatusTracker] Update failed:', error.message || error);
           }
         }
       } finally {

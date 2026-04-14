@@ -9,6 +9,7 @@ import {
   Star, StarOff, RefreshCw, ChevronLeft, ChevronRight, Loader2,
   Film, BarChart3, EyeIcon, ImageIcon, AlertCircle, X, FileText, Tag, Upload, Video
 } from 'lucide-react';
+import { getErrorMessage } from '@/utils/errorMessage';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -43,6 +44,30 @@ interface StudyItem {
   video: VideoData[];
 }
 
+interface Word {
+  id: number;
+  words: string;
+  means: string;
+  parts_of_speech: string;
+  pronunciation: string;
+  example: string;
+}
+
+interface CultureNoteContent {
+  id: number;
+  culture_note_id: number;
+  content_value: string;
+}
+
+interface CultureNote {
+  id: number;
+  study_id: number;
+  title: string;
+  subtitle: string;
+  contents: string;
+  contentRows: CultureNoteContent[];
+}
+
 const PER_PAGE = 10;
 const ALL_CATEGORIES = ['전체', '드라마', '영화', '예능', '음악'];
 const ALL_LEVELS = ['전체', '초급', '중급', '고급'];
@@ -71,8 +96,8 @@ const AdminStudyManagement = () => {
   const [previewStudy, setPreviewStudy] = useState<StudyItem | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [previewTab, setPreviewTab] = useState<'basic' | 'source' | 'content'>('basic');
-  const [previewWords, setPreviewWords] = useState<any[]>([]);
-  const [previewNotes, setPreviewNotes] = useState<any[]>([]);
+  const [previewWords, setPreviewWords] = useState<Word[]>([]);
+  const [previewNotes, setPreviewNotes] = useState<CultureNote[]>([]);
   const [previewDataLoading, setPreviewDataLoading] = useState(false);
 
   // ─── Fetch Data ────────────────────────────────────────────
@@ -86,8 +111,7 @@ const AdminStudyManagement = () => {
       // Determine if we need inner join for filtering
       const needsVideoFilter = filterCategory !== '전체' || filterLevel !== '전체';
 
-      let query = supabase
-        .from('study')
+      let query = (supabase.from('study') as any)
         .select(needsVideoFilter ? '*, video!inner(*)' : '*, video(*)', { count: 'exact' })
         .order('id', { ascending: false });
 
@@ -112,15 +136,15 @@ const AdminStudyManagement = () => {
       const { data, count, error } = await query;
 
       if (error) {
-        console.error('학습 목록 로드 실패:', error);
+        console.error('학습 목록 로드 실패:', getErrorMessage(error));
         toast.error('학습 목록을 불러오지 못했습니다.');
         return;
       }
 
       setStudies((data ?? []) as StudyItem[]);
       setTotalCount(count ?? 0);
-    } catch (err) {
-      console.error('학습 목록 로드 오류:', err);
+    } catch (err: unknown) {
+      console.error('학습 목록 로드 오류:', getErrorMessage(err));
       toast.error('학습 목록을 불러오지 못했습니다.');
     } finally {
       setLoading(false);
@@ -129,8 +153,7 @@ const AdminStudyManagement = () => {
 
   // 추천 콘텐츠 통계 지표 별도 수신 — 대시보드 요약 정보 동시성 확보
   const fetchStats = useCallback(async () => {
-    const { count } = await supabase
-      .from('study')
+    const { count } = await (supabase.from('study') as any)
       .select('id', { count: 'exact', head: true })
       .eq('is_featured', true);
     setFeaturedCount(count ?? 0);
@@ -165,14 +188,13 @@ const AdminStudyManagement = () => {
   // 추천(Featured) 상태 실시간 전환 — 메인 큐레이션 노출 정책 제어
   const handleToggleFeatured = async (study: StudyItem) => {
     const newValue = !study.is_featured;
-    const { error } = await supabase
-      .from('study')
+    const { error } = await (supabase.from('study') as any)
       .update({ is_featured: newValue })
       .eq('id', study.id);
 
     if (error) {
-      console.error('Featured toggle error:', error);
-      toast.error(`추천 상태 변경에 실패했습니다: ${error.message}`);
+      console.error('Featured toggle error:', getErrorMessage(error));
+      toast.error(`추천 상태 변경에 실패했습니다: ${getErrorMessage(error)}`);
       return;
     }
 
@@ -194,14 +216,13 @@ const AdminStudyManagement = () => {
       s.id === study.id ? { ...s, is_hidden: newValue } : s
     ));
 
-    const { error } = await supabase
-      .from('study')
+    const { error } = await (supabase.from('study') as any)
       .update({ is_hidden: newValue })
       .eq('id', study.id);
 
     if (error) {
-      console.error('Hidden toggle error:', error);
-      toast.error(`숨김 상태 변경 실패: ${error.message}`);
+      console.error('Hidden toggle error:', getErrorMessage(error));
+      toast.error(`숨김 상태 변경 실패: ${getErrorMessage(error)}`);
       // Rollback
       setStudies(prev => prev.map(s => 
         s.id === study.id ? { ...s, is_hidden: !newValue } : s
@@ -226,17 +247,17 @@ const AdminStudyManagement = () => {
 
     try {
       // Delete related data first
-      await supabase.from('word').delete().eq('study_id', selectedStudy.id);
+      await (supabase.from('word') as any).delete().eq('study_id', selectedStudy.id);
       // culture_note 2단계: contents → note 순서 삭제
-      const { data: existingNotes } = await supabase.from('culture_note').select('id').eq('study_id', selectedStudy.id);
+      const { data: existingNotes } = await (supabase.from('culture_note') as any).select('id').eq('study_id', selectedStudy.id);
       if (existingNotes && existingNotes.length > 0) {
-        const noteIds = existingNotes.map(n => n.id);
-        await supabase.from('culture_note_contents').delete().in('culture_note_id', noteIds);
+        const noteIds = existingNotes.map((n: any) => n.id);
+        await (supabase.from('culture_note_contents') as any).delete().in('culture_note_id', noteIds);
       }
-      await supabase.from('culture_note').delete().eq('study_id', selectedStudy.id);
-      await supabase.from('video').delete().eq('study_id', selectedStudy.id);
+      await (supabase.from('culture_note') as any).delete().eq('study_id', selectedStudy.id);
+      await (supabase.from('video') as any).delete().eq('study_id', selectedStudy.id);
       
-      const { error } = await supabase.from('study').delete().eq('id', selectedStudy.id);
+      const { error } = await (supabase.from('study') as any).delete().eq('id', selectedStudy.id);
 
       if (error) {
         toast.error('삭제에 실패했습니다: ' + error.message);
@@ -248,7 +269,8 @@ const AdminStudyManagement = () => {
       setSelectedStudy(null);
       fetchStudies();
       fetchStats();
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error('Delete error:', getErrorMessage(err));
       toast.error('삭제 중 오류가 발생했습니다.');
     } finally {
       setDeleteLoading(false);
@@ -264,24 +286,24 @@ const AdminStudyManagement = () => {
 
     try {
       // 1. 단어 데이터
-      const { data: words } = await supabase.from('word').select('*').eq('study_id', study.id).order('id');
+      const { data: words } = await (supabase.from('word') as any).select('*').eq('study_id', study.id).order('id');
       setPreviewWords(words || []);
 
       // 2. 문화 노트 데이터
-      const { data: notes } = await supabase.from('culture_note').select('*').eq('study_id', study.id).order('id');
+      const { data: notes } = await (supabase.from('culture_note') as any).select('*').eq('study_id', study.id).order('id');
       if (notes && notes.length > 0) {
-        const noteIds = notes.map(n => n.id);
-        const { data: noteContents } = await supabase.from('culture_note_contents').select('*').in('culture_note_id', noteIds);
-        const mapped = notes.map(n => ({
+        const noteIds = notes.map((n: any) => n.id);
+        const { data: noteContents } = await (supabase.from('culture_note_contents') as any).select('*').in('culture_note_id', noteIds);
+        const mapped = notes.map((n: any) => ({
           ...n,
-          contentRows: (noteContents || []).filter(c => c.culture_note_id === n.id)
+          contentRows: (noteContents || []).filter((c: any) => c.culture_note_id === n.id)
         }));
-        setPreviewNotes(mapped);
+        setPreviewNotes(mapped as CultureNote[]);
       } else {
         setPreviewNotes([]);
       }
-    } catch (err) {
-      console.error('Preview data fetch error:', err);
+    } catch (err: unknown) {
+      console.error('Preview data fetch error:', getErrorMessage(err));
     } finally {
       setPreviewDataLoading(false);
     }
@@ -378,7 +400,7 @@ const AdminStudyManagement = () => {
                 onChange={(e) => { setFilterCategory(e.target.value); setPage(1); }}
                 className="w-full sm:w-auto appearance-none px-3 py-2 pr-8 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary bg-background text-foreground outline-none cursor-pointer"
               >
-                {ALL_CATEGORIES.map(c => (
+                {ALL_CATEGORIES.map((c: any) => (
                   <option key={c} value={c}>{c === '전체' ? '전체 카테고리' : c}</option>
                 ))}
               </select>
@@ -814,7 +836,7 @@ const AdminStudyManagement = () => {
                   ].map((tab) => (
                     <button
                       key={tab.id}
-                      onClick={() => setPreviewTab(tab.id as any)}
+                      onClick={() => setPreviewTab(tab.id as 'basic' | 'source' | 'content')}
                       className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
                         previewTab === tab.id 
                           ? 'bg-background text-primary shadow-sm border border-gray-100 dark:border-gray-800' 
@@ -928,7 +950,7 @@ const AdminStudyManagement = () => {
                                     {/* Culture Note Contents Rows */}
                                     <div className="space-y-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
                                       {note.contentRows && note.contentRows.length > 0 ? (
-                                        note.contentRows.map((row: any, i: number) => (
+                                        note.contentRows.map((row, i: number) => (
                                           <div key={i} className="flex gap-2 items-start">
                                             <div className="w-1.5 h-1.5 rounded-full bg-primary/40 mt-1.5 shrink-0" />
                                             <p className="text-[11px] text-muted-foreground leading-relaxed whitespace-pre-wrap">{row.content_value}</p>

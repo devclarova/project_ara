@@ -13,6 +13,18 @@ import { useNicknameValidator } from '@/hooks/useNicknameValidator';
 import NicknameInputField from '@/components/common/NicknameInputField';
 import TextAreaField from '@/components/auth/TextAreaField';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { getErrorMessage } from '@/utils/errorMessage';
+
+interface ProfileUpdatePayload {
+  nickname: string;
+  bio: string;
+  country: string | null;
+  avatar_url: string;
+  banner_url: string | null;
+  banner_position_y: number;
+  nickname_updated_at?: string;
+  country_updated_at?: string;
+}
 interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -31,7 +43,7 @@ interface EditProfileModalProps {
     nickname_updated_at?: string | null;
     country_updated_at?: string | null;
   };
-  onSave: (updatedProfile: any) => void;
+  onSave: (updatedProfile: Partial<EditProfileModalProps['userProfile']>) => void;
 }
 // countries 테이블 구조에 맞게 타입 수정 (id + name 기준)
 type CountryOption = {
@@ -114,8 +126,7 @@ export default function EditProfileModal({
       const fetchCountries = async () => {
         try {
           setCountriesLoading(true);
-          const { data, error } = await supabase
-            .from('countries')
+          const { data, error } = await (supabase.from('countries') as any)
             .select('id, name, flag, flag_url') // id + name 기준으로 수정
             .order('id', { ascending: true });
           if (error) throw error;
@@ -124,7 +135,7 @@ export default function EditProfileModal({
           // 현재 프로필의 국가 이름(userProfile.country)에 해당하는 id를 찾아서
           //    formData.country를 그 id로 세팅 → CountrySelect가 처음부터 선택된 상태로 표시됨
           if (userProfile.country) {
-            const matched = list.find(c => c.name === userProfile.country);
+            const matched = list.find((c: any) => c.name === userProfile.country);
             if (matched) {
               setFormData(prev => ({
                 ...prev,
@@ -191,7 +202,7 @@ export default function EditProfileModal({
 
     // Check if country actually changed logic
     const originalCountryId = userProfile.country
-      ? countries.find(c => c.name === userProfile.country)?.id?.toString()
+      ? countries.find((c: any) => c.name === userProfile.country)?.id?.toString()
       : '';
     const isCountryChanged = formData.country !== originalCountryId;
     if (isCountryDisabled && isCountryChanged) {
@@ -229,9 +240,9 @@ export default function EditProfileModal({
       else if (bannerFile) {
         bannerUrl = await uploadImage(bannerFile, 'banners');
       }
-      const selectedCountry = countries.find(c => String(c.id) === formData.country) || null;
+      const selectedCountry = countries.find((c: any) => String(c.id) === formData.country) || null;
 
-      const updates: any = {
+      const updates: ProfileUpdatePayload = {
         nickname: formData.name,
         bio: formData.bio,
         country: formData.country || null,
@@ -242,7 +253,7 @@ export default function EditProfileModal({
       // Set timestamp if changed
       if (isNickChanged) updates.nickname_updated_at = new Date().toISOString();
       if (isCountryChanged) updates.country_updated_at = new Date().toISOString();
-      const { error } = await supabase.from('profiles').update(updates).eq('id', userProfile.id);
+      const { error } = await (supabase.from('profiles') as any).update(updates).eq('id', userProfile.id);
       if (error) throw error;
       // 로컬 상태 업데이트
       const updated = {
@@ -275,15 +286,15 @@ export default function EditProfileModal({
       setTimeout(() => {
         onClose();
       }, 300);
-    } catch (err: any) {
-      console.error('프로필 업데이트 실패:', err?.message || err);
+    } catch (err: unknown) {
+      console.error('프로필 업데이트 실패:', getErrorMessage(err));
       toast.error(t('profile.save_error_message', '프로필 업데이트를 실패하였습니다.'));
     } finally {
       setSaving(false);
     }
   };
   // 현재 선택된 국가의 플래그 (미리보기용)
-  const currentCountry = countries.find(c => String(c.id) === formData.country) || null;
+  const currentCountry = countries.find((c: any) => String(c.id) === formData.country) || null;
   const currentFlagUrl = currentCountry?.flag_url ?? userProfile.countryFlagUrl ?? null;
   const currentFlagEmoji = currentCountry?.flag ?? null;
 

@@ -40,12 +40,11 @@ export function ReplyInput({
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from('profiles')
+    (supabase.from('profiles') as any)
       .select('id, avatar_url, nickname')
       .eq('user_id', user.id)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data }: any) => {
         if (data) {
           setProfileId(data.id);
           setMyAvatar(data.avatar_url);
@@ -91,12 +90,9 @@ export function ReplyInput({
     const parentId = target.id;
     // Root logic is complex without tree. For now, flat structure or simple nesting.
     // If target has a root_reply_id, use it. Otherwise target.id is root?
-    // Casting target to any to access potential extra fields safely
-    const targetAny = target as any;
-    const rootId = targetAny.root_reply_id ?? target.id;
+    const rootId = target.root_reply_id ?? target.id;
 
-    const { data, error } = await supabase
-      .from('tweet_replies')
+    const { data, error } = await (supabase.from('tweet_replies') as any)
       .insert({
         tweet_id: target.tweetId,
         author_id: profileId,
@@ -117,27 +113,26 @@ export function ReplyInput({
       return; // 또는 toast로 "프로필 로딩중" 표시
     }
 
-    const createdAt = data.created_at ?? new Date().toISOString();
+    const createdAt = (data as any).created_at ?? new Date().toISOString();
 
     // 멘션 알림 생성 (댓글/대댓글 저장 성공 후)
     try {
       const mentioned = extractMentions(content);
 
       // 내가 멘션한 것 중 내 닉네임은 제외 (원하면 조건 제거 가능)
-      const filtered = mentioned.filter(m => m !== myNickname);
+      const filtered = mentioned.filter((m: any) => m !== myNickname);
 
       if (filtered.length > 0) {
         // nickname 기준으로 멘션 대상 프로필 찾기
-        const { data: mentionedProfiles } = await supabase
-          .from('profiles')
+        const { data: mentionedProfiles } = await (supabase.from('profiles') as any)
           .select('id, nickname')
           .in('nickname', filtered);
 
         if (mentionedProfiles && mentionedProfiles.length > 0) {
           // 멘션된 사용자들에게 알림 전송
           const payloads = mentionedProfiles
-            .filter(p => p.id !== profileId) // 자기 자신 멘션 제외
-            .map(p => ({
+            .filter((p: any) => p.id !== profileId) // 자기 자신 멘션 제외
+            .map((p: any) => ({
               receiver_id: p.id,
               sender_id: profileId,
               type: 'mention',
@@ -148,7 +143,7 @@ export function ReplyInput({
             }));
 
           if (payloads.length > 0) {
-            await supabase.from('notifications').insert(payloads);
+            await (supabase.from('notifications') as any).insert(payloads);
           }
         }
       }

@@ -22,6 +22,38 @@ import { useNavigate } from 'react-router-dom';
 import { useBlock } from '@/hooks/useBlock';
 import Modal from '@/components/common/Modal';
 import { useDirectChat } from '@/contexts/DirectChatContext';
+import { getErrorMessage } from '@/utils/errorMessage';
+import type { FeedItem } from '@/types/sns';
+
+type LocalFeedItem = FeedItem & {
+  isLiked?: boolean;
+  is_liked?: boolean;
+  likedByMe?: boolean;
+  viewerLiked?: boolean;
+  liked?: boolean;
+  type: 'post' | 'reply' | 'tweet';
+  author_id?: string;
+};
+
+interface ProfileFollowRow {
+  follower: {
+    id: string;
+    nickname: string;
+    username: string;
+    avatar_url: string | null;
+    bio: string | null;
+  };
+}
+
+interface ProfileFollowingRow {
+  following: {
+    id: string;
+    nickname: string;
+    username: string;
+    avatar_url: string | null;
+    bio: string | null;
+  };
+}
 
 interface ProfileHeaderProps {
   userProfile: UserProfile;
@@ -176,8 +208,7 @@ export default function ProfileHeader({
         type === 'avatar' ? 'avatars' : 'banners',
       );
 
-      const { error } = await supabase
-        .from('profiles')
+      const { error } = await (supabase.from('profiles') as any)
         .update(type === 'avatar' ? { avatar_url: imageUrl } : { banner_url: imageUrl })
         .eq('user_id', userProfile.user_id);
 
@@ -209,8 +240,7 @@ export default function ProfileHeader({
   };
 
   const saveBannerPosition = async (pos: number) => {
-    const { error } = await supabase
-      .from('profiles')
+    const { error } = await (supabase.from('profiles') as any)
       .update({
         banner_position_y: Math.round(pos),
       })
@@ -229,8 +259,7 @@ export default function ProfileHeader({
   const getMyProfileId = async () => {
     if (!user) return null;
 
-    const { data, error } = await supabase
-      .from('profiles')
+    const { data, error } = await (supabase.from('profiles') as any)
       .select('id')
       .eq('user_id', user.id)
       .single();
@@ -250,8 +279,7 @@ export default function ProfileHeader({
   };
 
   const fetchFollowers = async () => {
-    const { data, error } = await supabase
-      .from('user_follows')
+    const { data, error } = await (supabase.from('user_follows') as any)
       .select(
         `
     follower:profiles!user_follows_follower_id_fkey (
@@ -273,16 +301,15 @@ export default function ProfileHeader({
     const myId = await ensureMyProfileId();
     if (!myId) return;
 
-    const { data: myFollowing } = await supabase
-      .from('user_follows')
+    const { data: myFollowing } = await (supabase.from('user_follows') as any)
       .select('following_id')
       .eq('follower_id', myId)
       .is('ended_at', null);
 
-    const followingSet = new Set(myFollowing?.map(r => r.following_id));
+    const followingSet = new Set(myFollowing?.map((r: any) => r.following_id));
 
     setFollowers(
-      data.map((row: any) => ({
+      (data as unknown as ProfileFollowRow[]).map(row => ({
         id: row.follower.id,
         name: row.follower.nickname,
         username: row.follower.username,
@@ -297,8 +324,7 @@ export default function ProfileHeader({
     const followerProfileId = isOwnProfile ? await ensureMyProfileId() : userProfile.id;
     if (!followerProfileId) return;
 
-    const { data, error } = await supabase
-      .from('user_follows')
+    const { data, error } = await (supabase.from('user_follows') as any)
       .select(
         `
       created_at,
@@ -320,18 +346,17 @@ export default function ProfileHeader({
     const myId = await ensureMyProfileId();
     if (!myId) return;
 
-    const { data: myFollowing, error: mfErr } = await supabase
-      .from('user_follows')
+    const { data: myFollowing, error: mfErr } = await (supabase.from('user_follows') as any)
       .select('following_id')
       .eq('follower_id', myId)
       .is('ended_at', null); // 누락 수정
 
     if (mfErr) console.error(mfErr);
 
-    const followingSet = new Set(myFollowing?.map(r => r.following_id));
+    const followingSet = new Set(myFollowing?.map((r: any) => r.following_id));
 
     setFollowing(
-      (data ?? []).map((row: any) => ({
+      (data as unknown as ProfileFollowingRow[] ?? []).map(row => ({
         id: row.following.id,
         name: row.following.nickname,
         username: row.following.username,
@@ -405,8 +430,8 @@ export default function ProfileHeader({
       }
 
       navigate('/chat', { state: { roomId: chatId } });
-    } catch (e) {
-      console.error(e);
+    } catch (e: unknown) {
+      console.error('Message create error:', getErrorMessage(e));
       toast.error(t('message.create_room_failed', '메시지 방 생성 실패'));
     }
   };
@@ -738,8 +763,7 @@ export default function ProfileHeader({
           const myId = await ensureMyProfileId();
           if (!myId) return;
 
-          const { error } = await supabase
-            .from('user_follows')
+          const { error } = await (supabase.from('user_follows') as any)
             .update({ ended_at: new Date().toISOString() })
             .eq('follower_id', myId)
             .eq('following_id', targetProfileId)
@@ -760,8 +784,7 @@ export default function ProfileHeader({
           const myId = await ensureMyProfileId();
           if (!myId) return;
 
-          const revive = await supabase
-            .from('user_follows')
+          const revive = await (supabase.from('user_follows') as any)
             .update({ ended_at: null })
             .eq('follower_id', myId)
             .eq('following_id', targetProfileId)
@@ -776,7 +799,7 @@ export default function ProfileHeader({
 
           // 2) 복구된 게 없으면 신규 insert
           if (!revive.data || revive.data.length === 0) {
-            const { error } = await supabase.from('user_follows').insert({
+            const { error } = await (supabase.from('user_follows') as any).insert({
               follower_id: myId,
               following_id: targetProfileId,
               ended_at: null,

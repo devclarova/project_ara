@@ -43,8 +43,7 @@ async function requireUserId() {
 export async function fetchMyVoca() {
   const user_id = await requireUserId();
 
-  const { data: vocaRows, error: vocaError } = await supabase
-    .from('user_voca')
+  const { data: vocaRows, error: vocaError } = await (supabase.from('user_voca') as any)
     .select('*')
     .eq('user_id', user_id)
     .order('updated_at', { ascending: false });
@@ -78,8 +77,7 @@ export async function fetchMyVoca() {
   }
 
   try {
-    const { data: wordRows, error: wordError } = await supabase
-      .from('word')
+    const { data: wordRows, error: wordError } = await (supabase.from('word') as any)
       .select('id, image_url, pronunciation')
       .in('id', parsedWordIds);
 
@@ -111,8 +109,8 @@ export async function fetchMyVoca() {
 
       return {
         ...row,
-        image_url: row.image_url ?? matched?.image_url ?? null,
-        pron: row.pron ?? matched?.pronunciation ?? null,
+        image_url: row.image_url ?? (matched as any)?.image_url ?? null,
+        pron: row.pron ?? (matched as any)?.pronunciation ?? null,
       };
     }) as UserVocaRow[];
   } catch (err) {
@@ -169,8 +167,7 @@ export async function upsertMyVoca(input: {
     updated_at: new Date().toISOString(),
   };
 
-  const { error } = await supabase
-    .from('user_voca')
+  const { error } = await (supabase.from('user_voca') as any)
     .upsert(payload, { onConflict: 'user_id,word_key' });
 
   if (error) throw error;
@@ -179,8 +176,7 @@ export async function upsertMyVoca(input: {
 export async function deleteMyVoca(word_key: string) {
   const user_id = await requireUserId();
 
-  const { error } = await supabase
-    .from('user_voca')
+  const { error } = await (supabase.from('user_voca') as any)
     .delete()
     .eq('user_id', user_id)
     .eq('word_key', word_key);
@@ -191,8 +187,7 @@ export async function deleteMyVoca(word_key: string) {
 export async function updateMyVocaStatus(word_key: string, status: VocaStatus) {
   const user_id = await requireUserId();
 
-  const { error } = await supabase
-    .from('user_voca')
+  const { error } = await (supabase.from('user_voca') as any)
     .update({ status, updated_at: new Date().toISOString() })
     .eq('user_id', user_id)
     .eq('word_key', word_key);
@@ -203,8 +198,7 @@ export async function updateMyVocaStatus(word_key: string, status: VocaStatus) {
 export async function isSavedMyVoca(word_key: string) {
   const user_id = await requireUserId();
 
-  const { data, error } = await supabase
-    .from('user_voca')
+  const { data, error } = await (supabase.from('user_voca') as any)
     .select('word_key')
     .eq('user_id', user_id)
     .eq('word_key', word_key)

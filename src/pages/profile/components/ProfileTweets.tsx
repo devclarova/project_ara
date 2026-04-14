@@ -69,19 +69,29 @@ export default function ProfileTweets({
     { type: 'post' | 'reply'; id: string; date: string; likedAt: string }[]
   >([]);
 
+  type LocalFeedItem = FeedItem & {
+    isLiked?: boolean;
+    is_liked?: boolean;
+    likedByMe?: boolean;
+    viewerLiked?: boolean;
+    liked?: boolean;
+    type: 'post' | 'reply' | 'tweet';
+    author_id?: string;
+  };
+
   const patchViewerLikes = useCallback(
     async (items: FeedItem[]) => {
       // 기본: 전부 "내가 좋아요 안함"으로 초기화
-      const setFlag = (it: FeedItem, liked: boolean) =>
+      const setFlag = (it: FeedItem, liked: boolean): LocalFeedItem =>
         ({
-          ...(it as any),
+          ...it,
           // TweetCard/ReplyCard가 어떤 키를 쓰든 최대한 커버
           isLiked: liked,
           is_liked: liked,
-          liked: liked,
           likedByMe: liked,
           viewerLiked: liked,
-        }) as FeedItem;
+          liked: liked,
+        } as LocalFeedItem);
 
       if (!viewerProfileId || items.length === 0) {
         return items.map(it => setFlag(it, false));
@@ -94,24 +104,22 @@ export default function ProfileTweets({
 
       const [{ data: postLikes }, { data: replyLikes }] = await Promise.all([
         postIds.length
-          ? supabase
-              .from('tweet_likes')
+          ? (supabase.from('tweet_likes') as any)
               .select('tweet_id')
               .eq('user_id', viewerProfileId)
               .in('tweet_id', postIds)
-          : Promise.resolve({ data: [] as any[] }),
+          : Promise.resolve({ data: [] as { tweet_id: string }[] }),
 
         replyIds.length
-          ? supabase
-              .from('reply_likes')
+          ? (supabase.from('reply_likes') as any)
               .select('reply_id')
               .eq('user_id', viewerProfileId)
               .in('reply_id', replyIds)
-          : Promise.resolve({ data: [] as any[] }),
+          : Promise.resolve({ data: [] as { reply_id: string }[] }),
       ]);
 
-      postLikes?.forEach(r => likedSet.add(`post:${r.tweet_id}`));
-      replyLikes?.forEach(r => likedSet.add(`reply:${r.reply_id}`));
+      postLikes?.forEach((r: any) => likedSet.add(`post:${r.tweet_id}`));
+      replyLikes?.forEach((r: any) => likedSet.add(`reply:${r.reply_id}`));
 
       return items.map(it => setFlag(it, likedSet.has(`${it.type}:${it.id}`)));
     },
@@ -166,12 +174,11 @@ export default function ProfileTweets({
         const viewerPatched = await patchViewerLikes(items);
 
         // 차단 유저 필터
-        const filteredItems = viewerPatched.filter(
-          item => !blockedIds.includes(item.user.username),
+        const filteredItems = viewerPatched.filter((item: any) => !blockedIds.includes(item.user.username),
         );
 
         if (pageToLoad === 0 && allLikedItems) likedItemsRef.current = allLikedItems;
-        newData = filteredItems;
+        newData = filteredItems as FeedItem[];
       }
 
       // 요청 완료 후 탭이 바뀌었으면(사용자가 그새 다른 탭 클릭) 결과 버림
@@ -229,7 +236,7 @@ export default function ProfileTweets({
     const tweetChannel = supabase
       .channel(`profile-tweets-realtime-${userProfile.id}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tweets' }, payload => {
-        const updated = payload.new as any;
+        const updated = payload.new as { id: string; reply_count: number; like_count: number; view_count: number };
         setTweets(prev =>
           prev.map(t =>
             t.id === updated.id
@@ -240,6 +247,7 @@ export default function ProfileTweets({
                     replies: updated.reply_count,
                     likes: updated.like_count,
                     views: updated.view_count,
+                    retweets: t.stats.retweets, // Preserve existing
                   },
                 }
               : t,
@@ -252,13 +260,14 @@ export default function ProfileTweets({
     const profileChannel = supabase
       .channel(`profile-authors-sync-${userProfile.id}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
-        const updated = payload.new as any;
+        const updated = payload.new as { id: string; user_id: string; banned_until?: string | null };
         if (updated.banned_until !== undefined) {
           setTweets(prev =>
             prev.map(t => {
+              const localT = t as LocalFeedItem;
               if (
                 String(t.user.username) === String(updated.user_id) ||
-                String((t as any).author_id) === String(updated.id)
+                String(localT.author_id) === String(updated.id)
               ) {
                 return {
                   ...t,
@@ -297,7 +306,7 @@ export default function ProfileTweets({
   return (
     <div className="">
       <div className="flex flex-col gap-4 pb-10">
-        {tweets.map(item =>
+        {tweets.map((item: any) =>
           item.type === 'reply' ? (
             <ReplyCard
               key={item.id}

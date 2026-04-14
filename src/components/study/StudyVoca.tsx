@@ -100,8 +100,7 @@ const StudyVoca = ({
       setLoading(true);
       setError(null);
 
-      const { data, error } = await supabase
-        .from('word')
+      const { data, error } = await (supabase.from('word') as any)
         .select('id, study_id, words, means, example, parts_of_speech, pronunciation, image_url')
         .eq('study_id', studyId)
         .order('id', { ascending: true });
@@ -114,7 +113,7 @@ const StudyVoca = ({
         setLocalWords([]);
       } else {
         // console.log('word raw data:', data);
-        const mapped = (data ?? []).map(mapRow).filter((v): v is WordItem => v !== null);
+        const mapped = (data ?? []).map(mapRow).filter((v: any): v is WordItem => v !== null);
         // console.log('mapped words:', mapped);
         setLocalWords(mapped);
       }

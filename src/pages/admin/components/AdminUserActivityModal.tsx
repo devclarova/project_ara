@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getErrorMessage } from '@/utils/errorMessage';
 import Modal from '@/components/common/Modal';
 import {
   Loader2,
@@ -50,6 +51,47 @@ interface AdminUserActivityModalProps {
 
 type Tab = 'tweets' | 'replies' | 'likes' | 'chats';
 
+interface ChatMessage {
+  id: string;
+  sender_id: string;
+  content: string;
+  created_at: string;
+  deleted_at?: string;
+  is_system_message?: boolean;
+  attachments?: {
+    id: string;
+    url?: string;
+    file_url?: string;
+    name?: string;
+    file_name?: string;
+    type?: string;
+    file_type?: string;
+  }[];
+  sender?: {
+    id: string;
+    nickname: string;
+    avatar_url: string | null;
+    user_id?: string;
+  };
+}
+
+interface ChatRoom {
+  id: string;
+  user1_id: string;
+  user2_id: string;
+  last_message_at: string;
+  user1?: { id: string; nickname: string; avatar_url: string | null; user_id: string };
+  user2?: { id: string; nickname: string; avatar_url: string | null; user_id: string };
+}
+
+type ActivityItem = (
+  | (import('../../../types/database').Database['public']['Tables']['tweets']['Row'] & { profiles: { nickname: string; avatar_url: string | null; user_id: string }; type?: 'post' })
+  | (import('../../../types/database').Database['public']['Tables']['tweet_replies']['Row'] & { profiles: { nickname: string; avatar_url: string | null; banned_until: string | null; user_id: string }; tweets: { profiles: { nickname: string; user_id: string } }; type?: 'reply' })
+  | (import('../../../types/database').Database['public']['Tables']['direct_chats']['Row'] & { user1: { id: string; nickname: string; avatar_url: string | null; user_id: string }; user2: { id: string; nickname: string; avatar_url: string | null; user_id: string }; type?: 'chat' })
+  | UIPost
+  | UIReply
+);
+
 // Helper Component for Chat Message Item
 const ChatMessageItem = ({
   msg,
@@ -58,7 +100,14 @@ const ChatMessageItem = ({
   onOpenMediaViewer,
   onDownload,
   formatMessageTime,
-}: any) => {
+}: {
+  msg: ChatMessage;
+  user: AdminUserActivityModalProps['user'];
+  selectedChat: ChatRoom;
+  onOpenMediaViewer: (url: string) => void;
+  onDownload: (url: string, filename: string) => void;
+  formatMessageTime: (date: string) => string;
+}) => {
   const [translated, setTranslated] = useState<string>('');
   const targetUId = user?.profile_id || user?.id;
   const isMyMessage =
@@ -67,7 +116,7 @@ const ChatMessageItem = ({
   const sender =
     msg.sender ||
     [selectedChat.user1, selectedChat.user2].find(
-      (u: any) => u && (u.id === msg.sender_id || u.user_id === msg.sender_id),
+      (u) => u && (u.id === msg.sender_id || u.user_id === msg.sender_id),
     ) ||
     null;
 
@@ -149,7 +198,7 @@ const ChatMessageItem = ({
 
             {hasAttachments && !isDeleted && (
               <div className={`flex flex-wrap gap-1 ${hasContent ? 'mt-1' : ''} ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
-                {attachments.map((att: any, attIdx: number) => {
+                {attachments.map((att, attIdx: number) => {
                   const fileUrl = att.url || att.file_url || '';
                   const fileName = att.name || att.file_name || 'File';
                   const fileType = (att.type || att.file_type || '').toLowerCase();
@@ -207,18 +256,26 @@ const ChatMessageItem = ({
 
 const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen, onClose, user }) => {
   const [activeTab, setActiveTab] = useState<Tab>('tweets');
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [counts, setCounts] = useState<any>(null);
-  const [selectedChat, setSelectedChat] = useState<any | null>(null);
-  const [detailStack, setDetailStack] = useState<any[]>([]);
+  interface UserActivityCounts {
+    tweets_count: number;
+    replies_count: number;
+    likes_count: number;
+    chats_count: number;
+    tweet_likes_count?: number;
+    reply_likes_count?: number;
+  }
+  const [counts, setCounts] = useState<UserActivityCounts | null>(null);
+  const [selectedChat, setSelectedChat] = useState<ChatRoom | null>(null);
+  const [detailStack, setDetailStack] = useState<ActivityItem[]>([]);
   const [targetReplyId, setTargetReplyId] = useState<string | null>(null);
   const [likesPage, setLikesPage] = useState(0);
   const [hasMoreLikes, setHasMoreLikes] = useState(true);
-  const [allLikedItems, setAllLikedItems] = useState<any[]>([]);
-  const [itemReplies, setItemReplies] = useState<any[]>([]);
+  const [allLikedItems, setAllLikedItems] = useState<{ type: 'post' | 'reply'; id: string; date: string; likedAt: string }[]>([]);
+  const [itemReplies, setItemReplies] = useState<UIReply[]>([]);
   const [repliesLoading, setRepliesLoading] = useState(false);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
   const [showScrollDownBtn, setShowScrollDownBtn] = useState(false);
   const [showMediaViewer, setShowMediaViewer] = useState(false);
@@ -228,14 +285,14 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
   const { t } = useTranslation();
 
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [activeProfile, setActiveProfile] = useState<any>(null);
+  const [activeProfile, setActiveProfile] = useState<{ id: string; nickname: string; avatar_url: string | null } | null>(null);
   const [showLightbox, setShowLightbox] = useState(false);
-  const [lightboxImages, setLightboxImages] = useState<any[]>([]);
+  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const messageGroups = useMemo(() => {
-    const groups: { [date: string]: any[] } = {};
-    chatMessages.forEach(msg => {
+    const groups: { [date: string]: ChatMessage[] } = {};
+    chatMessages.forEach((msg: any) => {
       const date = formatDividerDate(msg.created_at);
       if (!groups[date]) groups[date] = [];
       groups[date].push(msg);
@@ -249,14 +306,14 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
       return;
     }
     const media: MediaItem[] = [];
-    chatMessages.forEach(msg => {
+    chatMessages.forEach((msg: any) => {
       const isDeleted = !!msg.deleted_at || msg.content === '관리자에 의해 삭제된 메시지입니다.';
       if (msg.attachments && msg.attachments.length > 0 && !isDeleted) {
         msg.attachments.forEach((att: any) => {
           const type = (att.type || att.file_type || '').toLowerCase();
           const url = att.url || att.file_url;
           if (!url) return;
-          const sender = [selectedChat.user1, selectedChat.user2].find(u => u && (u.id === msg.sender_id || u.user_id === msg.sender_id)) || msg.sender;
+          const sender = [selectedChat.user1, selectedChat.user2].find((u: any) => u && (u.id === msg.sender_id || u.user_id === msg.sender_id)) || msg.sender;
           if (type === 'video' || /\.(mp4|webm|ogg|mov)$/i.test(url)) {
             media.push({ url, messageId: msg.id, date: msg.created_at, senderId: msg.sender_id, senderName: sender?.nickname || 'Unknown', senderAvatarUrl: sender?.avatar_url, type: 'video' });
           } else if (type !== 'file' && (type === 'image' || /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(url))) {
@@ -289,17 +346,19 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
   const fetchCounts = async () => {
     if (!user) return;
     try {
-      const { data: res } = await supabase.rpc('get_user_activity_counts', { target_uid: user.id });
-      if (res && res.tweet_likes_count === undefined) {
+      const { data: res } = await (supabase as any).rpc('get_user_activity_counts', { target_uid: user.id });
+      if (res && (res as any).tweet_likes_count === undefined) {
         const [{ count: tLikes }, { count: rLikes }] = await Promise.all([
-          supabase.from('tweet_likes').select('*', { count: 'exact', head: true }).eq('user_id', user.profile_id),
-          supabase.from('tweet_replies_likes').select('*', { count: 'exact', head: true }).eq('user_id', user.profile_id),
+          (supabase.from('tweet_likes') as any).select('*', { count: 'exact', head: true }).eq('user_id', user.profile_id),
+          (supabase.from('tweet_replies_likes') as any).select('*', { count: 'exact', head: true }).eq('user_id', user.profile_id),
         ]);
-        setCounts({ ...res, tweet_likes_count: tLikes || 0, reply_likes_count: rLikes || 0 });
+        setCounts({ ...(res as any), tweet_likes_count: tLikes || 0, reply_likes_count: rLikes || 0 });
       } else {
-        setCounts(res);
+        setCounts(res as any);
       }
-    } catch (err) { console.error('Error fetching counts:', err); }
+    } catch (error: unknown) { 
+      console.error('Error fetching counts:', getErrorMessage(error)); 
+    }
   };
 
   const fetchData = async () => {
@@ -308,19 +367,21 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
     try {
       let query;
       if (activeTab === 'tweets') {
-        query = supabase.from('tweets').select('*, profiles:author_id(nickname, avatar_url, user_id), is_hidden').eq('author_id', user.profile_id).order('created_at', { ascending: false });
+        query = (supabase.from('tweets') as any).select('*, profiles:author_id(nickname, avatar_url, user_id), is_hidden').eq('author_id', user.profile_id).order('created_at', { ascending: false });
       } else if (activeTab === 'replies') {
-        query = supabase.from('tweet_replies').select('*, profiles:author_id(nickname, avatar_url, banned_until, user_id), tweets(profiles:author_id(nickname, user_id)), is_hidden').eq('author_id', user.profile_id).order('created_at', { ascending: false });
+        query = (supabase.from('tweet_replies') as any).select('*, profiles:author_id(nickname, avatar_url, banned_until, user_id), tweets(profiles:author_id(nickname, user_id)), is_hidden').eq('author_id', user.profile_id).order('created_at', { ascending: false });
       } else if (activeTab === 'likes') {
         fetchLikes(0);
         return;
       } else {
-        query = supabase.from('direct_chats').select(`*, user1:profiles!direct_chats_user1_id_fkey(id, nickname, avatar_url, user_id), user2:profiles!direct_chats_user2_id_fkey(id, nickname, avatar_url, user_id)`).or(`user1_id.eq.${user.profile_id},user2_id.eq.${user.profile_id}`).order('last_message_at', { ascending: false });
+        query = (supabase.from('direct_chats') as any).select(`*, user1:profiles!direct_chats_user1_id_fkey(id, nickname, avatar_url, user_id), user2:profiles!direct_chats_user2_id_fkey(id, nickname, avatar_url, user_id)`).or(`user1_id.eq.${user.profile_id},user2_id.eq.${user.profile_id}`).order('last_message_at', { ascending: false });
       }
       const { data: res, error } = await query;
       if (error) throw error;
       setData(res || []);
-    } catch (err) { console.error(err); } finally { setLoading(false); }
+    } catch (error: unknown) { 
+      console.error('Error fetching activity data:', getErrorMessage(error)); 
+    } finally { setLoading(false); }
   };
 
   const fetchLikes = async (page: number, refresh = true) => {
@@ -332,22 +393,28 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
       else { setData(prev => [...prev, ...items]); }
       setHasMoreLikes(items.length === 10);
       setLikesPage(page);
-    } catch (err) { console.error('Error fetching likes:', err); toast.error('좋아요 목록을 불러오지 못했습니다.'); } finally { setLoading(false); }
+    } catch (error: unknown) { 
+      console.error('Error fetching likes:', getErrorMessage(error)); 
+      toast.error('좋아요 목록을 불러오지 못했습니다.'); 
+    } finally { setLoading(false); }
   };
 
   const fetchChatMessages = async (chatId: string) => {
     setChatLoading(true);
     try {
-      const { data: res, error } = await supabase.from('direct_messages').select(`*, attachments:direct_message_attachments(*)`).eq('chat_id', chatId).order('created_at', { ascending: true });
+      const { data: res, error } = await (supabase.from('direct_messages') as any).select(`*, attachments:direct_message_attachments(*)`).eq('chat_id', chatId).order('created_at', { ascending: true });
       if (error) throw error;
       const messages = res || [];
       if (messages.length > 0) {
-        const senderIds = Array.from(new Set(messages.map(m => m.sender_id).filter(Boolean)));
-        const { data: profiles } = await supabase.from('profiles').select('id, nickname, avatar_url, user_id').or(`id.in.(${senderIds.map(id => `"${id}"`).join(',')}),user_id.in.(${senderIds.map(id => `"${id}"`).join(',')})`);
-        const enriched = messages.map(m => ({ ...m, sender: profiles?.find(p => p.id === m.sender_id || p.user_id === m.sender_id) }));
+        const senderIds = Array.from(new Set(messages.map((m: any) => m.sender_id).filter(Boolean)));
+        const { data: profiles } = await (supabase.from('profiles') as any).select('id, nickname, avatar_url, user_id').or(`id.in.(${senderIds.map(id => `"${id}"`).join(',')}),user_id.in.(${senderIds.map(id => `"${id}"`).join(',')})`);
+        const enriched = messages.map((m: any) => ({ ...m, sender: profiles?.find((p: any) => p.id === m.sender_id || p.user_id === m.sender_id) }));
         setChatMessages(enriched);
       } else { setChatMessages([]); }
-    } catch (err) { console.error(err); toast.error('채팅 내용을 불러오지 못했습니다.'); } finally { setChatLoading(false); }
+    } catch (error: unknown) { 
+      console.error('Error fetching chat messages:', getErrorMessage(error)); 
+      toast.error('채팅 내용을 불러오지 못했습니다.'); 
+    } finally { setChatLoading(false); }
   };
 
   useEffect(() => {
@@ -366,41 +433,53 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
     if (isOpen && user) fetchData();
   }, [activeTab]);
 
-  const mapToUIPost = (item: any): UIPost => {
+  const mapToUIPost = (item: ActivityItem): UIPost => {
     if (!item) return {} as UIPost;
+    if ('type' in item && item.type === 'post') return item as UIPost;
+    
+    const activity = item as any;
+    const profiles = (activity.profiles || activity.user || {}) as Record<string, any>;
     return {
-      id: item.id,
+      id: activity.id,
       user: {
-        id: item.profiles?.id || item.user?.id || item.author_id,
-        name: item.profiles?.nickname || item.user?.name || '알 수 없음',
-        username: item.profiles?.user_id || item.user?.username || '',
-        avatar: item.profiles?.avatar_url || item.user?.avatar || '/images/default-avatar.svg',
-        banned_until: item.profiles?.banned_until || item.user?.banned_until,
+        id: (profiles.id as string) || activity.author_id,
+        name: (profiles.nickname as string) || (profiles.name as string) || '알 수 없음',
+        username: (profiles.user_id as string) || (profiles.username as string) || '',
+        avatar: (profiles.avatar_url as string) || (profiles.avatar as string) || '/images/default-avatar.svg',
+        banned_until: profiles.banned_until,
       },
-      content: item.content || '',
-      image: item.image || item.image_url || [],
-      timestamp: item.created_at || item.timestamp,
+      content: activity.content || '',
+      image: activity.image || activity.image_urls || activity.image_url || [],
+      timestamp: activity.created_at || activity.timestamp,
       stats: {
-        replies: item.reply_count || item.stats?.replies || 0,
-        retweets: item.repost_count || item.stats?.retweets || 0,
-        likes: item.like_count || item.stats?.likes || 0,
-        views: item.view_count || item.stats?.views || 0,
+        replies: activity.reply_count || activity.stats?.replies || 0,
+        retweets: activity.repost_count || activity.stats?.retweets || 0,
+        likes: activity.like_count || activity.stats?.likes || 0,
+        views: activity.view_count || activity.stats?.views || 0,
       },
-      deleted_at: item.deleted_at,
-      is_hidden: item.is_hidden,
+      deleted_at: activity.deleted_at,
+      is_hidden: activity.is_hidden,
     };
   };
 
-  const mapToUIReply = (item: any): UIReply => {
+  const mapToUIReply = (item: ActivityItem): UIReply => {
     const post = mapToUIPost(item);
-    return { ...post, type: 'reply', tweetId: item.tweet_id, parentTweet: item.tweets?.author_id, parent_reply_id: item.parent_reply_id, root_reply_id: item.root_reply_id };
+    const replyItem = item as Record<string, any>;
+    return { 
+      ...post, 
+      type: 'reply', 
+      tweetId: replyItem.tweet_id, 
+      parentTweet: replyItem.tweets?.author_id || replyItem.parentTweet, 
+      parent_reply_id: replyItem.parent_reply_id, 
+      root_reply_id: replyItem.root_reply_id 
+    };
   };
 
   useEffect(() => {
-    if (currentItem?.id && currentItem.id !== 'undefined') {
-      const isRootTweet = !currentItem.tweet_id && !currentItem.parent_reply_id;
-      if (isRootTweet) fetchRepliesForTweet(currentItem.id);
-      else fetchSubReplies(currentItem.id);
+    if ((currentItem as any)?.id && (currentItem as any).id !== 'undefined') {
+      const isRootTweet = !(currentItem as any).tweet_id && !(currentItem as any).parent_reply_id;
+      if (isRootTweet) fetchRepliesForTweet((currentItem as any).id);
+      else fetchSubReplies((currentItem as any).id);
     }
   }, [currentItem?.id]);
 
@@ -408,7 +487,7 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
     if (!tweetId || tweetId === 'undefined') return;
     setRepliesLoading(true);
     try {
-      const { data, error } = await supabase.from('tweet_replies').select('*, profiles:author_id(nickname, avatar_url, banned_until, user_id), tweets(profiles:author_id(nickname, user_id))').eq('tweet_id', tweetId).is('parent_reply_id', null).order('created_at', { ascending: true });
+      const { data, error } = await (supabase.from('tweet_replies') as any).select('*, profiles:author_id(nickname, avatar_url, banned_until, user_id), tweets(profiles:author_id(nickname, user_id))').eq('tweet_id', tweetId).is('parent_reply_id', null).order('created_at', { ascending: true });
       if (!error) { const mapped = (data || []).map(mapToUIReply); setItemReplies(mapped); }
       if (targetReplyId) {
         const scrollTarget = () => {
@@ -431,7 +510,7 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
     if (!parentId || parentId === 'undefined') return;
     setRepliesLoading(true);
     try {
-      const { data, error } = await supabase.from('tweet_replies').select('*, profiles:author_id(nickname, avatar_url, banned_until, user_id), parent:parent_reply_id(profiles:author_id(nickname, user_id))').eq('parent_reply_id', parentId).order('created_at', { ascending: true });
+      const { data, error } = await (supabase.from('tweet_replies') as any).select('*, profiles:author_id(nickname, avatar_url, banned_until, user_id), parent:parent_reply_id(profiles:author_id(nickname, user_id))').eq('parent_reply_id', parentId).order('created_at', { ascending: true });
       if (!error) { const mapped = (data || []).map(mapToUIReply); setItemReplies(mapped); }
     } catch (err) { console.error('Error fetching sub-replies:', err); } finally { setRepliesLoading(false); }
   };
@@ -440,26 +519,33 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
     const table = isTweet ? 'tweets' : 'tweet_replies';
     if (!confirm('해당 콘텐츠를 삭제(Soft Delete) 하시겠습니까?')) return;
     try {
-      const { error } = await supabase.from(table).update({ deleted_at: new Date().toISOString() }).eq('id', id);
+      const { error } = await (supabase.from(table) as any).update({ deleted_at: new Date().toISOString() }).eq('id', id);
       if (error) throw error;
       toast.success('삭제되었습니다.');
       fetchData();
       if (currentItem?.id === id) setDetailStack(prev => prev.slice(0, -1));
-    } catch (err) { console.error(err); toast.error('삭제 실패'); }
+    } catch (error: unknown) { 
+      console.error('Delete content error:', getErrorMessage(error)); 
+      toast.error('삭제 실패'); 
+    }
   };
 
   const stripHtml = (html: string) => { if (!html) return ''; const doc = new DOMParser().parseFromString(html, 'text/html'); return doc.body.textContent || ''; };
 
-  const extractImages = (item: any) => {
+  const extractImages = (item: ActivityItem): string[] => {
     if (!item) return [];
     const images: string[] = [];
-    if (item.content) { const doc = new DOMParser().parseFromString(item.content, 'text/html'); doc.querySelectorAll('img').forEach(img => { if (img.src) images.push(img.src); }); }
-    if (item.image) { if (Array.isArray(item.image)) images.push(...item.image); else images.push(item.image); }
-    if (item.attachments && Array.isArray(item.attachments)) { item.attachments.forEach((att: any) => { if ((!att.type || att.type === 'image') && att.url) images.push(att.url); }); }
+    if ((item as any).content) { const doc = new DOMParser().parseFromString((item as any).content, 'text/html'); doc.querySelectorAll('img').forEach(img => { if (img.src) images.push(img.src); }); }
+    if ((item as any).image) { if (Array.isArray((item as any).image)) images.push(...(item as any).image); else images.push((item as any).image); }
+    if ((item as any).attachments && Array.isArray((item as any).attachments)) { 
+      (item as any).attachments.forEach((att: any) => { 
+        if ((!att.type || att.type === 'image') && att.url) images.push(att.url); 
+      }); 
+    }
     return [...new Set(images)].filter(Boolean);
   };
 
-  const openLightbox = (images: any[], index: number) => { setLightboxImages(images); setLightboxIndex(index); setShowLightbox(true); };
+  const openLightbox = (images: string[], index: number) => { setLightboxImages(images); setLightboxIndex(index); setShowLightbox(true); };
 
   const handleDownload = async (url: string, filename: string) => {
     try {
@@ -467,9 +553,9 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
       const blob = await response.blob();
       if ('showSaveFilePicker' in window) {
         try {
-          const handle = await (window as any).showSaveFilePicker({ suggestedName: filename, types: [{ description: 'File', accept: { [blob.type]: ['.' + (filename.split('.').pop() || 'dat')] } }] });
+          const handle = await (window as unknown as { showSaveFilePicker: (opts: unknown) => Promise<{ createWritable: () => Promise<{ write: (b: Blob) => Promise<void>; close: () => Promise<void> }> }> }).showSaveFilePicker({ suggestedName: filename, types: [{ description: 'File', accept: { [blob.type]: ['.' + (filename.split('.').pop() || 'dat')] } }] });
           const writable = await handle.createWritable(); await writable.write(blob); await writable.close(); return;
-        } catch (pickerError: any) { if (pickerError.name === 'AbortError') return; }
+        } catch (pickerError: unknown) { if ((pickerError as Error).name === 'AbortError') return; }
       }
       const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a'); link.href = blobUrl; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); window.URL.revokeObjectURL(blobUrl);
@@ -478,53 +564,57 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
 
   const openMediaViewer = (url: string) => { setInitialMediaId(url); setShowMediaViewer(true); };
 
-  const pushToStack = async (item: any) => {
-    const isReply = !!item.tweet_id || item.type === 'reply';
-    if (isReply && item.tweet_id) {
-      setLoading(true); setTargetReplyId(item.id);
+  const pushToStack = async (item: ActivityItem) => {
+    const activity = item as Record<string, any>;
+    const isReply = !!activity.tweet_id || activity.type === 'reply';
+    if (isReply && activity.tweet_id) {
+      setLoading(true); setTargetReplyId(activity.id);
       try {
-        const { data: rootTweet } = await supabase.from('tweets').select('*, profiles:author_id(nickname, avatar_url, banned_until, user_id)').eq('id', item.tweet_id).maybeSingle();
-        if (rootTweet) { setDetailStack(prev => [...prev, rootTweet]); setItemReplies([]); fetchRepliesForTweet(rootTweet.id); }
+        const { data: rootTweet } = await (supabase.from('tweets') as any).select('*, profiles:author_id(nickname, avatar_url, banned_until, user_id)').eq('id', (item as unknown as { tweet_id: string }).tweet_id).maybeSingle();
+        if (rootTweet) { setDetailStack(prev => [...prev, rootTweet as unknown as ActivityItem]); setItemReplies([]); fetchRepliesForTweet(rootTweet.id); }
         else toast.error('원본 게시글을 찾을 수 없습니다.');
       } catch (err) { console.error(err); } finally { setLoading(false); }
-    } else { setTargetReplyId(null); setDetailStack(prev => [...prev, item]); if (item.id) { setItemReplies([]); fetchRepliesForTweet(item.id); } }
+    } else { setTargetReplyId(null); setDetailStack(prev => [...prev, item]); if ((item as unknown as { id: string }).id) { setItemReplies([]); fetchRepliesForTweet((item as unknown as { id: string }).id); } }
   };
 
   const handleParentClick = async (tweetId: string) => {
     if (!tweetId || tweetId === 'undefined') return;
     try {
-      const { data: tweet } = await supabase.from('tweets').select('*, profiles:author_id(nickname, avatar_url, user_id)').eq('id', tweetId).maybeSingle();
+      const { data: tweet } = await (supabase.from('tweets') as any).select('*, profiles:author_id(nickname, avatar_url, user_id)').eq('id', tweetId).maybeSingle();
       if (!tweet) { toast.error('원본 게시글을 불러올 수 없습니다.'); return; }
       pushToStack(tweet);
-    } catch (err) { console.error(err); }
+    } catch (error: unknown) { 
+      console.error('Error loading parent tweet:', getErrorMessage(error)); 
+    }
   };
 
-  const ActivityListItem = ({ item, onClick, showLikeBadge = false }: { item: any; onClick: () => void; showLikeBadge?: boolean; }) => {
-    const isReply = item.type === 'reply' || !!(item.tweet_id || item.parent_reply_id);
+  const ActivityListItem = ({ item, onClick, showLikeBadge = false }: { item: ActivityItem; onClick: () => void; showLikeBadge?: boolean; }) => {
+    const activity = item as Record<string, any>;
+    const isReply = activity.type === 'reply' || !!(activity.tweet_id || activity.parent_reply_id);
     const images = extractImages(item);
     const mediaLabels = [];
     if (images.length > 0) mediaLabels.push('[사진]');
-    if (item.content?.includes('<video') || (item.attachments && item.attachments.some((a: any) => (a.file_type || a.type) === 'video'))) mediaLabels.push('[동영상]');
-    if (item.attachments && item.attachments.some((a: any) => (a.file_type || a.type) === 'file')) mediaLabels.push('[파일]');
+    if (activity.content?.includes('<video') || (activity.attachments && activity.attachments.some((a: { file_type?: string; type?: string }) => (a.file_type || a.type) === 'video'))) mediaLabels.push('[동영상]');
+    if (activity.attachments && activity.attachments.some((a: { file_type?: string; type?: string }) => (a.file_type || a.type) === 'file')) mediaLabels.push('[파일]');
     const mediaText = mediaLabels.length > 0 ? mediaLabels.join(' ') : '';
-    const plainContent = stripHtml(item.content || '');
+    const plainContent = stripHtml(activity.content || '');
     const displayContent = plainContent || (images.length > 0 ? (isReply ? '(이미지 댓글)' : '(이미지 게시글)') : '내용 없음');
-    const avatar = item.profiles?.avatar_url || item.user?.avatar || '/images/default-avatar.svg';
-    const nickname = item.profiles?.nickname || item.user?.name || (item.author_id === user?.profile_id ? user?.nickname : '알 수 없음');
+    const avatar = activity.profiles?.avatar_url || activity.user?.avatar || '/images/default-avatar.svg';
+    const nickname = activity.profiles?.nickname || activity.user?.name || (activity.author_id === user?.profile_id ? user?.nickname : '알 수 없음');
     return (
-      <div onClick={onClick} className={`p-4 rounded-2xl border cursor-pointer transition-all hover:border-primary/50 group flex gap-3 ${item.deleted_at ? 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800' : 'bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 shadow-sm'} relative overflow-hidden`}>
+      <div onClick={onClick} className={`p-4 rounded-2xl border cursor-pointer transition-all hover:border-primary/50 group flex gap-3 ${activity.deleted_at ? 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800' : 'bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 shadow-sm'} relative overflow-hidden`}>
         {showLikeBadge && <div className="absolute top-0 right-0 p-1.5 bg-red-50 dark:bg-red-950/30 rounded-bl-xl border-l border-b border-red-100 dark:border-red-900/50"><Heart size={10} className="text-red-500 fill-red-500" /></div>}
         <img src={avatar} className="w-8 h-8 rounded-full flex-shrink-0 object-cover bg-zinc-100 border border-zinc-100 dark:border-zinc-800" />
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1"><span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">{nickname}</span><span className="text-[9px] text-zinc-400">{format(new Date(item.created_at || item.timestamp), 'MM.dd HH:mm')}</span></div>
-          {isReply && item.tweets?.content && <div className="mb-2 p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded text-[10px] text-zinc-500 border-l-2 border-primary/30 line-clamp-1 italic text-xs">{stripHtml(item.tweets.content)}</div>}
-          <p className={`text-sm font-medium line-clamp-2 ${item.deleted_at ? 'text-zinc-400' : 'text-zinc-700 dark:text-zinc-300'}`}>{mediaText && <span className="text-primary mr-1">{mediaText}</span>}{displayContent}</p>
+          <div className="flex items-center gap-2 mb-1"><span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">{nickname}</span><span className="text-[9px] text-zinc-400">{format(new Date(activity.created_at || activity.timestamp), 'MM.dd HH:mm')}</span></div>
+          {isReply && activity.tweets?.content && <div className="mb-2 p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded text-[10px] text-zinc-500 border-l-2 border-primary/30 line-clamp-1 italic text-xs">{stripHtml(activity.tweets.content)}</div>}
+          <p className={`text-sm font-medium line-clamp-2 ${activity.deleted_at ? 'text-zinc-400' : 'text-zinc-700 dark:text-zinc-300'}`}>{mediaText && <span className="text-primary mr-1">{mediaText}</span>}{displayContent}</p>
           <div className="flex items-center gap-3 mt-2 text-[10px] text-zinc-400 opacity-60 group-hover:opacity-100 transition-opacity">
-            <div className="flex items-center gap-1"><MessageCircle size={10} /> {item.reply_count || item.stats?.replies || 0}</div>
-            <div className="flex items-center gap-1"><Heart size={10} /> {item.like_count || item.stats?.likes || 0}</div>
+            <div className="flex items-center gap-1"><MessageCircle size={10} /> {activity.reply_count || activity.stats?.replies || 0}</div>
+            <div className="flex items-center gap-1"><Heart size={10} /> {activity.like_count || activity.stats?.likes || 0}</div>
             <div className="ml-auto flex gap-2">
-              {item.is_hidden && <span className="text-amber-500 font-bold text-[8px] bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded">숨김</span>}
-              {item.deleted_at && <span className="text-red-500 font-bold text-[8px] bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded">삭제됨</span>}
+              {(activity as any).is_hidden && <span className="text-amber-500 font-bold text-[8px] bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded">숨김</span>}
+              {activity.deleted_at && <span className="text-red-500 font-bold text-[8px] bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded">삭제됨</span>}
             </div>
           </div>
         </div>
@@ -563,7 +653,7 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
                                 {Object.entries(messageGroups).map(([date, messages]) => (
                                   <div key={date} className="space-y-4">
                                     <div className="flex justify-center"><span className="px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-[10px] text-zinc-500 font-medium">{formatSmartDate(date)}</span></div>
-                                    {messages.map(msg => msg.is_system_message ? (
+                                    {messages.map((msg: any) => msg.is_system_message ? (
                                       <div key={msg.id} className="flex justify-center"><span className="text-[11px] text-zinc-400 bg-zinc-50 dark:bg-zinc-900 px-3 py-1 rounded-lg">{msg.content}</span></div>
                                     ) : (
                                       <ChatMessageItem key={msg.id} msg={msg} user={user} selectedChat={selectedChat} onOpenMediaViewer={openMediaViewer} onDownload={handleDownload} formatMessageTime={formatMessageTime} />
@@ -578,37 +668,37 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
                       </div>
                     ) : currentItem ? (
                       <div className="space-y-6">
-                        {detailStack.length === 1 && (currentItem?.tweet_id || currentItem?.parent_reply_id) && (
+                        {detailStack.length === 1 && ((currentItem as any)?.tweet_id || (currentItem as any)?.parent_reply_id) && (
                           <div className="mb-6 relative">
                             <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 block">원본 게시글</span>
-                            <div className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900/50 rounded-xl transition-colors" onClick={() => handleParentClick(currentItem.tweet_id)}>
-                              {currentItem.tweets ? <TweetDetailCard tweet={mapToUIPost(currentItem.tweets)} replyCount={currentItem.tweets.reply_count || 0} isAdminView={true} /> : <div className="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-xl flex items-center justify-center"><Loader2 className="animate-spin text-primary w-4 h-4" /></div>}
+                            <div className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900/50 rounded-xl transition-colors" onClick={() => handleParentClick((currentItem as any).tweet_id)}>
+                              {(currentItem as any).tweets ? <TweetDetailCard tweet={mapToUIPost((currentItem as any).tweets)} replyCount={(currentItem as any).tweets.reply_count || 0} isAdminView={true} /> : <div className="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-xl flex items-center justify-center"><Loader2 className="animate-spin text-primary w-4 h-4" /></div>}
                             </div>
                             <div className="absolute left-[19px] top-[60px] bottom-[-20px] w-0.5 bg-zinc-100 dark:bg-zinc-800" />
                           </div>
                         )}
                         <div className="relative">
                           <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mb-2 block pl-2">게시글 상세보기</span>
-                          {currentItem.tweet_id || currentItem.parent_reply_id ? (
+                          {(currentItem as any).tweet_id || (currentItem as any).parent_reply_id ? (
                             <ReplyCard reply={mapToUIReply(currentItem)} highlight={true} disableInteractions={true} isAdminView={true} editingReplyId={null} setEditingReplyId={() => {}} />
                           ) : (
                             <TweetDetailCard tweet={mapToUIPost(currentItem)} replyCount={itemReplies.length} isAdminView={true} />
                           )}
                         </div>
                         <div className="mt-8 border-t border-zinc-50 dark:border-zinc-900 pt-6">
-                          <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-4 pl-2">{(currentItem.tweet_id || currentItem.parent_reply_id) ? '대댓글' : '댓글'} ({itemReplies.length})</h4>
+                          <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-4 pl-2">{((currentItem as any).tweet_id || (currentItem as any).parent_reply_id) ? '대댓글' : '댓글'} ({itemReplies.length})</h4>
                           {repliesLoading ? <Loader2 className="animate-spin mx-auto py-10 text-primary" /> : itemReplies.length === 0 ? <p className="text-xs text-zinc-500 py-10 text-center bg-zinc-50 dark:bg-zinc-900 rounded-xl">데이터가 없습니다.</p> : (
                             <div className="space-y-0">
                               {itemReplies.map(reply => <ReplyCard key={reply.id} reply={reply as UIReply} onClick={() => pushToStack(reply)} disableInteractions={true} isAdminView={true} editingReplyId={null} setEditingReplyId={() => {}} />)}
                             </div>
                           )}
                         </div>
-                        {!currentItem?.deleted_at ? (
+                        {!(currentItem as any)?.deleted_at ? (
                           <div className="pt-10">
-                            <button onClick={() => handleDeleteContent(currentItem?.id, !currentItem.tweet_id && !currentItem.parent_reply_id)} className="w-full py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2"><Trash2 size={16} /> 이 콘텐츠 삭제하기</button>
+                            <button onClick={() => handleDeleteContent(currentItem?.id, !(currentItem as any).tweet_id && !(currentItem as any).parent_reply_id)} className="w-full py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2"><Trash2 size={16} /> 이 콘텐츠 삭제하기</button>
                           </div>
                         ) : (
-                          <div className="p-4 bg-red-50 dark:bg-red-950/20 text-red-600 rounded-xl text-center font-bold text-sm mt-10">이미 삭제된 콘텐츠입니다. ({format(new Date(currentItem.deleted_at), 'yyyy-MM-dd HH:mm')})</div>
+                          <div className="p-4 bg-red-50 dark:bg-red-950/20 text-red-600 rounded-xl text-center font-bold text-sm mt-10">이미 삭제된 콘텐츠입니다. ({format(new Date((currentItem as any).deleted_at), 'yyyy-MM-dd HH:mm')})</div>
                         )}
                       </div>
                     ) : null}
@@ -620,7 +710,7 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
                   {activeTab === 'tweets' && data.map(t => <ActivityListItem key={t.id} item={t} onClick={() => pushToStack(t)} />)}
                   {activeTab === 'replies' && data.map(r => <ActivityListItem key={r.id} item={r} onClick={() => pushToStack(r)} />)}
                   {activeTab === 'likes' && (<>{data.map((item, idx) => <ActivityListItem key={item.id + idx} item={item} onClick={() => pushToStack(item)} showLikeBadge={true} />)}{hasMoreLikes && <button onClick={() => fetchLikes(likesPage + 1, false)} className="w-full py-4 text-xs font-bold text-zinc-400 hover:text-primary transition-colors border-2 border-dashed border-zinc-100 dark:border-zinc-800 rounded-2xl">더 보기</button>}</>)}
-                  {activeTab === 'chats' && data.map(c => (
+                  {activeTab === 'chats' && data.map((c: any) => (
                     <div key={c.id} onClick={() => { setSelectedChat(c); fetchChatMessages(c.id); }} className="p-4 rounded-2xl border bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 hover:border-primary/50 cursor-pointer transition-all flex items-center justify-between shadow-sm group">
                       <div className="flex items-center gap-3">
                         <div className="flex -space-x-2">
@@ -638,9 +728,9 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
           )}
         </div>
       </div>
-      {showLightbox && <ModalImageSlider allImages={lightboxImages.map(img => (typeof img === 'string' ? img : img.url))} modalIndex={lightboxIndex} setModalIndex={setLightboxIndex} onClose={() => setShowLightbox(false)} />}
+      {showLightbox && <ModalImageSlider allImages={lightboxImages.map((img: any) => (typeof img === 'string' ? img : img.url))} modalIndex={lightboxIndex} setModalIndex={setLightboxIndex} onClose={() => setShowLightbox(false)} />}
       {showMediaViewer && <MediaViewer isOpen={showMediaViewer} onClose={() => setShowMediaViewer(false)} mediaList={mediaList} initialMediaId={initialMediaId} />}
-      <UserProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} user={activeProfile} />
+      <UserProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} user={activeProfile as any} />
     </Modal>
   );
 };

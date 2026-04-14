@@ -251,8 +251,7 @@ export default function SignUpStep2Form({
       return 'error';
     }
     try {
-      const { data, error: checkError } = await supabase
-        .rpc('email_exists', { _email: email.trim() });
+      const { data, error: checkError } = await (supabase.rpc as any)('email_exists', { _email: email.trim() });
       if (checkError) return 'error';
       return data === true ? 'taken' : 'available';
     } catch {

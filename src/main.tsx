@@ -8,13 +8,13 @@
   if (typeof window === 'undefined') return;
   const originalLog = console.log;
   const originalInfo = console.info;
-  const filter = (...args: any[]) => {
+  const filter = (...args: unknown[]) => {
     const msg = args[0];
     if (typeof msg === 'string' && (msg.includes('i18next is maintained') || msg.includes('Locize'))) return true;
     return false;
   };
-  console.log = (...args: any[]) => { if (!filter(...args)) originalLog.apply(console, args); };
-  console.info = (...args: any[]) => { if (!filter(...args)) originalInfo.apply(console, args); };
+  console.log = (...args: unknown[]) => { if (!filter(...args)) originalLog.apply(console, args as Parameters<typeof console.log>); };
+  console.info = (...args: unknown[]) => { if (!filter(...args)) originalInfo.apply(console, args as Parameters<typeof console.info>); };
   setTimeout(() => { console.log = originalLog; console.info = originalInfo; }, 5000);
 })();
 

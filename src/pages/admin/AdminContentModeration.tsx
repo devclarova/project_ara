@@ -28,6 +28,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { getErrorMessage } from '@/utils/errorMessage';
 import DOMPurify from 'dompurify';
 import UserProfileModal from './components/UserProfileModal';
 import ModalImageSlider from '@/pages/community/tweet/components/ModalImageSlider';
@@ -38,7 +39,7 @@ interface ModerationItem {
   id: string;
   parent_id: string;
   content: string;
-  image_urls: any;
+  image_urls: string | string[] | null;
   created_at: string;
   author_id: string;
   nickname: string;
@@ -52,6 +53,19 @@ interface ModerationItem {
   };
   is_hidden: boolean;
   total_count: number;
+}
+
+interface AdminProfile {
+  id: string;
+  profile_id: string;
+  nickname: string;
+  avatar_url: string | null;
+  email: string;
+  country: string | null;
+  country_name?: string;
+  country_flag_url?: string;
+  user_id?: string;
+  is_admin?: boolean;
 }
 
 const AdminContentModeration = () => {
@@ -76,7 +90,7 @@ const AdminContentModeration = () => {
   const scrollContainerRef = useRef<HTMLElement | null>(null);
   
   // 사용자 프로필 상세 모달 상태 관리
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminProfile | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   // 미디어(이미지) 확대 보기 모달 상태 관리
@@ -154,7 +168,7 @@ const AdminContentModeration = () => {
   const fetchContent = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('get_admin_moderation_content', {
+      const { data, error } = await (supabase as any).rpc('get_admin_moderation_content', {
         p_type: activeTab,
         p_search: debouncedSearch,
         p_page: page,
@@ -164,10 +178,10 @@ const AdminContentModeration = () => {
       if (error) throw error;
       
       setContent(data || []);
-      setTotalItems(data?.[0]?.total_count || 0);
-    } catch (error: any) {
-      console.error('Error fetching moderation content:', error);
-      toast.error('콘텐츠를 불러오는 중 오류가 발생했습니다.');
+      setTotalItems((data as any)?.[0]?.total_count || 0);
+    } catch (error: unknown) {
+      console.error('Error fetching moderation content:', getErrorMessage(error));
+      toast.error('콘텐츠를 불러오는 데 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -242,7 +256,7 @@ const AdminContentModeration = () => {
     if (!itemToDelete) return;
     setIsDeleting(true);
     try {
-      const { error } = await supabase.rpc('delete_moderation_content', {
+      const { error } = await (supabase as any).rpc('delete_moderation_content', {
         p_type: activeTab,
         p_id: itemToDelete
       });
@@ -253,8 +267,8 @@ const AdminContentModeration = () => {
       setShowDeleteModal(false);
       setItemToDelete(null);
       fetchContent();
-    } catch (error: any) {
-      console.error('Error deleting content:', error);
+    } catch (error: unknown) {
+      console.error('Error deleting content:', getErrorMessage(error));
       toast.error('삭제 처리 중 오류가 발생했습니다.');
     } finally {
       setIsDeleting(false);
@@ -266,10 +280,10 @@ const AdminContentModeration = () => {
     const newHiddenStatus = !originalStatus;
     
     // 1. 낙관적 업데이트(Optimistic Update) — 즉각적인 UI 반응성 제공을 위한 선행 상태 변경
-    setContent(prev => prev.map(c => c.id === item.id ? { ...c, is_hidden: newHiddenStatus } : c));
+    setContent(prev => prev.map((c: any) => c.id === item.id ? { ...c, is_hidden: newHiddenStatus } : c));
     
     try {
-      const { error } = await supabase.rpc('toggle_content_hidden', {
+      const { error } = await (supabase as any).rpc('toggle_content_hidden', {
         p_type: item.content_type,
         p_id: item.id,
         p_hidden: newHiddenStatus
@@ -277,13 +291,13 @@ const AdminContentModeration = () => {
 
       if (error) {
         // 2. 예외 처리 — API 서버 통신 실패 시 이전 상태로 정밀 롤백 수행
-        setContent(prev => prev.map(c => c.id === item.id ? { ...c, is_hidden: originalStatus } : c));
+        setContent(prev => prev.map((c: any) => c.id === item.id ? { ...c, is_hidden: originalStatus } : c));
         throw error;
       }
       
       toast.success(newHiddenStatus ? '콘텐츠가 숨김 처리되었습니다.' : '숨김 처리가 해제되었습니다.');
-    } catch (error: any) {
-      console.error('Error toggling hide status:', error);
+    } catch (error: unknown) {
+      console.error('Error toggling hide status:', getErrorMessage(error));
       toast.error('상태 변경 중 오류가 발생했습니다. DB 연동 상태를 확인해 주세요.');
     }
   };
@@ -291,8 +305,7 @@ const AdminContentModeration = () => {
   const handleUserClick = async (item: ModerationItem) => {
     try {
       // 기본 식별 데이터 로드 — 대상 사용자 기본 정보 수신
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
+      const { data: profile, error: profileError } = await (supabase.from('profiles') as any)
         .select('*')
         .eq('id', item.author_id)
         .maybeSingle();
@@ -306,8 +319,7 @@ const AdminContentModeration = () => {
       // 국가 데이터 계층 로드 — 데이터 무결성 확보를 위한 별도 검색 (Relation Error 방지)
       let countryData = null;
       if (profile.country) {
-        const { data: country } = await supabase
-          .from('countries')
+        const { data: country } = await (supabase.from('countries') as any)
           .select('name, flag_url')
           .or(`id.eq.${profile.country},iso_code.eq.${profile.country}`)
           .maybeSingle();
@@ -315,7 +327,7 @@ const AdminContentModeration = () => {
       }
 
       // 전역 모달 주입용 데이터 정규화 및 매핑
-      const enrichedUser = {
+      const enrichedUser: AdminProfile = {
         ...profile,
         profile_id: profile.id,
         country_name: countryData?.name || profile.country,
@@ -324,8 +336,8 @@ const AdminContentModeration = () => {
       
       setSelectedUser(enrichedUser);
       setShowProfileModal(true);
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
+    } catch (error: unknown) {
+      console.error('Error fetching user profile:', getErrorMessage(error));
       toast.error('사용자 정보를 불러오는 데 실패했습니다.');
     }
   };
@@ -384,15 +396,15 @@ const AdminContentModeration = () => {
     setShowMediaModal(true);
   };
 
-  const parseImages = (urls: any, htmlContent?: string): string[] => {
+  const parseImages = (urls: string | string[] | null, htmlContent?: string): string[] => {
     let images: string[] = [];
     if (Array.isArray(urls)) {
       images = [...urls];
     } else if (typeof urls === 'string' && urls.trim()) {
       try {
         if (urls.trim().startsWith('[') || urls.trim().startsWith('{')) {
-          const parsed = JSON.parse(urls);
-          if (Array.isArray(parsed)) images = [...images, ...parsed.filter(u => typeof u === 'string')];
+          const parsed = JSON.parse(urls) as string | string[] | { [key: string]: string };
+          if (Array.isArray(parsed)) images = [...images, ...parsed.filter((u: any) => typeof u === 'string')];
           else if (typeof parsed === 'string') images.push(parsed);
         } else {
           images.push(urls);
@@ -647,7 +659,7 @@ const AdminContentModeration = () => {
         <UserProfileModal
           isOpen={showProfileModal}
           onClose={() => setShowProfileModal(false)}
-          user={selectedUser}
+          user={selectedUser as any}
         />
       )}
 

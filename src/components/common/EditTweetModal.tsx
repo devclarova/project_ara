@@ -124,9 +124,9 @@ export default function EditTweetModal({
     });
 
     return () => {
-      document.removeEventListener('wheel', blockWheelTouch as any);
-      document.removeEventListener('touchmove', blockWheelTouch as any);
-      document.removeEventListener('keydown', blockKeys as any);
+      document.removeEventListener('wheel', blockWheelTouch, { capture: true });
+      document.removeEventListener('touchmove', blockWheelTouch, { capture: true });
+      document.removeEventListener('keydown', blockKeys);
       document.removeEventListener('scroll', restoreScroll, true);
     };
   }, [open, onClose]);

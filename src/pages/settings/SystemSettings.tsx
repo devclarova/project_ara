@@ -13,6 +13,12 @@ import LanguageSelect from './LanguageSelect';
 import ThemeSelect from './ThemeSelect';
 import { useTheme } from '@/components/theme-provider';
 
+declare global {
+  interface Window {
+    __setTheme?: (theme: Mode) => void;
+  }
+}
+
 interface PrivacySettingsProps {
   onBackToMenu?: () => void;
   searchQuery?: string;
@@ -38,7 +44,7 @@ function SystemSettings({ onBackToMenu, searchQuery }: PrivacySettingsProps) {
   };
 
   const applyTheme = (m: Mode) => {
-    (window as any).__setTheme?.(m); // 전역 테마 스위처가 있으면 사용
+    window.__setTheme?.(m); // 전역 테마 스위처가 있으면 사용
     document.documentElement.dataset.themeMode = m; // 미리보기용 fallback
   };
 

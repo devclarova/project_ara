@@ -32,7 +32,7 @@ export default function SettingsSidebar({
 }: Props) {
   const { t } = useTranslation();
   const displayTitle = title || t('settings.account_settings');
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
 
   // 뷰 스위칭 동기화 — 활성 탭 식별자(Active Tab)에 따라 고유한 하위 설정 화면을 조건부 렌더링
   useEffect(() => {
@@ -73,7 +73,7 @@ export default function SettingsSidebar({
       className={`bg-white dark:bg-secondary rounded-2xl border border-gray-200 dark:border-gray-700 shadow-[0_4px_12px_rgba(0,0,0,0.04)] h-[420px] max-h-[calc(100vh-280px)] min-h-[320px] overflow-hidden flex flex-col w-full ${className}`}
     >
       <div
-        ref={ref as any}
+        ref={ref}
         className="flex-1 overflow-y-auto overscroll-contain p-6 scrollbar-thin scrollbar-thumb-[#00BFA5]/20 hover:scrollbar-thumb-[#00BFA5]/40 scrollbar-track-transparent custom-scrollbar"
         style={{
           scrollbarWidth: 'thin',

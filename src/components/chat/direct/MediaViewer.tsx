@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Download, ChevronLeft, ChevronRight, Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 export interface MediaItem {
   url: string;
@@ -380,7 +381,7 @@ export default function MediaViewer({ isOpen, onClose, mediaList, initialMediaId
     if (isOpen) {
         if (!selectedMedia && initialMediaId) {
             // First load: Find initial
-            const found = mediaList.find(item => item.url === initialMediaId || item.messageId === initialMediaId);
+            const found = mediaList.find((item: any) => item.url === initialMediaId || item.messageId === initialMediaId);
             if (found) {
                 setSelectedMedia(found);
             } else if (mediaList.length > 0) {
@@ -389,7 +390,7 @@ export default function MediaViewer({ isOpen, onClose, mediaList, initialMediaId
         } else if (selectedMedia) {
             // Update: List changed (e.g. background fetch completed)
             // Try to find current selected URL in new list to keep reference fresh
-            const found = mediaList.find(item => item.url === selectedMedia.url);
+            const found = mediaList.find((item: any) => item.url === selectedMedia.url);
             if (found) {
                 // Update reference but don't reset view (handled by other effect)
                 setSelectedMedia(found);
@@ -433,7 +434,7 @@ export default function MediaViewer({ isOpen, onClose, mediaList, initialMediaId
       mediaList[currentIndex - 1]
     ].filter(Boolean);
 
-    toPreload.forEach(item => {
+    toPreload.forEach((item: any) => {
       if (item.type === 'image') {
         const img = new Image();
         img.src = item.url;
@@ -458,7 +459,7 @@ export default function MediaViewer({ isOpen, onClose, mediaList, initialMediaId
       if ('showSaveFilePicker' in window) {
         try {
             const name = filename || url.split('/').pop() || `download-${Date.now()}`;
-            const handle = await (window as any).showSaveFilePicker({
+            const handle = await (window as unknown as { showSaveFilePicker: (options: { suggestedName: string; types: { description: string; accept: Record<string, string[]> }[] }) => Promise<{ createWritable: () => Promise<{ write: (data: Blob) => Promise<void>; close: () => Promise<void> }> }> }).showSaveFilePicker({
                 suggestedName: name,
                 types: [{
                     description: 'Media File',
@@ -469,9 +470,10 @@ export default function MediaViewer({ isOpen, onClose, mediaList, initialMediaId
             await writable.write(blob);
             await writable.close();
             return;
-        } catch (pickerError: any) {
-            if (pickerError.name === 'AbortError') return; // User cancelled
-            console.warn('File picker failed, falling back to blob link:', pickerError);
+        } catch (pickerError: unknown) {
+            const errorMsg = getErrorMessage(pickerError);
+            if (errorMsg === 'The user aborted a request.') return; // User cancelled
+            console.warn('File picker failed, falling back to blob link:', errorMsg);
             // Fallthrough to link download
         }
       }

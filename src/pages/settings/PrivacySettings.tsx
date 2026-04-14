@@ -24,11 +24,16 @@ interface PrivacySettingsProps {
   initialActiveSetting?: ActiveSetting;
 }
 
-import Select, { components, type SingleValue, type StylesConfig } from 'react-select';
+import Select, { components, type SingleValue, type StylesConfig, type DropdownIndicatorProps } from 'react-select';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
+interface ReasonOption {
+  value: string;
+  label: string;
+}
+
 // --- React Select Custom Components & Styles ---
-const CustomDropdownIndicator = (props: any) => {
+const CustomDropdownIndicator = (props: DropdownIndicatorProps<ReasonOption, false>) => {
   const { selectProps } = props;
   const isOpen = selectProps.menuIsOpen;
   return (
@@ -81,7 +86,7 @@ export default function PrivacySettings({ onBackToMenu, searchQuery, initialActi
   // Dark Mode Check & React Select Styles
   const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
 
-  const customSelectStyles: StylesConfig<any, false> = {
+  const customSelectStyles: StylesConfig<ReasonOption, false> = {
     control: (provided, state) => {
         // Match InputField border logic: always gray-300 (#D1D5DB) unless focused/error
         const baseBorder = state.isFocused
@@ -207,14 +212,13 @@ export default function PrivacySettings({ onBackToMenu, searchQuery, initialActi
     // 3) 탈퇴 사유 저장 (관리자 전용) - New Feature
     try {
       if (reason) {
-        const { data: profile } = await supabase
-          .from('profiles')
+        const { data: profile } = await (supabase.from('profiles') as any)
           .select('id')
           .eq('user_id', user.id)
           .maybeSingle();
         
         if (profile) {
-            await supabase.from('withdrawal_feedbacks' as any).insert({
+            await (supabase.from('withdrawal_feedbacks') as any).insert({
               user_id: profile.id,
               reason,
               detail: reason === 'other' ? detail : null,
@@ -228,8 +232,7 @@ export default function PrivacySettings({ onBackToMenu, searchQuery, initialActi
 
     // 4) Soft Delete 처리 (profiles.deleted_at 기록)
     // 실제 데이터 삭제는 하지 않음 (7일 유예)
-    const { error: profileErr } = await supabase
-      .from('profiles')
+    const { error: profileErr } = await (supabase.from('profiles') as any)
       .update({ deleted_at: new Date().toISOString() })
       .eq('user_id', user.id);
 

@@ -7,6 +7,7 @@ import type { Profile } from '@/types/database';
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation, matchPath } from 'react-router-dom';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 interface SidebarProps {
   onTweetClick?: () => void;
@@ -42,8 +43,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
     if (location.pathname.startsWith('/auth/callback')) return;
 
     const fetchProfile = async () => {
-      const { data, error } = await supabase
-        .from('profiles')
+      const { data, error } = await (supabase.from('profiles') as any)
         .select('id, user_id, nickname, avatar_url')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -66,8 +66,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
         },
         async payload => {
           // 1. 실시간 이벤트 감지 시 바로 fetch로 최신 데이터 보장
-          const { data, error } = await supabase
-            .from('profiles')
+          const { data, error } = await (supabase.from('profiles') as any)
             .select('id, user_id, nickname, avatar_url')
             .eq('user_id', user.id)
             .maybeSingle();
@@ -91,8 +90,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
+      const { data, error } = await (supabase.from('profiles') as any)
         .select('nickname')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -104,8 +102,8 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
       }
 
       navigate(`/sns/user/${encodeURIComponent(data.nickname)}`);
-    } catch (err: any) {
-      console.error('프로필 이동 실패:', err.message);
+    } catch (err: unknown) {
+      console.error('프로필 이동 실패:', getErrorMessage(err));
       toast.error(t('common.error_navigate_profile'));
     }
   };

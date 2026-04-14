@@ -35,7 +35,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSuccess 
 
     setLoading(true);
     try {
-      const { data, error: rpcError } = await supabase.rpc('admin_create_user', {
+      const { data, error: rpcError } = await (supabase as any).rpc('admin_create_user', {
         p_email: email,
         p_password: password,
         p_nickname: nickname,
@@ -47,9 +47,10 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onSuccess 
       toast.success('새 사용자가 성공적으로 생성되었습니다.');
       onSuccess();
       handleClose();
-    } catch (err: any) {
-      console.error('Error creating user:', err);
-      setError(err.message || '사용자 생성 중 오류가 발생했습니다.');
+    } catch (err: unknown) {
+      const error = err as Error;
+      console.error('Error creating user:', error);
+      setError(error.message || '사용자 생성 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }

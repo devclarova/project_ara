@@ -128,42 +128,34 @@ function DirectChatPage() {
   }, []);
 
   return (
-    // 전체 배경 영역: App.tsx에서 전달해주는 남은 높이 공간을 100% 꽉 채웁니다. (flex-1)
-    <div className={`${styles.chatPage} w-full`}>
-      <div className="flex flex-col flex-1 items-center justify-center w-full py-4 sm:py-6 min-h-0">
-        {/* 폭 제한(max-w-6xl) 내부를 꽉 채우도록 flex 구조 설계 */}
-        <div className="flex flex-col flex-1 w-full max-w-6xl px-4 sm:px-5 lg:px-6 min-h-0">
-          {/* CSS 모듈 쪽에도 flex: 1 이 들어가 있음 */}
-          <div className={`${styles.chatPage} w-full`}>
-            <div className={`${styles.chatContainer} w-full`}>
-              {(!isMobile || showListOnMobile) && (
-                <div className="chat-sidebar flex-shrink-0 flex flex-col min-h-0 border-r border-[#e5e7eb] dark:border-[#454545]">
-                  <DirectChatList
-                    onChatSelect={handleChatSelect}
-                    onCreateChat={() => {}}
-                    selectedChatId={selectedChatId || undefined}
-                    onLeave={handleBackToList}
-                  />
-                </div>
-              )}
-
-              {(!isMobile || !showListOnMobile) && (
-                <div className="chat-main flex-1 flex flex-col min-h-0">
-                  {selectedChatId ? (
-                    <DirectChatRoom
-                      chatId={selectedChatId}
-                      isMobile={isMobile}
-                      onBackToList={handleBackToList}
-                      highlightMessageId={highlightMessageId}
-                    />
-                  ) : (
-                    !isMobile && <ChatWelcomeSearch onChatSelect={handleChatSelect} />
-                  )}
-                </div>
-              )}
-            </div>
+    // flex-1: App.tsx의 main이 남은 높이를 전달, overflow-hidden: 내부 스크롤만 허용
+    <div className={`${styles.chatPage} flex-1 w-full`}>
+      <div className={`${styles.chatContainer} w-full`}>
+        {(!isMobile || showListOnMobile) && (
+          <div className="chat-sidebar flex-shrink-0 flex flex-col min-h-0 border-r border-[#e5e7eb] dark:border-[#454545]">
+            <DirectChatList
+              onChatSelect={handleChatSelect}
+              onCreateChat={() => {}}
+              selectedChatId={selectedChatId || undefined}
+              onLeave={handleBackToList}
+            />
           </div>
-        </div>
+        )}
+
+        {(!isMobile || !showListOnMobile) && (
+          <div className="chat-main flex-1 flex flex-col min-h-0">
+            {selectedChatId ? (
+              <DirectChatRoom
+                chatId={selectedChatId}
+                isMobile={isMobile}
+                onBackToList={handleBackToList}
+                highlightMessageId={highlightMessageId}
+              />
+            ) : (
+              !isMobile && <ChatWelcomeSearch onChatSelect={handleChatSelect} />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

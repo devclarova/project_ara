@@ -14,6 +14,8 @@ import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useBlockedUsers } from '@/hooks/useBlockedUsers';
 import type { UITweet } from '@/types/sns';
 import type { Database } from '@/types/database';
+import { getErrorMessage } from '@/utils/errorMessage';
+
 type OutletCtx = {
   newTweet: UITweet | null;
   setNewTweet: (t: UITweet | null) => void;
@@ -53,8 +55,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
     }
     const loadProfileId = async () => {
       if (!user) return;
-      const { data } = await supabase
-        .from('profiles')
+      const { data } = await (supabase.from('profiles') as any)
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -103,7 +104,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
         const currentPage = reset ? 0 : pageRef.current;
         if (isSearching) {
           // 검색 모드: RPC 호출
-          const { data: rpcData, error: rpcError } = await supabase.rpc('search_tweets', {
+          const { data: rpcData, error: rpcError } = await (supabase as any).rpc('search_tweets', {
             keyword: mergedSearchQuery,
           });
           if (rpcError) throw rpcError;
@@ -113,8 +114,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
           // 일반 피드 모드
           const from = currentPage * PAGE_SIZE;
           const to = from + PAGE_SIZE - 1;
-          const { data: feedData, error } = await supabase
-            .from('tweets')
+          const { data: feedData, error } = await (supabase.from('tweets') as any)
             .select(
               `
             id, content, image_url, created_at, updated_at, deleted_at, is_hidden,
@@ -132,31 +132,39 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
           if (data.length < PAGE_SIZE) setHasMore(false);
           else setHasMore(true);
         }
-        const mapped: UITweet[] = data.map(t => ({
-          id: t.id,
-          user: {
-            id: t.profiles?.id ?? (t as any).author_id ?? '',
-            name: t.nickname ?? t.profiles?.nickname ?? 'Unknown',
-            username: t.user_id ?? t.profiles?.user_id ?? 'anonymous',
-            avatar: t.avatar_url ?? t.profiles?.avatar_url ?? '/default-avatar.svg',
-            banned_until: t.profiles?.banned_until ?? null,
-            plan: t.profiles?.plan,
-          },
-          content: t.content,
-          image: t.image_url || undefined,
-          timestamp: t.created_at || new Date().toISOString(),
-          createdAt: t.created_at || undefined,
-          updatedAt: (t as any).updated_at || undefined,
-          deleted_at: t.deleted_at,
-          stats: {
-            replies: t.reply_count ?? 0,
-            retweets: t.repost_count ?? 0,
-            likes: t.like_count ?? 0,
-            bookmarks: t.bookmark_count ?? 0,
-            views: t.view_count ?? 0,
-          },
-          is_hidden: t.is_hidden ?? false,
-        }));
+        const mapped: UITweet[] = data.map(t => {
+          const tRecord = t as Record<string, unknown>;
+          return {
+            id: t.id,
+            user: {
+              id: t.profiles?.id ?? (tRecord.author_id as string) ?? '',
+              name: t.profiles?.nickname ?? 'Unknown',
+              username: t.profiles?.user_id ?? t.profiles?.nickname ?? 'anonymous',
+              avatar: t.profiles?.avatar_url ?? '/default-avatar.svg',
+              banned_until: t.profiles?.banned_until ?? null,
+              plan: t.profiles?.plan ?? 'free',
+            },
+            content: t.content,
+            image: t.image_url ?? undefined,
+            timestamp: new Date(t.created_at ?? new Date()).toLocaleString('ko-KR', {
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+            createdAt: t.created_at ?? undefined,
+            updatedAt: (tRecord.updated_at as string) || undefined,
+            deleted_at: t.deleted_at,
+            stats: {
+              replies: t.reply_count ?? 0,
+              retweets: t.repost_count ?? 0,
+              likes: t.like_count ?? 0,
+              bookmarks: t.bookmark_count ?? 0,
+              views: t.view_count ?? 0,
+            },
+            is_hidden: t.is_hidden ?? false,
+          };
+        });
         // 상태 업데이트
         setTweets(prev => {
           const combined = reset ? mapped : [...prev, ...mapped];
@@ -173,8 +181,8 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
         if (!isSearching && !reset && data.length > 0) {
           pageRef.current += 1;
         }
-      } catch (err) {
-        // 오류 발생 시 로깅 생략
+      } catch (err: unknown) {
+        console.error('피드 불러오기 실패:', getErrorMessage(err));
       } finally {
         setLoading(false);
         loadingRef.current = false;
@@ -188,7 +196,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
         }
       }
     },
-    [isSearching, mergedSearchQuery, hasMore, blockedIds],
+    [isSearching, mergedSearchQuery, hasMore, blockedIds, isAdmin],
   );
 
   // blockedIds 변경 시 기존 트윗 목록에서 차단된 유저 제거
@@ -316,8 +324,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
             is_hidden?: boolean | null;
           };
 
-          const { data: profile } = await supabase
-            .from('profiles')
+          const { data: profile } = await (supabase.from('profiles') as any)
             .select('id, nickname, user_id, avatar_url, banned_until, plan')
             .eq('id', newTweet.author_id)
             .maybeSingle();
@@ -387,8 +394,9 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
     const profileChannel = supabase
       .channel('home-feed-author-sync')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
-        const updated = payload.new as any;
-        if (updated.banned_until !== undefined) {
+        type ProfileUpdate = { id: string; user_id: string; banned_until?: string | null; plan?: 'free' | 'basic' | 'premium' };
+        const updated = payload.new as ProfileUpdate;
+        if (updated.banned_until === undefined) return;
           setTweets(prev =>
             prev.map(t => {
               // 프로필 PK(id) 또는 인증 ID(user_id)로 매칭
@@ -405,7 +413,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
             }),
           );
         }
-      })
+      )
       .subscribe();
 
     return () => {

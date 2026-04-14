@@ -33,8 +33,7 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
     if (!user) return;
 
     const loadProfile = async () => {
-      const { data } = await supabase
-        .from('profiles')
+      const { data } = await (supabase.from('profiles') as any)
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -47,9 +46,10 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
 
   // Sync follow status across different components/cards
   useEffect(() => {
-    const handleStatusChange = (e: any) => {
-      if (e.detail.targetProfileId === targetProfileId) {
-        setIsFollowing(e.detail.isFollowing);
+    const handleStatusChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ targetProfileId: string; isFollowing: boolean }>;
+      if (customEvent.detail.targetProfileId === targetProfileId) {
+        setIsFollowing(customEvent.detail.isFollowing);
       }
     };
     window.addEventListener('followStatusChanged', handleStatusChange);
@@ -63,8 +63,7 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
       return;
     }
 
-    const { data } = await supabase
-      .from('user_follows')
+    const { data } = await (supabase.from('user_follows') as any)
       .select('id')
       .eq('follower_id', myProfileId)
       .eq('following_id', targetProfileId)
@@ -78,14 +77,12 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
   const refreshCounts = useCallback(async () => {
     if (!targetProfileId) return;
 
-    const { count: followers } = await supabase
-      .from('user_follows')
+    const { count: followers } = await (supabase.from('user_follows') as any)
       .select('*', { count: 'exact', head: true })
       .eq('following_id', targetProfileId)
       .is('ended_at', null);
 
-    const { count: following } = await supabase
-      .from('user_follows')
+    const { count: following } = await (supabase.from('user_follows') as any)
       .select('*', { count: 'exact', head: true })
       .eq('follower_id', targetProfileId)
       .is('ended_at', null);
@@ -140,8 +137,7 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
     try {
       if (isFollowing) {
         // Unfollow: Soft delete (set ended_at)
-        const { error } = await supabase
-          .from('user_follows')
+        const { error } = await (supabase.from('user_follows') as any)
           .update({ ended_at: new Date().toISOString() })
           .eq('follower_id', myProfileId)
           .eq('following_id', targetProfileId);
@@ -158,8 +154,7 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
         toast.success(t('profile.unfollowed', '언팔로우'));
       } else {
         // Follow: Check if soft-deleted row exists first
-        const { data: existing } = await supabase
-          .from('user_follows')
+        const { data: existing } = await (supabase.from('user_follows') as any)
           .select('id, ended_at')
           .eq('follower_id', myProfileId)
           .eq('following_id', targetProfileId)
@@ -169,14 +164,13 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
 
         if (existing && existing.ended_at !== null) {
           // Reactivate soft-deleted follow
-          ({ error } = await supabase
-            .from('user_follows')
+          ({ error } = await (supabase.from('user_follows') as any)
             .update({ ended_at: null })
             .eq('follower_id', myProfileId)
             .eq('following_id', targetProfileId));
         } else if (!existing) {
           // Create new follow
-          ({ error } = await supabase.from('user_follows').insert({
+          ({ error } = await (supabase.from('user_follows') as any).insert({
             follower_id: myProfileId,
             following_id: targetProfileId,
             ended_at: null,
@@ -201,7 +195,7 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
           comment_id: null,
         };
 
-        await supabase.from('notifications').insert(notificationPayload);
+        await (supabase.from('notifications') as any).insert(notificationPayload);
 
         setIsFollowing(true);
         window.dispatchEvent(

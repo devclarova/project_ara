@@ -112,8 +112,7 @@ export default function TranslateButton({
 
       // (2) Translation Cache Strategy: Checks for pre-existing translation records to reduce redundant API overhead.
       if (userId) {
-        const { data: existing } = await supabase
-          .from('translations')
+        const { data: existing } = await (supabase.from('translations') as any)
           .select('translated_text')
           .eq('content_id', contentId)
           .eq('user_id', userId)
@@ -162,7 +161,7 @@ export default function TranslateButton({
 
       // (6) Persistence Layer: Commits translated assets to the database for localized caching and performance scaling.
       if (userId) {
-        await supabase.from('translations').upsert(
+        await (supabase.from('translations') as any).upsert(
           {
             user_id: userId,
             content_id: contentId,

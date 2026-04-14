@@ -37,7 +37,7 @@ const ChatItem = memo(
     onLeave,
     onReport,
   }: {
-    chat: any;
+    chat: import('../../../types/ChatType').ChatListItem;
     isSelected: boolean;
     onSelect: (id: string) => void;
     currentUserId?: string;
@@ -462,7 +462,7 @@ const DirectChatList = ({
             <p>{t('chat.start_conversation')}</p>
           </div>
         ) : (
-          chats.map(chat => (
+          chats.map((chat: any) => (
             <ChatItem
               key={chat.id}
               chat={chat}

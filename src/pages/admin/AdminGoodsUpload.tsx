@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { goodsService } from '@/services/goodsService';
+import { getErrorMessage } from '@/utils/errorMessage';
 import type { Product, ProductVariant as ServiceVariant } from '@/services/goodsService';
 
 // 지역 UI 데이터 모델 정의 — 마스터 데이터와 연동되는 인터페이스 규약
@@ -99,7 +100,7 @@ const AdminGoodsUpload = () => {
             setBasePrice(product.price.toString());
             setDiscountPercent(product.discount_percent.toString());
             setSalePrice(product.sale_price);
-            setStatus(product.status as any || 'draft');
+            setStatus(product.status as 'draft' | 'active' | 'soldout' || 'draft');
             setSummary(product.summary || '');
             setDescription(product.description || '');
             setMainImage(product.main_image_url || null);
@@ -113,7 +114,7 @@ const AdminGoodsUpload = () => {
             
             if (product.options && product.options.length > 0) {
               setUseOptions(true);
-              setOptionGroups(product.options.map((opt: any) => ({
+              setOptionGroups(product.options.map((opt) => ({
                 id: opt.id || Math.random().toString(),
                 name: opt.name,
                 values: opt.values
@@ -121,17 +122,17 @@ const AdminGoodsUpload = () => {
             }
             
             if (product.variants && product.variants.length > 0) {
-              setVariants(product.variants.map((v: any) => ({
+              setVariants(product.variants.map((v) => ({
                 id: v.id || Math.random().toString(),
-                options: v.options,
+                options: v.options as Record<string, string>,
                 stock: v.stock,
                 additionalPrice: Number(v.additional_price),
                 sku: v.sku
               })));
             }
           }
-        } catch (err) {
-          console.error('Failed to fetch product for edit:', err);
+        } catch (err: unknown) {
+          console.error('Failed to fetch product for edit:', getErrorMessage(err));
           toast.error('상품 정보를 불러오는데 실패했습니다.');
         } finally {
           setLoading(false);
@@ -149,8 +150,8 @@ const AdminGoodsUpload = () => {
       const url = await goodsService.uploadImage(file);
       setMainImage(url);
       toast.success("대표 이미지가 업로드되었습니다.");
-    } catch (err: any) {
-      toast.error(`업로드 실패: ${err.message}`);
+    } catch (error: unknown) {
+      toast.error(`업로드 실패: ${getErrorMessage(error)}`);
     } finally {
       setUploading(false);
     }
@@ -164,8 +165,8 @@ const AdminGoodsUpload = () => {
       const urls = await Promise.all(files.map(file => goodsService.uploadImage(file)));
       setGalleryImages(prev => [...prev, ...urls]);
       toast.success(`${files.length}장의 이미지가 업로드되었습니다.`);
-    } catch (err: any) {
-      toast.error(`업로드 실패: ${err.message}`);
+    } catch (error: unknown) {
+      toast.error(`업로드 실패: ${getErrorMessage(error)}`);
     } finally {
       setUploading(false);
     }
@@ -179,8 +180,8 @@ const AdminGoodsUpload = () => {
       const url = await goodsService.uploadImage(file);
       setDescription(prev => prev + `\n![image](${url})\n`);
       toast.success("상세 이미지 삽입 완료");
-    } catch (err: any) {
-      toast.error(`업로드 실패: ${err.message}`);
+    } catch (error: unknown) {
+      toast.error(`업로드 실패: ${getErrorMessage(error)}`);
     } finally {
       setUploading(false);
     }
@@ -253,7 +254,7 @@ const AdminGoodsUpload = () => {
     setVariants(newVariants);
   };
 
-  const updateVariantValue = (id: string, field: 'stock' | 'additionalPrice' | 'sku', value: any) => {
+  const updateVariantValue = (id: string, field: 'stock' | 'additionalPrice' | 'sku', value: string | number) => {
     setVariants(prev => prev.map(v => v.id === id ? { ...v, [field]: value } : v));
   };
 
@@ -302,9 +303,9 @@ const AdminGoodsUpload = () => {
       await goodsService.saveProduct(productToSave, optionsToSave, variantsToSave);
       toast.success(id ? '상품 정보가 수정되었습니다.' : '새 상품이 등록되었습니다.');
       navigate('/admin/goods/manage');
-    } catch (err: any) {
-      console.error('Save failed:', err);
-      toast.error(`저장 중 오류가 발생했습니다: ${err.message}`);
+    } catch (error: unknown) {
+      console.error('Save failed:', getErrorMessage(error));
+      toast.error(`저장 중 오류가 발생했습니다: ${getErrorMessage(error)}`);
     } finally {
       setLoading(false);
     }
@@ -604,7 +605,7 @@ const AdminGoodsUpload = () => {
   );
 };
 
-const TabButtonUI = ({ active, onClick, label, icon: Icon }: { active: boolean, onClick: () => void, label: string, icon: any }) => (
+const TabButtonUI = ({ active, onClick, label, icon: Icon }: { active: boolean, onClick: () => void, label: string, icon: React.ElementType }) => (
   <button type="button" onClick={onClick} className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-bold text-sm transition-all ${active ? 'bg-primary text-white shadow-lg' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-zinc-800'}`}>
     <div className={`p-2 rounded-xl ${active ? 'bg-white/20' : 'bg-gray-100 dark:bg-zinc-700'}`}><Icon size={18} /></div>
     {label}
@@ -618,7 +619,7 @@ const ToggleButton = ({ active, onClick, label, isWarning }: { active: boolean, 
   </button>
 );
 
-const EditorTool = ({ icon: Icon, onClick, label }: { icon: any, onClick: () => void, label: string }) => (
+const EditorTool = ({ icon: Icon, onClick, label }: { icon: React.ElementType, onClick: () => void, label: string }) => (
   <button type="button" onClick={onClick} className="p-3 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-xl transition-all flex items-center gap-2 group">
     <Icon size={14} className="text-gray-500 group-hover:text-primary" />
     <span className="text-[9px] font-black text-gray-400 uppercase">{label}</span>

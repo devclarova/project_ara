@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { addDays, addYears } from 'date-fns';
 import { formatRelativeTime } from '@/utils/dateUtils';
+import { getErrorMessage } from '@/utils/errorMessage';
 import { 
   MessageSquare, 
   Heart, 
@@ -62,11 +63,39 @@ interface ReportActionModalProps {
   onResolve: () => void;
 }
 
+interface AdminProfile {
+  id: string;
+  user_id: string;
+  nickname: string;
+  avatar_url: string | null;
+  email: string | null;
+  country: string | null;
+  countryName?: string | null;
+  countryFlagUrl?: string | null;
+  gender?: string | null;
+  birthday?: string | null;
+  is_admin?: boolean;
+}
+
+type ReportTarget = 
+  | (import('@/types/database').Database['public']['Tables']['tweets']['Row'] & { profiles: AdminProfile; countryName?: string | null; countryFlagUrl?: string | null; is_hidden?: boolean })
+  | (import('@/types/database').Database['public']['Tables']['tweet_replies']['Row'] & { profiles: AdminProfile; countryName?: string | null; countryFlagUrl?: string | null; is_hidden?: boolean; tweet_id: string })
+  | (AdminProfile & { id: string; user_id: string; countryName?: string | null; countryFlagUrl?: string | null })
+  | (import('@/types/database').Database['public']['Tables']['direct_chats']['Row'] & { sender?: AdminProfile; countryName?: string | null; countryFlagUrl?: string | null; is_hidden?: boolean });
+
+type ReportedChatMessage = import('@/types/database').Database['public']['Tables']['direct_messages']['Row'] & {
+  attachments: any[];
+  sender?: AdminProfile;
+};
+
+// Report Context Type (Parent tweet or Chat history)
+type ReportActionContext = ReportTarget | ReportedChatMessage[] | null;
+
 export default function ReportActionModal({ report, isOpen, onClose, onResolve }: ReportActionModalProps) {
   const { t, i18n } = useTranslation();
   const [loading, setLoading] = useState(false);
-  const [targetData, setTargetData] = useState<any>(null);
-  const [contextData, setContextData] = useState<any>(null);
+  const [targetData, setTargetData] = useState<ReportTarget | null>(null);
+  const [contextData, setContextData] = useState<ReportActionContext>(null);
   const [activeUserTab, setActiveUserTab] = useState<ProfileTabKey>('posts');
   const [detailStack, setDetailStack] = useState<FeedItem[]>([]);
   const [replies, setReplies] = useState<UIReply[]>([]);
@@ -84,29 +113,31 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
   // Chat Report State
   const [chatHasMore, setChatHasMore] = useState(false);
   const [isChatLoading, setIsChatLoading] = useState(false);
-  const [reportedMessages, setReportedMessages] = useState<any[]>([]);
+  const [reportedMessages, setReportedMessages] = useState<ReportedChatMessage[]>([]);
   const [showFullChat, setShowFullChat] = useState(false);
-  const [fullChatMessages, setFullChatMessages] = useState<any[]>([]);
+  const [fullChatMessages, setFullChatMessages] = useState<ReportedChatMessage[]>([]);
 
   const loadMoreChat = async () => {
-      if (!targetData?.id || isChatLoading || !contextData?.length) return;
+      if (!targetData?.id || isChatLoading || !(contextData as any)?.length) return;
       setIsChatLoading(true);
       
-      const oldestMsg = contextData[0];
-      const { data: moreMsgs } = await supabase
-          .from('direct_messages')
+      const oldestMsg = (contextData as any)[0];
+      const { data: moreMsgs } = await (supabase.from('direct_messages') as any)
           .select('*')
           .eq('chat_id', targetData.id)
           .lt('created_at', oldestMsg.created_at)
-          .order('created_at', { ascending: false }) // Fetch closest past messages
+          .order('created_at', { ascending: false })
           .limit(50);
           
       if (moreMsgs && moreMsgs.length > 0) {
-           const senderIds = Array.from(new Set(moreMsgs.map(m => m.sender_id)));
-           const { data: profiles } = await supabase.from('profiles').select('*').in('user_id', senderIds);
-           const msgsWithSender = moreMsgs.map(m => ({...m, sender: profiles?.find(p => p.user_id === m.sender_id)})).reverse();
+           const senderIds = Array.from(new Set(moreMsgs.map((m: any) => m.sender_id)));
+           const { data: profiles } = await (supabase.from('profiles') as any).select('*').in('user_id', senderIds);
+           const msgsWithSender = moreMsgs.map((m: any) => ({...m, sender: profiles?.find((p: any) => p.user_id === m.sender_id)})).reverse();
            
-           setContextData((prev: any) => [...msgsWithSender, ...prev]);
+           setContextData((prev) => {
+               if (Array.isArray(prev)) return [...msgsWithSender, ...prev];
+               return msgsWithSender;
+           });
            setChatHasMore(moreMsgs.length === 50);
       } else {
            setChatHasMore(false);
@@ -131,7 +162,6 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
     }
   }, [detailStack]);
 
-  // Auto-scroll to activity section when detailStack changes
   useEffect(() => {
     if (detailStack.length > 0 && activitySectionRef.current) {
       activitySectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -150,7 +180,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
     }
   }, [isOpen, report]);
 
-  const [fetchedReporter, setFetchedReporter] = useState<any>(null);
+  const [fetchedReporter, setFetchedReporter] = useState<AdminProfile | null>(null);
 
   const fetchTargetData = async () => {
     if (!report) return;
@@ -158,14 +188,13 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
     try {
       let fetchedProfile = null;
       
-      // Fetch Reporter Data if exists
       if (report.reporter?.user_id) {
-          const { data: reporterData } = await supabase.from('profiles').select('*').eq('user_id', report.reporter.user_id).maybeSingle();
+          const { data: reporterData } = await (supabase.from('profiles') as any).select('*').eq('user_id', report.reporter.user_id).maybeSingle();
           if (reporterData) {
               let rCountryName = reporterData.country;
               let rCountryFlagUrl = null;
               if (reporterData.country) {
-                   const { data: cRow } = await supabase.from('countries').select('name, flag_url').eq('id', reporterData.country).maybeSingle();
+                   const { data: cRow } = await (supabase.from('countries') as any).select('name, flag_url').eq('id', reporterData.country).maybeSingle();
                    if (cRow) {
                        rCountryName = cRow.name;
                        rCountryFlagUrl = cRow.flag_url;
@@ -176,53 +205,44 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
       }
 
       if (report.target_type === 'tweet') {
-        const { data } = await supabase.from('tweets').select('*, profiles(*)').eq('id', report.target_id).maybeSingle();
+        const { data } = await (supabase.from('tweets') as any).select('*, profiles(*)').eq('id', report.target_id).maybeSingle();
         setTargetData(data);
         fetchedProfile = data?.profiles;
       } else if (report.target_type === 'reply') {
-        const { data: reply, error: replyError } = await supabase.from('tweet_replies').select('*, profiles(*)').eq('id', report.target_id).maybeSingle();
+        const { data: reply, error: replyError } = await (supabase.from('tweet_replies') as any).select('*, profiles(*)').eq('id', report.target_id).maybeSingle();
         
         if (replyError) {
-             console.log('Reply fetch error (might be deleted):', replyError);
              setTargetData(null);
         } else {
              setTargetData(reply);
              fetchedProfile = reply?.profiles;
              if (reply?.tweet_id) {
-                const { data: parent } = await supabase.from('tweets').select('*, profiles(*)').eq('id', reply.tweet_id).maybeSingle();
+                const { data: parent } = await (supabase.from('tweets') as any).select('*, profiles(*)').eq('id', reply.tweet_id).maybeSingle();
                 setContextData(parent);
              }
         }
       } else if (report.target_type === 'user') {
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', report.target_id).maybeSingle();
+        const { data: profile } = await (supabase.from('profiles') as any).select('*').eq('id', report.target_id).maybeSingle();
         setTargetData(profile);
         fetchedProfile = profile;
       } else if (report.target_type === 'chat') {
-         // Target is Chat Room
-         const { data: room, error: roomError } = await supabase.from('direct_chats').select('*').eq('id', report.target_id).maybeSingle();
+         const { data: room, error: roomError } = await (supabase.from('direct_chats') as any).select('*').eq('id', report.target_id).maybeSingle();
          
          if (room) {
-             // Identify Suspect (The one being reported)
-             // First, get reporter's profile ID from auth user_id
              const reporterAuthId = report.reporter?.user_id;
-             const { data: reporterProfile } = await supabase
-                 .from('profiles')
+             const { data: reporterProfile } = await (supabase.from('profiles') as any)
                  .select('id')
                  .eq('user_id', reporterAuthId)
                  .maybeSingle();
              
              const reporterProfileId = reporterProfile?.id;
-             
-             // Determine suspect: the other person in the chat
              const suspectProfileId = room.user1_id === reporterProfileId ? room.user2_id : room.user1_id;
-             
-             const { data: suspectProfile } = await supabase.from('profiles').select('*').eq('id', suspectProfileId).maybeSingle();
+             const { data: suspectProfile } = await (supabase.from('profiles') as any).select('*').eq('id', suspectProfileId).maybeSingle();
 
-             // Fetch country for suspect
              let countryName = suspectProfile?.country;
              let countryFlagUrl = null;
              if (suspectProfile?.country) {
-                 const { data: countryRow } = await supabase.from('countries').select('name, flag_url').eq('id', suspectProfile.country).maybeSingle();
+                 const { data: countryRow } = await (supabase.from('countries') as any).select('name, flag_url').eq('id', suspectProfile.country).maybeSingle();
                  if (countryRow) {
                      countryName = countryRow.name;
                      countryFlagUrl = countryRow.flag_url;
@@ -231,40 +251,36 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
 
              setTargetData({ ...room, sender: suspectProfile, countryName, countryFlagUrl });
              
-             // Fetch Latest Messages (Context) with attachments
-             const { data: messages } = await supabase
-                .from('direct_messages')
+             const { data: messages } = await (supabase.from('direct_messages') as any)
                 .select('*, attachments:direct_message_attachments(*)')
                 .eq('chat_id', room.id)
                 .order('created_at', { ascending: false }) 
                 .limit(50);
 
-             // Fetch specifically reported messages if IDs exist
              if (report.metadata?.reported_message_ids && report.metadata.reported_message_ids.length > 0) {
-                 const { data: reportedMsgs } = await supabase
-                    .from('direct_messages')
+                 const { data: reportedMsgs } = await (supabase.from('direct_messages') as any)
                     .select('*, attachments:direct_message_attachments(*)')
                     .in('id', report.metadata.reported_message_ids);
                  
                  if (reportedMsgs && reportedMsgs.length > 0) {
-                     const rSenderIds = Array.from(new Set(reportedMsgs.map(m => m.sender_id)));
-                     const { data: rProfiles } = await supabase.from('profiles').select('*').in('user_id', rSenderIds);
-                     const enrichedReportedMsgs = reportedMsgs.map(m => ({
+                     const rSenderIds = Array.from(new Set(reportedMsgs.map((m: any) => m.sender_id)));
+                     const { data: rProfiles } = await (supabase.from('profiles') as any).select('*').in('user_id', rSenderIds);
+                     const enrichedReportedMsgs = reportedMsgs.map((m: any) => ({
                          ...m,
-                         sender: rProfiles?.find(p => p.user_id === m.sender_id)
-                     })).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+                         sender: rProfiles?.find((p: any) => p.user_id === m.sender_id)
+                     })).sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
                      setReportedMessages(enrichedReportedMsgs);
                  }
              }
 
              if (messages && messages.length > 0) {
-                 const senderIds = Array.from(new Set(messages.map(m => m.sender_id)));
-                 const { data: profiles } = await supabase.from('profiles').select('*').in('user_id', senderIds);
+                 const senderIds = Array.from(new Set(messages.map((m: any) => m.sender_id)));
+                 const { data: profiles } = await (supabase.from('profiles') as any).select('*').in('user_id', senderIds);
                  
-                 const messagesWithSenders = messages.map(m => ({
+                 const messagesWithSenders = messages.map((m: any) => ({
                      ...m,
-                     sender: profiles?.find(p => p.user_id === m.sender_id)
-                 })).reverse(); // Chronological for display
+                     sender: profiles?.find((p: any) => p.user_id === m.sender_id)
+                 })).reverse();
                  
                  setContextData(messagesWithSenders);
                  setChatHasMore(messages.length === 50);
@@ -277,23 +293,22 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
          }
        }
 
-      // Fetch country information for the profile
       if (fetchedProfile) {
         let countryName = fetchedProfile.country;
         let countryFlagUrl = null;
         
         if (fetchedProfile.country) {
-             const { data: countryRow } = await supabase.from('countries').select('name, flag_url').eq('id', fetchedProfile.country).maybeSingle();
+             const { data: countryRow } = await (supabase.from('countries') as any).select('name, flag_url').eq('id', fetchedProfile.country).maybeSingle();
              if (countryRow) {
                  countryName = countryRow.name;
                  countryFlagUrl = countryRow.flag_url;
              }
         }
         
-        setTargetData((prev: any) => ({ ...prev, countryName, countryFlagUrl }));
+        setTargetData((prev) => prev ? ({ ...prev, countryName, countryFlagUrl }) : null);
       }
-    } catch (error) {
-      console.error('Error fetching target data:', error);
+    } catch (error: unknown) {
+      console.error('Error fetching target data:', getErrorMessage(error));
       toast.error('상세 정보를 불러올 수 없습니다.');
     } finally {
       setLoading(false);
@@ -302,9 +317,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
 
   const handleReplyClick = async (replyId: string, tweetId: string) => {
     try {
-      // Fetch the parent tweet
-      const { data: tweet, error } = await supabase
-        .from('tweets')
+      const { data: tweet, error } = await (supabase.from('tweets') as any)
         .select('*, profiles(*)')
         .eq('id', tweetId)
         .maybeSingle();
@@ -314,7 +327,6 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
         return;
       }
 
-      // Convert to FeedItem format and add to detailStack
       const feedItem = {
         id: tweet.id,
         type: 'tweet' as const,
@@ -337,17 +349,16 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
       };
 
       setDetailStack(prev => [...prev, feedItem]);
-    } catch (error) {
-      console.error('Error loading parent tweet:', error);
+    } catch (error: unknown) {
+      console.error('Error loading parent tweet:', getErrorMessage(error));
       toast.error('게시글 로드 실패');
     }
   };
 
-  const handleAction = async (action: 'dismiss' | 'delete' | 'ban') => {
+  const handleAction = async (action: 'dismiss' | 'delete' | 'ban' | 'toggle_hide') => {
     if (!report) return;
 
     if (action === 'ban') {
-       // Reset ban dialog state to default
        setBanDuration(1);
        setCustomDays('');
        setShowBanDialog(true);
@@ -359,12 +370,11 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
         return;
     }
 
-    // For delete, show confirmation modal
     if (action === 'delete') {
          setShowDeleteDialog(true);
     }
     
-    if (action === 'toggle_hide' as any) {
+    if (action === 'toggle_hide') {
         setShowHideDialog(true);
     }
   };
@@ -372,12 +382,12 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
   const executeDismiss = async () => {
       if (!report) return;
       try {
-          await supabase.from('reports').update({ status: 'dismissed' }).eq('id', report.id);
+          await (supabase.from('reports') as any).update({ status: 'dismissed' }).eq('id', report.id);
           toast.success('신고가 기각되었습니다.');
           onResolve();
           onClose();
-      } catch (e) {
-          console.error(e);
+      } catch (error: unknown) {
+          console.error('Dismiss report error:', getErrorMessage(error));
           toast.error('작업 수행 실패');
       } finally {
           setShowDismissDialog(false);
@@ -388,19 +398,19 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
       if (!report) return;
       try {
         if (report.target_type === 'tweet') {
-            await supabase.from('tweets').update({ deleted_at: new Date().toISOString() }).eq('id', report.target_id);
+            await (supabase.from('tweets') as any).update({ deleted_at: new Date().toISOString() }).eq('id', report.target_id);
         } else if (report.target_type === 'reply') {
-            await supabase.from('tweet_replies').update({ deleted_at: new Date().toISOString() }).eq('id', report.target_id);
+            await (supabase.from('tweet_replies') as any).update({ deleted_at: new Date().toISOString() }).eq('id', report.target_id);
         } else if (report.target_type === 'chat') {
-            await supabase.from('direct_messages').update({ deleted_at: new Date().toISOString() }).eq('id', report.target_id);
+            await (supabase.from('direct_messages') as any).update({ deleted_at: new Date().toISOString() }).eq('id', report.target_id);
         }
-        await supabase.from('reports').update({ status: 'resolved' }).eq('id', report.id);
+        await (supabase.from('reports') as any).update({ status: 'resolved' }).eq('id', report.id);
         toast.success('콘텐츠 삭제 및 신고 처리가 완료되었습니다.');
         
         onResolve();
         onClose();
-      } catch (e) {
-          console.error(e);
+      } catch (error: unknown) {
+          console.error('Delete content error:', getErrorMessage(error));
           toast.error('작업 수행 실패');
       }
   };
@@ -408,10 +418,10 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
   const executeToggleHide = async () => {
     if (!report || !targetData) return;
     try {
-      const currentHidden = !!targetData.is_hidden;
+      const currentHidden = !!(targetData as any)?.is_hidden;
       const newHidden = !currentHidden;
       
-      const { error } = await supabase.rpc('toggle_content_hidden', {
+      const { error } = await (supabase as any).rpc('toggle_content_hidden', {
         p_type: report.target_type === 'tweet' ? 'post' : report.target_type === 'reply' ? 'comment' : 'message',
         p_id: report.target_id,
         p_hidden: newHidden
@@ -419,19 +429,17 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
 
       if (error) throw error;
 
-      // Status update is optional, but usually hiding means it's partially resolved or reviewed
       if (report.status === 'pending') {
-        await supabase.from('reports').update({ status: 'reviewed' }).eq('id', report.id);
+        await (supabase.from('reports') as any).update({ status: 'reviewed' }).eq('id', report.id);
       }
 
       toast.success(newHidden ? '콘텐츠가 숨김 처리되었습니다.' : '숨김 처리가 해제되었습니다.');
       
-      // Update local state
-      setTargetData((prev: any) => ({ ...prev, is_hidden: newHidden }));
+      setTargetData((prev) => prev ? ({ ...prev, is_hidden: newHidden } as any) : null);
       setShowHideDialog(false);
       onResolve();
-    } catch (e) {
-      console.error(e);
+    } catch (error: unknown) {
+      console.error('Toggle hide error:', getErrorMessage(error));
       toast.error('상태 변경 중 오류가 발생했습니다.');
     }
   };
@@ -455,38 +463,27 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
               until = addDays(new Date(), banDuration).toISOString();
           }
           
-          if (report.target_type === 'user') {
-               await supabase.from('profiles').update({ banned_until: until }).eq('id', report.target_id);
+          const target = targetData as (ReportTarget & { profiles?: AdminProfile });
+          if (target?.profiles?.id) {
+              await (supabase.from('profiles') as any).update({ banned_until: until }).eq('id', target.profiles.id);
+          } else if (targetData && 'sender' in targetData && targetData.sender?.id) {
+              await (supabase.from('profiles') as any).update({ banned_until: until }).eq('id', targetData.sender.id);
           } else {
-               // If target is tweet/reply/chat, ban the AUTHOR
-               let userIdToBan = report.reporter?.user_id; // Default fallback (wrong)
-               // We need to know who the author is. 
-               // logic: fetched targetData has profiles object usually?
-               // targetData load might be async, but we can rely on report details or fetch again?
-               // Easier: use targetData if available.
-               // Check targetData structure:
-               if (targetData?.profiles?.id) {
-                   await supabase.from('profiles').update({ banned_until: until }).eq('id', targetData.profiles.id);
-               } else if (targetData?.sender?.id) { // Chat
-                   await supabase.from('profiles').update({ banned_until: until }).eq('id', targetData.sender.id);
-               } else {
-                   toast.error('사용자 정보를 찾을 수 없어 제재할 수 없습니다.');
-                   setIsBanProcessing(false);
-                   return;
-               }
+              toast.error('사용자 정보를 찾을 수 없어 제재할 수 없습니다.');
+              setIsBanProcessing(false);
+              return;
           }
 
-          // Mark report as resolved
-          await supabase.from('reports').update({ status: 'resolved' }).eq('id', report.id);
+          await (supabase.from('reports') as any).update({ status: 'resolved' }).eq('id', report.id);
           const durationText = banDuration === 'permanent' ? '영구' : banDuration === 'custom' ? `${customDays}일` : `${banDuration}일`;
           toast.success(`사용자를 ${durationText}간 정지했습니다.`);
           
           setShowBanDialog(false);
           onResolve();
           onClose();
-      } catch (err: any) {
+      } catch (err: unknown) {
           console.error(err);
-          toast.error('제재 처리 실패: ' + err.message);
+          toast.error('제재 처리 실패: ' + (err as Error).message);
       } finally {
           setIsBanProcessing(false);
       }
@@ -688,11 +685,11 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
           <div className="absolute inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
               <div className="bg-white dark:bg-zinc-900 rounded-xl max-w-sm w-full p-6 shadow-xl border border-zinc-200 dark:border-zinc-800 animate-in fade-in zoom-in duration-200">
                   <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
-                      {targetData?.is_hidden ? <Eye className="text-blue-500" /> : <XOctagon className="text-amber-500" />}
-                      {targetData?.is_hidden ? '숨김 해제' : '콘텐츠 숨기기'}
+                      {(targetData as any)?.is_hidden ? <Eye className="text-blue-500" /> : <XOctagon className="text-amber-500" />}
+                      {(targetData as any)?.is_hidden ? '숨김 해제' : '콘텐츠 숨기기'}
                   </h3>
                   <p className="text-sm text-gray-500 mb-6">
-                      {targetData?.is_hidden 
+                      {(targetData as any)?.is_hidden 
                         ? '숨겨진 콘텐츠를 다시 공개하시겠습니까? 일반 사용자들에게도 다시 노출됩니다.' 
                         : '해당 콘텐츠를 숨기시겠습니까? 일반 사용자들에게는 안내 문구가 표시되며 실제 내용은 가려집니다.'}
                   </p>
@@ -706,9 +703,9 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                         </button>
                         <button 
                             onClick={executeToggleHide}
-                            className={`px-4 py-2 ${targetData?.is_hidden ? 'bg-blue-600 hover:bg-blue-700' : 'bg-amber-600 hover:bg-amber-700'} text-white rounded-lg text-sm font-bold shadow-sm`}
+                            className={`px-4 py-2 ${(targetData as any)?.is_hidden ? 'bg-blue-600 hover:bg-blue-700' : 'bg-amber-600 hover:bg-amber-700'} text-white rounded-lg text-sm font-bold shadow-sm`}
                         >
-                            {targetData?.is_hidden ? '공개하기' : '숨기기'}
+                            {(targetData as any)?.is_hidden ? '공개하기' : '숨기기'}
                         </button>
                   </div>
               </div>
@@ -763,8 +760,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                     ...fetchedReporter, 
                                     id: fetchedReporter.id, 
                                     type: 'user',
-                                    // Make sure to adapt properties if needed for base item, but type 'user' is special
-                                }]);
+                                } as any]);
                             }
                         }}
                         className={`flex items-center gap-3 bg-background border border-border rounded-xl p-3 relative ${fetchedReporter ? 'cursor-pointer hover:bg-secondary/50 transition-colors group' : ''}`}
@@ -773,7 +769,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                              <span className="text-xs font-bold">FROM</span>
                         </div>
                         <Avatar className="w-10 h-10 border border-border">
-                            <AvatarImage src={report.reporter?.avatar_url} />
+                            <AvatarImage src={report.reporter?.avatar_url || undefined} />
                             <AvatarFallback>R</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
@@ -788,7 +784,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                 <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mt-1">
                                     {fetchedReporter.countryFlagUrl && (
                                         <span className="flex items-center gap-1 bg-secondary/50 px-1.5 py-0.5 rounded border border-border/50">
-                                            <img src={fetchedReporter.countryFlagUrl} alt={fetchedReporter.countryName} className="w-3.5 h-3.5 rounded-full object-cover" />
+                                            <img src={fetchedReporter.countryFlagUrl ?? undefined} alt={fetchedReporter.countryName ?? undefined} className="w-3.5 h-3.5 rounded-full object-cover" />
                                             <span>{fetchedReporter.countryName}</span>
                                         </span>
                                     )}
@@ -818,26 +814,26 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                              <span className="text-xs font-bold">TO</span>
                         </div>
                         <Avatar className="w-10 h-10 border border-border">
-                             <AvatarImage src={targetData?.profiles?.avatar_url || targetData?.sender?.avatar_url || targetData?.avatar_url} />
+                             <AvatarImage src={(targetData as any)?.profiles?.avatar_url || (targetData as any)?.sender?.avatar_url || (targetData as any)?.avatar_url || undefined} />
                              <AvatarFallback>?</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
                             <p className="text-xs text-red-500 dark:text-red-400 font-bold uppercase mb-0.5">대상자 (피신고자)</p>
                             <p className="text-sm font-bold truncate">
-                                {targetData?.profiles?.nickname || targetData?.sender?.nickname || targetData?.nickname || 'Loading...'}
+                                {(targetData as any)?.profiles?.nickname || (targetData as any)?.sender?.nickname || (targetData as any)?.nickname || 'Loading...'}
                             </p>
 
                             {/* Detailed Info (Age, Gender, Country) */}
                             {(() => {
-                                const profile = report.target_type === 'user' ? targetData : 
-                                              report.target_type === 'chat' ? targetData?.sender : 
-                                              targetData?.profiles;
+                                const profile = report.target_type === 'user' ? (targetData as any) : 
+                                              report.target_type === 'chat' ? (targetData as any)?.sender : 
+                                              (targetData as any)?.profiles;
                                 
                                 return profile ? (
                                     <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mt-1">
                                         {targetData?.countryFlagUrl && (
                                             <span className="flex items-center gap-1 bg-white dark:bg-black/20 px-1.5 py-0.5 rounded border border-red-100 dark:border-red-900/30">
-                                                <img src={targetData.countryFlagUrl} alt={targetData.countryName} className="w-3.5 h-3.5 rounded-full object-cover" />
+                                                <img src={targetData.countryFlagUrl ?? undefined} alt={targetData.countryName ?? undefined} className="w-3.5 h-3.5 rounded-full object-cover" />
                                                 <span>{targetData.countryName}</span>
                                             </span>
                                         )}
@@ -881,15 +877,15 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                 {(report.target_type === 'tweet' || report.target_type === 'reply' || report.target_type === 'chat') && (
                     <>
                         <button 
-                            onClick={() => handleAction('toggle_hide' as any)}
+                            onClick={() => handleAction('toggle_hide' as 'dismiss' | 'toggle_hide' | 'delete' | 'ban')}
                             className={`w-full flex items-center justify-center gap-2 p-2.5 rounded-lg border-2 ${
-                                targetData?.is_hidden 
+                                (targetData as any)?.is_hidden 
                                 ? 'border-amber-500 text-amber-500 bg-amber-50 dark:bg-amber-900/10 hover:bg-amber-100' 
                                 : 'border-blue-500 text-blue-500 bg-blue-50 dark:bg-blue-900/10 hover:bg-blue-100'
                             } transition text-sm font-bold shadow-sm`}
                         >
-                            {targetData?.is_hidden ? <EyeOff size={16} /> : <Eye size={16} />}
-                            {targetData?.is_hidden ? '숨기기 해제' : '콘텐츠 숨기기'}
+                            {(targetData as any)?.is_hidden ? <EyeOff size={16} /> : <Eye size={16} />}
+                            {(targetData as any)?.is_hidden ? '숨기기 해제' : '콘텐츠 숨기기'}
                         </button>
                         
                         <button 
@@ -941,17 +937,17 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                             const item = detailStack[detailStack.length - 1];
                             
                             // Handle User Profile View
-                            if ((item as any).type === 'user') {
-                                const p = item as any; 
+                            if ('type' in item && (item as unknown as { type: string }).type === 'user') {
+                                const p = item as unknown as (AdminProfile & { followers_count?: number; following_count?: number; banner_url?: string; banner_position_y?: number; bio?: string; created_at?: string }); 
                                 // Fallback objects for profile headers
                                 const userP = {
                                     id: p.id,
                                     user_id: p.user_id,
                                     name: p.nickname,
                                     username: p.user_id,
-                                    avatar: p.avatar_url,
-                                    bio: p.bio,
-                                    joinDate: p.created_at ? new Date(p.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }) : '',
+                                    avatar: p.avatar_url || '',
+                                    bio: p.bio || '',
+                                    joinDate: (p as any).created_at ? new Date((p as any).created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }) : '',
                                     followers: p.followers_count || 0,
                                     following: p.following_count || 0,
                                     banner: p.banner_url,
@@ -981,8 +977,8 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                                         userProfile={userP} 
                                                         disableInteractions={true}
                                                         onItemClick={async (item) => {
-                                                            if (item.type === 'reply' && (item as any).tweetId) {
-                                                                await handleReplyClick((item as any).id, (item as any).tweetId);
+                                                            if (item.type === 'reply' && (item as unknown as { tweetId: string }).tweetId) {
+                                                                await handleReplyClick((item as unknown as { id: string }).id, (item as unknown as { tweetId: string }).tweetId);
                                                             } else {
                                                                 setDetailStack(prev => [...prev, item]);
                                                             }
@@ -1001,11 +997,11 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                         key={'detail-' + item.id}
                                         reply={{
                                             ...item,
-                                            timestamp: item.timestamp || (item as any).created_at || item.createdAt || ''
+                                            timestamp: item.timestamp || (item as unknown as { created_at: string }).created_at || item.createdAt || ''
                                         } as UIReply}
                                         highlight={false}
                                         disableInteractions={true}
-                                        onClick={(id, tid) => { setDetailStack(prev => [...prev, { ...item, type: 'reply' } as any]); }} 
+                                        onClick={(id, tid) => { setDetailStack(prev => [...prev, { ...item, type: 'reply' } as unknown as FeedItem]); }} 
                                     />
                                     </div>
                                 ) : (
@@ -1055,9 +1051,9 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                 /* DEFAULT VIEW: REPORTED CONTENT + PROFILE + ACTIVITY */
                 <div className="h-full overflow-y-auto">
                     {(() => {
-                        const profile = report.target_type === 'user' ? targetData : 
-                                        report.target_type === 'chat' ? targetData.sender : 
-                                        targetData.profiles;
+                        const profile = report.target_type === 'user' ? (targetData as any) : 
+                                        report.target_type === 'chat' ? (targetData as any).sender : 
+                                        (targetData as any).profiles;
                         
                         if (!profile) return null;
 
@@ -1072,29 +1068,29 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                         <div>
                                             <div className="border border-red-200 dark:border-red-900/50 rounded-xl overflow-hidden shadow-sm">
                                                 <TweetCard 
-                                                id={targetData.id}
-                                                user={{
-                                                    id: targetData.profiles?.id || '00000000-0000-0000-0000-000000000000',
-                                                    username: targetData.profiles?.user_id || 'unknown',
-                                                    name: targetData.profiles?.nickname || 'Unknown',
-                                                    avatar: targetData.profiles?.avatar_url || ''
-                                                }}
-                                                content={targetData.content}
-                                                image={targetData.image_urls}
-                                                timestamp={targetData.created_at}
-                                                createdAt={targetData.created_at}
-                                                stats={{
-                                                    likes: targetData.like_count || 0,
-                                                    replies: targetData.reply_count || 0,
-                                                    retweets: 0,
-                                                    views: targetData.view_count || 0
-                                                }}
-                                                liked={false}
-                                                onClick={() => {
-                                                    setDetailStack(prev => [...prev, { ...targetData, type: 'tweet' }]);
-                                                }}
-                                                disableInteractions={true}
-                                            />
+                                                    id={(targetData as any).id}
+                                                    user={{
+                                                        id: (targetData as any).profiles?.id || '00000000-0000-0000-0000-000000000000',
+                                                        name: (targetData as any).profiles?.nickname || 'Unknown',
+                                                        username: (targetData as any).profiles?.user_id || 'unknown',
+                                                        avatar: (targetData as any).profiles?.avatar_url || ''
+                                                    }}
+                                                    image={(targetData as any).image_urls}
+                                                    content={(targetData as any).content}
+                                                    timestamp={(targetData as any).created_at}
+                                                    createdAt={(targetData as any).created_at}
+                                                    stats={{
+                                                        likes: (targetData as any).like_count || 0,
+                                                        replies: (targetData as any).reply_count || 0,
+                                                        retweets: 0,
+                                                        views: (targetData as any).view_count || 0
+                                                    }}
+                                                    liked={false}
+                                                    onClick={() => {
+                                                        setDetailStack(prev => [...prev, { ...targetData, type: 'tweet' } as any]);
+                                                    }}
+                                                    disableInteractions={true}
+                                                />
                                         </div>
                                         </div>
                                     )}
@@ -1103,30 +1099,30 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                         <div>
                                             <div className="border border-red-200 dark:border-red-900/50 rounded-xl overflow-hidden shadow-sm">
                                                 <ReplyCard 
-                                                reply={{
-                                                    id: targetData.id,
-                                                    tweetId: targetData.tweet_id,
-                                                    type: 'reply',
-                                                    user: {
-                                                        id: targetData.profiles?.id || '00000000-0000-0000-0000-000000000000',
-                                                        username: targetData.profiles?.user_id || 'unknown',
-                                                        name: targetData.profiles?.nickname || 'Unknown',
-                                                        avatar: targetData.profiles?.avatar_url || ''
-                                                    },
-                                                    content: targetData.content,
-                                                    timestamp: targetData.created_at,
-                                                    createdAt: targetData.created_at,
-                                                    stats: {
-                                                        likes: targetData.like_count || 0,
-                                                        replies: targetData.reply_count || 0,
-                                                        retweets: 0,
-                                                        views: targetData.view_count || 0
-                                                    },
-                                                    liked: false
-                                                }}
-                                                highlight={true}
-                                                onClick={(id, tweetId) => handleReplyClick(id, tweetId)}
-                                                disableInteractions={true}
+                                                    reply={{
+                                                        id: (targetData as any).id,
+                                                        tweetId: (targetData as any).tweet_id,
+                                                        type: 'reply',
+                                                        user: {
+                                                            id: (targetData as any).profiles?.id || '00000000-0000-0000-0000-000000000000',
+                                                            username: (targetData as any).profiles?.user_id || 'unknown',
+                                                            name: (targetData as any).profiles?.nickname || 'Unknown',
+                                                            avatar: (targetData as any).profiles?.avatar_url || ''
+                                                        },
+                                                        content: (targetData as any).content,
+                                                        timestamp: (targetData as any).created_at,
+                                                        createdAt: (targetData as any).created_at,
+                                                        stats: {
+                                                            likes: (targetData as any).like_count || 0,
+                                                            replies: (targetData as any).reply_count || 0,
+                                                            retweets: 0,
+                                                            views: (targetData as any).view_count || 0
+                                                        },
+                                                        liked: false
+                                                    } as any}
+                                                    highlight={true}
+                                                    onClick={(id, tweetId) => handleReplyClick(id, tweetId)}
+                                                    disableInteractions={true}
                                                 />
                                             </div>
                                         </div>
@@ -1138,12 +1134,12 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                             {reportedMessages.length > 0 ? (
                                                 <div className="space-y-2">
                                                     <h4 className="text-xs font-bold text-red-500 uppercase">신고된 메시지 ({reportedMessages.length})</h4>
-                                                    {reportedMessages.map(msg => (
+                                                    {reportedMessages.map((msg: any) => (
                                                         <div key={msg.id} className="bg-white dark:bg-black border border-red-200 dark:border-red-900/50 rounded-xl p-4 shadow-sm relative overflow-hidden space-y-2">
                                                             <div className="absolute top-0 right-0 p-1 bg-red-500 text-white text-[10px] font-bold px-2 rounded-bl-lg">신고 대상</div>
                                                             <div className="flex gap-3">
                                                                 <Avatar className="w-10 h-10 flex-shrink-0">
-                                                                    <AvatarImage src={msg.sender?.avatar_url} />
+                                                                    <AvatarImage src={msg.sender?.avatar_url || undefined} />
                                                                     <AvatarFallback>?</AvatarFallback>
                                                                 </Avatar>
                                                                 <div className="flex-1 min-w-0">
@@ -1205,19 +1201,18 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                                                 setShowFullChat(true);
                                                                 // Load ALL messages from the chat
                                                                 if (targetData?.id && fullChatMessages.length === 0) {
-                                                                    const { data: allMsgs } = await supabase
-                                                                        .from('direct_messages')
+                                                                    const { data: allMsgs } = await (supabase.from('direct_messages') as any)
                                                                         .select('*, attachments:direct_message_attachments(*)')
                                                                         .eq('chat_id', targetData.id)
                                                                         .order('created_at', { ascending: true });
                                                                     
-                                                                    if (allMsgs && allMsgs.length > 0) {
-                                                                        const senderIds = Array.from(new Set(allMsgs.map(m => m.sender_id)));
-                                                                        const { data: profiles } = await supabase.from('profiles').select('*').in('user_id', senderIds);
+                                                                    if (allMsgs && (allMsgs as any).length > 0) {
+                                                                        const senderIds = Array.from(new Set((allMsgs as any).map((m: any) => m.sender_id)));
+                                                                        const { data: profiles } = await (supabase.from('profiles') as any).select('*').in('user_id', senderIds);
                                                                         
-                                                                        const enriched = allMsgs.map(m => ({
+                                                                        const enriched = allMsgs.map((m: any) => ({
                                                                             ...m,
-                                                                            sender: profiles?.find(p => p.user_id === m.sender_id)
+                                                                            sender: profiles?.find((p: any) => p.user_id === m.sender_id)
                                                                         }));
                                                                         setFullChatMessages(enriched);
                                                                     }
@@ -1229,16 +1224,16 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                                         </button>
                                                     </div>
                                                     <div className="space-y-3 pl-4 border-l-2 border-border/50 ml-2 max-h-96 overflow-y-auto">
-                                                        {contextData.map((msg: any) => (
+                                                        {(contextData as ReportedChatMessage[]).map((msg) => (
                                                             <div key={msg.id} className="flex gap-3 opacity-70 hover:opacity-100 transition-opacity">
                                                                  <Avatar className="w-8 h-8">
-                                                                    <AvatarImage src={msg.sender?.avatar_url} />
+                                                                    <AvatarImage src={msg.sender?.avatar_url || undefined} />
                                                                     <AvatarFallback>?</AvatarFallback>
                                                                 </Avatar>
                                                                 <div className="flex-1">
                                                                     <div className="flex items-center gap-2 mb-0.5">
                                                                         <span className="text-sm font-bold">{msg.sender?.nickname}</span>
-                                                                        <span className="text-[10px] text-muted-foreground">{new Date(msg.created_at).toLocaleTimeString()}</span>
+                                                                        <span className="text-[10px] text-muted-foreground">{new Date(msg.created_at as any).toLocaleTimeString()}</span>
                                                                     </div>
                                                                     {msg.content && (
                                                                         <p className="bg-white dark:bg-zinc-800 px-3 py-1.5 rounded-lg text-sm border border-border mb-1">
@@ -1250,10 +1245,10 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                                                             {msg.attachments.map((att: any) => (
                                                                                 <div key={att.id} className="text-xs">
                                                                                     {att.type === 'image' && (
-                                                                                        <img src={att.url} alt="" className="max-w-[150px] rounded border" />
+                                                                                        <img src={att.url ?? undefined} alt="" className="max-w-[150px] rounded border" />
                                                                                     )}
                                                                                     {att.type === 'video' && (
-                                                                                        <video src={att.url} controls className="max-w-[150px] rounded border" />
+                                                                                        <video src={att.url ?? undefined} controls className="max-w-[150px] rounded border" />
                                                                                     )}
                                                                                     {att.type === 'file' && (
                                                                                         <a href={att.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-xs">
@@ -1288,9 +1283,9 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                             user_id: profile.user_id,
                                             name: profile.nickname,
                                             username: profile.user_id,
-                                            avatar: profile.avatar_url,
+                                            avatar: profile.avatar_url || '',
                                             bio: profile.bio,
-                                            joinDate: new Date(profile.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }),
+                                            joinDate: new Date(profile.created_at as any).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }),
                                             followers: profile.followers_count || 0,
                                             following: profile.following_count || 0,
                                             banner: profile.banner_url,
@@ -1314,12 +1309,12 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                             id: profile.id,
                                             name: profile.nickname,
                                             username: profile.user_id,
-                                            avatar: profile.avatar_url,
+                                            avatar: profile.avatar_url || '',
                                         }}
                                         onItemClick={async (item) => {
                                             // If it's a reply, load the parent tweet
-                                            if (item.type === 'reply' && (item as any).tweetId) {
-                                                await handleReplyClick((item as any).id, (item as any).tweetId);
+                                            if (item.type === 'reply' && (item as unknown as { tweetId: string }).tweetId) {
+                                                await handleReplyClick((item as unknown as { id: string }).id, (item as unknown as { tweetId: string }).tweetId);
                                             } else {
                                                 // For regular tweets, just add to stack
                                                 setDetailStack(prev => [...prev, item]);
@@ -1337,15 +1332,15 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
       </div>
 
       {/* Full Chat View Overlay */}
-      {showFullChat && report?.target_type === 'chat' && (fullChatMessages.length > 0 ? fullChatMessages : contextData) && (() => {
-        const messages = fullChatMessages.length > 0 ? fullChatMessages : contextData;
+      {showFullChat && report?.target_type === 'chat' && ((fullChatMessages as any).length > 0 ? fullChatMessages : contextData) && (() => {
+        const messages = ((fullChatMessages as any).length > 0 ? fullChatMessages : contextData) as any;
         const reporterUserId = report.reporter?.user_id;
         
         return (
           <div className="absolute inset-0 bg-background z-50 flex flex-col">
             {/* Header */}
             <div className="flex-shrink-0 bg-background border-b border-border p-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold">전체 채팅방 ({messages.length}개 메시지)</h3>
+              <h3 className="text-lg font-bold">전체 채팅방 ({(messages as any)?.length || 0}개 메시지)</h3>
               <button
                 onClick={() => setShowFullChat(false)}
                 className="px-3 py-1.5 text-sm hover:bg-secondary rounded-lg transition-colors"
@@ -1356,7 +1351,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
             
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {messages.map((msg: any) => {
+              {(messages as any)?.map((msg: any) => {
                 const isReporter = msg.sender?.user_id === reporterUserId;
                 
                 return (
@@ -1365,7 +1360,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                     {/* Left Avatar (for reported user) */}
                     {!isReporter && (
                       <Avatar className="w-8 h-8 flex-shrink-0">
-                        <AvatarImage src={msg.sender?.avatar_url} />
+                        <AvatarImage src={msg.sender?.avatar_url || undefined} />
                         <AvatarFallback>?</AvatarFallback>
                       </Avatar>
                     )}
@@ -1378,7 +1373,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                           {msg.sender?.nickname}
                         </span>
                         <span className="text-[10px] text-muted-foreground">
-                          {new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(msg.created_at as any).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
                       
@@ -1397,7 +1392,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                     {/* Right Avatar (for reporter) */}
                     {isReporter && (
                       <Avatar className="w-8 h-8 flex-shrink-0">
-                        <AvatarImage src={msg.sender?.avatar_url} />
+                        <AvatarImage src={msg.sender?.avatar_url ?? undefined} />
                         <AvatarFallback>?</AvatarFallback>
                       </Avatar>
                     )}

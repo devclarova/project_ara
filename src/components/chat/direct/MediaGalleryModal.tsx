@@ -56,9 +56,9 @@ export default function MediaGalleryModal({ isOpen, onClose, chatId }: MediaGall
     // So we reverse/sort it.
     const sorted = [...mediaMessages].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
     
-    sorted.forEach(msg => {
+    sorted.forEach((msg: any) => {
       if (msg.attachments && msg.attachments.length > 0) {
-        msg.attachments.forEach((att: any) => {
+        msg.attachments.forEach((att: import('@/types/ChatType').MessageAttachment) => {
           // 파일 타입은 제외하고 이미지와 비디오만 갤러리에 표시
             const type = (att.type || '').toLowerCase();
             if (type === 'video') {
@@ -94,7 +94,7 @@ export default function MediaGalleryModal({ isOpen, onClose, chatId }: MediaGall
   const groupedMedia = useMemo(() => {
     const groups: GroupedMedia = {};
     
-    allMedia.forEach(item => {
+    allMedia.forEach((item: any) => {
       const dateKey = new Date(item.date).toDateString();
       if (!groups[dateKey]) {
         groups[dateKey] = [];

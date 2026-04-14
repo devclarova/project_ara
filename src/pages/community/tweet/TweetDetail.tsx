@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { SnsStore } from '@/lib/snsState';
 import type { UIPost, UIReply } from '@/types/sns';
 import { tweetService } from '@/services/tweetService';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 export default function TweetDetail() {
   const { t } = useTranslation();
@@ -205,7 +206,7 @@ export default function TweetDetail() {
     const profileChannel = supabase
       .channel(`tweet-${id}-profiles-sync`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
-        const updated = payload.new as any;
+        const updated = payload.new as { id: string; user_id: string; banned_until?: string | null };
         if (updated.banned_until === undefined) return;
 
         // 본문 작성자 체크
@@ -306,15 +307,14 @@ export default function TweetDetail() {
       });
 
       // 2. RPC 호출 (LocalStorage 체크 제거 -> 매 방문마다 카운트)
-      const { data: profile } = await supabase
-        .from('profiles')
+      const { data: profile } = await (supabase.from('profiles') as any)
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
 
       if (!profile) return;
 
-      const { error } = await supabase.rpc('increment_tweet_view', {
+      const { error } = await (supabase as any).rpc('increment_tweet_view', {
         tweet_id_input: tweetId,
         viewer_id_input: profile.id, // viewer_id is used for history logging if needed, or just bypass uniqueness check/log logic in DB
       });
@@ -343,8 +343,8 @@ export default function TweetDetail() {
       }
 
       setTweet(data);
-    } catch (error: any) {
-      console.error('트윗 불러오기 실패:', error.message);
+    } catch (error: unknown) {
+      console.error('트윗 불러오기 실패:', getErrorMessage(error));
       toast.info(t('tweet.deleted_or_not_exist'));
       navigate(-1);
     } finally {
@@ -389,8 +389,8 @@ export default function TweetDetail() {
 
         setPage(pageParam + 1);
       }
-    } catch (error: any) {
-      console.error('댓글 불러오기 실패:', error.message);
+    } catch (error: unknown) {
+      console.error('댓글 불러오기 실패:', getErrorMessage(error));
     }
   };
 
@@ -416,8 +416,7 @@ export default function TweetDetail() {
             if (prev.some(r => r.id === newReply.id)) return prev;
             return prev;
           });
-          const { data: profile } = await supabase
-            .from('profiles')
+          const { data: profile } = await (supabase.from('profiles') as any)
             .select('nickname, user_id, avatar_url')
             .eq('id', newReply.author_id)
             .maybeSingle();
@@ -585,7 +584,7 @@ export default function TweetDetail() {
       window.history.scrollRestoration = 'manual';
     }
     let foundAndLocked = false;
-    let lockTimer: any = null;
+    let lockTimer: ReturnType<typeof setTimeout> | null = null;
 
     const findAndScroll = () => {
       if (cancelled) return;

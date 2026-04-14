@@ -23,8 +23,7 @@ function readDraft() {
  * 프로필 데이터를 로컬 드래프트(Draft)를 참조하여 자동 복구 및 생성 보장
  */
 async function ensureProfileFromDraftAfterSignIn(userId: string, email?: string | null) {
-  const { data: exists, error: exErr } = await supabase
-    .from('profiles')
+  const { data: exists, error: exErr } = await (supabase.from('profiles') as any)
     .select('user_id')
     .eq('user_id', userId)
     .maybeSingle();
@@ -55,7 +54,7 @@ async function ensureProfileFromDraftAfterSignIn(userId: string, email?: string 
     updated_at: new Date().toISOString(),
   };
 
-  const { error } = await supabase.from('profiles').insert(payload);
+  const { error } = await (supabase.from('profiles') as any).insert(payload);
   if (!error) {
     try {
       localStorage.removeItem(DRAFT_KEY);
@@ -86,8 +85,7 @@ async function postSignInRoute(navigate: ReturnType<typeof useNavigate>) {
   }
 
   // 소셜: 온보딩 여부로 분기
-  const { data: prof, error } = await supabase
-    .from('profiles')
+  const { data: prof, error } = await (supabase.from('profiles') as any)
     .select('user_id,is_onboarded')
     .eq('user_id', u.id)
     .maybeSingle();
@@ -231,8 +229,8 @@ function SignInCard() {
     // 인증 후처리 워크플로우 — 정상 로그인이 확인되면 프로필 상태에 따른 라우팅 엔진(postSignInRoute) 가동
     try {
       await postSignInRoute(navigate);
-    } catch (e) {
-      console.warn('[signin route] fallback social:', (e as any)?.message);
+    } catch (e: unknown) {
+      console.warn('[signin route] fallback social:', (e as Error)?.message);
       navigate('/studyList', { replace: true });
     } finally {
       setLoading(false);

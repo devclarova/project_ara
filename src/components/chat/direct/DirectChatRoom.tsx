@@ -573,7 +573,7 @@ const DirectChatRoom = ({
 
     // Iterate over messageGroups to find messages
     // 원천 데이터 스캔 및 포맷팅 — 선택된 메시지의 식별자를 기반으로 전체 리스트에서 해당 데이터를 추적하여 신고용 스냅샷 생성
-    (messages || []).forEach(msg => {
+    (messages || []).forEach((msg: any) => {
       if (selectedMessages.has(msg.id)) {
         const content = typeof msg.content === 'string' ? msg.content : '(Media/File)';
         const date = formatMessageTime(msg.created_at);
@@ -617,9 +617,9 @@ const DirectChatRoom = ({
       (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
     );
 
-    sortedMsgs.forEach(msg => {
+    sortedMsgs.forEach((msg: any) => {
       if (msg.attachments?.length) {
-        msg.attachments.forEach(att => {
+        msg.attachments.forEach((att: import('../../../types/ChatType').MessageAttachment) => {
           const type = (att.type || '').toLowerCase();
           if (type === 'video') {
             media.push({
@@ -652,7 +652,7 @@ const DirectChatRoom = ({
   // Calculate content snapshot for reporting
   const contentSnapshot = useMemo(() => {
     if (!isReportMode || selectedMessages.size === 0) return null;
-    return messages.filter(m => selectedMessages.has(m.id));
+    return messages.filter((m: any) => selectedMessages.has(m.id));
   }, [messages, selectedMessages, isReportMode]);
 
   // 전체 미디어 목록 (무한 스크롤 너머의 데이터 포함)
@@ -674,9 +674,9 @@ const DirectChatRoom = ({
               (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
             );
 
-            sorted.forEach(msg => {
+            sorted.forEach((msg: any) => {
               if (msg.attachments?.length) {
-                msg.attachments.forEach((att: any) => {
+                msg.attachments.forEach((att: import('../../../types/ChatType').MessageAttachment) => {
                   const type = (att.type || '').toLowerCase();
                   if (type === 'video') {
                     fullList.push({
@@ -704,7 +704,7 @@ const DirectChatRoom = ({
             });
 
             // Remove duplicates just in case
-            const uniqueList = Array.from(new Map(fullList.map(item => [item.url, item])).values());
+            const uniqueList = Array.from(new Map(fullList.map((item: any) => [item.url, item])).values());
             setFullMediaList(uniqueList);
           }
         })
@@ -833,7 +833,7 @@ const DirectChatRoom = ({
             let content = typeof lastMessage.content === 'string' ? lastMessage.content : '';
 
             if (lastMessage.attachments && lastMessage.attachments.length > 0) {
-              const types = lastMessage.attachments.map(a => a.type);
+              const types = lastMessage.attachments.map((a: any) => a.type);
               let prefix = '';
               if (types.includes('video')) prefix = `[${t('notification.media_video', '동영상')}] `;
               else if (types.includes('file'))
@@ -1012,7 +1012,7 @@ const DirectChatRoom = ({
     // 이미 스크롤을 완료한 ID라면 건너뜀 (데이터 업데이트로 인한 재실행 방지)
     if (hasScrolledToHighlightRef.current === highlightMessageId) return;
     // 데이터 진단: 타겟 메시지가 목록에 있는지 확인
-    const exists = messages.some(m => m.id === highlightMessageId);
+    const exists = messages.some((m: any) => m.id === highlightMessageId);
     if (!exists) return;
     const targetId = `msg-${highlightMessageId}`;
     let retryCount = 0;
@@ -1113,7 +1113,7 @@ const DirectChatRoom = ({
 
     // 서버 사이드 검색 수행
     const foundMessages = await searchMessagesInChat(chatId, q);
-    const matchedIds = foundMessages.map(m => m.id);
+    const matchedIds = foundMessages.map((m: any) => m.id);
 
     setSearchResults(matchedIds);
     setCurrentResultIndex(0);
@@ -1127,7 +1127,7 @@ const DirectChatRoom = ({
   // goToResult에서 쓸 수 있도록 별도 함수 분리 (Ref나 내부 로직 활용)
   const jumpToMessage = useCallback(
     (messageId: string) => {
-      const exists = messages.some(m => m.id === messageId);
+      const exists = messages.some((m: any) => m.id === messageId);
       if (exists) {
         scrollToMessage(messageId);
       } else {

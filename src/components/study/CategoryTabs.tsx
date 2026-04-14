@@ -10,12 +10,12 @@ type CategoryTabsProps = {
   categories?: { value: TCategory; label: string }[];
 };
 
-const DEFAULT_CATEGORIES: { value: TCategory; label: string }[] = CATEGORIES.map(c => ({ value: c, label: c }));
+const DEFAULT_CATEGORIES: { value: TCategory; label: string }[] = CATEGORIES.map((c: any) => ({ value: c, label: c }));
 
 const CategoryTabs = ({ active, onChange, className = '', categories = DEFAULT_CATEGORIES }: CategoryTabsProps) => {
   const handleKey = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
-      const items = categories.map(c => c.value);
+      const items = categories.map((c: any) => c.value);
       const idx = items.indexOf(active);
       if (idx < 0) return;
       if (e.key === 'ArrowRight') {

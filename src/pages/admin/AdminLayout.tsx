@@ -28,6 +28,7 @@ import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 const AdminLayout = () => {
   const { t } = useTranslation();
@@ -67,8 +68,7 @@ const AdminLayout = () => {
       if (!user) return;
 
       try {
-        const { data, error } = await supabase
-          .from('profiles')
+        const { data, error } = await (supabase.from('profiles') as any)
           .select('nickname, avatar_url')
           .eq('user_id', user.id)
           .single();
@@ -80,8 +80,8 @@ const AdminLayout = () => {
           email: user.email || 'admin@project-ara.com',
           avatar_url: data?.avatar_url || null,
         });
-      } catch (error) {
-        console.error('Error fetching admin profile:', error);
+      } catch (error: unknown) {
+        console.error('Error fetching admin profile:', getErrorMessage(error));
         // Fallback to user email if profile fetch fails
         setAdminProfile({
           nickname: '관리자',
@@ -123,15 +123,14 @@ const AdminLayout = () => {
     try {
       // 1. 데이터베이스 내 활성 상태(Online Status) 즉시 해제 — 실시간 상호작용 피드백 동기화
       if (user) {
-        await supabase
-          .from('profiles')
+        await (supabase.from('profiles') as any)
           .update({ is_online: false, last_active_at: new Date().toISOString() })
           .eq('user_id', user.id);
       }
       // 2. 인증 서버 세션 파기 — 보안 무결성 확보를 위한 클라우드 로그아웃 수행
       await supabase.auth.signOut();
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Logout error:', getErrorMessage(error));
     } finally {
       window.location.href = '/';
     }
@@ -368,7 +367,6 @@ const AdminLayout = () => {
   );
 };
 
-// 네비게이션 메뉴 아이템 — 경로 활성 상태 매칭 및 인터페이스 바인딩 엔진
 function NavItem({
   icon: Icon,
   label,
@@ -376,7 +374,7 @@ function NavItem({
   end,
   onClick,
 }: {
-  icon: any;
+  icon: React.ElementType;
   label: string;
   to: string;
   end?: boolean;

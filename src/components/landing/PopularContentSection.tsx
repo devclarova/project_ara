@@ -31,8 +31,7 @@ export default function PopularContentSection() {
     const fetchFeatured = async () => {
       setLoading(true);
 
-      const { data, error } = await supabase
-        .from('study')
+      const { data, error } = await (supabase.from('study') as any)
         .select(
           `
           id,
@@ -58,8 +57,15 @@ export default function PopularContentSection() {
         console.error('Failed to fetch featured contents', error);
         setItems([]);
       } else {
-        const mapped: StudyListProps[] = (data ?? []).map((row: any) => {
-          const v = Array.isArray(row.video) ? row.video[0] : row.video;
+        const mapped: StudyListProps[] = (data || []).map((row: any) => {
+          const videoData = Array.isArray(row.video) ? row.video[0] : row.video;
+          const v = videoData as { 
+            contents?: string; 
+            episode?: string; 
+            scene?: string; 
+            level?: string; 
+            runtime_bucket?: string | null;
+          } | undefined;
 
           return {
             id: row.id,

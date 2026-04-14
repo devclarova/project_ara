@@ -36,8 +36,7 @@ export default function AlarmSettings({ onBackToMenu, searchQuery }: PrivacySett
       if (!session?.user?.id) return;
 
       try {
-        const { data, error } = await supabase
-          .from('profiles')
+        const { data, error } = await (supabase.from('profiles') as any)
           .select('notify_comment, notify_like, notify_follow, notify_chat')
           .eq('user_id', session.user.id)
           .single();
@@ -72,8 +71,7 @@ export default function AlarmSettings({ onBackToMenu, searchQuery }: PrivacySett
 
     try {
       // 2. DB Update
-      const { error } = await supabase
-        .from('profiles')
+      const { error } = await (supabase.from('profiles') as any)
         .update({ [key]: value })
         .eq('user_id', session.user.id);
 

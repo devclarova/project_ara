@@ -10,6 +10,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRelinkDetection } from '@/hooks/useRelinkDetection';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/utils/errorMessage';
+import type { User } from '@supabase/supabase-js';
 
 const DRAFT_KEY = 'signup-profile-draft';
 
@@ -29,7 +31,7 @@ function readDraft() {
  * - 생성 성공 시 draft 제거
  * - 이메일 플로우는 is_onboarded=true로 마무리(첫 로그인에서 바로 /social)
  */
-async function ensureProfileFromDraft(uid: string, email?: string | null, userMetadata?: any) {
+async function ensureProfileFromDraft(uid: string, email?: string | null, userMetadata?: Record<string, unknown>) {
   const localDraft = readDraft();
   // 로컬 드래프트와 메타데이터 결합 (메타데이터가 있으면 우선권)
   const draft = { ...localDraft, ...userMetadata };
@@ -81,7 +83,7 @@ async function ensureProfileFromDraft(uid: string, email?: string | null, userMe
     updated_at: new Date().toISOString(),
   };
 
-  const { error } = await supabase.from('profiles').upsert(payload, { onConflict: 'user_id' });
+  const { error } = await (supabase.from('profiles') as any).upsert(payload, { onConflict: 'user_id' });
   if (!error) {
     try {
       localStorage.removeItem(DRAFT_KEY);
@@ -89,10 +91,9 @@ async function ensureProfileFromDraft(uid: string, email?: string | null, userMe
   }
 }
 
-async function createProfileShellIfMissing(user: any) {
+async function createProfileShellIfMissing(user: User) {
   const uid = user.id;
-  const { count, error: exErr } = await supabase
-    .from('profiles')
+  const { count, error: exErr } = await (supabase.from('profiles') as any)
     .select('user_id', { count: 'exact', head: true })
     .eq('user_id', uid);
   if (!exErr && (count ?? 0) > 0) return;
@@ -119,7 +120,7 @@ async function createProfileShellIfMissing(user: any) {
     updated_at: new Date().toISOString(),
   };
 
-  await supabase.from('profiles').upsert(payload, { onConflict: 'user_id' });
+  await (supabase.from('profiles') as any).upsert(payload, { onConflict: 'user_id' });
 }
 
 export default function AuthCallback() {
@@ -139,7 +140,7 @@ export default function AuthCallback() {
   // setTimeout 반환형 number로 고정
   const redirectTimerRef = useRef<number | null>(null);
 
-  const scheduleRedirect = (path: string, delay = 600, state?: any) => {
+  const scheduleRedirect = (path: string, delay = 600, state?: Record<string, unknown>) => {
     if (redirectTimerRef.current) window.clearTimeout(redirectTimerRef.current);
     redirectTimerRef.current = window.setTimeout(() => {
       navigate(path, { replace: true, state });
@@ -218,8 +219,8 @@ export default function AuthCallback() {
           if (!exErr && exData.session) {
             session = exData.session;
           }
-        } catch (e: any) {
-          // ignore error
+        } catch (e: unknown) {
+          console.error('Exchange code error:', getErrorMessage(e));
         }
       }
 
@@ -252,8 +253,8 @@ export default function AuthCallback() {
         // 1. 드래프트 기반 프로필 생성
         try {
           await ensureProfileFromDraft(u.id, u.email, u.user_metadata);
-        } catch (e) {
-          // console.warn('[AuthCallback] ensureProfileFromDraft error', e);
+        } catch (e: unknown) {
+          console.warn('[AuthCallback] ensureProfileFromDraft error', getErrorMessage(e));
         }
 
         // 2. 로그아웃 (이메일 인증만 마치고 다시 로그인 유도)
@@ -299,21 +300,20 @@ export default function AuthCallback() {
         if (isLinkingFlag || wasBypassed) {
           try {
             // Delete the unlinked history record now that it's successfully re-linked
-            const latestIdentity = (u.identities as any[])?.sort(
-              (a: any, b: any) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+            const latestIdentity = [...(u.identities ?? [])]?.sort(
+              (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
             )[0];
             
             if (latestIdentity) {
-              await supabase
-                .from('unlinked_identities')
+              await (supabase.from('unlinked_identities') as any)
                 .delete()
                 .match({
                   provider: latestIdentity.provider,
                   identity_id: latestIdentity.id
                 });
             }
-          } catch (e) {
-            console.error('[AuthCallback] Clear record error:', e);
+          } catch (e: unknown) {
+            console.error('[AuthCallback] Clear record error:', getErrorMessage(e));
           } finally {
             // Do NOT remove linking flag here yet, we need it for the final redirect check below
           }
@@ -321,8 +321,7 @@ export default function AuthCallback() {
       }
 
       // 1. 이미 프로필이 있는지 확인
-      const { data: existingProfile } = await supabase
-        .from('profiles')
+      const { data: existingProfile } = await (supabase.from('profiles') as any)
         .select('is_onboarded')
         .eq('user_id', u.id)
         .maybeSingle();
@@ -351,8 +350,8 @@ export default function AuthCallback() {
       // (C) 프로필 없거나 온보딩 미완료 → 셸 생성 시도 후 위자드로
       try {
         await createProfileShellIfMissing(u);
-      } catch (e) {
-        console.warn('[AuthCallback] createProfileShellIfMissing error', e);
+      } catch (e: unknown) {
+        console.warn('[AuthCallback] createProfileShellIfMissing error', getErrorMessage(e));
       }
 
       // 소셜 전용 회원가입(추가 정보 입력) 페이지로 이동

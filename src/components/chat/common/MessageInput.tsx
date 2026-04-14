@@ -89,7 +89,7 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
   // 메시지 고도화 발송 엔진(Dispatch Engine) — 텍스트/미디어 페이로드 구성, 보안 검증(금칙어/제재) 및 네트워크 트랜잭션 오케스트레이션
   const handleSubmit = useCallback(
     async (e: React.FormEvent | KeyboardEvent) => {
-      (e as any).preventDefault?.();
+      if ('preventDefault' in e) e.preventDefault();
 
       if (isComposing || sending) return;
       
@@ -127,7 +127,7 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
         const success = await sendMessage({
           chat_id: chatId,
           content: payload,
-          attachments: attachments.map(a => a.file),
+          attachments: attachments.map((a: any) => a.file),
         });
         if (success) {
           setMessage('');
@@ -150,7 +150,7 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
       if (isComposing) return;
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        handleSubmit(e as any);
+        handleSubmit(e.nativeEvent);
       }
     },
     [isComposing, handleSubmit],
@@ -183,11 +183,11 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
 
   const removeAttachment = useCallback((id: string) => {
     setAttachments(prev => {
-      const target = prev.find(a => a.id === id);
+      const target = prev.find((a: any) => a.id === id);
       if (target?.previewUrl) {
         URL.revokeObjectURL(target.previewUrl);
       }
-      return prev.filter(a => a.id !== id);
+      return prev.filter((a: any) => a.id !== id);
     });
   }, []);
 

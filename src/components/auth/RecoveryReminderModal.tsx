@@ -28,7 +28,7 @@ export default function RecoveryReminderModal() {
 
     // 2. Exclusion paths: Don't show while in auth flow or on landing page
     const NO_MODAL_PATHS = ['/', '/signin', '/signup', '/auth/callback', '/signup/social', '/find-email', '/reset-password', '/update-password'];
-    if (NO_MODAL_PATHS.some(p => pathname === p || (p !== '/' && pathname.startsWith(p)))) {
+    if (NO_MODAL_PATHS.some((p: any) => pathname === p || (p !== '/' && pathname.startsWith(p)))) {
       setLoading(false);
       return;
     }
@@ -47,8 +47,7 @@ export default function RecoveryReminderModal() {
         }
 
         // 4. Fetch profile data
-        const { data, error } = await supabase
-          .from('profiles')
+        const { data, error } = await (supabase.from('profiles') as any)
           .select('recovery_question, recovery_answer_hash, recovery_email, is_onboarded')
           .eq('user_id', user.id)
           .maybeSingle();

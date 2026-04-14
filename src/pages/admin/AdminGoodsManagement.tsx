@@ -4,15 +4,15 @@
  * - 방법(How): 상품 테이블 CRUD 쿼리 연동과 함께 뱃지 토글, 일괄 수정 및 검색/상태 복합 필터 기능을 지원함
  */
 import React, { useState } from 'react';
-import { Search, Edit, Trash2, Eye, EyeOff, ChevronDown, Calendar, Package, DollarSign } from 'lucide-react';
+import { Search, Edit, Trash2, Eye, EyeOff, ChevronDown, Calendar, Package, DollarSign, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns';
-import { Loader2 } from 'lucide-react';
 import { goodsService } from '@/services/goodsService';
 import type { Product } from '@/services/goodsService';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 const AdminGoodsManagement = () => {
   const { t } = useTranslation();
@@ -22,7 +22,7 @@ const AdminGoodsManagement = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [goods, setGoods] = useState<any[]>([]);
+  const [goods, setGoods] = useState<Product[]>([]);
 
   const [categoryFilter, setCategoryFilter] = useState('all');
 
@@ -36,8 +36,8 @@ const AdminGoodsManagement = () => {
         category: categoryFilter
       });
       setGoods(data);
-    } catch (err: any) {
-      console.error('Fetch goods error:', err);
+    } catch (err: unknown) {
+      console.error('Fetch goods error:', getErrorMessage(err));
       toast.error('상품 목록을 불러오는 데 실패했습니다.');
     } finally {
       setLoading(false);
@@ -52,9 +52,10 @@ const AdminGoodsManagement = () => {
   const handleToggleHide = async (id: string, currentHidden: boolean) => {
     try {
       await goodsService.updateProductFields(id, { is_hidden: !currentHidden });
-      setGoods(goods.map(p => p.id === id ? { ...p, is_hidden: !currentHidden } : p));
+      setGoods(goods.map((p: any) => p.id === id ? { ...p, is_hidden: !currentHidden } : p));
       toast.success(!currentHidden ? '상품이 숨김 처리되었습니다.' : '상품 숨김이 해제되었습니다.');
-    } catch (err: any) {
+    } catch (err: unknown) {
+      console.error('Toggle hide error:', getErrorMessage(err));
       toast.error('상태 변경 실패');
     }
   };
@@ -73,13 +74,14 @@ const AdminGoodsManagement = () => {
     if (!selectedProduct) return;
 
     try {
-      const { error } = await supabase.from('products').delete().eq('id', selectedProduct);
+      const { error } = await (supabase.from('products') as any).delete().eq('id', selectedProduct);
       if (error) throw error;
-      setGoods(goods.filter(p => p.id !== selectedProduct));
+      setGoods(goods.filter((p: any) => p.id !== selectedProduct));
       toast.success(t('admin.goods_deleted'));
       setDeleteModalOpen(false);
       setSelectedProduct(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      console.error('Delete product error:', getErrorMessage(err));
       toast.error('삭제 실패');
     }
   };
@@ -349,7 +351,7 @@ const AdminGoodsManagement = () => {
 };
 
 // 내부 원자적 UI 컴포넌트(Atomic Components) — 고수준 재사용성을 확보한 하위 조각들
-const PageButton = ({ label, icon: Icon, active, disabled, rotate }: { label?: string, icon?: any, active?: boolean, disabled?: boolean, rotate?: number }) => (
+const PageButton = ({ label, icon: Icon, active, disabled, rotate }: { label?: string, icon?: React.ElementType, active?: boolean, disabled?: boolean, rotate?: number }) => (
   <button 
     disabled={disabled}
     className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all font-black text-xs border ${

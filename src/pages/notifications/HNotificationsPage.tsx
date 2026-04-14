@@ -36,6 +36,26 @@ interface Notification {
   } | null;
 }
 
+interface NotificationQueryResult {
+  id: string;
+  type: Notification['type'];
+  content: string | null;
+  is_read: boolean;
+  created_at: string;
+  tweet_id: string | null;
+  comment_id: string | null;
+  sender: {
+    id: string;
+    nickname: string | null;
+    user_id: string | null;
+    avatar_url: string | null;
+    username: string | null;
+    bio: string | null;
+  } | null;
+  tweet: { content: string | null } | null;
+  reply: { content: string | null } | null;
+}
+
 export default function HNotificationsPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -58,8 +78,7 @@ export default function HNotificationsPage() {
   useEffect(() => {
     if (!user) return;
     const loadProfile = async () => {
-      const { data } = await supabase
-        .from('profiles')
+      const { data } = await (supabase.from('profiles') as any)
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -72,8 +91,7 @@ export default function HNotificationsPage() {
   useEffect(() => {
     if (!profileId) return;
     const fetchNotifications = async () => {
-      const { data, error } = await supabase
-        .from('notifications')
+      const { data, error } = await (supabase.from('notifications') as any)
         .select(
           `
           id, type, content, is_read, created_at, tweet_id, comment_id,
@@ -91,7 +109,7 @@ export default function HNotificationsPage() {
       }
 
       setNotifications(
-        (data ?? []).map((n: any) => {
+        ((data as unknown as NotificationQueryResult[]) ?? []).map((n) => {
           // 피드 좋아요 혹은 멘션인 경우, 알림 자체 content가 비어있으면 원본 트윗 내용을 보여줌
           let contentToUse = n.content;
 
@@ -114,7 +132,7 @@ export default function HNotificationsPage() {
           return {
             id: n.id,
             type: n.type,
-            content: contentToUse,
+            content: contentToUse ?? '',
             is_read: n.is_read,
             created_at: n.created_at,
             tweet_id: n.tweet_id,
@@ -122,8 +140,8 @@ export default function HNotificationsPage() {
             sender: n.sender
               ? {
                   id: n.sender.id,
-                  name: n.sender.nickname,
-                  username: n.sender.username || n.sender.nickname,
+                  name: n.sender.nickname ?? '',
+                  username: (n.sender.username || n.sender.nickname) ?? '',
                   avatar: n.sender.avatar_url,
                   bio: n.sender.bio,
                 }
@@ -150,11 +168,19 @@ export default function HNotificationsPage() {
           filter: `receiver_id=eq.${profileId}`,
         },
         async payload => {
-          const newItem = payload.new as any;
+          const newItem = payload.new as {
+            id: string;
+            type: Notification['type'];
+            content: string | null;
+            is_read: boolean;
+            created_at: string;
+            tweet_id: string | null;
+            comment_id: string | null;
+            sender_id: string | null;
+          };
 
           const { data: sender } = newItem.sender_id
-            ? await supabase
-                .from('profiles')
+            ? await (supabase.from('profiles') as any)
                 .select('id, nickname, user_id, avatar_url, username, bio')
                 .eq('id', newItem.sender_id)
                 .maybeSingle()
@@ -169,8 +195,7 @@ export default function HNotificationsPage() {
               (!contentToUse || contentToUse.trim() === ''));
 
           if (needTweetContent) {
-            const { data: tweetData } = await supabase
-              .from('tweets')
+            const { data: tweetData } = await (supabase.from('tweets') as any)
               .select('content')
               .eq('id', newItem.tweet_id)
               .maybeSingle();
@@ -181,8 +206,7 @@ export default function HNotificationsPage() {
           }
 
           if (newItem.type === 'reply' && newItem.comment_id && !contentToUse) {
-            const { data: replyData } = await supabase
-              .from('tweet_replies')
+            const { data: replyData } = await (supabase.from('tweet_replies') as any)
               .select('content')
               .eq('id', newItem.comment_id)
               .maybeSingle();
@@ -194,7 +218,7 @@ export default function HNotificationsPage() {
           const uiItem: Notification = {
             id: newItem.id,
             type: newItem.type,
-            content: contentToUse,
+            content: contentToUse ?? '',
             is_read: newItem.is_read,
             created_at: newItem.created_at,
             tweet_id: newItem.tweet_id,
@@ -202,8 +226,8 @@ export default function HNotificationsPage() {
             sender: sender
               ? {
                   id: sender.id,
-                  name: sender.nickname,
-                  username: sender.username || sender.nickname,
+                  name: sender.nickname ?? '',
+                  username: (sender.username || sender.nickname) ?? '',
                   avatar: sender.avatar_url,
                   bio: sender.bio,
                 }
@@ -230,7 +254,7 @@ export default function HNotificationsPage() {
       window.dispatchEvent(new Event('notification:deleted-one'));
     }
     setNotifications(prev => prev.map(n => (n.id === id ? { ...n, is_read: true } : n)));
-    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    await (supabase.from('notifications') as any).update({ is_read: true }).eq('id', id);
   };
 
   // 전체 비우기
@@ -238,7 +262,7 @@ export default function HNotificationsPage() {
     if (!profileId) return;
 
     try {
-      const { error } = await supabase.from('notifications').delete().eq('receiver_id', profileId);
+      const { error } = await (supabase.from('notifications') as any).delete().eq('receiver_id', profileId);
 
       if (error) {
         console.error('알림 비우기 실패:', error.message);
@@ -250,8 +274,8 @@ export default function HNotificationsPage() {
       window.dispatchEvent(new Event('notifications:cleared'));
 
       toast.success(t('notification.success_clear_all'));
-    } catch (err: any) {
-      console.error('알림 비우기 예외:', err.message);
+    } catch (err: unknown) {
+      console.error('알림 비우기 예외:', (err as Error).message);
       toast.error(t('notification.error_clear_all'));
     }
   };
@@ -280,12 +304,12 @@ export default function HNotificationsPage() {
       }
 
       // DB 삭제
-      const { error } = await supabase.from('notifications').delete().eq('id', deleteId);
+      const { error } = await (supabase.from('notifications') as any).delete().eq('id', deleteId);
       if (error) throw error;
 
       toast.success(t('common.success_delete'));
-    } catch (err: any) {
-      console.error('알림 삭제 실패:', err.message);
+    } catch (err: unknown) {
+      console.error('알림 삭제 실패:', (err as Error).message);
       toast.error(t('common.error_delete'));
     } finally {
       setDeleteId(null);
@@ -414,7 +438,7 @@ export default function HNotificationsPage() {
                     key={n.id}
                     notification={{
                       id: n.id,
-                      type: n.type as any, // Alignment with card props
+                      type: n.type as Notification['type'], // Alignment with card props
                       user: {
                         id: n.sender?.id || '',
                         name:
@@ -437,7 +461,7 @@ export default function HNotificationsPage() {
                             : n.type === 'system'
                               ? '' // 시스템 알림은 본문이 길어서 action 칸은 비웁니다
                               : n.content,
-                      content: n.content,
+                      content: n.content || '',
                       timestamp: n.created_at,
                       isRead: n.is_read,
                       tweetId: n.tweet_id,
@@ -458,7 +482,7 @@ export default function HNotificationsPage() {
                         }
 
                         // DB 삭제
-                        await supabase.from('notifications').delete().eq('id', id);
+                        await (supabase.from('notifications') as any).delete().eq('id', id);
                       } catch (err) {
                         console.error('알림 자동 삭제 실패:', err);
                       }

@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { supabase } from '@/lib/supabase';
 import { useAuth } from './AuthContext';
 import { retryWithBackoff, isOnline } from '@/utils/networkUtils';
+import { getErrorMessage } from '@/utils/errorMessage';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface PresenceState {
   user_id: string;
@@ -51,7 +53,7 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     pendingReports: 0
   });
 
-  const channelRef = useRef<any>(null);
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   // ============================================================
   // 1. 전역 통계 새로고침 (관리자 전용)
@@ -66,24 +68,23 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (data) {
           setStats(prev => ({
             ...prev,
-            totalUsers: data.total_users || 0,
-            dbOnlineUsersCount: data.online_users || 0,
-            adminCount: data.admin_count || 0,
-            bannedCount: data.banned_count || 0,
-            newUsers7d: data.new_users_7d || 0,
-            pendingReports: data.pending_reports || 0,
+            totalUsers: (data as any).total_users || 0,
+            dbOnlineUsersCount: (data as any).online_users || 0,
+            adminCount: (data as any).admin_count || 0,
+            bannedCount: (data as any).banned_count || 0,
+            newUsers7d: (data as any).new_users_7d || 0,
+            pendingReports: (data as any).pending_reports || 0,
           }));
         }
       }, {
         maxAttempts: 2,
-        shouldRetry: (err: any) => {
-          const msg = err?.message?.toLowerCase() || '';
+        shouldRetry: (err: unknown) => {
+          const msg = getErrorMessage(err).toLowerCase();
           return msg.includes('fetch') || msg.includes('network');
         }
       });
-    } catch (err: any) {
-      // 네트워크 오류는 조용히 무시 (다음 주기에 시도)
-      const msg = err?.message?.toLowerCase() || '';
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err).toLowerCase();
       const isNetworkError = msg.includes('fetch') || msg.includes('network');
       if (!isNetworkError) {
         console.error('Failed to refresh global stats:', err);
@@ -104,14 +105,13 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     const fetchInitialOnlineStatus = async () => {
       try {
-        const { data, error } = await supabase
-          .from('profiles')
+        const { data, error } = await (supabase.from('profiles') as any)
           .select('id, is_online, last_active_at')
           .eq('is_online', true);
         
         if (!error && data) {
           const initial: Record<string, { is_online: boolean; last_active_at: string | null }> = {};
-          data.forEach((p: any) => {
+          (data as { id: string; is_online: boolean; last_active_at: string | null }[]).forEach((p) => {
             initial[p.id] = { is_online: p.is_online, last_active_at: p.last_active_at };
           });
           setDbOnlineUsers(initial);
@@ -143,13 +143,13 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     channelRef.current = channel;
 
     channel
-      .on('presence' as any, { event: 'sync' }, () => {
+      .on('presence' as never, { event: 'sync' }, () => {
         const state = channel.presenceState();
         const users = new Set<string>();
         let totalSessions = 0;
 
         Object.keys(state).forEach((key) => {
-          const presences = state[key] as any[];
+          const presences = state[key] as any as PresenceState[];
           users.add(key);
           totalSessions += (presences?.length || 0);
         });
@@ -166,10 +166,9 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           // Detect country via IP and update profile
           try {
             const geoRes = await fetch('https://ipapi.co/json/');
-            const geoData = await geoRes.json();
+            const geoData = (await geoRes.json()) as { country_code?: string };
             if (geoData?.country_code) {
-              await supabase
-                .from('profiles')
+              await (supabase.from('profiles') as any)
                 .update({ last_known_country: geoData.country_code })
                 .eq('id', profileId);
             }
@@ -201,8 +200,8 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'profiles' },
-        (payload) => {
-          const updated = payload.new as any;
+        (payload: import('@supabase/supabase-js').RealtimePostgresUpdatePayload<{ id: string; is_online: boolean; last_active_at: string | null }>) => {
+          const updated = payload.new;
           if (updated.is_online !== undefined && updated.id) {
              setDbOnlineUsers(prev => ({
                ...prev,

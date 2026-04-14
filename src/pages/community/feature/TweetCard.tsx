@@ -1,4 +1,6 @@
 import { BanBadge } from '@/components/common/BanBadge';
+import { getErrorMessage } from '@/utils/errorMessage';
+
 import BlockButton from '@/components/common/BlockButton';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import ReportModal from '@/components/common/ReportModal';
@@ -165,8 +167,7 @@ export default function TweetCard({
   useEffect(() => {
     const loadProfile = async () => {
       if (!authUser) return;
-      const { data, error } = await supabase
-        .from('profiles')
+      const { data, error } = await (supabase.from('profiles') as any)
         .select('id')
         .eq('user_id', authUser.id)
         .maybeSingle();
@@ -183,8 +184,7 @@ export default function TweetCard({
     if (!profileId || hasChecked.current) return;
     hasChecked.current = true;
     (async () => {
-      const { data, error } = await supabase
-        .from('tweet_likes')
+      const { data, error } = await (supabase.from('tweet_likes') as any)
         .select('id')
         .eq('tweet_id', id)
         .eq('user_id', profileId)
@@ -243,8 +243,7 @@ export default function TweetCard({
       }
 
       try {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
+        const { data: profile, error: profileError } = await (supabase.from('profiles') as any)
           .select('id, country')
           .eq('user_id', authorUserId)
           .maybeSingle();
@@ -269,8 +268,7 @@ export default function TweetCard({
           return;
         }
 
-        const { data: country, error: countryError } = await supabase
-          .from('countries')
+        const { data: country, error: countryError } = await (supabase.from('countries') as any)
           .select('name, flag_url')
           .eq('id', profile.country)
           .maybeSingle();
@@ -382,8 +380,7 @@ export default function TweetCard({
     try {
       if (optimisticLiked) {
         // 1) 좋아요 레코드 추가
-        const { error: likeError } = await supabase
-          .from('tweet_likes')
+        const { error: likeError } = await (supabase.from('tweet_likes') as any)
           .insert([{ tweet_id: id, user_id: likeUserId }]);
         // 이미 눌렀던 경우(UNIQUE 충돌)만 조용히 무시
         if (likeError && likeError.code !== '23505') throw likeError;
@@ -393,7 +390,7 @@ export default function TweetCard({
 
         // 2) 알림 추가 (자기 글 좋아요면 알림 안 보냄, 작성자 프로필 없으면 스킵)
         if (authorProfileId && authorProfileId !== likeUserId) {
-          const { error: notiError } = await supabase.from('notifications').insert([
+          const { error: notiError } = await (supabase.from('notifications') as any).insert([
             {
               type: 'like',
               content: content || safeContent,
@@ -410,8 +407,7 @@ export default function TweetCard({
         }
       } else {
         // 좋아요 취소
-        const { error } = await supabase
-          .from('tweet_likes')
+        const { error } = await (supabase.from('tweet_likes') as any)
           .delete()
           .eq('tweet_id', id)
           .eq('user_id', likeUserId);
@@ -420,8 +416,8 @@ export default function TweetCard({
         toast.info(t('common.cancel_like'));
         // 알림은 취소해도 남겨두는 정책이므로 건드리지 않음
       }
-    } catch (err: any) {
-      console.error('좋아요 토글 실패:', err.message);
+    } catch (err: unknown) {
+      console.error('좋아요 토글 실패:', getErrorMessage(err));
       toast.error(t('common.error_like'));
       // 실패 시 원상복구
       setLiked(!optimisticLiked);
@@ -497,8 +493,8 @@ export default function TweetCard({
       }
 
       const table = type === 'reply' ? 'tweet_replies' : 'tweets';
-      const { error } = await supabase
-        .from(table)
+      const { error } = await (supabase
+        .from(table) as any)
         .update({ content: finalContent, updated_at: nowIso })
         .eq('id', id)
         .eq('author_id', profileId);
@@ -523,7 +519,7 @@ export default function TweetCard({
       SnsStore.updateTweet(storeKey, { content: finalContent, updatedAt: nowIso });
 
       setShowMenu(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('수정 실패:', err);
       toast.error(t('common.error_edit', '수정에 실패했습니다'));
     }
@@ -718,9 +714,10 @@ export default function TweetCard({
             <span className={`${metaClass} flex-shrink-0`}>
               {formatSmartDate(timestamp)}
               {(() => {
-                const created = createdAt ?? timestamp;
+                const created = timestamp;
                 const edited = currentUpdatedAt;
-                const isEdited = edited && new Date(edited).getTime() > new Date(created).getTime();
+                const toMs = (v: any) => v ? new Date(v).getTime() : 0;
+                const isEdited = edited && toMs(edited) > toMs(created) + 1000;
                 return isEdited ? <span className="ml-1 text-xs text-gray-400">수정됨</span> : null;
               })()}
             </span>
@@ -1050,7 +1047,7 @@ export default function TweetCard({
         <ReportModal
           isOpen={showReportModal}
           onClose={() => setShowReportModal(false)}
-          targetType={type as any} // 'tweet' | 'reply' | 'post'
+          targetType={type === 'post' ? 'tweet' : (type as import('@/components/common/ReportModal').ReportTargetType)} 
           targetId={id}
           contentSnapshot={{
             id,

@@ -22,7 +22,7 @@ import { GlobalUserStatusTracker } from './components/common/GlobalUserStatusTra
 import Header from './components/common/Header';
 import { GlobalNoticeBar } from './components/common/GlobalNoticeBar';
 import ScrollToTop from './components/common/ScrollToTop';
-import ProfileSettings from './components/profile/ProfileSettings';
+const ProfileSettings = React.lazy(() => import('./components/profile/ProfileSettings'));
 import { ThemeProvider, useTheme } from './components/theme-provider';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DirectChatProvider } from './contexts/DirectChatContext';
@@ -34,48 +34,49 @@ import { SecurityGuard } from './components/common/SecurityGuard';
 import { supabase } from './lib/supabase';
 import RecoveryReminderModal from './components/auth/RecoveryReminderModal';
 
-// Admin Pages
-import AdminAnalytics from './pages/admin/AdminAnalytics';
-import AdminAuthCallback from './pages/admin/AdminAuthCallback';
-import AdminContentModeration from './pages/admin/AdminContentModeration';
-import AdminGoodsManagement from './pages/admin/AdminGoodsManagement';
-import AdminBannerManager from './pages/admin/AdminBannerManager';
-import AdminPromotionsPage from './pages/admin/AdminPromotionsPage';
-import AdminGoodsUpload from './pages/admin/AdminGoodsUpload';
-import AdminHome from './pages/admin/AdminHome';
-import AdminLayout from './pages/admin/AdminLayout';
-import AdminLogin from './pages/admin/AdminLogin';
-import AdminReports from './pages/admin/AdminReports';
-import AdminSettings from './pages/admin/AdminSettings';
-import AdminStudyManagement from './pages/admin/AdminStudyManagement';
-import AdminStudyUpload from './pages/admin/AdminStudyUpload';
-import UserManagement from './pages/admin/UserManagement';
+// 페이지 컴포넌트 — 코드 스플리팅으로 초기 번들 크기 최소화
+// 각 페이지는 해당 라우트에 처음 진입할 때 비로소 로드됨
+const AdminAnalytics = React.lazy(() => import('./pages/admin/AdminAnalytics'));
+const AdminAuthCallback = React.lazy(() => import('./pages/admin/AdminAuthCallback'));
+const AdminContentModeration = React.lazy(() => import('./pages/admin/AdminContentModeration'));
+const AdminGoodsManagement = React.lazy(() => import('./pages/admin/AdminGoodsManagement'));
+const AdminBannerManager = React.lazy(() => import('./pages/admin/AdminBannerManager'));
+const AdminPromotionsPage = React.lazy(() => import('./pages/admin/AdminPromotionsPage'));
+const AdminGoodsUpload = React.lazy(() => import('./pages/admin/AdminGoodsUpload'));
+const AdminHome = React.lazy(() => import('./pages/admin/AdminHome'));
+const AdminLayout = React.lazy(() => import('./pages/admin/AdminLayout'));
+const AdminLogin = React.lazy(() => import('./pages/admin/AdminLogin'));
+const AdminReports = React.lazy(() => import('./pages/admin/AdminReports'));
+const AdminSettings = React.lazy(() => import('./pages/admin/AdminSettings'));
+const AdminStudyManagement = React.lazy(() => import('./pages/admin/AdminStudyManagement'));
+const AdminStudyUpload = React.lazy(() => import('./pages/admin/AdminStudyUpload'));
+const UserManagement = React.lazy(() => import('./pages/admin/UserManagement'));
 
-// Auth Pages
-import AuthCallback from './pages/auth/AuthCallback';
-import SignInPage from './pages/auth/SignInPage';
-import SignUpPage from './pages/auth/SignUpPage';
-import SignUpWizard from './pages/auth/SignUpWizard';
-import FindEmailPage from './pages/auth/FindEmailPage';
-import ResetPasswordPage from './pages/auth/ResetPasswordPage';
-import UpdatePasswordPage from './pages/auth/UpdatePasswordPage';
+const AuthCallback = React.lazy(() => import('./pages/auth/AuthCallback'));
+const SignInPage = React.lazy(() => import('./pages/auth/SignInPage'));
+const SignUpPage = React.lazy(() => import('./pages/auth/SignUpPage'));
+const SignUpWizard = React.lazy(() => import('./pages/auth/SignUpWizard'));
+const FindEmailPage = React.lazy(() => import('./pages/auth/FindEmailPage'));
+const ResetPasswordPage = React.lazy(() => import('./pages/auth/ResetPasswordPage'));
+const UpdatePasswordPage = React.lazy(() => import('./pages/auth/UpdatePasswordPage'));
 
-// Content Pages
-import SubscriptionPage from './pages/subscription/SubscriptionPage';
-import DirectChatPage from './pages/chat/DirectChatPage';
-import CommunityFeed from './pages/community/CommunityFeed';
-import CommunityLayout from './pages/community/CommunityLayout';
-import NotFoundPage from './pages/community/NotFoundPage';
-import GoodsDetailPage from './pages/goods/GoodsDetailPage';
-import GoodsPage from './pages/goods/GoodsPage';
-import LandingPage from './pages/LandingPage';
-import HNotificationsPage from './pages/notifications/HNotificationsPage';
-import ProfileAsap from './pages/profile/ProfileAsap';
-import SnsDetailPage from './pages/sns/SnsDetailPage';
-import SnsPage from './pages/sns/SnsPage';
-import StudyListPage from './pages/StudyListPage';
-import StudyPage from './pages/StudyPage';
-import StudyVocaPage from './pages/StudyVocaPage';
+const SubscriptionPage = React.lazy(() => import('./pages/subscription/SubscriptionPage'));
+const DirectChatPage = React.lazy(() => import('./pages/chat/DirectChatPage'));
+const CommunityFeed = React.lazy(() => import('./pages/community/CommunityFeed'));
+const CommunityLayout = React.lazy(() => import('./pages/community/CommunityLayout'));
+const NotFoundPage = React.lazy(() => import('./pages/community/NotFoundPage'));
+const GoodsDetailPage = React.lazy(() => import('./pages/goods/GoodsDetailPage'));
+const GoodsPage = React.lazy(() => import('./pages/goods/GoodsPage'));
+const LandingPage = React.lazy(() => import('./pages/LandingPage'));
+const HNotificationsPage = React.lazy(() => import('./pages/notifications/HNotificationsPage'));
+const ProfileAsap = React.lazy(() => import('./pages/profile/ProfileAsap'));
+const SnsDetailPage = React.lazy(() => import('./pages/sns/SnsDetailPage'));
+const SnsPage = React.lazy(() => import('./pages/sns/SnsPage'));
+const StudyListPage = React.lazy(() => import('./pages/StudyListPage'));
+const StudyPage = React.lazy(() => import('./pages/StudyPage'));
+const StudyVocaPage = React.lazy(() => import('./pages/StudyVocaPage'));
+
+// 라우트 가드 및 공통 — 즉시 로드 필요
 import OnboardingWall from './routes/guards/OnboardingWall';
 import PageLoader from './components/common/PageLoader';
 import { MarketingPopup } from './components/marketing/MarketingPopup';
@@ -128,8 +129,7 @@ function RequireAdmin() {
       }
 
       try {
-        const { data, error } = await supabase
-          .from('profiles')
+        const { data, error } = await (supabase.from('profiles') as any)
           .select('is_admin')
           .eq('user_id', session.user.id)
           .maybeSingle();
@@ -177,8 +177,7 @@ function RequireAdmin() {
           </button>
           <button
             onClick={async () => {
-              await supabase
-                .from('profiles')
+              await (supabase.from('profiles') as any)
                 .update({ is_online: false, last_active_at: new Date().toISOString() })
                 .eq('user_id', session.user.id);
               await supabase.auth.signOut();
@@ -207,8 +206,7 @@ function AppInner() {
   useEffect(() => {
     const checkAdmin = async () => {
       if (!session) return;
-      const { data } = await supabase
-        .from('profiles')
+      const { data } = await (supabase.from('profiles') as any)
         .select('is_admin')
         .eq('user_id', session.user.id)
         .maybeSingle();
@@ -227,7 +225,7 @@ function AppInner() {
       <DocumentMetadataManager />
       <ScrollToTop />
       
-      <div className={`flex flex-col w-full ${location.pathname.startsWith('/admin') ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
+      <div className={`flex flex-col w-full ${(location.pathname.startsWith('/admin') || location.pathname.startsWith('/chat')) ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
         <div className="sticky top-0 z-[100] w-full flex flex-col shrink-0">
           <GlobalNoticeBar />
           {!showMaintenance && !hideHeader && <Header />}

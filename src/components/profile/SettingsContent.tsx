@@ -13,7 +13,7 @@ export default function SettingsContent({
   children: React.ReactNode;
   className?: string;
 }) {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = ref.current;
@@ -55,7 +55,7 @@ export default function SettingsContent({
       className={`bg-white dark:bg-secondary rounded-2xl border border-gray-200 dark:border-gray-700 shadow-[0_4px_12px_rgba(0,0,0,0.04)] h-[420px] max-h-[calc(100vh-280px)] min-h-[320px] overflow-hidden flex flex-col ${className}`}
     >
       <div
-        ref={ref as any}
+        ref={ref}
         className="flex-1 overflow-y-auto overscroll-contain p-6 scrollbar-thin scrollbar-thumb-[#00BFA5]/20 hover:scrollbar-thumb-[#00BFA5]/40 scrollbar-track-transparent custom-scrollbar"
         style={{
           scrollbarWidth: 'thin',

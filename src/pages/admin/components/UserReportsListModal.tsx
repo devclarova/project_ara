@@ -30,22 +30,30 @@ const UserReportsListModal: React.FC<UserReportsListModalProps> = ({
       const rpcName = mode === 'sent' ? 'get_user_made_reports' : 'get_user_related_reports';
       const params = { target_profile_id: user.profile_id || user.id };
 
-      const { data, error } = await supabase.rpc(rpcName, params);
+      const { data, error } = await (supabase as any).rpc(rpcName, params).order('created_at', { ascending: false });
 
       if (error) throw error;
       
       // Enrich reports with participant info if possible
-      if (data && data.length > 0) {
-        const reporterIds = Array.from(new Set(data.map((r: any) => r.reporter_id).filter(Boolean)));
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, nickname, avatar_url, user_id')
+      if (data && (data as any).length > 0) {
+        const reporterIds = Array.from(new Set((data as any).map((r: any) => r.reporter_id).filter(Boolean)));
+        const { data: profiles } = await (supabase.from('profiles') as any)
+          .select('id, nickname, avatar_url, user_id, banned_until')
           .or(`id.in.(${reporterIds.map(id => `"${id}"`).join(',')}),user_id.in.(${reporterIds.map(id => `"${id}"`).join(',')})`);
 
-        const enriched = data.map((r: any) => ({
-          ...r,
-          reporter: profiles?.find(p => p.id === r.reporter_id || p.user_id === r.reporter_id)
-        }));
+        const enriched = (data as any).map((r: any) => {
+          const profile = profiles?.find((p: any) => p.id === r.reporter_id || p.user_id === r.reporter_id);
+          return {
+            ...r,
+            reporter: profile ? {
+              id: profile.id,
+              nickname: profile.nickname,
+              avatar_url: profile.avatar_url,
+              banned_until: profile.banned_until,
+              email: ''
+            } : undefined
+          };
+        });
         setReports(enriched);
       } else {
         setReports([]);
@@ -98,7 +106,7 @@ const UserReportsListModal: React.FC<UserReportsListModalProps> = ({
                        report.status === 'resolved' ? '처리 완료' : '반려됨'}
                     </span>
                     <span className="text-xs font-bold text-zinc-400">
-                      {format(new Date(report.created_at), 'yyyy-MM-dd HH:mm')}
+                      {format(new Date(report.created_at as any), 'yyyy-MM-dd HH:mm')}
                     </span>
                   </div>
                   <ChevronRight size={16} className="text-zinc-300 group-hover:text-primary transition-colors" />
@@ -137,7 +145,7 @@ const UserReportsListModal: React.FC<UserReportsListModalProps> = ({
         <ReportActionModal 
           isOpen={!!selectedReport}
           onClose={() => setSelectedReport(null)}
-          report={selectedReport}
+          report={selectedReport as any}
           onResolve={fetchReports}
         />
       )}

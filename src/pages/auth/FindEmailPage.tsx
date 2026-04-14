@@ -41,8 +41,7 @@ export default function FindEmailPage() {
 
     try {
       // DB에서 닉네임과 복구 이메일이 일치하는 프로필 조회
-      const { data, error: dbError } = await supabase
-        .from('profiles')
+      const { data, error: dbError } = await (supabase.from('profiles') as any)
         .select('user_id, recovery_email')
         .eq('nickname', nickname.trim())
         .eq('recovery_email', recoveryEmail.trim().toLowerCase())
@@ -54,7 +53,7 @@ export default function FindEmailPage() {
       }
 
       // user_id로 RPC 함수 호출하여 이메일 가져오기
-      const { data: userEmail, error: emailError } = await supabase
+      const { data: userEmail, error: emailError } = await (supabase as any)
         .rpc('get_user_email_by_id', { p_user_id: data.user_id });
       
       if (emailError || !userEmail) {
@@ -84,8 +83,7 @@ export default function FindEmailPage() {
     try {
       // 1단계: 닉네임으로 프로필 조회하여 질문 가져오기
       if (!question) {
-        const { data, error: dbError } = await supabase
-          .from('profiles')
+        const { data, error: dbError } = await (supabase.from('profiles') as any)
           .select('recovery_question, recovery_answer_hash, user_id')
           .eq('nickname', nickname.trim())
           .maybeSingle();
@@ -109,8 +107,7 @@ export default function FindEmailPage() {
         return;
       }
 
-      const { data, error: dbError } = await supabase
-        .from('profiles')
+      const { data, error: dbError } = await (supabase.from('profiles') as any)
         .select('recovery_answer_hash, user_id')
         .eq('nickname', nickname.trim())
         .maybeSingle();
@@ -129,7 +126,7 @@ export default function FindEmailPage() {
       }
 
       // user_id로 RPC 함수 호출하여 이메일 가져오기
-      const { data: userEmail, error: emailError } = await supabase
+      const { data: userEmail, error: emailError } = await (supabase as any)
         .rpc('get_user_email_by_id', { p_user_id: data.user_id });
       
       if (emailError || !userEmail) {
@@ -272,7 +269,7 @@ export default function FindEmailPage() {
                       {t('find_email.your_question')}
                     </p>
                     <p className="font-semibold text-primary-dark dark:text-primary-light">
-                      {t(`recovery.${question}`)}
+                      {t(question)}
                     </p>
                   </div>
                   <div>

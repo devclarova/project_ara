@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 /**
  * 관리자 인증 콜백 처리기(Admin Auth Callback Handler):
@@ -28,8 +29,7 @@ const AdminAuthCallback = () => {
         }
 
         // 관리자 권한(is_admin) 식별 검증 — RBAC(Role-Based Access Control) 기반 원격 데이터베이스 조회
-        const { data: userData, error: userError } = await supabase
-          .from('profiles')
+        const { data: userData, error: userError } = await (supabase.from('profiles') as any)
           .select('is_admin')
           .eq('user_id', session.user.id)
           .single();
@@ -56,7 +56,8 @@ const AdminAuthCallback = () => {
         // 인증 및 권한 검증 성공 — 보안 세션 확정 후 관리 대시보드로 이동 처리
         toast.success(t('admin.login_success'));
         navigate('/admin');
-      } catch (error: any) {
+      } catch (error: unknown) {
+        console.error('Admin auth callback error:', getErrorMessage(error));
         toast.error(t('auth.auth_failed'));
         navigate('/admin/login');
       }

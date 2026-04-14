@@ -164,9 +164,9 @@ const LandingPage = ({ onSignup }: HomeProps) => {
       }
     };
 
-    window.addEventListener('wheel', wheelHandler as any, { passive: false });
+    window.addEventListener('wheel', wheelHandler as EventListener, { passive: false });
     return () => {
-      window.removeEventListener('wheel', wheelHandler as any);
+      window.removeEventListener('wheel', wheelHandler as EventListener);
       window.removeEventListener('resize', handleResize);
     };
   }, [goToNeighborSection]);
@@ -206,13 +206,13 @@ const LandingPage = ({ onSignup }: HomeProps) => {
     };
 
     window.addEventListener('touchstart', handleTouchStart, { passive: false });
-    window.addEventListener('touchmove', handleTouchMove as any, { passive: false });
-    window.addEventListener('touchend', handleTouchEnd as any, { passive: false });
+    window.addEventListener('touchmove', handleTouchMove as EventListener, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd as EventListener, { passive: false });
 
     return () => {
       window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove as any);
-      window.removeEventListener('touchend', handleTouchEnd as any);
+      window.removeEventListener('touchmove', handleTouchMove as EventListener);
+      window.removeEventListener('touchend', handleTouchEnd as EventListener);
     };
   }, [goToNeighborSection]);
 

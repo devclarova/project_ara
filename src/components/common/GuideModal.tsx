@@ -88,7 +88,7 @@ export default function GuideModal({
 
       const body = document.body;
       const originalOverflow = body.style.overflow;
-      const originalTouchAction = (body.style as any).touchAction;
+      const originalTouchAction = body.style.touchAction;
 
       const preventScroll = (e: Event) => {
         if (modalContentRef.current && modalContentRef.current.contains(e.target as Node)) return;
@@ -96,14 +96,14 @@ export default function GuideModal({
       };
 
       body.style.overflow = 'hidden';
-      (body.style as any).touchAction = 'none';
+      body.style.touchAction = 'none';
       document.addEventListener('touchmove', preventScroll, { passive: false });
       document.addEventListener('wheel', preventScroll, { passive: false });
       document.addEventListener('mousewheel', preventScroll, { passive: false });
 
       return () => {
         body.style.overflow = originalOverflow || '';
-        (body.style as any).touchAction = originalTouchAction || '';
+        body.style.touchAction = originalTouchAction || '';
         document.removeEventListener('touchmove', preventScroll);
         document.removeEventListener('wheel', preventScroll);
         document.removeEventListener('mousewheel', preventScroll);
@@ -183,7 +183,7 @@ export default function GuideModal({
     onClose();
   };
 
-  const handleDragEnd = (_: any, info: PanInfo) => {
+  const handleDragEnd = (_: unknown, info: PanInfo) => {
     if (!width) return;
     const threshold = width * 0.35;
 
