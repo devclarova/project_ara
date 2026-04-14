@@ -108,7 +108,7 @@ function LanguageSelect({ value, onChange, onClose, onSave, onCancel }: Language
           minHeight: 0, // flex에서 overflow가 작동하도록
         }}
       >
-        <div className="flex flex-col gap-2 py-2" role="radiogroup" aria-label="언어 선택">
+        <div className="flex flex-col gap-2 py-2" role="radiogroup" aria-label={t('settings.language_select_aria')}>
           {options.map(({ code, label, flag }) => {
             const selected = value === code;
             const isoCode = LANG_TO_ISO[code];

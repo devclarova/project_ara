@@ -4,6 +4,7 @@
  * - 방법(How): SnsLayout과 계층형 라우팅을 오케스트레이션하며, 인증 상태에 따른 접근 제어(Login Gate)로 보안성을 확보함
  */
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import SnsLayout from './SnsLayout';
 import CommunityFeed from '../community/CommunityFeed';
@@ -11,13 +12,14 @@ import { SignInModal } from '@/components/auth/SignInModal';
 import { useSnsLoginGate } from '@/hooks/useSnsLoginGate';
 
 export default function SnsPage() {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const { user } = useAuth();
   const { showLoginModal, handleLoginModalClose } = useSnsLoginGate(user);
 
   useEffect(() => {
-    document.title = '커뮤니티 | ARA';
-  }, []);
+    document.title = `${t('community.title')} | ARA`;
+  }, [t]);
 
   return (
     <>

@@ -13,10 +13,10 @@ import { useBatchAutoTranslation } from '@/hooks/useBatchAutoTranslation';
 import SignInModal from '../auth/SignInModal';
 
 export default function PopularContentSection() {
+  const { t } = useTranslation();
   const CONTENT_INTRO = {
-    title: '이런 콘텐츠로 배우게 돼요',
-    description:
-      '전래동화와 설화를 바탕으로 한 자체 애니메이션 콘텐츠를 중심으로 학습 흐름이 구성됩니다.',
+    title: t('landing.popular.title'),
+    description: t('landing.popular.description'),
   };
 
   type SwiperStyle = CSSProperties & {
@@ -166,7 +166,7 @@ export default function PopularContentSection() {
         {/* 로딩 상태 */}
         {loading ? (
           <div className="text-center text-sm text-gray-500 py-16">
-            인기 콘텐츠를 불러오는 중이에요...
+            {t('landing.popular.loading')}
           </div>
         ) : (
           <Swiper

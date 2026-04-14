@@ -149,7 +149,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
         >
           <img
             src="/images/sample_font_logo.png"
-            alt="logo"
+            alt={t('common.ara_logo', 'ARA Logo')}
             className="w-20 h-auto object-contain"
           />
         </button>

@@ -42,11 +42,12 @@ interface SubscriptionCouponSettingsProps {
 }
 
 function SubscriptionHistoryItem({ item }: { item: SubscriptionItem }) {
-  const planLabel = item.plan === 'premium' ? '프리미엄' : item.plan === 'basic' ? '베이직' : '무료';
+  const { t } = useTranslation();
+  const planLabel = item.plan === 'premium' ? t('subscription.plans.premium.title') : item.plan === 'basic' ? t('subscription.plans.basic.title') : t('subscription.plans.free.title');
   const statusMap: Record<string, { label: string; cls: string }> = {
-    active:    { label: '이용중', cls: 'bg-[#00BFA5]/15 text-[#00BFA5]' },
-    cancelled: { label: '해지됨', cls: 'bg-red-500/10 text-red-500' },
-    expired:   { label: '만료됨', cls: 'bg-gray-200 dark:bg-zinc-700 text-gray-500 dark:text-gray-400' },
+    active:    { label: t('settings.coupons.status.active'), cls: 'bg-[#00BFA5]/15 text-[#00BFA5]' },
+    cancelled: { label: t('settings.coupons.status.cancelled'), cls: 'bg-red-500/10 text-red-500' },
+    expired:   { label: t('settings.coupons.status.expired'), cls: 'bg-gray-200 dark:bg-zinc-700 text-gray-500 dark:text-gray-400' },
   };
   const st = statusMap[item.status] ?? { label: item.status, cls: 'bg-gray-100 text-gray-500' };
   return (
@@ -54,7 +55,7 @@ function SubscriptionHistoryItem({ item }: { item: SubscriptionItem }) {
       <div className="flex items-center gap-2.5 min-w-0">
         <CreditCard size={13} className="flex-shrink-0 text-gray-400" />
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-gray-900 dark:text-white whitespace-nowrap">{planLabel} 플랜</p>
+          <p className="text-xs font-semibold text-gray-900 dark:text-white whitespace-nowrap">{t('settings.coupons.plan_label', { plan: planLabel })}</p>
           <p className="text-xs text-gray-400 whitespace-nowrap">
             {format(new Date(item.created_at), 'yy.MM.dd')}
             {item.ends_at ? ` ~ ${format(new Date(item.ends_at), 'yy.MM.dd')}` : ''}
@@ -179,8 +180,8 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
           
           toast.success(
             <div className="flex flex-col gap-1">
-              <span className="font-bold">쿠폰 등록 성공!</span>
-              <span className="text-sm opacity-90">{rpcData.title || rpcData.promotion?.name} ({ (rpcData.discount_type || rpcData.promotion?.discount_type) === 'percent' ? `${rpcData.discount_value || rpcData.promotion?.discount_value}%` : `₩${(rpcData.discount_value || rpcData.promotion?.discount_value || 0).toLocaleString()}`} 할인)</span>
+              <span className="font-bold">{t('settings.coupons.redeem_success')}</span>
+              <span className="text-sm opacity-90">{t('settings.coupons.redeem_success_desc', { name: rpcData.title || rpcData.promotion?.name, discount: (rpcData.discount_type || rpcData.promotion?.discount_type) === 'percent' ? `${rpcData.discount_value || rpcData.promotion?.discount_value}%` : `₩${(rpcData.discount_value || rpcData.promotion?.discount_value || 0).toLocaleString()}` })}</span>
             </div>
           );
           
@@ -188,11 +189,11 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
           fetchData(); // 사용 내역 갱신
         }
       } else {
-        toast.error(rpcData?.error || rpcData?.reason || '유효하지 않은 쿠폰입니다.');
+        toast.error(rpcData?.error || rpcData?.reason || t('settings.coupons.redeem_fail'));
       }
     } catch (err: unknown) {
       console.error('Coupon validation error:', getErrorMessage(err));
-      toast.error('쿠폰 확인 중 오류가 발생했습니다.');
+      toast.error(t('settings.coupons.redeem_error'));
     } finally {
       setValidating(false);
     }
@@ -218,12 +219,12 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
         .update({ plan: 'free' })
         .eq('user_id', session!.user.id);
       
-      toast.success('구독이 성공적으로 해지되었습니다.');
+      toast.success(t('settings.coupons.cancel_success'));
       // 재조회 및 전역 상태 리프레시
       await refreshUserPlan();
       fetchData();
     } catch (err: unknown) {
-      toast.error('해지 중 오류 발생: ' + getErrorMessage(err));
+      toast.error(t('settings.coupons.cancel_error', { error: getErrorMessage(err) }));
     } finally {
       setIsCancelModalOpen(false);
       setLoading(false);
@@ -243,7 +244,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
       });
 
       if (alreadyReceived) {
-          toast.error('이번 달 VIP 혜택을 이미 받으셨습니다. 다음 달을 기다려 주세요!');
+          toast.error(t('settings.coupons.vip_already_claimed'));
           return;
       }
 
@@ -288,7 +289,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
 
     } catch (err: unknown) {
         console.error('VIP Box open fail:', getErrorMessage(err));
-        toast.error('혜택을 불러오는 중 오류가 발생했습니다.');
+        toast.error(t('settings.coupons.redeem_error'));
     } finally {
         setIsIssuingVip(false);
     }
@@ -323,7 +324,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
           <i className="ri-arrow-left-line text-lg" />
         </button>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          {t('settings.subscription_coupon', '구독 & 쿠폰')}
+          {t('settings.subscription_coupon')}
         </h3>
       </div>
 
@@ -408,12 +409,12 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
               </button>
             )}
 
-            {currentPlan !== 'free' && (
+              {currentPlan !== 'free' && (
               <button
                 onClick={handleCancelSubscription}
                 className="w-full px-4 py-2.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-xl font-semibold text-sm transition-all flex items-center justify-center whitespace-nowrap"
               >
-                구독 해지하기
+                {t('subscription.payment_modal.cancel_subscription')}
               </button>
             )}
           </div>
@@ -438,7 +439,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
 
         {subscriptionHistory.length === 0 ? (
           <div className="py-5 text-center text-xs text-gray-500 bg-gray-50 dark:bg-zinc-800/50 rounded-xl border border-gray-100 dark:border-white/5">
-            구독 이력이 없습니다.
+            {t('settings.coupons.no_history')}
           </div>
         ) : (
           <div className="space-y-1.5">
@@ -463,9 +464,9 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
       <div className="space-y-3">
         <div>
           <h4 className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
-            <Ticket size={13} className="text-primary" /> 쿠폰 등록
+            <Ticket size={13} className="text-primary" /> {t('settings.coupons.redeem_title')}
           </h4>
-          <p className="text-xs text-gray-500">코드를 입력하면 혜택이 즉시 등록됩니다.</p>
+          <p className="text-xs text-gray-500">{t('settings.coupons.btn_redeem')}</p>
         </div>
 
         <form onSubmit={handleApplyCoupon} className="flex flex-col gap-2">
@@ -473,7 +474,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
             type="text"
             value={couponCode}
             onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-            placeholder="쿠폰 코드 입력 (예: SPRING2026)"
+            placeholder={t('settings.coupons.redeem_placeholder')}
             className="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-white/10 focus:border-primary/50 focus:ring-2 focus:ring-primary/10 outline-none transition-all font-mono font-bold uppercase tracking-widest text-xs text-gray-900 dark:text-white placeholder:text-xs placeholder:normal-case placeholder:font-normal placeholder:tracking-normal placeholder:text-gray-400"
           />
           <button
@@ -481,7 +482,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
             disabled={!couponCode.trim() || validating}
             className="w-full px-5 py-3 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {validating ? <Loader2 size={16} className="animate-spin" /> : '등록하기'}
+            {validating ? <Loader2 size={16} className="animate-spin" /> : t('settings.coupons.btn_redeem')}
           </button>
         </form>
       </div>
@@ -494,7 +495,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
 
         {usageHistory.length === 0 ? (
           <div className="py-5 text-center text-xs text-gray-500 bg-gray-50 dark:bg-zinc-800/50 rounded-xl border border-gray-100 dark:border-white/5">
-            등록된 쿠폰 내역이 없습니다.
+            {t('settings.coupons.no_history')}
           </div>
         ) : (
           <div className="space-y-1.5">
@@ -557,10 +558,10 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
 
       <ConfirmModal
         open={isCancelModalOpen}
-        title="구독을 해지하시겠습니까?"
-        description="해지 시 프리미엄 혜택 이용이 불가능해지며 즉시 무료 플랜으로 전환됩니다. 정말 진행하시겠습니까?"
-        confirmText="해지하기"
-        cancelText="유지하기"
+        title={t('subscription.payment_modal.cancel_confirm_title')}
+        description={t('subscription.payment_modal.cancel_confirm_desc')}
+        confirmText={t('subscription.payment_modal.cancel_subscription')}
+        cancelText={t('subscription.payment_modal.keep_subscription')}
         onConfirm={confirmCancelAction}
         onCancel={() => setIsCancelModalOpen(false)}
       />

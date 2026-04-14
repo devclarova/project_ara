@@ -7,6 +7,7 @@ import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react
 import { useOutletContext, useNavigationType } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import TweetCard from '@/pages/community/feature/TweetCard';
 import SnsInlineEditor from '@/components/common/SnsInlineEditor';
 import { SnsStore } from '@/lib/snsState';
@@ -32,6 +33,7 @@ const defaultOutletCtx: OutletCtx = {
 const SNS_LAST_TWEET_ID_KEY = 'sns-last-tweet-id';
 const PAGE_SIZE = 10;
 export default function CommunityFeed({ searchQuery }: HomeProps) {
+  const { t, i18n } = useTranslation();
   const outletCtx = useOutletContext<OutletCtx | null>() ?? defaultOutletCtx;
   const { newTweet, setNewTweet, searchQuery: outletSearchQuery } = outletCtx;
   const mergedSearchQuery = (searchQuery ?? outletSearchQuery ?? '').trim();
@@ -132,37 +134,37 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
           if (data.length < PAGE_SIZE) setHasMore(false);
           else setHasMore(true);
         }
-        const mapped: UITweet[] = data.map(t => {
-          const tRecord = t as Record<string, unknown>;
+        const mapped: UITweet[] = data.map(tweet => {
+          const tRecord = tweet as Record<string, unknown>;
           return {
-            id: t.id,
+            id: tweet.id,
             user: {
-              id: t.profiles?.id ?? (tRecord.author_id as string) ?? '',
-              name: t.profiles?.nickname ?? 'Unknown',
-              username: t.profiles?.user_id ?? t.profiles?.nickname ?? 'anonymous',
-              avatar: t.profiles?.avatar_url ?? '/default-avatar.svg',
-              banned_until: t.profiles?.banned_until ?? null,
-              plan: t.profiles?.plan ?? 'free',
+              id: tweet.profiles?.id ?? (tRecord.author_id as string) ?? '',
+              name: tweet.profiles?.nickname ?? t('common.unknown', 'Unknown'),
+              username: tweet.profiles?.user_id ?? tweet.profiles?.nickname ?? t('common.anonymous', 'anonymous'),
+              avatar: tweet.profiles?.avatar_url ?? '/default-avatar.svg',
+              banned_until: tweet.profiles?.banned_until ?? null,
+              plan: tweet.profiles?.plan ?? 'free',
             },
-            content: t.content,
-            image: t.image_url ?? undefined,
-            timestamp: new Date(t.created_at ?? new Date()).toLocaleString('ko-KR', {
+            content: tweet.content,
+            image: tweet.image_url ?? undefined,
+            timestamp: new Date(tweet.created_at ?? new Date()).toLocaleString(i18n.language, {
               month: 'short',
               day: 'numeric',
               hour: '2-digit',
               minute: '2-digit',
             }),
-            createdAt: t.created_at ?? undefined,
+            createdAt: tweet.created_at ?? undefined,
             updatedAt: (tRecord.updated_at as string) || undefined,
-            deleted_at: t.deleted_at,
+            deleted_at: tweet.deleted_at,
             stats: {
-              replies: t.reply_count ?? 0,
-              retweets: t.repost_count ?? 0,
-              likes: t.like_count ?? 0,
-              bookmarks: t.bookmark_count ?? 0,
-              views: t.view_count ?? 0,
+              replies: tweet.reply_count ?? 0,
+              retweets: tweet.repost_count ?? 0,
+              likes: tweet.like_count ?? 0,
+              bookmarks: tweet.bookmark_count ?? 0,
+              views: tweet.view_count ?? 0,
             },
-            is_hidden: t.is_hidden ?? false,
+            is_hidden: tweet.is_hidden ?? false,
           };
         });
         // 상태 업데이트
@@ -333,8 +335,8 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
             id: newTweet.id,
             user: {
               id: profile?.id || '00000000-0000-0000-0000-000000000000',
-              name: profile?.nickname || 'Unknown',
-              username: profile?.user_id || 'anonymous',
+              name: profile?.nickname || t('common.unknown'),
+              username: profile?.user_id || t('common.anonymous'),
               avatar: profile?.avatar_url || '/default-avatar.svg',
               banned_until: profile?.banned_until ?? null,
               plan: profile?.plan,
@@ -454,7 +456,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
       <div className="flex flex-col">
         {tweets.length === 0 && !loading ? (
           <div className="text-center py-20 text-muted-foreground">
-            {isSearching ? '검색 결과가 없습니다.' : '게시글이 없습니다.'}
+            {isSearching ? t('community.no_results') : t('community.no_posts')}
           </div>
         ) : (
           tweets.map(t => (
@@ -477,7 +479,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
         )}
         {!hasMore && tweets.length > 0 && (
-          <p className="text-sm text-muted-foreground">모든 소식을 확인했습니다.</p>
+          <p className="text-sm text-muted-foreground">{t('community.all_posts_loaded')}</p>
         )}
       </div>
     </div>

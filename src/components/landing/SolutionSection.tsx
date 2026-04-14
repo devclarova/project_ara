@@ -1,27 +1,29 @@
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 export default function SolutionSection() {
+  const { t } = useTranslation();
   const WHY_ARA = {
-    title: '왜 ARA인가요?',
+    title: t('landing.solution.title'),
     description: [
-      '단어만 외우는 학습이 아니라, 콘텐츠 속 흐름과 감정까지',
-      '함께 기억되는 학습을 목표로 만들었습니다.',
-      '학습과 커뮤니티, 두 가지 경험이 한 화면 안에서 자연스럽게 이어지도록 설계했어요.',
+      t('landing.solution.description.0'),
+      t('landing.solution.description.1'),
+      t('landing.solution.description.2'),
     ],
   };
 
   const items = [
     {
-      title: '이야기 기반 학습',
-      desc: '전래동화·설화 애니메이션 한 에피소드를 따라가며 어휘, 표현, 문화적 맥락을 함께 익힙니다.',
+      title: t('landing.solution.features.1.title'),
+      desc: t('landing.solution.features.1.desc'),
     },
     {
-      title: '사용하면서 배우는 구조',
-      desc: '학습 후 바로 표현을 써보고, 예시 문장과 피드백으로 더 자연스러운 표현을 익힙니다.',
+      title: t('landing.solution.features.2.title'),
+      desc: t('landing.solution.features.2.desc'),
     },
     {
-      title: '글로벌 커뮤니티',
-      desc: '서로 다른 언어와 배경을 가진 학습자들이 모여, 이야기로 연결되는 한국어 사용 경험을 나눕니다.',
+      title: t('landing.solution.features.3.title'),
+      desc: t('landing.solution.features.3.desc'),
     },
   ];
 

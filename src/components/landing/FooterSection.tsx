@@ -35,18 +35,18 @@ export default function FooterSection() {
             </p>
             
             <Link to="/signup" className="group inline-flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground rounded-full text-lg font-bold transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/20">
-              {t('landing.cta_start', 'Start Your Journey')}
+              {t('landing.cta_start')}
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
           {/* 뉴스레터 구독 (Minimalist Form) */}
           <div className="lg:w-[400px] flex flex-col justify-end">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">{t('footer.newsletter.title', 'Subscribe to our newsletter')}</h3>
+            <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">{t('footer.newsletter.title')}</h3>
             <div className="relative group">
               <input 
                 type="email" 
-                placeholder={t('footer.newsletter.placeholder', 'Enter your email address')}
+                placeholder={t('footer.newsletter.placeholder')}
                 className="w-full bg-transparent border-b-2 border-border py-4 text-lg focus:outline-none focus:border-primary transition-colors placeholder:text-muted-foreground/50"
               />
               <button className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-primary transition-colors">
@@ -54,7 +54,7 @@ export default function FooterSection() {
               </button>
             </div>
             <p className="text-xs text-muted-foreground/60 mt-4">
-              {t('footer.newsletter.desc', 'Join 10,000+ others and never miss out on new tips, tutorials, and more.')}
+              {t('footer.newsletter.desc')}
             </p>
           </div>
         </div>
@@ -65,13 +65,13 @@ export default function FooterSection() {
             <FooterLink>{t('footer.columns.product.features')}</FooterLink>
             <FooterLink>{t('footer.columns.product.pricing')}</FooterLink>
             <FooterLink>{t('footer.columns.product.enterprise')}</FooterLink>
-            <FooterLink>{t('footer.columns.product.security', 'Security')}</FooterLink>
+            <FooterLink>{t('footer.columns.product.security')}</FooterLink>
           </FooterColumn>
           
           <FooterColumn title={t('footer.columns.resources.title')}>
             <FooterLink>{t('footer.columns.resources.documentation')}</FooterLink>
             <FooterLink>{t('footer.columns.resources.community')}</FooterLink>
-            <FooterLink>{t('footer.columns.resources.webinars', 'Webinars')}</FooterLink>
+            <FooterLink>{t('footer.columns.resources.webinars')}</FooterLink>
             <FooterLink>{t('footer.columns.resources.help_center')}</FooterLink>
           </FooterColumn>
 
@@ -84,10 +84,10 @@ export default function FooterSection() {
 
           {/* 오피스 정보 (Visual) */}
           <div className="flex flex-col gap-6">
-            <h3 className="font-bold text-foreground">{t('footer.columns.company.office', 'Office')}</h3>
+            <h3 className="font-bold text-foreground">{t('footer.columns.company.office')}</h3>
             <address className="not-italic text-sm text-muted-foreground leading-relaxed">
-              <span className="block font-medium text-foreground mb-1">Seoul HQ</span>
-              Teheran-ro 123, Gangnam-gu<br />
+              <span className="block font-medium text-foreground mb-1">{t('footer.office.address_name')}</span>
+              {t('footer.office.address')}<br />
               Seoul, South Korea<br />
               <a href="mailto:hello@ara.com" className="block mt-4 hover:text-primary transition-colors">hello@ara.com</a>
             </address>

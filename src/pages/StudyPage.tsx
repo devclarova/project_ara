@@ -64,10 +64,10 @@ const StudyPage = () => {
   const enc = (v?: string | number | null) => encodeURIComponent(String(v ?? ''));
 
   // SEO 전용 페이지 메타 데이터 및 기본 타이틀 구성
-  const baseTitle = 'ARA - Learn Korean with K-Content';
+  const baseTitle = t('study.meta_desc_default');
   const pageTitleOriginal = study
     ? `${study.contents ?? 'ARA Study'}${study.episode ? ` ${study.episode}` : ''}${
-        study.scene ? ` - Scene ${study.scene}` : ''
+        study.scene ? ` - ${t('study.scene_label')} ${study.scene}` : ''
       } | ${baseTitle}`
     : `Study | ${baseTitle}`;
 

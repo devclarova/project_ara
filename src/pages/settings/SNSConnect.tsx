@@ -77,14 +77,14 @@ function SNSConnect({ onClose }: SNSConnectProps) {
 
       if (error) {
         console.error(`Failed to connect ${provider}:`, error);
-        toast.error(t('settings.sns_connect_failed', 'SNS 연결에 실패했습니다.'));
+        toast.error(t('settings.sns_connect_failed'));
         sessionStorage.removeItem('ara_linking_in_progress');
         setLoadingProvider(null);
       }
       // linkIdentity redirects to the provider's login page
     } catch (error) {
       console.error('Unexpected error:', error);
-      toast.error(t('settings.sns_connect_failed', 'SNS 연결에 실패했습니다.'));
+      toast.error(t('settings.sns_connect_failed'));
       sessionStorage.removeItem('ara_linking_in_progress');
       setLoadingProvider(null);
     }
@@ -93,7 +93,7 @@ function SNSConnect({ onClose }: SNSConnectProps) {
   const openUnlinkModal = (provider: Provider) => {
     // Check if this is the last login method
     if (linkedIdentities.length === 1) {
-      toast.error(t('settings.sns_unlink_last_method', '최소 1개의 로그인 방법이 필요합니다.'));
+      toast.error(t('settings.sns_unlink_last_method'));
       return;
     }
     setProviderToUnlink(provider);
@@ -120,14 +120,14 @@ function SNSConnect({ onClose }: SNSConnectProps) {
       const rpcData = data as any;
       if (error || !rpcData?.success) {
         console.error(`Failed to unlink ${providerToUnlink}:`, error || rpcData?.error);
-        toast.error(t('settings.sns_unlink_failed', 'SNS 연결 해제에 실패했습니다.'));
+        toast.error(t('settings.sns_unlink_failed'));
       } else {
-        toast.success(t('settings.sns_unlink_success', 'SNS 연결이 해제되었습니다.'));
+        toast.success(t('settings.sns_unlink_success'));
         await fetchLinkedAccounts();
       }
     } catch (error) {
       console.error('Unexpected error:', error);
-      toast.error(t('settings.sns_unlink_failed', 'SNS 연결 해제에 실패했습니다.'));
+      toast.error(t('settings.sns_unlink_failed'));
     } finally {
       setLoadingProvider(null);
       setProviderToUnlink(null);
@@ -163,7 +163,7 @@ function SNSConnect({ onClose }: SNSConnectProps) {
           {/* 현재 연결된 계정 */}
           <div>
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-              {t('settings.linked_accounts', '연결된 계정')}
+              {t('settings.linked_accounts')}
             </h3>
 
             {isLoading ? (
@@ -183,7 +183,7 @@ function SNSConnect({ onClose }: SNSConnectProps) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {t('settings.email', '이메일')}
+                      {t('settings.email')}
                     </p>
                     {hasEmailPassword && (
                       <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
@@ -198,7 +198,7 @@ function SNSConnect({ onClose }: SNSConnectProps) {
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                     }`}>
                       {hasEmailPassword && <i className="ri-check-line"></i>}
-                      {hasEmailPassword ? t('settings.connected', '연결됨') : t('settings.not_connected', '미연결')}
+                      {hasEmailPassword ? t('settings.connected') : t('settings.not_connected')}
                     </span>
                   </div>
                 </div>
@@ -218,7 +218,7 @@ function SNSConnect({ onClose }: SNSConnectProps) {
                     </p>
                     {hasGoogle && (
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {t('settings.social_login_active', '소셜 로그인 사용 가능')}
+                        {t('settings.social_login_active')}
                       </p>
                     )}
                   </div>
@@ -227,7 +227,7 @@ function SNSConnect({ onClose }: SNSConnectProps) {
                       <>
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs font-medium">
                           <i className="ri-check-line"></i>
-                          {t('settings.connected', '연결됨')}
+                          {t('settings.connected')}
                         </span>
                         {linkedIdentities.length > 1 && (
                           <button
@@ -235,7 +235,7 @@ function SNSConnect({ onClose }: SNSConnectProps) {
                             disabled={loadingProvider === 'google'}
                             className="px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
                           >
-                            {loadingProvider === 'google' ? t('common.processing', '처리 중...') : t('settings.unlink', '해제')}
+                            {loadingProvider === 'google' ? t('common.processing') : t('settings.unlink')}
                           </button>
                         )}
                       </>
@@ -245,7 +245,7 @@ function SNSConnect({ onClose }: SNSConnectProps) {
                         disabled={loadingProvider === 'google'}
                         className="px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition"
                       >
-                        {loadingProvider === 'google' ? t('common.processing', '처리 중...') : t('settings.connect', '연결')}
+                        {loadingProvider === 'google' ? t('common.processing') : t('settings.connect')}
                       </button>
                     )}
                   </div>
@@ -266,7 +266,7 @@ function SNSConnect({ onClose }: SNSConnectProps) {
                     </p>
                     {hasKakao && (
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {t('settings.social_login_active', '소셜 로그인 사용 가능')}
+                        {t('settings.social_login_active')}
                       </p>
                     )}
                   </div>
@@ -275,7 +275,7 @@ function SNSConnect({ onClose }: SNSConnectProps) {
                       <>
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs font-medium">
                           <i className="ri-check-line"></i>
-                          {t('settings.connected', '연결됨')}
+                          {t('settings.connected')}
                         </span>
                         {linkedIdentities.length > 1 && (
                           <button
@@ -283,7 +283,7 @@ function SNSConnect({ onClose }: SNSConnectProps) {
                             disabled={loadingProvider === 'kakao'}
                             className="px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
                           >
-                            {loadingProvider === 'kakao' ? t('common.processing', '처리 중...') : t('settings.unlink', '해제')}
+                            {loadingProvider === 'kakao' ? t('common.processing') : t('settings.unlink')}
                           </button>
                         )}
                       </>
@@ -293,7 +293,7 @@ function SNSConnect({ onClose }: SNSConnectProps) {
                         disabled={loadingProvider === 'kakao'}
                         className="px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition"
                       >
-                        {loadingProvider === 'kakao' ? t('common.processing', '처리 중...') : t('settings.connect', '연결')}
+                        {loadingProvider === 'kakao' ? t('common.processing') : t('settings.connect')}
                       </button>
                     )}
                   </div>
@@ -305,7 +305,7 @@ function SNSConnect({ onClose }: SNSConnectProps) {
           {/* 하단 안내 */}
           <div className="pt-2">
             <p className="text-[11px] md:text-xs text-gray-400 dark:text-gray-500">
-              💡 {t('settings.sns_connect_note', '여러 계정을 연결하면 모든 방법으로 로그인할 수 있습니다.')}
+              💡 {t('settings.sns_connect_note')}
             </p>
           </div>
         </div>
@@ -313,7 +313,7 @@ function SNSConnect({ onClose }: SNSConnectProps) {
         {/* 푸터 */}
         <div className="mt-auto border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-secondary px-4 md:px-6 py-3.5 md:py-4 flex justify-end">
           <Button type="button" variant="primary" size="md" onClick={onClose}>
-            {t('settings.close', '닫기')}
+            {t('settings.close')}
           </Button>
         </div>
       </div>
@@ -322,7 +322,7 @@ function SNSConnect({ onClose }: SNSConnectProps) {
       <Modal 
         isOpen={showUnlinkModal} 
         onClose={cancelUnlink} 
-        title={t('settings.unlink_confirm_title', '계정 연결 해제')}
+        title={t('settings.unlink_confirm_title')}
         className="max-w-md h-auto"
       >
         <div className="px-6 py-6">
@@ -336,10 +336,10 @@ function SNSConnect({ onClose }: SNSConnectProps) {
           {/* 메시지 */}
           <div className="text-center space-y-3">
             <p className="text-base font-medium text-gray-900 dark:text-gray-100">
-              {getProviderName(providerToUnlink)} {t('settings.sns_unlink_confirm_msg', '계정 연결을 해제하시겠습니까?')}
+              {getProviderName(providerToUnlink)} {t('settings.sns_unlink_confirm_msg')}
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {t('settings.sns_unlink_warning', '연결을 해제하면 해당 방법으로 로그인할 수 없습니다.')}
+              {t('settings.sns_unlink_warning')}
             </p>
           </div>
         </div>

@@ -137,7 +137,7 @@ export default function SignUpPage() {
                    hover:bg-primary/50 hover:dark:bg-primary/80 hover:from-sky-400/10 hover:to-indigo-500/10
                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-0
                    whitespace-nowrap"
-                 aria-label="다음에 하기"
+                 aria-label={t('signup.later')}
               >
                 <X size={16} className="xs:w-4 xs:h-4 sm:w-5 sm:h-5" />
                 <span className="xs:hidden">{t('signup.later')}</span>
@@ -154,7 +154,7 @@ export default function SignUpPage() {
                    hover:bg-gray-300/50 hover:dark:bg-gray-300/30 hover:from-sky-400/10 hover:to-indigo-500/10
                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-0
                    whitespace-nowrap"
-                aria-label="홈으로"
+                aria-label={t('signup.go_home')}
               >
                 <Home size={16} className="xs:w-4 xs:h-4 sm:w-5 sm:h-5" />
                 <span className="xs:hidden">{t('signup.go_home')}</span>

@@ -36,7 +36,7 @@ export default function RelinkAccountModal({
       <Modal
         isOpen={isOpen}
         onClose={onCancel || onClose}
-        title="SNS 재연결 안내"
+        title={t('auth.relink_notice_title', 'SNS 재연결 안내')}
         className="max-w-md h-auto"
       >
         <div className="px-6 py-8">
@@ -46,11 +46,11 @@ export default function RelinkAccountModal({
             </div>
             
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-              이전에 해제된 SNS 계정입니다
+              {t('auth.relink_previously_unlinked', '이전에 해제된 SNS 계정입니다')}
             </h3>
             
             <p className="text-base text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
-              보안을 위해 <span className="font-semibold text-primary">이메일로 로그인</span>하신 후, [설정 &gt; SNS 연결 관리]에서 직접 다시 연결해 주세요.
+              {t('auth.relink_security_guide', '보안을 위해 이메일로 로그인하신 후, [설정 > SNS 연결 관리]에서 직접 다시 연결해 주세요.')}
             </p>
           </div>
         </div>
@@ -63,7 +63,7 @@ export default function RelinkAccountModal({
             onClick={onCancel || onClose}
             className="flex-1 rounded-xl"
           >
-            취소
+            {t('common.cancel', '취소')}
           </Button>
           <Button
             type="button"
@@ -72,7 +72,7 @@ export default function RelinkAccountModal({
             onClick={onReconnect}
             className="flex-1 rounded-xl shadow-lg shadow-primary/20"
           >
-            이메일로 로그인
+            {t('auth.login_with_email', '이메일로 로그인')}
           </Button>
         </div>
       </Modal>
@@ -84,7 +84,7 @@ export default function RelinkAccountModal({
     <Modal
       isOpen={isOpen}
       onClose={onCancel || onClose}
-      title="SNS 계정 중복 방지 안내"
+      title={t('auth.duplicate_prevent_title', 'SNS 계정 중복 방지 안내')}
       className="max-w-md h-auto"
     >
       <div className="px-6 py-8">
@@ -94,14 +94,18 @@ export default function RelinkAccountModal({
           </div>
           
           <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-            어떤 이메일로 시작할까요?
+            {t('auth.choose_start_method', '어떤 이메일로 시작할까요?')}
           </h3>
           
           <div className="space-y-4 mb-8 w-full">
             <p className="text-base text-gray-600 dark:text-gray-400 leading-relaxed text-left">
-              이 {providerName} 계정은 이전에 <span className="font-bold text-primary">{originalEmailMasked}</span> 계정에 연결되어 있었습니다. 
+              {t('auth.relink_cross_account_desc', {
+                provider: providerName,
+                email: originalEmailMasked,
+                interpolation: { escapeValue: false }
+              })}
               <br /><br />
-              보안을 위해 자동 로그인이 차단되었습니다. **이메일로 로그인** 후 [설정]에서 다시 연결해 주세요.
+              {t('auth.relink_manual_guide', '보안을 위해 이메일로 로그인 후 [설정]에서 다시 연결해 주세요.')}
             </p>
           </div>
         </div>

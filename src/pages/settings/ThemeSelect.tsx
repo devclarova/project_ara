@@ -35,7 +35,7 @@ function ThemeSelect({ value, onChange, onClose, onSave, onCancel }: ThemeSelect
         <div
           className="flex-col items-center gap-2 rounded-lg p-1.5"
           role="radiogroup"
-          aria-label="테마 선택"
+          aria-label={t('settings.theme_select_aria')}
         >
           {options.map(({ key, label, icon }) => {
             const selected = value === key;

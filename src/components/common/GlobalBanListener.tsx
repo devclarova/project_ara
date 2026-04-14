@@ -8,10 +8,12 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { addYears } from 'date-fns';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import type { Database } from '@/types/database';
 
 export const GlobalBanListener: React.FC = () => {
   const { user, signOut, bannedUntil: initialBannedUntil } = useAuth();
+  const { t } = useTranslation();
   const lastNotifiedBanRef = React.useRef<string | null>(initialBannedUntil);
 
   useEffect(() => {
@@ -55,8 +57,8 @@ export const GlobalBanListener: React.FC = () => {
             const isPermanent = bannedUntil > permanentThreshold;
 
             if (isPermanent) {
-              toast.error('계정이 영구적으로 정지되었습니다.', {
-                description: '관리자에 의해 계정 사용이 영구적으로 제한되었습니다.',
+              toast.error(t('notification.system.ban_permanent', '계정이 영구적으로 정지되었습니다.'), {
+                description: t('notification.system.ban_permanent_desc', '관리자에 의해 계정 사용이 영구적으로 제한되었습니다.'),
                 duration: Infinity,
               });
               // Give a small delay for toast to be seen? No, immediate action is safer/better UX for "perm ban" usually means "get out"
@@ -66,8 +68,11 @@ export const GlobalBanListener: React.FC = () => {
               }, 1000);
             } else {
               // Temporary Suspension Workflow: Notifies the user and triggers a global UI refresh to enforce permission constraints.
-              toast.warning('계정 이용이 제한되었습니다.', {
-                 description: `관리자에 의해 ${bannedUntil.toLocaleDateString()}까지 이용이 제한됩니다.`,
+              toast.warning(t('notification.system.ban_temporary_title', '계정 이용이 제한되었습니다.'), {
+                 description: t('notification.system.ban_temporary_desc', { 
+                   date: bannedUntil.toLocaleDateString(),
+                   defaultValue: `관리자에 의해 ${bannedUntil.toLocaleDateString()}까지 이용이 제한됩니다.` 
+                 }),
                  duration: 5000,
               });
               // Ideally we'd trigger a context refresh here to disable write buttons,
@@ -89,7 +94,7 @@ export const GlobalBanListener: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, signOut]);
+  }, [user, signOut, t]);
 
   return null;
 };

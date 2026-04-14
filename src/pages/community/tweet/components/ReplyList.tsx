@@ -207,8 +207,8 @@ export default function ReplyList({
     return (
       <div className="border-b border-gray-200 dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
         <i className="ri-chat-3-line text-4xl mb-2 block" />
-        <p>{t('tweet.no_replies', '댓글이 없습니다.')}</p>
-        <p className="text-sm mt-1">{t('tweet.be_first', '첫 댓글을 남겨보세요!')}</p>
+        <p>{t('tweet.no_replies')}</p>
+        <p className="text-sm mt-1">{t('tweet.be_first')}</p>
       </div>
     );
   }
@@ -222,7 +222,7 @@ export default function ReplyList({
         <div className="p-6 text-center text-gray-500 dark:text-gray-400">
           <div className="inline-flex items-center space-x-2">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 dark:border-primary/80" />
-            <span>Loading comments...</span>
+            <span>{t('common.loading')}</span>
           </div>
         </div>
       }

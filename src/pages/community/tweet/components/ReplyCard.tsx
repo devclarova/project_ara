@@ -167,14 +167,14 @@ export function ReplyCard({
   // rawContent는 초기값/동기화용으로만 두고
   const rawContent =
     (isSoftDeleted || isHiddenContent) && !isAdminView 
-      ? (isSoftDeleted ? '관리자에 의해 삭제된 메시지입니다.' : '관리자에 의해 숨김 처리된 콘텐츠입니다.') 
+      ? (isSoftDeleted ? t('community.deleted_post', '관리자에 의해 삭제된 메시지입니다.') : t('community.hidden_content', '관리자에 의해 숨김 처리된 콘텐츠입니다.')) 
       : (reply.content ?? '');
 
   const [currentContent, setCurrentContent] = useState(rawContent);
 
   // 실제 화면에 표시할 건 currentContent를 쓰기
   const displayContent =
-    isSoftDeleted && !isAdminView ? '관리자에 의해 삭제된 메시지입니다.' : currentContent;
+    isSoftDeleted && !isAdminView ? t('community.deleted_post', '관리자에 의해 삭제된 메시지입니다.') : currentContent;
 
   const safeContent = DOMPurify.sanitize(displayContent, {
     ADD_TAGS: ['iframe', 'video', 'source', 'img'],
@@ -196,7 +196,7 @@ export function ReplyCard({
     const base = html || '';
     if (imgs.length === 0) return base;
     const imageHtml = imgs
-      .map(src => `<div class="tweet-img"><img src="${src}" alt="reply image" /></div>`)
+      .map(src => `<div class="tweet-img"><img src="${src}" alt="${t('common.image', 'reply image')}" /></div>`)
       .join('');
     return `${base}${imageHtml}`;
   };
@@ -601,13 +601,13 @@ export function ReplyCard({
 
       if (uploadedUrls.length > 0) {
         setEditImages(prev => [...prev, ...uploadedUrls]);
-        toast.success('이미지 추가 완료!');
+        toast.success(t('common.upload_success', '이미지 추가 완료!'));
       } else {
-        toast.error('이미지 업로드 실패');
+        toast.error(t('common.upload_failed', '이미지 업로드 실패'));
       }
     } catch (err: unknown) {
       console.error(getErrorMessage(err));
-      toast.error('이미지 업로드 실패');
+      toast.error(t('common.upload_failed', '이미지 업로드 실패'));
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -822,7 +822,7 @@ export function ReplyCard({
                 <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 h-5 ml-1">
                   <img
                     src={authorCountryFlagUrl}
-                    alt={authorCountryName ?? '국가'}
+                    alt={authorCountryName ?? t('common.country', '국가')}
                     title={authorCountryName ?? ''}
                     className="w-5 h-3.5 rounded-[2px] object-cover"
                   />
@@ -841,14 +841,14 @@ export function ReplyCard({
 
               <span className="mx-1 text-gray-500 dark:text-gray-400">·</span>
               <span className="text-gray-500 dark:text-gray-400 text-xs shrink-0 self-center">
-              · {formatSmartDate(createdAt)}
-              {isEdited && <span className="ml-1 text-[10px] text-gray-400">수정됨</span>}
-            </span>
-            {isAdmin && reply.is_hidden && (
-              <Badge variant="outline" className="ml-2 border-amber-500 text-amber-500 text-[10px] py-0 h-4 self-center">
-                숨김
-              </Badge>
-            )}
+                · {formatSmartDate(createdAt)}
+                {isEdited && <span className="ml-1 text-[10px] text-gray-400">{t('common.edited', '수정됨')}</span>}
+              </span>
+              {isAdmin && reply.is_hidden && (
+                <Badge variant="outline" className="ml-2 border-amber-500 text-amber-500 text-[10px] py-0 h-4 self-center">
+                  {t('common.hidden', '숨김')}
+                </Badge>
+              )}
           </div>
 
             <div className="flex items-center">
@@ -861,7 +861,7 @@ export function ReplyCard({
                   className="mr-2 text-[10px] font-bold text-gray-400 hover:text-red-500 bg-gray-100 dark:bg-white/5 px-2 py-1 rounded transition-all flex items-center gap-1 group/remask active:scale-95"
                 >
                   <i className="ri-eye-off-line" />
-                  <span>{t('common.hide_content', '다시 숨기기')}</span>
+                  <span>{t('common.remask', '다시 숨기기')}</span>
                 </button>
               )}
               <button
@@ -1010,7 +1010,7 @@ export function ReplyCard({
                           type="button"
                           onClick={() => setEditImages(prev => prev.filter((_, i) => i !== idx))}
                           className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center"
-                          title="삭제"
+                          title={t('common.delete', '삭제')}
                         >
                           ×
                         </button>
@@ -1027,23 +1027,23 @@ export function ReplyCard({
                       disabled={isUploading}
                       className="px-3 py-2 rounded-full border text-sm hover:bg-gray-100 dark:hover:bg-white/10 disabled:opacity-50"
                     >
-                      {isUploading ? '업로드 중...' : '이미지 추가'}
+                      {isUploading ? t('common.uploading', '업로드 중...') : t('common.add_image', '이미지 추가')}
                     </button>
 
                     <button
                       type="button"
                       onClick={() => {
-                        const url = prompt('이미지 URL을 입력하세요');
+                        const url = prompt(t('common.prompt_image_url', '이미지 URL을 입력하세요'));
                         if (url) setEditImages(prev => [...prev, url]);
                       }}
                       className="px-3 py-2 rounded-full border text-sm hover:bg-gray-100 dark:hover:bg-white/10"
                     >
-                      URL 추가
+                      {t('common.add_url', 'URL 추가')}
                     </button>
 
                     {editImages.length > 0 && (
                       <span className="text-xs text-gray-500 dark:text-gray-400">
-                        이미지 {editImages.length}개
+                        {t('common.image_count', { count: editImages.length })}
                       </span>
                     )}
                   </div>
@@ -1066,7 +1066,7 @@ export function ReplyCard({
                       disabled={isSaveDisabled}
                       className="px-4 py-2 rounded-full bg-primary text-white hover:bg-primary/80"
                     >
-                      저장
+                      {t('common.save', '저장')}
                     </button>
                   </div>
                 </div>

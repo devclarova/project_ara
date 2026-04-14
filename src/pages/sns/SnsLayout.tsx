@@ -4,6 +4,7 @@
  * - 방법(How): 다중 컬럼 스태틱 그리드 시스템과 반응형 뷰포트 분기점(Breakpoint)을 설정하여 모바일 및 데스크톱 환경에 최적화함
  */
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import TrendsPanel from '../community/feature/TrendsPanel';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import { useMarketingBanners } from '@/hooks/useMarketingBanners';
@@ -22,6 +23,7 @@ export default function SnsLayout({
   onSearchChange,
   hideSearchBar,
 }: SnsLayoutProps) {
+  const { t } = useTranslation();
   const { banners: sidebarBanners, trackClick, trackView } = useMarketingBanners('inline_card', 'sns');
 
   return (
@@ -47,14 +49,16 @@ export default function SnsLayout({
                         >
                             <div className="flex items-center gap-4">
                                 {banner.image_url ? (
-                                    <img src={banner.image_url} className="w-20 h-20 rounded-2xl object-cover shadow-sm" alt="ad" />
+                                    <img src={banner.image_url} className="w-20 h-20 rounded-2xl object-cover shadow-sm" alt={t('common.advertisement', 'ad')} />
                                 ) : (
                                     <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
                                         <Megaphone size={32} />
                                     </div>
                                 )}
                                 <div className="flex-1">
-                                    <span className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded-full mb-2 inline-block">SPONSORED</span>
+                                    <span className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded-full mb-2 inline-block">
+                                        {t('common.sponsored', 'SPONSORED')}
+                                    </span>
                                     <h4 className="font-bold text-lg leading-tight mb-1">{banner.title}</h4>
                                     <p className="text-xs text-muted-foreground line-clamp-2">{banner.content}</p>
                                 </div>
@@ -95,7 +99,9 @@ export default function SnsLayout({
                             {banner.content}
                         </p>
                         <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">Sponsored</span>
+                            <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-600 uppercase tracking-widest">
+                                {t('common.sponsored', 'Sponsored')}
+                            </span>
                             <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
                                 <ExternalLink size={14} />
                             </div>

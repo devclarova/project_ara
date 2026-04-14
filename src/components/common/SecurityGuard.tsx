@@ -8,9 +8,11 @@ import type { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { Shield, AlertTriangle, Lock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const SecurityGuard = ({ children }: { children: ReactNode }) => {
     const location = useLocation();
+    const { t } = useTranslation();
     const { settings } = useSiteSettings();
     const [isBlocked, setIsBlocked] = useState(false);
     const [userIp, setUserIp] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export const SecurityGuard = ({ children }: { children: ReactNode }) => {
 
                     if (!whitelist.includes(currentIp)) {
                         setIsBlocked(true);
-                        setReason('허용되지 않은 IP 주소입니다. (관리자 전역 엄격 차단 정책)');
+                        setReason(t('notification.system.security_denied_ip', '허용되지 않은 IP 주소입니다. (관리자 전역 엄격 차단 정책)'));
                         return;
                     } else {
                         setIsBlocked(false);
@@ -65,15 +67,16 @@ export const SecurityGuard = ({ children }: { children: ReactNode }) => {
                     <h2 className="text-2xl font-black text-foreground mb-2 italic">ACCESS DENIED</h2>
                     <div className="h-1 w-12 bg-destructive mx-auto mb-6 rounded-full" />
                     
+                    {/* useTranslation 훅을 컴포넌트 내부에서 사용해야 함 */}
                     <p className="text-muted-foreground mb-8 text-sm leading-relaxed">
-                        {reason || '보안 정책에 의해 접근이 제한되었습니다.'}
+                        {reason || t('notification.system.security_denied_generic', '보안 정책에 의해 접근이 제한되었습니다.')}
                     </p>
 
                     <div className="bg-muted/50 rounded-2xl p-4 mb-8 text-left border border-border">
                         <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">
-                            <Lock size={12} /> Your Identifier
+                            <Lock size={12} /> {t('notification.system.identifier_label', 'Your Identifier')}
                         </div>
-                        <p className="font-mono text-xs font-bold text-foreground">{userIp || 'Checking...'}</p>
+                        <p className="font-mono text-xs font-bold text-foreground">{userIp || t('common.checking', 'Checking...')}</p>
                     </div>
 
                     <div className="flex flex-col gap-3">
@@ -81,10 +84,10 @@ export const SecurityGuard = ({ children }: { children: ReactNode }) => {
                             onClick={() => window.location.href = '/'}
                             className="w-full py-4 bg-foreground text-background rounded-xl font-bold text-sm hover:opacity-90 transition-all active:scale-95"
                         >
-                            메인 페이지로 돌아가기
+                            {t('auth.go_home', '메인 페이지로 돌아가기')}
                         </button>
                         <p className="text-[10px] text-muted-foreground mt-2 flex items-center justify-center gap-1">
-                            <AlertTriangle size={12} /> 잘못된 차단이라고 생각되면 시스템 관리자에게 문의하세요.
+                            <AlertTriangle size={12} /> {t('notification.system.security_contact_admin', '잘못된 차단이라고 생각되면 시스템 관리자에게 문의하세요.')}
                         </p>
                     </div>
                 </div>
