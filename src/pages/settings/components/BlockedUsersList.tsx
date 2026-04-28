@@ -41,7 +41,7 @@ export default function BlockedUsersList() {
             </Avatar>
             <div>
               <p className="font-medium text-sm">{user.nickname || 'Unknown User'}</p>
-              <p className="text-xs text-muted-foreground">@{user.user_id}</p>
+              <p className="text-xs text-muted-foreground">@{user.username}</p>
             </div>
           </div>
           <button

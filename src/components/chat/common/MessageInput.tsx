@@ -23,8 +23,11 @@ type Attachment = {
 
 const MessageInput = memo(({ chatId }: MessageInputProps) => {
   const { t } = useTranslation();
-  const { sendMessage } = useDirectChat();
+  const { sendMessage, currentChat, blockedUserIds } = useDirectChat();
   const { isBanned, bannedUntil } = useAuth();
+
+  // 현재 대화 상대가 차단된 상태인지 확인 (Profile ID 기준)
+  const isChatBlocked = currentChat ? blockedUserIds.has(currentChat.other_user.id) : false;
 
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -385,8 +388,9 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
             <button
               ref={buttonRef}
               type="button"
-              className="attach-button group"
-              onClick={() => setShowAddMenu(prev => !prev)}
+              className={`attach-button group ${isChatBlocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={() => !isChatBlocked && setShowAddMenu(prev => !prev)}
+              disabled={isChatBlocked}
               aria-label={t('common.more', '더보기')}
             >
               <i 
@@ -446,17 +450,16 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
             onKeyDown={handleKeyDown}
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={() => setIsComposing(false)}
-            className="message-textarea"
+            className={`message-textarea ${isChatBlocked ? 'bg-gray-100 dark:bg-gray-800/50 cursor-not-allowed text-gray-400' : ''}`}
             rows={1}
-            placeholder={t('chat.input_placeholder')}
-            disabled={sending}
+            placeholder={isChatBlocked ? t('chat.blocked_user_input_placeholder', '차단한 사용자에게는 메시지를 보낼 수 없습니다') : t('chat.input_placeholder')}
+            disabled={sending || isChatBlocked}
             maxLength={2000}
           />
           <button
             type="submit"
             className="send-button"
-            disabled={(!message.trim() && !hasAttachments) || sending || attachments.some(att => att.isCompressing)}
-
+            disabled={(!message.trim() && !hasAttachments) || sending || isChatBlocked || attachments.some(att => att.isCompressing)}
             aria-label={t('chat.aria_send_message', '메시지 전송')}
           >
             {sending ? (

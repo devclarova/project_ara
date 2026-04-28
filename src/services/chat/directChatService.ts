@@ -1351,6 +1351,7 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
 export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<boolean>> {
   try {
     const currentUser = await getCurrentUser();
+    console.log('[DEBUG] exitDirectChat entry:', { chatId, userId: currentUser?.id, profileId: currentUser?.profileId });
     if (!currentUser) {
       return { success: false, error: '사용자가 로그인되지 않았습니다.' };
     }
@@ -1442,7 +1443,6 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
       .eq('id', chatId);
 
     if (updateError) {
-      console.error('채팅방 비활성화 오류:', updateError);
       return { success: false, error: '채팅방 나가기에 실패했습니다.' };
     }
 

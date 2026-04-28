@@ -13,6 +13,7 @@ import imageCompression from 'browser-image-compression';
 import type { UIReply } from '@/types/sns';
 import { getBanMessage } from '@/utils/banUtils';
 import SeagullIcon from '@/components/common/SeagullIcon';
+import { useBlockedUsers } from '@/contexts/BlockedUsersContext';
 
 type EditorMode = 'tweet' | 'reply';
 
@@ -74,6 +75,7 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
   const { t } = useTranslation();
   const { mode, onCancel } = props;
   const { user, userPlan, isBanned, bannedUntil } = useAuth();
+  const { blockedIds, blockingMeIds } = useBlockedUsers();
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [profileNickname, setProfileNickname] = useState<string>('');
@@ -301,7 +303,10 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
               const tweetAuthorId = tweetData?.author_id;
 
               // 부모 댓글 작성자가 트윗 작성자와 다를 때만 reply 알림 발송 (중복 방지)
-              if (parentAuthorId !== tweetAuthorId) {
+              // 상호 차단 관계인 경우 알림 생성을 스킵함
+              const isBlockedRelation = parentAuthorId && (blockedIds.includes(parentAuthorId) || blockingMeIds.includes(parentAuthorId));
+
+              if (parentAuthorId !== tweetAuthorId && !isBlockedRelation) {
                 const { error: notifError } = await (supabase.from('notifications') as any).insert({
                   receiver_id: parentAuthorId,
                   sender_id: profileId,

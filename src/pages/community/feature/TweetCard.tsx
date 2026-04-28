@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import ImageSlider from '../tweet/components/ImageSlider';
 import ModalImageSlider from '../tweet/components/ModalImageSlider';
 import EditTweetModal from '@/components/common/EditTweetModal';
+import { useBlockedUsers } from '@/contexts/BlockedUsersContext';
 
 const SNS_LAST_TWEET_ID_KEY = 'sns-last-tweet-id';
 
@@ -99,6 +100,7 @@ export default function TweetCard({
   const location = useLocation();
   const { t } = useTranslation();
   const { user: authUser, isAdmin, profileId } = useAuth();
+  const { blockedIds, blockingMeIds } = useBlockedUsers();
   const [liked, setLiked] = useState(initialLiked ?? false);
   const [showMenu, setShowMenu] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
@@ -302,7 +304,10 @@ export default function TweetCard({
         toast.success(t('common.success_like'));
 
         // 2) 알림 추가 (자기 글 좋아요면 알림 안 보냄, 작성자 프로필 없으면 스킵)
-        if (authorProfileId && authorProfileId !== likeUserId) {
+        // 상호 차단 관계인 경우 알림 생성을 스킵함
+        const isBlockedRelation = authorProfileId && (blockedIds.includes(authorProfileId) || blockingMeIds.includes(authorProfileId));
+        
+        if (authorProfileId && authorProfileId !== likeUserId && !isBlockedRelation) {
           const { error: notiError } = await (supabase.from('notifications') as any).insert([
             {
               type: 'like',

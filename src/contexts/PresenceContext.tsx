@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from './AuthContext';
+import { useBlockedUsersContext } from './BlockedUsersContext'; // 추가
 import { retryWithBackoff, isOnline } from '@/utils/networkUtils';
 import { getErrorMessage } from '@/utils/errorMessage';
 import type { RealtimeChannel } from '@supabase/supabase-js';
@@ -40,6 +41,7 @@ const PresenceContext = createContext<PresenceContextType | undefined>(undefined
 // 실시간 접속 상태 및 서비스 지표 분석 엔진(Real-time Presence & Analytics Engine) — 사용자 온라인 상태, 활성 세션 및 관리자 대시보드 통계 실시간 정규화
 export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, profileId, isAdmin } = useAuth();
+  const { blockedIds, blockingMeIds } = useBlockedUsersContext(); // 차단 목록 구독
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
   const [dbOnlineUsers, setDbOnlineUsers] = useState<Record<string, { is_online: boolean; last_active_at: string | null }>>({});
   const [stats, setStats] = useState<RealtimeStats>({
@@ -215,6 +217,12 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // 지능형 온라인 판정 및 세션 클리너(Smart Presence Guard) — 웹소켓 상태와 DB 활동 임계치(5분)를 교차 분석하여 좀비 접속 방지 및 정확한 온라인 상태 산출
   const isUserOnline = useCallback((pId: string | undefined): boolean => {
     if (!pId) return false;
+
+    // 0. 차단 관계 확인 (내가 차단했거나 나를 차단한 유저라면 오프라인으로 표시)
+    if (blockedIds.includes(pId) || blockingMeIds.includes(pId)) {
+      return false;
+    }
+
     // 1. 실시간 프레즌스(웹소켓)에서 확인 — 가장 확실
     if (onlineUsers.has(pId)) return true;
     // 2. DB 실시간 동기화 상태에서 확인 (좀비 방어: 5분 이내 활동만 허용)
@@ -224,7 +232,7 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return (Date.now() - lastActiveTime) < ZOMBIE_THRESHOLD_MS;
     }
     return false;
-  }, [onlineUsers, dbOnlineUsers]);
+  }, [onlineUsers, dbOnlineUsers, blockedIds, blockingMeIds]);
 
   const updateDbStatus = useCallback((userId: string, isOnline: boolean) => {
     setDbOnlineUsers(prev => ({
@@ -237,18 +245,29 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // 6. 실시간 온라인 카운트 계산 (웹소켓 + DB 5분 임계치 합산)
   // ============================================================
   const computedOnlineCount = useMemo(() => {
-    const onlineSet = new Set(onlineUsers);
+    const onlineSet = new Set<string>();
     const now = Date.now();
+    
+    // 웹소켓 기반 온라인 유저 합산 (차단 유저 제외)
+    onlineUsers.forEach(pId => {
+      if (!blockedIds.includes(pId) && !blockingMeIds.includes(pId)) {
+        onlineSet.add(pId);
+      }
+    });
+
+    // DB 기반 온라인 유저 합산 (차단 유저 제외)
     Object.entries(dbOnlineUsers).forEach(([pId, status]) => {
       if (status.is_online && status.last_active_at) {
         const lastActiveTime = new Date(status.last_active_at).getTime();
         if ((now - lastActiveTime) < ZOMBIE_THRESHOLD_MS) {
-          onlineSet.add(pId);
+          if (!blockedIds.includes(pId) && !blockingMeIds.includes(pId)) {
+            onlineSet.add(pId);
+          }
         }
       }
     });
     return onlineSet.size;
-  }, [onlineUsers, dbOnlineUsers]);
+  }, [onlineUsers, dbOnlineUsers, blockedIds, blockingMeIds]);
 
   const value = useMemo(() => ({
     onlineUsers,

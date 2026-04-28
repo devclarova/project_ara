@@ -135,12 +135,16 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       if (!myProfId) return;
 
       const { data } = await (supabase.from('user_blocks') as any)
-        .select('blocked_id')
+        .select('blocked_id, profiles:blocked_id(user_id)')
         .eq('blocker_id', myProfId)
         .is('ended_at', null);
 
       if (data) {
-        const newSet = new Set<string>(data.map((b: any) => b.blocked_id));
+        const newSet = new Set<string>();
+        data.forEach((b: any) => {
+          if (b.blocked_id) newSet.add(b.blocked_id);
+          if (b.profiles?.user_id) newSet.add(b.profiles.user_id);
+        });
         blockedIdsRef.current = newSet;
         setBlockedUserIds(newSet);
       }
@@ -165,21 +169,21 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
   const loadChatsTimeoutRef = useRef<number | null>(null);
   const isLoadingChatsRef = useRef(false);
 
-  const loadChats = useCallback(async () => {
-    if (isLoadingChatsRef.current) return;
+  const loadChats = useCallback(async (force = false) => {
+    // force가 true이면 진행 중인 로딩 무시하고 강제 실행
+    if (isLoadingChatsRef.current && !force) return;
 
     if (loadChatsTimeoutRef.current) {
       window.clearTimeout(loadChatsTimeoutRef.current);
     }
 
     loadChatsTimeoutRef.current = window.setTimeout(async () => {
-      if (isLoadingChatsRef.current) return;
+      if (isLoadingChatsRef.current && !force) return;
 
       isLoadingChatsRef.current = true;
       try {
         const response = await getChatList();
         if (response.success && response.data) {
-          // DB의 last_message_at이 stale한 경우가 있으므로, last_message.created_at과 비교하여 더 최신인 값으로 정렬
           const sorted = [...response.data].sort((a: any, b: any) => {
             const aDb = new Date(a.last_message_at || 0).getTime();
             const aMsg = new Date(a.last_message?.created_at || 0).getTime();
@@ -189,7 +193,6 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           });
           setChats(sorted);
         } else {
-
           handleError(response.error || '채팅방 목록을 불러올 수 없습니다.');
         }
       } catch (err: unknown) {
@@ -199,7 +202,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         isLoadingChatsRef.current = false;
       }
     }, 200);
-  }, [setUnreadCount, handleError]); 
+  }, [handleError]); 
   // blockedUserIds 의존성 제거 -> 리렌더링은 chats 업데이트로 충분함
 
   // 차단/해제 시 상태 갱신 리스너 (의존성 최소화로 무한루프 방지)
@@ -208,7 +211,11 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
 
     const handleRefresh = () => {
       loadBlockedUsers();
-      loadChats(); 
+      
+      // DB 업데이트 반영 시간을 확보하기 위해 500ms 지연 후 목록 갱신 (강제 실행)
+      setTimeout(() => {
+        loadChats(true); 
+      }, 500);
     };
     window.addEventListener('REFRESH_BLOCKED_USERS', handleRefresh);
 

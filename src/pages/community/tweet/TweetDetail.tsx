@@ -101,10 +101,10 @@ export default function TweetDetail() {
     setHasMore(true);
   }, [id, locationState?.scrollKey]);
 
-  // blockedIds 변경 시 댓글 목록 필터링
+  // blockedIds 변경 시 트윗 본문 작성자 차단 여부만 체크
   useEffect(() => {
     if (blockedIds.length === 0) return;
-    setReplies(prev => prev.filter(r => !blockedIds.includes(r.user.username)));
+    
     // 트윗 본문 작성자가 차단된 경우 처리 (선택)
     if (tweet && blockedIds.includes(tweet.user.username)) {
       toast.info(t('tweet.author_blocked', '차단한 사용자의 게시물입니다.'));
@@ -363,12 +363,9 @@ export default function TweetDetail() {
       // setIsLoading(true); // 무한 스크롤 시 전체 로딩 걸리는 문제 수정
       const mapped = await tweetService.getRepliesByTweetId(tweetId, pageParam, shouldLoadAll, profileId);
 
-      // 차단 필터링 적용
-      const filtered = mapped.filter(r => !blockedIds.includes(r.user.username));
-
       if (shouldLoadAll) {
         // 전체 로드 시에는 기존 것 덮어쓰고 더보기 없음 처리
-        setReplies(filtered);
+        setReplies(mapped);
         setHasMore(false);
       } else {
         // 페이지네이션
@@ -427,6 +424,7 @@ export default function TweetDetail() {
             parent_reply_id: newReply.parent_reply_id ?? null,
             root_reply_id: newReply.root_reply_id ?? null,
             user: {
+              id: profile?.id,
               name: profile?.nickname ?? t('common.unknown', 'Unknown'),
               username: profile?.user_id ?? t('common.anonymous', 'anonymous'),
               avatar: profile?.avatar_url ?? '/default-avatar.svg',
@@ -447,8 +445,6 @@ export default function TweetDetail() {
           } as UIReply;
           setReplies(prev => {
             if (prev.some(r => r.id === formattedReply.id)) return prev;
-            // 차단된 유저의 실시간 댓글이면 추가하지 않음 (선택 사항)
-            if (blockedIds.includes(formattedReply.user.username)) return prev;
 
             const combined = [...prev, formattedReply];
             return combined.sort(
