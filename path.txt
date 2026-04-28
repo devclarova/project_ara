@@ -1,0 +1,1 @@
+d:/study/jh/project_ara/src/pages/community/tweet/components/TweetDetailCard.tsx

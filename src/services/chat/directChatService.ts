@@ -496,6 +496,15 @@ async function uploadAttachments(files: File[], chatId: string) {
   const uploads: { url: string; type: 'image' | 'video' | 'file'; name: string }[] = [];
 
   for (const file of files) {
+    // 🟢 최종 방어적 용량 검수 (1MB / 10MB / 5MB)
+    if (file.type.startsWith('image/')) {
+      if (file.size > 1 * 1024 * 1024) throw new Error('IMAGE_SIZE_EXCEEDED');
+    } else if (file.type.startsWith('video/')) {
+      if (file.size > 10 * 1024 * 1024) throw new Error('VIDEO_SIZE_EXCEEDED');
+    } else {
+      if (file.size > 5 * 1024 * 1024) throw new Error('FILE_SIZE_EXCEEDED');
+    }
+
     const ext = file.name.split('.').pop();
     const path = `direct/${chatId}/${crypto.randomUUID()}.${ext}`;
 

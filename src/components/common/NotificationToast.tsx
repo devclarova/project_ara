@@ -99,6 +99,14 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
         textColor: 'text-emerald-600 dark:text-emerald-400',
         badgeColor: 'text-emerald-500'
       };
+      case 'reply': return {
+        icon: '💬',
+        label: t('notification.action_reply', '대댓글을 남겼습니다'),
+        bgColor: 'bg-emerald-50 dark:bg-emerald-900/20',
+        iconBg: 'bg-emerald-100 dark:bg-emerald-800',
+        textColor: 'text-emerald-600 dark:text-emerald-400',
+        badgeColor: 'text-emerald-500'
+      };
       case 'follow': return {
         icon: '👤',
         label: t('notification.follow_msg', '회원님을 팔로우합니다'),

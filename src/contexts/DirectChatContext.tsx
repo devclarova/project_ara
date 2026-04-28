@@ -149,6 +149,18 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     }
   }, [currentUserId]);
 
+  // 🟢 헤더 배지(미읽음 카운트) 동기화 — chats 또는 차단 목록 변경 시 렌더링 사이클 외부에서 안전하게 상태 업데이트
+  useEffect(() => {
+    const totalUnread = chats.filter((chat) => {
+      // 차단된 사용자의 채팅은 카운트에서 제외
+      if (blockedUserIds.has(chat.other_user.id)) return false;
+      return (chat.unread_count || 0) > 0;
+    }).length;
+    
+    setUnreadCount(totalUnread);
+  }, [chats, blockedUserIds, setUnreadCount]);
+
+
   // loadChats 디바운스 및 상태 관리
   const loadChatsTimeoutRef = useRef<number | null>(null);
   const isLoadingChatsRef = useRef(false);
@@ -176,13 +188,8 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
             return Math.max(bDb, bMsg) - Math.max(aDb, aMsg);
           });
           setChats(sorted);
-          const unreadChatsCount = response.data.filter((chat: any) => {
-            // Ref를 사용하여 최신 차단 정보 보되 의존성 제거
-            if (blockedIdsRef.current.has(chat.other_user.id)) return false;
-            return (chat.unread_count || 0) > 0;
-          }).length;
-          setUnreadCount(unreadChatsCount);
         } else {
+
           handleError(response.error || '채팅방 목록을 불러올 수 없습니다.');
         }
       } catch (err: unknown) {
@@ -360,16 +367,10 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
 
           // 로컬 상태 즉시 반영
           setChats(prev => {
-            const updated = prev.map((chat: any) => (chat.id === chatId ? { ...chat, unread_count: 0 } : chat));
-            // 헤더 배지도 동기화: 나머지 채팅방의 미읽음 수 재계산
-            const totalUnread = updated.filter((c: any) => {
-              if (blockedIdsRef.current.has(c.other_user.id)) return false;
-              return (c.unread_count || 0) > 0;
-            }).length;
-            setUnreadCount(totalUnread);
-            return updated;
+            return prev.map((chat: any) => (chat.id === chatId ? { ...chat, unread_count: 0 } : chat));
           });
         } else {
+
           handleError(response.error || '메시지를 불러올 수 없습니다.');
         }
       } catch (err) {

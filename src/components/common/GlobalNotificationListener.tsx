@@ -23,6 +23,13 @@ export const GlobalNotificationListener: React.FC = () => {
   const currentChatRef = useRef<string | null>(null);
   // Event Deduplication: Implements a short-term buffer to filter out rapid, identical notification spikes (debouncing).
   const recentNotificationsRef = useRef<Map<string, number>>(new Map());
+  // User Notification Settings: Caches the user's notification preferences to control toast visibility in real-time.
+  const userSettingsRef = useRef({
+    notify_comment: true,
+    notify_like: true,
+    notify_follow: true,
+    notify_chat: true,
+  });
 
   useEffect(() => {
     currentChatRef.current = currentChat?.id || null;
@@ -36,11 +43,20 @@ export const GlobalNotificationListener: React.FC = () => {
     let chatChannel: any = null;
 
     const setupSubscriptions = async () => {
-      // 1. Fetch profile ID
+      // 1. Fetch profile ID and notification settings
       const { data: profile } = await (supabase.from('profiles') as any)
-        .select('id')
+        .select('id, notify_comment, notify_like, notify_follow, notify_chat')
         .eq('user_id', user.id)
         .maybeSingle();
+      
+      if (profile) {
+        userSettingsRef.current = {
+          notify_comment: profile.notify_comment ?? true,
+          notify_like: profile.notify_like ?? true,
+          notify_follow: profile.notify_follow ?? true,
+          notify_chat: profile.notify_chat ?? true,
+        };
+      }
 
       if (!isMounted) return;
 
@@ -63,6 +79,14 @@ export const GlobalNotificationListener: React.FC = () => {
               if (blockedUserIds.has(newNotif.sender_id as string)) {
                 return;
               }
+
+              // Notification Type Filter: Checks user settings before displaying the toast.
+              const type = newNotif.type;
+              if (type === 'comment' && !userSettingsRef.current.notify_comment) return;
+              if (type === 'like' && !userSettingsRef.current.notify_like) return;
+              if (type === 'follow' && !userSettingsRef.current.notify_follow) return;
+              // mention, repost, reply 등은 comment 필드 설정을 따르거나 기본값(true) 유지
+              if ((type === 'mention' || type === 'repost' || type === 'reply') && !userSettingsRef.current.notify_comment) return;
               
               const { data: senderProfile } = await (supabase.from('profiles') as any)
                 .select('id, nickname, avatar_url, username, bio')
@@ -153,20 +177,9 @@ export const GlobalNotificationListener: React.FC = () => {
             if (!profile?.id) return;
             if (currentChatRef.current === newMessage.chat_id) return;
 
-            // 채팅 알림 설정 확인 (토스트용)
-            try {
-              const { data: chatSettings } = await (supabase.from('profiles') as any)
-                .select('notify_chat')
-                .eq('user_id', user.id)
-                .single();
-              
-              // 채팅 알림이 비활성화되어 있으면 토스트 띄우지 않음 (헤더 알림은 DirectChatContext에서 처리)
-              if (chatSettings?.notify_chat === false) {
-                return;
-              }
-            } catch (err) {
-              // 에러 시 기본값(true)으로 동작
-              console.warn('[GlobalNotificationListener] Error checking chat notification settings:', err);
+            // 채팅 알림 설정 확인 (미리 로드된 캐시 사용)
+            if (!userSettingsRef.current.notify_chat) {
+              return;
             }
 
             // active 상태도 같이 조회하여, 내가 나간 채팅방인지 확인
@@ -246,10 +259,36 @@ export const GlobalNotificationListener: React.FC = () => {
 
     setupSubscriptions();
 
+    // 4. Follow profile setting changes in real-time
+    const settingsChannel = supabase
+      .channel(`profile-settings-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload: any) => {
+          const updated = payload.new;
+          if (updated) {
+            userSettingsRef.current = {
+              notify_comment: updated.notify_comment ?? userSettingsRef.current.notify_comment,
+              notify_like: updated.notify_like ?? userSettingsRef.current.notify_like,
+              notify_follow: updated.notify_follow ?? userSettingsRef.current.notify_follow,
+              notify_chat: updated.notify_chat ?? userSettingsRef.current.notify_chat,
+            };
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       isMounted = false;
       if (notifChannel) supabase.removeChannel(notifChannel);
       if (chatChannel) supabase.removeChannel(chatChannel);
+      if (settingsChannel) supabase.removeChannel(settingsChannel);
     };
   }, [user]);
 

@@ -6,6 +6,8 @@ import { checkMessage, initProfanity } from '@/utils/safety';
 import { useAuth } from '@/contexts/AuthContext';
 import { getBanMessage } from '@/utils/banUtils';
 import { toast } from 'sonner';
+import imageCompression from 'browser-image-compression';
+
 
 interface MessageInputProps {
   chatId: string;
@@ -15,7 +17,9 @@ type Attachment = {
   id: string;
   file: File;
   previewUrl?: string;
+  isCompressing?: boolean;
 };
+
 
 const MessageInput = memo(({ chatId }: MessageInputProps) => {
   const { t } = useTranslation();
@@ -174,21 +178,71 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
 
   // 다중 미디어 수용 및 전처리 — 브라우저 파일 API를 통한 유효성 검증 및 런타임 메모리 가용성을 위한 프리뷰(Blob URL) 생명주기 관리
   const handleFilesSelected = useCallback((files: FileList) => {
-    const next: Attachment[] = Array.from(files).map(file => {
-      let previewUrl: string | undefined;
-      // 이미지 또는 동영상이면 미리보기 URL 생성
-      if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
-        previewUrl = URL.createObjectURL(file);
-      }
-      return {
-        id: crypto.randomUUID(),
-        file,
-        previewUrl,
-      };
-    });
+    const fileArray = Array.from(files);
+    const nextArr: Attachment[] = [];
 
-    setAttachments(prev => [...prev, ...next]);
-  }, []);
+    // 1차 필터링 및 즉시 프리뷰 생성
+    for (const file of fileArray) {
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
+
+      // 동영상 용량 제한 (10MB) - 즉시 차단
+      if (isVideo && file.size > 10 * 1024 * 1024) {
+        toast.error(t('chat.error_video_size', '동영상 용량은 10MB를 초과할 수 없습니다.'));
+        continue;
+      }
+      // 일반 파일 용량 제한 (5MB) - 즉시 차단
+      if (!isImage && !isVideo && file.size > 5 * 1024 * 1024) {
+        toast.error(t('chat.error_file_size', '파일 용량은 5MB를 초과할 수 없습니다.'));
+        continue;
+      }
+
+      const id = crypto.randomUUID();
+      nextArr.push({
+        id,
+        file,
+        previewUrl: (isImage || isVideo) ? URL.createObjectURL(file) : undefined,
+        isCompressing: isImage, // 이미지는 압축 프로세스 시작
+      });
+    }
+
+    if (nextArr.length === 0) return;
+
+    // 상태 즉시 반영 (프리뷰 표시)
+    setAttachments(prev => [...prev, ...nextArr]);
+
+    // 비동기 이미지 압축 처리 (백그라운드)
+    nextArr.forEach(async (att) => {
+      if (!att.isCompressing) return;
+
+      try {
+        const options = {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+        };
+        const compressed = await imageCompression(att.file, options);
+        
+        // 상태 업데이트: 파일 교체 및 로딩 해제
+        setAttachments(prev => prev.map(p => 
+          p.id === att.id ? { ...p, file: compressed, isCompressing: false } : p
+        ));
+      } catch (err) {
+        console.error('이미지 압축 실패:', err);
+        // 압축 실패 시 1MB 체크 후 결정
+        if (att.file.size > 1 * 1024 * 1024) {
+          toast.error(t('chat.error_image_size', '이미지 용량은 1MB를 초과할 수 없습니다.'));
+          setAttachments(prev => prev.filter(p => p.id !== att.id));
+        } else {
+          setAttachments(prev => prev.map(p => 
+            p.id === att.id ? { ...p, isCompressing: false } : p
+          ));
+        }
+      }
+    });
+  }, [t]);
+
+
 
   const removeAttachment = useCallback((id: string) => {
     setAttachments(prev => {
@@ -306,7 +360,15 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
                   </div>
                 )}
                 
+                {/* 압축 중 로딩 스피너 오버레이 */}
+                {att.isCompressing && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+                    <i className="ri-loader-4-line text-white text-xl animate-spin" />
+                  </div>
+                )}
+                
                 <button
+
                   type="button"
                   onClick={() => removeAttachment(att.id)}
                   className="absolute top-0.5 right-0.5 bg-black/50 hover:bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center transition-colors"
@@ -393,7 +455,8 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
           <button
             type="submit"
             className="send-button"
-            disabled={(!message.trim() && !hasAttachments) || sending}
+            disabled={(!message.trim() && !hasAttachments) || sending || attachments.some(att => att.isCompressing)}
+
             aria-label={t('chat.aria_send_message', '메시지 전송')}
           >
             {sending ? (

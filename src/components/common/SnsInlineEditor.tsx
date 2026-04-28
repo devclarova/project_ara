@@ -136,7 +136,21 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const selected = Array.from(e.target.files);
-    setFiles(selected);
+    
+    // 이미지 파일만 필터링
+    const imageFiles = selected.filter(file => file.type.startsWith('image/'));
+    
+    // 이미지가 아닌 파일이 포함된 경우 토스트 알림
+    if (imageFiles.length !== selected.length) {
+      toast.error(t('tweets.error_only_images', '이미지 파일만 업로드할 수 있습니다.'));
+    }
+
+    if (imageFiles.length === 0) {
+      if (e.target) e.target.value = '';
+      return;
+    }
+    
+    setFiles(imageFiles);
   };
 
   // Media Orchestration: Implements a multi-stage pipeline encompassing client-side compression and storage ingestion.
@@ -244,6 +258,45 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
           toast.error(t('tweets.error_reply_save'));
           setIsSubmitting(false);
           return;
+        }
+
+        // 대댓글 알림 생성 (부모 댓글 작성자에게)
+        if (parentReplyId) {
+          try {
+            // 1. 부모 댓글 작성자 ID 조회
+            const { data: parentData } = await (supabase.from('tweet_replies') as any)
+              .select('author_id')
+              .eq('id', parentReplyId)
+              .maybeSingle();
+
+            const parentAuthorId = parentData?.author_id;
+
+            // 가드 로직
+            if (parentAuthorId && parentAuthorId !== profileId) {
+              // 2. 트윗 작성자 ID 조회
+              const { data: tweetData } = await (supabase.from('tweets') as any)
+                .select('author_id')
+                .eq('id', tweetId)
+                .maybeSingle();
+
+              const tweetAuthorId = tweetData?.author_id;
+
+              // 부모 댓글 작성자가 트윗 작성자와 다를 때만 reply 알림 발송 (중복 방지)
+              if (parentAuthorId !== tweetAuthorId) {
+                const { error: notifError } = await (supabase.from('notifications') as any).insert({
+                  receiver_id: parentAuthorId,
+                  sender_id: profileId,
+                  type: 'reply',
+                  content: finalContent.trim(),
+                  tweet_id: tweetId,
+                  comment_id: inserted.id,
+                  is_read: false,
+                });
+              }
+            }
+          } catch (e) {
+            console.error('Notification creation failed:', e);
+          }
         }
         
         const uiReply: UIReply = {
