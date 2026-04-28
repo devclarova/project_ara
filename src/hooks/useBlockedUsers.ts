@@ -6,10 +6,11 @@ import { useBlockedUsersContext } from '@/contexts/BlockedUsersContext';
  * - 방법(How): BlockedUsersContext를 통해 중앙 집중식으로 데이터를 공급받으며, 중복 요청을 방지함
  */
 export function useBlockedUsers() {
-  const { blockedIds, blockedUsers, isLoading, unblock } = useBlockedUsersContext();
+  const { blockedIds, blockingMeIds, blockedUsers, isLoading, unblock } = useBlockedUsersContext();
 
   return {
     blockedIds,
+    blockingMeIds,
     blockedUsers,
     isLoading,
     unblockMutation: {

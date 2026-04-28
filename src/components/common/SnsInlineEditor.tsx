@@ -25,7 +25,7 @@ export type EditorCreatedTweet = {
     name: string;
     username: string;
     avatar: string;
-    plan?: string;
+    plan?: 'free' | 'basic' | 'premium';
     countryFlag?: string | null;
     countryName?: string | null;
     banned_until?: string | null;
