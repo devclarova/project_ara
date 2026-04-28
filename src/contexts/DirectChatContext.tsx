@@ -860,7 +860,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           };
           updatedChat.last_message_at = newMessage.created_at;
 
-          if (currentChatId.current !== chatId) {
+          if (currentChatId.current !== chatId && newMessage.sender_id !== currentUserId) {
             updatedChat.unread_count = (updatedChat.unread_count || 0) + 1;
             updatedChat.is_new_chat = true;
           }
