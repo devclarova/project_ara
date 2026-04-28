@@ -32,8 +32,7 @@ export function useBlock(targetProfileId?: string): UseBlockReturn {
 
   // Check block status (no-op now as we use context)
   const checkBlockStatus = useCallback(async () => {
-    // Rely on REFRESH_BLOCKED_USERS event to trigger fetch in context
-    window.dispatchEvent(new Event('REFRESH_BLOCKED_USERS'));
+    // Rely on Context to handle state
   }, []);
 
   // Removed useEffect checkBlockStatus on mount to prevent 100+ DB queries
@@ -41,12 +40,12 @@ export function useBlock(targetProfileId?: string): UseBlockReturn {
   // 전역 차단 갱신 이벤트를 받으면 재조회
   useEffect(() => {
     const handler = () => {
-      checkBlockStatus();
+      // Logic for handling refresh if needed in local state
     };
 
     window.addEventListener('REFRESH_BLOCKED_USERS', handler);
     return () => window.removeEventListener('REFRESH_BLOCKED_USERS', handler);
-  }, [checkBlockStatus]);
+  }, []);
 
   // 차단/해제 트랜잭션 오케스트레이션(Block Transaction Orchestration) — 관계 상태의 원자적(Atomic) 전환 및 실시간 전역 이벤트 전파를 통한 UI 동기화
   const toggleBlock = async () => {

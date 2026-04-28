@@ -23,6 +23,7 @@ import EditButton from '@/components/common/EditButton';
 import EditTweetModal from '@/components/common/EditTweetModal';
 import { getErrorMessage } from '@/utils/errorMessage';
 import SeagullIcon from '@/components/common/SeagullIcon';
+import { useBlockedUsers } from '@/contexts/BlockedUsersContext';
 
 function htmlToEditorText(html: string) {
   const doc = new DOMParser().parseFromString(html || '', 'text/html');
@@ -67,6 +68,7 @@ export default function TweetDetailCard({
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user: authUser, isAdmin } = useAuth();
+  const { blockedIds, blockingMeIds } = useBlockedUsers();
 
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(tweet.stats.likes || 0);
@@ -323,9 +325,12 @@ export default function TweetDetailCard({
       setLiked(true);
       setLikeCount(prev => prev + 1);
       toast.success(t('common.success_like'));
-
+      
       // 알림 생성 (본인 게시글이 아닐 때만, 작성자 없으면 스킵)
-      if (authorProfileId && !isDeletedUser && authorProfileId !== profileId) {
+      // 상호 차단 관계인 경우 알림 생성을 스킵함
+      const isBlockedRelation = authorProfileId && (blockedIds.includes(authorProfileId) || blockingMeIds.includes(authorProfileId));
+
+      if (authorProfileId && !isDeletedUser && authorProfileId !== profileId && !isBlockedRelation) {
         await (supabase.from('notifications') as any).insert({
           type: 'like',
           content: t('tweet.liked_feed'),

@@ -252,9 +252,11 @@ const MessageItem = memo(
         id={`msg-${message.id}`}
         className={`message-item ${isMyMessage ? 'my-message' : 'other-message'} ${highlightClass} ${flashClass} 
           ${canSelect ? 'cursor-pointer select-none' : ''} 
-          ${isSelected ? 'bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-500/50 rounded-xl my-1 py-1' : ''}`}
+          ${isSelected ? 'bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-500/50 rounded-xl my-1 py-1' : ''}
+          ${message.id.startsWith('temp-') ? 'opacity-50 pointer-events-none' : ''}`}
         onClick={canSelect ? handleSelectionClick : undefined}
       >
+
         {canSelect && (
           <div className="flex items-center justify-center mx-2 z-10 shrink-0">
             {isSelected ? (

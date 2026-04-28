@@ -10,13 +10,15 @@ import { type PostgrestError } from '@supabase/supabase-js';
 
 export interface BlockedUser {
   id: string; // profile id
-  user_id: string; // auth id (username)
+  user_id: string; // auth id (UUID)
+  username: string; // handle (e.g. user_123)
   nickname: string;
   avatar_url: string;
 }
 
 interface BlockedUsersContextType {
   blockedIds: string[];
+  blockingMeIds: string[]; // 나를 차단한 유저 목록 추가
   blockedUsers: BlockedUser[];
   isLoading: boolean;
   error: PostgrestError | null;
@@ -30,6 +32,7 @@ export function BlockedUsersProvider({ children }: PropsWithChildren) {
   const { user, profileId } = useAuth();
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [blockedIds, setBlockedIds] = useState<string[]>([]);
+  const [blockingMeIds, setBlockingMeIds] = useState<string[]>([]); // 상태 추가
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<PostgrestError | null>(null);
 
@@ -37,43 +40,67 @@ export function BlockedUsersProvider({ children }: PropsWithChildren) {
     if (!user || !profileId) {
       setBlockedUsers([]);
       setBlockedIds([]);
+      setBlockingMeIds([]);
       setIsLoading(false);
       return;
     }
 
     try {
       setIsLoading(true);
-      const { data, error } = await (supabase.from('user_blocks') as any)
-        .select(`
-          blocked_id,
-          profiles:blocked_id (
-            id,
-            user_id,
-            nickname,
-            avatar_url
-          )
-        `)
-        .eq('blocker_id', profileId)
-        .is('ended_at', null);
+      
+      // 1. 내가 차단한 유저 및 2. 나를 차단한 유저 목록을 병렬로 조회
+      const [blockedRes, blockingMeRes] = await Promise.all([
+        (supabase.from('user_blocks') as any)
+          .select(`
+            blocked_id,
+            profiles:blocked_id (
+              id,
+              user_id,
+              username,
+              nickname,
+              avatar_url
+            )
+          `)
+          .eq('blocker_id', profileId)
+          .is('ended_at', null),
+        (supabase.from('user_blocks') as any)
+          .select('blocker_id')
+          .eq('blocked_id', profileId)
+          .is('ended_at', null)
+      ]);
 
-      if (error) throw error;
+      if (blockedRes.error) throw blockedRes.error;
+      if (blockingMeRes.error) throw blockingMeRes.error;
 
       type BlockRow = {
         blocked_id: string;
-        profiles: { id: string; user_id: string; nickname: string; avatar_url: string } | null;
+        profiles: { id: string; user_id: string; username: string | null; nickname: string; avatar_url: string } | null;
       };
       
-      const mapped = (data as BlockRow[] || [])
+      const mapped = (blockedRes.data as BlockRow[] || [])
         .map(row => ({
           id: row.profiles?.id,
           user_id: row.profiles?.user_id,
+          username: row.profiles?.username || row.profiles?.nickname || 'unknown',
           nickname: row.profiles?.nickname,
           avatar_url: row.profiles?.avatar_url,
         }))
         .filter((u): u is BlockedUser => !!u.id && !!u.user_id);
 
       setBlockedUsers(mapped);
-      setBlockedIds(mapped.map(u => u.id));
+      
+      // 1. 내가 차단한 유저 ID 세트 (Profile ID + Auth ID)
+      const allBlockedIds = new Set<string>();
+      mapped.forEach(u => {
+        if (u.id) allBlockedIds.add(u.id);
+        if (u.user_id) allBlockedIds.add(u.user_id);
+      });
+      setBlockedIds(Array.from(allBlockedIds));
+
+      // 2. 나를 차단한 유저 ID 목록 (Profile ID만 저장해도 판별 가능)
+      const allBlockingMeIds = (blockingMeRes.data as { blocker_id: string }[] || []).map(row => row.blocker_id);
+      setBlockingMeIds(allBlockingMeIds);
+
       setError(null);
     } catch (err: any) {
       console.error('[BlockedUsersContext] fetch error:', err);
@@ -125,12 +152,13 @@ export function BlockedUsersProvider({ children }: PropsWithChildren) {
 
   const value = useMemo(() => ({
     blockedIds,
+    blockingMeIds, // 추가
     blockedUsers,
     isLoading,
     error,
     refresh: fetchBlockedUsers,
     unblock,
-  }), [blockedIds, blockedUsers, isLoading, error, fetchBlockedUsers]);
+  }), [blockedIds, blockingMeIds, blockedUsers, isLoading, error, fetchBlockedUsers]);
 
   return (
     <BlockedUsersContext.Provider value={value}>
@@ -139,8 +167,11 @@ export function BlockedUsersProvider({ children }: PropsWithChildren) {
   );
 }
 
-export function useBlockedUsersContext() {
+export function useBlockedUsers() {
   const ctx = useContext(BlockedUsersContext);
-  if (!ctx) throw new Error('useBlockedUsersContext must be used within BlockedUsersProvider');
+  if (!ctx) throw new Error('useBlockedUsers must be used within BlockedUsersProvider');
   return ctx;
 }
+
+// 기존 코드 호환성을 위한 별칭
+export const useBlockedUsersContext = useBlockedUsers;

@@ -8,6 +8,8 @@ import { toast } from 'sonner';
 import { getBanMessage } from '@/utils/banUtils';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { useTranslation } from 'react-i18next';
+import imageCompression from 'browser-image-compression';
+
 
 interface ComposeBoxProps {
 // ... existing interface ...
@@ -65,6 +67,13 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // 이미지 파일 여부 확인
+      if (!file.type.startsWith('image/')) {
+        toast.error(t('tweets.error_only_images', '이미지 파일만 업로드할 수 있습니다.'));
+        if (event.target) event.target.value = '';
+        return;
+      }
+
       setSelectedImage(file);
       const reader = new FileReader();
       reader.onload = e => setPreviewImage(e.target?.result as string);
@@ -84,24 +93,60 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
 
     try {
       setUploading(true);
-      // ... rest of logic
-
+      
       let uploadedImageUrl: string | null = null;
+      let fileToUpload = selectedImage;
 
-      // ✅ 이미지가 선택된 경우 Supabase Storage에 업로드
+      // ✅ 파일 선택 시 용량 제한 및 이미지 압축 로직
       if (selectedImage) {
-        const fileExt = selectedImage.name.split('.').pop();
+        if (selectedImage.type.startsWith('image/')) {
+          try {
+            // 이미지 압축 (1MB 제한)
+            const options = {
+              maxSizeMB: 1,
+              maxWidthOrHeight: 1920,
+              useWebWorker: true,
+            };
+            fileToUpload = await imageCompression(selectedImage, options);
+          } catch (err) {
+            console.error('이미지 압축 실패:', err);
+            // 압축 실패 시 1MB 초과 여부 확인 (차단)
+            if (selectedImage.size > 1 * 1024 * 1024) {
+              toast.error(t('tweets.error_file_size', '이미지 용량은 1MB를 초과할 수 없습니다.'));
+              setUploading(false);
+              return;
+            }
+          }
+        } else if (selectedImage.type.startsWith('video/')) {
+          // 동영상: 최대 10MB (차단)
+          if (selectedImage.size > 10 * 1024 * 1024) {
+            toast.error(t('tweets.error_video_size', '동영상 용량은 10MB를 초과할 수 없습니다.'));
+            setUploading(false);
+            return;
+          }
+        } else {
+          // 기타 파일: 최대 5MB (차단)
+          if (selectedImage.size > 5 * 1024 * 1024) {
+            toast.error(t('tweets.error_file_size_generic', '파일 용량은 5MB를 초과할 수 없습니다.'));
+            setUploading(false);
+            return;
+          }
+        }
+      }
+
+      // ✅ 파일 업로드 실행
+      if (fileToUpload) {
+        const fileExt = fileToUpload.name.split('.').pop();
         const fileName = `${user.id}-${Date.now()}.${fileExt}`;
         const filePath = `tweet_images/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('tweet_media')
-          .upload(filePath, selectedImage);
+          .upload(filePath, fileToUpload);
 
         if (uploadError) throw uploadError;
 
         const { data: publicUrl } = supabase.storage.from('tweet_media').getPublicUrl(filePath);
-
         uploadedImageUrl = publicUrl.publicUrl;
       }
 

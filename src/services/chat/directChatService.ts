@@ -496,6 +496,15 @@ async function uploadAttachments(files: File[], chatId: string) {
   const uploads: { url: string; type: 'image' | 'video' | 'file'; name: string }[] = [];
 
   for (const file of files) {
+    // 🟢 최종 방어적 용량 검수 (1MB / 10MB / 5MB)
+    if (file.type.startsWith('image/')) {
+      if (file.size > 1 * 1024 * 1024) throw new Error('IMAGE_SIZE_EXCEEDED');
+    } else if (file.type.startsWith('video/')) {
+      if (file.size > 10 * 1024 * 1024) throw new Error('VIDEO_SIZE_EXCEEDED');
+    } else {
+      if (file.size > 5 * 1024 * 1024) throw new Error('FILE_SIZE_EXCEEDED');
+    }
+
     const ext = file.name.split('.').pop();
     const path = `direct/${chatId}/${crypto.randomUUID()}.${ext}`;
 
@@ -1342,6 +1351,7 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
 export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<boolean>> {
   try {
     const currentUser = await getCurrentUser();
+    console.log('[DEBUG] exitDirectChat entry:', { chatId, userId: currentUser?.id, profileId: currentUser?.profileId });
     if (!currentUser) {
       return { success: false, error: '사용자가 로그인되지 않았습니다.' };
     }
@@ -1433,7 +1443,6 @@ export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<bo
       .eq('id', chatId);
 
     if (updateError) {
-      console.error('채팅방 비활성화 오류:', updateError);
       return { success: false, error: '채팅방 나가기에 실패했습니다.' };
     }
 

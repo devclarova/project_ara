@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { useBlockedUsers } from '@/contexts/BlockedUsersContext';
 
 interface UseFollowReturn {
   isFollowing: boolean;
@@ -22,6 +23,7 @@ interface UseFollowReturn {
 export function useFollow(targetProfileId: string): UseFollowReturn {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { blockedIds, blockingMeIds } = useBlockedUsers();
   const [isFollowing, setIsFollowing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
@@ -195,7 +197,12 @@ export function useFollow(targetProfileId: string): UseFollowReturn {
           comment_id: null,
         };
 
-        await (supabase.from('notifications') as any).insert(notificationPayload);
+        // 상호 차단 관계인 경우 알림 생성을 스킵함
+        const isBlockedRelation = blockedIds.includes(targetProfileId) || blockingMeIds.includes(targetProfileId);
+
+        if (!isBlockedRelation) {
+          await (supabase.from('notifications') as any).insert(notificationPayload);
+        }
 
         setIsFollowing(true);
         window.dispatchEvent(

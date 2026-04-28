@@ -13,6 +13,7 @@ import imageCompression from 'browser-image-compression';
 import type { UIReply } from '@/types/sns';
 import { getBanMessage } from '@/utils/banUtils';
 import SeagullIcon from '@/components/common/SeagullIcon';
+import { useBlockedUsers } from '@/contexts/BlockedUsersContext';
 
 type EditorMode = 'tweet' | 'reply';
 
@@ -24,6 +25,10 @@ export type EditorCreatedTweet = {
     name: string;
     username: string;
     avatar: string;
+    plan?: string;
+    countryFlag?: string | null;
+    countryName?: string | null;
+    banned_until?: string | null;
   };
   content: string;
   image?: string | string[];
@@ -70,10 +75,13 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
   const { t } = useTranslation();
   const { mode, onCancel } = props;
   const { user, userPlan, isBanned, bannedUntil } = useAuth();
+  const { blockedIds, blockingMeIds } = useBlockedUsers();
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [profileNickname, setProfileNickname] = useState<string>('');
   const [profileUserId, setProfileUserId] = useState<string>('');
+  const [profileCountryFlag, setProfileCountryFlag] = useState<string | null>(null);
+  const [profileCountryName, setProfileCountryName] = useState<string | null>(null);
   const [value, setValue] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -98,16 +106,29 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
-      const { data, error } = await (supabase.from('profiles') as any)
-        .select('id, avatar_url, nickname, user_id')
+      const { data: profile, error: pError } = await (supabase.from('profiles') as any)
+        .select('id, avatar_url, nickname, user_id, country')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (!error && data) {
-        setProfileAvatar(data.avatar_url);
-        setProfileId(data.id);
-        setProfileNickname(data.nickname ?? '');
-        setProfileUserId(data.user_id ?? '');
+      if (!pError && profile) {
+        setProfileAvatar(profile.avatar_url);
+        setProfileId(profile.id);
+        setProfileNickname(profile.nickname ?? '');
+        setProfileUserId(profile.user_id ?? '');
+        
+        // 국가 정보 추가 조회
+        if (profile.country) {
+          const { data: cData } = await (supabase.from('countries') as any)
+            .select('name, flag_url')
+            .eq('id', profile.country)
+            .maybeSingle();
+          
+          if (cData) {
+            setProfileCountryFlag(cData.flag_url);
+            setProfileCountryName(cData.name);
+          }
+        }
       }
     };
     loadProfile();
@@ -136,7 +157,21 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const selected = Array.from(e.target.files);
-    setFiles(selected);
+    
+    // 이미지 파일만 필터링
+    const imageFiles = selected.filter(file => file.type.startsWith('image/'));
+    
+    // 이미지가 아닌 파일이 포함된 경우 토스트 알림
+    if (imageFiles.length !== selected.length) {
+      toast.error(t('tweets.error_only_images', '이미지 파일만 업로드할 수 있습니다.'));
+    }
+
+    if (imageFiles.length === 0) {
+      if (e.target) e.target.value = '';
+      return;
+    }
+    
+    setFiles(imageFiles);
   };
 
   // Media Orchestration: Implements a multi-stage pipeline encompassing client-side compression and storage ingestion.
@@ -245,6 +280,48 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
           setIsSubmitting(false);
           return;
         }
+
+        // 대댓글 알림 생성 (부모 댓글 작성자에게)
+        if (parentReplyId) {
+          try {
+            // 1. 부모 댓글 작성자 ID 조회
+            const { data: parentData } = await (supabase.from('tweet_replies') as any)
+              .select('author_id')
+              .eq('id', parentReplyId)
+              .maybeSingle();
+
+            const parentAuthorId = parentData?.author_id;
+
+            // 가드 로직
+            if (parentAuthorId && parentAuthorId !== profileId) {
+              // 2. 트윗 작성자 ID 조회
+              const { data: tweetData } = await (supabase.from('tweets') as any)
+                .select('author_id')
+                .eq('id', tweetId)
+                .maybeSingle();
+
+              const tweetAuthorId = tweetData?.author_id;
+
+              // 부모 댓글 작성자가 트윗 작성자와 다를 때만 reply 알림 발송 (중복 방지)
+              // 상호 차단 관계인 경우 알림 생성을 스킵함
+              const isBlockedRelation = parentAuthorId && (blockedIds.includes(parentAuthorId) || blockingMeIds.includes(parentAuthorId));
+
+              if (parentAuthorId !== tweetAuthorId && !isBlockedRelation) {
+                const { error: notifError } = await (supabase.from('notifications') as any).insert({
+                  receiver_id: parentAuthorId,
+                  sender_id: profileId,
+                  type: 'reply',
+                  content: finalContent.trim(),
+                  tweet_id: tweetId,
+                  comment_id: inserted.id,
+                  is_read: false,
+                });
+              }
+            }
+          } catch (e) {
+            console.error('Notification creation failed:', e);
+          }
+        }
         
         const uiReply: UIReply = {
            type: 'reply',
@@ -256,15 +333,14 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
                id: profileId,
                name: profileNickname || t('common.unknown', 'Unknown'),
                username: profileUserId || user.id,
-               avatar: profileAvatar ?? '/default-avatar.svg'
+               avatar: profileAvatar ?? '/default-avatar.svg',
+               plan: userPlan || (user as any).plan || 'free',
+               countryFlag: profileCountryFlag,
+               countryName: profileCountryName,
+               banned_until: bannedUntil || null
            },
            content: finalContent,
-           timestamp: new Date().toLocaleString('ko-KR', {
-               hour: '2-digit',
-               minute: '2-digit',
-               month: 'short',
-               day: 'numeric',
-           }),
+           timestamp: inserted.created_at || new Date().toISOString(),
            createdAt: inserted.created_at || new Date().toISOString(),
            stats: {
                replies: 0,
@@ -317,6 +393,10 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
             name: profileNickname || t('common.unknown', 'Unknown'),
             username: profileUserId || user.id,
             avatar: profileAvatar ?? '/default-avatar.svg',
+            plan: userPlan || (user as any).plan || 'free',
+            countryFlag: profileCountryFlag,
+            countryName: profileCountryName,
+            banned_until: bannedUntil || null
           },
           content: finalContent,
           image: undefined,

@@ -391,7 +391,7 @@ export default function NotificationCard({
                 <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 ml-1">
                   {notification.type === 'like' && (notification.replyId ? t('notification.like_comment') : t('notification.like_feed'))}
                   {notification.type === 'comment' && t('notification.comment_feed')}
-                  {notification.type === 'reply' && t('notification.comment_feed')}
+                  {notification.type === 'reply' && t('notification.action_reply', '대댓글을 남겼습니다')}
                   {notification.type === 'follow' && t('notification.follow_msg')}
                   {notification.type === 'repost' && t('notification.repost_msg')}
                   {notification.type === 'mention' && t('notification.mention_msg')}

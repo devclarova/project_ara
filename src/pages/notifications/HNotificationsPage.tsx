@@ -452,9 +452,11 @@ export default function HNotificationsPage() {
                         bio: n.sender?.bio,
                       },
                       action:
-                        n.type === 'comment' || n.type === 'reply' || n.type === 'mention'
+                        n.type === 'comment' || n.type === 'mention'
                           ? t('notification.action_comment')
-                          : n.type === 'like' || n.type === 'like_comment' || n.type === 'like_feed'
+                          : n.type === 'reply'
+                            ? t('notification.action_reply', '대댓글을 남겼습니다')
+                            : n.type === 'like' || n.type === 'like_comment' || n.type === 'like_feed'
                             ? n.comment_id
                               ? t('notification.action_like_comment')
                               : t('notification.action_like_feed')

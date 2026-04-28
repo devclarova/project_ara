@@ -111,9 +111,9 @@ export function ReplyCard({
   const [showImageModal, setShowImageModal] = useState(false);
   const [contentImages, setContentImages] = useState<string[]>([]);
   const [isHighlighted, setIsHighlighted] = useState(false);
-  const { blockedIds, isLoading: isBlockedLoading } = useBlockedUsers();
+  const { blockedIds, blockingMeIds, isLoading: isBlockedLoading } = useBlockedUsers();
   const [isUnmasked, setIsUnmasked] = useState(false);
-  const isAuthorBlocked = blockedIds.includes(reply.user.id);
+  const isAuthorBlocked = (blockedIds ?? []).includes(reply.user.id) || (blockedIds ?? []).includes(reply.user.username);
   const showMask = isAuthorBlocked && !isUnmasked;
 
   const authorCountryFlagUrl = reply.user.countryFlag;
@@ -345,14 +345,19 @@ export function ReplyCard({
               .maybeSingle();
 
             if (!existingNoti) {
-              await (supabase.from('notifications') as any).insert({
-                receiver_id: receiverProfile.id,
-                sender_id: currentProfileId,
-                type: 'like',
-                content: reply.content || rawContent,
-                tweet_id: reply.tweetId,
-                comment_id: reply.id,
-              });
+              // 상호 차단 관계인 경우 알림 생성을 스킵함
+              const isBlockedRelation = receiverProfile.id && ((blockedIds ?? []).includes(receiverProfile.id) || (blockingMeIds ?? []).includes(receiverProfile.id));
+              
+              if (!isBlockedRelation) {
+                await (supabase.from('notifications') as any).insert({
+                  receiver_id: receiverProfile.id,
+                  sender_id: currentProfileId,
+                  type: 'like',
+                  content: reply.content || rawContent,
+                  tweet_id: reply.tweetId,
+                  comment_id: reply.id,
+                });
+              }
             }
           }
         }
@@ -799,7 +804,7 @@ export function ReplyCard({
 
               <span className="mx-1 text-gray-500 dark:text-gray-400">·</span>
               <span className="text-gray-500 dark:text-gray-400 text-xs shrink-0 self-center">
-                · {formatSmartDate(createdAt)}
+                {formatSmartDate(createdAt)}
                 {isEdited && <span className="ml-1 text-[10px] text-gray-400">{t('common.edited', '수정됨')}</span>}
               </span>
               {isAdmin && reply.is_hidden && (
