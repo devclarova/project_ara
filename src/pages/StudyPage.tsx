@@ -107,7 +107,12 @@ const StudyPage = () => {
   const displayScene = formatValue('scene', study?.scene);
 
   // 제품 분류 판별 — 음악 카테고리 특화 레이아웃(에피소드 숨김 등) 적용 유무 결정
-  const isMusic = study?.categories?.includes('음악') || study?.categories?.includes('Music') || study?.categories?.includes(t('study.category.music'));
+  // 제품 분류 판별 — 음악 카테고리 특화 레이아웃 적용 유무 결정 (i18n 키 기반 동적 매칭)
+  const isMusic = useMemo(() => {
+    const categories = study?.categories ?? '';
+    const musicKeys = ['음악', 'Music', 'music', t('study.category.music')];
+    return musicKeys.some(key => categories.includes(key));
+  }, [study?.categories, t]);
 
   let displayTitle = effectiveTitle || t('study.no_title');
 
@@ -128,10 +133,16 @@ const StudyPage = () => {
 
   const translatedLevelDisplay = useMemo(() => {
     const lvl = study?.level;
-    if (lvl === '초급') return t('study.level.beginner');
-    if (lvl === '중급') return t('study.level.intermediate');
-    if (lvl === '고급') return t('study.level.advanced');
-    return lvl;
+    const levelMap: Record<string, string> = {
+      '초급': 'study.level.beginner',
+      '중급': 'study.level.intermediate',
+      '고급': 'study.level.advanced',
+      'beginner': 'study.level.beginner',
+      'intermediate': 'study.level.intermediate',
+      'advanced': 'study.level.advanced'
+    };
+    const key = levelMap[String(lvl)];
+    return key ? t(key) : lvl;
   }, [study?.level, t]);
 
   const pageTitle = study

@@ -96,9 +96,9 @@ app.post('/api/detect-language', async (req, res) => {
     }
 
     const systemPrompt = `
-다음 문장이 의미 있는 자연어인지 판별해라.
-한국어/영어/기타 문장 → "valid"
-의미 없는 랜덤 문자(예: 뷃둙훽뤰줻) → "invalid"
+다음 문장이 의미 있는 자연어, 감탄사, 또는 강조 기호가 포함된 유효한 소통용 문장인지 판별해라.
+- 의미 있는 단어, 문장, 일상적인 감탄사(ㅋㅋ, ㅎㅎ, wow 등), 강조 기호(~, !, ?)가 포함된 경우 → "valid"
+- 완전히 무작위인 글자 나열이나 의미를 부여할 수 없는 자음/모음의 단순 나열(예: 뷃둙훽뤰줻, asdfasdf) → "invalid"
 설명 없이 valid 또는 invalid만 출력.
     `;
 
@@ -175,31 +175,27 @@ app.post('/api/translate-batch', async (req, res) => {
 
     const targetLanguageName = langCodeToName[targetLang] || targetLang;
 
-    const systemPrompt = `You are a high-performance translation engine for a language learning app.
+    const systemPrompt = `You are a high-performance translation and localization engine for the ARA Global Platform.
 Target Language: ${targetLanguageName} (Code: ${targetLang})
-Context: Korean Subtitles, K-Pop Lyrics, K-Drama.
+Primary Context: E-commerce Shopping (Product names, Options like Color/Size, Reviews) and K-Content.
 
 Output Format: JSON Object with key "translations" containing an Array of Strings.
 Example: { "translations": ["Translated Text 1", "Translated Text 2"] }
 
-CRITICAL TRANSLATION RULES (Follow Strictly):
-1. **Target Language Only**: The output MUST be in **${targetLanguageName}**. 
-   - If the input is English, **TRANSLATE** it to ${targetLanguageName}. Do NOT keep it in English (unless Target is English).
-   - If the input is Korean, **TRANSLATE** it to ${targetLanguageName}.
-2. **PRONUNCIATION (Romanization) HANDLING (HIGHEST PRIORITY)**:
-   - **Scenario A (Bracketed)**: Input contains '[Romanization]'.
-     - Action: Transliterate content inside '[]' to Target Script (Sound Only). **No Meaning Translation.**
-   - **Scenario B (Raw/Unbracketed)**: Input is ONLY Romanized Korean (e.g. "Saranghae", "Annyeong").
-     - Action: **Transliterate** to Target Script (Sound Only).
-     - **Strict Rule**: NEVER translate the meaning of Romanized Korean.
-     - **Bad Example**: "Saranghae" -> "I Love You" (Wrong! Meaning)
-     - **Good Example (JA)**: "Saranghae" -> "サランヘ" (Correct! Sound)
-     - **Good Example (RU)**: "Annyeong" -> "Аннён" (Correct! Sound)
-3. **NO KOREAN CHARACTERS**: The output MUST NOT contain any Korean characters (Hangul).
-4. **NO QUOTES**: Do NOT wrap strings in extra quotes inside the JSON array.
-5. **Music Titles**:
-   - If input is "Artist - Title", output "Artist - Translated Title".
-   - If input is ONLY "Title", output "Translated Title". Do NOT add artist.
+CRITICAL RULES (Follow Strictly):
+1. **ZERO REFUSAL POLICY**: NEVER return messages like "I cannot translate", "Sorry", "I need more context", or "Provide more details". 
+   - If the input is too short, an identifier, or you are unsure, simply return the ORIGINAL text as the translation.
+2. **NO EXPLANATIONS / NO APOLOGIES**: Return ONLY the translated strings. Do NOT include any meta-comments, apologies, or explanations in the response.
+3. **PRONUNCIATION / TRANSCRIPTION**:
+   - If the input text is wrapped in square brackets (e.g. "[ha-da]") or matches a pronunciation identifier, it is a **Korean pronunciation guide**.
+   - Transcribe this pronunciation into the script/phonetic notation of the **${targetLanguageName}**.
+   - For example, if target is Russian, transcribe "[ha-da]" into Cyrillic "[ха-да]". 
+4. **Product Options (Size, Color, etc.)**: 
+   - Maintain global standard codes (S, M, L, XL, XXL) as Latin characters. 
+   - Translate actual words (e.g., "Red", "Blue", "Black", "Small", "Regular") naturally into ${targetLanguageName}.
+   - If an option is an arbitrary value (e.g. "100ml", "Type A"), preserve its core meaning or return as-is if it's a technical code.
+5. **No Korean Characters**: The output MUST NOT contain any Korean characters (Hangul).
+6. **JSON Consistency**: Ensure the result is valid JSON matching the requested count of items.
 `;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -209,7 +205,7 @@ CRITICAL TRANSLATION RULES (Follow Strictly):
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: JSON.stringify({ texts }) },
@@ -272,38 +268,27 @@ app.post('/api/translate-single', async (req, res) => {
       ? '\n- For Japanese: Use hiragana (ひらがな) and katakana (カタカナ) as much as possible. Minimize the use of kanji (漢字). Prefer simpler, more accessible Japanese.'
       : '';
 
-    const systemPrompt = `You are an expert translator and localization specialist for a premium Korean language learning platform.
+    const systemPrompt = `You are an expert translator and localization specialist for the ARA Global Platform (E-commerce Goods Store & Language Learning).
 Target Language: ${targetLanguageName} (Code: ${targetLang})
 
-Your goal is to provide **natural, fluently written translations** that sound like they were written by a native speaker of the target language.
+Your goal is to provide **natural, fluently written translations** suitable for a premium shopping and learning experience.
 
 CRITICAL RULES:
 1. **TARGET LANGUAGE ONLY**: The output MUST be in **${targetLanguageName}**. 
    - If the input is English, **TRANSLATE** it to ${targetLanguageName}. Do NOT keep it in English (unless Target is English).
    - If the input is Korean, **TRANSLATE** it to ${targetLanguageName}.
-2. **PRONUNCIATION (Romanization) HANDLING (HIGHEST PRIORITY)**:
-   - **Scenario A (Bracketed)**: Input contains '[Romanization]'.
-     - Action: Transliterate content inside '[]' to Target Script (Sound Only). **No Meaning Translation.**
-   - **Scenario B (Raw/Unbracketed)**: Input is ONLY Romanized Korean (e.g. "Saranghae", "Annyeong").
-     - Action: **Transliterate** to Target Script (Sound Only).
-     - **Strict Rule**: NEVER translate the meaning of Romanized Korean.
-     - **Bad Example**: "Saranghae" -> "I Love You" (Wrong! Meaning)
-     - **Good Example (JA)**: "Saranghae" -> "サランヘ" (Correct! Sound)
-     - **Good Example (RU)**: "Annyeong" -> "Аннён" (Correct! Sound)
-3. **NO KOREAN CHARACTERS**: The output MUST NOT contain any Korean characters (Hangul). If you see Korean, translate it completely.
-4. **NO QUOTES**: Do NOT wrap the translation in quotation marks (single ' or double "). Return only the clean text.
-5. **Music Titles**:
-   - **Format Preservation**: 
-     - If input is "Artist - Title", output "Artist - Translated Title".
-     - If input is ONLY "Title" (no artist), output ONLY "Translated Title". **DO NOT ADD THE ARTIST NAME.**
-   - **Artist**: Use official name (e.g., "IU", "BTS").
-   - **Title**: Use official title **in the Target Language Script**.
-     - If the title is English (e.g. "Love Poem") and Target is NOT English: **Transliterate or Translate** it (e.g. "Love Poem" -> "ラブ·ポエム" for Japanese). **Do NOT keep it in English alphabet.**
-   - Example: "밤편지" -> "Through the Night" (for English).
-   - Example: "Love Poem" -> "ラブ·ポエム" (for Japanese).
-6. **English Input Handling**:
    - If the input is already in English (e.g. "Crush - Beautiful", "Drama Title"), but the Target Language is NOT English (e.g. Japanese, Spanish), you MUST translate/transliterate it to the target language.
    - Do NOT just copy the English input unless the target language uses English titles officially.
+2. **PRONUNCIATION / TRANSCRIPTION**:
+   - If the input text appears to be a pronunciation guide (e.g. Romanized Korean in square brackets like "[ha-da]"), transcribe it into the script/phonetic notation of **${targetLanguageName}**.
+3. **ZERO REFUSAL / ZERO APOLOGY**: NEVER return messages like "I cannot translate", "Sorry", or "Provide more context". 
+   - If translation is impossible or unnecessary (standard codes), return the ORIGINAL input.
+4. **CLEAN OUTPUT ONLY**: Return ONLY the translated string. Do NOT include any explanations or conversational fillers.
+5. **Product Options**:
+   - Maintain global codes (S, M, L, XL) as Latin characters.
+   - Translate color names and descriptive options naturally into ${targetLanguageName}.
+6. **Emphasized Reviews**: Handle text with symbols like "~", "!", etc. naturally. Keep the emotional tone while reflecting the original punctuation.
+7. **No Korean Characters**: Ensure absolutely NO Hangul remains in the output.
 7. **Mixed Input Handling**: 
    - Input: "내 손을 잡아 (Hold My Hand)"
    - Instruction: Translate content into a single clean title in the target language.
@@ -319,7 +304,7 @@ ${japaneseGuideline}`;
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o', 
+        model: 'gpt-4o-mini', 
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: text },

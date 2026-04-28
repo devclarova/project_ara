@@ -21,7 +21,7 @@ export default function SubscriptionPage() {
   const PLANS = [
     {
       id: 'free',
-      name: 'Free',
+      name: t('subscription.plans.free.title'),
       price: '₩0',
       interval: t('subscription.plans.free.interval'),
       description: t('subscription.plans.free.desc'),
@@ -37,7 +37,7 @@ export default function SubscriptionPage() {
     },
     {
       id: 'basic',
-      name: 'Basic',
+      name: t('subscription.plans.basic.title'),
       price: '₩4,900',
       interval: t('subscription.plans.basic.interval'),
       description: t('subscription.plans.basic.desc'),
@@ -53,7 +53,7 @@ export default function SubscriptionPage() {
     },
     {
       id: 'premium',
-      name: 'Premium',
+      name: t('subscription.plans.premium.title'),
       price: '₩9,900',
       interval: t('subscription.plans.premium.interval'),
       description: t('subscription.plans.premium.desc'),
@@ -180,7 +180,7 @@ export default function SubscriptionPage() {
       toast.success(
         <div className="flex flex-col gap-1">
           <span className="font-bold">{t('subscription.payment_modal.payment_success')}</span>
-          <span className="text-sm opacity-90">{t('subscription.payment_modal.plan_applied', { plan: selectedPlan.toUpperCase() })}</span>
+          <span className="text-sm opacity-90">{t('subscription.payment_modal.plan_applied', { plan: PLANS.find(p => p.id === selectedPlan)?.name })}</span>
         </div>
       );
       

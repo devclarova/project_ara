@@ -37,6 +37,7 @@ export interface SiteSettings {
     sns_top: string;
     search_placeholder: string;
   };
+  toast_sound_url: string | null;
 }
 
 interface SiteSettingsContextType {
@@ -88,6 +89,7 @@ export const SiteSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ 
             },
             integrations: { supabase_url: '', ga4_id: '' },
             banner_messages: { sns_top: '', search_placeholder: '' },
+            toast_sound_url: (legacyMap.toast_sound_url as string) || null,
           };
           setSettings(formatted);
           return;
@@ -129,6 +131,7 @@ export const SiteSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ 
             sns_top: '',
             search_placeholder: '',
           },
+          toast_sound_url: data.toast_sound_url ?? null,
         };
         setSettings(formatted);
       }

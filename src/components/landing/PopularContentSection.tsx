@@ -70,7 +70,7 @@ export default function PopularContentSection() {
           return {
             id: row.id,
             image: row.poster_image_url ?? undefined,
-            title: row.title || '제목 없음',
+            title: row.title || t('landing.popular.no_title', '제목 없음'),
             short_description: row.short_description || '',
             contents: v?.contents || '',
             episode: v?.episode || '',
@@ -80,7 +80,7 @@ export default function PopularContentSection() {
               typeof v?.runtime_bucket === 'string'
                 ? v.runtime_bucket
                 : (v?.runtime_bucket ?? null),
-            comments: '0개 댓글',
+            comments: t('landing.popular.comments_count', { defaultValue: '0개 댓글', count: 0 }),
             required_plan: row.required_plan || 'free',
           };
         });

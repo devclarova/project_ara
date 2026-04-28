@@ -163,19 +163,7 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          // Detect country via IP and update profile
-          try {
-            const geoRes = await fetch('https://ipapi.co/json/');
-            const geoData = (await geoRes.json()) as { country_code?: string };
-            if (geoData?.country_code) {
-              await (supabase.from('profiles') as any)
-                .update({ last_known_country: geoData.country_code })
-                .eq('id', profileId);
-            }
-          } catch (err) {
-            console.warn('Failed to detect geolocation:', err);
-          }
-
+          // [Fix] Removed external geolocation fetch that caused 429/CORS errors
           await channel.track({
             profile_id: profileId,
             online_at: new Date().toISOString(),

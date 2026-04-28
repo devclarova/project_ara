@@ -13,54 +13,54 @@ export default function FooterSection() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative w-full bg-white dark:bg-black text-foreground overflow-hidden border-t border-black/5 dark:border-white/10 mt-auto">
+    <footer id="footer" className="relative w-full min-h-screen bg-white dark:bg-black text-foreground border-t border-black/5 dark:border-white/10 mt-auto flex flex-col">
       {/* 배경 장식 (은은한 그라데이션) */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute -top-[50%] -left-[20%] w-[70%] h-[70%] rounded-full bg-primary/5 blur-[120px]" />
         <div className="absolute top-[20%] -right-[20%] w-[60%] h-[60%] rounded-full bg-purple-500/5 blur-[100px]" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8 pt-20 pb-12">
+      <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8 pt-10 pb-8 flex-1 flex flex-col justify-center">
         
-        {/* 상단: 초대형 브랜드 메시지 & 뉴스레터 */}
-        <div className="flex flex-col lg:flex-row gap-16 lg:gap-24 mb-24">
-          {/* 브랜드 슬로건 (Big Typography) */}
+        {/* 상단: 브랜드 메시지 & 뉴스레터 */}
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 mb-10">
+          {/* 브랜드 슬로건 */}
           <div className="flex-1">
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-[1.1] mb-6">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter leading-[1.1] mb-4">
               Connect <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-600">Culture</span>,<br />
               Expand <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-primary">World</span>.
             </h2>
-            <p className="text-lg md:text-xl text-muted-foreground/80 font-medium max-w-lg mb-8">
+            <p className="text-base md:text-lg text-muted-foreground/80 font-medium max-w-lg mb-5">
               {t('footer.brand.slogan_sub')}
             </p>
             
-            <Link to="/signup" className="group inline-flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground rounded-full text-lg font-bold transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/20">
+            <Link to="/signup" className="group inline-flex items-center gap-3 px-6 py-3 bg-primary text-primary-foreground rounded-full text-base font-bold transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/20">
               {t('landing.cta_start')}
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
-          {/* 뉴스레터 구독 (Minimalist Form) */}
-          <div className="lg:w-[400px] flex flex-col justify-end">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-4">{t('footer.newsletter.title')}</h3>
+          {/* 뉴스레터 구독 */}
+          <div className="lg:w-[360px] flex flex-col justify-end">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-3">{t('footer.newsletter.title')}</h3>
             <div className="relative group">
               <input 
                 type="email" 
                 placeholder={t('footer.newsletter.placeholder')}
-                className="w-full bg-transparent border-b-2 border-border py-4 text-lg focus:outline-none focus:border-primary transition-colors placeholder:text-muted-foreground/50"
+                className="w-full bg-transparent border-b-2 border-border py-3 text-base focus:outline-none focus:border-primary transition-colors placeholder:text-muted-foreground/50"
               />
               <button className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-primary transition-colors">
-                <ArrowRight className="w-6 h-6" />
+                <ArrowRight className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-xs text-muted-foreground/60 mt-4">
+            <p className="text-xs text-muted-foreground/60 mt-3">
               {t('footer.newsletter.desc')}
             </p>
           </div>
         </div>
 
-        {/* 중단: 링크 그리드 (Clean & Professional) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-8 border-t border-border/40 pt-16 mb-16">
+        {/* 중단: 링크 그리드 */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 border-t border-border/40 pt-8 mb-8">
           <FooterColumn title={t('footer.columns.product.title')}>
             <FooterLink>{t('footer.columns.product.features')}</FooterLink>
             <FooterLink>{t('footer.columns.product.pricing')}</FooterLink>
@@ -82,24 +82,23 @@ export default function FooterSection() {
              <FooterLink>{t('footer.columns.company.contact')}</FooterLink>
           </FooterColumn>
 
-          {/* 오피스 정보 (Visual) */}
-          <div className="flex flex-col gap-6">
+          {/* 오피스 정보 */}
+          <div className="flex flex-col gap-4">
             <h3 className="font-bold text-foreground">{t('footer.columns.company.office')}</h3>
             <address className="not-italic text-sm text-muted-foreground leading-relaxed">
               <span className="block font-medium text-foreground mb-1">{t('footer.office.address_name')}</span>
               {t('footer.office.address')}<br />
-              Seoul, South Korea<br />
-              <a href="mailto:hello@ara.com" className="block mt-4 hover:text-primary transition-colors">hello@ara.com</a>
+              <a href="mailto:hello@ara.com" className="block mt-2 hover:text-primary transition-colors">hello@ara.com</a>
             </address>
           </div>
         </div>
 
-        {/* 하단: 바닥글 (Minimal) */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-8 border-t border-border/40">
+        {/* 하단: 바닥글 */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-border/40">
           <div className="flex items-center gap-2">
             <span className="text-xl font-black tracking-tighter">ARA</span>
-            <span className="text-xs text-muted-foreground ml-2">
-              {t('footer.bottom.rights', { year: currentYear })}
+            <span className="text-xs text-muted-foreground ml-2" translate="no">
+              © 2026 Ara — Dive into Korean. Made with 🌊
             </span>
           </div>
 

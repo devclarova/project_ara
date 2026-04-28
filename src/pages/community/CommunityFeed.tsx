@@ -38,38 +38,33 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
   const { newTweet, setNewTweet, searchQuery: outletSearchQuery } = outletCtx;
   const mergedSearchQuery = (searchQuery ?? outletSearchQuery ?? '').trim();
   const isSearching = mergedSearchQuery.length > 0;
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, profileId } = useAuth();
   const { blockedIds } = useBlockedUsers(); // 차단된 유저 목록 가져오기
   const [tweets, setTweets] = useState<UITweet[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
+
   // Refs
   const pageRef = useRef(0);
   const loadingRef = useRef(false);
   const restoredRef = useRef(false);
-  const myProfileIdRef = useRef<string | null>(null);
+
   // 1. 내 프로필 ID 로드
   useEffect(() => {
     // 브라우저 기본 스크롤 복원 방지 (우리가 직접 제어)
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
     }
-    const loadProfileId = async () => {
-      if (!user) return;
-      const { data } = await (supabase.from('profiles') as any)
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (data) myProfileIdRef.current = data.id;
-    };
-    loadProfileId();
+    
+    // myProfileIdRef.current = profileId; // profileId is now reactive from useAuth, but if needed for refs:
+    
     return () => {
       if ('scrollRestoration' in window.history) {
         window.history.scrollRestoration = 'auto';
       }
     };
-  }, [user]);
+  }, [profileId]);
   // 2. 통합 데이터 패칭 함수
   type TweetWithProfile = Database['public']['Tables']['tweets']['Row'] & {
     nickname?: string; // from RPC
@@ -84,6 +79,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
       avatar_url: string | null;
       banned_until?: string | null;
       plan?: 'free' | 'basic' | 'premium';
+      country?: string | null;
     } | null;
   };
 
@@ -121,7 +117,9 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
               `
             id, content, image_url, created_at, updated_at, deleted_at, is_hidden,
             reply_count, repost_count, like_count, bookmark_count, view_count,
-            profiles:author_id ( id, nickname, user_id, avatar_url, banned_until, plan )
+            profiles:author_id ( 
+              id, nickname, user_id, avatar_url, banned_until, plan, country
+            )
           `,
             )
             .order('created_at', { ascending: false })
@@ -134,6 +132,38 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
           if (data.length < PAGE_SIZE) setHasMore(false);
           else setHasMore(true);
         }
+
+        // 3. 현재 페이지 트윗들의 '좋아요' 상태를 일괄 조회 (로그인 시)
+        let likedIds = new Set<string>();
+        if (profileId && data.length > 0) {
+          const tweetIds = data.map(d => d.id);
+          const { data: likeData } = await (supabase.from('tweet_likes') as any)
+            .select('tweet_id')
+            .eq('user_id', profileId)
+            .in('tweet_id', tweetIds);
+          
+          if (likeData) {
+            likedIds = new Set(likeData.map((l: any) => l.tweet_id));
+          }
+        }
+
+        // 4. 작성자들의 국가 정보를 전역에서 일괄 조회 (Optimize)
+        let countryMap = new Map<string, { name: string; flag_url: string }>();
+        const countryIds = Array.from(new Set(
+          data.map(d => d.profiles?.country).filter(Boolean) as string[]
+        ));
+
+        if (countryIds.length > 0) {
+          const { data: countryData } = await (supabase.from('countries') as any)
+            .select('id, name, flag_url')
+            .in('id', countryIds);
+          
+          if (countryData) {
+            countryData.forEach((c: any) => {
+              countryMap.set(String(c.id), { name: c.name, flag_url: c.flag_url });
+            });
+          }
+        }
         const mapped: UITweet[] = data.map(tweet => {
           const tRecord = tweet as Record<string, unknown>;
           return {
@@ -145,18 +175,16 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
               avatar: tweet.profiles?.avatar_url ?? '/default-avatar.svg',
               banned_until: tweet.profiles?.banned_until ?? null,
               plan: tweet.profiles?.plan ?? 'free',
+              countryFlag: tweet.profiles?.country ? countryMap.get(String(tweet.profiles.country))?.flag_url : null,
+              countryName: tweet.profiles?.country ? countryMap.get(String(tweet.profiles.country))?.name : null,
             },
             content: tweet.content,
             image: tweet.image_url ?? undefined,
-            timestamp: new Date(tweet.created_at ?? new Date()).toLocaleString(i18n.language, {
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            }),
+            timestamp: tweet.created_at ?? new Date().toISOString(),
             createdAt: tweet.created_at ?? undefined,
             updatedAt: (tRecord.updated_at as string) || undefined,
             deleted_at: tweet.deleted_at,
+            liked: likedIds.has(tweet.id),
             stats: {
               replies: tweet.reply_count ?? 0,
               retweets: tweet.repost_count ?? 0,
@@ -344,6 +372,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
             content: newTweet.content,
             image: newTweet.image_url || undefined,
             timestamp: newTweet.created_at || new Date().toISOString(),
+            createdAt: newTweet.created_at || new Date().toISOString(),
             deleted_at: newTweet.deleted_at,
             stats: {
               replies: newTweet.reply_count ?? 0,
@@ -422,7 +451,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
       supabase.removeChannel(tweetChannel);
       supabase.removeChannel(profileChannel);
     };
-  }, [blockedIds]);
+  }, [blockedIds, t]); // t를 의존성에 추가 (번역 갱신용)
   // 9. 안전장치: 로딩이 너무 오래 걸리면 강제 종료 (Main 브랜치 기능 통합)
   useEffect(() => {
     if (loading) {
@@ -459,10 +488,11 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
             {isSearching ? t('community.no_results') : t('community.no_posts')}
           </div>
         ) : (
-          tweets.map(t => (
+          tweets.map((t, index) => (
             <TweetCard
               key={t.id}
               {...t}
+              content={t.content}
               dimmed={false}
               onDeleted={tweetId => setTweets(prev => prev.filter(i => i.id !== tweetId))}
               onUpdated={(id, updates) => {

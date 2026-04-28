@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAutoTranslation } from '@/hooks/useAutoTranslation';
+import { useBatchAutoTranslation } from '@/hooks/useBatchAutoTranslation';
+import { romanizeKorean, hasKorean } from '@/utils/romanize';
 import {
   Bookmark,
   BookmarkCheck,
@@ -55,7 +57,7 @@ export default function EpisodeVocaModal({
   onClose,
   words,
   initialWordId,
-  title = '단어 카드',
+  title,
   getEpisodeHref,
   episodeCtaLabel,
   sourceEpisodeId,
@@ -65,8 +67,10 @@ export default function EpisodeVocaModal({
 }: Props) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
+
+  const displayModalTitle = title ?? t('study.voca.modal_default_title', '단어 카드');
 
   const targetLang = i18n.language || 'en';
   const isKorean = targetLang.toLowerCase().startsWith('ko');
@@ -141,8 +145,65 @@ export default function EpisodeVocaModal({
 
   const meaningSrc = normalize(word?.meaning || word?.en);
   const exampleSrc = normalize(word?.exampleEn || word?.exampleKo);
-  const posSrc = normalize(word?.pos);
   const pronSrc = normalize(word?.pronKo || word?.pron);
+  const POS_KEY_MAP: Record<string, string> = {
+    '명사': 'voca.pos.noun',
+    '동사': 'voca.pos.verb',
+    '형용사': 'voca.pos.adjective',
+    '부사': 'voca.pos.adverb',
+    '대명사': 'voca.pos.pronoun',
+    '수사': 'voca.pos.numeral',
+    '조사': 'voca.pos.particle',
+    '감탄사': 'voca.pos.interjection',
+  };
+  const posSrc = useMemo(() => {
+    const p = normalize(word?.pos).replace(/[()]/g, '');
+    const k = POS_KEY_MAP[p];
+    return k ? t(k) : p;
+  }, [word?.pos, t, POS_KEY_MAP]);
+
+  // 글로벌 번역 페이징 파이프라인 — 모달 내 전체 단어 리스트를 사전에 번역하여 탐색 중 끊김 현상 제거
+  const combinedTexts = useMemo(() => {
+    const meanings = words.map(w => normalize(w.meaning || w.en));
+    const prons = words.map(w => {
+      const p = normalize(isVocaPage ? (w.pronKo || w.pron) : (w.pron || w.pronKo));
+      return (!isKorean && p) ? `[${p}]` : p;
+    });
+    const examples = words.map(w => normalize(w.exampleEn || w.exampleKo));
+    
+    const poses = words.map(w => {
+      const p = normalize(w.pos).replace(/[()]/g, '');
+      const k = POS_KEY_MAP[p];
+      return k ? t(k) : p;
+    });
+    return [...meanings, ...prons, ...examples, ...poses];
+  }, [words, isKorean, t, isVocaPage]);
+
+  const combinedKeys = useMemo(() => {
+    const meanings = words.map(w => `episode_voca_meaning_${w.id}`);
+    const prons = words.map(w => `episode_voca_pron_v4_${w.id}`);
+    const examples = words.map(w => `episode_voca_example_${w.id}`);
+    const poses = words.map(w => `episode_voca_pos_${w.id}`);
+    return [...meanings, ...prons, ...examples, ...poses];
+  }, [words]);
+
+  const { translatedTexts: allTranslated } = useBatchAutoTranslation(combinedTexts, combinedKeys, targetLang);
+
+  const getTr = (fieldIdx: number) => {
+    let tr = allTranslated[fieldIdx * words.length + index] || '';
+    if (fieldIdx === 1 && tr.startsWith('[') && tr.endsWith(']')) {
+      tr = tr.slice(1, -1);
+    }
+    return tr;
+  };
+
+  const displayMeaning = showOriginal ? meaningSrc : (isKorean ? meaningSrc : getTr(0) || meaningSrc);
+  const displayPron = showOriginal ? pronSrc : (isKorean ? pronSrc : getTr(1) || pronSrc);
+  const displayExample = showOriginal ? exampleSrc : (isKorean ? exampleSrc : getTr(2) || exampleSrc);
+  const displayPos = showOriginal ? posSrc : (isKorean ? posSrc : getTr(3) || posSrc);
+
+  // 단어(Term)는 번역하지 않고 항상 원문 노출 (User Request)
+  const displayTerm = word?.ko;
 
   const imageSrc = useMemo(() => {
     const raw = normalize(word?.image_url);
@@ -181,32 +242,7 @@ export default function EpisodeVocaModal({
     });
   }, [isOpen, hasWords, index, words]);
 
-  const { translatedText: translatedMeaning } = useAutoTranslation(
-    meaningSrc,
-    `episode_voca_meaning_${word?.id ?? 'empty'}`,
-    targetLang,
-  );
-
-  const { translatedText: translatedExample } = useAutoTranslation(
-    exampleSrc,
-    `episode_voca_example_${word?.id ?? 'empty'}`,
-    targetLang,
-  );
-
-  const { translatedText: translatedPos } = useAutoTranslation(
-    posSrc,
-    `episode_voca_pos_${word?.id ?? 'empty'}`,
-    targetLang,
-  );
-
-  const translatedMeaningText = isKorean ? meaningSrc : normalize(translatedMeaning) || meaningSrc;
-  const translatedExampleText = isKorean ? exampleSrc : normalize(translatedExample) || exampleSrc;
-  const translatedPosText = isKorean ? posSrc : normalize(translatedPos) || posSrc;
-
-  const displayMeaning = showOriginal ? meaningSrc : translatedMeaningText;
-  const displayExample = showOriginal ? exampleSrc : translatedExampleText;
-  const displayPos = showOriginal ? posSrc : translatedPosText;
-  const displayPron = pronSrc;
+  // [DELETED redundant single-hook calls]
 
   useEffect(() => {
     if (!isOpen) return;
@@ -312,7 +348,13 @@ export default function EpisodeVocaModal({
     }
 
     const utter = new SpeechSynthesisUtterance(word.ko);
-    utter.lang = 'ko-KR';
+    
+    // 타겟 언어 설정에 따른 TTS 발음 코드 동적 할당 (영어만 나오는 문제 해결)
+    if (targetLang.startsWith('en')) utter.lang = 'en-US';
+    else if (targetLang.startsWith('ja')) utter.lang = 'ja-JP';
+    else if (targetLang.startsWith('zh')) utter.lang = 'zh-CN';
+    else if (targetLang.startsWith('vi')) utter.lang = 'vi-VN';
+    else utter.lang = 'ko-KR'; // ARA의 주 학습 대상인 한국어를 기본값으로 유지하되 타켓 매칭
 
     utter.onstart = () => setTtsSpeaking(true);
     utter.onend = () => setTtsSpeaking(false);
@@ -346,7 +388,7 @@ export default function EpisodeVocaModal({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 text-[13px] font-semibold text-emerald-500">
-                    <span className="truncate">{title}</span>
+                    <span className="truncate">{displayModalTitle}</span>
                     {hasWords && (
                       <>
                         <span className="text-gray-300">·</span>
@@ -367,8 +409,8 @@ export default function EpisodeVocaModal({
                         ? 'bg-amber-100 text-amber-700'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-white/10 dark:text-gray-200 dark:hover:bg-white/15'
                     }`}
-                    aria-label={saved ? '북마크 해제' : '북마크 저장'}
-                    title={saved ? '저장됨 (클릭하면 해제)' : '저장하기'}
+                    aria-label={saved ? t('study.voca.aria_bookmark_remove', '북마크 해제') : t('study.voca.aria_bookmark_save', '북마크 저장')}
+                    title={saved ? t('study.voca.aria_bookmark_remove', '저장됨 (클릭하면 해제)') : t('study.voca.aria_bookmark_save', '저장하기')}
                   >
                     {saved ? <BookmarkCheck size={22} /> : <Bookmark size={22} />}
                   </button>
@@ -389,7 +431,7 @@ export default function EpisodeVocaModal({
               <div className="pt-2 sm:pt-5">
                 <div className="text-center">
                   <div className="text-[26px] leading-[1] sm:text-[34px] font-extrabold text-gray-900 dark:text-gray-100">
-                    {word?.ko ?? '단어 카드'}
+                    {(showOriginal ? word?.ko : displayTerm) ?? t('study.voca.word_card', '단어 카드')}
                   </div>
 
                   <div className="mt-2 min-h-[20px] text-[13px] sm:text-[15px] text-gray-500 dark:text-gray-300">
@@ -426,7 +468,7 @@ export default function EpisodeVocaModal({
                     {imageSrc && !imgError ? (
                       <img
                         src={imageSrc}
-                        alt={word?.ko ?? '단어 이미지'}
+                        alt={word?.ko ?? t('study.voca.word_image', '단어 이미지')}
                         className="h-full w-full object-cover"
                         referrerPolicy="no-referrer"
                         loading="eager"
@@ -450,23 +492,23 @@ export default function EpisodeVocaModal({
               <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 <button
                   onClick={() => setShowOriginal(v => !v)}
-                  aria-label={showOriginal ? '번역 보기' : '원문 보기'}
-                  title={showOriginal ? '번역 보기' : '원문 보기'}
+                  aria-label={showOriginal ? t('study.voca.view_translation', '번역 보기') : t('study.voca.view_original', '원문 보기')}
+                  title={showOriginal ? t('study.voca.view_translation', '번역 보기') : t('study.voca.view_original', '원문 보기')}
                   className="h-[44px] sm:h-[56px] rounded-[16px] sm:rounded-[18px]
                              bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-lg
                              active:scale-[0.99] transition flex items-center justify-center gap-0 sm:gap-2"
                 >
                   <RefreshCw size={22} />
                   <span className="hidden sm:inline text-[14px]">
-                    {showOriginal ? '번역 보기' : '원문 보기'}
+                    {showOriginal ? t('study.voca.view_translation', '번역 보기') : t('study.voca.view_original', '원문 보기')}
                   </span>
                 </button>
 
                 <button
                   onClick={handleSpeak}
                   disabled={!word}
-                  aria-label={ttsSpeaking ? '발음 중지' : '발음 듣기'}
-                  title={ttsSpeaking ? '중지' : '발음'}
+                  aria-label={ttsSpeaking ? t('study.voca.stop_tts', '발음 중지') : t('study.voca.play_tts', '발음 듣기')}
+                  title={ttsSpeaking ? t('study.voca.stop_tts', '중지') : t('study.voca.play_tts', '발음')}
                   className="h-[42px] sm:h-[56px] rounded-[16px] sm:rounded-[18px]
                              bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold
                              active:scale-[0.99] transition flex items-center justify-center gap-0 sm:gap-2
@@ -474,7 +516,7 @@ export default function EpisodeVocaModal({
                 >
                   {ttsSpeaking ? <VolumeX size={22} /> : <Volume2 size={22} />}
                   <span className="hidden sm:inline text-[14px]">
-                    {ttsSpeaking ? '중지' : '발음'}
+                    {ttsSpeaking ? t('study.voca.stop_tts_short', '중지') : t('study.voca.play_tts_short', '발음')}
                   </span>
                 </button>
 
@@ -489,8 +531,8 @@ export default function EpisodeVocaModal({
                       }
                     }}
                     disabled={isVocaPage ? !episodeHref : false}
-                    aria-label={isVocaPage ? '에피소드로 이동' : '단어장으로 이동'}
-                    title={isVocaPage ? '에피소드로' : '단어장'}
+                    aria-label={isVocaPage ? t('study.voca.go_episode', '에피소드로 이동') : t('study.voca.go_voca', '단어장으로 이동')}
+                    title={isVocaPage ? t('study.voca.go_episode_short', '에피소드로') : t('study.voca.go_voca_short', '단어장')}
                     className="h-[48px] sm:h-[56px] rounded-[16px] sm:rounded-[18px]
                              bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold
                              active:scale-[0.99] transition flex items-center justify-center gap-0 sm:gap-2
@@ -498,7 +540,7 @@ export default function EpisodeVocaModal({
                   >
                     <BookOpen size={22} />
                     <span className="hidden sm:inline text-[14px]">
-                      {isVocaPage ? (episodeCtaLabel ?? '에피소드') : '단어장'}
+                      {isVocaPage ? (episodeCtaLabel ?? t('study.voca.go_episode_short', '에피소드')) : t('study.voca.go_voca_short', '단어장')}
                     </span>
                   </button>
                 )}
@@ -543,7 +585,7 @@ export default function EpisodeVocaModal({
           )}
 
           {!hasWords && (
-            <div className="mt-3 text-center text-sm text-gray-200">표시할 단어가 없어요.</div>
+            <div className="mt-3 text-center text-sm text-gray-200">{t('study.voca.no_words_to_show', '표시할 단어가 없어요.')}</div>
           )}
         </div>
       </div>

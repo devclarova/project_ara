@@ -1,21 +1,18 @@
-import { useAutoTranslation } from '@/hooks/useAutoTranslation';
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 
 interface Props {
   content: string;
-  idKey: string; // 영속성 캐시 및 훅 식별자용 고유 키
+  translatedValue?: string;
+  isKorean: boolean;
 }
 
-const TranslatedCultureNoteItem: React.FC<Props> = ({ content, idKey }) => {
-  const { i18n } = useTranslation();
-
-  const { translatedText } = useAutoTranslation(content, `cult_content_${idKey}`, i18n.language);
+const TranslatedCultureNoteItem: React.FC<Props> = ({ content, translatedValue, isKorean }) => {
+  const displayContent = isKorean ? content : (translatedValue || content);
 
   return (
     <li className="flex items-start text-sm sm:text-base cursor-default">
       <span className="text-pink-500 mr-2">•</span>
-      <span>{translatedText || content}</span>
+      <span>{displayContent}</span>
     </li>
   );
 };

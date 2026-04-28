@@ -22,6 +22,7 @@ import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import EditButton from '@/components/common/EditButton';
 import EditTweetModal from '@/components/common/EditTweetModal';
 import { getErrorMessage } from '@/utils/errorMessage';
+import SeagullIcon from '@/components/common/SeagullIcon';
 
 function htmlToEditorText(html: string) {
   const doc = new DOMParser().parseFromString(html || '', 'text/html');
@@ -547,9 +548,9 @@ export default function TweetDetailCard({
 
         <div
           onClick={handleAvatarClick}
-          className={`cursor-pointer flex-shrink-0 relative ${isDeletedUser ? 'cursor-default' : ''}`}
+          className={`cursor-pointer flex-shrink-0 self-start relative ${isDeletedUser ? 'cursor-default' : ''} ${tweet.user.plan === 'premium' ? 'rounded-full p-[2px] bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] shadow-[0_2px_10px_rgba(0,191,165,0.4)]' : ''}`}
         >
-          <Avatar>
+          <Avatar className="border-2 border-white dark:border-background">
             <AvatarImage
               src={tweet.user.avatar || '/default-avatar.svg'}
               alt={isDeletedUser ? t('deleted_user') : tweet.user.name}
@@ -558,6 +559,13 @@ export default function TweetDetailCard({
               {isDeletedUser ? '?' : tweet.user.name.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
+          {!isDeletedUser && tweet.user.plan === 'premium' && (
+            <div className="absolute -top-1.5 -left-1.5 z-10 p-[2px] bg-white dark:bg-background rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.1)] transition-transform hover:scale-110 -rotate-12">
+              <div className="bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] w-[15px] h-[15px] rounded-full flex items-center justify-center shadow-[inset_0_1px_3px_rgba(255,255,255,0.5)]">
+                <SeagullIcon size={12} className="text-white drop-shadow-sm" />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex-1 min-w-0">

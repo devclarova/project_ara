@@ -16,9 +16,11 @@ import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import ReportModal from '@/components/common/ReportModal';
 import { useBlockedUsers } from '@/hooks/useBlockedUsers';
 import { formatSmartDate } from '@/utils/dateUtils';
+import { ensureMyProfileId } from '@/lib/ensureMyProfileId';
 import { getErrorMessage } from '@/utils/errorMessage';
 
 import ModalImageSlider from './ModalImageSlider';
+import SeagullIcon from '@/components/common/SeagullIcon';
 
 function linkifyMentions(html: string) {
   if (/<a\b[^>]*>/.test(html)) return html;
@@ -94,14 +96,14 @@ export function ReplyCard({
 }: ReplyCardProps) {
   const navigate = useNavigate();
   const params = useParams();
-  const { user: authUser, isAdmin } = useAuth();
+  const { user: authUser, isAdmin, profileId } = useAuth();
   const { t } = useTranslation();
   const [liked, setLiked] = useState(reply.liked ?? false);
   const [likeCount, setLikeCount] = useState(reply.stats?.likes ?? 0);
   const [showMenu, setShowMenu] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
-  const [profileId, setProfileId] = useState<string | null>(null);
+
   const menuRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const [translated, setTranslated] = useState<string>('');
@@ -114,39 +116,18 @@ export function ReplyCard({
   const isAuthorBlocked = blockedIds.includes(reply.user.id);
   const showMask = isAuthorBlocked && !isUnmasked;
 
-  const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
-  const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
-
-  /** 트윗 작성자 국적 / 국기 로드 */
-  useEffect(() => {
-    const fetchAuthorCountry = async () => {
-      try {
-        if (!reply.user.username || reply.user.username === 'anonymous') return;
-        const { data: profile, error: profileError } = await (supabase.from('profiles') as any)
-          .select('id, country')
-          .eq('user_id', reply.user.username)
-          .maybeSingle();
-        if (profileError || !profile || !profile.country) return;
-
-        const { data: country, error: countryError } = await (supabase.from('countries') as any)
-          .select('name, flag_url')
-          .eq('id', profile.country)
-          .maybeSingle();
-        if (countryError || !country) return;
-
-        setAuthorCountryFlagUrl(country.flag_url ?? null);
-        setAuthorCountryName(country.name ?? null);
-      } catch (err) {
-        // Error handled silently
-      }
-    };
-    fetchAuthorCountry();
-  }, [reply.user.username]);
+  const authorCountryFlagUrl = reply.user.countryFlag;
+  const authorCountryName = reply.user.countryName;
 
   // Sync likeCount with props
   useEffect(() => {
     setLikeCount(reply.stats?.likes ?? 0);
   }, [reply.stats?.likes]);
+
+  // Sync liked with props
+  useEffect(() => {
+    setLiked(reply.liked ?? false);
+  }, [reply.liked]);
 
   // 댓글 수정 기능
   const isEditing = editingReplyId === reply.id;
@@ -217,38 +198,7 @@ export function ReplyCard({
     }
   }, [highlight]);
 
-  // 로그인한 사용자의 profiles.id 가져오기
-  useEffect(() => {
-    const loadProfileId = async () => {
-      if (!authUser) return;
-      const { data, error } = await (supabase.from('profiles') as any)
-        .select('id')
-        .eq('user_id', authUser.id)
-        .maybeSingle();
-      if (!error && data) setProfileId(data.id);
-    };
-    loadProfileId();
-  }, [authUser]);
 
-  // 내가 이미 좋아요 눌렀는지 확인
-  useEffect(() => {
-    if (!authUser || !profileId) return;
-    const loadLiked = async () => {
-      try {
-        const { data, error } = await (supabase.from('tweet_replies_likes') as any)
-          .select('id')
-          .eq('reply_id', reply.id)
-          .eq('user_id', profileId)
-          .maybeSingle();
-        if (!error && data) {
-          setLiked(true);
-        }
-      } catch (err) {
-        // Error handled silently
-      }
-    };
-    loadLiked();
-  }, [authUser, profileId, reply.id]);
 
   // 외부 클릭 시 메뉴 닫기
   useEffect(() => {
@@ -341,7 +291,8 @@ export function ReplyCard({
       toast.error(t('auth.login_needed'));
       return;
     }
-    if (!profileId) {
+    const currentProfileId = await ensureMyProfileId();
+    if (!currentProfileId) {
       toast.error(t('common.error_profile_loading'));
       return;
     }
@@ -362,7 +313,7 @@ export function ReplyCard({
         const { error: deleteError } = await (supabase.from('tweet_replies_likes') as any)
           .delete()
           .eq('reply_id', reply.id)
-          .eq('user_id', profileId);
+          .eq('user_id', currentProfileId);
         if (deleteError) throw deleteError;
 
         toast.info(t('common.cancel_like', '좋아요를 취소했습니다'));
@@ -370,7 +321,7 @@ export function ReplyCard({
         // 좋아요 추가
         const { error: insertError } = await (supabase.from('tweet_replies_likes') as any).insert({
           reply_id: reply.id,
-          user_id: profileId,
+          user_id: currentProfileId,
         });
         if (insertError) throw insertError;
 
@@ -384,7 +335,7 @@ export function ReplyCard({
             .eq('user_id', reply.user.username)
             .maybeSingle();
 
-          if (!receiverError && receiverProfile && receiverProfile.id !== profileId) {
+          if (!receiverError && receiverProfile && receiverProfile.id !== currentProfileId) {
             // 중복 알림 체크
             const { data: existingNoti } = await (supabase.from('notifications') as any)
               .select('id')
@@ -396,7 +347,7 @@ export function ReplyCard({
             if (!existingNoti) {
               await (supabase.from('notifications') as any).insert({
                 receiver_id: receiverProfile.id,
-                sender_id: profileId,
+                sender_id: currentProfileId,
                 type: 'like',
                 content: reply.content || rawContent,
                 tweet_id: reply.tweetId,
@@ -785,15 +736,22 @@ export function ReplyCard({
       <div className="flex space-x-3 relative z-10">
         <div
           onClick={handleAvatarClick}
-          className={`cursor-pointer transition-transform duration-200 active:scale-95 z-20 ${isDeletedUser ? 'cursor-default' : ''}`}
+          className={`flex-shrink-0 self-start cursor-pointer transition-all duration-300 active:scale-95 z-20 ${isDeletedUser ? 'cursor-default' : ''} ${!isDeletedUser && reply.user.plan === 'premium' ? 'rounded-full p-[2px] bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] shadow-[0_2px_10px_rgba(0,191,165,0.4)]' : ''}`}
         >
-          <Avatar className="w-10 h-10 border-2 border-transparent group-hover:border-primary/20 shadow-sm transition-all duration-300 group-hover:shadow-md">
+          <Avatar className="w-10 h-10 border-2 border-white dark:border-background shadow-sm">
             <AvatarImage
               src={reply.user.avatar || '/default-avatar.svg'}
               alt={isDeletedUser ? t('deleted_user') : reply.user.name}
             />
             <AvatarFallback>{isDeletedUser ? '?' : reply.user.name.charAt(0)}</AvatarFallback>
           </Avatar>
+          {!isDeletedUser && reply.user.plan === 'premium' && (
+            <div className="absolute -top-1.5 -left-1.5 z-30 p-[2px] bg-white dark:bg-background rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.1)] transition-transform hover:scale-110 -rotate-12">
+              <div className="bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] w-[15px] h-[15px] rounded-full flex items-center justify-center shadow-[inset_0_1px_3px_rgba(255,255,255,0.5)]">
+                <SeagullIcon size={12} className="text-white drop-shadow-sm" />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex-1 min-w-0">
@@ -1269,3 +1227,4 @@ export function ReplyCard({
     </div>
   );
 }
+// force-refresh for Vite module resolution stabilization

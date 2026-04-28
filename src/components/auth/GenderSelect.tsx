@@ -29,7 +29,7 @@ export default function GenderSelect({ value, onChange, error = false }: GenderS
   useEffect(() => {
     // 성별 옵션 초기화 — 다국어 지원(i18n) 및 비이진 성별(Non-binary)을 포함한 포용적 서술형 선택지 구성
     const genders = [
-      { value: 'other', label: t('auth.gender_other'), icon: '✨' },
+      // { value: 'other', label: t('signup.gender_other', 'Other'), icon: '✨' },
       { value: 'Male', label: t('signup.gender_male') },
       { value: 'Female', label: t('signup.gender_female') }
     ];

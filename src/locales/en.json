@@ -11,7 +11,9 @@
     "post": "Post",
     "admin": "Admin Mode",
     "admin_dashboard": "Admin Dashboard",
-    "goods": "Goods Shop"
+    "goods": "Goods Shop",
+    "voca": "Vocabulary Book",
+    "admin_goods": "Product Management"
   },
   "admin": {
     "report_processed": "Report processed.",
@@ -89,8 +91,17 @@
       "reporter_target": "<strong>• Reported Target:</strong> {{target}}",
       "reporter_reason": "<strong>• Reason:</strong> {{reason}}",
       "reporter_action": "<strong>• Action Taken:</strong> {{action}}",
-      "reporter_footer": "<br/>Thank you for your cooperation."
-    }
+      "reporter_footer": "<br/>Thank you for your cooperation.",
+      "ban_permanent": "Your account has been permanently banned.",
+      "ban_permanent_desc": "Account access has been permanently restricted by administrators.",
+      "ban_temporary_title": "Account access restricted.",
+      "ban_temporary_desc": "Access restricted by administrator until {{date}}.",
+      "security_contact_admin": "Contact system administrator if you believe this is an error.",
+      "identifier_label": "Your Identifier",
+      "security_denied_ip": "Access denied: Unauthorized IP address.",
+      "security_denied_generic": "Access restricted by security policy."
+    },
+    "photo_content": "[Photo]"
   },
   "study": {
     "studylist": "Study List",
@@ -100,8 +111,16 @@
       "all": "All",
       "drama": "Drama",
       "movie": "Movie",
-      "entertainment": "Entertainment",
-      "music": "Music"
+      "music": "Music",
+      "show": "Variety Show"
+    },
+    "culture_note": {
+      "title": "Culture Note",
+      "loading": "Loading culture notes...",
+      "error": "Failed to load culture notes.",
+      "empty": "No culture notes for this scene.",
+      "default_title": "Background Knowledge",
+      "empty_list": "No registered culture notes found."
     },
     "level": {
       "title": "Difficulty",
@@ -127,7 +146,6 @@
     "meta_desc_default": "Learn Korean with ARA",
     "study_card_title": "Study Card",
     "vocab_explanation": "Vocabulary",
-    "culture_note": "Culture Note",
     "subtitle_title": "Subtitles",
     "subtitle_loading": "Loading subtitles...",
     "subtitle_no_data": "No subtitle data available.",
@@ -136,7 +154,59 @@
     "meta_title": "ARA - K-Content Based Korean Learning Platform",
     "meta_desc_scene": "Learn Korean with K-Content: {{contents}} {{episode}} {{scene}}",
     "aria_prev_episode": "Previous Episode",
-    "aria_next_episode": "Next Episode"
+    "aria_next_episode": "Next Episode",
+    "voca": {
+      "pos": {
+        "noun": "Noun",
+        "verb": "Verb",
+        "adjective": "Adjective",
+        "adverb": "Adverb",
+        "pronoun": "Pronoun",
+        "numeral": "Numeral",
+        "determiner": "Determiner",
+        "particle": "Particle",
+        "interjection": "Interjection"
+      },
+      "example_label": "Example",
+      "delete_confirm": {
+        "title_single": "Delete word",
+        "title_all": "Delete all",
+        "desc_single": "Do you want to delete the word?",
+        "desc_all": "Do you want to delete all words?"
+      },
+      "empty_cta": "Try saving words on the study page.",
+      "title": "Vocabulary List",
+      "description": "You can collect and view saved words.",
+      "btn_quiz": "Quiz",
+      "btn_back_to_study": "To Learning",
+      "search_placeholder": "Search Word/Meaning/Example/Speech Part/Pronunciation",
+      "status_title": "Learning Status",
+      "status_all": "All",
+      "btn_delete_all": "Delete all",
+      "btn_delete_all_title": "Reset wordbook",
+      "empty_message": "No saved words.",
+      "modal_cta": "To episode",
+      "episode_cta": "Go to episode",
+      "aria_delete": "Delete word",
+      "status_learning": "In progress",
+      "status_known": "Completed",
+      "status_unknown": "Not learned"
+    },
+    "culture_note_label": "Culture Note",
+    "promotion": {
+      "premium_title": "Project ARA Premium",
+      "premium_desc": "Enjoy ad-free learning and exclusive episodes.",
+      "ad_badge": "AD",
+      "promo_badge": "PROMO",
+      "guide_alt_1": "ARA Study Usage Guide 1",
+      "guide_alt_2": "ARA Study Usage Guide 2",
+      "guide_alt_3": "ARA Study Usage Guide 3",
+      "guide_alt_4": "ARA Study Usage Guide 4",
+      "guide_alt_5": "ARA Study Usage Guide 5"
+    },
+    "episode_label": "Episode",
+    "scene_label": "Scene",
+    "voca_btn": "My Vocabulary List"
   },
   "auth": {
     "login": "Sign in",
@@ -182,7 +252,19 @@
     "restore_confirm": "Restore Account",
     "profile_not_found_contact_admin": "Profile not created. Please contact admin.",
     "auth_failed": "Authentication failed.",
-    "signin": "Sign In"
+    "signin": "Sign In",
+    "check_verification_email": "Please check the verification link sent to your email.",
+    "relink_notice_title": "SNS reconnection guide",
+    "relink_previously_unlinked": "This is a previously disconnected SNS account.",
+    "relink_security_guide": "For security, please log in with your email and reconnect directly in [Settings > SNS Connection Management].",
+    "relink_cross_account_desc": "This {{provider}} account was previously connected to the <span class=\"font-bold text-primary\">{{email}}</span> account.",
+    "relink_manual_guide": "For security, please log in with your email and reconnect in [Settings].",
+    "choose_start_method": "Which email would you like to start with?",
+    "login_with_email": "Log in with email",
+    "duplicate_prevent_title": "SNS account duplication prevention notice",
+    "preview_alt": "Preview",
+    "cover_preview_alt": "Cover preview",
+    "ban_message_template": "You cannot {{action}} while in a restricted state.\nRestriction period: ~{{date}} ({{days}} days remaining)"
   },
   "find_email": {
     "title": "Find Email",
@@ -295,7 +377,67 @@
     "block_modal_notice_4": "This user's comments will be masked in the community.",
     "block_modal_warning": "You can manage blocked users in 'Settings > Blocked Users'.",
     "unknown": "Unknown",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "view_details": "View Details",
+    "read_more": "Read More",
+    "sponsored": "Sponsored",
+    "translated": "Translated",
+    "auto_translated": "Auto-translated by AI",
+    "add": "Add",
+    "unblock_modal_title": "Do you want to unblock this user?",
+    "checking": "Checking...",
+    "today": "Today",
+    "country": "Country",
+    "preview": "Preview",
+    "view_voca": "View My Vocabulary",
+    "edited": "Edited",
+    "blocked_users_desc": "Manage the list of blocked users.",
+    "replies": "Comment",
+    "more": "See more",
+    "my_voca": "Wordbook",
+    "deleted_user": "Withdrawn user",
+    "error_label": "Error",
+    "retry": "Retry",
+    "yesterday": "Yesterday",
+    "just_now": "Just now",
+    "date_format_short": "M month d day",
+    "error_image_size": "The size of the {{name}} file exceeds {{size}}.",
+    "block_user": "Block user",
+    "unblock_user": "Unblock user",
+    "block_user_desc": "If blocked, you cannot view each other's profiles or send chats.",
+    "blocked_user_alert": "Blocked user.",
+    "blocked_users": "Blocked user",
+    "no_blocked_users": "No blocked users.",
+    "confirm_unblock": "Are you sure you want to unblock?",
+    "share_default_text": "Learn Korean with fun! Sharing learning scenes at ARA.",
+    "copy_link_prompt": "Copy the link below:",
+    "submitting": "Submitting...",
+    "thumbnail": "Thumbnail",
+    "scroll_to_top": "Scroll to top",
+    "user": "User",
+    "premium_member": "Premium Member",
+    "hidden": "Hidden",
+    "show_more": "More",
+    "collapse": "Collapse",
+    "hidden_content": "Hidden Content",
+    "deleted_post": "Deleted Post",
+    "edit_post": "Edit Post",
+    "upload_success": "Upload Complete!",
+    "upload_failed": "Upload Failed",
+    "remask": "Hide Again",
+    "add_image": "Add Image",
+    "uploading": "Uploading...",
+    "prompt_image_url": "Enter Image URL",
+    "add_url": "Add URL",
+    "image_count": "Image {{count}}",
+    "image_reply": "Reply Image",
+    "image_tweet": "Post Image",
+    "me": "I",
+    "avatar": "Avatar",
+    "user_initials": "User",
+    "advertisement": "Advertisement",
+    "likes": "Like",
+    "views": "Views"
   },
   "recovery_reminder": {
     "title": "Enhance Account Security",
@@ -304,6 +446,39 @@
     "later": "Maybe Later"
   },
   "settings": {
+    "no_changes_or_invalid": "No changes made or invalid input.",
+    "saved": "Settings saved successfully.",
+    "coupons": {
+      "no_subscription_data": "No subscription data found.",
+      "no_vip_available": "No VIP benefits available at this time. Please contact admin.",
+      "vip_success_title": "🎁 VIP Secret Benefit Issued!",
+      "vip_success_code": "Coupon Code: {{code}} (99% OFF)",
+      "vip_success_desc": "Enter the code at checkout to claim your benefit.",
+      "discount_percent": "{{value}}% OFF",
+      "discount_fixed": "₩{{value}} Benefit",
+      "btn_redeem": "Redeem Coupon",
+      "btn_claim_vip": "Claim VIP Coupon",
+      "redeem_title": "Redeem Coupon",
+      "redeem_placeholder": "Enter coupon code",
+      "redeem_success": "Coupon redeemed successfully!",
+      "redeem_success_desc": "{{name}} ({{discount}} discount)",
+      "redeem_fail": "Invalid coupon code.",
+      "redeem_error": "Error verifying coupon.",
+      "no_history": "No history.",
+      "no_subscription": "No subscription data.",
+      "plan_label": "{{plan}} Plan",
+      "cancel_success": "Subscription cancelled successfully.",
+      "cancel_error": "Error cancelling: {{error}}",
+      "history_title": "Subscription & Coupon History",
+      "vip_already_claimed": "You have already claimed this month's VIP benefit.",
+      "vip_benefit_title": "Monthly VIP Benefit",
+      "vip_benefit_desc": "Check out special coupons for Premium+ members.",
+      "status": {
+        "active": "Active",
+        "cancelled": "Cancelled",
+        "expired": "Expired"
+      }
+    },
     "languageSelect": "Select Language",
     "themeSelect": "Select Theme",
     "theme_options": {
@@ -376,8 +551,21 @@
     "support_policy": "Support & Policy",
     "help_center": "Help Center",
     "terms": "Terms of Service",
-    "privacy_policy": "Privacy Policy",
-    "marketing_consent": "Marketing Consent",
+    "privacy_policy": {
+      "summary": "The company collects and uses the minimum personal information necessary to provide services and destroys it without delay after achieving the purpose of collection.",
+      "items_title": "Key items",
+      "item_1": "Collection items, purpose of collection and use, retention and use period",
+      "item_2": "Status of third-party provision and processing delegation of personal information",
+      "item_3": "User rights (access, correction, deletion, suspension of processing) and how to exercise them",
+      "item_4": "Personal information protection officer and contact information",
+      "close": "Close"
+    },
+    "marketing_consent": {
+      "push": "Push Notification",
+      "title": "Marketing consent",
+      "email": "Email reception",
+      "sms": "SMS reception"
+    },
     "email_info_missing": "Email information not found. Please contact support.",
     "password_incorrect": "Incorrect password.",
     "email_mismatch_error": "The email address you entered is incorrect.",
@@ -396,7 +584,44 @@
     "confirm_unblock": "Are you sure you want to unblock this user?",
     "alarm_chat": "Chat Notifications",
     "alarm_chat_desc": "Get notified when you receive new chat messages.",
-    "saved": "Settings saved."
+    "subscription_coupon": "Subscription & Benefits",
+    "alarm_push": "Push Notifications",
+    "alarm_email": "Email Notifications",
+    "theme_dark": "Dark Mode",
+    "plan": "Subscription Plan",
+    "coupon": "Coupon",
+    "premium": "Premium",
+    "set_password": "Set Password",
+    "current_pw_incorrect": "Current password is incorrect.",
+    "pw_change_error": "Error changing password. Please try again.",
+    "pw_change_success": "Password changed successfully.",
+    "pw_set_guide": "Set a password for your social login account to also sign in via email.",
+    "pw_set_success": "Password set successfully.",
+    "email": "Email",
+    "connected": "Connected",
+    "not_connected": "Not Connected",
+    "connect": "Connect",
+    "unlink": "Disconnect",
+    "unlink_confirm_title": "Disconnect Account",
+    "linked_accounts": "Linked Accounts",
+    "social_login_active": "Social login active",
+    "sns_connect_failed": "Failed to connect SNS account.",
+    "sns_unlink_confirm_msg": "Are you sure you want to disconnect this account?",
+    "sns_unlink_failed": "Failed to disconnect SNS account.",
+    "sns_unlink_success": "SNS account disconnected.",
+    "sns_unlink_last_method": "At least one login method is required.",
+    "sns_unlink_warning": "You will not be able to sign in with this method after disconnecting.",
+    "close": "Close",
+    "language_select_aria": "Language selection",
+    "theme_select_aria": "Theme selection",
+    "customer_center": {
+      "faq_desc": "Check key questions about account, billing, security, etc.",
+      "faq_title": "Frequently Asked Questions (FAQ)",
+      "contact_1on1_title": "1:1 Inquiry",
+      "contact_1on1_desc": "Weekdays 09:00~18:00 (excluding holidays)"
+    },
+    "privacy_policy_title": "Privacy Policy",
+    "theme_light": "Light"
   },
   "profile": {
     "edit_profile": "Edit Profile",
@@ -441,7 +666,18 @@
     "turn_on_notifications": "Turn on notifications",
     "turn_off_notifications": "Turn off notifications",
     "followed": "Followed",
-    "unfollowed": "Unfollowed"
+    "unfollowed": "Unfollowed",
+    "view_profile": "View profile",
+    "drag_to_reposition": "Drag to adjust position",
+    "already_following": "Already following",
+    "cannot_follow_self": "You cannot follow yourself",
+    "notifications_updated": "Notification settings have been changed",
+    "blocked": "Blocked successfully",
+    "unblocked": "Unblock",
+    "already_blocked": "Already blocked",
+    "cannot_block_self": "You cannot block yourself",
+    "block_list": "Block list",
+    "no_blocked_users": "No users blocked"
   },
   "tweets": {
     "placeholder_tweet": "What are you thinking about?",
@@ -477,7 +713,93 @@
     "deleted_or_not_exist": "This post has been deleted or does not exist",
     "deleted_while_viewing": "This post has been deleted.",
     "login_to_reply": "You can write comments after logging in.",
-    "join_community_desc": "Please sign in or sign up to join the community."
+    "join_community_desc": "Please sign in or sign up to join the community.",
+    "liked_feed": "Likes your post.",
+    "reply_to_tweet": "Reply to post",
+    "compose_tweet": "Create new post"
+  },
+  "goods": {
+    "title": "Goods Shop",
+    "subtitle": "Discover official goods reflecting ARA's identity",
+    "product_details": "Product Details",
+    "product_options": "Select Options",
+    "product_recommendations": "You Might Also Like",
+    "total_amount": "Total Amount",
+    "checkout_total": "Total Amount",
+    "price_unit": "$",
+    "percent_suffix": "%",
+    "checkout_loading": "Processing checkout...",
+    "checkout_success": "Payment completed successfully!",
+    "checkout_error": "An error occurred during payment processing.",
+    "badge": {
+      "new": "NEW",
+      "best": "BEST",
+      "soldout": "SOLD OUT",
+      "sale": "SALE",
+      "off_pattern": "{{percent}}% OFF"
+    },
+    "reviews": {
+      "title": "Reviews",
+      "count": "{{count}} Reviews",
+      "rating_average": "Average Rating",
+      "photo_review": "Photo Reviews",
+      "write_btn": "Write a Review",
+      "verified_purchase": "Verified Purchase",
+      "helpful": "Helpful",
+      "no_reviews": "No reviews yet.",
+      "be_first": "Be the first to review!",
+      "be_first_desc": "Share your experience and help other buyers.",
+      "load_more": "Load More",
+      "view_all": "View All",
+      "translate_btn": "Translate",
+      "show_original": "Original",
+      "no_stats": "No Data",
+      "positive_ratio": "Positive Review Ratio",
+      "waiting_first": "Waiting for the first review",
+      "buyer_only_error": "Only buyers can write a review.",
+      "modal": {
+        "how_was_it": "How was the product?",
+        "detail_review": "Detail Review",
+        "placeholder": "Please enter your review.",
+        "add_photo": "Add Photos (Max 3)",
+        "empty_content": "Please enter review content.",
+        "success": "Your review has been registered!"
+      }
+    },
+    "coupon": {
+      "apply": "Apply Coupon",
+      "apply_btn": "Apply",
+      "placeholder": "Enter coupon code",
+      "applied": "Coupon applied!",
+      "invalid": "Invalid coupon code.",
+      "error": "Error checking coupon."
+    },
+    "category_all": "All",
+    "category_clothing": "Clothing",
+    "category_accessories": "Accessories",
+    "category_stationery": "Stationery",
+    "category_digital": "Digital",
+    "related_products": "Related Products",
+    "product_not_found": "Product not found.",
+    "back_to_list": "Back to List",
+    "buy_now": "Buy Now",
+    "free_shipping": "Free Shipping",
+    "authentic_guarantee": "100% Authentic",
+    "coming_soon": "Coming Soon",
+    "notice_banner": "Official Goods Shop is under preparation.",
+    "option": {
+      "size": "Size",
+      "color": "Color"
+    },
+    "alt": {
+      "main_image": "Main Product Image",
+      "gallery_image": "Gallery Image",
+      "detail_image": "Detail Image",
+      "store_membership": "ARA Goods Store Membership",
+      "hero_bg": "Hero Background",
+      "review_image": "User Review Image",
+      "preview_image": "Upload Preview"
+    }
   },
   "trending": {
     "title": "Real-time Popular Feeds",
@@ -545,233 +867,365 @@
     "confirm_exit_title": "Leave Chat?",
     "confirm_exit_desc": "You will be returned to the chat list.",
     "exit_success": "Left chat room.",
-    "creating_chat": "Creating chat..."
+    "creating_chat": "Creating chat...",
+    "translate_error_api": "API request failed",
+    "translate_error_untranslatable": "This sentence cannot be translated as its meaning cannot be determined.",
+    "translate_error_generic": "An error occurred during translation.",
+    "scroll_to_bottom": "Scroll to bottom",
+    "deleted_message": "Message deleted by administrator.",
+    "aria_send_message": "Send message"
   },
   "policy": {
     "close": "Close",
     "help_center": {
-      "intro": "If you have any difficulties while using the service, please feel free to contact us through the channels below.",
-      "email_title": "Email Support",
+      "intro": "If you have any difficulties using the service, please contact us anytime through the channels below.",
+      "email_title": "Email Inquiry",
       "email_address": "koreara25@gmail.com",
-      "email_hours": "Weekdays 10:00 ~ 18:00 (Closed on weekends and holidays)",
+      "email_hours": "Weekdays 10:00 ~ 18:00 (KST, Closed on weekends/holidays)",
       "app_report_title": "In-app Report/Inquiry",
       "app_report_post": "You can report directly from the top right menu of posts and comments.",
-      "app_report_dm": "You can also report from DM list > User profile > Report/Block menu.",
+      "app_report_dm": "You can also report from DM list > User Profile > Report/Block menu.",
       "faq_title": "Frequently Asked Questions (FAQ)",
-      "faq_account": "Account/password, login issues",
-      "faq_report": "Report/block and community guidelines",
-      "faq_privacy": "Data/privacy related inquiries",
-      "faq_note": "An FAQ page will be added upon official launch."
+      "faq_account": "Account/Password, Login issues",
+      "faq_report": "Reporting/Blocking and Community Guidelines",
+      "faq_privacy": "Data/Privacy related inquiries",
+      "faq_note": "FAQ page will be added at the official launch."
     },
     "terms": {
-      "title": "Terms of Service",
+      "title": "Terms of Use",
       "purpose": {
         "h": "Article 1 (Purpose)",
-        "body": "These Terms aim to define the rights, obligations, responsibilities, and other necessary matters between the Company and Members regarding the use of the SNS/community-based service (including mobile/web, hereinafter \"Service\") provided by \"ARA\" (hereinafter \"Company\")."
+        "body": "These Terms aim to regulate the rights, obligations, and responsibilities between the company and members regarding the use of the SNS/Community service (including mobile/web, hereinafter \"Service\") provided by \"ARA\" (hereinafter \"Company\")."
       },
       "definition": {
         "h": "Article 2 (Definitions)",
-        "member": "\"Member\" refers to a person who agrees to the Company's terms and creates an account to use the Service.",
-        "content": "\"Content\" means all materials including text, images, audio, video, links, and other data that Members upload, transmit, or post on the Service.",
-        "paid_service": "\"Paid Service\" refers to services that require payment, such as digital items, subscriptions, ad removal, and additional storage."
+        "member": "\"Member\" refers to a person who agrees to the company's terms and creates an account to use the service.",
+        "content": "\"Content\" refers to all data including text, images, voice, video, links, etc., that members upload/transmit/post on the service.",
+        "paid_service": "\"Paid Service\" refers to services used by paying a fee, such as digital items, subscriptions, ad removal, additional storage, etc."
       },
       "contract": {
-        "h": "Article 3 (Establishment and Qualification of Use Agreement)",
-        "agreement": "The use agreement is established when a Member agrees to the terms and privacy policy and completes the registration process.",
+        "h": "Article 3 (Establishment and Qualification of Use Contract)",
+        "agreement": "A use contract is established when a member agrees to the terms and privacy policy and completes the signup process.",
         "verification": "Identity verification procedures, including social login, may be required.",
-        "age_limit": "Persons under 14 years of age cannot register. The Company may request submission of age verification documents when necessary."
+        "age_limit": "Persons under 14 years old cannot sign up. The company may request age verification documents if necessary."
       },
       "community": {
-        "h": "Article 4 (Community Management and Prohibited Acts)",
-        "guidelines": "You must comply with laws, regulations, terms, and community guidelines.",
-        "prohibited_content": "It is prohibited to post, transmit, or promote content that infringes on the rights of others or is illegal, harmful, discriminatory, hateful, obscene, or violent.",
-        "prohibited_actions": "It is prohibited to collect or post personal information (yours or others') without authorization, spam, advertising, phishing, lending/transferring accounts, or accessing/collecting/scraping using automated means.",
-        "violations": "The Company may delete posts, restrict exposure, temporarily suspend, or permanently ban accounts in case of guideline violations."
+        "h": "Article 4 (Community Operation and Prohibited Acts)",
+        "guidelines": "Members must comply with laws, terms, and community guidelines.",
+        "prohibited_content": "Posting/transmitting/promoting content that infringes on others' rights or is illegal, harmful, discriminatory, hateful, obscene, or violent is prohibited.",
+        "prohibited_actions": "Unauthorized collection/posting of personal information (own/others), spam/advertising/phishing, account sharing/transfer, and access/collection/scraping using automated means are prohibited.",
+        "violations": "The company may delete posts, limit exposure, or temporarily/permanently suspend accounts in case of guideline violations."
       },
       "member_duty": {
-        "h": "Article 5 (Member's Obligations)",
+        "h": "Article 5 (Member Responsibilities)",
         "password": "Members are responsible for managing their account passwords.",
-        "identity": "You must not misappropriate another person's identity or payment method, or register false information.",
-        "ai_output": "You must not use AI function outputs within the Service in a manner that infringes on third-party rights."
+        "identity": "Members must not steal others' names/payment methods or register false information.",
+        "ai_output": "AI features must not be used in ways that infringe on third-party rights."
       },
       "license": {
         "h": "Article 6 (Content Rights and License)",
-        "copyright": "The copyright of content posted by Members belongs to the Member in principle.",
-        "grant": "Members grant the Company a non-exclusive, free, worldwide license to store, reproduce, post, display, transmit, and edit (limited to format changes) such content for the purpose of providing, operating, improving, and promoting the Service. Members may revoke this license after deleting the post or account (excluding retention for backup/legal compliance purposes).",
-        "responsibility": "Members are solely responsible for all legal consequences if they post content that infringes on others' rights."
+        "copyright": "The copyright of the content posted by members belongs to the members.",
+        "grant": "Members grant the company a non-exclusive, royalty-free, worldwide license to store, reproduce, post, display, transmit, and edit (format changes only) the content for service operation/improvement/promotion. This license can be revoked upon post/account deletion.",
+        "responsibility": "Members bear all legal responsibility for content that infringes on others' rights."
       },
       "ai": {
-        "h": "Article 7 (AI Function Notice)",
-        "usage": "The Service may use AI/algorithm functions such as post recommendation, content generation/summarization, and report review assistance.",
-        "disclaimer": "AI results may contain errors and are provided for reference purposes. Members should review and utilize the results themselves."
+        "h": "Article 7 (AI Feature Notice)",
+        "usage": "The service may use AI/algorithm features for post recommendations, content generation/summarization, and report review assistance.",
+        "disclaimer": "AI results may contain errors and are provided for reference. Members should review and verify results themselves."
       },
       "payment": {
         "h": "Article 8 (Paid Services and Payment)",
-        "pricing": "The price, payment terms, and refund policy for paid services are separately notified on the screen.",
-        "policy": "App market/payment agency policies may apply first."
+        "pricing": "Prices, payment conditions, and refund policies for paid services are separately notified on the screen.",
+        "policy": "App market/payment gateway policies may take precedence."
       },
       "service_change": {
         "h": "Article 9 (Service Changes/Suspension)",
-        "body": "The Company may change or suspend all or part of the Service when operationally or technically necessary or when laws/policies change, and important changes will be announced in advance."
+        "body": "The company may change or suspend all or part of the service for operational/technical needs or policy changes, with prior notice for significant changes."
       },
       "termination": {
-        "h": "Article 10 (Contract Termination and Usage Restrictions)",
-        "withdrawal": "Members may withdraw from the settings at any time.",
-        "restriction": "If there are reasons such as violation of terms/guidelines, multiple infringement reports, or security threats, the Company may delete posts, restrict exposure, or suspend/terminate accounts after prior notice (post-notice in emergencies)."
+        "h": "Article 10 (Termination and Restrictions)",
+        "withdrawal": "Members can withdraw at any time in settings.",
+        "restriction": "The company may restrict exposure or suspend accounts for guideline violations or security risks with prior notice."
       },
       "ip_report": {
-        "h": "Article 11 (Infringement Reports and Counter-Notice)",
-        "takedown": "If a rights holder demonstrates infringement, the Company may temporarily block or delete the relevant content.",
-        "counter": "Posters may request reinstatement by submitting counter-evidence."
+        "h": "Article 11 (IP Infringement and Reposting)",
+        "takedown": "The company may temporarily block or delete content upon valid infringement claims.",
+        "counter": "Posters may request reposting by submitting counter-evidence."
       },
       "disclaimer": {
         "h": "Article 12 (Disclaimer and Limitation of Liability)",
-        "force_majeure": "The Company is not liable for damages caused by force majeure such as natural disasters or communication failures.",
-        "disputes": "Disputes between Members or between Members and third parties are the responsibility of the parties, and the Company is not liable unless there is willful misconduct or gross negligence."
+        "force_majeure": "The company is not liable for damages caused by force majeure events.",
+        "disputes": "Disputes between members or with third parties are handled by the parties themselves."
       },
       "law": {
         "h": "Article 13 (Governing Law and Jurisdiction)",
-        "body": "These Terms are governed by the laws of the Republic of Korea, and in case of disputes, the court having jurisdiction over the Company's principal office shall have exclusive jurisdiction."
+        "body": "These Terms are governed by the laws of the Republic of Korea, and disputes shall be resolved in the court of competent jurisdiction for the company's headquarters."
       },
       "notice": {
-        "h": "Article 14 (Amendment and Notice of Terms)",
-        "body": "The Company may amend the terms within the scope of compliance with relevant laws, and will announce the amended content and effective date at least 7 days in advance (30 days for changes disadvantageous to Members)."
+        "h": "Article 14 (Amendments and Notice)",
+        "body": "The company may amend the terms within legal limits, with at least 7 days (30 days for unfavorable changes) prior notice."
       }
     },
     "privacy": {
       "title": "Privacy Policy",
       "collect": {
-        "h": "Article 1 (Items of Personal Information Collected)",
+        "h": "Article 1 (Items Collected)",
         "required_title": "Required",
-        "required_items": "Email, password (hashed), nickname, service identifier (UID)",
+        "required_items": "Email, Password (hash), Nickname, Service Identifier (UID)",
         "optional_title": "Optional",
-        "optional_items": "Date of birth, gender, profile picture, country/language, self-introduction",
-        "auto_title": "Automatically Collected",
-        "auto_items": "Access/usage logs, IP/device information, cookies/similar technologies, error/crash logs, notification tokens, advertising identifiers (when opted in)",
+        "optional_items": "Date of Birth, Gender, Profile Picture, Country/Language, Bio",
+        "auto_title": "Auto-collected",
+        "auto_items": "Access logs, IP/device info, cookies, crash logs, notification tokens",
         "social_title": "Social Login",
-        "social_items": "Information within the provider's policy scope, such as profile nickname/email and platform identifiers"
+        "social_items": "Profile name/email from the provider within their policy"
       },
       "purpose": {
-        "h": "Article 2 (Purpose of Using Personal Information)",
-        "account": "Member registration/identity verification/account management",
-        "sns_features": "Providing core SNS features such as friend recommendations and feed exposure",
-        "support": "Customer inquiry response and announcements, service stabilization and quality improvement",
-        "analytics": "Statistics/analysis and personalized content recommendations (within consent scope)",
-        "security": "Security, fraud prevention, report handling",
-        "payment": "Paid service payment/refund/receipt issuance"
+        "h": "Article 2 (Purpose of Use)",
+        "account": "Sign-up/Identity verification/Account management",
+        "sns_features": "Core SNS features like friend recommendations and feed exposure",
+        "support": "Customer support, notices, service stabilization/improvement",
+        "analytics": "Stats/analysis and personalized content recommendations",
+        "security": "Security, fraud prevention, report processing",
+        "payment": "Payment/Refund/Receipt issuance for paid services"
       },
       "share": {
-        "h": "Article 3 (Third-Party Provision and Processing of Personal Information)",
-        "principle": "The Company does not provide personal information to third parties without the Member's consent in principle.",
-        "outsourcing": "For service operation, tasks such as cloud/data hosting, log analysis, and message delivery may be outsourced to specialized vendors. The names, tasks, and retention periods of trustees are disclosed on the 'Trustees' disclosure page within the service.",
-        "legal": "Information may be provided exceptionally when requested by law."
+        "h": "Article 3 (Third-party Provision and Entrustment)",
+        "principle": "The company does not provide information to third parties without consent.",
+        "outsourcing": "Certain tasks may be entrusted to specialized companies (cloud hosting, log analysis, messaging) as disclosed in the 'Entrustment' page.",
+        "legal": "Exceptions apply for legal requests."
       },
       "xborder": {
-        "h": "Article 4 (Cross-Border Transfer)",
-        "body": "The server location or trustee's facilities may be located abroad. The country of transfer, transfer date and method, retention period, and protective measures are disclosed within the service."
+        "h": "Article 4 (Overseas Transfer)",
+        "body": "Servers or facilities of entrusted companies may be located overseas. Details are notified within the service."
       },
       "store": {
-        "h": "Article 5 (Retention and Usage Period)",
-        "withdrawal": "Personal information is destroyed without delay upon member withdrawal, but may be retained for a certain period according to relevant laws.",
-        "legal_retention": "E-commerce/payment and telecommunications fact confirmation data follow legal retention periods.",
-        "backup": "If immediate deletion is difficult due to technical limitations of the backup system, it will be stored separately and periodically destroyed."
+        "h": "Article 5 (Retention Period)",
+        "withdrawal": "Information is destroyed upon withdrawal, except as required by law.",
+        "legal_retention": "Legal retention periods apply for commerce/payments and communication data.",
+        "backup": "Data in backup systems is destroyed periodically according to technical cycles."
       },
       "security": {
         "h": "Article 6 (Security Measures)",
-        "encryption": "Encrypted storage of passwords and sensitive information",
-        "access_control": "Minimization of access rights and regular inspections",
-        "logs": "Access record retention and prevention of forgery/alteration",
-        "backup_recovery": "Operating backup/disaster recovery systems in preparation for security incidents"
+        "encryption": "Encrypted storage of passwords and sensitive info",
+        "access_control": "Minimization of access rights and regular checks",
+        "logs": "Retention of access logs and prevention of forgery",
+        "backup_recovery": "Backup/disaster recovery systems for security incidents"
       },
       "rights": {
         "h": "Article 7 (Rights of Users and Legal Representatives)",
-        "data_rights": "You may request access, correction, deletion, suspension of processing, and data portability of personal information.",
-        "settings": "You can change profile publicity scope and notification/personalized recommendation settings.",
-        "cookies": "Cookie settings can be managed in your browser."
+        "data_rights": "Users can request access, correction, deletion, or suspension of processing.",
+        "settings": "Users can change exposure ranges and notification/recommendation settings.",
+        "cookies": "Cookie settings can be managed in the browser."
       },
       "children": {
-        "h": "Article 8 (Protection of Children's Personal Information)",
-        "body": "Registration of children under 14 years of age is not permitted, and accounts may be restricted upon confirmation."
+        "h": "Article 8 (Protection of Children)",
+        "body": "Sign-up for children under 14 is not allowed, and accounts may be restricted upon verification."
       },
       "notice": {
-        "h": "Article 9 (Changes to Privacy Policy)",
-        "body": "This policy may be amended in accordance with changes in laws/services, and important changes will be announced 7 days in advance (30 days for changes disadvantageous to Members)."
+        "h": "Article 9 (Amendments)",
+        "body": "This policy may be amended due to law/service changes, with 7 days (30 days for unfavorable changes) prior notice."
       },
       "contact": {
         "h": "Article 10 (Privacy Officer)",
-        "name": "Name: Hong Gildong",
+        "name": "Name: Gildong Hong",
         "email": "Email: privacy@ara-service.com",
-        "hours": "Consultation hours: Weekdays 10:00~18:00"
+        "hours": "Consultation: Weekdays 10:00~18:00"
       }
     },
     "marketing": {
       "title": "Marketing Information Consent",
       "purpose": {
-        "h": "Article 1 (Purpose of Reception)",
-        "body": "We provide useful information such as new content, events, and discounts through email, push, SMS, etc."
+        "h": "Article 1 (Purpose of Receipt)",
+        "body": "Provides useful information such as new content, events, and discounts via email/push/SMS."
       },
       "contents": {
-        "h": "Article 2 (Content Received)",
-        "features": "New features and recommended feed summaries",
-        "events": "Event/campaign/promotion announcements",
-        "discounts": "Discounts, coupons, partnership benefits",
-        "reports": "Personalized reports (activity summary, trends)"
+        "h": "Article 2 (Contents of Receipt)",
+        "features": "Summary of new features and recommended feeds",
+        "events": "Event/Campaign/Promotion information",
+        "discounts": "Discounts, coupons, and partner benefits",
+        "reports": "Personalized reports (Activity summary, trends)"
       },
       "channels": {
-        "h": "Article 3 (Reception Channels and Settings)",
-        "individual": "You can individually consent to or withdraw from each channel (email/push/SMS).",
-        "settings": "You can change this in Settings > Notifications/Marketing menu or the link at the bottom of received messages.",
-        "apply": "Withdrawal will be applied from subsequent mailings."
+        "h": "Article 3 (Channels and Settings)",
+        "individual": "Consent/withdrawal is available individually for each channel.",
+        "settings": "Changes can be made in Settings > Notifications/Marketing or through the link at the bottom of messages.",
+        "apply": "Withdrawal applies from the next shipment onwards."
       },
       "partners": {
-        "h": "Article 4 (Third-Party Marketing and Outsourcing)",
-        "body": "Some mailing tasks may be outsourced to professional agencies, and partner marketing will be conducted with separate consent."
+        "h": "Article 4 (Third-party Marketing and Entrustment)",
+        "body": "Some delivery tasks may be entrusted to specialized agencies, and partner marketing requires separate consent."
       },
       "note": {
         "h": "Article 5 (Essential Notices)",
-        "body": "Essential service operation notices (terms/security, etc.) may be sent regardless of reception consent."
+        "body": "Essential operational notices (Terms/Security, etc.) may be sent regardless of consent."
       }
     }
   },
   "landing": {
-    "badge": "K-Content Based Korean Learning Platform",
-    "title_1": "Learn Language through Content",
-    "title_2": "Connecting through Culture",
-    "description": "Learn real expressions from dramas, variety shows, and movies. A space where you can write, correct, and share Korean with friends worldwide.",
-    "point_1": "Real Scene-based Learning",
-    "point_2": "Multilingual Translation",
-    "point_3": "Global Learning Community",
-    "cta_start": "Start Now",
-    "cta_explore": "Explore Content",
+    "badge": "Learn Korean through stories · Community",
+    "title_1": "Learn a language through content",
+    "title_2": "Experience connected through culture",
+    "description": "Expressions learned through self-produced episodes and Korean folktales and legends",
+    "description2": "Korean learning space ARA where you write, edit, and share with friends worldwide",
+    "point_1": "Story-based episode learning",
+    "point_2": "Understanding expressions through folktales and legends",
+    "point_3": "Global learning community",
+    "cta_start": "Start now",
+    "cta_explore": "Browse content",
     "scroll_hint": "Scroll to explore",
     "nav_top": "Top",
-    "nav_how": "How it works",
-    "nav_problems": "Core Value",
-    "nav_features": "Features",
-    "nav_contents": "Contents",
-    "nav_stories": "Stories",
-    "nav_start": "Start",
+    "nav_how": "Learning method",
+    "nav_problems": "Core values",
+    "nav_features": "Key features",
+    "nav_contents": "Content",
+    "nav_stories": "Learning Reviews",
+    "nav_start": "Get Started",
+    "nav_contact": "Contact",
     "aria_badge": "Platform Introduction",
-    "aria_start": "Start now button",
-    "aria_explore": "Explore content button",
-    "cta_badge_text": "Learners joined today",
-    "cta_title_1": "Korean, not 'Study'",
-    "cta_title_2": "Start as an 'Experience'",
-    "cta_description": "Sign up now and start your first learning course with scenes from popular K-dramas.",
+    "aria_start": "Start Now",
+    "aria_explore": "Browse Content",
+    "cta_badge_text": "Learners Joined Today",
+    "cta_title_1": "Korean, not as 'study'",
+    "cta_title_2": "Start as an 'experience'",
+    "cta_description": "Join now and start your first learning course with popular drama scenes.",
     "cta_start_free": "Start for Free",
     "problem_title": "Have you ever had these concerns?",
-    "problem_desc": "ARA started from the concerns most frequently shared by real learners.",
+    "problem_desc": "ARA started from the concerns most frequently mentioned by real learners.",
     "problem_badge": "Real Concerns",
     "problems": {
-      "1": "I want to watch dramas without subtitles, but I can't remember vocabulary well.",
-      "2": "Textbook expressions are too different from how people actually speak.",
-      "3": "I want to use the expressions I learned, but there's no proper place to do it.",
-      "4": "It's so hard to find content that's just right for my level.",
-      "5": "Studying alone makes my motivation drop quickly."
+      "1": "Important expressions just pass by even when watching dramas.",
+      "2": "I want to learn Korean used in real-life situations, but I don't know how.",
+      "3": "Even if I learn expressions, I can't grasp how they are used in conversations.",
+      "4": "There is no content that I can enjoy watching at my level.",
+      "5": "It's hard to keep studying consistently on my own."
     },
     "how_it_works_badge": "HOW IT WORKS",
-    "how_it_works_title": "This is how ARA learning flows",
-    "guide_alt": "ARA Guide {{index}}"
+    "how_it_works_title": "This is how the ARA learning flow proceeds",
+    "guide_alt": "ARA Guide {{index}}",
+    "popular": {
+      "title": "You will learn with this kind of content",
+      "description": "The learning flow is centered around original animation content based on folktales and legends.",
+      "loading": "Loading popular content..."
+    },
+    "solution": {
+      "title": "Why ARA?",
+      "description": [
+        "Not just memorizing words, but also the flow and emotions within the content",
+        "It is designed with the goal of learning that is remembered together.",
+        "It is designed so that learning and community experiences naturally continue on one screen."
+      ],
+      "features": {
+        "1": {
+          "title": "Story-based learning",
+          "desc": "Learn vocabulary, expressions, and cultural context by following an episode of traditional tales and legends animation."
+        },
+        "2": {
+          "title": "Learn by using the structure",
+          "desc": "Immediately use expressions after learning, and acquire more natural expressions with example sentences and feedback."
+        },
+        "3": {
+          "title": "Global community",
+          "desc": "Learners from different languages and backgrounds gather to share Korean language experiences connected through stories."
+        }
+      }
+    },
+    "slider": {
+      "preview": {
+        "title": "Learn Korean expressions through stories",
+        "subtitle": "Expressions and nuances naturally through situational dialogue",
+        "bullets": [
+          "Dialogue → Expression understanding",
+          "Usage situation & cultural tips",
+          "Includes short practice exercises"
+        ],
+        "ctaLabel": "Episode preview",
+        "alt": "Story-based episode learning screen"
+      },
+      "folktale": {
+        "title": "Meet Korean through traditional tales and legends",
+        "subtitle": "Re-read old stories in modern Korean",
+        "bullets": [
+          "Traditional tales & legends content",
+          "Explanation of culture and background in expressions",
+          "Recommended bundle for beginners"
+        ],
+        "ctaLabel": "Preview of fairy tale content",
+        "alt": "Learning content on Korean folktales and legends"
+      },
+      "community": {
+        "title": "Practice with friends around the world",
+        "subtitle": "Share sentences and receive feedback with learners from various language backgrounds",
+        "bullets": [
+          "Multilingual user community",
+          "Exchange short sentences",
+          "Share expression/culture tips"
+        ],
+        "ctaLabel": "Community preview",
+        "alt": "Examples of global community activities"
+      }
+    },
+    "testimonials": {
+      "title": {
+        "line1": "ARA is designed with these learners in mind",
+        "line2": "Although not officially launched yet, ARA is being designed with the thought of"
+      },
+      "description": {
+        "intro": "Rather than imagining a single typical learner",
+        "highlight": "Various types of learners",
+        "body": "It is being created with imagination together.",
+        "detail": [
+          "From people who have just started learning Korean to those preparing for working holidays or studying abroad,",
+          "to office workers who need to use Korean in their daily life or work.",
+          "Learning lasts longer when using favorite content and community together,",
+          "We are designing the flow to continue naturally."
+        ]
+      },
+      "stats": {
+        "duration": {
+          "label": "Learning duration",
+          "desc": "We are designing the flow to stay longer than when studying alone with just textbooks."
+        },
+        "persona": {
+          "label": "Persona type",
+          "desc": "We are considering learner types with various countries and goals and reviewing screens and functions."
+        },
+        "scenario": {
+          "label": "Learning scenario",
+          "desc": "We are continuously building learning scenarios scene by scene for when ARA will be turned on in various situations."
+        }
+      },
+      "reviews": {
+        "sarah": {
+          "country": "United States · US",
+          "persona": "Beginner learners who started Korean with dramas",
+          "text": "Until now, I relied only on subtitles to watch stories, so I often missed important expressions. In ARA, it breaks down each scene and highlights key expressions, so I understand, \"Ah, this is the expression used in this situation.\" It's also fun to watch the same episode again while gradually reducing the subtitles."
+        },
+        "diego": {
+          "country": "Spain · ES",
+          "persona": "Practical learners preparing for working holiday or study abroad",
+          "text": "I wanted to study expressions that I could actually use before going on a working holiday. The conversations in the animations are organized by situation, so I liked that I could learn to distinguish between 'everyday expressions' and 'expressions to be used with caution.'"
+        },
+        "meilin": {
+          "country": "Singapore · SG",
+          "persona": "Intermediate to advanced learners who want to start speaking",
+          "text": "I know some grammar and vocabulary, but it's always been difficult to express them verbally. When I write short reviews or reactions after watching stories on ARA, it corrects them to more natural expressions. By using those sentences in feeds or DMs, I felt my speaking sense gradually coming back."
+        },
+        "alexey": {
+          "country": "Russia · RU",
+          "persona": "Business learners who need business expressions",
+          "text": "I needed business expressions because I often communicate with Korean partners. By comparing the speech of adults and children, and superiors and subordinates in the animations, I could naturally learn expressions suitable for different situations. It was impressive that it wasn't just simple translation but understanding the context."
+        },
+        "hana": {
+          "country": "Japan · JP",
+          "persona": "Self-improvement learners whose routines often break",
+          "text": "When studying with textbooks, the flow would break after just a few days. With ARA, even watching just one short story is enough for learning, so there's no pressure. I would come in thinking 'just up to this scene today,' and naturally developed a routine of logging in daily."
+        }
+      },
+      "notice": {
+        "mobile": "The review you are seeing now is a scenario-based example review composed based on the learner personas assumed by ARA.",
+        "desktop": "The review you are seeing now is a scenario-based review composed based on the learner personas targeted by ARA, not actual user data. After the official launch, this section will continue to be updated with stories from actual learners."
+      }
+    }
   },
   "signup": {
     "title_social": "Social Sign Up",
@@ -811,6 +1265,7 @@
     "already_in_use": "Already in use.",
     "gender_male": "Male",
     "gender_female": "Female",
+    "gender_other": "Other",
     "label_gender": "Gender",
     "error_gender_required": "Please select gender.",
     "label_birth": "Date of Birth",
@@ -839,32 +1294,32 @@
     "agree_and_close": "Agree and Close"
   },
   "recovery": {
-    "section_title": "Email Recovery Information (Required)",
-    "section_description": "Used to recover your account if you forget your email.",
-    "question_label": "Select a Question",
-    "question_placeholder": "Choose a question",
-    "answer_label": "Answer",
-    "answer_placeholder": "Enter your answer (min 2 characters)",
-    "answer_placeholder_already_set": "Answer already saved. (Changes when newly entered)",
-    "temp_email_label": "Recovery Secondary Email",
-    "temp_email_placeholder": "example@email.com",
-    "temp_email_description": "Used for identity verification if you forget your email address.",
+    "section_description": "Set up a method to securely recover your account in case you forget your ID/Password.",
+    "partial_setup_guide": "You can recover your account by setting up either a security question or a recovery email.",
     "set_question_title": "Security Question Setup",
+    "question_label": "Security Question",
+    "question_placeholder": "Please select a question",
+    "answer_label": "Answer",
+    "answer_placeholder": "Please enter an answer (min. 2 characters)",
+    "answer_placeholder_already_set": "Answer already set (can be modified)",
     "set_email_title": "Recovery Email Setup",
-    "partial_setup_guide": "Setting up either a security question or a recovery email is enough to protect your account.",
+    "temp_email_label": "Email Address",
+    "temp_email_placeholder": "Enter recovery email",
+    "temp_email_description": "Please enter an email address other than your primary email.",
     "question_favorite_color": "What is your favorite color?",
     "question_pet_name": "What was the name of your first pet?",
-    "question_birthplace": "In which city were you born?",
+    "question_birthplace": "Where were you born?",
     "question_first_school": "What was the name of your first school?",
-    "question_favorite_teacher": "What is your most memorable teacher's name?",
+    "question_favorite_teacher": "Who was your most memorable teacher?",
     "question_childhood_nickname": "What was your childhood nickname?",
-    "question_mothers_maiden": "What is your mother's maiden name?",
+    "question_mothers_maiden": "What is your mother's name?",
     "question_favorite_food": "What is your favorite food?",
     "question_first_car": "What was the model of your first car?",
     "question_favorite_movie": "What is your favorite movie?",
-    "question_parents_met_city": "In which city did your parents meet?"
+    "question_parents_met_city": "In which city did your parents first meet?"
   },
   "validation": {
+    "recovery_email_same_as_primary": "Recovery email cannot be same as primary email.",
     "required_email": "Please enter email",
     "required_password": "Please enter password",
     "required_nickname": "Please enter nickname",
@@ -897,9 +1352,9 @@
     "nickname_length": "Nickname must be between {min} and {max} characters",
     "recovery_question_required": "Please select a question",
     "recovery_answer_required": "Please enter an answer",
-    "recovery_answer_too_short": "Answer must be at least 2 characters",
-    "recovery_email_invalid": "Invalid email format",
-    "recovery_email_same_as_primary": "Cannot use the same email as sign-up."
+    "recovery_answer_too_short": "Answer must be at least 2 characters.",
+    "recovery_email_invalid": "Please enter a valid email address.",
+    "check_duplicate": "Verify"
   },
   "footer": {
     "brand": {
@@ -926,6 +1381,7 @@
         "documentation": "Documentation",
         "api": "API Reference",
         "community": "Community",
+        "webinars": "Webinars",
         "help_center": "Help Center"
       },
       "company": {
@@ -933,7 +1389,8 @@
         "about": "About Us",
         "careers": "Careers",
         "blog": "Blog",
-        "contact": "Contact"
+        "contact": "Contact",
+        "office": "Office"
       }
     },
     "newsletter": {
@@ -942,96 +1399,17 @@
       "placeholder": "Email address"
     },
     "bottom": {
-      "rights": "© {{year}} Ara Inc.",
+      "rights": "© {{year}} Ara Inc. All rights reserved.",
       "terms": "Terms",
       "privacy": "Privacy",
       "cookies": "Cookies"
-    }
-  },
-  "goods": {
-    "hero_title": "Official Store",
-    "hero_desc": "Support your learning.",
-    "category_all": "All",
-    "category_clothing": "Clothing",
-    "category_accessories": "Accessories",
-    "category_digital": "Digital",
-    "category_stationery": "Stationery",
-    "new_arrival": "New",
-    "best_seller": "Best",
-    "sold_out": "Sold Out",
-    "price_unit": "$",
-    "add_to_cart": "Add to Cart",
-    "buy_now": "Buy Now",
-    "option_color": "Color",
-    "option_size": "Size",
-    "quantity": "Quantity",
-    "related_items": "You Might Also Like",
-    "back_to_list": "Back to List",
-    "items": {
-      "hoodie": {
-        "title": "Signature Hoodie",
-        "desc": "Premium cotton hoodie with signature logo. Comfortable fit for daily wear."
-      },
-      "tote_bag": {
-        "title": "Eco Tote Bag",
-        "desc": "Eco-friendly canvas tote bag. Durable and spacious for your essentials."
-      },
-      "note_set": {
-        "title": "Premium Note Set",
-        "desc": "High-quality paper notebook set. Perfect for studying and journaling."
-      },
-      "planner": {
-        "title": "Digital Planner 2026",
-        "desc": "All-in-one digital planner for iPad/Tablet. Organize your 2026 efficiently."
-      },
-      "cap": {
-        "title": "Logo Cap",
-        "desc": "Stylish ball cap with embroidered logo. Adjustable strap for custom fit."
-      },
-      "tumbler": {
-        "title": "Minimalist Tumbler",
-        "desc": "Stainless steel tumbler. Keeps drinks hot/cold for 12 hours."
-      }
     },
-    "product_not_found": "Product not found",
-    "buy_now": "Buy Now",
-    "coupon_applied": "Coupon applied!",
-    "coupon_invalid": "Invalid coupon.",
-    "coupon_error": "Error checking coupon.",
-    "reviews_count": "{{count}} reviews",
-    "free_shipping": "Free Shipping over $50",
-    "authentic_guarantee": "Authentic Guarantee",
-    "product_details": "Product Details",
-    "reviews": {
-      "title": "Reviews",
-      "rating_average": "Average Rating",
-      "count": "{{count}} Reviews",
-      "write_btn": "Write a Review",
-      "sort_latest": "Latest",
-      "sort_highest": "Highest Rating",
-      "sort_lowest": "Lowest Rating",
-      "helpful": "Helpful",
-      "photo_review": "Photo Review",
-      "verified_purchase": "Verified",
-      "no_reviews": "No reviews yet.",
-      "be_first": "Be the first to review!",
-      "be_first_desc": "Share your experience and help other buyers.",
-      "load_more": "Load More",
-      "view_all": "View All",
-      "no_stats": "No Data",
-      "positive_ratio": "Positive Review Ratio",
-      "buyer_only_error": "Only verified buyers can write a review."
-    },
-    "preview_notice": "This service is currently under preparation. Preview it with virtual data.",
-    "guide": {
-      "title_1": "Official Goods Shop",
-      "desc_1": "Welcome to ARA's Official Goods Shop!",
-      "title_2": "Under Preparation",
-      "desc_2": "The Goods Shop is currently preparing for its official launch.",
-      "title_3": "Preview Now",
-      "desc_3": "You can experience the Shop's features with virtual data."
+    "office": {
+      "address_name": "Seoul Headquarter",
+      "address": "123 Teheran-ro, Gangnam-gu, Seoul",
+      "tel": "Tel: +82 2-1234-5678",
+      "registration": "Business Registration Number: 123-45-67890"
     }
-
   },
   "translation": {
     "login_required": "Please sign in to use the translation feature.",
@@ -1057,7 +1435,8 @@
       "harmful": "Harmful Content",
       "inappropriate": "Inappropriate Content",
       "other": "Other (Direct Input)"
-    }
+    },
+    "report": "Report"
   },
   "home": {
     "greeting_night": "Good night / dawn",
@@ -1076,5 +1455,140 @@
     "field_progress": "Progress by Field",
     "percent_complete": "{{percent}}% Complete",
     "time_left": "{{time}} Left"
+  },
+  "subscription": {
+    "plans": {
+      "free": {
+        "title": "Free Plan",
+        "desc": "For those who need the basics",
+        "interval": "month",
+        "feature_voca": "Basic vocabulary access",
+        "feature_community": "Community participation",
+        "feature_badge": "Premium badge",
+        "feature_ads": "Ad-free experience",
+        "feature_promo": "Exclusive promotions"
+      },
+      "basic": {
+        "title": "Basic Plan",
+        "desc": "For active learners",
+        "interval": "month",
+        "feature_voca": "Full vocabulary access",
+        "feature_community": "Community participation",
+        "feature_ads": "Ad-free experience",
+        "feature_badge": "Premium badge",
+        "feature_promo": "Exclusive promotions"
+      },
+      "premium": {
+        "title": "Premium Plan",
+        "desc": "All-in-one plan with every benefit",
+        "interval": "month",
+        "feature_course": "Full course access",
+        "feature_profile": "Premium profile badge",
+        "feature_ads": "Ad-free experience",
+        "feature_badge": "Premium badge",
+        "feature_coupon": "Monthly exclusive coupons"
+      }
+    },
+    "current_plan": "Current Plan",
+    "active_status": "Active",
+    "payment_date": "Next Payment",
+    "upgrade_plan": "Upgrade Plan",
+    "manage_plan": "Manage Plan",
+    "vip_box": "Open VIP Box",
+    "history": "Subscription History",
+    "total_count": "Total {{count}} items →",
+    "more_count": "+ {{count}} more",
+    "recent_coupons": "Recent Coupons",
+    "history_all": "Full History",
+    "premium_only": "Premium Exclusive Content",
+    "payment_modal": {
+      "title": "Payment Details",
+      "promo_code": "Promo Code",
+      "coupon_placeholder": "Enter coupon code",
+      "apply": "Apply",
+      "coupon_applied": "{{name}} coupon applied",
+      "card_info": "Card Information",
+      "card_number": "Card Number",
+      "expiry": "MM / YY",
+      "cvc": "CVC",
+      "pay_now": "Pay {{price}}",
+      "payment_success": "Payment completed!",
+      "plan_applied": "{{plan}} plan has been applied.",
+      "payment_fail": "Payment failed: {{error}}",
+      "test_warning": "⚠️ This is a test payment simulation. No real charges will be made.",
+      "cancel_confirm_title": "Cancel Subscription",
+      "cancel_confirm_desc": "Are you sure you want to cancel your subscription?",
+      "cancel_subscription": "Cancel Subscription",
+      "keep_subscription": "Keep Subscription"
+    },
+    "back": "Back",
+    "title_prefix": "Choose Your",
+    "title_highlight": "Plan",
+    "description": "Choose the plan that fits your needs and enjoy premium benefits.",
+    "popular_badge": "Popular",
+    "subscribe_now": "Subscribe Now",
+    "guaranteed_payment": "Guaranteed Secure Payment",
+    "secure_payment": "Secure Payment",
+    "cancel_anytime": "Cancel Anytime",
+    "all_cards_supported": "All Cards Supported",
+    "errors": {
+      "login_required": "Please log in to subscribe.",
+      "already_free": "You are already on the Free plan.",
+      "cancel_success": "Subscription cancelled successfully.",
+      "cancel_fail": "Error during cancellation: {{error}}",
+      "coupon_success": "Coupon applied!",
+      "coupon_invalid": "Invalid coupon code.",
+      "coupon_error": "Error validating coupon."
+    },
+    "cancel_confirm": {
+      "title": "Cancel Subscription",
+      "desc": "Are you sure you want to cancel? You will be switched to the Free plan.",
+      "btn_confirm": "Cancel Subscription",
+      "btn_cancel": "Keep Subscription"
+    }
+  },
+  "voca": {
+    "pos": {
+      "noun": "Noun",
+      "verb": "Verb",
+      "adjective": "Adjective",
+      "adverb": "Adverb",
+      "pronoun": "Pronoun",
+      "numeral": "Numeral",
+      "determiner": "Determiner",
+      "particle": "Particle",
+      "interjection": "Interjection"
+    }
+  },
+  "not_found": {
+    "discovery": "We found a lost page",
+    "title": "This is a scene where the script hasn't been written yet",
+    "description": "There is no ARA episode prepared at this address yet. Shall we return to the home page and continue enjoying Korean language and culture with other K-content?",
+    "quote_part1": "“Someday, this page will be filled with a scene.”",
+    "quote_accent": "a scene",
+    "quote_part2": "will be filled.",
+    "feedback_prefix": "If you have any features or ideas you expected on this page, feel free to leave them in the feedback menu within ARA or",
+    "feedback_suffix": "contact us."
+  },
+  "community": {
+    "seo": {
+      "title": "Community | ARA - Learn Korean through K-Content",
+      "description": "This is the ARA community where learners from around the world come together. Learn Korean through K-content, communicate with friends, and enjoy the cultures of various countries.",
+      "keywords": "ARA, Korean learning, Learn Korean, Korean culture, K-POP, K-Drama, K-Culture, language exchange, feed, global learners",
+      "og_title": "ARA Community - A global learning platform based on K-content",
+      "og_description": "Learn Korean through K-content and communicate with learners from around the world on the global home feed ARA."
+    },
+    "title": "Community",
+    "no_results": "No search results.",
+    "no_posts": "No news has been shared yet.",
+    "all_posts_loaded": "You have checked all the news.",
+    "hidden_content": "This post has been hidden by the administrator.",
+    "deleted_post": "This post has been deleted due to a policy violation.",
+    "edit_post": "Edit post"
+  },
+  "marketing": {
+    "subscription": {
+      "title": "Project ARA Subscription!"
+    }
   }
 }

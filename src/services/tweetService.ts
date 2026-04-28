@@ -26,7 +26,7 @@ export const tweetService = {
       .select(
         `id, content, image_url, created_at, deleted_at, is_hidden,
         reply_count, like_count, view_count,
-        profiles:author_id (id, nickname, user_id, avatar_url, banned_until)`,
+        profiles:author_id (id, nickname, user_id, avatar_url, banned_until, plan, country)`,
       )
       .eq('author_id', userId)
       .order('created_at', { ascending: false })
@@ -34,31 +34,52 @@ export const tweetService = {
 
     const posts = (data as unknown as TweetQueryResponse[]) ?? [];
 
+    // Country Batch Fetch
+    let countryMap = new Map<string, { name: string; flag_url: string }>();
+    const countryIds = Array.from(new Set(
+      posts.map(p => (p.profiles as any)?.country).filter(Boolean) as string[]
+    ));
+
+    if (countryIds.length > 0) {
+      const { data: countryData } = await (supabase.from('countries') as any)
+        .select('id, name, flag_url')
+        .in('id', countryIds);
+      if (countryData) {
+        countryData.forEach((c: any) => countryMap.set(String(c.id), { name: c.name, flag_url: c.flag_url }));
+      }
+    }
+
     return posts
       // .filter(t => !t.is_hidden) // RLS에서 처리 (작성자/관리자는 보이게)
       .filter(t => !blockedUserIds.includes(t.profiles?.id ?? ''))
-      .map(t => ({
-        type: 'post',
-        id: t.id,
-        user: {
-          id: t.profiles?.id ?? '00000000-0000-0000-0000-000000000000',
-          name: t.profiles?.nickname ?? 'Unknown',
-          username: t.profiles?.user_id ?? 'anonymous',
-          avatar: t.profiles?.avatar_url ?? '/default-avatar.svg',
-          banned_until: t.profiles?.banned_until ?? null,
-        },
-        content: t.content,
-        image: t.image_url || undefined,
-        timestamp: t.created_at,
-        deleted_at: t.deleted_at,
-        is_hidden: t.is_hidden,
-        stats: {
-          replies: t.reply_count ?? 0,
-          likes: t.like_count ?? 0,
-          views: t.view_count ?? 0,
-          retweets: 0,
-        },
-      }));
+      .map(t => {
+        const countryId = (t.profiles as any)?.country;
+        return {
+          type: 'post',
+          id: t.id,
+          user: {
+            id: t.profiles?.id ?? '00000000-0000-0000-0000-000000000000',
+            name: t.profiles?.nickname ?? 'Unknown',
+            username: t.profiles?.user_id ?? 'anonymous',
+            avatar: t.profiles?.avatar_url ?? '/default-avatar.svg',
+            banned_until: t.profiles?.banned_until ?? null,
+            plan: t.profiles?.plan,
+            countryFlag: countryId ? countryMap.get(String(countryId))?.flag_url : null,
+            countryName: countryId ? countryMap.get(String(countryId))?.name : null,
+          },
+          content: t.content,
+          image: t.image_url || undefined,
+          timestamp: t.created_at,
+          deleted_at: t.deleted_at,
+          is_hidden: t.is_hidden,
+          stats: {
+            replies: t.reply_count ?? 0,
+            likes: t.like_count ?? 0,
+            views: t.view_count ?? 0,
+            retweets: 0,
+          },
+        };
+      });
   },
 
   /**
@@ -83,7 +104,7 @@ export const tweetService = {
         tweet_id,
         parent_reply_id,
         root_reply_id,
-        profiles:author_id (id, nickname, user_id, avatar_url, banned_until),
+        profiles:author_id (id, nickname, user_id, avatar_url, banned_until, plan),
         tweet_replies_likes!left(count),
         tweets!left (
           content,
@@ -115,6 +136,7 @@ export const tweetService = {
               username: r.profiles?.user_id ?? 'anonymous',
               avatar: r.profiles?.avatar_url ?? '/default-avatar.svg',
               banned_until: r.profiles?.banned_until ?? null,
+              plan: r.profiles?.plan,
             },
             content: r.content,
             parentTweet: r.tweets?.content, // for display context if needed
@@ -205,7 +227,7 @@ export const tweetService = {
             `
             id, content, image_url, created_at, deleted_at, is_hidden,
             reply_count, like_count, view_count,
-            profiles(id, nickname, user_id, avatar_url, banned_until)
+            profiles(id, nickname, user_id, avatar_url, banned_until, plan, country)
         `,
           )
           .in('id', postIds)
@@ -217,7 +239,7 @@ export const tweetService = {
           .select(
             `
             id, content, created_at, updated_at, tweet_id, deleted_at, is_hidden, parent_reply_id, root_reply_id,
-            profiles(id, nickname, user_id, avatar_url, banned_until),
+            profiles(id, nickname, user_id, avatar_url, banned_until, plan, country),
             tweet_replies_likes(count),
             tweets(content, author_id)
         `,
@@ -259,6 +281,7 @@ export const tweetService = {
               username: p.profiles?.user_id ?? 'anonymous',
               avatar: p.profiles?.avatar_url ?? '/default-avatar.svg',
               banned_until: p.profiles?.banned_until ?? null,
+              plan: p.profiles?.plan,
             },
             content: p.content,
             image: p.image_url,
@@ -289,6 +312,7 @@ export const tweetService = {
               username: r.profiles?.user_id ?? 'anonymous',
               avatar: r.profiles?.avatar_url ?? '/default-avatar.svg',
               banned_until: r.profiles?.banned_until ?? null,
+              plan: r.profiles?.plan,
             },
             content: r.content,
             parentTweet: r.tweets?.content,
@@ -322,7 +346,7 @@ export const tweetService = {
         `
         id, content, image_url, created_at, updated_at, deleted_at, is_hidden,
         reply_count, repost_count, like_count, bookmark_count, view_count,
-        profiles (id, nickname, user_id, avatar_url, banned_until)
+        profiles (id, nickname, user_id, avatar_url, banned_until, plan)
       `,
       )
       .eq('id', tweetId)
@@ -345,6 +369,7 @@ export const tweetService = {
         username: tweet.profiles?.user_id ?? 'anonymous',
         avatar: tweet.profiles?.avatar_url ?? '/default-avatar.svg',
         banned_until: tweet.profiles?.banned_until ?? null,
+        plan: tweet.profiles?.plan,
       },
       content: tweet.content,
       image: tweet.image_url,
@@ -368,10 +393,10 @@ export const tweetService = {
    * Fetch replies for a specific tweet
    * supports pagination or loading all (for jumping to a comment)
    */
-  async getRepliesByTweetId(tweetId: string, page: number, loadAll = false): Promise<UIReply[]> {
+  async getRepliesByTweetId(tweetId: string, page: number, loadAll = false, profileId?: string | null): Promise<UIReply[]> {
     let query = (supabase.from('tweet_replies') as any)
       .select(
-        `id, content, created_at, updated_at, deleted_at, is_hidden, parent_reply_id, root_reply_id, profiles:author_id (id, nickname, user_id, avatar_url, banned_until), tweet_replies_likes (count)`,
+        `id, content, created_at, updated_at, deleted_at, is_hidden, parent_reply_id, root_reply_id, profiles:author_id (id, nickname, user_id, avatar_url, banned_until, plan, country), tweet_replies_likes (count)`,
       )
       .eq('tweet_id', tweetId)
       // .eq('is_hidden', false) // RLS 정책에서 작성자/관리자 예외 처리를 하기 위해 여기서 제거
@@ -389,11 +414,44 @@ export const tweetService = {
     const { data, error } = await query;
     if (error) throw error;
 
-    const replies = (data || []) as unknown as ReplyQueryResponse[];
+    const repliesData = (data || []) as unknown as ReplyQueryResponse[];
 
-    return replies.map(
-      r =>
-        ({
+    // 1. 좋아요 상태 일괄 조회 (로그인 시)
+    let likedIds = new Set<string>();
+    if (profileId && repliesData.length > 0) {
+      const replyIds = repliesData.map(r => r.id);
+      const { data: likeData } = await (supabase.from('tweet_replies_likes') as any)
+        .select('reply_id')
+        .eq('user_id', profileId)
+        .in('reply_id', replyIds);
+      
+      if (likeData) {
+        likedIds = new Set(likeData.map((l: any) => l.reply_id));
+      }
+    }
+
+    // 2. 작성자 국가 정보 일괄 조회
+    let countryMap = new Map<string, { name: string; flag_url: string }>();
+    const countryIds = Array.from(new Set(
+      repliesData.map(r => (r.profiles as any)?.country).filter(Boolean) as string[]
+    ));
+
+    if (countryIds.length > 0) {
+      const { data: countryData } = await (supabase.from('countries') as any)
+        .select('id, name, flag_url')
+        .in('id', countryIds);
+      
+      if (countryData) {
+        countryData.forEach((c: any) => {
+          countryMap.set(String(c.id), { name: c.name, flag_url: c.flag_url });
+        });
+      }
+    }
+
+    return repliesData.map(
+      r => {
+        const countryId = (r.profiles as any)?.country;
+        return {
           type: 'reply',
           id: r.id,
           tweetId,
@@ -405,6 +463,9 @@ export const tweetService = {
             username: r.profiles?.user_id ?? 'anonymous',
             avatar: r.profiles?.avatar_url ?? '/default-avatar.svg',
             banned_until: r.profiles?.banned_until ?? null,
+            plan: r.profiles?.plan,
+            countryFlag: countryId ? countryMap.get(String(countryId))?.flag_url : null,
+            countryName: countryId ? countryMap.get(String(countryId))?.name : null,
           },
           content: r.content,
           deleted_at: r.deleted_at,
@@ -412,6 +473,7 @@ export const tweetService = {
           timestamp: r.created_at,
           createdAt: r.created_at, // for sorting
           updatedAt: r.updated_at ?? undefined,
+          liked: likedIds.has(r.id),
           stats: {
             replies: 0,
             retweets: 0,
@@ -420,7 +482,8 @@ export const tweetService = {
               : 0,
             views: 0,
           },
-        }) as UIReply,
+        } as UIReply;
+      }
     );
   },
 
@@ -431,7 +494,7 @@ export const tweetService = {
   async getRepliesByParentId(parentId: string): Promise<UIReply[]> {
     const { data, error } = await (supabase.from('tweet_replies') as any)
       .select(
-        `id, content, created_at, tweet_id, deleted_at, is_hidden, parent_reply_id, root_reply_id, profiles:author_id (id, nickname, user_id, avatar_url, banned_until), tweet_replies_likes (count), updated_at`,
+        `id, content, created_at, tweet_id, deleted_at, is_hidden, parent_reply_id, root_reply_id, profiles:author_id (id, nickname, user_id, avatar_url, banned_until, plan), tweet_replies_likes (count), updated_at`,
       )
       .eq('parent_reply_id', parentId)
       // .eq('is_hidden', false) // RLS에서 처리
@@ -455,6 +518,7 @@ export const tweetService = {
             username: r.profiles?.user_id ?? 'anonymous',
             avatar: r.profiles?.avatar_url ?? '/default-avatar.svg',
             banned_until: r.profiles?.banned_until ?? null,
+            plan: r.profiles?.plan,
           },
           content: r.content,
           deleted_at: r.deleted_at,

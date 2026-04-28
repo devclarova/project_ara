@@ -125,7 +125,9 @@ const ChatItem = memo(
             </div>
             <div className="flex items-center gap-1">
               <div className="chat-time font-mono">
-                {chat.last_message ? formatTime(chat.last_message.created_at) : ''}
+                {(chat.last_message?.created_at || chat.last_message_at)
+                  ? formatTime(chat.last_message?.created_at || chat.last_message_at!)
+                  : ''}
               </div>
               <div className="relative" ref={menuRef}>
                 <button

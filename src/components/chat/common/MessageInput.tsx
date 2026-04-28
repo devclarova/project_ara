@@ -122,20 +122,29 @@ const MessageInput = memo(({ chatId }: MessageInputProps) => {
         hintTimeoutRef.current = window.setTimeout(() => setPolicyHint(''), 2500);
       }
 
+      // 전송 시작 전 입력창 즉시 비움 (UX 개선)
+      const savedMessage = message;
+      const savedAttachments = [...attachments];
+      setMessage('');
+      setAttachments([]);
+      if (textareaRef.current) textareaRef.current.style.height = 'auto';
+
       setSending(true);
       try {
         const success = await sendMessage({
           chat_id: chatId,
           content: payload,
-          attachments: attachments.map((a: any) => a.file),
+          attachments: savedAttachments.map((a: any) => a.file),
         });
-        if (success) {
-          setMessage('');
-          setAttachments([]);
-          if (textareaRef.current) textareaRef.current.style.height = 'auto';
+        if (!success) {
+          // 실패 시 입력 복원
+          setMessage(savedMessage);
+          setAttachments(savedAttachments);
         }
       } catch (error) {
-        // Error handled silently or could show toast
+        // 에러 시 입력 복원
+        setMessage(savedMessage);
+        setAttachments(savedAttachments);
       } finally {
         setSending(false);
         requestAnimationFrame(() => textareaRef.current?.focus());

@@ -14,6 +14,7 @@ import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useBatchAutoTranslation } from '@/hooks/useBatchAutoTranslation';
+import { useAutoTranslation } from '@/hooks/useAutoTranslation';
 import { supabase } from '../lib/supabase';
 import type { Study } from '../types/study';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,8 +22,8 @@ import SignInModal from '@/components/auth/SignInModal';
 import { BookOpen, ExternalLink } from 'lucide-react';
 import { useMarketingBanners } from '@/hooks/useMarketingBanners';
 
-const ALL_CATEGORIES: TCategory[] = ['전체', '드라마', '영화', '예능', '음악'];
-const ALL_LEVELS: TDifficulty[] = ['', '초급', '중급', '고급'];
+const ALL_CATEGORIES: string[] = ['all', 'drama', 'movie', 'show', 'music'];
+const ALL_LEVELS: TDifficulty[] = ['', 'beginner', 'intermediate', 'advanced'];
 const LEANING_GUIDE_KEY = 'ara-leaning-guide';
 
 const LEANING_GUIDE_SLIDES = (t: any) => [
@@ -48,8 +49,50 @@ const StudyListPage = () => {
 
   // 광고 노출 정책 제어 — 유료 플랜(Premium/Basic) 및 관리자 계정 식별을 통한 인라인 광고 제거 판별
   const isAdFree = userPlan === 'premium' || userPlan === 'basic' || (isAdmin && userPlan !== 'free');
-  const [pageSize, setPageSize] = useState(isAdFree ? 12 : 10);
+
+  const displayCategory = useMemo(() => {
+    const q = searchParams.get('category') ?? 'all';
+    return (ALL_CATEGORIES.includes(q) ? q : 'all');
+  }, [searchParams.get('category')]);
+
+  const [activeCategory, setActiveCategory] = useState<string>(displayCategory);
+  const [levelFilter, setLevelFilter] = useState<TDifficulty>((searchParams.get('level') ?? '') as TDifficulty);
+  // page는 pageSize useEffect보다 먼저 선언되어야 setPage(1) 참조가 유효함
+  const [page, setPage] = useState(parseInt(searchParams.get('page') ?? '1', 10));
+
+  // [반응형 페이지네이션] 화면 너비 및 광고 정책에 따른 DB 페치 수 산출
+  // 배너는 매 3번째 학습 카드 뒤에 삽입 → 2열/3열에서 2개 규칙 분산, 1열에서 1개
+  // 총 노출: 1열=5(4+1), 2열=10(8+2), 3열=9(7+2)
+  const getResponsivePageSize = () => {
+    if (typeof window === 'undefined') return isAdFree ? 9 : 7;
+    const width = window.innerWidth;
+    // 1열 (< 640px): 총 5개 — free: 학습4+배너1 / premium: 학습5
+    if (width < 640) return isAdFree ? 5 : 4;
+    // 2열 (< 1024px): 총 10개 — free: 학습8+배너2 / premium: 학습10
+    if (width < 1024) return isAdFree ? 10 : 8;
+    // 3열 (>= 1024px): 총 9개 — free: 학습7+배너2 / premium: 학습9
+    return isAdFree ? 9 : 7;
+  };
+
+  const [pageSize, setPageSize] = useState(getResponsivePageSize);
   const limit = pageSize;
+
+  // resize 또는 isAdFree 변경 시 pageSize 재계산
+  useEffect(() => {
+    const recalc = () => {
+      const next = getResponsivePageSize();
+      setPageSize(prev => {
+        if (prev !== next) {
+          setPage(1);
+          return next;
+        }
+        return prev;
+      });
+    };
+    recalc();
+    window.addEventListener('resize', recalc);
+    return () => window.removeEventListener('resize', recalc);
+  }, [isAdFree]);
 
   const { banners: inlineBanners, trackClick: trackBannerClick, trackView: trackBannerView } = useMarketingBanners('inline_card');
 
@@ -57,33 +100,36 @@ const StudyListPage = () => {
     if (!isGuideModalDismissed(LEANING_GUIDE_KEY)) setShowGuide(true);
   }, []);
 
-  const displayCategory: TCategory = useMemo(() => {
-    const q = searchParams.get('category') ?? '전체';
-    return (ALL_CATEGORIES.includes(q as TCategory) ? q : '전체') as TCategory;
-  }, [searchParams.get('category')]);
-
-  const [activeCategory, setActiveCategory] = useState<TCategory>(displayCategory);
-  const [levelFilter, setLevelFilter] = useState<TDifficulty>((searchParams.get('level') ?? '') as TDifficulty);
-  const [page, setPage] = useState(parseInt(searchParams.get('page') ?? '1', 10));
-
   const categoryScrollRef = useRef<HTMLDivElement>(null);
   const [isScrollable, setIsScrollable] = useState(false);
 
   // 메타데이터 배치 번역 — 대량의 학습 콘텐츠 제목 및 설명을 타겟 언어로 일괄 변환 처리
   const { translatedTexts: trTitles } = useBatchAutoTranslation(clips.map((c: any) => c.title), clips.map((c: any) => `study_title_${c.id}`), targetLang);
   const { translatedTexts: trDescs } = useBatchAutoTranslation(clips.map((c: any) => c.short_description || ''), clips.map((c: any) => `study_desc_${c.id}`), targetLang);
+  const { translatedTexts: trEpisodes } = useBatchAutoTranslation(clips.map((c: any) => (c.video && c.video?.length > 0 ? c.video[0].episode : '') || ''), clips.map((c: any) => `study_episode_${c.id}`), targetLang);
 
   useEffect(() => {
     let ignore = false;
     const fetchClips = async () => {
-      const needsVideoFilter = activeCategory !== '전체' || levelFilter !== '';
+      const needsVideoFilter = activeCategory !== 'all' || levelFilter !== '';
       let query = (supabase.from('study') as any)
         .select(needsVideoFilter ? '*, video!inner(*)' : '*, video(*)', { count: 'exact' });
       
       query = query.eq('is_hidden', false);
 
-      if (activeCategory !== '전체') query = query.eq('video.categories', activeCategory);
-      if (levelFilter) query = query.eq('video.level', levelFilter);
+      if (activeCategory !== 'all') {
+        const dbCategory = activeCategory === 'show' ? '예능' : 
+                          activeCategory === 'drama' ? '드라마' : 
+                          activeCategory === 'movie' ? '영화' : 
+                          activeCategory === 'music' ? '음악' : activeCategory;
+        query = query.eq('video.categories', dbCategory);
+      }
+      if (levelFilter) {
+        const dbLevel = levelFilter === 'beginner' ? '초급' :
+                        levelFilter === 'intermediate' ? '중급' :
+                        levelFilter === 'advanced' ? '고급' : levelFilter;
+        query = query.eq('video.level', dbLevel);
+      }
       if (keyword.trim()) query = query.ilike('title', `%${keyword.trim()}%`);
       
       const { data, count, error } = await query
@@ -100,11 +146,11 @@ const StudyListPage = () => {
   }, [activeCategory, levelFilter, keyword, page, limit]);
 
   const handleCategoryChange = (c: string) => {
-    const next = (ALL_CATEGORIES.includes(c as TCategory) ? c : '전체') as TCategory;
+    const next = (ALL_CATEGORIES.includes(c) ? c : 'all');
     setActiveCategory(next);
     setPage(1);
     const nextParams = new URLSearchParams(searchParams);
-    if (next === '전체') nextParams.delete('category');
+    if (next === 'all') nextParams.delete('category');
     else nextParams.set('category', next);
     setSearchParams(nextParams, { replace: true });
   };
@@ -141,9 +187,9 @@ const StudyListPage = () => {
                 <CategoryTabs
                   active={activeCategory}
                   onChange={handleCategoryChange}
-                  categories={ALL_CATEGORIES.map((c: any) => ({
+                  categories={ALL_CATEGORIES.map((c) => ({
                     value: c,
-                    label: String(c === '전체' ? t('study.category.all') : t(`study.category.${c.toLowerCase()}`, c))
+                    label: String(t(`study.category.${c}`))
                   }))}
                 />
               </div>
@@ -166,9 +212,9 @@ const StudyListPage = () => {
                     title={t('study.level.title')}
                     labelMap={{
                       '': t('study.level.all'),
-                      초급: t('study.level.beginner'),
-                      중급: t('study.level.intermediate'),
-                      고급: t('study.level.advanced'),
+                      beginner: t('study.level.beginner'),
+                      intermediate: t('study.level.intermediate'),
+                      advanced: t('study.level.advanced'),
                     }}
                   />
                 </div>
@@ -194,7 +240,7 @@ const StudyListPage = () => {
             </div>
 
             <div className="w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 lg:max-w-[1200px] xl:max-w-[1320px] 2xl:max-w-[1400px]">
-              <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
                 {clips.length > 0 ? (
                   clips.reduce<React.ReactNode[]>((acc, study, index) => {
                     const originalIndex = clips.findIndex(c => c.id === study.id);
@@ -204,13 +250,16 @@ const StudyListPage = () => {
                         key={study.id}
                         id={study.id}
                         image={study.poster_image_url}
-                        title={originalIndex >= 0 ? (trTitles[originalIndex] ?? study.title ?? '') : (study.title || '')}
-                        short_description={originalIndex >= 0 ? (trDescs[originalIndex] ?? study.short_description ?? '') : (study.short_description || '')}
+                        title={study.title || ''}
+                        translatedTitleProp={originalIndex >= 0 ? trTitles[originalIndex] : null}
+                        short_description={study.short_description || ''}
+                        translatedDescProp={originalIndex >= 0 ? trDescs[originalIndex] : null}
                         contents={v?.contents || ''}
                         episode={v?.episode || ''}
                         scene={v?.scene || ''}
                         level={v?.level || ''}
                         duration={typeof v?.runtime_bucket === 'string' ? v.runtime_bucket : null}
+                        translatedEpisodeProp={originalIndex >= 0 ? trEpisodes[originalIndex] : null}
                         basePath={user ? '/study' : '/guest-study'}
                         isGuest={!user}
                         isPreview={study.is_featured}
@@ -220,19 +269,16 @@ const StudyListPage = () => {
                       />
                     );
 
-                    {/* 프로모션 삽입 엔진 — 콘텐츠 리스트 사이의 마케팅 배너 동적 배치 및 유입 트래킹 */}
-                    if (!isAdFree && (index + 1) % 5 === 0) {
+                    // 배너 삽입: 매 3번째 학습 카드 뒤 삽입 (규칙적 간격 배치)
+                    if (!isAdFree && (index + 1) % 3 === 0) {
                       const globalIndex = ((page - 1) * limit) + index;
                       const hasBanners = inlineBanners.length > 0;
                       const bannerIndex = hasBanners ? (Math.floor(globalIndex / 5) % inlineBanners.length) : 0;
                       const banner = hasBanners ? inlineBanners[bannerIndex] : null;
                       
                       acc.push(
-                        <motion.div
+                        <div
                           key={`marketing-${globalIndex}-${banner?.id || 'default'}`}
-                          initial={{ opacity: 0, y: 20 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true }}
                           onClick={() => {
                             if (banner) {
                               trackBannerClick(banner.id);
@@ -241,37 +287,45 @@ const StudyListPage = () => {
                               window.location.href = '/subscription';
                             }
                           }}
-                          onViewportEnter={() => banner && trackBannerView(banner.id)}
-                          className="relative aspect-[4/3] rounded-3xl overflow-hidden cursor-pointer group shadow-sm hover:shadow-xl transition-all duration-500 bg-gray-100 dark:bg-zinc-900 border border-gray-100 dark:border-white/5"
+                          className="group relative flex flex-col h-full rounded-xl shadow-lg cursor-pointer transition-all hover:shadow-xl sm:scale-[0.95] md:scale-100 sm:hover:scale-[0.98] origin-top duration-300 overflow-hidden transform-gpu ring-1 ring-transparent bg-white dark:bg-secondary"
                         >
-                          {banner?.image_url ? (
-                            <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-[#00E5FF]/20 to-[#00BFA5]/20 flex flex-col items-center justify-center p-8 text-center">
-                              <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 border border-white/20">
-                                <span className="text-xl font-black text-[#00BFA5]">A</span>
+                          {/* 이미지 구조 정석화 (Aspect-video 고정) */}
+                          <div className="card__media aspect-video relative w-full overflow-hidden rounded-t-xl">
+                            {banner?.image_url ? (
+                              <img src={banner.image_url} alt={banner.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                            ) : (
+                              <div className="absolute inset-0 bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900 flex flex-col items-center justify-center p-8 text-center border border-gray-100 dark:border-white/5">
+                                <h4 className="text-base font-bold text-gray-900 dark:text-white mb-1 leading-tight">
+                                  {t('study.promotion.premium_title')}
+                                </h4>
+                                <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                                  {t('study.promotion.premium_desc')}
+                                </p>
                               </div>
-                              <h4 className="text-lg font-black text-gray-900 dark:text-white mb-2 leading-tight">
-                                {t('study.promotion.premium_title')}
-                              </h4>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                                {t('study.promotion.premium_desc')}
-                              </p>
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+                            <div className="absolute inset-0 p-3 sm:p-5 flex flex-col justify-end">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="px-1.5 py-0.5 rounded-md bg-white/20 backdrop-blur-md text-[8px] sm:text-[9px] font-black text-white tracking-widest border border-white/10 uppercase">
+                                  {banner ? t('study.promotion.ad_badge') : t('study.promotion.promo_badge')}
+                                </span>
+                              </div>
+                              <BannerTitle banner={banner} fallback={t('study.promotion.premium_title')} />
                             </div>
-                          )}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
-                          <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-md text-[10px] font-black text-white tracking-widest border border-white/10 uppercase">
-                                {banner ? t('study.promotion.ad_badge') : t('study.promotion.promo_badge')}
-                              </span>
-                              {(banner?.link_url || !banner) && <ExternalLink size={14} className="text-white/60" />}
-                            </div>
-                            <h4 className="text-xl font-black text-white leading-tight tracking-tight">
-                              {banner?.title || t('study.promotion.premium_title')}
-                            </h4>
                           </div>
-                        </motion.div>
+
+                          {/* 본문 구조 정석화 (flex-1 적용하여 높이 동기화) */}
+                          <div className="flex-1 px-2 py-2 sm:px-3 sm:py-2 md:px-4 md:py-2">
+                            <div className="grid min-h-20 flex flex-col justify-center">
+                              <div className="flex items-center justify-between opacity-50">
+                                <span className="text-[10px] md:text-[11px] font-black text-gray-400 uppercase tracking-tighter">Premium Collection</span>
+                                <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary/60">
+                                  <ExternalLink size={10} />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       );
                     }
                     return acc;
@@ -282,7 +336,7 @@ const StudyListPage = () => {
                 <SignInModal isOpen={showSignIn} onClose={() => setShowSignIn(false)} />
               </div>
 
-              {totalPages > 1 && (
+              {totalPages >= 1 && (
                 <div className="mt-12">
                   <Pagination totalPages={totalPages} page={page} onPageChange={setPage} windowSize={5} autoScrollTop={true} />
                 </div>
@@ -294,5 +348,30 @@ const StudyListPage = () => {
     </div>
   );
 };
+
+function BannerTitle({ banner, fallback }: { banner: any, fallback: string }) {
+  const { t, i18n } = useTranslation();
+  const title = banner?.title || '';
+
+  // [Surgical Tip] 마케팅 구독 수동 번역 키 우선 적용 (번역 딜레이 방지)
+  if (banner?.id?.includes('subscription') || title.toLowerCase().includes('subscription')) {
+    const manualTitle = t('marketing.subscription.title');
+    if (manualTitle && manualTitle !== 'marketing.subscription.title') {
+      return (
+      <h4 className="text-sm sm:text-[13px] md:text-base font-black text-white leading-tight tracking-tight drop-shadow-sm line-clamp-1">
+        {manualTitle}
+      </h4>
+    );
+  }
+}
+
+const { translatedText } = useAutoTranslation(title, `banner_title_inline_${banner?.id}`, i18n.language);
+
+return (
+  <h4 className="text-sm sm:text-[13px] md:text-base font-black text-white leading-tight tracking-tight drop-shadow-sm line-clamp-1">
+    {translatedText || title || fallback}
+  </h4>
+);
+}
 
 export default StudyListPage;

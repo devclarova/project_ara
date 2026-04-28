@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import StudyVocaItem from './StudyVocaItem';
 import EpisodeVocabModal, { type EpisodeWord } from '@/components/study/EpisodeVocaModal';
+import { useTranslation } from 'react-i18next';
+import { useBatchAutoTranslation } from '@/hooks/useBatchAutoTranslation';
+import { romanizeKorean, hasKorean } from '@/utils/romanize';
 
 type WordRow = {
   id: number;
@@ -61,6 +64,7 @@ const StudyVoca = ({
   sourceStudyPath,
   sourceStudyTitle,
 }: StudyVocaProps) => {
+  const { t } = useTranslation();
   const controlled = Array.isArray(words) && words.length > 0;
 
   const [localWords, setLocalWords] = useState<WordItem[]>([]);
@@ -178,6 +182,40 @@ const StudyVoca = ({
   const end = start + pageSize;
   const currentData = data.slice(start, end);
 
+  // 글로벌 번역 파이프라인 — 리스트뿐만 아니라 모달 진입 시의 지연을 방지하기 위해 전체 데이터에 대해 일괄 번역 수행
+  const { i18n } = useTranslation();
+  const targetLang = i18n.language;
+  const isKorean = targetLang.toLowerCase().startsWith('ko');
+
+  const combinedTexts = useMemo(() => {
+    const meanings = data.map(w => w.meaning || '');
+    const prons = data.map(w => {
+      const p = w.pron || '';
+      return (!isKorean && p) ? `[${p}]` : p;
+    });
+    const examples = data.map(w => w.example || '');
+    const poses = data.map(w => w.pos || '');
+    return [...meanings, ...prons, ...examples, ...poses];
+  }, [data, isKorean]);
+
+  const combinedKeys = useMemo(() => {
+    const meanings = data.map(w => `voca_meaning_${w.id}`);
+    const prons = data.map(w => `voca_pron_v4_${w.id}`);
+    const examples = data.map(w => `voca_example_${w.id}`);
+    const poses = data.map(w => `voca_pos_${w.id}`);
+    return [...meanings, ...prons, ...examples, ...poses];
+  }, [data]);
+
+  const { translatedTexts } = useBatchAutoTranslation(combinedTexts, combinedKeys, targetLang);
+
+  const getTr = (fieldIdx: number, itemIdx: number) => {
+    let tr = translatedTexts[fieldIdx * data.length + itemIdx] || '';
+    if (fieldIdx === 1 && tr.startsWith('[') && tr.endsWith(']')) {
+      tr = tr.slice(1, -1);
+    }
+    return tr;
+  };
+
   const isLastPage = currentPage * pageSize + pageSize >= data.length;
   const isFirstPage = currentPage === 0;
 
@@ -191,28 +229,38 @@ const StudyVoca = ({
     setIsModalOpen(true);
   };
 
-  if (!controlled && loading) return <p className="p-3 text-sm text-gray-500">보카 불러오는 중…</p>;
-  if (!controlled && error) return <p className="p-3 text-sm text-red-600">보카 오류: {error}</p>;
+  if (!controlled && loading) return <p className="p-3 text-sm text-gray-500">{t('study.voca.loading', 'Loading vocabulary...')}</p>;
+  if (!controlled && error) return <p className="p-3 text-sm text-red-600">{t('study.voca.error', 'Voca error')}: {error}</p>;
   if (!currentData || currentData.length === 0)
-    return <p className="p-3 text-sm text-gray-500">단어가 없습니다.</p>;
+    return <p className="p-3 text-sm text-gray-500">{t('study.voca.no_words', 'No words found.')}</p>;
 
   return (
     <div>
       <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${className ?? ''}`}>
-        {currentData.map((w, i) => (
-          <div
-            key={w.id ?? i}
-            role="button"
-            tabIndex={0}
-            onClick={() => openModal(w)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' || e.key === ' ') openModal(w);
-            }}
-            className="cursor-pointer"
-          >
-            <StudyVocaItem item={w} id={w.id ?? i} />
-          </div>
-        ))}
+        {currentData.map((w, i) => {
+          const globalIdx = start + i;
+          return (
+            <div
+              key={w.id ?? i}
+              role="button"
+              tabIndex={0}
+              onClick={() => openModal(w)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') openModal(w);
+              }}
+              className="cursor-pointer"
+            >
+              <StudyVocaItem
+                item={w}
+                id={w.id ?? i}
+                translatedMeaningProp={translatedTexts[globalIdx] || undefined}
+                translatedPronProp={translatedTexts[data.length + globalIdx] || undefined}
+                translatedExampleProp={translatedTexts[data.length * 2 + globalIdx] || undefined}
+                translatedPosProp={translatedTexts[data.length * 3 + globalIdx] || undefined}
+              />
+            </div>
+          );
+        })}
       </div>
 
       {data.length > pageSize && (
@@ -295,7 +343,7 @@ const StudyVoca = ({
         onClose={() => setIsModalOpen(false)}
         words={modalWords}
         initialWordId={initialWordId}
-        title="단어 카드"
+        title={t('study.voca.modal_title', 'Word Card')}
         sourceStudyPath={sourceStudyPath}
         sourceStudyTitle={sourceStudyTitle}
       />

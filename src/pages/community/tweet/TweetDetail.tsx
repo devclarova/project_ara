@@ -18,7 +18,7 @@ import { getErrorMessage } from '@/utils/errorMessage';
 export default function TweetDetail() {
   const { t } = useTranslation();
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, profileId } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -361,7 +361,7 @@ export default function TweetDetail() {
 
     try {
       // setIsLoading(true); // 무한 스크롤 시 전체 로딩 걸리는 문제 수정
-      const mapped = await tweetService.getRepliesByTweetId(tweetId, pageParam, shouldLoadAll);
+      const mapped = await tweetService.getRepliesByTweetId(tweetId, pageParam, shouldLoadAll, profileId);
 
       // 차단 필터링 적용
       const filtered = mapped.filter(r => !blockedIds.includes(r.user.username));
@@ -417,7 +417,7 @@ export default function TweetDetail() {
             return prev;
           });
           const { data: profile } = await (supabase.from('profiles') as any)
-            .select('nickname, user_id, avatar_url')
+            .select('nickname, user_id, avatar_url, plan')
             .eq('id', newReply.author_id)
             .maybeSingle();
           const formattedReply = {
@@ -430,6 +430,7 @@ export default function TweetDetail() {
               name: profile?.nickname ?? t('common.unknown', 'Unknown'),
               username: profile?.user_id ?? t('common.anonymous', 'anonymous'),
               avatar: profile?.avatar_url ?? '/default-avatar.svg',
+              plan: profile?.plan,
             },
             content: newReply.content,
             // timestamp: new Date(newReply.created_at ?? Date.now()).toLocaleString('ko-KR', {

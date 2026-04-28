@@ -40,6 +40,8 @@ type VocabItem = {
   sourceStudyTitle?: string;
 };
 
+const normalize = (v?: string | null) => (v ?? '').trim();
+
 const VOCAB_LS_KEY = 'ara_vocab_mock_v1';
 
 function loadVocab(): VocabItem[] {
@@ -99,17 +101,41 @@ function VocabCard({ v, onOpen, onDelete, onChangeStatus }: VocabCardProps) {
     targetLang,
   );
 
+  const { translatedText: translatedTerm } = useAutoTranslation(
+    v.term,
+    `voca_page_term_${v.id}`,
+    targetLang,
+  );
+
   const { translatedText: translatedPos } = useAutoTranslation(
     posSrc,
     `voca_page_pos_${v.id}`,
     targetLang,
   );
 
+  // 품사(PoS) 매핑 엔진 — 한국어 원문 품사(괄호 포함 가능)를 다국어 키로 변환하여 로컬라이징 결과 보정
+  const posMap: Record<string, string> = {
+    '명사': 'voca.pos.noun',
+    '동사': 'voca.pos.verb',
+    '형용사': 'voca.pos.adjective',
+    '부사': 'voca.pos.adverb',
+    '대명사': 'voca.pos.pronoun',
+    '수사': 'voca.pos.numeral',
+    '관형사': 'voca.pos.determiner',
+    '조사': 'voca.pos.particle',
+    '감탄사': 'voca.pos.interjection',
+  };
+  
+  const cleanPos = posSrc.replace(/[()]/g, '');
+  const mappedPosKey = posMap[cleanPos];
+  const mappedPos = mappedPosKey ? t(mappedPosKey) : null;
+
+  const displayTerm = isKorean ? v.term : (normalize(translatedTerm) || v.term);
   const displayMeaning = isKorean ? meaningSrc : translatedMeaning?.trim() || meaningSrc;
   const displayExample = isKorean
     ? exampleKoSrc || exampleTrSrc
     : translatedExampleKo?.trim() || exampleTrSrc || exampleKoSrc;
-  const displayPos = isKorean ? posSrc : translatedPos?.trim() || posSrc;
+  const displayPos = isKorean ? posSrc : (mappedPos || translatedPos?.trim() || posSrc);
 
   return (
     <div
@@ -124,15 +150,19 @@ function VocabCard({ v, onOpen, onDelete, onChangeStatus }: VocabCardProps) {
       <div className="flex justify-between items-start gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="font-bold text-gray-900 dark:text-gray-100 truncate">{v.term}</div>
+            <div className="font-bold text-gray-900 dark:text-gray-100 truncate">{displayTerm}</div>
 
             {v.pron && (
               <div className="text-[11px] text-gray-400 whitespace-nowrap">[{v.pron}]</div>
             )}
           </div>
-          <div className="mt-1 min-h-[16px] text-[11px] text-gray-400">
-            {displayPos ? `(${displayPos})` : ''}
-          </div>
+          {displayPos ? (
+            <div className="mt-1 min-h-[16px] text-[11px] text-gray-400">
+              ({displayPos})
+            </div>
+          ) : (
+            <div className="mt-1 min-h-[16px]" />
+          )}
           <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">{displayMeaning}</div>
         </div>
 
@@ -169,7 +199,7 @@ function VocabCard({ v, onOpen, onDelete, onChangeStatus }: VocabCardProps) {
                 : 'ring-primary/60 hover:ring-primary'
             }`}
           >
-            {st}
+            {t(`study.voca.status_${st}`, st)}
           </button>
         ))}
       </div>
@@ -412,9 +442,9 @@ export default function StudyVocaPage() {
             title={t('study.voca.status_title')}
             options={[
               { label: t('study.voca.status_all'), value: 'all' },
-              { label: 'unknown', value: 'unknown' },
-              { label: 'learning', value: 'learning' },
-              { label: 'known', value: 'known' },
+              { label: t('study.voca.status_unknown'), value: 'unknown' },
+              { label: t('study.voca.status_learning'), value: 'learning' },
+              { label: t('study.voca.status_known'), value: 'known' },
             ]}
           />
 

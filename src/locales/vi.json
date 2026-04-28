@@ -11,7 +11,9 @@
     "post": "Đăng",
     "admin": "Chế độ quản trị",
     "admin_dashboard": "Bảng điều khiển quản trị",
-    "goods": "Cửa hàng"
+    "goods": "Cửa hàng",
+    "voca": "Sổ từ vựng",
+    "admin_goods": "Quản lý sản phẩm"
   },
   "notification": {
     "like_feed": "đã thích bài viết của bạn.",
@@ -60,8 +62,23 @@
       "reporter_target": "<strong>• Đối tượng bị báo cáo:</strong> {{target}}",
       "reporter_reason": "<strong>• Lý do báo cáo:</strong> {{reason}}",
       "reporter_action": "<strong>• Biện pháp xử lý:</strong> {{action}}",
-      "reporter_footer": "<br/>Cảm ơn bạn đã luôn quan tâm."
-    }
+      "reporter_footer": "<br/>Cảm ơn bạn đã luôn quan tâm.",
+      "ban_permanent": "Your account has been permanently banned.",
+      "ban_permanent_desc": "Account access has been permanently restricted by administrators.",
+      "ban_temporary_title": "Account access restricted.",
+      "ban_temporary_desc": "Access restricted by administrator until {{date}}.",
+      "security_contact_admin": "Contact system administrator if you believe this is an error.",
+      "identifier_label": "Your Identifier",
+      "security_denied_ip": "Access denied: Unauthorized IP address.",
+      "security_denied_generic": "Access restricted by security policy."
+    },
+    "new_arrived": "Có thông báo mới",
+    "photo_content": "[Hình ảnh]",
+    "follow_you": "đã bắt đầu theo dõi bạn",
+    "follow_request": "đã gửi yêu cầu theo dõi",
+    "accept": "Chấp nhận",
+    "decline": "Từ chối",
+    "no_content_available": "Không thể tải nội dung"
   },
   "study": {
     "studylist": "Danh sách học",
@@ -71,8 +88,8 @@
       "all": "Tất cả",
       "drama": "Phim bộ",
       "movie": "Phim lẻ",
-      "entertainment": "Giải trí",
-      "music": "Âm nhạc"
+      "music": "Âm nhạc",
+      "show": "Chương trình giải trí"
     },
     "level": {
       "title": "Độ khó",
@@ -98,12 +115,75 @@
     "meta_desc_default": "Học tiếng Hàn vui vẻ tại ARA",
     "study_card_title": "Thẻ học tập",
     "vocab_explanation": "Giải thích từ vựng",
-    "culture_note": "Ghi chú văn hóa",
+    "culture_note": {
+      "title": "Ghi chú văn hóa",
+      "loading": "...",
+      "error": "Error",
+      "empty": "Empty",
+      "default_title": "Ghi chú văn hóa",
+      "empty_list": "No data"
+    },
     "subtitle_title": "Phụ đề",
     "subtitle_loading": "Đang tải phụ đề...",
     "subtitle_no_data": "Không có dữ liệu phụ đề.",
     "login_required": "Cần đăng nhập",
-    "preview": "Xem trước"
+    "preview": "Xem trước",
+    "voca": {
+      "pos": {
+        "noun": "Noun",
+        "verb": "Verb",
+        "adjective": "Adjective",
+        "adverb": "Adverb",
+        "pronoun": "Pronoun",
+        "numeral": "Numeral",
+        "particle": "Particle",
+        "interjection": "Interjection",
+        "determiner": "Determiner"
+      },
+      "example_label": "Ví dụ",
+      "delete_confirm": {
+        "title_single": "Xóa từ",
+        "title_all": "Xóa tất cả",
+        "desc_single": "Bạn có muốn xóa từ này không?",
+        "desc_all": "Bạn có muốn xóa tất cả các từ không?"
+      },
+      "description": "Bạn có thể xem lại các từ đã lưu.",
+      "title": "Sổ từ vựng",
+      "btn_quiz": "Câu đố",
+      "btn_back_to_study": "Đến học tập",
+      "search_placeholder": "Tìm kiếm từ/ý nghĩa/câu ví dụ/loại từ/phát âm",
+      "status_title": "Trạng thái học tập",
+      "status_all": "Tất cả",
+      "btn_delete_all": "Xóa tất cả",
+      "btn_delete_all_title": "Khởi tạo sổ từ vựng",
+      "empty_message": "Không có từ nào được lưu.",
+      "empty_cta": "Hãy lưu từ trong trang học tập.",
+      "modal_cta": "Đến tập phim",
+      "episode_cta": "Di chuyển đến tập phim",
+      "aria_delete": "Xóa từ",
+      "status_learning": "Đang học",
+      "status_known": "Hoàn thành học tập",
+      "status_unknown": "Chưa học"
+    },
+    "culture_note_label": "Ghi chú văn hóa",
+    "promotion": {
+      "premium_title": "Project ARA Premium",
+      "premium_desc": "Hãy trải nghiệm học tập không quảng cáo và các tập độc quyền.",
+      "ad_badge": "QUẢNG CÁO",
+      "promo_badge": "KHUYẾN MÃI",
+      "guide_alt_1": "Hướng dẫn sử dụng ARA Study 1",
+      "guide_alt_2": "Hướng dẫn sử dụng ARA Study 2",
+      "guide_alt_3": "Hướng dẫn cách sử dụng ARA Study 3",
+      "guide_alt_4": "Hướng dẫn cách sử dụng ARA Study 4",
+      "guide_alt_5": "Hướng dẫn cách sử dụng ARA Study 5"
+    },
+    "episode_label": "Tập phim",
+    "scene_label": "Cảnh",
+    "voca_btn": "Từ điển của tôi",
+    "meta_desc_scene": "Hãy học nghe và diễn đạt tiếng Hàn qua cảnh {{contents}} {{episode}} {{scene}}.",
+    "aria_prev_episode": "Tập trước",
+    "aria_next_episode": "Tập tiếp theo",
+    "meta_title": "ARA - Nền tảng học tiếng Hàn dựa trên nội dung K"
   },
   "auth": {
     "login": "Đăng nhập",
@@ -147,7 +227,21 @@
     "restore_desc_2": "Bạn có muốn khôi phục tài khoản không?",
     "restore_remaining": "Còn {{days}} ngày cho đến khi xóa vĩnh viễn.",
     "restore_confirm": "Khôi phục tài khoản",
-    "signin": "Đăng nhập"
+    "signin": "Đăng nhập",
+    "relink_previously_unlinked": "Đây là tài khoản SNS đã được hủy kích hoạt trước đó",
+    "check_verification_email": "Vui lòng kiểm tra liên kết xác thực được gửi qua email",
+    "profile_not_found_contact_admin": "Hồ sơ chưa được tạo. Vui lòng liên hệ với quản trị viên.",
+    "auth_failed": "Xác thực thất bại.",
+    "relink_notice_title": "Hướng dẫn kết nối lại SNS",
+    "relink_security_guide": "Vì lý do bảo mật, vui lòng đăng nhập bằng email, sau đó kết nối lại trực tiếp tại [Cài đặt > Quản lý kết nối SNS].",
+    "relink_cross_account_desc": "Tài khoản {{provider}} này đã được kết nối trước đó với tài khoản <span class=\"font-bold text-primary\">{{email}}</span>.",
+    "relink_manual_guide": "Vì lý do bảo mật, vui lòng đăng nhập bằng email và kết nối lại tại [Cài đặt].",
+    "choose_start_method": "Bạn muốn bắt đầu với email nào?",
+    "login_with_email": "Đăng nhập bằng email",
+    "duplicate_prevent_title": "Hướng dẫn ngăn chặn trùng lặp tài khoản SNS",
+    "preview_alt": "Xem trước",
+    "cover_preview_alt": "Xem trước bìa",
+    "ban_message_template": "Trong trạng thái hạn chế sử dụng, bạn không thể {{action}}.\nThời gian hạn chế sử dụng: ~{{date}} (còn {{days}} ngày)"
   },
   "signup": {
     "title_social": "Đăng Ký Mạng Xã Hội",
@@ -187,6 +281,7 @@
     "already_in_use": "Đã được sử dụng.",
     "gender_male": "Nam",
     "gender_female": "Nữ",
+    "gender_other": "Khác",
     "label_gender": "Giới Tính",
     "error_gender_required": "Vui lòng chọn giới tính.",
     "label_birth": "Ngày Sinh",
@@ -215,26 +310,29 @@
     "agree_and_close": "Đồng ý và đóng"
   },
   "recovery": {
-    "section_title": "Thông tin khôi phục (Bắt buộc)",
-    "section_description": "Được sử dụng để khôi phục tài khoản nếu bạn quên email.",
-    "question_label": "Chọn câu hỏi",
-    "question_placeholder": "Chọn một câu hỏi",
+    "section_description": "Thiết lập phương thức khôi phục tài khoản an toàn khi quên ID/Mật khẩu.",
+    "partial_setup_guide": "Chỉ cần thiết lập câu hỏi bảo mật hoặc email khôi phục là có thể khôi phục tài khoản.",
+    "set_question_title": "Thiết lập câu hỏi bảo mật",
+    "question_label": "Câu hỏi bảo mật",
+    "question_placeholder": "Vui lòng chọn câu hỏi",
     "answer_label": "Câu trả lời",
-    "answer_placeholder": "Nhập câu trả lời của bạn (tối thiểu 2 ký tự)",
-    "temp_email_label": "Email dự phòng",
-    "temp_email_placeholder": "example@email.com",
-    "temp_email_description": "Một địa chỉ email bổ sung để nhận các liên kết khôi phục nếu bạn mất quyền truy cập vào tài khoản chính của mình.",
-    "question_favorite_color": "Màu sắc yêu thích của bạn là gì?",
-    "question_pet_name": "Tên của thú cưng đầu tiên của bạn là gì?",
-    "question_birthplace": "Bạn sinh ra ở thành phố nào?",
-    "question_first_school": "Tên trường học đầu tiên của bạn là gì?",
-    "question_favorite_teacher": "Tên giáo viên đáng nhớ nhất của bạn là gì?",
+    "answer_placeholder": "Nhập câu trả lời (tối thiểu 2 ký tự)",
+    "answer_placeholder_already_set": "Câu trả lời đã được thiết lập (có thể chỉnh sửa)",
+    "set_email_title": "Thiết lập email khôi phục",
+    "temp_email_label": "Địa chỉ email",
+    "temp_email_placeholder": "Nhập email khôi phục",
+    "temp_email_description": "Vui lòng nhập địa chỉ email khác với email chính.",
+    "question_favorite_color": "Màu yêu thích nhất là gì?",
+    "question_pet_name": "Tên thú cưng đầu tiên của bạn?",
+    "question_birthplace": "Nơi sinh của bạn ở đâu?",
+    "question_first_school": "Ngôi trường đầu tiên bạn học tên là gì?",
+    "question_favorite_teacher": "Giáo viên đáng nhớ nhất là ai?",
     "question_childhood_nickname": "Biệt danh thời thơ ấu của bạn là gì?",
-    "question_mothers_maiden": "Tên thời con gái của mẹ bạn là gì?",
-    "question_favorite_food": "Món ăn yêu thích của bạn là gì?",
-    "question_first_car": "Mẫu xe hơi đầu tiên của bạn là gì?",
-    "question_favorite_movie": "Bộ phim yêu thích của bạn là gì?",
-    "question_parents_met_city": "Cha mẹ bạn đã gặp nhau ở thành phố nào?"
+    "question_mothers_maiden": "Họ và tên của mẹ bạn?",
+    "question_favorite_food": "Món ăn yêu thích nhất là gì?",
+    "question_first_car": "Mẫu xe ô tô đầu tiên của bạn?",
+    "question_favorite_movie": "Bộ phim yêu thích nhất của bạn?",
+    "question_parents_met_city": "Nơi bố mẹ bạn gặp nhau lần đầu?"
   },
   "validation": {
     "required_email": "Vui lòng nhập địa chỉ email",
@@ -267,11 +365,16 @@
     "nickname_lang_unknown": "Chứa ký tự không được hỗ trợ",
     "nickname_invalid_chars": "Chứ ký tự không hợp lệ",
     "nickname_length": "Biệt danh phải từ {min} đến {max} ký tự",
-    "recovery_question_required": "Vui lòng chọn một câu hỏi",
+    "recovery_question_required": "Vui lòng chọn câu hỏi",
     "recovery_answer_required": "Vui lòng nhập câu trả lời",
-    "recovery_answer_too_short": "Câu trả lời phải có ít nhất 2 ký tự",
-    "recovery_email_invalid": "Định dạng địa chỉ email không hợp lệ",
-    "recovery_email_same_as_primary": "Không thể sử dụng cùng email đăng ký."
+    "recovery_answer_too_short": "Câu trả lời phải có ít nhất 2 ký tự.",
+    "recovery_email_invalid": "Vui lòng nhập địa chỉ email hợp lệ.",
+    "recovery_email_same_as_primary": "Không thể sử dụng cùng email đăng ký.",
+    "thumbnail": "Hình thu nhỏ",
+    "scroll_to_top": "Cuộn lên đầu",
+    "image_count": "Hình ảnh {{count}} cái",
+    "retry": "Thử lại",
+    "check_duplicate": "Kiểm tra trùng lặp"
   },
   "common": {
     "ara_team": "Đội ngũ ARA",
@@ -321,7 +424,83 @@
       "dismissed": "Báo cáo bị bác bỏ"
     },
     "cancel_like": "Bỏ thích",
-    "success_like": "Đã thích"
+    "success_like": "Đã thích",
+    "sponsored": "Được tài trợ",
+    "translated": "Đã dịch",
+    "auto_translated": "Dịch tự động bởi AI",
+    "view_details": "Xem chi tiết",
+    "read_more": "Xem chi tiết",
+    "add": "Thêm",
+    "block_modal_title": "Are you sure you want to block?",
+    "block_modal_notice_1": "You will automatically leave the 1:1 chat with this user.",
+    "block_modal_notice_2": "You will not receive any more messages from this user.",
+    "block_modal_notice_3": "This user's posts will be hidden from the community feed.",
+    "block_modal_notice_4": "This user's comments will be masked in the community.",
+    "block_modal_warning": "You can manage blocked users in 'Settings > Blocked Users'.",
+    "unblock_modal_title": "Do you want to unblock this user?",
+    "or": "or",
+    "date_format_short": "Ngày d tháng M",
+    "file_size_error": "Kích thước tệp {{name}} vượt quá {{size}}.",
+    "checking": "Đang kiểm tra...",
+    "thumbnail": "Hình thu nhỏ",
+    "image_count": "Hình ảnh {{count}} cái",
+    "retry": "Thử lại",
+    "scroll_to_top": "Cuộn lên đầu trang",
+    "user_initials": "Người dùng",
+    "more": "Xem thêm",
+    "my_voca": "Sổ từ vựng",
+    "view_voca": "Xem sổ từ vựng của tôi",
+    "deleted_user": "Người dùng đã rút lui",
+    "error_label": "Lỗi",
+    "today": "Hôm nay",
+    "yesterday": "Hôm qua",
+    "just_now": "Vừa mới",
+    "error_image_size": "Kích thước của tệp {{name}} vượt quá {{size}}.",
+    "block_user": "Chặn {{name}}",
+    "unblock_user": "Bỏ chặn {{name}}",
+    "block_user_desc": "Nếu chặn, bạn sẽ không thể xem hồ sơ của nhau và không thể gửi tin nhắn.",
+    "blocked_user_alert": "Người dùng bị chặn.",
+    "blocked_users": "Người dùng bị chặn",
+    "blocked_users_desc": "Quản lý danh sách người dùng đã chặn.",
+    "no_blocked_users": "Không có người dùng nào bị chặn.",
+    "confirm_unblock": "Bạn có chắc chắn muốn bỏ chặn không?",
+    "edit_mode": "Chuyển sang chế độ chỉnh sửa.",
+    "blocked_comment_msg": "Bình luận của người bị chặn",
+    "view_content": "Xem nội dung",
+    "hide_content": "Ẩn lại",
+    "mask_comments": "Bình luận bị che",
+    "hide_posts": "Bài viết bị ẩn",
+    "anonymous": "Ẩn danh",
+    "share_default_text": "Học tiếng Hàn vui vẻ! Chia sẻ cảnh học tập tại ARA.",
+    "copy_link_prompt": "Sao chép liên kết dưới đây:",
+    "submitting": "Đang gửi...",
+    "user": "Người dùng",
+    "unknown": "Không xác định",
+    "premium_member": "Thành viên cao cấp",
+    "country": "Quốc gia",
+    "edited": "Đã chỉnh sửa",
+    "hidden": "Đã ẩn",
+    "show_more": "Xem thêm",
+    "collapse": "Thu gọn",
+    "hidden_content": "Nội dung bị ẩn",
+    "deleted_post": "Bài viết đã bị xóa",
+    "edit_post": "Chỉnh sửa bài viết",
+    "upload_success": "Tải lên hoàn tất!",
+    "upload_failed": "Tải lên thất bại",
+    "remask": "Ẩn lại",
+    "add_image": "Thêm hình ảnh",
+    "uploading": "Đang tải lên...",
+    "prompt_image_url": "Vui lòng nhập URL hình ảnh",
+    "add_url": "Thêm URL",
+    "image_reply": "Hình ảnh trả lời",
+    "image_tweet": "Hình ảnh bài viết",
+    "me": "Tôi",
+    "avatar": "Hình đại diện",
+    "preview": "Xem trước",
+    "advertisement": "Quảng cáo",
+    "replies": "Bình luận",
+    "likes": "Thích",
+    "views": "Lượt xem"
   },
   "settings": {
     "languageSelect": "Ngôn ngữ",
@@ -331,40 +510,54 @@
       "dark": "Tối",
       "system": "Hệ thống"
     },
+    "theme": "Giao diện",
     "system": "Hệ thống",
     "language": "Ngôn ngữ",
-    "theme": "Giao diện",
+    "title_language": "Đổi ngôn ngữ",
+    "title_theme": "Đổi giao diện",
+    "title_password_change": "Đổi mật khẩu",
+    "title_recovery": "Cài đặt khôi phục tài khoản",
+    "title_sns_connect": "Liên kết tài khoản SNS",
+    "title_withdraw": "Xóa tài khoản",
+    "title_terms": "Điều khoản sử dụng",
+    "title_privacy": "Chính sách bảo mật",
+    "title_marketing": "Đồng ý tiếp thị",
+    "title_support": "Trung tâm hỗ trợ",
+    "security_title": "Cài đặt bảo mật",
+    "session_management": "Quản lý phiên",
     "notifications": "Thông báo",
     "alarm_comment": "Bình luận",
-    "alarm_comment_desc": "Nhận thông báo khi có người bình luận bài đăng của bạn.",
+    "alarm_comment_desc": "Nhận thông báo khi ai đó bình luận bài viết của bạn.",
     "alarm_like": "Thích",
-    "alarm_like_desc": "Nhận thông báo khi có người thích bài đăng của bạn.",
+    "alarm_like_desc": "Nhận thông báo khi ai đó thích bài viết của bạn.",
     "alarm_follow": "Theo dõi",
-    "alarm_follow_desc": "Nhận thông báo khi có người theo dõi bạn.",
-    "privacy": "Riêng tư",
+    "alarm_follow_desc": "Nhận thông báo khi ai đó theo dõi bạn.",
+    "alarm_chat": "Thông báo tin nhắn",
+    "alarm_chat_desc": "Nhận thông báo khi có tin nhắn mới.",
+    "privacy": "Quyền riêng tư",
     "change_password": "Đổi mật khẩu",
     "connect_sns": "Liên kết SNS",
     "withdraw": "Xóa tài khoản",
     "withdraw_phrase": "Xóa tài khoản của tôi",
-    "withdraw_grace_period_1": "Áp dụng thời gian ân hạn 7 ngày khi yêu cầu xóa.",
-    "withdraw_grace_period_2": "Bạn có thể khôi phục tài khoản ngay lập tức bằng cách đăng nhập trong vòng 7 ngày.",
+    "withdraw_grace_period_1": "Có thời gian ân hạn 7 ngày khi gửi yêu cầu xóa.",
+    "withdraw_grace_period_2": "Bạn có thể khôi phục tài khoản ngay bằng cách đăng nhập trong vòng 7 ngày.",
     "withdraw_grace_period_3": "Sau 7 ngày, không thể khôi phục và dữ liệu sẽ bị xóa vĩnh viễn sau 30 ngày.",
     "withdraw_verify_placeholder": "Vui lòng nhập \"{{phrase}}\" để xác nhận",
-    "withdraw_modal_title": "Bạn có chắc chắn muốn xóa tài khoản không?",
-    "withdraw_warning_1": "Thông tin tài khoản của bạn không thể khôi phục.",
+    "withdraw_modal_title": "Bạn có chắc chắn muốn xóa tài khoản?",
+    "withdraw_warning_1": "Thông tin tài khoản không thể khôi phục.",
     "withdraw_warning_2": "Tất cả bài viết và bình luận sẽ bị xóa.",
-    "withdraw_warning_3": "Thông tin theo dõi sẽ bị mất.",
+    "withdraw_warning_3": "Thông tin người theo dõi sẽ bị mất.",
     "withdraw_warning_4": "Hành động này không thể hoàn tác.",
-    "confirm_password": "Xác nhận mật khẩu",
+    "confirm_password": "Mật khẩu",
     "confirm_password_placeholder": "Nhập mật khẩu",
-    "confirm_password_desc": "Vui lòng nhập mật khẩu để xác nhận danh tính.",
-    "confirm_email": "Xác nhận Email",
-    "confirm_email_desc": "Vui lòng nhập địa chỉ email để xác nhận danh tính.",
-    "withdraw_verify_label": "Xác thực",
+    "confirm_password_desc": "Vui lòng nhập mật khẩu để xác nhận.",
+    "confirm_email": "Email",
+    "confirm_email_desc": "Vui lòng nhập chính xác email của bạn.",
+    "withdraw_verify_label": "Xác minh",
     "withdraw_btn_cancel": "Hủy",
     "withdraw_btn_processing": "Đang xử lý...",
     "withdraw_btn_confirm": "Xóa",
-    "pw_change_guide": "Chúng tôi khuyên bạn nên sử dụng ít nhất 8 ký tự bao gồm chữ cái, số và ký hiệu.",
+    "pw_change_guide": "Chúng tôi khuyến nghị sử dụng ít nhất 8 ký tự kết hợp chữ cái, số và ký hiệu.",
     "current_pw": "Mật khẩu hiện tại",
     "current_pw_placeholder": "Nhập mật khẩu hiện tại",
     "new_pw": "Mật khẩu mới",
@@ -372,41 +565,120 @@
     "confirm_new_pw": "Xác nhận mật khẩu mới",
     "confirm_new_pw_placeholder": "Nhập lại mật khẩu mới",
     "pw_mismatch": "Mật khẩu mới không khớp.",
-    "pw_check_req": "Vui lòng kiểm tra mật khẩu của bạn (tối thiểu 8 ký tự và khớp nhau).",
+    "pw_check_req": "Vui lòng kiểm tra mật khẩu (tối thiểu 8 ký tự và phải khớp).",
     "hide": "Ẩn",
-    "show": "Hiện",
-    "sns_connect_desc": "Kết nối tài khoản của bạn với đăng nhập xã hội để truy cập và khôi phục dễ dàng hơn.",
-    "connect_google": "Kết nối tài khoản Google",
-    "connect_kakao": "Kết nối tài khoản Kakao",
-    "sns_connect_note": "Bạn có thể ngắt kết nối các tài khoản liên kết trong Cài đặt > Quyền riêng tư bất cứ lúc nào. (Sắp ra mắt)",
+    "show": "Hiển thị",
+    "sns_connect_desc": "Liên kết tài khoản với đăng nhập mạng xã hội để truy cập và khôi phục dễ dàng hơn.",
+    "connect_google": "Liên kết tài khoản Google",
+    "connect_kakao": "Liên kết tài khoản Kakao",
+    "sns_connect_note": "Bạn có thể hủy liên kết tài khoản trong Cài đặt > Quyền riêng tư bất cứ lúc nào. (Sắp ra mắt)",
     "account_settings": "Cài đặt",
     "support_policy": "Hỗ trợ & Chính sách",
-    "help_center": "Trung tâm trợ giúp",
-    "terms": "Điều khoản dịch vụ",
-    "privacy_policy": "Chính sách bảo mật",
-    "marketing_consent": "Đồng ý tiếp thị",
-    "title_language": "Thay đổi ngôn ngữ",
-    "title_theme": "Thay đổi chủ đề",
-    "title_password_change": "Đổi mật khẩu",
-    "title_sns_connect": "Kết nối tài khoản SNS",
-    "title_withdraw": "Xóa tài khoản",
-    "title_terms": "Điều khoản dịch vụ",
-    "title_privacy": "Chính sách quyền riêng tư",
-    "title_marketing": "Đồng ý tiếp thị",
-    "title_support": "Trung tâm trợ giúp",
-    "security_title": "Cài đặt bảo mật",
-    "session_management": "Quản lý phiên",
-    "withdraw_reason_label": "Lý do hủy",
+    "help_center": "Trung tâm hỗ trợ",
+    "terms": "Điều khoản sử dụng",
+    "privacy_policy": {
+      "summary": "Công ty chỉ thu thập và sử dụng thông tin cá nhân tối thiểu để cung cấp dịch vụ và sẽ hủy bỏ ngay sau khi đạt được mục đích thu thập.",
+      "items_title": "Mục chính",
+      "item_1": "Các mục thu thập, mục đích thu thập và sử dụng, thời gian lưu giữ và sử dụng",
+      "item_2": "Cung cấp thông tin cá nhân cho bên thứ ba và hiện trạng ủy thác xử lý",
+      "item_3": "Quyền của người dùng (xem, chỉnh sửa, xóa, ngừng xử lý) và cách thực hiện",
+      "item_4": "Người chịu trách nhiệm bảo vệ thông tin cá nhân và thông tin liên lạc",
+      "close": "Đóng"
+    },
+    "marketing_consent": {
+      "title": "Đồng ý tiếp thị",
+      "email": "Nhận email",
+      "sms": "Nhận SMS",
+      "push": "Thông báo đẩy"
+    },
+    "saved": "Đã lưu cài đặt.",
+    "subscription_coupon": "Đăng ký & Ưu đãi",
+    "alarm_push": "Thông báo đẩy",
+    "alarm_email": "Thông báo email",
+    "theme_dark": "Chế độ tối",
+    "plan": "Gói đăng ký",
+    "coupon": "Phiếu giảm giá",
+    "premium": "Premium",
+    "set_password": "Đặt mật khẩu",
+    "current_pw_incorrect": "Mật khẩu hiện tại không đúng.",
+    "pw_change_error": "Lỗi khi đổi mật khẩu.",
+    "pw_change_success": "Đổi mật khẩu thành công.",
+    "pw_set_guide": "Đặt mật khẩu cho tài khoản đăng nhập mạng xã hội.",
+    "pw_set_success": "Đặt mật khẩu thành công.",
+    "email_info_missing": "Không tìm thấy thông tin email.",
+    "email": "Email",
+    "connected": "Đã kết nối",
+    "not_connected": "Chưa kết nối",
+    "connect": "Kết nối",
+    "unlink": "Hủy kết nối",
+    "unlink_confirm_title": "Hủy kết nối tài khoản",
+    "linked_accounts": "Tài khoản liên kết",
+    "social_login_active": "Đăng nhập MXH đang hoạt động",
+    "sns_connect_failed": "Không thể liên kết tài khoản SNS.",
+    "sns_unlink_confirm_msg": "Bạn có chắc muốn hủy kết nối tài khoản này?",
+    "sns_unlink_failed": "Không thể hủy kết nối SNS.",
+    "sns_unlink_success": "Đã hủy kết nối tài khoản SNS.",
+    "sns_unlink_last_method": "Cần ít nhất một phương thức đăng nhập.",
+    "sns_unlink_warning": "Bạn sẽ không thể đăng nhập bằng phương thức này sau khi hủy.",
+    "close": "Đóng",
+    "blocked_users": "Người dùng bị chặn",
+    "no_blocked_users": "Không có người dùng bị chặn.",
+    "confirm_unblock": "Bạn có chắc muốn bỏ chặn?",
+    "no_changes_or_invalid": "Không có thay đổi hoặc đầu vào không hợp lệ.",
+    "withdraw_error": "Lỗi khi xóa tài khoản.",
+    "password_incorrect": "Mật khẩu không đúng.",
+    "email_mismatch_error": "Email nhập không đúng.",
+    "withdraw_reason_label": "Lý do xóa tài khoản",
     "withdraw_reason_placeholder": "Chọn lý do",
     "withdraw_detail_placeholder": "Vui lòng cung cấp chi tiết",
     "reason_low_usage": "Ít sử dụng",
-    "reason_rejoin": "Để tham gia lại",
-    "reason_privacy": "Lo ngại về quyền riêng tư",
+    "reason_rejoin": "Đăng ký lại",
+    "reason_privacy": "Vấn đề quyền riêng tư",
     "reason_feature": "Không hài lòng với tính năng",
     "reason_other": "Khác",
-    "alarm_chat": "Thông báo trò chuyện",
-    "alarm_chat_desc": "Nhận thông báo khi bạn nhận được tin nhắn trò chuyện mới.",
-    "saved": "Đã lưu cài đặt."
+    "language_select_aria": "Chọn ngôn ngữ",
+    "theme_select_aria": "Chọn giao diện",
+    "coupons": {
+      "no_subscription_data": "Không tìm thấy dữ liệu đăng ký.",
+      "no_vip_available": "Không có quyền lợi VIP hiện tại.",
+      "vip_success_title": "🎁 Đã nhận quyền lợi VIP bí mật!",
+      "vip_success_code": "Mã phiếu: {{code}} (giảm 99%)",
+      "vip_success_desc": "Nhập mã khi thanh toán.",
+      "discount_percent": "Giảm {{value}}%",
+      "discount_fixed": "₩{{value}} thưởng",
+      "btn_redeem": "Sử dụng phiếu",
+      "btn_claim_vip": "Nhận phiếu VIP",
+      "redeem_title": "Sử dụng phiếu",
+      "redeem_placeholder": "Nhập mã phiếu",
+      "redeem_success": "Sử dụng phiếu thành công!",
+      "redeem_success_desc": "{{name}} (giảm {{discount}})",
+      "redeem_fail": "Mã phiếu không hợp lệ.",
+      "redeem_error": "Lỗi xác minh phiếu.",
+      "no_history": "Không có lịch sử.",
+      "no_subscription": "Không có dữ liệu đăng ký.",
+      "plan_label": "Gói {{plan}}",
+      "cancel_success": "Đã hủy đăng ký thành công.",
+      "cancel_error": "Lỗi hủy: {{error}}",
+      "history_title": "Lịch sử đăng ký và phiếu giảm giá",
+      "vip_already_claimed": "Bạn đã nhận quyền lợi VIP tháng này.",
+      "vip_benefit_title": "Quyền lợi VIP hàng tháng",
+      "vip_benefit_desc": "Phiếu đặc biệt cho thành viên Premium+.",
+      "status": {
+        "active": "Hoạt động",
+        "cancelled": "Đã hủy",
+        "expired": "Hết hạn"
+      }
+    },
+    "customer_center": {
+      "contact_1on1_title": "Hỏi đáp 1:1",
+      "contact_1on1_desc": "Liên hệ trực tiếp với đội hỗ trợ ARA.",
+      "faq_title": "Câu hỏi thường gặp",
+      "faq_desc": "Xem các câu hỏi và trả lời phổ biến."
+    },
+    "theme_light": "Nhẹ",
+    "theme_system": "Cài đặt hệ thống",
+    "privacy_policy_title": "Chính sách xử lý thông tin cá nhân",
+    "blocked_users_desc": "Quản lý danh sách người dùng bị chặn."
   },
   "profile": {
     "edit_profile": "Sửa hồ sơ",
@@ -444,7 +716,25 @@
     "search_users": "Tìm kiếm người dùng...",
     "follow_feature_coming_soon": "Tính năng theo dõi sắp có",
     "turn_on_notifications": "Bật thông báo",
-    "turn_off_notifications": "Tắt thông báo"
+    "turn_off_notifications": "Tắt thông báo",
+    "cannot_follow_self": "Bạn không thể theo dõi chính mình",
+    "already_following": "Đã theo dõi",
+    "view_profile": "Xem hồ sơ",
+    "cover_photo": "Ảnh bìa",
+    "select_cover": "Chọn ảnh bìa",
+    "cover_photo_hint": "Kích thước đề xuất: 1500x500px",
+    "followers_count": "Người theo dõi {{count}} người",
+    "following_count": "Đang theo dõi {{count}} người",
+    "drag_to_reposition": "Kéo để điều chỉnh vị trí",
+    "followed": "Theo dõi",
+    "unfollowed": "Bỏ theo dõi",
+    "notifications_updated": "Cài đặt thông báo đã được thay đổi",
+    "blocked": "Đã chặn xong",
+    "unblocked": "Bỏ chặn",
+    "already_blocked": "Đã bị chặn trước đó",
+    "cannot_block_self": "Không thể chặn chính mình",
+    "block_list": "Danh sách chặn",
+    "no_blocked_users": "Không có người dùng bị chặn"
   },
   "tweets": {
     "placeholder_tweet": "Đang xảy ra chuyện gì?",
@@ -480,7 +770,10 @@
     "deleted_or_not_exist": "Bài viết này đã bị xóa hoặc không tồn tại",
     "deleted_while_viewing": "Bài viết này đã bị xóa.",
     "login_to_reply": "Bạn có thể viết bình luận sau khi đăng nhập.",
-    "join_community_desc": "Vui lòng đăng nhập hoặc đăng ký để tham gia cộng đồng."
+    "join_community_desc": "Vui lòng đăng nhập hoặc đăng ký để tham gia cộng đồng.",
+    "liked_feed": "Thích bài viết của bạn.",
+    "reply_to_tweet": "Trả lời bài viết",
+    "compose_tweet": "Tạo bài viết mới"
   },
   "trending": {
     "title": "Xu hướng",
@@ -497,8 +790,8 @@
     "room_title": "Direct Chat",
     "loading": "Đang tải...",
     "me": "Tôi",
-    "unknown": "Không rõ",
-    "today": "Hôm nay",
+    "unknown": "Không xác định",
+    "anonymous": "Ẩn danh",
     "exit": "Thoát",
     "search_placeholder": "Tìm tin nhắn...",
     "search_btn": "Tìm kiếm",
@@ -546,7 +839,15 @@
     "attach_file": "Tập tin",
     "confirm_exit_title": "Leave Chat?",
     "confirm_exit_desc": "You will be returned to the chat list.",
-    "exit_success": "Left chat room."
+    "exit_success": "Left chat room.",
+    "block_messages": "Chặn tin nhắn",
+    "creating_chat": "Đang tạo phòng chat...",
+    "translate_error_untranslatable": "Câu không thể dịch vì không hiểu được ý nghĩa.",
+    "translate_error_generic": "Đã xảy ra lỗi trong quá trình dịch.",
+    "translate_error_api": "Yêu cầu API thất bại",
+    "scroll_to_bottom": "Cuộn xuống dưới cùng",
+    "deleted_message": "Tin nhắn đã bị xóa bởi quản trị viên.",
+    "aria_send_message": "Gửi tin nhắn"
   },
   "footer": {
     "brand": {
@@ -573,6 +874,7 @@
         "documentation": "Tài liệu",
         "api": "API",
         "community": "Cộng đồng",
+        "webinars": "Hội thảo trực tuyến",
         "help_center": "Trung tâm trợ giúp"
       },
       "company": {
@@ -580,70 +882,110 @@
         "about": "Về chúng tôi",
         "careers": "Tuyển dụng",
         "blog": "Blog",
-        "contact": "Liên hệ"
+        "contact": "Liên hệ",
+        "office": "Văn phòng"
       }
     },
     "newsletter": {
       "title": "Đăng ký nhận tin",
-      "desc": "Nhận thông tin cập nhật và tính năng mới nhất.",
-      "placeholder": "Địa chỉ email"
+      "desc": "Tham gia cùng hơn 10.000 người học và nhận các mẹo và tính năng mới nhất.",
+      "placeholder": "Nhập địa chỉ email"
     },
     "bottom": {
-      "rights": "© {{year}} Ara Inc.",
+      "rights": "© {{year}} Ara Inc. Bảo lưu mọi quyền.",
       "terms": "Điều khoản",
       "privacy": "Quyền riêng tư",
       "cookies": "Cookies"
+    },
+    "office": {
+      "address_name": "Trụ sở chính Seoul",
+      "address": "123 Teheran-ro, Gangnam-gu, Seoul",
+      "tel": "Tel: +82 2-1234-5678",
+      "registration": "Số đăng ký kinh doanh: 123-45-67890"
     }
   },
   "goods": {
-    "hero_title": "Cửa hàng",
-    "category_all": "Tất cả",
-    "items": {
-      "hoodie": {
-        "title": "Áo Hoodie Chữ Ký",
-        "desc": "Áo hoodie cotton cao cấp với logo đặc trưng. Form dáng thoải mái, thích hợp mặc hàng ngày."
-      },
-      "tote_bag": {
-        "title": "Túi Tote Eco",
-        "desc": "Túi tote vải canvas thân thiện môi trường. Bền bỉ và rộng rãi cho các vật dụng cần thiết."
-      },
-      "note_set": {
-        "title": "Bộ Sổ Tay Cao Cấp",
-        "desc": "Bộ sổ tay giấy chất lượng cao. Hoàn hảo cho việc học tập và viết nhật ký."
-      },
-      "planner": {
-        "title": "Sổ Kế Hoạch Kỹ Thuật Số 2026",
-        "desc": "Sổ kế hoạch kỹ thuật số tất cả trong một cho iPad/Máy tính bảng. Sắp xếp năm 2026 của bạn một cách hiệu quả."
-      },
-      "cap": {
-        "title": "Mũ Lưỡi Trai Logo",
-        "desc": "Mũ lưỡi trai sành điệu với logo thêu. Dây đai điều chỉnh cho vừa vặn."
-      },
-      "tumbler": {
-        "title": "Bình Giữ Nhiệt Tối Giản",
-        "desc": "Ly giữ nhiệt thép không gỉ. Giữ nóng/lạnh trong 12 giờ."
+    "title": "Cửa hàng Goods",
+    "subtitle": "Khám phá các sản phẩm chính thức mang bản sắc của ARA",
+    "product_details": "Chi tiết sản phẩm",
+    "product_options": "Chọn tùy chọn",
+    "product_recommendations": "Có thể bạn cũng thích",
+    "total_amount": "Tổng số tiền",
+    "checkout_total": "Tổng thanh toán",
+    "price_unit": "₫",
+    "percent_suffix": "%",
+    "checkout_loading": "Đang xử lý thanh toán...",
+    "checkout_success": "Thanh toán thành công!",
+    "checkout_error": "Đã xảy ra lỗi trong quá trình xử lý thanh toán.",
+    "badge": {
+      "new": "MỚI",
+      "best": "HOT",
+      "soldout": "HẾT HÀNG",
+      "sale": "GIẢM GIÁ",
+      "off_pattern": "GIẢM {{percent}}%"
+    },
+    "reviews": {
+      "title": "Đánh giá",
+      "count": "{{count}} đánh giá",
+      "rating_average": "Đánh giá trung bình",
+      "photo_review": "Chỉ xem đánh giá có ảnh",
+      "write_btn": "Viết đánh giá",
+      "verified_purchase": "Đã mua hàng",
+      "helpful": "Hữu ích",
+      "no_reviews": "Chưa có đánh giá nào.",
+      "be_first": "Hãy là người đầu tiên đánh giá!",
+      "be_first_desc": "Chia sẻ trải nghiệm của bạn và giúp đỡ những người mua khác.",
+      "load_more": "Xem thêm",
+      "view_all": "Xem tất cả",
+      "translate_btn": "Dịch",
+      "show_original": "Xem bản gốc",
+      "no_stats": "Không có dữ liệu",
+      "positive_ratio": "Tỷ lệ đánh giá tích cực",
+      "waiting_first": "Đang chờ đánh giá đầu tiên",
+      "buyer_only_error": "Chỉ người mua hàng mới có thể viết đánh giá.",
+      "modal": {
+        "how_was_it": "Sản phẩm như thế nào?",
+        "detail_review": "Đánh giá chi tiết",
+        "placeholder": "Vui lòng nhập đánh giá của bạn.",
+        "add_photo": "Thêm ảnh (Tối đa 3)",
+        "empty_content": "Vui lòng nhập nội dung đánh giá.",
+        "success": "Đánh giá của bạn đã được ghi lại!"
       }
     },
-    "price_unit": "$",
+    "coupon": {
+      "apply": "Áp dụng mã giảm giá",
+      "apply_btn": "Áp dụng",
+      "placeholder": "Nhập mã giảm giá",
+      "applied": "Đã áp dụng mã!",
+      "invalid": "Mã giảm giá không hợp lệ.",
+      "error": "Lỗi khi kiểm tra mã giảm giá."
+    },
+    "category_all": "Tất cả",
     "category_clothing": "Quần áo",
     "category_accessories": "Phụ kiện",
-    "category_digital": "Kỹ thuật số",
     "category_stationery": "Văn phòng phẩm",
-    "new_arrival": "Mới",
-    "best_seller": "Bán chạy",
-    "sold_out": "Hết hàng",
-    "product_not_found": "Không tìm thấy sản phẩm",
-    "reviews_count": "{{count}} đánh giá",
-    "free_shipping": "Miễn phí vận chuyển cho đơn hàng trên $50",
-    "authentic_guarantee": "Cam kết chính hãng",
-    "option_color": "Màu sắc",
-    "option_size": "Kích thước",
-    "add_to_cart": "Thêm vào giỏ hàng",
-    "product_details": "Chi tiết sản phẩm",
-    "related_items": "Có thể bạn cũng thích",
+    "category_digital": "Kỹ thuật số",
+    "related_products": "Sản phẩm liên quan",
+    "product_not_found": "Không tìm thấy sản phẩm.",
+    "back_to_list": "Quay lại danh sách",
     "buy_now": "Mua ngay",
-    "quantity": "Số lượng",
-    "back_to_list": "Quay lại danh sách"
+    "free_shipping": "Miễn phí vận chuyển",
+    "authentic_guarantee": "100% Chính hãng",
+    "coming_soon": "Sắp ra mắt",
+    "notice_banner": "Cửa hàng chính thức đang trong quá trình chuẩn bị.",
+    "option": {
+      "size": "Kích thước",
+      "color": "Màu sắc"
+    },
+    "alt": {
+      "main_image": "Ảnh sản phẩm chính",
+      "gallery_image": "Ảnh bộ sưu tập",
+      "detail_image": "Ảnh chi tiết",
+      "store_membership": "Thành viên ARA Goods",
+      "hero_bg": "Nền hero",
+      "review_image": "Ảnh đánh giá của người dùng",
+      "preview_image": "Xem trước ảnh tải lên"
+    }
   },
   "translation": {
     "login_required": "Vui lòng đăng nhập để sử dụng tính năng dịch.",
@@ -657,7 +999,20 @@
       "harmful": "Nội dung độc hại",
       "inappropriate": "Nội dung không phù hợp",
       "other": "Khác (Nhập trực tiếp)"
-    }
+    },
+    "title": "Report",
+    "desc": "Please select a reason for the report. Processing may be delayed if there is no valid reason.",
+    "reason_label": "Select Reason",
+    "description_label": "Details",
+    "description_placeholder": "Please describe the reason for reporting in detail.",
+    "success": "Report has been submitted.",
+    "status": {
+      "dismissed": "Báo cáo bị từ chối"
+    },
+    "report": "Báo cáo",
+    "select_placeholder": "Vui lòng chọn lý do",
+    "select_reason": "Vui lòng chọn lý do báo cáo.",
+    "enter_description": "Vui lòng nhập lý do chi tiết."
   },
   "admin": {
     "report_processed": "Báo cáo đã được xử lý.",
@@ -679,6 +1034,570 @@
     "option_group_add_wip": "Option group addition (WIP)",
     "content_deleted": "{{type}} (ID: {{id}}) deleted.",
     "logged_out": "Logged out",
-    "logout_error": "Error during logout"
+    "logout_error": "Lỗi khi đăng xuất"
+  },
+  "policy": {
+    "close": "Đóng",
+    "help_center": {
+      "intro": "Nếu bạn gặp bất kỳ khó khăn nào trong quá trình sử dụng dịch vụ, vui lòng liên hệ với chúng tôi bất cứ lúc nào qua các kênh bên dưới.",
+      "email_title": "Yêu cầu qua email",
+      "email_address": "koreara25@gmail.com",
+      "email_hours": "Ngày thường 10:00 ~ 18:00 (KST, nghỉ cuối tuần và ngày lễ)",
+      "app_report_title": "Báo cáo/Yêu cầu trong ứng dụng",
+      "app_report_post": "Bạn có thể báo cáo trực tiếp từ menu ở trên cùng bên phải của bài viết và bình luận.",
+      "app_report_dm": "Bạn cũng có thể báo cáo từ danh sách DM > Hồ sơ người dùng > Menu Báo cáo/Chặn.",
+      "faq_title": "Câu hỏi thường gặp (FAQ)",
+      "faq_account": "Tài khoản/Mật khẩu, vấn đề đăng nhập",
+      "faq_report": "Báo cáo/Chặn và hướng dẫn cộng đồng",
+      "faq_privacy": "Yêu cầu liên quan đến dữ liệu/quyền riêng tư",
+      "faq_note": "Trang FAQ sẽ được thêm vào khi ra mắt chính thức."
+    },
+    "terms": {
+      "title": "Điều khoản sử dụng",
+      "purpose": {
+        "h": "Điều 1 (Mục đích)",
+        "body": "Các điều khoản này nhằm mục đích điều chỉnh quyền, nghĩa vụ và trách nhiệm giữa Công ty và các Thành viên liên quan đến việc sử dụng dịch vụ mạng xã hội/cộng đồng (bao gồm di động/web, sau đây gọi là \"Dịch vụ\") do \"ARA\" (sau đây gọi là \"Công ty\") cung cấp."
+      },
+      "definition": {
+        "h": "Điều 2 (Định nghĩa)",
+        "member": "\"Thành viên\" dùng để chỉ người đồng ý với các điều khoản của Công ty và tạo tài khoản để sử dụng dịch vụ.",
+        "content": "\"Nội dung\" dùng để chỉ tất cả dữ liệu bao gồm văn bản, hình ảnh, âm thanh, video, liên kết, v.v., mà các thành viên tải lên/truyền tải/đăng tải trên dịch vụ.",
+        "paid_service": "\"Dịch vụ trả phí\" dùng để chỉ các dịch vụ được sử dụng đối với việc thanh toán phí, chẳng hạn như vật phẩm kỹ thuật số, đăng ký, loại bỏ quảng cáo, v.v."
+      },
+      "contract": {
+        "h": "Điều 3 (Thiết lập và hiệu lực của hợp đồng sử dụng)",
+        "agreement": "Hợp đồng sử dụng được thiết lập khi thành viên đồng ý với các điều khoản và chính sách bảo mật và hoàn tất quá trình đăng ký.",
+        "verification": "Các quy trình xác minh danh tính, bao gồm đăng nhập mạng xã hội, có thể được yêu cầu.",
+        "age_limit": "Người dưới 14 tuổi không được đăng ký. Công ty có thể yêu cầu tài liệu xác minh độ tuổi nếu cần thiết."
+      },
+      "community": {
+        "h": "Điều 4 (Vận hành cộng đồng và các hành vi bị cấm)",
+        "guidelines": "Thành viên phải tuân thủ luật pháp, các điều khoản và hướng dẫn cộng đồng.",
+        "prohibited_content": "Cấm đăng tải/truyền tải/quảng bá nội dung vi phạm quyền của người khác hoặc bất hợp pháp, có hại, phân biệt đối xử, thù hận, dâm ô hoặc bạo lực.",
+        "prohibited_actions": "Cấm thu thập/công bố thông tin cá nhân trái phép, thư rác/quảng cáo/lừa đảo, chia sẻ tài khoản và truy cập/quét dữ liệu tự động.",
+        "violations": "Công ty có thể xóa bài đăng hoặc đình chỉ tài khoản tạm thời hoặc vĩnh viễn trong trường hợp vi phạm hướng dẫn."
+      },
+      "member_duty": {
+        "h": "Điều 5 (Trách nhiệm của thành viên)",
+        "password": "Thành viên chịu trách nhiệm quản lý mật khẩu tài khoản của mình.",
+        "identity": "Thành viên không được đánh cắp danh tính hoặc phương thức thanh toán của người khác hoặc đăng ký thông tin sai lệch.",
+        "ai_output": "Không được sử dụng các tính năng AI theo những cách vi phạm quyền của bên thứ ba."
+      },
+      "license": {
+        "h": "Điều 6 (Quyền nội dung và giấy phép)",
+        "copyright": "Bản quyền đối với nội dung do thành viên đăng tải thuộc về chính thành viên đó.",
+        "grant": "Thành viên cấp cho Công ty giấy phép không độc quyền, miễn phí để sử dụng nội dung cho mục đích vận hành và quảng bá dịch vụ.",
+        "responsibility": "Thành viên chịu hoàn toàn trách nhiệm pháp lý đối với nội dung vi phạm quyền của người khác."
+      },
+      "ai": {
+        "h": "Điều 7 (Thông báo về tính năng AI)",
+        "usage": "Dịch vụ có thể sử dụng các tính năng AI để gợi ý và tạo nội dung.",
+        "disclaimer": "Kết quả AI có thể chứa lỗi và chỉ được cung cấp để tham khảo."
+      },
+      "payment": {
+        "h": "Điều 8 (Dịch vụ trả phí và thanh toán)",
+        "pricing": "Giá cả và chính sách hoàn tiền cho các dịch vụ trả phí sẽ được thông báo riêng.",
+        "policy": "Các chính sách của App Store / Cổng thanh toán có thể được ưu tiên áp dụng."
+      },
+      "service_change": {
+        "h": "Điều 9 (Thay đổi/Tạm ngừng dịch vụ)",
+        "body": "Công ty có thể thay đổi hoặc tạm ngừng toàn bộ hoặc một phần dịch vụ vì nhu cầu kỹ thuật hoặc vận hành với thông báo trước."
+      },
+      "termination": {
+        "h": "Điều 10 (Chấm dứt và hạn chế)",
+        "withdrawal": "Thành viên có thể hủy tài khoản bất kỳ lúc nào trong phần cài đặt.",
+        "restriction": "Công ty có thể hạn chế quyền truy cập hoặc đình chỉ tài khoản do vi phạm hướng dẫn."
+      },
+      "ip_report": {
+        "h": "Điều 11 (Vi phạm IP và đăng lại)",
+        "takedown": "Công ty có thể chặn hoặc xóa nội dung tạm thời khi có khiếu nại vi phạm quyền hợp lệ.",
+        "counter": "Tác giả có thể yêu cầu đăng lại bằng cách cung cấp bằng chứng phản bác."
+      },
+      "disclaimer": {
+        "h": "Điều 12 (Miễn trừ trách nhiệm)",
+        "force_majeure": "Công ty không chịu trách nhiệm về các thiệt hại do trường hợp bất khả kháng gây ra.",
+        "disputes": "Các tranh chấp giữa các thành viên hoặc với bên thứ ba sẽ do chính các bên tự giải quyết."
+      },
+      "law": {
+        "h": "Điều 13 (Luật áp dụng và thẩm quyền xét xử)",
+        "body": "Các điều khoản này được điều chỉnh bởi luật pháp của Đại Hàn Dân Quốc."
+      },
+      "notice": {
+        "h": "Điều 14 (Sửa đổi và Thông báo)",
+        "body": "Công ty có thể thay đổi các điều khoản với thông báo trước ít nhất 7 ngày."
+      },
+      "more_detail_hint": "Nhấn vào từng điều khoản để xem chi tiết đầy đủ."
+    },
+    "privacy": {
+      "title": "Chính sách bảo mật",
+      "collect": {
+        "h": "Điều 1 (Dữ liệu thu thập)",
+        "required_title": "Bắt buộc",
+        "required_items": "Email, Mật khẩu (băm), Biệt danh, ID dịch vụ (UID)",
+        "optional_title": "Tùy chọn",
+        "optional_items": "Ngày sinh, Giới tính, Ảnh hồ sơ, Quốc gia/Ngôn ngữ, Giới thiệu bản thân",
+        "auto_title": "Thu thập tự động",
+        "auto_items": "Nhật ký truy cập, thông tin thiết bị, cookie, nhật ký lỗi",
+        "social_title": "Đăng nhập mạng xã hội",
+        "social_items": "Tên nhà cung cấp/Email theo chính sách của họ"
+      },
+      "purpose": {
+        "h": "Điều 2 (Mục đích sử dụng)",
+        "account": "Đăng ký / Xác minh danh tính / Quản lý tài khoản",
+        "sns_features": "Các tính năng mạng xã hội cơ bản như gợi ý bạn bè và nguồn cấp dữ liệu",
+        "support": "Hỗ trợ khách hàng, thông báo, cải thiện dịch vụ",
+        "analytics": "Thống kê và gợi ý cá nhân hóa",
+        "security": "An ninh và ngăn ngừa gian lận",
+        "payment": "Thanh toán/Hoàn tiền cho dịch vụ trả phí"
+      },
+      "share": {
+        "h": "Điều 3 (Chia sẻ với bên thứ ba)",
+        "principle": "Công ty không cung cấp thông tin cho bên thứ ba khi chưa có sự đồng ý.",
+        "outsourcing": "Một số tác vụ có thể được giao phó cho các đối tác chuyên biệt (lưu trữ, phân tích).",
+        "legal": "Các trường hợp ngoại lệ áp dụng cho các yêu cầu pháp lý."
+      },
+      "xborder": {
+        "h": "Điều 4 (Chuyển dữ liệu xuyên biên giới)",
+        "body": "Dữ liệu có thể được lưu trữ trên các máy chủ đặt tại nước ngoài."
+      },
+      "store": {
+        "h": "Điều 5 (Thời gian lưu giữ)",
+        "withdrawal": "Thông tin sẽ bị hủy khi hủy tài khoản, trừ khi có nghĩa vụ pháp lý.",
+        "legal_retention": "Các thời hạn pháp lý áp dụng cho dữ liệu thanh toán và liên lạc.",
+        "backup": "Dữ liệu sao lưu sẽ bị hủy định kỳ."
+      },
+      "security": {
+        "h": "Điều 6 (Biện pháp an ninh)",
+        "encryption": "Lưu trữ mã hóa mật khẩu và thông tin nhạy cảm",
+        "access_control": "Giảm thiểu quyền truy cập và kiểm tra thường xuyên",
+        "logs": "Lưu giữ nhật ký truy cập",
+        "backup_recovery": "Hệ thống sao lưu và phục hồi để đảm bảo an ninh"
+      },
+      "rights": {
+        "h": "Điều 7 (Quyền của người dùng)",
+        "data_rights": "Người dùng có thể yêu cầu truy cập, đính chính hoặc xóa dữ liệu của mình.",
+        "settings": "Cài đặt có thể được thay đổi trong hồ sơ cá nhân.",
+        "cookies": "Cài đặt cookie có thể được quản lý thông qua trình duyệt."
+      },
+      "children": {
+        "h": "Điều 8 (Bảo vệ trẻ em)",
+        "body": "Không cho phép trẻ em dưới 14 tuổi đăng ký."
+      },
+      "notice": {
+        "h": "Điều 9 (Sửa đổi)",
+        "body": "Chính sách này có thể thay đổi với thông báo trước 7 ngày."
+      },
+      "contact": {
+        "h": "Điều 10 (Cán bộ bảo vệ quyền riêng tư)",
+        "name": "Họ tên: Gildong Hong",
+        "email": "Email: privacy@ara-service.com",
+        "hours": "Tư vấn: Ngày thường 10:00~18:00"
+      }
+    },
+    "marketing": {
+      "title": "Chấp thuận thông tin marketing",
+      "purpose": {
+        "h": "Điều 1 (Mục đích)",
+        "body": "Cung cấp thông tin hữu ích (tin tức, sự kiện, khuyến mãi) qua email/push/SMS."
+      },
+      "contents": {
+        "h": "Điều 2 (Nội dung)",
+        "features": "Tóm tắt các tính năng mới và các nguồn cấp dữ liệu được đề xuất",
+        "events": "Thông tin về các sự kiện và chiến dịch",
+        "discounts": "Giảm giá, coupon và quyền lợi đối tác",
+        "reports": "Báo cáo cá nhân hóa (tóm tắt hoạt động)"
+      },
+      "channels": {
+        "h": "Điều 3 (Kênh và Cài đặt)",
+        "individual": "Sự chấp thuận có thể được quản lý theo từng kênh.",
+        "settings": "Có thể thay đổi trong Cài đặt > Thông báo/Marketing.",
+        "apply": "Việc hủy bỏ sẽ có hiệu lực từ lần gửi tiếp theo."
+      },
+      "partners": {
+        "h": "Điều 4 (Marketing bên thứ ba)",
+        "body": "Một số tác vụ gửi có thể được giao cho các đại lý."
+      },
+      "note": {
+        "h": "Điều 5 (Thông báo thiết yếu)",
+        "body": "Các thông báo vận hành thiết yếu có thể được gửi mà không cần sự chấp thuận."
+      }
+    }
+  },
+  "subscription": {
+    "back": "Quay lại",
+    "title_prefix": "Chọn",
+    "title_highlight": "gói của bạn",
+    "description": "Chọn gói phù hợp nhất với nhu cầu của bạn và tận hưởng các đặc quyền Premium.",
+    "popular_badge": "Phổ biến",
+    "subscribe_now": "Đăng ký ngay",
+    "current_plan": "Gói hiện tại",
+    "active_status": "Đang hoạt động",
+    "payment_date": "Ngày thanh toán tiếp theo",
+    "upgrade_plan": "Nâng cấp gói",
+    "manage_plan": "Quản lý gói",
+    "vip_box": "Mở hộp VIP",
+    "history": "Lịch sử đăng ký",
+    "total_count": "Tổng cộng {{count}} mục →",
+    "more_count": "+ thêm {{count}}",
+    "recent_coupons": "Mã giảm giá gần đây",
+    "history_all": "Toàn bộ lịch sử",
+    "premium_only": "Nội dung độc quyền Premium",
+    "guaranteed_payment": "Đảm bảo thanh toán an toàn",
+    "secure_payment": "Thanh toán an toàn",
+    "cancel_anytime": "Hủy bất cứ lúc nào",
+    "all_cards_supported": "Hỗ trợ tất cả các loại thẻ",
+    "plans": {
+      "free": {
+        "title": "Gói miễn phí",
+        "desc": "Dành cho những người chỉ cần những thứ cơ bản",
+        "interval": "tháng",
+        "feature_voca": "Truy cập từ vựng cơ bản",
+        "feature_community": "Tham gia cộng đồng",
+        "feature_badge": "Huy hiệu Premium",
+        "feature_ads": "Trải nghiệm không quảng cáo",
+        "feature_promo": "Khuyến mãi độc quyền"
+      },
+      "basic": {
+        "title": "Gói cơ bản",
+        "desc": "Dành cho người học năng động",
+        "interval": "tháng",
+        "feature_voca": "Truy cập từ vựng đầy đủ",
+        "feature_community": "Tham gia cộng đồng",
+        "feature_ads": "Trải nghiệm không quảng cáo",
+        "feature_badge": "Huy hiệu Premium",
+        "feature_promo": "Khuyến mãi độc quyền"
+      },
+      "premium": {
+        "title": "Gói cao cấp",
+        "desc": "Gói tất cả trong một với đầy đủ quyền lợi",
+        "interval": "tháng",
+        "feature_course": "Truy cập toàn bộ khóa học",
+        "feature_profile": "Huy hiệu hồ sơ Premium",
+        "feature_ads": "Trải nghiệm không quảng cáo",
+        "feature_badge": "Huy hiệu Premium",
+        "feature_coupon": "Mã giảm giá đặc biệt hàng tháng"
+      }
+    },
+    "errors": {
+      "login_required": "Vui lòng đăng nhập để đăng ký.",
+      "already_free": "Bạn đang sử dụng gói miễn phí.",
+      "cancel_success": "Hủy đăng ký thành công.",
+      "cancel_fail": "Lỗi khi hủy: {{error}}",
+      "coupon_success": "Đã áp dụng mã giảm giá!",
+      "coupon_invalid": "Mã giảm giá không hợp lệ.",
+      "coupon_error": "Lỗi khi kiểm tra mã giảm giá."
+    },
+    "cancel_confirm": {
+      "title": "Hủy đăng ký",
+      "desc": "Bạn có chắc muốn hủy không? Bạn sẽ được chuyển về gói miễn phí.",
+      "btn_confirm": "Hủy đăng ký",
+      "btn_cancel": "Giữ đăng ký"
+    },
+    "payment_modal": {
+      "title": "Chi tiết thanh toán",
+      "promo_code": "Mã khuyến mãi",
+      "coupon_placeholder": "Nhập mã giảm giá",
+      "apply": "Áp dụng",
+      "coupon_applied": "Đã áp dụng mã {{name}}",
+      "card_info": "Thông tin thẻ",
+      "card_number": "Số thẻ",
+      "expiry": "MM / YY",
+      "cvc": "CVC",
+      "pay_now": "Thanh toán {{price}}",
+      "payment_success": "Thanh toán hoàn tất!",
+      "plan_applied": "Đã kích hoạt gói {{plan}}.",
+      "payment_fail": "Thanh toán thất bại: {{error}}",
+      "test_warning": "⚠️ Đây là giả lập thanh toán thử nghiệm. Sẽ không có giao dịch thực tế nào được thực hiện.",
+      "cancel_confirm_title": "Hủy đăng ký",
+      "cancel_confirm_desc": "Bạn có chắc chắn muốn hủy đăng ký không?",
+      "cancel_subscription": "Hủy đăng ký",
+      "keep_subscription": "Giữ đăng ký"
+    }
+  },
+  "reset_password": {
+    "title": "Reset Password",
+    "success_title": "Reset Link Sent",
+    "success_message": "A password reset link has been sent to your email address.",
+    "check_inbox": "Please check your inbox.",
+    "back_to_login": "Back to Login",
+    "email_label": "Email Address",
+    "email_placeholder": "Enter your email",
+    "sending": "Sending...",
+    "send_reset_link": "Send Reset Link",
+    "error_email_required": "Email is required.",
+    "error_invalid_email": "Please enter a valid email."
+  },
+  "landing": {
+    "badge": "Học tiếng Hàn qua câu chuyện · Cộng đồng",
+    "title_1": "Học ngôn ngữ qua nội dung",
+    "title_2": "Trải nghiệm kết nối qua văn hóa",
+    "description": "Học các biểu đạt qua các tập phim tự sản xuất và truyện cổ tích, truyền thuyết Hàn Quốc",
+    "description2": "Không gian học tiếng Hàn ARA để viết, chỉnh sửa và chia sẻ cùng bạn bè toàn cầu",
+    "point_1": "Học qua các tập phim dựa trên câu chuyện",
+    "point_2": "Hiểu biểu đạt qua truyện cổ tích, truyền thuyết",
+    "point_3": "Cộng đồng học tập toàn cầu",
+    "cta_start": "Bắt đầu ngay",
+    "cta_explore": "Khám phá nội dung",
+    "scroll_hint": "Cuộn để khám phá",
+    "nav_top": "Trên cùng",
+    "nav_how": "Phương pháp học",
+    "nav_problems": "Giá trị cốt lõi",
+    "nav_features": "Chức năng chính",
+    "nav_contents": "Nội dung",
+    "nav_stories": "Nhận xét học tập",
+    "nav_start": "Bắt đầu",
+    "nav_contact": "Liên hệ",
+    "aria_badge": "Giới thiệu nền tảng",
+    "aria_start": "Bắt đầu ngay bây giờ",
+    "aria_explore": "Khám phá nội dung",
+    "cta_badge_text": "Người học đăng ký hôm nay",
+    "cta_title_1": "Tiếng Hàn, không phải 'học'",
+    "cta_title_2": "Hãy bắt đầu bằng 'trải nghiệm'",
+    "cta_description": "Đăng ký ngay và bắt đầu khóa học đầu tiên của bạn với các cảnh phim nổi tiếng.",
+    "cta_start_free": "Bắt đầu miễn phí",
+    "problem_title": "Bạn đã từng có những lo lắng này chưa?",
+    "problem_desc": "ARA bắt đầu từ những lo lắng mà người học thực sự thường nói đến nhất.",
+    "problem_badge": "lo lắng thực sự",
+    "problems": {
+      "1": "Dù xem phim nhưng các biểu hiện quan trọng cứ trôi qua.",
+      "2": "Tôi muốn học tiếng Hàn thực tế nhưng không biết cách nào.",
+      "3": "Dù học được biểu hiện nhưng không biết dùng thế nào trong câu chuyện.",
+      "4": "Không có nội dung nào phù hợp với trình độ của tôi để xem một cách thú vị.",
+      "5": "Tự học thì khó duy trì lâu dài."
+    },
+    "how_it_works_badge": "CÁCH HOẠT ĐỘNG",
+    "how_it_works_title": "Quy trình học của ARA diễn ra như thế này",
+    "guide_alt": "Hướng dẫn ARA {{index}}",
+    "popular": {
+      "title": "Bạn sẽ học với nội dung như thế này",
+      "description": "Quy trình học được xây dựng xoay quanh nội dung hoạt hình tự sản xuất dựa trên truyện cổ tích và truyền thuyết.",
+      "loading": "Đang tải nội dung phổ biến..."
+    },
+    "solution": {
+      "title": "Tại sao lại là ARA?",
+      "description": [
+        "Không chỉ học thuộc từ vựng, mà còn cả dòng chảy và cảm xúc trong nội dung",
+        "Được tạo ra với mục tiêu ghi nhớ cùng nhau.",
+        "Thiết kế để trải nghiệm học tập và cộng đồng diễn ra tự nhiên trên cùng một màn hình."
+      ],
+      "features": {
+        "1": {
+          "title": "Học tập dựa trên câu chuyện",
+          "desc": "Theo dõi một tập phim hoạt hình truyện cổ tích và truyền thuyết để học từ vựng, biểu đạt và ngữ cảnh văn hóa."
+        },
+        "2": {
+          "title": "Học cấu trúc thông qua việc sử dụng",
+          "desc": "Sau khi học, thực hành biểu đạt ngay và học cách diễn đạt tự nhiên hơn qua câu ví dụ và phản hồi."
+        },
+        "3": {
+          "title": "Cộng đồng toàn cầu",
+          "desc": "Người học từ các ngôn ngữ và nền tảng khác nhau tụ họp, chia sẻ trải nghiệm sử dụng tiếng Hàn qua câu chuyện."
+        }
+      }
+    },
+    "slider": {
+      "preview": {
+        "title": "Học biểu đạt tiếng Hàn qua câu chuyện",
+        "subtitle": "Biểu đạt và sắc thái tự nhiên qua hội thoại trong tình huống",
+        "bullets": [
+          "Hội thoại → Hiểu biểu đạt",
+          "Tình huống sử dụng & Mẹo văn hóa",
+          "Bao gồm bài tập ngắn"
+        ],
+        "ctaLabel": "Xem trước tập phim",
+        "alt": "Màn hình học tập tập phim dựa trên câu chuyện"
+      },
+      "folktale": {
+        "title": "Gặp gỡ tiếng Hàn qua truyện cổ tích và truyền thuyết",
+        "subtitle": "Đọc lại truyện cổ tích bằng tiếng Hàn hiện đại",
+        "bullets": [
+          "Nội dung truyện cổ tích & truyền thuyết",
+          "Giải thích về văn hóa và bối cảnh trong biểu hiện",
+          "Gói đề xuất cho người mới bắt đầu"
+        ],
+        "ctaLabel": "Xem trước nội dung truyện cổ tích",
+        "alt": "Nội dung học truyện cổ tích và truyền thuyết Hàn Quốc"
+      },
+      "community": {
+        "title": "Luyện tập cùng bạn bè trên toàn thế giới",
+        "subtitle": "Chia sẻ câu và nhận phản hồi từ người học nhiều ngôn ngữ",
+        "bullets": [
+          "Cộng đồng người dùng đa ngôn ngữ",
+          "Trao đổi câu ngắn",
+          "Chia sẻ mẹo về biểu hiện/văn hóa"
+        ],
+        "ctaLabel": "Xem trước cộng đồng",
+        "alt": "Ví dụ về hoạt động cộng đồng toàn cầu"
+      }
+    },
+    "testimonials": {
+      "title": {
+        "line1": "ARA là những người học như thế này",
+        "line2": "Được thiết kế với suy nghĩ về họ"
+      },
+      "description": {
+        "intro": "Dù chưa chính thức ra mắt, ARA không chỉ nghĩ về một người học điển hình",
+        "highlight": "Mà còn nhiều loại người học khác nhau",
+        "body": "đang được tạo ra cùng với sự tưởng tượng.",
+        "detail": [
+          "Từ những người mới bắt đầu học tiếng Hàn đến những người chuẩn bị cho kỳ nghỉ làm việc hoặc du học,",
+          "đến cả những nhân viên cần sử dụng tiếng Hàn trong công việc hàng ngày hoặc công việc.",
+          "Khi sử dụng nội dung yêu thích và cộng đồng cùng nhau, việc học sẽ kéo dài hơn,",
+          "Chúng tôi đang thiết kế luồng để nó tiếp tục một cách tự nhiên."
+        ]
+      },
+      "stats": {
+        "duration": {
+          "label": "Thời gian duy trì học tập",
+          "desc": "Chúng tôi đang thiết kế luồng để bạn có thể ở lại lâu hơn so với khi chỉ học một mình với sách giáo khoa."
+        },
+        "persona": {
+          "label": "Loại nhân vật",
+          "desc": "Chúng tôi đang xem xét màn hình và chức năng bằng cách giả định các loại người học từ nhiều quốc gia và mục tiêu khác nhau."
+        },
+        "scenario": {
+          "label": "Kịch bản học tập",
+          "desc": "Chúng tôi đang tiếp tục xây dựng kịch bản học tập theo từng cảnh để biết khi nào ARA sẽ được bật trong tình huống nào."
+        }
+      },
+      "reviews": {
+        "sarah": {
+          "country": "Mỹ · US",
+          "persona": "Người học tiếng Hàn sơ cấp bắt đầu từ phim truyền hình",
+          "text": "Trước đây, tôi thường bỏ lỡ những biểu hiện quan trọng vì chỉ dựa vào phụ đề để xem câu chuyện. Trong ARA, các biểu hiện chính được chỉ ra từng cảnh một, giúp tôi hiểu rằng “À, mình dùng câu này trong tình huống này”. Tôi cũng thấy thú vị khi xem lại cùng một tập phim và giảm dần phụ đề."
+        },
+        "diego": {
+          "country": "Tây Ban Nha · ES",
+          "persona": "Người học thực hành chuẩn bị cho kỳ nghỉ làm việc và du học",
+          "text": "Trước khi đi kỳ nghỉ làm việc, tôi muốn học các biểu hiện thực tế. Các cuộc hội thoại trong hoạt hình được sắp xếp theo tình huống, giúp tôi phân biệt được 'những câu nói hàng ngày' và 'những biểu hiện cần cẩn thận khi sử dụng'."
+        },
+        "meilin": {
+          "country": "Singapore · SG",
+          "persona": "Người học trung cấp và cao cấp muốn cải thiện khả năng nói",
+          "text": "Tôi biết một chút về ngữ pháp và từ vựng, nhưng luôn gặp khó khăn khi diễn đạt bằng lời. Khi viết cảm nhận hoặc phản ứng ngắn sau khi xem câu chuyện trên ARA, tôi được chỉnh sửa để có biểu hiện tự nhiên hơn. Tôi cảm thấy khả năng nói của mình dần dần được cải thiện khi thử sử dụng câu đó trên feed hoặc DM."
+        },
+        "alexey": {
+          "country": "Nga · RU",
+          "persona": "Người học là nhân viên cần biểu hiện kinh doanh",
+          "text": "Tôi cần các biểu hiện kinh doanh vì thường xuyên giao tiếp với đối tác Hàn Quốc. So sánh cách nói của người lớn và trẻ em, cấp trên và cấp dưới trong hoạt hình giúp tôi học được các biểu hiện phù hợp với tình huống một cách tự nhiên. Điều ấn tượng là tôi không chỉ dịch đơn giản mà còn hiểu được ngữ cảnh."
+        },
+        "hana": {
+          "country": "Nhật Bản · JP",
+          "persona": "Người học tự phát triển bản thân dễ bị gián đoạn thói quen",
+          "text": "Khi học bằng sách giáo khoa, chỉ sau vài ngày là tôi bị gián đoạn. Trên ARA, chỉ cần xem một câu chuyện ngắn là tôi đã học được, nên không cảm thấy áp lực. Tôi vào với ý định 'hôm nay chỉ xem đến cảnh này thôi', nhưng dần dần hình thành thói quen truy cập hàng ngày."
+        }
+      },
+      "notice": {
+        "mobile": "Nhận xét bạn đang xem là ví dụ đánh giá theo kịch bản dựa trên persona người học mà ARA đã xác định.",
+        "desktop": "Nhận xét bạn đang xem không phải là dữ liệu người dùng thực tế, mà là đánh giá theo kịch bản dựa trên persona người học mà ARA nhắm đến. Sau khi ra mắt chính thức, phần này sẽ được cập nhật liên tục với câu chuyện của người học thực tế."
+      }
+    }
+  },
+  "find_email": {
+    "nickname_label": "Biệt danh",
+    "error_no_recovery": "Không có thông tin khôi phục đã đăng ký.",
+    "title": "Tìm email",
+    "method_select": "Chọn phương pháp tìm kiếm",
+    "method_recovery_email": "Tìm bằng email khôi phục",
+    "method_question": "Tìm bằng câu hỏi khôi phục",
+    "nickname_placeholder": "Vui lòng nhập biệt danh",
+    "recovery_email_label": "Email khôi phục",
+    "recovery_email_placeholder": "Email khôi phục đã đăng ký khi tham gia",
+    "your_question": "Câu hỏi bạn đã thiết lập",
+    "answer_label": "Câu trả lời",
+    "answer_placeholder": "Vui lòng nhập câu trả lời",
+    "find_button": "Tìm email",
+    "finding": "Đang tìm kiếm...",
+    "result_found": "Địa chỉ email của bạn",
+    "error_not_found": "Không có thông tin trùng khớp.",
+    "error_nickname_required": "Vui lòng nhập biệt danh của bạn.",
+    "error_recovery_email_required": "Vui lòng nhập email khôi phục của bạn.",
+    "error_answer_required": "Vui lòng nhập câu trả lời của bạn.",
+    "back_to_login": "Quay lại đăng nhập",
+    "select_method": "Vui lòng chọn phương pháp"
+  },
+  "update_password": {
+    "confirm_password_label": "Xác nhận mật khẩu",
+    "title": "Thiết lập mật khẩu mới",
+    "new_password_label": "Mật khẩu mới",
+    "new_password_placeholder": "Nhập mật khẩu mới",
+    "confirm_password_placeholder": "Nhập lại mật khẩu",
+    "update_button": "Thay đổi mật khẩu",
+    "updating": "Đang thay đổi...",
+    "success_title": "Hoàn tất thay đổi mật khẩu",
+    "success_message": "Mật khẩu đã được thay đổi thành công.",
+    "go_to_login": "Đăng nhập",
+    "error_required": "Vui lòng nhập mật khẩu.",
+    "error_length": "Mật khẩu phải có ít nhất 8 ký tự.",
+    "error_mismatch": "Mật khẩu không khớp.",
+    "error_failed": "Thay đổi mật khẩu thất bại."
+  },
+  "recovery_reminder": {
+    "later": "Để sau",
+    "title": "Hướng dẫn tăng cường bảo mật tài khoản",
+    "desc": "Vui lòng thiết lập câu hỏi khôi phục và email để có thể khôi phục tài khoản an toàn khi quên mật khẩu.",
+    "action": "Thiết lập ngay bây giờ"
+  },
+  "voca": {
+    "pos": {
+      "noun": "Danh từ",
+      "verb": "Động từ",
+      "adjective": "Tính từ",
+      "adverb": "Trạng từ",
+      "pronoun": "Đại từ",
+      "numeral": "Số từ",
+      "determiner": "Định từ",
+      "particle": "Trợ từ",
+      "interjection": "Thán từ"
+    }
+  },
+  "not_found": {
+    "discovery": "Chúng tôi đã tìm thấy một trang bị lạc đường",
+    "title": "Đây là một cảnh chưa được viết kịch bản",
+    "description": "Tập của ARA chưa được chuẩn bị cho địa chỉ này. Bạn có muốn quay lại trang chủ và tiếp tục thưởng thức tiếng Hàn và văn hóa với các nội dung K khác không?",
+    "quote_part1": "“Một ngày nào đó trang này cũng sẽ",
+    "quote_accent": "được lấp đầy",
+    "quote_part2": "bằng một cảnh.”",
+    "feedback_prefix": "Nếu bạn có chức năng hoặc ý tưởng nào mong đợi trên trang này, hãy để lại phản hồi trong menu phản hồi của ARA hoặc",
+    "feedback_suffix": "liên hệ với chúng tôi."
+  },
+  "community": {
+    "seo": {
+      "title": "Cộng đồng | ARA - Học tiếng Hàn qua nội dung K",
+      "description": "Đây là cộng đồng ARA nơi các học viên trên toàn thế giới cùng nhau học tiếng Hàn qua nội dung K, giao lưu với bạn bè và tận hưởng văn hóa các nước.",
+      "keywords": "ARA, học tiếng Hàn, Học tiếng Hàn, văn hóa Hàn Quốc, K-POP, K-Drama, K-Culture, trao đổi ngôn ngữ, nguồn cấp dữ liệu, học viên toàn cầu",
+      "og_title": "Cộng đồng ARA - Nền tảng học tập toàn cầu dựa trên nội dung K",
+      "og_description": "Học tiếng Hàn qua nội dung K và giao lưu với học viên từ khắp nơi trên thế giới tại nguồn cấp dữ liệu toàn cầu ARA."
+    },
+    "deleted_post": "Bài viết này đã bị xóa do vi phạm chính sách.",
+    "title": "Cộng đồng",
+    "no_results": "Không có kết quả tìm kiếm.",
+    "no_posts": "Chưa có tin tức nào được chia sẻ.",
+    "all_posts_loaded": "Bạn đã xem tất cả tin tức.",
+    "hidden_content": "Bài viết đã bị ẩn bởi quản trị viên.",
+    "edit_post": "Chỉnh sửa bài viết"
+  },
+  "home": {
+    "more": "Xem thêm",
+    "greeting_night": "Chúc ngủ ngon / Đã là sáng sớm",
+    "greeting_morning": "Chào buổi sáng",
+    "greeting_afternoon": "Xin chào",
+    "greeting_evening": "Xin chào (buổi tối)",
+    "stats_due": "Dự kiến ôn tập",
+    "stats_new": "Từ mới",
+    "stats_streak": "Học liên tục",
+    "goal_text": "Mục tiêu hôm nay {{count}} cái",
+    "recent_progress": "Tiến trình học gần đây",
+    "continue_learning": "Tiếp tục học",
+    "today_recommendation": "Gợi ý hôm nay",
+    "weekly_stats": "Thống kê học tập hàng tuần",
+    "field_progress": "Tiến độ theo lĩnh vực",
+    "percent_complete": "{{percent}}% hoàn thành",
+    "time_left": "Thời gian còn lại {{time}}"
+  },
+  "marketing": {
+    "subscription": {
+      "title": "Đăng ký Project ARA!"
+    }
   }
 }

@@ -50,11 +50,13 @@ export default function BlockButton({ targetProfileId, onClose, onChanged }: Blo
           disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <i className="ri-forbid-line" />
-        {isLoading
-          ? t('common.loading', '로딩중...')
-          : isBlocked
-            ? t('common.unblock', '차단 해제')
-            : t('common.block', '차단')}
+        <span>
+          {isLoading
+            ? t('common.loading', '로딩중...')
+            : isBlocked
+              ? t('common.unblock', '차단 해제')
+              : t('common.block', '차단')}
+        </span>
       </button>
 
       <Modal
@@ -183,14 +185,14 @@ export default function BlockButton({ targetProfileId, onClose, onChanged }: Blo
               onClick={() => setShowUnblockConfirm(false)}
               className="flex-1 py-2.5 rounded-xl text-sm bg-gray-100 dark:bg-white/10"
             >
-              취소
+                {t('common.cancel', '취소')}
             </button>
             <button
               onClick={handleAction}
               disabled={isLoading}
               className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-emerald-500 text-white hover:bg-emerald-600"
             >
-              {isLoading ? '처리 중…' : '차단 해제'}
+                {isLoading ? t('common.loading', '처리 중…') : t('common.unblock', '차단 해제')}
             </button>
           </div>
         </div>

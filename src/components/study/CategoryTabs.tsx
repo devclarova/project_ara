@@ -1,7 +1,7 @@
 import { useCallback, type KeyboardEvent } from 'react';
 
-export type TCategory = '전체' | '드라마' | '영화' | '예능' | '음악';
-export const CATEGORIES: TCategory[] = ['전체', '드라마', '영화', '예능', '음악'];
+export type TCategory = string;
+export const CATEGORIES: TCategory[] = ['all', 'drama', 'movie', 'show', 'music'];
 
 type CategoryTabsProps = {
   active: TCategory;

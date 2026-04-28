@@ -52,7 +52,12 @@ const ContentCard = ({
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const targetLang = i18n.language;
-  const isMusic = categories?.includes('음악') || categories?.includes('Music');
+  const isMusic = useMemo(() => {
+    if (!categories) return false;
+    const catStr = String(categories).toLowerCase();
+    // Support multiple languages for music category detection (DB values + common labels)
+    return catStr.includes('음악') || catStr.includes('music') || catStr.includes('音乐') || catStr.includes('音楽');
+  }, [categories]);
 
   // 번역 최적화 파이프라인 — 외부 주입 번역 데이터(Prop) 존재 시 불필요한 자동 번역 훅(Internal Hook) 실행 스킵
   const { translatedText: translatedTitleHook } = useAutoTranslation(
@@ -101,9 +106,11 @@ const ContentCard = ({
 
   // Level Translation (Enum mapping)
   const translatedLevel = useMemo(() => {
-    if (level === '초급') return t('study.level.beginner');
-    if (level === '중급') return t('study.level.intermediate');
-    if (level === '고급') return t('study.level.advanced');
+    if (!level) return '';
+    const l = String(level).trim().toLowerCase();
+    if (l === '초급' || l === 'beginner') return t('study.level.beginner');
+    if (l === '중급' || l === 'intermediate') return t('study.level.intermediate');
+    if (l === '고급' || l === 'advanced') return t('study.level.advanced');
     return level;
   }, [level, t]);
 
@@ -122,13 +129,7 @@ const ContentCard = ({
     })();
 
   if (shouldShowTranslation) {
-    if (isMusic) {
-      // Music: Original (Translated)
-      displayTitle = `${title} (${translatedTitle})`;
-    } else {
-      // Others: Original - Translated
-      displayTitle = `${title} - ${translatedTitle}`;
-    }
+    displayTitle = translatedTitle;
   }
 
   // Description Formatting
@@ -181,46 +182,42 @@ const ContentCard = ({
   return (
     <div
       onClick={handleClick}
-      className="group relative rounded-xl shadow-lg cursor-pointer transition-all hover:shadow-xl sm:scale-[0.95] md:scale-100 sm:hover:scale-[0.98] origin-top duration-300 overflow-hidden transform-gpu ring-1 ring-transparent dark:bg-secondary"
+      className="group relative flex flex-col h-full rounded-xl shadow-lg cursor-pointer transition-all hover:shadow-xl sm:scale-[0.95] md:scale-100 sm:hover:scale-[0.98] origin-top duration-300 overflow-hidden transform-gpu ring-1 ring-transparent dark:bg-secondary"
     >
-      {/* 이미지 */}
-      <div className="flex justify-center items-center overflow-hidden">
-        <div className="card__media relative w-full overflow-hidden rounded-t-xl">
-          {/* 비율 유지 (모바일 4:5 → 태블릿 1:2 → 데스크톱 16:9 → 와이드 5:3) */}
-          <div className="w-full pt-[110%] xs:pt-[85%] sm:pt-[75%] md:pt-[65%] lg:pt-[60%] xl:pt-[56%] min-h-[180px]" />
-          {image ? (
-            <img
-              src={image}
-              alt={displayTitle}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              loading="lazy"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gray-200 w-full h-full" />
-          )}
+      {/* 이미지 구조 정석화 (Aspect-video 고정) */}
+      <div className="card__media aspect-video relative w-full overflow-hidden rounded-t-xl">
+        {image ? (
+          <img
+            src={image}
+            alt={displayTitle}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gray-200 w-full h-full" />
+        )}
 
-          {/* 동적 권한 제어 오버레이 — 게스트 제한 또는 프리미엄 구독 등급에 따른 시각적 락(Lock) 처리 */}
-          {((isGuest && !isPreview) || isPremiumLocked) && (
-            <div className={`absolute inset-0 flex items-center justify-center z-10 transition-colors ${isPremiumLocked ? 'bg-black/60 backdrop-grayscale backdrop-blur-sm' : 'bg-black/40 backdrop-blur-[2px] group-hover:bg-black/50'}`}>
-              <div className="relative group/lock flex flex-col items-center">
-                <div className={`absolute inset-0 blur-xl rounded-full transform scale-150 transition-opacity duration-500 ${isPremiumLocked ? 'bg-[#00BFA5]/40 opacity-50 group-hover:opacity-100' : 'bg-primary/30 opacity-0 group-hover:opacity-100'}`}></div>
-                <div className={`p-3 rounded-full border backdrop-blur-md shadow-2xl relative z-10 transform group-hover:scale-110 transition-transform duration-300 ${isPremiumLocked ? 'bg-[#0a1a14]/80 border-[#00BFA5]/50' : 'bg-white/10 border-white/30'}`}>
-                  <i className={`ri-lock-2-fill text-2xl drop-shadow-md ${isPremiumLocked ? 'text-[#00F0FF]' : 'text-white'}`}></i>
-                </div>
-                {isPremiumLocked && (
-                  <span className="mt-3 relative z-10 text-[#00F0FF] text-xs font-black tracking-widest uppercase drop-shadow-lg">
-                    Premium Only
-                  </span>
-                )}
+        {/* 동적 권한 제어 오버레이 */}
+        {((isGuest && !isPreview) || isPremiumLocked) && (
+          <div className={`absolute inset-0 flex items-center justify-center z-10 transition-colors ${isPremiumLocked ? 'bg-black/60 backdrop-grayscale backdrop-blur-sm' : 'bg-black/40 backdrop-blur-[2px] group-hover:bg-black/50'}`}>
+            <div className="relative group/lock flex flex-col items-center">
+              <div className={`absolute inset-0 blur-xl rounded-full transform scale-150 transition-opacity duration-500 ${isPremiumLocked ? 'bg-[#00BFA5]/40 opacity-50 group-hover:opacity-100' : 'bg-primary/30 opacity-0 group-hover:opacity-100'}`}></div>
+              <div className={`p-3 rounded-full border backdrop-blur-md shadow-2xl relative z-10 transform group-hover:scale-110 transition-transform duration-300 ${isPremiumLocked ? 'bg-[#0a1a14]/80 border-[#00BFA5]/50' : 'bg-white/10 border-white/30'}`}>
+                <i className={`ri-lock-2-fill text-2xl drop-shadow-md ${isPremiumLocked ? 'text-[#00F0FF]' : 'text-white'}`}></i>
               </div>
+              {isPremiumLocked && (
+                <span className="mt-3 relative z-10 text-[#00F0FF] text-xs font-black tracking-widest uppercase drop-shadow-lg">
+                  Premium Only
+                </span>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* 본문 */}
-      <div className="px-2 py-2 sm:px-3 sm:py-2 md:px-4 md:py-2">
-        <div className="gird min-h-20">
+      {/* 본문 구조 정석화 (flex-1 적용) */}
+      <div className="flex-1 px-2 py-2 sm:px-3 sm:py-2 md:px-4 md:py-2">
+        <div className="grid min-h-20">
           <h3 className="text-sm sm:text-[13px] md:text-base font-semibold text-gray-900 line-clamp-2 dark:text-gray-100">
             {displayTitle}
           </h3>
@@ -238,18 +235,16 @@ const ContentCard = ({
                 <div
                   className={`flex items-center justify-start ${scene ? 'w-1/2 pr-3' : 'w-full'}`}
                 >
-                  {isMusic
-                    ? episode && (
-                        <InfoItem
-                          icon="ri-music-2-line"
-                          text={
-                            translatedEpisode && translatedEpisode !== episode
-                              ? `${displayEpisode} (${translatedEpisode})`
-                              : displayEpisode
-                          }
-                        />
-                      )
-                    : episode && <InfoItem icon="ri-youtube-line" text={displayEpisode} />}
+                  {episode && (
+                    <InfoItem
+                      icon={isMusic ? 'ri-music-2-line' : 'ri-youtube-line'}
+                      text={
+                        translatedEpisode && translatedEpisode !== episode
+                          ? translatedEpisode
+                          : displayEpisode
+                      }
+                    />
+                  )}
                 </div>
 
                 {/* 오른쪽 아이템 (scene이 있을 때만 렌더링) */}
@@ -327,7 +322,7 @@ const ContentCard = ({
           {((isGuest && !isPreview) || isPremiumLocked) && (
             <div className={`mt-1.5 text-xs font-semibold py-1.5 rounded-lg flex items-center justify-center gap-1 ${isPremiumLocked ? 'text-[#AA771C] bg-[#D4AF37]/20 border border-[#D4AF37]/30' : 'text-rose-500 bg-rose-50 dark:bg-rose-900/20'}`}>
               <i className="ri-lock-2-line"></i>
-              {isPremiumLocked ? '👑 프리미엄 전용 콘텐츠' : t('study.login_required')}
+              {isPremiumLocked ? `👑 ${t('subscription.premium_only')}` : t('study.login_required')}
             </div>
           )}
         </div>

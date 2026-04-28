@@ -204,8 +204,8 @@ export default function Footer() {
           {/* Bottom Bar */}
           <div className="border-t border-slate-100 dark:border-zinc-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
-              <p className="text-sm text-muted-foreground font-medium">
-                {t('footer.bottom.rights', { year: currentYear })}
+              <p className="text-sm text-muted-foreground font-medium" translate="no">
+                © 2026 Ara — Dive into Korean. Made with 🌊
               </p>
               <div className="flex gap-6 text-sm text-muted-foreground">
                  <FooterLink onClick={(e) => handleLinkClick(e, 'policy', 'terms')}>{t('footer.bottom.terms')}</FooterLink>

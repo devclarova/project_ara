@@ -34,6 +34,7 @@ interface SiteSettings {
   security_config: { ip_restriction: boolean; ip_whitelist: string; multi_login_limit: boolean; brute_force_protection: boolean; tfa_required: boolean; session_timeout: number };
   notifications: { email_daily_report: boolean; email_security_alert: boolean; push_new_report: boolean; push_resource_warning: boolean };
   integrations: { supabase_url: string; ga4_id: string };
+  toast_sound_url: string | null;
 }
 
 const AdminSettings = () => {
@@ -49,7 +50,8 @@ const AdminSettings = () => {
     site_metadata: { title: 'Project Ara', description: '', logo_url: null, primary_color: '#6366f1' },
     security_config: { ip_restriction: false, ip_whitelist: '', multi_login_limit: false, brute_force_protection: true, tfa_required: false, session_timeout: 60 },
     notifications: { email_daily_report: true, email_security_alert: true, push_new_report: true, push_resource_warning: false },
-    integrations: { supabase_url: import.meta.env.VITE_SUPABASE_URL || '', ga4_id: 'G-ARA2026PRJ' }
+    integrations: { supabase_url: import.meta.env.VITE_SUPABASE_URL || '', ga4_id: 'G-ARA2026PRJ' },
+    toast_sound_url: null
   });
 
   useEffect(() => {
@@ -114,6 +116,7 @@ const AdminSettings = () => {
           site_logo_url: settings.site_metadata.logo_url,
           sec_ip_restriction: settings.security_config.ip_restriction,
           sec_ip_whitelist: settings.security_config.ip_whitelist.split(',').map(s => s.trim()).filter(Boolean),
+          toast_sound_url: settings.toast_sound_url,
           updated_at: new Date().toISOString()
         });
         if (error) throw error;
@@ -142,10 +145,13 @@ const AdminSettings = () => {
     subKey: SK, 
     value: SiteSettings[K][SK]
   ) => {
+    // Only update if the key points to an object (to support spread)
+    if (typeof settings[key] !== 'object' || settings[key] === null) return;
+    
     setSettings((prev: SiteSettings) => ({
       ...prev,
       [key]: {
-        ...prev[key],
+        ...(prev[key] as any),
         [subKey]: value
       }
     }));
@@ -506,6 +512,82 @@ const AdminSettings = () => {
                    </div>
                    <button className="text-xs font-bold px-4 py-2 bg-blue-500 text-white rounded-lg shadow-lg shadow-blue-500/20">테스트 메일 발송</button>
                 </div>
+
+                <SectionCard title="시스템 효과음 설정" icon={Bell} description="알림 발생 시 재생될 음원을 관리합니다.">
+                   <div className="space-y-6">
+                      <div>
+                         <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 ml-1">토스트 알림음 (.mp3)</label>
+                         <div className="flex flex-col md:flex-row gap-4">
+                            <div className="flex-1">
+                               <input 
+                                 type="text" 
+                                 placeholder="음원 URL (직접 입력 또는 업로드)"
+                                 value={settings.toast_sound_url || ''}
+                                 onChange={(e) => setSettings(prev => ({ ...prev, toast_sound_url: e.target.value }))}
+                                 className="form-input w-full bg-background border-border rounded-xl py-3 text-sm mb-2 focus:ring-primary/20 outline-none"
+                               />
+                               <input 
+                                 type="file" 
+                                 accept="audio/mpeg,audio/mp3"
+                                 className="hidden" 
+                                 id="toast-sound-upload"
+                                 onChange={async (e) => {
+                                   const file = e.target.files?.[0];
+                                   if (!file) return;
+                                   try {
+                                     setSaving(true);
+                                     const fileName = `notification_${Date.now()}.mp3`;
+                                     const { data, error } = await supabase.storage
+                                       .from('system_assets')
+                                       .upload(`sounds/${fileName}`, file);
+                                     
+                                     if (error) throw error;
+                                     
+                                     const { data: { publicUrl } } = supabase.storage
+                                       .from('system_assets')
+                                       .getPublicUrl(`sounds/${fileName}`);
+                                     
+                                     setSettings(prev => ({ ...prev, toast_sound_url: publicUrl }));
+                                     toast.success('음원이 성공적으로 업로드되었습니다.');
+                                   } catch (err: any) {
+                                     toast.error(`업로드 실패: ${err.message}`);
+                                   } finally {
+                                     setSaving(false);
+                                   }
+                                 }}
+                               />
+                               <div className="flex gap-2">
+                                 <label 
+                                   htmlFor="toast-sound-upload"
+                                   className="cursor-pointer px-4 py-2 bg-secondary text-foreground text-xs font-bold rounded-lg border border-border hover:bg-muted transition-colors flex items-center gap-2"
+                                 >
+                                   <Zap size={14} /> 음원 업로드
+                                 </label>
+                                 {settings.toast_sound_url && (
+                                   <button 
+                                     onClick={() => {
+                                       const audio = new Audio(settings.toast_sound_url!);
+                                       audio.play().catch(console.error);
+                                     }}
+                                     className="px-4 py-2 bg-primary/10 text-primary text-xs font-bold rounded-lg border border-primary/20 hover:bg-primary/20 transition-colors flex items-center gap-2"
+                                   >
+                                     ▶ 미리듣기
+                                   </button>
+                                 )}
+                               </div>
+                            </div>
+                            <div className="bg-muted/30 p-4 rounded-xl border border-border/40 text-[10px] text-muted-foreground flex-shrink-0 md:w-64">
+                               <p className="font-bold mb-1 flex items-center gap-1 text-primary"><AlertTriangle size={12} /> 권장 사항</p>
+                               <ul className="list-disc pl-3 space-y-1">
+                                  <li>파일 형식: MP3</li>
+                                  <li>파일 크기: 500KB 이하 권장</li>
+                                  <li>이 사운드는 전역 토스트 알림에 공통 적용됩니다.</li>
+                               </ul>
+                            </div>
+                         </div>
+                      </div>
+                   </div>
+                </SectionCard>
              </div>
            )}
 

@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import type { CultureNote } from '../../types/study';
 import TranslatedCultureNoteView from './TranslatedCultureNoteView';
+import { useBatchAutoTranslation } from '@/hooks/useBatchAutoTranslation';
 
 // DB 테이블 타입
 type CultureNoteRow = {
@@ -21,6 +23,7 @@ type StudyCultureNoteProps =
   | { note?: never; studyId: number }; // studyId로 DB에서 불러오는 경우
 
 const StudyCultureNote = (props: StudyCultureNoteProps) => {
+  const { t } = useTranslation();
   const [data, setData] = useState<CultureNoteRow[]>([]); // 여러 개의 culture_note 항목들
   const [contents, setContents] = useState<CultureNoteContent[]>([]); // 콘텐츠 항목들
   const [loading, setLoading] = useState(false);
@@ -89,6 +92,34 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
     };
   }, [studyId]);
 
+  // 글로벌 번역 파이프라인 — 문화 노트의 제목, 부제목 및 모든 리스트 항목을 단일 배치로 처리하여 로딩 지연 최소화
+  const { i18n } = useTranslation();
+  const targetLang = i18n.language;
+  const isKorean = targetLang.toLowerCase().startsWith('ko');
+
+  const combinedItems = useMemo(() => {
+    const list: { text: string; key: string }[] = [];
+    
+    data.forEach((note) => {
+      // 1. 제목
+      if (note.title) list.push({ text: note.title, key: `cult_title_${note.id}` });
+      // 2. 부제목
+      if (note.subtitle) list.push({ text: note.subtitle, key: `cult_subtitle_${note.id}` });
+      // 3. 연관 콘텐츠 리스트
+      const noteContents = contents.filter(c => c.culture_note_id === note.id);
+      noteContents.forEach((c, idx) => {
+        list.push({ text: c.content_value, key: `cult_content_${note.id}_${idx}` });
+      });
+    });
+    
+    return list;
+  }, [data, contents]);
+
+  const combinedTexts = useMemo(() => combinedItems.map(i => i.text), [combinedItems]);
+  const combinedKeys = useMemo(() => combinedItems.map(i => i.key), [combinedItems]);
+
+  const { translatedTexts } = useBatchAutoTranslation(combinedTexts, combinedKeys, targetLang);
+
   // 현재 보고 있는 문화 노트로 이동
   const handleNextNote = () => {
     setCurrentNoteIndex(prevIndex => {
@@ -105,30 +136,64 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
 
   // 로딩/에러 처리 (자체 fetch 모드일 때만)
   if (!loading && error) {
-    return <p className="p-3 text-sm text-red-600">문화 노트 오류: {error}</p>;
+    return <p className="p-3 text-sm text-red-600">{t('study.culture_note.error', { error })}</p>;
   }
 
-  if (loading) return <p className="p-3 text-sm text-gray-500">문화 노트 불러오는 중…</p>;
+  if (loading) return <p className="p-3 text-sm text-gray-500">{t('study.culture_note.loading')}</p>;
 
   if (data.length === 0) {
     return (
       <div className="p-4 bg-white border rounded-lg shadow-sm">
-        <h4 className="font-semibold mb-2">문화 노트</h4>
-        <p className="text-sm text-gray-500">문화 노트가 없습니다.</p>
+        <h4 className="font-semibold mb-2">{t('study.culture_note.title')}</h4>
+        <p className="text-sm text-gray-500">{t('study.culture_note.empty')}</p>
       </div>
     );
   }
 
   // 뷰 상태 동기화 — 현재 인덱스 및 관계형 식별자(culture_note_id)를 기반으로 렌더링 대상 데이터 필터링
   const currentNote = data[currentNoteIndex]; // 현재 보고 있는 문화 노트
-  const currentContents = contents.filter(content => content.culture_note_id === currentNote.id); // 해당 문화 노트에 맞는 콘텐츠들
+  const noteContents = contents.filter(content => content.culture_note_id === currentNote.id);
+
+  // 번역 데이터 추출 파이프라인 — 배치 번역 결과물에서 현재 인덱스에 해당하는 제목, 부제목, 리스트 항목을 매핑
+  const getNoteTranslation = (noteId: number) => {
+    let offset = 0;
+    let noteTitle = '';
+    let noteSubtitle = '';
+    const noteList: string[] = [];
+
+    for (const note of data) {
+      if (note.id === noteId) {
+        if (note.title) noteTitle = translatedTexts[offset++] || '';
+        if (note.subtitle) noteSubtitle = translatedTexts[offset++] || '';
+        const nc = contents.filter(c => c.culture_note_id === note.id);
+        nc.forEach(() => {
+          noteList.push(translatedTexts[offset++] || '');
+        });
+        break;
+      }
+      if (note.title) offset++;
+      if (note.subtitle) offset++;
+      const nc = contents.filter(c => c.culture_note_id === note.id);
+      offset += nc.length;
+    }
+    return { noteTitle, noteSubtitle, noteList };
+  };
+
+  const { noteTitle, noteSubtitle, noteList } = getNoteTranslation(currentNote.id);
 
   const isLastPage = currentNoteIndex === data.length - 1; // 마지막 페이지인지 여부
   const isFirstPage = currentNoteIndex === 0; // 첫 번째 페이지인지 여부
 
   return (
     <div>
-      <TranslatedCultureNoteView note={currentNote} contents={currentContents} />
+      <TranslatedCultureNoteView 
+        note={currentNote} 
+        contents={noteContents}
+        translatedTitle={noteTitle}
+        translatedSubtitle={noteSubtitle}
+        translatedContents={noteList}
+        isKorean={isKorean}
+      />
 
       {/* 버튼들 */}
       {data.length > 1 && (

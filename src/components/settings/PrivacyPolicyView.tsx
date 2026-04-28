@@ -12,7 +12,7 @@ function PrivacyPolicyView({ onClose }: PrivacyPolicyViewProps) {
   if (!toc) {
     return (
       <div className="p-4 text-sm text-red-500">
-        개인정보처리방침 문서를 찾을 수 없습니다. CONTENT.privacy 정의를 확인해주세요.
+        {t('policy.not_found_privacy', '개인정보처리방침 문서를 찾을 수 없습니다. CONTENT.privacy 정의를 확인해주세요.')}
       </div>
     );
   }

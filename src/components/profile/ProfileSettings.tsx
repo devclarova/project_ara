@@ -64,8 +64,8 @@ export default function ProfileSettings() {
       label: t('settings.support_policy'),
       keywords: [
         t('settings.terms', '이용약관'),
-        t('settings.privacy_policy', '개인정보 처리방침'),
-        t('settings.marketing_consent', '마케팅 정보 수신 동의'),
+        t('settings.title_privacy', '개인정보 처리방침'),
+        t('settings.title_marketing', '마케팅 정보 수신 동의'),
         t('settings.help_center', '고객센터'),
       ],
     },

@@ -40,13 +40,16 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import TranslateButton from '@/components/common/TranslateButton';
+import { useAutoTranslation } from '@/hooks/useAutoTranslation';
 
 
 
 export default function GoodsDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language;
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -62,6 +65,7 @@ export default function GoodsDetailPage() {
   const [newContent, setNewContent] = useState('');
   const [reviewImages, setReviewImages] = useState<File[]>([]);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [translatedReviews, setTranslatedReviews] = useState<Record<string, string>>({});
   const [isBuyer, setIsBuyer] = useState(false); 
   const [photoOnly, setPhotoOnly] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -73,6 +77,11 @@ export default function GoodsDetailPage() {
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
   const [couponError, setCouponError] = useState('');
   
+  // 자동 번역 엔진(Dynamic Localization) — 상품명, 요약, 상세 설명 등 DB 기반 텍스트를 현재 선택된 언어로 실시간 번역
+  const { translatedText: translatedName } = useAutoTranslation(product?.name || '', `goods_name_${id}`, currentLang);
+  const { translatedText: translatedSummary } = useAutoTranslation(product?.summary || '', `goods_summary_${id}`, currentLang);
+  const { translatedText: translatedDescription } = useAutoTranslation(product?.description || '', `goods_description_${id}`, currentLang);
+
   // 파생 상태 엔진(Derived State) — 기본가, 할인가, 쿠폰 적용 여부를 기반으로 런타임 결제 금액 실시간 산출
   const [finalPrice, setFinalPrice] = useState(0);
 
@@ -172,14 +181,14 @@ export default function GoodsDetailPage() {
       const rpcData = data as any;
       if (rpcData && rpcData.is_valid) {
         setAppliedCoupon(rpcData.promotion);
-        toast.success(t('goods.coupon_applied', '쿠폰이 적용되었습니다!'));
+        toast.success(t('goods.coupon.applied'));
       } else {
-        setCouponError(rpcData?.reason || t('goods.coupon_invalid', '유효하지 않은 쿠폰입니다.'));
+        setCouponError(rpcData?.reason || t('goods.coupon.invalid'));
         setAppliedCoupon(null);
       }
     } catch (err: unknown) {
       console.error('Coupon validation fail:', getErrorMessage(err));
-      setCouponError(t('goods.coupon_error', '쿠폰 확인 중 오류가 발생했습니다.'));
+      setCouponError(t('goods.coupon.error'));
     } finally {
       setIsValidatingCoupon(false);
     }
@@ -191,7 +200,7 @@ export default function GoodsDetailPage() {
       <div className="bg-primary/10 dark:bg-primary/20 border-b border-primary/20 dark:border-primary/40 py-2.5 relative z-50">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-2.5 text-primary font-semibold tracking-tight text-[11px] sm:text-xs md:text-sm">
           <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-          <span className="text-center">공식 굿즈샵 런칭 준비 중입니다. ARA의 새로운 컬렉션을 먼저 만나보세요.</span>
+          <span className="text-center">{t('goods.notice_banner')}</span>
           <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 hidden sm:block shrink-0 opacity-70" />
         </div>
       </div>
@@ -202,7 +211,7 @@ export default function GoodsDetailPage() {
             <ChevronLeft className="w-6 h-6" />
           </Button>
           <span className="font-semibold text-lg max-w-[200px] truncate opacity-0 md:opacity-100 transition-opacity">
-             {product.name}
+             {translatedName || product.name}
           </span>
           <div className="flex gap-2">
             <Button variant="ghost" size="icon" className="rounded-full">
@@ -226,34 +235,34 @@ export default function GoodsDetailPage() {
              <div className="aspect-square rounded-3xl overflow-hidden bg-gray-100 dark:bg-gray-900 relative group">
               <img 
                 src={product.main_image_url || 'https://images.unsplash.com/photo-1583573636246-18cb2246697f?q=80&w=800'} 
-                alt={product.name}
+                alt={translatedName || product.name}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
-              <div className="absolute top-4 left-4 flex flex-col gap-2">
+              <div className="absolute top-4 left-4 flex flex-col gap-2 z-20 pointer-events-none">
                 {product.badge_new && (
-                    <Badge className="bg-[#00bfa5] text-white px-3 py-1 text-xs uppercase tracking-widest border-none">NEW</Badge>
+                    <Badge className="bg-[#00bfa5] text-white px-3 py-1 text-xs uppercase tracking-widest border-none">{t('goods.badge.new')}</Badge>
                 )}
                 {product.badge_best && (
-                    <Badge className="bg-amber-500 text-white px-3 py-1 text-xs uppercase tracking-widest border-none">BEST</Badge>
+                    <Badge className="bg-amber-500 text-white px-3 py-1 text-xs uppercase tracking-widest border-none">{t('goods.badge.best')}</Badge>
                 )}
                 {product.discount_percent > 0 && (
                     <Badge className="bg-red-500 text-white px-3 py-1 text-xs uppercase tracking-widest border-none">
-                        {product.discount_percent}% OFF
+                        {t('goods.badge.off_pattern', { percent: product.discount_percent })}
                     </Badge>
                 )}
                 {product.status === 'soldout' && (
-                    <Badge className="bg-zinc-800 text-white px-3 py-1 text-xs uppercase tracking-widest border-none opacity-90">SOLD OUT</Badge>
+                    <Badge className="bg-zinc-800 text-white px-3 py-1 text-xs uppercase tracking-widest border-none opacity-90">{t('goods.badge.soldout')}</Badge>
                 )}
               </div>
             </div>
             {/* 멀티플 뷰 디렉토리 — 상품의 세부 디테일을 확인하기 위한 썸네일 탐색 인터페이스 */}
              <div className="grid grid-cols-4 gap-4">
                <div className="aspect-square rounded-xl overflow-hidden cursor-pointer border-2 border-black dark:border-white">
-                    <img src={product.main_image_url || 'https://images.unsplash.com/photo-1583573636246-18cb2246697f?q=80&w=200'} className="w-full h-full object-cover" alt="main" />
+                    <img src={product.main_image_url || 'https://images.unsplash.com/photo-1583573636246-18cb2246697f?q=80&w=200'} className="w-full h-full object-cover" alt={t('goods.alt.main_image')} />
                </div>
                {product.gallery_urls?.slice(0, 3).map((url: string, i: number) => (
                  <div key={i} className="aspect-square rounded-xl overflow-hidden cursor-pointer border-2 border-transparent">
-                    <img src={url} className="w-full h-full object-cover hover:opacity-80 transition-opacity" alt="gallery" />
+                    <img src={url} className="w-full h-full object-cover hover:opacity-80 transition-opacity" alt={t('goods.alt.gallery_image')} />
                  </div>
                ))}
             </div>
@@ -273,17 +282,17 @@ export default function GoodsDetailPage() {
             </div>
             
             <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">
-              {product.name}
+              {translatedName || product.name}
             </h1>
 
             <div className="flex items-center gap-4 mb-6">
               <div className="flex flex-col">
                 <div className="text-3xl font-semibold text-primary">
-                  ${finalPrice.toFixed(2)}
+                   {t('goods.price_unit')}{finalPrice.toFixed(2)}
                 </div>
                 {product.discount_percent > 0 && (
                   <div className="text-sm text-gray-400 line-through">
-                    ${product.price.toFixed(2)}
+                     {t('goods.price_unit')}{product.price.toFixed(2)}
                   </div>
                 )}
               </div>
@@ -297,7 +306,7 @@ export default function GoodsDetailPage() {
             </div>
 
             <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed whitespace-pre-wrap">
-              {product.summary}
+              {translatedSummary || product.summary}
             </p>
 
             {/* 옵션 매트릭스 렌더러 — 상품 SKU별 가용 옵션을 동적으로 매핑하여 사용자 선택 유도 */}
@@ -305,7 +314,9 @@ export default function GoodsDetailPage() {
               <div className="space-y-6 mb-8 border-t border-b border-gray-100 dark:border-gray-800 py-6">
                 {product.options.map((option: ProductOption) => (
                   <div key={option.name}>
-                    <label className="block text-sm font-bold mb-3">{option.name}</label>
+                    <label className="block text-sm font-bold mb-3">
+                      <TranslatedOptionText text={option.name} contentId={`goods_opt_name_${product.id}_${option.name}`} lang={currentLang} />
+                    </label>
                     <div className="flex flex-wrap gap-3">
                       {option.values.map((val: string) => (
                         <button 
@@ -318,7 +329,7 @@ export default function GoodsDetailPage() {
                               : 'border-gray-200 dark:border-gray-700 hover:border-black dark:hover:border-white'}
                           `}
                         >
-                          {val}
+                          <TranslatedOptionText text={val} contentId={`goods_opt_val_${product.id}_${option.name}_${val}`} lang={currentLang} />
                         </button>
                       ))}
                     </div>
@@ -329,13 +340,13 @@ export default function GoodsDetailPage() {
 
             {/* Coupon Application Section */}
             <div className="mb-8 p-6 bg-gray-50 dark:bg-zinc-900 rounded-3xl border border-gray-100 dark:border-white/5">
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">할인 쿠폰 적용</label>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">{t('goods.coupon.apply')}</label>
                 <div className="flex gap-2">
                     <input 
                         type="text"
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value)}
-                        placeholder="쿠폰 코드를 입력하세요"
+                        placeholder={t('goods.coupon.placeholder')}
                         className="flex-1 bg-white dark:bg-black border border-gray-200 dark:border-zinc-800 rounded-xl px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                     />
                     <Button 
@@ -344,7 +355,7 @@ export default function GoodsDetailPage() {
                         disabled={isValidatingCoupon}
                         className="rounded-xl font-bold"
                     >
-                        {isValidatingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : '적용'}
+                        {isValidatingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : t('goods.coupon.apply_btn')}
                     </Button>
                 </div>
                 {couponError && <p className="text-red-500 text-[10px] mt-2 ml-1 font-bold">{couponError}</p>}
@@ -352,7 +363,7 @@ export default function GoodsDetailPage() {
                     <div className="mt-3 flex items-center justify-between p-3 bg-primary/10 rounded-xl border border-primary/20">
                         <div className="flex items-center gap-2">
                             <Sparkles className="w-4 h-4 text-primary" />
-                            <span className="text-xs font-bold text-primary">{appliedCoupon.name} 적용됨</span>
+                            <span className="text-xs font-bold text-primary">{appliedCoupon.name} {t('goods.coupon.applied')}</span>
                         </div>
                         <button onClick={() => { setAppliedCoupon(null); setCouponCode(''); }} className="text-primary/60 hover:text-primary transition-colors">
                             <XIcon size={14} />
@@ -361,17 +372,19 @@ export default function GoodsDetailPage() {
                 )}
             </div>
 
-            {/* Price Preview */}
-            <div className="mb-8 flex justify-between items-end bg-primary/5 p-6 rounded-3xl border-2 border-dashed border-primary/10">
-                <span className="text-sm font-bold text-gray-500">최종 결제 금액</span>
+            {/* Price Preview - Glassmorphism & Refined Solid Border */}
+            <div className="mb-8 flex justify-between items-center bg-gradient-to-br from-primary/[0.08] to-transparent backdrop-blur-md p-6 rounded-[2rem] border border-primary/20">
+                <div className="flex flex-col gap-1">
+                  <span className="text-base font-bold text-gray-800 dark:text-gray-100">{t('goods.checkout_total')}</span>
+                  {appliedCoupon && (
+                      <span className="text-sm text-gray-400 line-through decoration-primary/30">
+                          {t('goods.price_unit')}{itemPrice.toFixed(2)}
+                      </span>
+                  )}
+                </div>
                 <div className="text-right">
-                    {appliedCoupon && (
-                        <div className="text-sm text-gray-400 line-through mb-1">
-                            ${itemPrice.toFixed(2)}
-                        </div>
-                    )}
-                    <div className="text-4xl font-black text-primary tracking-tighter">
-                        ${finalPrice.toFixed(2)}
+                    <div className="text-4xl font-black text-primary tracking-tighter drop-shadow-sm">
+                        {t('goods.price_unit')}{finalPrice.toFixed(2)}
                     </div>
                 </div>
             </div>
@@ -393,15 +406,15 @@ export default function GoodsDetailPage() {
                     toast.promise(
                         new Promise((resolve) => setTimeout(resolve, 1500)),
                         {
-                            loading: '결제 준비 중...',
-                            success: '주문이 접수되었습니다! (가상 결제 완료)',
-                            error: '결제 실패'
+                            loading: t('goods.checkout_loading'),
+                            success: t('goods.checkout_success'),
+                            error: t('goods.checkout_error')
                         }
                     );
                 }}
                 className="flex-1 h-14 rounded-full text-lg font-semibold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
                >
-                 {t('goods.buy_now') || '지금 구매하기'}
+                 {t('goods.buy_now')}
                </Button>
                <Button variant="outline" className="h-14 w-14 rounded-full p-0 flex-shrink-0" onClick={() => setIsWishlisted(!isWishlisted)}>
                  <Heart className={`w-6 h-6 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />
@@ -426,14 +439,14 @@ export default function GoodsDetailPage() {
         <div className="mt-16 border-t border-gray-100 dark:border-gray-800 pt-16">
            <h2 className="text-2xl font-bold mb-8">{t('goods.product_details')}</h2>
            <div className="prose dark:prose-invert max-w-none text-gray-600 dark:text-gray-300">
-             <div className="text-lg leading-relaxed mb-8 whitespace-pre-wrap">
-               {product.description}
+            <div className="text-lg leading-relaxed mb-8 whitespace-pre-wrap">
+               {translatedDescription || product.description}
              </div>
              {/* Detail Images if any */}
              {product.gallery_urls?.length > 0 && (
                  <div className="space-y-8">
                      {product.gallery_urls.map((url: string, i: number) => (
-                         <img key={i} src={url} className="w-full rounded-2xl shadow-sm" alt="detail" />
+                         <img key={i} src={url} className="w-full rounded-2xl shadow-sm" alt={t('goods.alt.detail_image')} />
                      ))}
                  </div>
              )}
@@ -453,10 +466,10 @@ export default function GoodsDetailPage() {
                <div key={p.id} onClick={() => navigate(`/goods/${p.id}`)} className="cursor-pointer group">
                   <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 mb-3 relative">
                      <img src={p.main_image_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform" alt={p.name} />
-                     {p.discount_percent > 0 && <Badge className="absolute top-2 left-2 bg-red-500 text-white border-none text-[10px]">{p.discount_percent}%</Badge>}
+                     {p.discount_percent > 0 && <Badge className="absolute top-2 left-2 bg-red-500 text-white border-none text-[10px]">{p.discount_percent}{t('goods.percent_suffix')}</Badge>}
                   </div>
                   <h3 className="font-bold text-sm truncate">{p.name}</h3>
-                  <p className="text-primary font-bold text-sm">${p.sale_price.toFixed(2)}</p>
+                  <p className="text-primary font-bold text-sm">{t('goods.price_unit')}{p.sale_price.toFixed(2)}</p>
                </div>
              )) : (
               <div className="col-span-full py-10 text-center text-gray-400">
@@ -530,7 +543,7 @@ export default function GoodsDetailPage() {
                            <span className="w-3 font-medium">{r}</span>
                            <Star className="w-3 h-3 text-gray-300 fill-gray-300" />
                            <Progress value={percent} className="h-2 flex-1" />
-                           <span className="w-8 text-right text-gray-400">{Math.round(percent)}%</span>
+                           <span className="w-8 text-right text-gray-400">{Math.round(percent)}{t('goods.percent_suffix')}</span>
                         </div>
                       );
                    })}
@@ -540,11 +553,11 @@ export default function GoodsDetailPage() {
                       <p className="text-sm text-gray-500 mb-2">{t('goods.reviews.verified_purchase')}</p>
                       <p className="font-bold text-2xl text-primary">
                           {reviews.length > 0 
-                            ? `${Math.round((reviews.filter(r => r.rating >= 4).length / reviews.length) * 100)}%`
-                            : t('goods.reviews.no_stats') || '데이터 없음'} 
+                            ? `${Math.round((reviews.filter(r => r.rating >= 4).length / reviews.length) * 100)}${t('goods.percent_suffix')}`
+                            : t('goods.reviews.no_stats')} 
                       </p>
                       <p className="text-xs text-gray-400 mt-1">
-                        {reviews.length > 0 ? "구매자의 긍정적 검토 비율" : "첫 후기를 기다리고 있습니다"}
+                        {reviews.length > 0 ? t('goods.reviews.positive_ratio') : t('goods.reviews.waiting_first')}
                       </p>
                    </div>
                 </div>
@@ -554,8 +567,8 @@ export default function GoodsDetailPage() {
                 <div className="w-16 h-16 bg-white dark:bg-zinc-800 rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4 text-gray-300">
                    <Star size={32} />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">아직 등록된 후기가 없습니다</h3>
-                <p className="text-sm text-gray-500">첫 번째 리뷰를 작성하고 다른 구매자들에게 도움을 주세요.</p>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('goods.reviews.no_reviews')}</h3>
+                <p className="text-sm text-gray-500">{t('goods.reviews.be_first_desc')}</p>
              </div>
            )}
 
@@ -588,14 +601,42 @@ export default function GoodsDetailPage() {
                        ))}
                     </div>
 
-                    <p className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">
-                       {review.content}
-                    </p>
+                    <div className="flex flex-col gap-2 mb-4">
+                    <div className="flex flex-col gap-3 mb-4">
+                      <p className="text-gray-700 dark:text-gray-300 leading-relaxed font-['Pretendard']">
+                         {review.content}
+                      </p>
+                      
+                      {translatedReviews[review.id] && (
+                        <div className="bg-gray-50/50 dark:bg-white/5 backdrop-blur-md border border-gray-100 dark:border-white/10 rounded-2xl p-4 mt-1 relative overflow-hidden group/trans">
+                          <div className="absolute top-0 left-0 w-1 h-full bg-primary/30" />
+                          <div className="flex items-center gap-2 mb-2 text-primary/70">
+                            <i className="ri-translate-2 text-sm" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">{t('common.translated')}</span>
+                          </div>
+                          <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed italic">
+                            {translatedReviews[review.id]}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2">
+                        <TranslateButton 
+                          text={review.content} 
+                          contentId={`goods_review_${review.id}`}
+                          setTranslated={(val) => setTranslatedReviews(prev => ({...prev, [review.id]: val}))}
+                        />
+                        {translatedReviews[review.id] && (
+                          <span className="text-[10px] text-gray-400 font-medium">{t('common.auto_translated')}</span>
+                        )}
+                      </div>
+                    </div>
+                    </div>
 
                     {review.image_urls && review.image_urls.length > 0 && (
                        <div className="flex gap-2 mb-4">
                           {review.image_urls.map((img: string, i: number) => (
-                             <img key={i} src={img} alt="review" className="w-20 h-20 rounded-lg object-cover cursor-pointer hover:opacity-90" />
+                             <img key={i} src={img} alt={t('goods.alt.review_image')} className="w-20 h-20 rounded-lg object-cover cursor-pointer hover:opacity-90" />
                           ))}
                        </div>
                     )}
@@ -660,7 +701,7 @@ export default function GoodsDetailPage() {
                         }
                     }}
                 >
-                   {t('goods.reviews.load_more') || '리뷰 더보기'}
+                   {t('goods.reviews.load_more')}
                 </Button>
              </div>
            )}
@@ -688,7 +729,7 @@ export default function GoodsDetailPage() {
               <div className="flex justify-between items-center mb-8">
                 <div>
                   <h3 className="text-2xl font-black">{t('goods.reviews.write_btn')}</h3>
-                  <p className="text-sm text-gray-500 mt-1">이 상품에 대한 솔직한 경험을 들려주세요</p>
+                  <p className="text-sm text-gray-500 mt-1">{t('goods.reviews.modal.how_was_it')}</p>
                 </div>
                 <button onClick={() => setIsReviewModalOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
                   <XIcon size={24} />
@@ -697,7 +738,7 @@ export default function GoodsDetailPage() {
 
               <div className="space-y-6">
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">상품은 어떠셨나요?</label>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">{t('goods.reviews.modal.how_was_it')}</label>
                   <div className="flex gap-2">
                     {[1, 2, 3, 4, 5].map((s) => (
                       <button 
@@ -712,24 +753,24 @@ export default function GoodsDetailPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">상세 후기</label>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">{t('goods.reviews.modal.detail_review')}</label>
                   <textarea 
                     value={newContent}
                     onChange={(e) => setNewContent(e.target.value)}
                     className="w-full h-32 p-4 bg-gray-50 dark:bg-zinc-800 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 border border-transparent focus:border-primary/20 text-sm resize-none"
-                    placeholder="다른 구매자들에게 도움이 될 수 있도록 소중한 후기를 남겨주세요."
+                    placeholder={t('goods.reviews.modal.placeholder')}
                   />
                 </div>
 
                 <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">사진 첨부 (최대 3장)</label>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">{t('goods.reviews.modal.add_photo')}</label>
                     <div className="flex gap-3 overflow-x-auto pb-2">
                         {reviewImages.map((file, idx) => (
                             <div key={idx} className="relative w-24 h-24 flex-shrink-0 group">
                                 <img 
                                     src={URL.createObjectURL(file)} 
                                     className="w-full h-full object-cover rounded-xl" 
-                                    alt="Preview" 
+                                    alt={t('goods.alt.preview_image')} 
                                 />
                                 <button 
                                     type="button"
@@ -753,7 +794,7 @@ export default function GoodsDetailPage() {
                                     }}
                                 />
                                 <ImageIcon size={24} />
-                                <span className="text-[10px] font-bold mt-1">추가</span>
+                                <span className="text-[10px] font-bold mt-1">{t('common.add')}</span>
                             </label>
                         )}
                     </div>
@@ -765,13 +806,13 @@ export default function GoodsDetailPage() {
                     disabled={isSubmittingReview}
                     onClick={async () => {
                         if (!newContent.trim()) {
-                            toast.error("리뷰 내용을 입력해 주세요.");
+                            toast.error(t('goods.reviews.modal.empty_content'));
                             return;
                         }
 
                         setIsSubmittingReview(true);
                         try {
-                            if (!session?.user) throw new Error("로그인이 필요합니다.");
+                            if (!session?.user) throw new Error(t('auth.login_needed'));
                             
                             // 미디어 직렬화 업로드 — 이미지 안정성 확보를 위해 개별 파일을 독립적으로 스토리지에 업로드하고 식별자 정규화
                             const imageUrls: string[] = [];
@@ -793,14 +834,14 @@ export default function GoodsDetailPage() {
                             await goodsService.addReview({
                                 product_id: product.id,
                                 user_id: session.user.id,
-                                user_name: profile?.nickname || '익명 사용자',
+                                user_name: profile?.nickname || t('common.anonymous'),
                                 user_avatar_url: profile?.avatar_url || '',
                                 rating: newRating,
                                 content: newContent,
                                 image_urls: imageUrls
                             });
                             
-                            toast.success("소중한 리뷰가 등록되었습니다!");
+                            toast.success(t('goods.reviews.modal.success'));
                             setIsReviewModalOpen(false);
                             setNewContent('');
                             setReviewImages([]);
@@ -815,7 +856,7 @@ export default function GoodsDetailPage() {
                     }}
                   >
                     {isSubmittingReview ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send size={20} />}
-                    등록하기
+                    {t('common.submit')}
                   </Button>
                 </div>
               </div>
@@ -825,4 +866,9 @@ export default function GoodsDetailPage() {
       </AnimatePresence>
     </div>
   );
+}
+
+function TranslatedOptionText({ text, contentId, lang }: { text: string; contentId: string; lang: string }) {
+  const { translatedText } = useAutoTranslation(text, contentId, lang);
+  return <>{translatedText || text}</>;
 }

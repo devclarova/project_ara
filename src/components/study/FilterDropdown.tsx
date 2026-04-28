@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import CheckboxSquare from '../common/CheckboxSquare';
 
-export type TDifficulty = '' | '초급' | '중급' | '고급';
+export type TDifficulty = string;
 
 type FilterValue = string;
 
@@ -12,10 +12,10 @@ interface FilterOption {
 }
 
 const DEFAULT_LEVEL_OPTIONS: FilterOption[] = [
-  { label: '전체', value: '' },
-  { label: '초급', value: '초급' },
-  { label: '중급', value: '중급' },
-  { label: '고급', value: '고급' },
+  { label: 'All', value: '' },
+  { label: 'Beginner', value: 'beginner' },
+  { label: 'Intermediate', value: 'intermediate' },
+  { label: 'Advanced', value: 'advanced' },
 ];
 
 interface FilterDropdownProps {
