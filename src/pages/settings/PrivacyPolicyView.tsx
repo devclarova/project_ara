@@ -14,18 +14,18 @@ export function PrivacyPolicyView({ onClose }: { onClose?: () => void }) {
     <div className="flex flex-col min-h-[420px]">
       <div className="space-y-3 text-sm leading-6 text-gray-700 dark:text-gray-300">
         <p>
-          {t('settings.privacy_policy.summary')}
+          {t('policy.privacy.collect.h')}
         </p>
         <ul className="list-disc pl-5 space-y-1">
-          <li>{t('settings.privacy_policy.item_1')}</li>
-          <li>{t('settings.privacy_policy.item_2')}</li>
-          <li>{t('settings.privacy_policy.item_3')}</li>
-          <li>{t('settings.privacy_policy.item_4')}</li>
+          <li>{t('policy.privacy.collect.required_items')}</li>
+          <li>{t('policy.privacy.collect.optional_items')}</li>
+          <li>{t('policy.privacy.collect.auto_items')}</li>
+          <li>{t('policy.privacy.collect.social_items')}</li>
         </ul>
       </div>
       <div className="-mx-6 mt-auto dark:border-gray-800 bg-white dark:bg-gray-900 px-6 py-4 flex justify-end gap-2 transition-colors">
         <Button type="button" variant="primary" size="md" onClick={onClose}>
-          {t('settings.privacy_policy.close')}
+          {t('common.close', '닫기')}
         </Button>
       </div>
     </div>

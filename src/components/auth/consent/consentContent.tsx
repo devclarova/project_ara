@@ -293,5 +293,7 @@ export const getContent = (
   },
 });
 
-// 기존 호환성을 위한 CONTENT 유지
-export const CONTENT = getContent((key: string) => key);
+import i18next from 'i18next';
+
+// 기존 호환성을 위한 CONTENT 유지 - i18next.t를 사용하여 키 노출 방지
+export const CONTENT = getContent((key: string) => i18next.t(key));

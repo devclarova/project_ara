@@ -66,7 +66,7 @@ export default function SolutionSection() {
           <div className="space-y-8">
             {items.map((item, index) => (
               <motion.div
-                key={item.title}
+                key={`feature-${index}`}
                 className="relative pl-8"
                 initial={{ opacity: 0, x: 24 }}
                 whileInView={{ opacity: 1, x: 0 }}

@@ -32,7 +32,8 @@ type SectionId =
   | 'features'
   | 'contents'
   | 'testimonials'
-  | 'cta';
+  | 'cta'
+  | 'footer';
 
 const sectionOrder: SectionId[] = [
   'hero',
@@ -42,6 +43,7 @@ const sectionOrder: SectionId[] = [
   'contents',
   'testimonials',
   'cta',
+  'footer',
 ];
 
 const LandingPage = ({ onSignup }: HomeProps) => {
@@ -249,6 +251,7 @@ const LandingPage = ({ onSignup }: HomeProps) => {
           { id: 'contents' as SectionId, label: t('landing.nav_contents', 'Contents') },
           { id: 'testimonials' as SectionId, label: t('landing.nav_stories', 'Stories') },
           { id: 'cta' as SectionId, label: t('landing.nav_start', 'Start') },
+          { id: 'footer' as SectionId, label: t('landing.nav_contact', 'Contact') },
         ].map(({ id, label }) => {
           const isActive = activeSection === id;
           return (

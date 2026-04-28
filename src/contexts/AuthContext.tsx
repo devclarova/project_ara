@@ -78,6 +78,7 @@ async function createProfileFromDraftIfMissing(u: User) {
   const marketing_opt_in = !!draft?.marketing_opt_in;
 
   const payload = {
+    id: u.id, // Auth ID를 Profile ID(PK)로 사용하여 RLS 정책(auth.uid() = user_id)과의 정합성 확보
     user_id: u.id,
     nickname,
     gender,

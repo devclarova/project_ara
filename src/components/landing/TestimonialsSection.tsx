@@ -60,17 +60,17 @@ export default function TestimonialsSection() {
   const stats = [
     {
       label: t('landing.testimonials.stats.duration.label'),
-      value: '2.1배',
+      value: t('landing.testimonials.stats.duration.value', '2.1배'),
       desc: t('landing.testimonials.stats.duration.desc'),
     },
     {
       label: t('landing.testimonials.stats.persona.label'),
-      value: '15명+',
+      value: t('landing.testimonials.stats.persona.value', '15명+'),
       desc: t('landing.testimonials.stats.persona.desc'),
     },
     {
       label: t('landing.testimonials.stats.scenario.label'),
-      value: '20개+',
+      value: t('landing.testimonials.stats.scenario.value', '20개+'),
       desc: t('landing.testimonials.stats.scenario.desc'),
     },
   ];
@@ -129,9 +129,9 @@ export default function TestimonialsSection() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {stats.map(stat => (
+              {stats.map((stat, index) => (
                 <div
-                  key={stat.label}
+                  key={`stat-${index}`}
                   className="rounded-2xl bg-gray-50 dark:bg-secondary px-3 py-2 sm:px-4 sm:py-3 shadow-sm border border-gray-100 dark:border-slate-700 h-full flex flex-col"
                 >
                   <div className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1 break-keep">
@@ -149,8 +149,8 @@ export default function TestimonialsSection() {
           {/* 오른쪽 영역 */}
           <div className="w-full mt-10 md:mt-0 md:justify-self-end max-w-full overflow-hidden">
             <BaseCarousel autoplay loop slidesPerView={1} spaceBetween={20}>
-              {reviews.map(r => (
-                <SwiperSlide key={r.name} className="pb-10">
+              {reviews.map((r, index) => (
+                <SwiperSlide key={`review-${index}`} className="pb-10">
                   <div className="relative rounded-2xl bg-gray-50 dark:bg-secondary px-5 py-6 shadow-sm border border-gray-100 dark:border-slate-700 h-full flex flex-col">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/60 to-sky-400 text-white flex items-center justify-center text-sm font-semibold">

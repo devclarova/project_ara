@@ -1,8 +1,9 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { useBlockedUsers } from '@/hooks/useBlockedUsers';
 
 interface UseBlockReturn {
   isBlocked: boolean;
@@ -17,55 +18,25 @@ interface UseBlockReturn {
  * - 방법(How): Supabase Soft Delete 패턴으로 차단 상태를 관리하며, 차단 시 채팅방 퇴장 및 알림 읽음 처리 등 연쇄적인 데이터 정량화(Cleanup) 프로세스를 오케스트레이션함
  */
 export function useBlock(targetProfileId?: string): UseBlockReturn {
-  const { user } = useAuth();
+  const { user, profileId: myProfileId } = useAuth();
+  const { blockedIds } = useBlockedUsers();
   const { t } = useTranslation();
-  const [isBlocked, setIsBlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [myProfileId, setMyProfileId] = useState<string | null>(null);
 
-  // Get current user's profile ID
-  useEffect(() => {
-    if (!user) return;
+  const isBlocked = useMemo(() => 
+    targetProfileId ? blockedIds.includes(targetProfileId) : false,
+    [blockedIds, targetProfileId]
+  );
 
-    const loadProfile = async () => {
-      const { data } = await (supabase.from('profiles') as any)
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
 
-      if (data) setMyProfileId(data.id);
-    };
 
-    loadProfile();
-  }, [user]);
-
-  // Check block status
+  // Check block status (no-op now as we use context)
   const checkBlockStatus = useCallback(async () => {
-    if (!myProfileId || !targetProfileId || myProfileId === targetProfileId) {
-      setIsBlocked(false);
-      return;
-    }
+    // Rely on REFRESH_BLOCKED_USERS event to trigger fetch in context
+    window.dispatchEvent(new Event('REFRESH_BLOCKED_USERS'));
+  }, []);
 
-    const { data, error } = await (supabase.from('user_blocks') as any)
-      .select('id')
-      .eq('blocker_id', myProfileId)
-      .eq('blocked_id', targetProfileId)
-      .is('ended_at', null)
-      .maybeSingle();
-
-    if (error) {
-      console.error('[useBlock] checkBlockStatus error:', error);
-      return;
-    }
-
-    setIsBlocked(!!data);
-  }, [myProfileId, targetProfileId]);
-
-  // Initial + whenever ids change
-  useEffect(() => {
-    if (!myProfileId || !targetProfileId) return;
-    checkBlockStatus();
-  }, [myProfileId, targetProfileId, checkBlockStatus]);
+  // Removed useEffect checkBlockStatus on mount to prevent 100+ DB queries
 
   // 전역 차단 갱신 이벤트를 받으면 재조회
   useEffect(() => {
@@ -106,7 +77,6 @@ export function useBlock(targetProfileId?: string): UseBlockReturn {
 
         if (error) throw error;
 
-        setIsBlocked(false);
         toast.success(t('profile.unblocked', '차단 해제'));
       } else {
         // Block: Check if soft-deleted row exists
@@ -140,7 +110,6 @@ export function useBlock(targetProfileId?: string): UseBlockReturn {
 
         if (error) throw error;
 
-        setIsBlocked(true);
         toast.success(t('profile.blocked', '차단 완료'));
 
         // 1:1 채팅방 나가기 처리 및 기존 미읽음 메시지/알림 읽음 처리 (자동화)

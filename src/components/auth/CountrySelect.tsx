@@ -203,6 +203,18 @@ export default function CountrySelect({ value, onChange, error = false, isDisabl
         menuPortalTarget={typeof window !== 'undefined' ? document.body : null}
         menuShouldScrollIntoView
         maxMenuHeight={280}
+        formatOptionLabel={(opt: Option) => (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {opt.flag_url && (
+              <img
+                src={opt.flag_url}
+                alt=""
+                style={{ width: 20, height: 14, objectFit: 'cover', borderRadius: 2, flexShrink: 0 }}
+              />
+            )}
+            <span>{opt.label}</span>
+          </div>
+        )}
         openMenuOnFocus
       />
 

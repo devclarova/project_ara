@@ -4,6 +4,7 @@ import { Autoplay, Pagination } from 'swiper/modules';
 
 import 'swiper/css';
 import 'swiper/css/pagination';
+import { useTranslation } from 'react-i18next';
 
 type SlideItem = {
   id: string | number;
@@ -16,41 +17,55 @@ type SlideItem = {
   alt?: string;
 };
 
-const SLIDES: SlideItem[] = [
+const getSlides = (t: any): SlideItem[] => [
   {
     id: 'preview',
-    title: '이야기로 배우는 한국어 표현',
-    subtitle: '상황 속 대화로 표현과 뉘앙스를 자연스럽게',
-    bullets: ['대화 → 표현 이해', '사용 상황 & 문화 팁', '짧은 연습 문제 포함'],
-    ctaLabel: '에피소드 미리보기',
+    title: t('landing.slider.preview.title', '이야기로 배우는 한국어 표현'),
+    subtitle: t('landing.slider.preview.subtitle', '상황 속 대화로 표현과 뉘앙스를 자연스럽게'),
+    bullets: [
+        t('landing.slider.preview.bullets.0', '대화 → 표현 이해'), 
+        t('landing.slider.preview.bullets.1', '사용 상황 & 문화 팁'), 
+        t('landing.slider.preview.bullets.2', '짧은 연습 문제 포함')
+    ],
+    ctaLabel: t('landing.slider.preview.ctaLabel', '에피소드 미리보기'),
     ctaPath: '/studyList',
     thumbnail: '/images/right_slider_1.png',
-    alt: '이야기 기반 에피소드 학습 화면',
+    alt: t('landing.slider.preview.alt', '이야기 기반 에피소드 학습 화면'),
   },
   {
     id: 'folktale',
-    title: '전래동화·설화로 만나는 한국어',
-    subtitle: '옛이야기를 현대 한국어로 다시 읽어요',
-    bullets: ['전래동화 & 설화 콘텐츠', '표현 속 문화와 배경 설명', '입문자용 추천 묶음'],
-    ctaLabel: '동화 콘텐츠 미리보기',
+    title: t('landing.slider.folktale.title', '전래동화·설화로 만나는 한국어'),
+    subtitle: t('landing.slider.folktale.subtitle', '옛이야기를 현대 한국어로 다시 읽어요'),
+    bullets: [
+        t('landing.slider.folktale.bullets.0', '전래동화 & 설화 콘텐츠'), 
+        t('landing.slider.folktale.bullets.1', '표현 속 문화와 배경 설명'), 
+        t('landing.slider.folktale.bullets.2', '입문자용 추천 묶음')
+    ],
+    ctaLabel: t('landing.slider.folktale.ctaLabel', '동화 콘텐츠 미리보기'),
     ctaPath: '/studyList',
     thumbnail: '/images/right_slider_2.jpg',
-    alt: '한국 전래동화 및 설화 학습 콘텐츠',
+    alt: t('landing.slider.folktale.alt', '한국 전래동화 및 설화 학습 콘텐츠'),
   },
   {
     id: 'community',
-    title: '전 세계 친구들과 함께 연습',
-    subtitle: '여러 언어권 학습자와 문장을 나누고 피드백을 받아요',
-    bullets: ['다국어 사용자 커뮤니티', '짧은 문장 교류', '표현/문화 팁 공유'],
-    ctaLabel: '커뮤니티 미리보기',
+    title: t('landing.slider.community.title', '전 세계 친구들과 함께 연습'),
+    subtitle: t('landing.slider.community.subtitle', '여러 언어권 학습자와 문장을 나누고 피드백을 받아요'),
+    bullets: [
+        t('landing.slider.community.bullets.0', '다국어 사용자 커뮤니티'), 
+        t('landing.slider.community.bullets.1', '짧은 문장 교류'), 
+        t('landing.slider.community.bullets.2', '표현/문화 팁 공유')
+    ],
+    ctaLabel: t('landing.slider.community.ctaLabel', '커뮤니티 미리보기'),
     ctaPath: '/sns',
     thumbnail: '/images/right_slider_3.png',
-    alt: '글로벌 커뮤니티 활동 예시',
+    alt: t('landing.slider.community.alt', '글로벌 커뮤니티 활동 예시'),
   },
 ];
 
 export default function RightHeroSlider() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const slides = getSlides(t);
 
   return (
     <div className="w-full max-w-[360px] sm:max-w-[420px] max-h-[520px]">
@@ -86,7 +101,7 @@ export default function RightHeroSlider() {
             loop
             aria-live="polite"
           >
-            {SLIDES.map((s, idx) => (
+            {slides.map((s, idx) => (
               <SwiperSlide key={s.id}>
                 <article
                   className="
@@ -138,9 +153,9 @@ export default function RightHeroSlider() {
                       <button
                         onClick={() => navigate(s.ctaPath ?? '/studylist')}
                         className="inline-flex items-center justify-center rounded-[10px] bg-primary px-4 py-2 text-xs sm:text-sm font-semibold text-white transition hover:bg-primary/90"
-                        aria-label={s.ctaLabel ?? '자세히 보기'}
+                        aria-label={s.ctaLabel ?? t('common.read_more', '자세히 보기')}
                       >
-                        {s.ctaLabel ?? '자세히 보기'}
+                        {s.ctaLabel ?? t('common.read_more', '자세히 보기')}
                       </button>
                     </div>
                   </div>

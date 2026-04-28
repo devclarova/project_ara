@@ -94,7 +94,7 @@ function RecoverySettings({ onDone, onClose }: RecoverySettingsProps) {
       return;
     }
     if (recoveryEmail === primaryEmail) {
-      setErr(t('validation.recovery_email_same_as_primary', '현재 계정 이메일과 동일합니다.'));
+      setErr(t('validation.recovery_email_same_as_primary'));
       return;
     }
 
@@ -156,7 +156,7 @@ function RecoverySettings({ onDone, onClose }: RecoverySettingsProps) {
 
       if (updateError) throw updateError;
 
-      toast.success(t('settings.saved', '설정이 저장되었습니다.'));
+      toast.success(t('settings.saved'));
       onDone?.();
       onClose?.();
     } catch (error: unknown) {
@@ -205,7 +205,7 @@ function RecoverySettings({ onDone, onClose }: RecoverySettingsProps) {
           <div className="p-4 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-4 bg-gray-50/30 dark:bg-gray-900/10">
             <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
               <i className="ri-shield-user-line text-primary" />
-              {t('recovery.set_question_title', '보안 질문 설정')}
+              {t('recovery.set_question_title')}
             </h4>
             
             <div className="space-y-6">
@@ -237,7 +237,7 @@ function RecoverySettings({ onDone, onClose }: RecoverySettingsProps) {
           <div className="p-4 rounded-2xl border border-gray-100 dark:border-gray-800 space-y-4 bg-gray-50/30 dark:bg-gray-900/10">
             <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
               <i className="ri-mail-line text-primary" />
-              {t('recovery.set_email_title', '복구 이메일 설정')}
+              {t('recovery.set_email_title')}
             </h4>
 
             <div className="space-y-2">

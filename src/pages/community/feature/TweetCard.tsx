@@ -1,4 +1,5 @@
 import { BanBadge } from '@/components/common/BanBadge';
+import { ensureMyProfileId } from '@/lib/ensureMyProfileId';
 import { getErrorMessage } from '@/utils/errorMessage';
 
 import BlockButton from '@/components/common/BlockButton';
@@ -96,10 +97,9 @@ export default function TweetCard({
 }: TweetCardProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user: authUser, isAdmin } = useAuth();
   const { t } = useTranslation();
+  const { user: authUser, isAdmin, profileId } = useAuth();
   const [liked, setLiked] = useState(initialLiked ?? false);
-  const [profileId, setProfileId] = useState<string | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
@@ -112,9 +112,7 @@ export default function TweetCard({
   const [modalIndex, setModalIndex] = useState(0);
   const [showReportModal, setShowReportModal] = useState(false);
   const [translated, setTranslated] = useState<string>('');
-  const [authorCountryFlagUrl, setAuthorCountryFlagUrl] = useState<string | null>(null);
-  const [authorCountryName, setAuthorCountryName] = useState<string | null>(null);
-  const [authorProfileId, setAuthorProfileId] = useState<string | null>(null);
+  const [authorProfileId] = useState<string | null>(user.id);
   const [replyCount, setReplyCount] = useState(stats.replies ?? 0);
   const [likeCount, setLikeCount] = useState(stats.likes ?? 0);
   const [viewCount, setViewCount] = useState(stats.views ?? 0);
@@ -163,39 +161,9 @@ export default function TweetCard({
     FORBID_TAGS: ['img'],
   });
 
-  /** 로그인한 프로필 ID 로드 (트윗 삭제/좋아요용) */
-  useEffect(() => {
-    const loadProfile = async () => {
-      if (!authUser) return;
-      const { data, error } = await (supabase.from('profiles') as any)
-        .select('id')
-        .eq('user_id', authUser.id)
-        .maybeSingle();
-      if (error) {
-        console.error('프로필 로드 실패:', error.message);
-      } else if (data) {
-        setProfileId(data.id);
-      }
-    };
-    loadProfile();
-  }, [authUser]);
-  /** 내가 이미 좋아요한 트윗인지 확인 (user_id = profiles.id 기준) */
-  useEffect(() => {
-    if (!profileId || hasChecked.current) return;
-    hasChecked.current = true;
-    (async () => {
-      const { data, error } = await (supabase.from('tweet_likes') as any)
-        .select('id')
-        .eq('tweet_id', id)
-        .eq('user_id', profileId)
-        .maybeSingle();
-      if (error) {
-        console.error('좋아요 상태 확인 실패:', error.message);
-        return;
-      }
-      if (data) setLiked(true);
-    })();
-  }, [profileId, id]);
+
+  // Removed liked status check on mount to prevent DB request storm
+  // initialLiked from props is used instead
   /** 외부 클릭 시 메뉴 닫기 */
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -226,67 +194,8 @@ export default function TweetCard({
     setCurrentImage(0);
   }, [currentContent]);
 
-  /** 트윗 작성자 국적 / 국기 + 작성자 profileId 로드 */
-  const isValidUUID = (v: string) =>
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
-
-  useEffect(() => {
-    const fetchAuthorCountry = async () => {
-      const authorUserId = user.username;
-
-      // 삭제유저/값없음/uuid아님 => 조회 스킵 + 상태 초기화
-      if (!authorUserId || authorUserId === 'anonymous' || !isValidUUID(authorUserId)) {
-        setAuthorCountryFlagUrl(null);
-        setAuthorCountryName(null);
-        setAuthorProfileId(null);
-        return;
-      }
-
-      try {
-        const { data: profile, error: profileError } = await (supabase.from('profiles') as any)
-          .select('id, country')
-          .eq('user_id', authorUserId)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error('작성자 프로필(country) 로드 실패:', profileError.message);
-          return;
-        }
-
-        if (!profile) {
-          setAuthorCountryFlagUrl(null);
-          setAuthorCountryName(null);
-          setAuthorProfileId(null);
-          return;
-        }
-
-        setAuthorProfileId(profile.id);
-
-        if (!profile.country) {
-          setAuthorCountryFlagUrl(null);
-          setAuthorCountryName(null);
-          return;
-        }
-
-        const { data: country, error: countryError } = await (supabase.from('countries') as any)
-          .select('name, flag_url')
-          .eq('id', profile.country)
-          .maybeSingle();
-
-        if (countryError) {
-          console.error('작성자 국가 정보 로드 실패:', countryError.message);
-          return;
-        }
-
-        setAuthorCountryFlagUrl(country?.flag_url ?? null);
-        setAuthorCountryName(country?.name ?? null);
-      } catch (err) {
-        console.error('작성자 국기 정보 로드 중 예외:', err);
-      }
-    };
-
-    fetchAuthorCountry();
-  }, [user.username]);
+  const authorCountryFlagUrl = user.countryFlag;
+  const authorCountryName = user.countryName;
 
   // props가 바뀔 때 동기화
   useEffect(() => {
@@ -295,6 +204,10 @@ export default function TweetCard({
   useEffect(() => {
     setLikeCount(stats.likes ?? 0);
   }, [stats.likes]);
+
+  useEffect(() => {
+    setLiked(initialLiked ?? false);
+  }, [initialLiked]);
 
   useEffect(() => {
     setViewCount(stats.views ?? 0);
@@ -755,7 +668,7 @@ export default function TweetCard({
                         e.stopPropagation();
                         openEditModal();
                       }}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-800 dark:text-gray-200 text-sm flex items-center gap-2"
                     >
                       <i className="ri-edit-2-line" />
                       <span>{t('common.edit', '수정')}</span>
@@ -771,7 +684,7 @@ export default function TweetCard({
                         e.stopPropagation();
                         setShowDialog(true);
                       }}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
+                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 text-sm flex items-center gap-2"
                     >
                       <i className="ri-delete-bin-line" />
                       <span>{t('common.delete', '삭제')}</span>
@@ -785,10 +698,10 @@ export default function TweetCard({
                         setShowReportModal(true);
                         setShowMenu(false);
                       }}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-800 dark:text-gray-200 text-sm flex items-center gap-2"
                     >
                       <i className="ri-alarm-warning-line" />
-                      <span>{t('report.action', '신고하기')}</span>
+                      <span>{t('common.report', '신고하기')}</span>
                     </button>
                     {authorProfileId && (
                       <BlockButton

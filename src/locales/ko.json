@@ -97,7 +97,9 @@
       "ban_permanent": "계정이 영구적으로 정지되었습니다.",
       "ban_permanent_desc": "관리자에 의해 계정 사용이 영구적으로 제한되었습니다.",
       "ban_temporary_title": "계정 이용이 제한되었습니다.",
-      "ban_temporary_desc": "관리자에 의해 {{date}}까지 이용이 제한됩니다."
+      "ban_temporary_desc": "관리자에 의해 {{date}}까지 이용이 제한됩니다.",
+      "security_denied_ip": "Access denied: Unauthorized IP address.",
+      "security_denied_generic": "Access restricted by security policy."
     }
   },
   "study": {
@@ -108,6 +110,14 @@
       "movie": "영화",
       "show": "예능",
       "music": "음악"
+    },
+    "culture_note": {
+      "title": "문화 노트",
+      "loading": "문화 노트를 불러오는 중...",
+      "error": "문화 노트를 불러오지 못했습니다.",
+      "empty": "이 장면에는 문화 노트가 없습니다.",
+      "default_title": "배경 지식",
+      "empty_list": "등록된 문화 노트를 찾을 수 없습니다."
     },
     "level": {
       "title": "레벨",
@@ -163,6 +173,12 @@
       "empty_message": "저장된 단어가 없어요.",
       "empty_cta": "학습 페이지에서 단어를 저장해보아요.",
       "modal_cta": "에피소드로",
+      "episode_cta": "에피소드로 이동",
+      "example_label": "예문",
+      "aria_delete": "단어 삭제",
+      "status_learning": "학습 중",
+      "status_known": "학습 완료",
+      "status_unknown": "미학습",
       "delete_confirm": {
         "title_single": "단어 삭제",
         "title_all": "전체 삭제",
@@ -172,13 +188,13 @@
     },
     "study_card_title": "학습 카드",
     "vocab_explanation": "단어 설명",
-    "culture_note": "문화 노트",
     "subtitle_title": "자막",
     "subtitle_loading": "자막 로딩 중...",
     "subtitle_no_data": "자막 데이터가 없습니다.",
     "login_required": "로그인 필요",
     "preview": "미리보기",
-    "meta_title": "ARA - K-콘텐츠 기반 한국어 학습 플랫폼"
+    "meta_title": "ARA - K-콘텐츠 기반 한국어 학습 플랫폼",
+    "culture_note_label": "문화 노트"
   },
   "auth": {
     "login": "로그인",
@@ -327,6 +343,7 @@
     "already_in_use": "이미 사용 중입니다.",
     "gender_male": "남성",
     "gender_female": "여성",
+    "gender_other": "기타",
     "label_gender": "성별",
     "error_gender_required": "성별을 선택해주세요.",
     "label_birth": "생년월일",
@@ -355,32 +372,32 @@
     "agree_and_close": "동의하고 닫기"
   },
   "recovery": {
-    "section_title": "이메일 찾기 정보 (필수)",
-    "section_description": "이메일을 잊어버렸을 때 계정을 복구하는 데 사용됩니다.",
-    "question_label": "질문 선택",
-    "question_placeholder": "질문을 선택하세요",
-    "answer_label": "답변",
-    "answer_placeholder": "답변을 입력하세요 (최소 2자)",
-    "answer_placeholder_already_set": "답변 저장됨 (새로 입력 시 변경)",
-    "temp_email_label": "복구용 보조 이메일",
-    "temp_email_placeholder": "example@email.com",
-    "temp_email_description": "이메일 주소를 잊어버렸을 때 본인 인증을 위해 사용됩니다.",
+    "section_description": "ID/PW 분실 시 계정을 안전하게 복구하기 위한 수단을 설정합니다.",
+    "partial_setup_guide": "보안 질문 또는 복구 이메일 중 하나만 설정해도 계정 복구가 가능합니다.",
     "set_question_title": "보안 질문 설정",
+    "question_label": "보안 질문",
+    "question_placeholder": "질문을 선택해 주세요",
+    "answer_label": "답변",
+    "answer_placeholder": "답변을 입력해 주세요 (최소 2자)",
+    "answer_placeholder_already_set": "이미 답변이 설정되어 있습니다 (수정 가능)",
     "set_email_title": "복구 이메일 설정",
-    "partial_setup_guide": "보안 질문 또는 복구 이메일 중 하나만 설정해도 계정을 안전하게 보호할 수 있습니다.",
-    "question_favorite_color": "가장 좋아하는 색깔은 무엇인가요?",
-    "question_pet_name": "첫 반려동물의 이름은?",
-    "question_birthplace": "태어난 도시는 어디인가요?",
-    "question_first_school": "다닌 첫 학교의 이름은?",
-    "question_favorite_teacher": "가장 기억에 남는 선생님 성함은?",
-    "question_childhood_nickname": "어릴적 별명은?",
-    "question_mothers_maiden": "어머니의 성함(처녀 시절)은?",
+    "temp_email_label": "이메일 주소",
+    "temp_email_placeholder": "복구용 이메일 주소 입력",
+    "temp_email_description": "기본 이메일 이외의 다른 이메일 주소를 입력해 주세요.",
+    "question_favorite_color": "가장 좋아하는 색깔은?",
+    "question_pet_name": "첫 번째 반려동물의 이름은?",
+    "question_birthplace": "태어난 고향은 어디인가요?",
+    "question_first_school": "처음 다닌 학교의 이름은?",
+    "question_favorite_teacher": "가장 기억에 남는 선생님은?",
+    "question_childhood_nickname": "어릴 적 별명은?",
+    "question_mothers_maiden": "어머님의 성함은?",
     "question_favorite_food": "가장 좋아하는 음식은?",
     "question_first_car": "첫 번째 차의 모델은?",
-    "question_favorite_movie": "인상 깊게 본 영화는?",
-    "question_parents_met_city": "부모님이 처음 만나신 도시는?"
+    "question_favorite_movie": "인생에서 가장 좋아하는 영화 한 편은?",
+    "question_parents_met_city": "부모님이 처음 만나신 도시는 어디인가요?"
   },
   "validation": {
+    "recovery_email_same_as_primary": "현재 계정 이메일과 동일합니다.",
     "required_email": "이메일을 입력해주세요",
     "required_password": "비밀번호를 입력해주세요",
     "required_nickname": "닉네임을 입력해주세요",
@@ -414,8 +431,7 @@
     "recovery_question_required": "질문을 선택해주세요",
     "recovery_answer_required": "답변을 입력해주세요",
     "recovery_answer_too_short": "답변은 2글자 이상이어야 합니다.",
-    "recovery_email_invalid": "올바른 이메일 주소를 입력해주세요.",
-    "recovery_email_same_as_primary": "가입 이메일과 동일한 이메일은 사용할 수 없습니다."
+    "recovery_email_invalid": "올바른 이메일 주소를 입력해주세요."
   },
   "common": {
     "or": "또는",
@@ -530,7 +546,109 @@
     "sponsored": "스폰서",
     "replies": "댓글",
     "likes": "좋아요",
-    "views": "조회수"
+    "views": "조회수",
+    "view_details": "자세히 보기",
+    "read_more": "자세히 보기",
+    "translated": "번역됨",
+    "auto_translated": "AI로 자동 번역됨",
+    "add": "추가",
+    "unblock_modal_title": "정말 차단을 해제하시겠습니까?"
+  },
+  "voca": {
+    "pos": {
+      "noun": "명사",
+      "verb": "동사",
+      "adjective": "형용사",
+      "adverb": "부사",
+      "pronoun": "대명사",
+      "numeral": "수사",
+      "determiner": "관형사",
+      "particle": "조사",
+      "interjection": "감탄사"
+    }
+  },
+  "goods": {
+    "title": "굿즈샵",
+    "subtitle": "ARA의 정체성을 담은 공식 굿즈를 만나보세요",
+    "product_details": "상품 상세",
+    "product_options": "옵션 선택",
+    "product_recommendations": "이런 상품은 어떠세요?",
+    "total_amount": "총 결제 금액",
+    "checkout_total": "총 결제 금액",
+    "price_unit": "₩",
+    "percent_suffix": "%",
+    "checkout_loading": "결제 진행 중...",
+    "checkout_success": "결제가 완료되었습니다!",
+    "checkout_error": "결제 처리 중 오류가 발생했습니다.",
+    "badge": {
+      "new": "신규",
+      "best": "인기",
+      "soldout": "품절",
+      "sale": "세일",
+      "off_pattern": "{{percent}}% 세일"
+    },
+    "reviews": {
+      "title": "사용자 후기",
+      "count": "{{count}}개의 후기",
+      "rating_average": "평균 별점",
+      "photo_review": "포토 후기만 보기",
+      "write_btn": "후기 작성하기",
+      "verified_purchase": "구매자 인증",
+      "helpful": "도움이 돼요",
+      "no_reviews": "아직 작성된 후기가 없습니다.",
+      "be_first": "첫 후기를 남겨주세요!",
+      "be_first_desc": "첫 번째 리뷰를 작성하고 다른 구매자들에게 도움을 주세요.",
+      "load_more": "더 보기",
+      "view_all": "전체 보기",
+      "translate_btn": "번역하기",
+      "show_original": "원문보기",
+      "no_stats": "데이터 없음",
+      "positive_ratio": "긍정 후기 비율",
+      "waiting_first": "첫 후기를 기다리고 있습니다",
+      "buyer_only_error": "구매자만 리뷰를 작성할 수 있습니다.",
+      "modal": {
+        "how_was_it": "상품은 어떠셨나요?",
+        "detail_review": "상세 후기",
+        "placeholder": "리뷰 내용을 입력해 주세요.",
+        "add_photo": "사진 첨부 (최대 3장)",
+        "empty_content": "리뷰 내용을 입력해 주세요.",
+        "success": "소중한 리뷰가 등록되었습니다!"
+      }
+    },
+    "coupon": {
+      "apply": "쿠폰 적용",
+      "apply_btn": "적용",
+      "placeholder": "쿠폰 코드를 입력하세요",
+      "applied": "쿠폰이 적용되었습니다!",
+      "invalid": "유효하지 않은 쿠폰입니다.",
+      "error": "쿠폰 확인 중 오류가 발생했습니다."
+    },
+    "category_all": "전체",
+    "category_clothing": "의류",
+    "category_accessories": "액세서리",
+    "category_stationery": "문구",
+    "category_digital": "디지털",
+    "related_products": "연관 상품",
+    "product_not_found": "상품을 찾을 수 없습니다.",
+    "back_to_list": "목록으로 돌아가기",
+    "buy_now": "지금 구매하기",
+    "free_shipping": "무료 배송",
+    "authentic_guarantee": "100% 정품 보장",
+    "coming_soon": "구현 예정",
+    "notice_banner": "공식 굿즈샵 런칭 준비 중입니다.",
+    "option": {
+      "size": "사이즈",
+      "color": "색상"
+    },
+    "alt": {
+      "main_image": "상품 대표 이미지",
+      "gallery_image": "갤러리 이미지",
+      "detail_image": "상세 이미지",
+      "store_membership": "ARA 굿즈 스토어 멤버십",
+      "hero_bg": "히어로 배경",
+      "review_image": "사용자 리뷰 이미지",
+      "preview_image": "업로드 미리보기"
+    }
   },
   "not_found": {
     "discovery": "길을 잃은 페이지를 발견했어요",
@@ -549,6 +667,39 @@
     "later": "나중에 하기"
   },
   "settings": {
+    "no_changes_or_invalid": "변경 사항이 없거나 입력 정보가 올바르지 않습니다.",
+    "saved": "설정이 저장되었습니다.",
+    "coupons": {
+      "no_subscription_data": "구독 정보가 없습니다.",
+      "no_vip_available": "현재 준비된 VIP 혜택이 없습니다. 관리자에게 문의하세요.",
+      "vip_success_title": "🎁 VIP 시크릿 혜택 지급 완료!",
+      "vip_success_code": "쿠폰 코드: {{code}} (99% 할인)",
+      "vip_success_desc": "결제 시 위 코드를 입력하여 혜택을 받으세요.",
+      "discount_percent": "{{value}}% 할인",
+      "discount_fixed": "₩{{value}} 혜택",
+      "history_title": "구독 및 쿠폰 내역",
+      "no_history": "내역이 없습니다.",
+      "plan_label": "{{plan}} 플랜",
+      "status": {
+        "active": "이용중",
+        "cancelled": "해지됨",
+        "expired": "만료됨"
+      },
+      "redeem_title": "쿠폰 등록",
+      "redeem_placeholder": "쿠폰 코드를 입력하세요",
+      "btn_redeem": "쿠폰 등록",
+      "vip_benefit_title": "이달의 VIP 혜택",
+      "vip_benefit_desc": "프리미엄 이상 회원을 위한 특별한 쿠폰을 확인하세요.",
+      "btn_claim_vip": "VIP 쿠폰 받기",
+      "vip_already_claimed": "이번 달 VIP 혜택을 이미 받으셨습니다. 다음 달을 기다려 주세요!",
+      "redeem_success": "쿠폰 등록 성공!",
+      "redeem_success_desc": "{{name}} ({{discount}} 할인)",
+      "redeem_fail": "유효하지 않은 쿠폰입니다.",
+      "redeem_error": "쿠폰 확인 중 오류가 발생했습니다.",
+      "cancel_success": "구독이 성공적으로 해지되었습니다.",
+      "cancel_error": "해지 중 오류 발생: {{error}}",
+      "no_subscription": "구독 정보가 없습니다."
+    },
     "languageSelect": "언어 선택",
     "themeSelect": "테마 선택",
     "theme_options": {
@@ -664,30 +815,6 @@
       "contact_1on1_title": "1:1 문의",
       "contact_1on1_desc": "평일 09:00~18:00 (공휴일 제외)"
     },
-    "coupons": {
-      "history_title": "구독 및 쿠폰 내역",
-      "no_history": "내역이 없습니다.",
-      "plan_label": "{{plan}} 플랜",
-      "status": {
-        "active": "이용중",
-        "cancelled": "해지됨",
-        "expired": "만료됨"
-      },
-      "redeem_title": "쿠폰 등록",
-      "redeem_placeholder": "쿠폰 코드를 입력하세요",
-      "btn_redeem": "쿠폰 등록",
-      "vip_benefit_title": "이달의 VIP 혜택",
-      "vip_benefit_desc": "프리미엄 이상 회원을 위한 특별한 쿠폰을 확인하세요.",
-      "btn_claim_vip": "VIP 쿠폰 받기",
-      "vip_already_claimed": "이번 달 VIP 혜택을 이미 받으셨습니다. 다음 달을 기다려 주세요!",
-      "redeem_success": "쿠폰 등록 성공!",
-      "redeem_success_desc": "{{name}} ({{discount}} 할인)",
-      "redeem_fail": "유효하지 않은 쿠폰입니다.",
-      "redeem_error": "쿠폰 확인 중 오류가 발생했습니다.",
-      "cancel_success": "구독이 성공적으로 해지되었습니다.",
-      "cancel_error": "해지 중 오류 발생: {{error}}",
-      "no_subscription": "구독 정보가 없습니다."
-    },
     "email_info_missing": "이메일 정보를 찾을 수 없습니다. 고객센터로 문의해주세요.",
     "password_incorrect": "비밀번호가 올바르지 않습니다.",
     "email_mismatch_error": "입력하신 이메일 주소가 올바르지 않습니다.",
@@ -700,7 +827,22 @@
     "reason_privacy": "개인정보/보안 우려",
     "reason_feature": "기능 불만족",
     "reason_other": "기타",
-    "saved": "설정이 저장되었습니다."
+    "subscription_coupon": "구독 및 쿠폰",
+    "alarm_email": "이메일 알림",
+    "plan": "요금제",
+    "coupon": "쿠폰 등록",
+    "premium": "프리미엄",
+    "set_password": "비밀번호 설정",
+    "current_pw_incorrect": "현재 비밀번호가 올바르지 않습니다.",
+    "pw_change_error": "비밀번호 변경 중 오류가 발생했습니다.",
+    "pw_change_success": "비밀번호가 성공적으로 변경되었습니다.",
+    "pw_set_guide": "소셜 로그인 계정에 비밀번호를 설정하여 이메일로도 로그인할 수 있습니다.",
+    "pw_set_success": "비밀번호가 성공적으로 설정되었습니다.",
+    "close": "닫기",
+    "blocked_users": "차단된 사용자",
+    "blocked_users_desc": "차단한 사용자의 목록을 관리합니다.",
+    "no_blocked_users": "차단한 사용자가 없습니다.",
+    "confirm_unblock": "정말 차단을 해제하시겠습니까?"
   },
   "profile": {
     "edit_profile": "프로필 편집",
@@ -1088,6 +1230,7 @@
     "nav_contents": "콘텐츠",
     "nav_stories": "학습후기",
     "nav_start": "시작하기",
+    "nav_contact": "연락처",
     "aria_badge": "플랫폼 소개",
     "aria_start": "지금 바로 시작",
     "aria_explore": "콘텐츠 둘러보기",
@@ -1134,6 +1277,41 @@
           "title": "글로벌 커뮤니티",
           "desc": "서로 다른 언어와 배경을 가진 학습자들이 모여, 이야기로 연결되는 한국어 사용 경험을 나눕니다."
         }
+      }
+    },
+    "slider": {
+      "preview": {
+        "title": "이야기로 배우는 한국어 표현",
+        "subtitle": "상황 속 대화로 표현과 뉘앙스를 자연스럽게",
+        "bullets": [
+          "대화 → 표현 이해",
+          "사용 상황 & 문화 팁",
+          "짧은 연습 문제 포함"
+        ],
+        "ctaLabel": "에피소드 미리보기",
+        "alt": "이야기 기반 에피소드 학습 화면"
+      },
+      "folktale": {
+        "title": "전래동화·설화로 만나는 한국어",
+        "subtitle": "옛이야기를 현대 한국어로 다시 읽어요",
+        "bullets": [
+          "전래동화 & 설화 콘텐츠",
+          "표현 속 문화와 배경 설명",
+          "입문자용 추천 묶음"
+        ],
+        "ctaLabel": "동화 콘텐츠 미리보기",
+        "alt": "한국 전래동화 및 설화 학습 콘텐츠"
+      },
+      "community": {
+        "title": "전 세계 친구들과 함께 연습",
+        "subtitle": "여러 언어권 학습자와 문장을 나누고 피드백을 받아요",
+        "bullets": [
+          "다국어 사용자 커뮤니티",
+          "짧은 문장 교류",
+          "표현/문화 팁 공유"
+        ],
+        "ctaLabel": "커뮤니티 미리보기",
+        "alt": "글로벌 커뮤니티 활동 예시"
       }
     },
     "testimonials": {
@@ -1254,60 +1432,6 @@
       "registration": "사업자등록번호: 123-45-67890"
     }
   },
-  "goods": {
-    "category_all": "전체",
-    "category_clothing": "의류",
-    "category_accessories": "액세서리",
-    "category_stationery": "문구",
-    "category_digital": "디지털",
-    "related_products": "이런 상품은 어떠세요?",
-    "product_not_found": "상품을 찾을 수 없습니다.",
-    "back_to_list": "목록으로 돌아가기",
-    "buy_now": "지금 구매하기",
-    "coupon_applied": "쿠폰이 적용되었습니다!",
-    "coupon_invalid": "유효하지 않은 쿠폰입니다.",
-    "coupon_error": "쿠폰 확인 중 오류가 발생했습니다.",
-    "add_to_cart": "장바구니 담기",
-    "free_shipping": "무료 배송",
-    "authentic_guarantee": "100% 정품 보장",
-    "product_details": "상품 상세 정보",
-    "reviews_count": "{{count}}개의 후기",
-    "reviews": {
-      "title": "사용자 후기",
-      "count": "{{count}}건의 후기",
-      "rating_average": "평균 별점",
-      "photo_review": "포토 후기만 보기",
-      "write_btn": "후기 작성하기",
-      "verified_purchase": "구매자 인증",
-      "helpful": "도움이 돼요",
-      "no_reviews": "아직 작성된 후기가 없습니다.",
-      "be_first": "첫 후기를 기다리고 있습니다",
-      "be_first_desc": "첫 번째 리뷰를 작성하고 다른 구매자들에게 도움을 주세요.",
-      "load_more": "리뷰 더보기",
-      "view_all": "전체 후기 보기",
-      "no_stats": "데이터 없음",
-      "positive_ratio": "구매자의 긍정적 검토 비율",
-      "buyer_only_error": "실제 구매하신 고객님만 후기를 작성하실 수 있습니다.",
-      "sort_latest": "최신순",
-      "sort_highest": "평점 높은순",
-      "sort_lowest": "평점 낮은순"
-    },
-    "preview_notice": "공식 굿즈샵 런칭 준비 중입니다. ARA의 새로운 컬렉션을 먼저 만나보세요.",
-    "preview_modal": {
-      "title": "Welcome",
-      "line1": "Official Goods Shop",
-      "line2": "ARA의 정체성을 담은 공식 라인업이 곧 출시될 예정입니다. 준비된 프리미엄 상품들을 미리 살펴보세요.",
-      "confirm": "확인"
-    },
-    "guide": {
-      "title_1": "Official Goods Shop",
-      "desc_1": "ARA의 공식 굿즈샵에 오신 것을 환영합니다!",
-      "title_2": "준비 중인 서비스",
-      "desc_2": "현재 굿즈샵은 정식 오픈을 준비 중입니다.",
-      "title_3": "미리 체험하기",
-      "desc_3": "가상의 데이터로 굿즈샵의 기능을 미리 체험해보실 수 있습니다."
-    }
-  },
   "translation": {
     "login_required": "로그인 후 번역 기능을 사용하실 수 있습니다.",
     "guest_limit_reached": "무료 번역 횟수를 모두 사용하셨습니다. 로그인하여 계속 이용하세요."
@@ -1332,7 +1456,8 @@
       "harmful": "유해한 콘텐츠",
       "inappropriate": "부적절한 내용",
       "other": "기타 (직접 입력)"
-    }
+    },
+    "title": "신고하기"
   },
   "home": {
     "greeting_night": "안녕히 주무세요 / 새벽입니다",
@@ -1351,5 +1476,101 @@
     "field_progress": "분야별 진도",
     "percent_complete": "{{percent}}% 완료",
     "time_left": "남은 시간 {{time}}"
+  },
+  "subscription": {
+    "plans": {
+      "free": {
+        "title": "무료 플랜",
+        "desc": "기본 기능만 필요한 분에게",
+        "interval": "개월",
+        "feature_voca": "기본 단어장 사용",
+        "feature_community": "커뮤니티 참여",
+        "feature_badge": "프리미엄 뱃지",
+        "feature_ads": "광고 제거",
+        "feature_promo": "전용 프로모션"
+      },
+      "basic": {
+        "title": "베이직 플랜",
+        "desc": "적극적인 학습자를 위한 플랜",
+        "interval": "개월",
+        "feature_voca": "전체 단어장 사용",
+        "feature_community": "커뮤니티 참여",
+        "feature_ads": "광고 제거",
+        "feature_badge": "프리미엄 뱃지",
+        "feature_promo": "전용 프로모션"
+      },
+      "premium": {
+        "title": "프리미엄 플랜",
+        "desc": "모든 혜택을 누리는 올인원 플랜",
+        "interval": "개월",
+        "feature_course": "전체 코스 이용",
+        "feature_profile": "프리미엄 프로필 배지",
+        "feature_ads": "광고 제거",
+        "feature_badge": "프리미엄 뱃지",
+        "feature_coupon": "월별 전용 쿠폰"
+      }
+    },
+    "current_plan": "현재 플랜",
+    "active_status": "활성",
+    "payment_date": "다음 결제일",
+    "upgrade_plan": "플랜 업그레이드",
+    "manage_plan": "플랜 관리",
+    "vip_box": "VIP 박스 열기",
+    "history": "구독 내역",
+    "total_count": "총 {{count}}건 →",
+    "more_count": "+ {{count}}건 더보기",
+    "recent_coupons": "최근 쿠폰",
+    "history_all": "전체 내역",
+    "premium_only": "프리미엄 전용 콘텐츠",
+    "payment_modal": {
+      "title": "결제 정보",
+      "promo_code": "프로모션 코드",
+      "coupon_placeholder": "쿠폰 코드를 입력하세요",
+      "apply": "적용",
+      "coupon_applied": "{{name}} 쿠폰이 적용되었습니다",
+      "card_info": "카드 정보",
+      "card_number": "카드 번호",
+      "expiry": "유효기간 (MM/YY)",
+      "cvc": "CVC",
+      "pay_now": "{{price}} 결제하기",
+      "payment_success": "결제가 완료되었습니다!",
+      "plan_applied": "{{plan}} 플랜이 적용되었습니다.",
+      "payment_fail": "결제 실패: {{error}}",
+      "test_warning": "⚠️ 이것은 테스트 결제 시뮬레이션입니다. 실제 결제는 이루어지지 않습니다.",
+      "cancel_confirm_title": "구독 해지",
+      "cancel_confirm_desc": "정말로 구독을 해지하시겠습니까?",
+      "cancel_subscription": "구독 해지",
+      "keep_subscription": "구독 유지"
+    },
+    "back": "뒤로",
+    "title_prefix": "나만의 플랜을",
+    "title_highlight": "선택하세요",
+    "description": "목적에 맞는 요금제를 선택하고 프리미엄 혜택을 누리세요.",
+    "popular_badge": "인기",
+    "subscribe_now": "구독하기",
+    "guaranteed_payment": "안전한 결제를 보장합니다",
+    "secure_payment": "안전한 결제",
+    "cancel_anytime": "언제든 해지 가능",
+    "all_cards_supported": "모든 카드 지원",
+    "errors": {
+      "login_required": "구독을 위해 로그인이 필요합니다.",
+      "already_free": "이미 무료 플랜을 사용 중입니다.",
+      "cancel_success": "구독이 성공적으로 해지되었습니다.",
+      "cancel_fail": "해지 중 오류 발생: {{error}}",
+      "coupon_success": "쿠폰이 적용되었습니다!",
+      "coupon_invalid": "유효하지 않은 쿠폰입니다.",
+      "coupon_error": "쿠폰 검증 중 오류가 발생했습니다."
+    },
+    "cancel_confirm": {
+      "title": "구독 해지",
+      "desc": "정말 구독을 해지하시겠습니까? 무료 플랜으로 변경됩니다.",
+      "btn_confirm": "해지하기",
+      "btn_cancel": "유지하기"
+    }
+  },
+  "marketing": {
+    "subscription": {
+      "title": "아라 구독!"
+    }
   }
-}
+}

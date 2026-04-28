@@ -44,8 +44,8 @@ export default function SupportPolicy({ onBackToMenu, searchQuery }: PrivacySett
 
         <div className="space-y-2">
           <Row label={t('settings.terms')} onClick={() => open('terms')} searchQuery={searchQuery} />
-          <Row label={t('settings.privacy_policy')} onClick={() => open('privacy')} searchQuery={searchQuery} />
-          <Row label={t('settings.marketing_consent')} onClick={() => open('marketing')} searchQuery={searchQuery} />
+          <Row label={t('settings.title_privacy')} onClick={() => open('privacy')} searchQuery={searchQuery} />
+          <Row label={t('settings.title_marketing')} onClick={() => open('marketing')} searchQuery={searchQuery} />
           <Row label={t('settings.help_center')} onClick={() => open('support')} searchQuery={searchQuery} />
         </div>
 

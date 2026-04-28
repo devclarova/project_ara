@@ -11,7 +11,35 @@
     "post": "Postar",
     "admin": "Modo Administrador",
     "admin_dashboard": "Painel de Administração",
-    "goods": "Loja"
+    "goods": "Loja",
+    "voca": [
+      "Caderno de Palavras",
+      "Gerenciamento de Produtos",
+      "Você tem uma nova notificação",
+      "[Foto]",
+      "começou a seguir você",
+      "enviou uma solicitação para seguir você",
+      "Aceitar",
+      "Recusar",
+      "Não foi possível carregar o conteúdo",
+      "Episódio",
+      "Cena",
+      "Meu Caderno de Palavras",
+      "Aprenda a ouvir e a se expressar em coreano com {{contents}} {{episode}} cena {{scene}}.",
+      "Episódio Anterior",
+      "Próximo Episódio",
+      "Project ARA Premium",
+      "Desfrute de aprendizado sem anúncios e episódios exclusivos.",
+      "ANÚNCIO",
+      "PROMOÇÃO",
+      "Guia de Uso do ARA Study 1",
+      "Guia de Uso do ARA Study 2",
+      "Guia de Uso do ARA Study 3",
+      "Guia de Uso do ARA Study 4",
+      "Guia de Uso do ARA Study 5",
+      "Caderno de Palavras"
+    ],
+    "admin_goods": "Gerenciamento de produtos"
   },
   "notification": {
     "like_feed": "curtiu sua publicação.",
@@ -60,8 +88,23 @@
       "reporter_target": "<strong>• Alvo da denúncia:</strong> {{target}}",
       "reporter_reason": "<strong>• Motivo:</strong> {{reason}}",
       "reporter_action": "<strong>• Medida tomada:</strong> {{action}}",
-      "reporter_footer": "<br/>Obrigado pelo seu interesse constante."
-    }
+      "reporter_footer": "<br/>Obrigado pelo seu interesse constante.",
+      "ban_permanent": "Your account has been permanently banned.",
+      "ban_permanent_desc": "Account access has been permanently restricted by administrators.",
+      "ban_temporary_title": "Account access restricted.",
+      "ban_temporary_desc": "Access restricted by administrator until {{date}}.",
+      "security_contact_admin": "Contact system administrator if you believe this is an error.",
+      "identifier_label": "Your Identifier",
+      "security_denied_ip": "Access denied: Unauthorized IP address.",
+      "security_denied_generic": "Access restricted by security policy."
+    },
+    "new_arrived": "Uma nova notificação chegou",
+    "photo_content": "[Foto]",
+    "follow_you": "começou a seguir você",
+    "follow_request": "enviou uma solicitação para seguir você",
+    "accept": "Aceitar",
+    "decline": "Recusar",
+    "no_content_available": "Não é possível carregar o conteúdo"
   },
   "study": {
     "studylist": "Lista de Estudo",
@@ -71,8 +114,8 @@
       "all": "Tudo",
       "drama": "Drama",
       "movie": "Filme",
-      "entertainment": "Entretenimento",
-      "music": "Música"
+      "music": "Música",
+      "show": "Show de variedades"
     },
     "level": {
       "title": "Nível",
@@ -98,12 +141,101 @@
     "meta_desc_default": "Aprenda coreano na ARA",
     "study_card_title": "Cartão de Estudo",
     "vocab_explanation": "Vocabulário",
-    "culture_note": "Nota Cultural",
+    "culture_note": {
+      "title": "Nota Cultural",
+      "loading": "...",
+      "error": "Error",
+      "empty": "Empty",
+      "default_title": "Nota Cultural",
+      "empty_list": "No data"
+    },
     "subtitle_title": "Legendas",
     "subtitle_loading": "Carregando legendas...",
     "subtitle_no_data": "Dados de legendas indisponíveis.",
     "login_required": "Login necessário",
-    "preview": "Visualizar"
+    "preview": "Visualizar",
+    "voca": {
+      "pos": {
+        "noun": "Noun",
+        "verb": "Verb",
+        "adjective": "Adjective",
+        "adverb": "Adverb",
+        "pronoun": "Pronoun",
+        "numeral": "Numeral",
+        "particle": "Particle",
+        "interjection": "Interjection",
+        "determiner": "Determiner"
+      },
+      "example_label": "Exemplo",
+      "delete_confirm": {
+        "title_single": "Excluir palavra",
+        "title_all": "Excluir tudo",
+        "desc_single": "Deseja excluir a palavra?",
+        "desc_all": "Deseja excluir todas as palavras?"
+      },
+      "description": [
+        "Você pode reunir as palavras salvas.",
+        "Quiz",
+        "Para Estudo",
+        "Pesquisar Palavra/Significado/Exemplo/Classe Gramatical/Pronúncia",
+        "Estado de Estudo",
+        "Tudo",
+        "Excluir Tudo",
+        "Redefinir Lista de Palavras",
+        "Não há palavras salvas.",
+        "Tente salvar palavras na página de estudo.",
+        "Por Episódio",
+        "Ir para Episódio",
+        "Excluir Palavra",
+        "Em Estudo",
+        "Estudo Concluído",
+        "Não Estudado",
+        "Excluir Palavra",
+        "Excluir Tudo",
+        "Deseja excluir a palavra?",
+        "Deseja excluir todas as palavras?",
+        "ARA - Plataforma de Aprendizado de Coreano Baseada em Conteúdo K",
+        "Por favor, verifique o link de verificação enviado por e-mail.",
+        "Perfil não criado. Entre em contato com o administrador.",
+        "Falha na autenticação.",
+        "Orientação para reconexão de SNS"
+      ],
+      "title": "Caderno de palavras",
+      "btn_quiz": "Quiz",
+      "btn_back_to_study": "Para o aprendizado",
+      "search_placeholder": "Pesquisar palavra/significado/exemplo/classe gramatical/pronúncia",
+      "status_title": "Estado de aprendizado",
+      "status_all": "Tudo",
+      "btn_delete_all": "Excluir tudo",
+      "btn_delete_all_title": "Redefinir caderno de palavras",
+      "empty_message": "Não há palavras salvas.",
+      "empty_cta": "Tente salvar palavras na página de aprendizado.",
+      "modal_cta": "Para o episódio",
+      "episode_cta": "Ir para o episódio",
+      "aria_delete": "Excluir palavra",
+      "status_learning": "Em aprendizado",
+      "status_known": "Aprendizado concluído",
+      "status_unknown": "Não aprendido"
+    },
+    "culture_note_label": "Nota Cultural",
+    "promotion": {
+      "premium_title": "Project ARA Premium",
+      "premium_desc": "Desfrute de aprendizado sem anúncios e episódios exclusivos.",
+      "ad_badge": "ANÚNCIO",
+      "promo_badge": "PROMOÇÃO",
+      "guide_alt_1": "Guia de uso do ARA Study 1",
+      "guide_alt_2": "Guia de uso do ARA Study 2",
+      "guide_alt_3": "Guia de uso do ARA Study 3",
+      "guide_alt_4": "Guia de uso do ARA Study 4",
+      "guide_alt_5": "Guia de uso do ARA Study 5"
+    },
+    "episode_label": "Episódio",
+    "scene_label": "Cena",
+    "voca_btn": "Meu vocabulário",
+    "meta_desc_scene": "Aprenda a ouvir e expressar em coreano com a cena {{contents}} {{episode}} {{scene}}.",
+    "aria_prev_episode": "Episódio anterior",
+    "aria_next_episode": "Próximo episódio",
+    "meta_title": "ARA - Plataforma de aprendizado de coreano baseada em K-Content"
   },
   "auth": {
     "login": "Entrar",
@@ -147,7 +279,47 @@
     "restore_desc_2": "Deseja restaurar sua conta?",
     "restore_remaining": "Restam {{days}} dias até a exclusão permanente.",
     "restore_confirm": "Restaurar Conta",
-    "signin": "Entrar"
+    "signin": "Entrar",
+    "relink_previously_unlinked": [
+      "Esta é uma conta SNS previamente desconectada.",
+      "Para sua segurança, faça login com seu e-mail e, em seguida, reconecte-se diretamente em [Configurações > Gerenciar Conexões SNS].",
+      "Esta conta {{provider}} estava anteriormente conectada à conta <span class=\"font-bold text-primary\">{{email}}</span>.",
+      "Para sua segurança, faça login com seu e-mail e reconecte-se em [Configurações].",
+      "Com qual e-mail você gostaria de começar?",
+      "Entrar com e-mail",
+      "Aviso de prevenção de duplicação de conta SNS",
+      "Pré-visualização",
+      "Pré-visualização da capa",
+      "Você não pode {{action}} enquanto estiver em estado de restrição de uso.\nPeríodo de restrição de uso: até {{date}} ({{days}} dias restantes)",
+      "Encontrar e-mail",
+      "Escolher método de busca",
+      "Encontrar com e-mail de recuperação",
+      "Encontrar com pergunta de recuperação",
+      "Apelido",
+      "Por favor, insira seu apelido",
+      "E-mail de recuperação",
+      "E-mail de recuperação registrado no momento da inscrição",
+      "Pergunta definida por você",
+      "Resposta",
+      "Por favor, insira sua resposta",
+      "Encontrar e-mail",
+      "Procurando...",
+      "Seu endereço de e-mail",
+      "Nenhuma informação correspondente encontrada."
+    ],
+    "check_verification_email": "Por favor, verifique o link de verificação enviado por e-mail",
+    "profile_not_found_contact_admin": "O perfil não foi criado. Por favor, entre em contato com o administrador.",
+    "auth_failed": "Falha na autenticação.",
+    "relink_notice_title": "Orientação para reconexão de SNS",
+    "relink_security_guide": "Para sua segurança, faça login por e-mail e reconecte diretamente em [Configurações > Gerenciamento de Conexão SNS].",
+    "relink_cross_account_desc": "Esta conta {{provider}} estava anteriormente conectada à conta <span class=\"font-bold text-primary\">{{email}}</span>.",
+    "relink_manual_guide": "Para sua segurança, faça login por e-mail e reconecte em [Configurações].",
+    "choose_start_method": "Com qual e-mail gostaria de começar?",
+    "login_with_email": "Login por e-mail",
+    "duplicate_prevent_title": "Orientação para evitar duplicação de contas SNS",
+    "preview_alt": "Visualizar",
+    "cover_preview_alt": "Visualizar capa",
+    "ban_message_template": "Não é possível {{action}} no estado de restrição de uso.\nPeríodo de restrição de uso: ~{{date}} ({{days}} dias restantes)"
   },
   "signup": {
     "title_social": "Cadastro com Redes Sociais",
@@ -187,6 +359,7 @@
     "already_in_use": "Já em uso.",
     "gender_male": "Masculino",
     "gender_female": "Feminino",
+    "gender_other": "Outro",
     "label_gender": "Sexo",
     "error_gender_required": "Por favor, selecione o sexo.",
     "label_birth": "Data de Nascimento",
@@ -215,25 +388,28 @@
     "agree_and_close": "Concordar e fechar"
   },
   "recovery": {
-    "section_title": "Informações de recuperação de e-mail (Obrigatório)",
-    "section_description": "Usado para recuperar sua conta se você esquecer seu e-mail",
-    "question_label": "Selecione uma pergunta",
-    "question_placeholder": "Escolha uma pergunta",
+    "section_description": "Configure medidas para recuperar sua conta com segurança caso perca seu ID ou senha.",
+    "partial_setup_guide": "Você pode recuperar sua conta configurando uma pergunta de segurança ou um e-mail de recuperação.",
+    "set_question_title": "Configuração da Pergunta de Segurança",
+    "question_label": "Pergunta de Segurança",
+    "question_placeholder": "Por favor, selecione uma pergunta",
     "answer_label": "Resposta",
-    "answer_placeholder": "Digite sua resposta (mínimo 2 caracteres)",
-    "temp_email_label": "E-mail secundário",
-    "temp_email_placeholder": "example@email.com",
-    "temp_email_description": "Um endereço de e-mail adicional para receber links de recuperação se você perder o acesso à sua conta principal.",
-    "question_favorite_color": "Qual é sua cor favorita?",
+    "answer_placeholder": "Por favor, digite sua resposta (mín. 2 caracteres)",
+    "answer_placeholder_already_set": "Resposta já definida (pode ser modificada)",
+    "set_email_title": "Configuração do E-mail de Recuperação",
+    "temp_email_label": "Endereço de E-mail",
+    "temp_email_placeholder": "Digite o e-mail de recuperação",
+    "temp_email_description": "Por favor, insira um endereço de e-mail diferente do seu e-mail principal.",
+    "question_favorite_color": "Qual é a sua cor favorita?",
     "question_pet_name": "Qual era o nome do seu primeiro animal de estimação?",
     "question_birthplace": "Em que cidade você nasceu?",
     "question_first_school": "Qual era o nome da sua primeira escola?",
-    "question_favorite_teacher": "Qual é o nome do seu professor mais memorável?",
-    "question_childhood_nickname": "Qual era seu apelido de infância?",
+    "question_favorite_teacher": "Quem é o seu professor mais memorável?",
+    "question_childhood_nickname": "Qual era o seu apelido de infância?",
     "question_mothers_maiden": "Qual é o nome de solteira da sua mãe?",
-    "question_favorite_food": "Qual é sua comida favorita?",
+    "question_favorite_food": "Qual é a sua comida favorita?",
     "question_first_car": "Qual era o modelo do seu primeiro carro?",
-    "question_favorite_movie": "Qual é seu filme favorito?",
+    "question_favorite_movie": "Qual é o filme da sua vida?",
     "question_parents_met_city": "Em que cidade seus pais se conheceram?"
   },
   "validation": {
@@ -322,7 +498,221 @@
     "block_success": "{{name}} bloqueado.",
     "unblock_success": "{{name}} desbloqueado.",
     "cancel_like": "Descurtiu",
-    "success_like": "Curtiu"
+    "success_like": "Curtiu",
+    "sponsored": "Patrocinado",
+    "auto_translated": "Traduzido automaticamente por IA",
+    "view_details": "Ver detalhes",
+    "read_more": "Ver detalhes",
+    "add": "Adicionar",
+    "block_modal_title": "Are you sure you want to block?",
+    "block_modal_notice_1": "You will automatically leave the 1:1 chat with this user.",
+    "block_modal_notice_2": "You will not receive any more messages from this user.",
+    "block_modal_notice_3": "This user's posts will be hidden from the community feed.",
+    "block_modal_notice_4": "This user's comments will be masked in the community.",
+    "block_modal_warning": "You can manage blocked users in 'Settings > Blocked Users'.",
+    "unblock_modal_title": "Do you want to unblock this user?",
+    "or": "or",
+    "checking": "Checking...",
+    "date_format_short": [
+      "d 'de' MMM",
+      "O tamanho do arquivo {{name}} excede {{size}}.",
+      "Bloquear {{name}}",
+      "Desbloquear {{name}}",
+      "Ao bloquear, você não poderá ver o perfil um do outro, nem enviar mensagens.",
+      "Usuário bloqueado.",
+      "Usuário bloqueado",
+      "Gerencie a lista de usuários bloqueados.",
+      "Nenhum usuário bloqueado.",
+      "Tem certeza de que deseja desbloquear?",
+      "Comentário de um usuário bloqueado",
+      "Ver conteúdo",
+      "Ocultar novamente",
+      "Mascarar comentário",
+      "Ocultar postagem",
+      "Anônimo",
+      "Aprenda coreano de forma divertida! Compartilhe cenas de aprendizado no ARA.",
+      "Copie o link abaixo:",
+      "Enviando...",
+      "Miniatura"
+    ],
+    "scroll_to_top": [
+      "Rolar para o topo",
+      "Usuário",
+      "Desconhecido",
+      "Membro Premium",
+      "País",
+      "Modificado",
+      "Oculto",
+      "Ver mais",
+      "Recolher",
+      "Conteúdo oculto",
+      "Postagem excluída",
+      "Editar postagem",
+      "Upload concluído!",
+      "Falha no upload",
+      "Ocultar novamente",
+      "Adicionar imagem",
+      "Carregando...",
+      "Insira o URL da imagem",
+      "Adicionar URL",
+      "{{count}} imagens"
+    ],
+    "image_reply": [
+      "Imagem de resposta",
+      "Imagem da postagem",
+      "Eu",
+      "Avatar",
+      "Pré-visualização",
+      "Usuário",
+      "Anúncio",
+      "Comentário",
+      "Curtir",
+      "Visualizações",
+      "Traduzido",
+      "Aviso de reforço de segurança da conta",
+      "Para recuperar sua conta com segurança caso perca a senha, configure perguntas de recuperação e e-mail.",
+      "Configurar agora",
+      "Fazer mais tarde",
+      "Claro",
+      "Configurações do sistema",
+      "A empresa coleta e utiliza o mínimo de informações pessoais necessárias para fornecer o serviço e as destrói sem demora após atingir o objetivo da coleta.",
+      "Itens principais",
+      "Itens coletados, finalidade da coleta e uso, período de retenção e uso"
+    ],
+    "retry": [
+      "Tentar novamente",
+      "Hoje",
+      "Ontem",
+      "Pouco antes",
+      "d 'de' MMM",
+      "O tamanho do arquivo {{name}} excede {{size}}.",
+      "Bloquear {{name}}",
+      "Desbloquear {{name}}",
+      "Ao bloquear, você não poderá ver o perfil um do outro, nem enviar mensagens de chat.",
+      "Usuário bloqueado.",
+      "Usuário bloqueado",
+      "Gerencie a lista de usuários bloqueados.",
+      "Nenhum usuário bloqueado.",
+      "Tem certeza de que deseja desbloquear?",
+      "Comentário de usuário bloqueado",
+      "Ver conteúdo",
+      "Ocultar novamente",
+      "Mascaramento de comentários",
+      "Ocultar postagem",
+      "Anônimo",
+      "Aprenda coreano de forma divertida! Compartilhe cenas de aprendizado no ARA.",
+      "Copie o link abaixo:",
+      "Enviando...",
+      "Miniatura",
+      "Rolar para o topo"
+    ],
+    "user": [
+      "Usuário",
+      "Desconhecido",
+      "Membro Premium",
+      "País",
+      "Modificado",
+      "Oculto",
+      "Mais",
+      "Recolher",
+      "Conteúdo Oculto",
+      "Postagem Excluída",
+      "Editar Postagem",
+      "Upload Concluído!",
+      "Falha no Upload",
+      "Ocultar Novamente",
+      "Adicionar Imagem",
+      "Carregando...",
+      "Insira o URL da Imagem",
+      "Adicionar URL",
+      "{{count}} Imagens",
+      "Imagem de Resposta",
+      "Imagem da Postagem",
+      "Eu",
+      "Avatar",
+      "Pré-visualização",
+      "Usuário"
+    ],
+    "advertisement": [
+      "Anúncio",
+      "Comentário",
+      "Curtir",
+      "Visualizações",
+      "Traduzido",
+      "Substantivo",
+      "Verbo",
+      "Adjetivo",
+      "Advérbio",
+      "Pronome",
+      "Numeral",
+      "Determinante",
+      "Partícula",
+      "Interjeição",
+      "Você encontrou uma página perdida",
+      "Esta cena ainda não tem um script escrito",
+      "Ainda não há um episódio de ARA preparado neste endereço. Que tal voltar para a página inicial e continuar desfrutando de conteúdos coreanos e cultura?",
+      "“Algum dia esta página também",
+      "será preenchida com uma cena.”",
+      "Se você tiver alguma funcionalidade ou ideia que esperava nesta página, sinta-se à vontade para deixar seu feedback no menu de feedback dentro do ARA ou",
+      "entre em contato conosco.",
+      "Aviso de fortalecimento da segurança da conta",
+      "Para recuperar sua conta com segurança caso perca a senha, configure perguntas de recuperação e e-mail.",
+      "Configurar agora"
+    ],
+    "more": "Ver mais",
+    "my_voca": "Vocabulário",
+    "view_voca": "Ver meu vocabulário",
+    "deleted_user": "Usuário desativado",
+    "error_label": "Erro",
+    "today": "Hoje",
+    "yesterday": "Ontem",
+    "just_now": "Agora mesmo",
+    "error_image_size": "O tamanho do arquivo {{name}} excede {{size}}.",
+    "block_user": "Bloquear",
+    "unblock_user": "Desbloquear",
+    "block_user_desc": "Se você bloquear, não poderá ver o perfil um do outro nem enviar mensagens.",
+    "blocked_user_alert": "Usuário bloqueado.",
+    "blocked_users": "Usuário bloqueado",
+    "blocked_users_desc": "Gerencie a lista de usuários bloqueados.",
+    "no_blocked_users": "Não há usuários bloqueados.",
+    "confirm_unblock": "Tem certeza de que deseja desbloquear?",
+    "blocked_comment_msg": "Comentário de usuário bloqueado",
+    "view_content": "Ver conteúdo",
+    "hide_content": "Ocultar novamente",
+    "mask_comments": "Máscara de comentário",
+    "hide_posts": "Ocultar postagem",
+    "anonymous": "Anônimo",
+    "share_default_text": "Aprenda coreano de forma divertida! Compartilhe cenas de aprendizado no ARA.",
+    "copy_link_prompt": "Copie o link abaixo:",
+    "submitting": "Enviando...",
+    "thumbnail": "Miniatura",
+    "unknown": "Desconhecido",
+    "premium_member": "Membro Premium",
+    "country": "País",
+    "edited": "Editado",
+    "hidden": "Ocultar",
+    "show_more": "Ver mais",
+    "collapse": "Recolher",
+    "hidden_content": "Conteúdo oculto",
+    "deleted_post": "Postagem excluída",
+    "edit_post": "Editar postagem",
+    "upload_success": "Upload concluído!",
+    "upload_failed": "Falha no upload",
+    "remask": "Ocultar novamente",
+    "add_image": "Adicionar imagem",
+    "uploading": "Carregando...",
+    "prompt_image_url": "Insira o URL da imagem",
+    "add_url": "Adicionar URL",
+    "image_count": "{{count}} imagens",
+    "image_tweet": "Imagem da postagem",
+    "me": "Eu",
+    "avatar": "Avatar",
+    "preview": "Pré-visualização",
+    "user_initials": "Usuário",
+    "replies": "Comentário",
+    "likes": "Gosto",
+    "views": "Visualizações",
+    "translated": "Traduzido"
   },
   "settings": {
     "languageSelect": "Idioma",
@@ -383,8 +773,42 @@
     "support_policy": "Suporte e Política",
     "help_center": "Central de ajuda",
     "terms": "Termos de serviço",
-    "privacy_policy": "Política de privacidade",
-    "marketing_consent": "Consentimento de marketing",
+    "privacy_policy": {
+      "item_2": [
+        "Fornecimento e delegação de processamento de informações pessoais a terceiros",
+        "Direitos do usuário (acesso, correção, exclusão, suspensão de processamento) e métodos de exercício",
+        "Responsável pela proteção de informações pessoais e contato",
+        "Fechar",
+        "Política de Privacidade",
+        "Consentimento de Marketing",
+        "Recebimento de Email",
+        "Recebimento de SMS",
+        "Notificações Push",
+        "Perguntas Frequentes (FAQ)",
+        "Confira as principais perguntas sobre conta, pagamento, segurança, etc.",
+        "Consulta 1:1",
+        "Dias úteis 09:00~18:00 (exceto feriados)",
+        "Gerencie a lista de usuários bloqueados.",
+        "Seguidores",
+        "Ver Perfil",
+        "Foto de Capa",
+        "Selecionar Foto de Capa",
+        "Tamanho recomendado: 1500x500px",
+        "Seguidores {{count}}"
+      ],
+      "summary": "A empresa coleta e utiliza o mínimo de informações pessoais necessárias para fornecer o serviço e as destrói sem demora após atingir o objetivo da coleta.",
+      "items_title": "Itens principais",
+      "item_1": "Itens coletados, finalidade da coleta e uso, período de retenção e uso",
+      "item_3": "Direitos do usuário (acesso, correção, exclusão, suspensão de processamento) e métodos de exercício",
+      "item_4": "Responsável pela proteção de dados pessoais e contato",
+      "close": "Fechar"
+    },
+    "marketing_consent": {
+      "title": "Consentimento de marketing",
+      "email": "Recebimento de e-mail",
+      "sms": "Recebimento de SMS",
+      "push": "Notificações push"
+    },
     "title_language": "Alterar idioma",
     "title_theme": "Alterar tema",
     "title_password_change": "Alterar senha",
@@ -406,7 +830,88 @@
     "reason_other": "Outro",
     "alarm_chat": "Notificações de bate-papo",
     "alarm_chat_desc": "Receba notificações quando receber novas mensagens de bate-papo.",
-    "saved": "Configurações salvas."
+    "saved": "Configurações salvas.",
+    "system": "Sistema",
+    "subscription_coupon": "Assinatura e Cupons",
+    "alarm_push": "Notificações push",
+    "alarm_email": "Notificações por e-mail",
+    "theme_dark": "Modo escuro",
+    "plan": "Plano de assinatura",
+    "coupon": "Cupom",
+    "premium": "Premium",
+    "set_password": "Definir senha",
+    "current_pw_incorrect": "A senha atual está incorreta.",
+    "pw_change_error": "Erro ao alterar a senha.",
+    "pw_change_success": "Senha alterada com sucesso.",
+    "pw_set_guide": "Defina uma senha para sua conta de login social.",
+    "pw_set_success": "Senha definida com sucesso.",
+    "email_info_missing": "Informações de e-mail não encontradas.",
+    "email": "E-mail",
+    "connected": "Conectado",
+    "not_connected": "Não conectado",
+    "connect": "Conectar",
+    "unlink": "Desconectar",
+    "unlink_confirm_title": "Desconectar conta",
+    "linked_accounts": "Contas vinculadas",
+    "social_login_active": "Login social ativo",
+    "sns_connect_failed": "Falha ao conectar SNS.",
+    "sns_unlink_confirm_msg": "Tem certeza de que deseja desconectar esta conta?",
+    "sns_unlink_failed": "Falha ao desconectar SNS.",
+    "sns_unlink_success": "Conta SNS desconectada.",
+    "sns_unlink_last_method": "É necessário pelo menos um método de login.",
+    "sns_unlink_warning": "Não será possível fazer login com este método após desconectar.",
+    "close": "Fechar",
+    "blocked_users": "Usuários bloqueados",
+    "no_blocked_users": "Nenhum usuário bloqueado.",
+    "confirm_unblock": "Tem certeza de que deseja desbloquear?",
+    "no_changes_or_invalid": "Sem alterações ou entrada inválida.",
+    "withdraw_error": "Erro durante a exclusão.",
+    "password_incorrect": "Senha incorreta.",
+    "email_mismatch_error": "O e-mail digitado está incorreto.",
+    "title_recovery": "Configurações de recuperação",
+    "language_select_aria": "Seleção de idioma",
+    "theme_select_aria": "Seleção de tema",
+    "coupons": {
+      "no_subscription_data": "Sem dados de assinatura.",
+      "no_vip_available": "Sem benefícios VIP disponíveis.",
+      "vip_success_title": "🎁 Benefício VIP secreto emitido!",
+      "vip_success_code": "Código do cupom: {{code}} (99% de desconto)",
+      "vip_success_desc": "Digite o código ao pagar.",
+      "discount_percent": "{{value}}% de desconto",
+      "discount_fixed": "₩{{value}} de benefício",
+      "btn_redeem": "Resgatar cupom",
+      "btn_claim_vip": "Obter cupom VIP",
+      "redeem_title": "Resgatar cupom",
+      "redeem_placeholder": "Digite o código do cupom",
+      "redeem_success": "Cupom resgatado com sucesso!",
+      "redeem_success_desc": "{{name}} ({{discount}} de desconto)",
+      "redeem_fail": "Código de cupom inválido.",
+      "redeem_error": "Erro ao verificar o cupom.",
+      "no_history": "Sem histórico.",
+      "no_subscription": "Sem dados de assinatura.",
+      "plan_label": "Plano {{plan}}",
+      "cancel_success": "Assinatura cancelada com sucesso.",
+      "cancel_error": "Erro ao cancelar: {{error}}",
+      "history_title": "Histórico de assinatura e cupons",
+      "vip_already_claimed": "Você já resgatou o benefício VIP deste mês.",
+      "vip_benefit_title": "Benefício VIP mensal",
+      "vip_benefit_desc": "Cupons especiais para membros Premium+.",
+      "status": {
+        "active": "Ativo",
+        "cancelled": "Cancelado",
+        "expired": "Expirado"
+      }
+    },
+    "customer_center": {
+      "faq_title": "Perguntas frequentes (FAQ)",
+      "faq_desc": "Confira as principais perguntas sobre conta, pagamento, segurança, etc.",
+      "contact_1on1_title": "Consulta 1:1",
+      "contact_1on1_desc": "Dias úteis 09:00~18:00 (exceto feriados)"
+    },
+    "theme_light": "Claro",
+    "theme_system": "Configurações do sistema",
+    "privacy_policy_title": "Política de privacidade",
+    "blocked_users_desc": "Gerenciar a lista de usuários bloqueados."
   },
   "profile": {
     "edit_profile": "Editar perfil",
@@ -443,7 +948,68 @@
     "search_users": "Buscar usuários...",
     "follow_feature_coming_soon": "Função de seguir em breve",
     "turn_on_notifications": "Ativar notificações",
-    "turn_off_notifications": "Desativar notificações"
+    "turn_off_notifications": "Desativar notificações",
+    "following_count": [
+      "Seguindo {{count}} pessoas",
+      "Arraste para ajustar a posição",
+      "Seguir",
+      "Deixar de seguir",
+      "Já está seguindo",
+      "Não é possível seguir a si mesmo",
+      "Configurações de notificação foram alteradas",
+      "Bloqueio concluído",
+      "Desbloquear",
+      "Já está bloqueado",
+      "Não é possível bloquear a si mesmo",
+      "Lista de bloqueios",
+      "Nenhum usuário bloqueado",
+      "Tel: +82 2-1234-5678",
+      "Número de registro comercial: 123-45-67890"
+    ],
+    "followers_count": [
+      "Seguidores {{count}}",
+      "Seguindo {{count}}",
+      "Arraste para ajustar a posição",
+      "Seguir",
+      "Deixar de seguir",
+      "Você já está seguindo",
+      "Você não pode seguir a si mesmo",
+      "Configurações de notificação foram alteradas",
+      "Bloqueio concluído",
+      "Desbloquear",
+      "Já está bloqueado",
+      "Você não pode bloquear a si mesmo",
+      "Lista de bloqueios",
+      "Nenhum usuário bloqueado",
+      "Gosta da sua postagem.",
+      "Responder ao post",
+      "Criar nova postagem",
+      "Compartilhou uma foto.",
+      "Bloquear mensagem",
+      "Criando sala de chat...",
+      "Frase não pode ser traduzida por falta de contexto.",
+      "Ocorreu um erro durante a tradução.",
+      "Falha na solicitação da API",
+      "Rolar até o final",
+      "Mensagem deletada pelo administrador."
+    ],
+    "followers": "Seguidores",
+    "view_profile": "Ver perfil",
+    "cover_photo": "Foto de capa",
+    "select_cover": "Selecionar foto de capa",
+    "cover_photo_hint": "Tamanho recomendado: 1500x500px",
+    "drag_to_reposition": "Arraste para ajustar a posição",
+    "followed": "Seguir",
+    "unfollowed": "Deixar de seguir",
+    "already_following": "Já está seguindo",
+    "cannot_follow_self": "Não é possível seguir a si mesmo",
+    "notifications_updated": "Configurações de notificação foram alteradas",
+    "blocked": "Bloqueio concluído",
+    "unblocked": "Desbloquear",
+    "already_blocked": "Já está bloqueado",
+    "cannot_block_self": "Não é possível bloquear a si mesmo",
+    "block_list": "Lista de bloqueios",
+    "no_blocked_users": "Nenhum usuário bloqueado"
   },
   "tweets": {
     "placeholder_tweet": "O que está acontecendo?",
@@ -479,11 +1045,15 @@
     "deleted_or_not_exist": "Esta publicação foi excluída ou não existe",
     "deleted_while_viewing": "Esta publicação foi excluída.",
     "login_to_reply": "Você pode escrever comentários após fazer login.",
-    "join_community_desc": "Por favor, faça login ou cadastre-se para participar da comunidade."
+    "join_community_desc": "Por favor, faça login ou cadastre-se para participar da comunidade.",
+    "liked_feed": "Gosta da sua postagem.",
+    "reply_to_tweet": "Responder ao post",
+    "compose_tweet": "Criar nova postagem"
   },
   "trending": {
     "title": "Tendências para você",
-    "no_trending": "Sem tendências"
+    "no_trending": "Sem tendências",
+    "shared_photo": "Compartilhou uma foto."
   },
   "chat": {
     "direct_chat": "Mensagens",
@@ -496,7 +1066,7 @@
     "loading": "Carregando...",
     "me": "Eu",
     "unknown": "Desconhecido",
-    "today": "Hoje",
+    "anonymous": "Anônimo",
     "exit": "Sair",
     "search_placeholder": "Buscar mensagens",
     "search_btn": "Buscar",
@@ -544,7 +1114,41 @@
     "attach_file": "Arquivo",
     "confirm_exit_title": "Leave Chat?",
     "confirm_exit_desc": "You will be returned to the chat list.",
-    "exit_success": "Left chat room."
+    "exit_success": "Left chat room.",
+    "aria_send_message": [
+      "Enviar mensagem",
+      "Comunidade",
+      "Nenhum resultado encontrado.",
+      "Ainda não há notícias compartilhadas.",
+      "Você verificou todas as notícias.",
+      "Esta postagem foi ocultada pelo administrador.",
+      "Esta postagem foi removida por violar a política.",
+      "Editar postagem",
+      "Comunidade | ARA - Aprenda Coreano com K-Content",
+      "Bem-vindo à comunidade ARA, onde aprendizes de todo o mundo se reúnem. Aprenda coreano através de K-Content, comunique-se com amigos e desfrute das culturas de diferentes países.",
+      "ARA, Aprendizado de Coreano, Aprender Coreano, Cultura Coreana, K-POP, K-Drama, K-Culture, intercâmbio de idiomas, feed, aprendizes globais",
+      "Comunidade ARA - Plataforma global de aprendizado baseada em K-Content",
+      "Aprenda coreano com K-Content e conecte-se com aprendizes de todo o mundo no feed global ARA.",
+      "Tel: +82 2-1234-5678",
+      "Número de registro comercial: 123-45-67890",
+      "Denunciar",
+      "Denúncia rejeitada",
+      "Selecione um motivo",
+      "Por favor, selecione um motivo para a denúncia.",
+      "Por favor, insira um motivo detalhado.",
+      "Boa noite / É de madrugada",
+      "Bom dia",
+      "Olá",
+      "Olá (noite)",
+      "Revisão planejada"
+    ],
+    "block_messages": "Bloquear mensagem",
+    "creating_chat": "Criando sala de chat...",
+    "translate_error_untranslatable": "Esta frase não pode ser traduzida porque seu significado não pode ser determinado.",
+    "translate_error_generic": "Ocorreu um erro durante a tradução.",
+    "translate_error_api": "Falha na solicitação da API",
+    "scroll_to_bottom": "Rolar até o final",
+    "deleted_message": "Mensagem deletada pelo administrador."
   },
   "footer": {
     "brand": {
@@ -571,6 +1175,7 @@
         "documentation": "Documentação",
         "api": "API",
         "community": "Comunidade",
+        "webinars": "Webinários",
         "help_center": "Central de Ajuda"
       },
       "company": {
@@ -578,70 +1183,110 @@
         "about": "Sobre nós",
         "careers": "Carreiras",
         "blog": "Blog",
-        "contact": "Contato"
+        "contact": "Contato",
+        "office": "Escritório"
       }
     },
     "newsletter": {
-      "title": "Inscrever-se",
-      "desc": "Receba as últimas notícias e atualizações.",
+      "title": "Newsletter",
+      "desc": "Junte-se a mais de 10.000 alunos e receba as melhores dicas e funcionalidades.",
       "placeholder": "Endereço de e-mail"
     },
     "bottom": {
-      "rights": "© {{year}} Ara Inc.",
+      "rights": "© {{year}} Ara Inc. Todos os direitos reservados.",
       "terms": "Termos",
       "privacy": "Privacidade",
       "cookies": "Cookies"
+    },
+    "office": {
+      "address_name": "Sede de Seul",
+      "address": "123 Teheran-ro, Gangnam-gu, Seul",
+      "tel": "Tel: +82 2-1234-5678",
+      "registration": "Número de registro da empresa: 123-45-67890"
     }
   },
   "goods": {
-    "items": {
-      "hoodie": {
-        "title": "Moletom Signature",
-        "desc": "Moletom de algodão premium com logotipo exclusivo. Ajuste confortável para uso diário."
-      },
-      "tote_bag": {
-        "title": "Ecobag",
-        "desc": "Sacola de lona ecológica. Durável e espaçosa para seus itens essenciais."
-      },
-      "note_set": {
-        "title": "Kit de Cadernos Premium",
-        "desc": "Conjunto de cadernos de papel de alta qualidade. Perfeito para estudar e fazer diário."
-      },
-      "planner": {
-        "title": "Planner Digital 2026",
-        "desc": "Planejador digital tudo-em-um para iPad/Tablet. Organize seu 2026 com eficiência."
-      },
-      "cap": {
-        "title": "Boné com Logo",
-        "desc": "Boné elegante com logotipo bordado. Alça ajustável para ajuste personalizado."
-      },
-      "tumbler": {
-        "title": "Copo Minimalista",
-        "desc": "Copo de aço inoxidável. Mantém bebidas quentes/frias por 12 horas."
+    "title": "Loja de Produtos",
+    "subtitle": "Descubra produtos oficiais que refletem a identidade da ARA",
+    "product_details": "Detalhes do Produto",
+    "product_options": "Selecionar Opções",
+    "product_recommendations": "Você Também Pode Gostar",
+    "total_amount": "Valor Total",
+    "checkout_total": "Total do Pagamento",
+    "price_unit": "R$",
+    "percent_suffix": "%",
+    "checkout_loading": "Processando pagamento...",
+    "checkout_success": "Pagamento concluído com sucesso!",
+    "checkout_error": "Ocorreu um erro durante o processamento do pagamento.",
+    "badge": {
+      "new": "NOVO",
+      "best": "BEST",
+      "soldout": "ESGOTADO",
+      "sale": "OFERTA",
+      "off_pattern": "{{percent}}% OFF"
+    },
+    "reviews": {
+      "title": "Avaliações",
+      "count": "{{count}} avaliações",
+      "rating_average": "Avaliação Média",
+      "photo_review": "Apenas avaliações com foto",
+      "write_btn": "Escrever uma avaliação",
+      "verified_purchase": "Compra verificada",
+      "helpful": "Útil",
+      "no_reviews": "Ainda não há avaliações.",
+      "be_first": "Seja o primeiro a avaliar!",
+      "be_first_desc": "Compartilhe sua experiência e ajude outros compradores.",
+      "load_more": "Carregar Mais",
+      "view_all": "Ver Tudo",
+      "translate_btn": "Traduzir",
+      "show_original": "Ver Original",
+      "no_stats": "Sem dados",
+      "positive_ratio": "Proporção de avaliações positivas",
+      "waiting_first": "Aguardando a primeira avaliação",
+      "buyer_only_error": "Apenas compradores podem escrever uma avaliação.",
+      "modal": {
+        "how_was_it": "O que achou do produto?",
+        "detail_review": "Avaliação Detalhada",
+        "placeholder": "Por favor, insira a sua avaliação.",
+        "add_photo": "Adicionar fotos (Máx. 3)",
+        "empty_content": "Por favor, insira o conteúdo da avaliação.",
+        "success": "Sua avaliação foi registrada!"
       }
     },
-    "hero_title": "Loja",
-    "category_all": "Tudo",
-    "price_unit": "$",
-    "category_clothing": "Roupas",
+    "coupon": {
+      "apply": "Aplicar Cupom",
+      "apply_btn": "Aplicar",
+      "placeholder": "Insira o código do cupom",
+      "applied": "Cupom aplicado!",
+      "invalid": "Código de cupom inválido.",
+      "error": "Erro ao verificar o cupom."
+    },
+    "category_all": "Todos",
+    "category_clothing": "Vestuário",
     "category_accessories": "Acessórios",
-    "category_digital": "Digital",
     "category_stationery": "Papelaria",
-    "new_arrival": "Novo",
-    "best_seller": "Mais Vendido",
-    "sold_out": "Esgotado",
-    "product_not_found": "Produto não encontrado",
-    "reviews_count": "{{count}} avaliações",
-    "free_shipping": "Frete grátis acima de $50",
-    "authentic_guarantee": "Garantia de autenticidade",
-    "option_color": "Cor",
-    "option_size": "Tamanho",
-    "add_to_cart": "Adicionar ao carrinho",
-    "product_details": "Detalhes do produto",
-    "related_items": "Você também pode gostar",
-    "buy_now": "Comprar agora",
-    "quantity": "Quantidade",
-    "back_to_list": "Voltar para a lista"
+    "category_digital": "Digital",
+    "related_products": "Produtos Relacionados",
+    "product_not_found": "Produto não encontrado.",
+    "back_to_list": "Voltar para a Lista",
+    "buy_now": "Comprar Agora",
+    "free_shipping": "Frete Grátis",
+    "authentic_guarantee": "100% Autêntico",
+    "coming_soon": "Em breve",
+    "notice_banner": "A loja oficial está em preparação.",
+    "option": {
+      "size": "Tamanho",
+      "color": "Cor"
+    },
+    "alt": {
+      "main_image": "Imagem principal do produto",
+      "gallery_image": "Imagem da galeria",
+      "detail_image": "Imagem de detalhe",
+      "store_membership": "Membro ARA Goods",
+      "hero_bg": "Fundo hero",
+      "review_image": "Imagem de avaliação do usuário",
+      "preview_image": "Pré-visualização de upload"
+    }
   },
   "translation": {
     "login_required": "Por favor, faça login para usar a função de tradução.",
@@ -655,7 +1300,20 @@
       "harmful": "Conteúdo nocivo",
       "inappropriate": "Conteúdo inapropriado",
       "other": "Outro (Entrada direta)"
-    }
+    },
+    "title": "Report",
+    "desc": "Please select a reason for the report. Processing may be delayed if there is no valid reason.",
+    "reason_label": "Select Reason",
+    "description_label": "Details",
+    "description_placeholder": "Please describe the reason for reporting in detail.",
+    "success": "Report has been submitted.",
+    "status": {
+      "dismissed": "Denúncia rejeitada"
+    },
+    "report": "Denunciar",
+    "select_placeholder": "Selecione o motivo",
+    "select_reason": "Por favor, selecione o motivo da denúncia.",
+    "enter_description": "Por favor, insira o motivo detalhado."
   },
   "admin": {
     "report_processed": "Denúncia processada.",
@@ -678,5 +1336,674 @@
     "content_deleted": "{{type}} (ID: {{id}}) deleted.",
     "logged_out": "Logged out",
     "logout_error": "Error during logout"
+  },
+  "policy": {
+    "close": "Fechar",
+    "help_center": {
+      "intro": "Se você tiver alguma dificuldade ao usar o serviço, entre em contato conosco a qualquer momento pelos canais abaixo.",
+      "email_title": "Suporte por E-mail",
+      "email_address": "koreara25@gmail.com",
+      "email_hours": "Dias úteis 10:00 ~ 18:00 (KST, fechado nos fins de semana e feriados)",
+      "app_report_title": "Denúncia/Suporte no App",
+      "app_report_post": "Você pode denunciar diretamente pelo menu superior direito de postagens e comentários.",
+      "app_report_dm": "Você também pode denunciar pela lista de DM > Perfil do Usuário > Menu Denunciar/Bloquear.",
+      "faq_title": "Perguntas Frequentes (FAQ)",
+      "faq_account": "Conta/Senha, problemas de login",
+      "faq_report": "Denúncia/Bloqueio e Diretrizes da comunidade",
+      "faq_privacy": "Consultas sobre dados e privacidade",
+      "faq_note": "A página de dúvidas frequentes será adicionada no lançamento oficial."
+    },
+    "terms": {
+      "title": "Termos de Uso",
+      "purpose": {
+        "h": "Artigo 1 (Objetivo)",
+        "body": "Estes Termos visam regular os direitos, obrigações e responsabilidades entre a empresa e os usuários em relação ao uso do serviço de rede social/comunidade (incluindo mobile/web, doravante \"Serviço\") fornecido pela \"ARA\" (doravante \"Empresa\")."
+      },
+      "definition": {
+        "h": "Artigo 2 (Definições)",
+        "member": "\"Usuário\" refere-se a uma pessoa que aceita os termos da empresa e cria uma conta para utilizar o serviço.",
+        "content": "\"Conteúdo\" refere-se a todos os dados, incluindo textos, imagens, áudio, vídeo, links, etc., que os usuários carregam/transmitem/postam no serviço.",
+        "paid_service": "\"Serviço Pago\" refere-se a serviços utilizados mediante pagamento de taxas, como itens digitais, assinaturas, remoção de anúncios, etc."
+      },
+      "contract": {
+        "h": "Artigo 3 (Contrato de Uso e Qualificação)",
+        "agreement": "O contrato de uso é estabelecido quando o usuário aceita os termos e a política de privacidade e conclui o processo de cadastro.",
+        "verification": "Procedimentos de verificação de identidade, incluindo login social, podem ser solicitados.",
+        "age_limit": "Menores de 14 anos não podem se cadastrar. A empresa pode solicitar documentos de verificação de idade se necessário."
+      },
+      "community": {
+        "h": "Artigo 4 (Operação da Comunidade e Atos Proibidos)",
+        "guidelines": "Os usuários devem respeitar as leis, os termos e as diretrizes da comunidade.",
+        "prohibited_content": "É proibida a postagem/transmissão/promoção de conteúdo que viole direitos de terceiros ou que seja ilegal, prejudicial, discriminatório, de ódio, obsceno ou violento.",
+        "prohibited_actions": "São proibidos a coleta/publicação não autorizada de dados pessoais, spam/publicidade/phishing, compartilhamento de conta e acesso automatizado/scraping.",
+        "violations": "A empresa pode remover postagens ou suspender contas temporária ou permanentemente em caso de violação das diretrizes."
+      },
+      "member_duty": {
+        "h": "Artigo 5 (Responsabilidades do Usuário)",
+        "password": "O usuário é responsável por gerenciar a segurança da senha de sua conta.",
+        "identity": "O usuário não deve assumir a identidade de outros, utilizar meios de pagamento de terceiros ou registrar informações falsas.",
+        "ai_output": "As funções de IA não devem ser usadas de modo a violar direitos de terceiros."
+      },
+      "license": {
+        "h": "Artigo 6 (Direitos de Conteúdo e Licença)",
+        "copyright": "Os direitos autorais do conteúdo postado pertencem ao usuário que o criou.",
+        "grant": "O usuário concede à empresa uma licença não exclusiva e gratuita para utilizar o conteúdo para a operação e promoção do serviço.",
+        "responsibility": "O usuário assume total responsabilidade legal por conteúdos que violem direitos de terceiros."
+      },
+      "ai": {
+        "h": "Artigo 7 (Aviso sobre Funções de IA)",
+        "usage": "O serviço pode utilizar IA para recomendações e geração de conteúdo.",
+        "disclaimer": "Resultados de IA podem conter erros e são fornecidos apenas como referência."
+      },
+      "payment": {
+        "h": "Artigo 8 (Serviços Pagos e Pagamento)",
+        "pricing": "Preços e políticas de reembolso para serviços pagos são informados separadamente.",
+        "policy": "As políticas das lojas de aplicativos e gateways de pagamento podem prevalecer."
+      },
+      "service_change": {
+        "h": "Artigo 9 (Alterações e Suspensão do Serviço)",
+        "body": "A empresa pode alterar ou suspender o serviço por necessidades técnicas ou operacionais com aviso prévio."
+      },
+      "termination": {
+        "h": "Artigo 10 (Cancelamento e Restrições)",
+        "withdrawal": "O usuário pode encerrar sua conta a qualquer momento nas configurações.",
+        "restriction": "A empresa pode restringir o acesso ou suspender contas por violação das diretrizes."
+      },
+      "ip_report": {
+        "h": "Artigo 11 (Vioação de PI e Republicação)",
+        "takedown": "A empresa pode bloquear ou remover temporariamente conteúdos diante de denúncias válidas de infração.",
+        "counter": "Autores podem solicitar a republicação enviando provas contrárias."
+      },
+      "disclaimer": {
+        "h": "Artigo 12 (Exoneração de Responsabilidade)",
+        "force_majeure": "A empresa não responde por danos decorrentes de força maior.",
+        "disputes": "Disputas entre usuários ou com terceiros são resolvidas entre as próprias partes."
+      },
+      "law": {
+        "h": "Artigo 13 (Lei Aplicável e Foro)",
+        "body": "Estes Termos são regidos pelas leis da República da Coreia."
+      },
+      "notice": {
+        "h": "Artigo 14 (Alterações nos Termos)",
+        "body": "A empresa pode alterar os termos com aviso prévio de, no mínimo, 7 dias."
+      }
+    },
+    "privacy": {
+      "title": "Política de Privacidade",
+      "collect": {
+        "h": "Artigo 1 (Dados Coletados)",
+        "required_title": "Obrigatórios",
+        "required_items": "E-mail, Senha (hash), Apelido, ID de serviço (UID)",
+        "optional_title": "Opcionais",
+        "optional_items": "Data de nascimento, Gênero, Foto de perfil, País/Idioma, Bio",
+        "auto_title": "Coleta automática",
+        "auto_items": "Logs de acesso, informações do dispositivo, cookies, logs de erro",
+        "social_title": "Login Social",
+        "social_items": "Nome/E-mail do provedor conforme a política deles"
+      },
+      "purpose": {
+        "h": "Artigo 2 (Finalidade do Uso)",
+        "account": "Cadastro/Verificação de identidade/Gestão de conta",
+        "sns_features": "Recursos principais de rede social, como sugestões de amizade",
+        "support": "Suporte ao cliente, comunicados, melhoria do serviço",
+        "analytics": "Estatísticas e recomendações personalizadas",
+        "security": "Segurança e prevenção de fraudes",
+        "payment": "Processamento de pagamentos e reembolsos"
+      },
+      "share": {
+        "h": "Artigo 3 (Compartilhamento com Terceiros)",
+        "principle": "A empresa não fornece dados a terceiros sem consentimento prévio.",
+        "outsourcing": "Certas tarefas podem ser delegadas a parceiros (hospedagem, análise de dados).",
+        "legal": "Exceções se aplicam em caso de requisições legais."
+      },
+      "xborder": {
+        "h": "Artigo 4 (Transferência Internacional)",
+        "body": "Os dados podem ser armazenados em servidores no exterior."
+      },
+      "store": {
+        "h": "Artigo 5 (Período de Retenção)",
+        "withdrawal": "Dados são excluídos no encerramento da conta, exceto por obrigação legal.",
+        "legal_retention": "Prazos legais se aplicam a dados financeiros e de comunicação.",
+        "backup": "Dados em backups são excluídos periodicamente."
+      },
+      "security": {
+        "h": "Artigo 6 (Medidas de Segurança)",
+        "encryption": "Armazenamento criptografado de senhas e dados sensíveis",
+        "access_control": "Controle rigoroso de acesso e auditorias periódicas",
+        "logs": "Manutenção de registros de acesso",
+        "backup_recovery": "Sistemas de proteção e recuperação de dados"
+      },
+      "rights": {
+        "h": "Artigo 7 (Direitos do Usuário)",
+        "data_rights": "Usuários podem solicitar acesso, correção ou exclusão de seus dados.",
+        "settings": "Preferências podem ser alteradas no perfil.",
+        "cookies": "A gestão de cookies pode ser feita pelo navegador."
+      },
+      "children": {
+        "h": "Artigo 8 (Proteção de Menores)",
+        "body": "O cadastro de menores de 14 anos não é permitido."
+      },
+      "notice": {
+        "h": "Artigo 9 (Alterações)",
+        "body": "Esta política pode ser atualizada com aviso de 7 dias."
+      },
+      "contact": {
+        "h": "Artigo 10 (Responsável pela Privacidade)",
+        "name": "Nome: Gildong Hong",
+        "email": "E-mail: privacy@ara-service.com",
+        "hours": "Atendimento: Dias úteis 10:00~18:00"
+      }
+    },
+    "marketing": {
+      "title": "Consentimento para Marketing",
+      "purpose": {
+        "h": "Artigo 1 (Finalidade)",
+        "body": "Envio de informações úteis (novidades, eventos, promoções) via e-mail/push/SMS."
+      },
+      "contents": {
+        "h": "Artigo 2 (Conteúdo)",
+        "features": "Resumo de novas funções e feeds recomendados",
+        "events": "Informações sobre eventos e promoções",
+        "discounts": "Cupons, descontos e benefícios de parceiros",
+        "reports": "Relatórios personalizados de atividade"
+      },
+      "channels": {
+        "h": "Artigo 3 (Canais e Configurações)",
+        "individual": "O consentimento pode ser gerenciado por canal.",
+        "settings": "Alterações em Configurações > Notificações/Marketing.",
+        "apply": "O cancelamento terá efeito a partir do próximo envio."
+      },
+      "partners": {
+        "h": "Artigo 4 (Marketing de Terceiros)",
+        "body": "Serviços de envio podem ser delegados a empresas especializadas."
+      },
+      "note": {
+        "h": "Artigo 5 (Avisos Operacionais)",
+        "body": "Comunicados essenciais sobre o serviço podem ser enviados sem consentimento."
+      }
+    }
+  },
+  "subscription": {
+    "back": "Voltar",
+    "title_prefix": "Escolha o seu",
+    "title_highlight": "plano",
+    "description": "Escolha o plano que melhor se adapta às suas necessidades e aproveite os benefícios Premium.",
+    "popular_badge": "Popular",
+    "subscribe_now": "Assinar agora",
+    "current_plan": "Plano atual",
+    "active_status": "Ativo",
+    "payment_date": "Próxima data de pagamento",
+    "upgrade_plan": "Melhorar plano",
+    "manage_plan": "Gerenciar plano",
+    "vip_box": "Abrir caixa VIP",
+    "history": "Histórico de assinaturas",
+    "total_count": "Total {{count}} itens →",
+    "more_count": "+ mais {{count}}",
+    "recent_coupons": "Cupons recentes",
+    "history_all": "Histórico completo",
+    "premium_only": "Conteúdo exclusivo Premium",
+    "guaranteed_payment": "Pagamento seguro garantido",
+    "secure_payment": "Pagamento seguro",
+    "cancel_anytime": "Cancele a qualquer momento",
+    "all_cards_supported": "Todos os cartões suportados",
+    "plans": {
+      "free": {
+        "title": "Plano Gratuito",
+        "desc": "Para quem precisa apenas do essencial",
+        "interval": "mês",
+        "feature_voca": "Acesso básico ao vocabulário",
+        "feature_community": "Participação na comunidade",
+        "feature_badge": "Selo premium",
+        "feature_ads": "Experiência sem anúncios",
+        "feature_promo": "Promoções exclusivas"
+      },
+      "basic": {
+        "title": "Plano Básico",
+        "desc": "Para alunos ativos",
+        "interval": "mês",
+        "feature_voca": "Acesso completo ao vocabulário",
+        "feature_community": "Participação na comunidade",
+        "feature_ads": "Experiencia sem anúncios",
+        "feature_badge": "Selo premium",
+        "feature_promo": "Promoções exclusivas"
+      },
+      "premium": {
+        "title": "Plano Premium",
+        "desc": "Plano tudo-em-um com todos os benefícios",
+        "interval": "mês",
+        "feature_course": "Acesso completo ao curso",
+        "feature_profile": "Selo de perfil premium",
+        "feature_ads": "Experiência sem anúncios",
+        "feature_badge": "Selo premium",
+        "feature_coupon": "Cupons mensais exclusivos"
+      }
+    },
+    "errors": {
+      "login_required": "Faça login para assinar.",
+      "already_free": "Você já está usando o plano gratuito.",
+      "cancel_success": "Assinatura cancelada com sucesso.",
+      "cancel_fail": "Erro ao cancelar: {{error}}",
+      "coupon_success": "Cupom aplicado!",
+      "coupon_invalid": "Código de cupom inválido.",
+      "coupon_error": "Erro ao verificar o cupom."
+    },
+    "cancel_confirm": {
+      "title": "Cancelar assinatura",
+      "desc": "Tem certeza de que deseja cancelar? Você voltará para o plano gratuito.",
+      "btn_confirm": "Cancelar assinatura",
+      "btn_cancel": "Manter assinatura"
+    },
+    "payment_modal": {
+      "title": "Detalhes do pagamento",
+      "promo_code": "Código promocional",
+      "coupon_placeholder": "Insira o código do cupom",
+      "apply": "Aplicar",
+      "coupon_applied": "Cupom {{name}} aplicado",
+      "card_info": "Informações do cartão",
+      "card_number": "Número do cartão",
+      "expiry": "MM / AA",
+      "cvc": "CVC",
+      "pay_now": "Pagar {{price}}",
+      "payment_success": "Pagamento concluído!",
+      "plan_applied": "Plano {{plan}} ativado.",
+      "payment_fail": "Falha no pagamento: {{error}}",
+      "test_warning": "⚠️ Esta é uma simulação de pagamento de teste. Não haverá cobranças reais.",
+      "cancel_confirm_title": "Cancelar assinatura",
+      "cancel_confirm_desc": "Tem certeza de que deseja cancelar sua assinatura?",
+      "cancel_subscription": "Cancelar assinatura",
+      "keep_subscription": "Manter assinatura"
+    }
+  },
+  "reset_password": {
+    "title": "Redefinir senha",
+    "success_title": "Link de redefinição enviado",
+    "success_message": "Um link de redefinição de senha foi enviado para o seu endereço de e-mail.",
+    "check_inbox": "Por favor, verifique sua caixa de entrada.",
+    "back_to_login": "Voltar para o login",
+    "email_label": "Endereço de e-mail",
+    "email_placeholder": "Digite seu e-mail",
+    "sending": "Enviando...",
+    "send_reset_link": "Enviar link de redefinição",
+    "error_email_required": "O e-mail é obrigatório.",
+    "error_invalid_email": "Por favor, insira um e-mail válido."
+  },
+  "landing": {
+    "badge": "Aprendendo coreano através de histórias · Comunidade",
+    "title_1": "Aprenda idiomas com conteúdo",
+    "title_2": "Experiência conectada pela cultura",
+    "description": "Expressões aprendidas através de episódios originais e contos folclóricos coreanos",
+    "description2": "Espaço de aprendizado de coreano ARA para escrever, corrigir e compartilhar com amigos de todo o mundo",
+    "point_1": "Aprendizado baseado em episódios de histórias",
+    "point_2": "Compreensão de expressões através de contos folclóricos",
+    "point_3": "Comunidade global de aprendizado",
+    "cta_start": "Começar agora",
+    "cta_explore": "Explorar conteúdo",
+    "scroll_hint": "Role para explorar",
+    "nav_top": "Topo",
+    "nav_how": "Método de aprendizado",
+    "nav_problems": "Valores principais",
+    "nav_features": "Funcionalidades principais",
+    "nav_contents": "Conteúdo",
+    "nav_stories": "Depoimentos",
+    "nav_start": "Começar",
+    "nav_contact": "Contato",
+    "aria_badge": "Sobre a plataforma",
+    "aria_start": "Comece agora",
+    "aria_explore": "Explorar conteúdo",
+    "cta_badge_text": "Alunos que se inscreveram hoje",
+    "cta_title_1": "Coreano, não como 'estudo'",
+    "cta_title_2": "Comece como uma 'experiência'",
+    "cta_description": "Inscreva-se agora e comece seu primeiro curso de aprendizado com cenas de dramas populares.",
+    "cta_start_free": "Comece gratuitamente",
+    "problem_title": "Você já teve essas preocupações?",
+    "problem_desc": "ARA começou com as preocupações mais mencionadas por alunos reais.",
+    "problem_badge": "preocupações reais",
+    "problems": {
+      "1": "Mesmo assistindo dramas, as expressões importantes passam despercebidas.",
+      "2": "Quero aprender coreano usado em situações reais, mas não sei como.",
+      "3": "Mesmo que eu aprenda expressões, não consigo entender como são usadas em conversas.",
+      "4": "Não há conteúdo que eu possa assistir e aproveitar de acordo com o meu nível.",
+      "5": "É difícil continuar estudando sozinho."
+    },
+    "how_it_works_badge": "COMO FUNCIONA",
+    "how_it_works_title": "O fluxo de aprendizado do ARA funciona assim",
+    "guide_alt": "Guia ARA {{index}}",
+    "popular": {
+      "title": "Você aprenderá com este tipo de conteúdo",
+      "description": "O fluxo de aprendizado é composto principalmente por conteúdo de animação original baseado em contos folclóricos e lendas.",
+      "loading": "Carregando conteúdo popular..."
+    },
+    "solution": {
+      "title": "Por que ARA?",
+      "description": [
+        "Não é apenas memorização de palavras, mas também o fluxo e as emoções dentro do conteúdo",
+        "Foi criado com o objetivo de ser uma aprendizagem que é lembrada junto.",
+        "Foi projetado para que a experiência de aprendizado e comunidade se conectem naturalmente em uma única tela."
+      ],
+      "features": {
+        "1": {
+          "title": "Aprendizado baseado em histórias",
+          "desc": "Siga um episódio de animação de contos folclóricos e lendas para aprender vocabulário, expressões e contexto cultural."
+        },
+        "2": {
+          "title": "Aprenda enquanto usa a estrutura",
+          "desc": "Use a expressão imediatamente após aprender e adquira expressões mais naturais com frases de exemplo e feedback."
+        },
+        "3": {
+          "title": "Comunidade global",
+          "desc": "Aprendizes de diferentes idiomas e origens se reúnem para compartilhar experiências de uso do coreano conectadas por histórias."
+        }
+      }
+    },
+    "slider": {
+      "preview": {
+        "title": "Aprenda expressões coreanas através de histórias",
+        "subtitle": "Expressões e nuances de forma natural em diálogos situacionais",
+        "bullets": [
+          "Diálogo → Compreensão de expressões",
+          "Dicas de uso e cultura",
+          "Inclui exercícios curtos"
+        ],
+        "ctaLabel": "Prévia do episódio",
+        "alt": "Tela de aprendizado baseada em episódios de histórias"
+      },
+      "folktale": {
+        "title": "Coreano encontrado em contos folclóricos e lendas",
+        "subtitle": "Leia contos antigos em coreano moderno",
+        "bullets": [
+          "Conteúdo de contos folclóricos e lendas",
+          "Explicação de cultura e contexto nas expressões",
+          "Pacote recomendado para iniciantes"
+        ],
+        "ctaLabel": "Prévia de conteúdo de contos de fadas",
+        "alt": "Conteúdo de aprendizado de contos e lendas coreanas"
+      },
+      "community": {
+        "title": "Pratique com amigos de todo o mundo",
+        "subtitle": "Compartilhe frases e receba feedback de alunos de várias línguas",
+        "bullets": [
+          "Comunidade de usuários multilíngues",
+          "Troca de frases curtas",
+          "Compartilhamento de dicas de expressões/cultura"
+        ],
+        "ctaLabel": "Prévia da comunidade",
+        "alt": "Exemplo de atividades da comunidade global"
+      }
+    },
+    "testimonials": {
+      "title": {
+        "line1": "ARA é para esses tipos de alunos",
+        "line2": "Está sendo projetado com eles em mente"
+      },
+      "description": {
+        "intro": "Embora ainda não tenha sido lançado oficialmente, ARA não está sendo projetado pensando em um único tipo de aluno",
+        "highlight": "Mas em vários tipos de alunos",
+        "body": "está sendo imaginado e criado juntos.",
+        "detail": [
+          "Desde pessoas que estão começando a aprender coreano até aquelas que estão se preparando para trabalhar ou estudar no exterior,",
+          "até profissionais que precisam usar coreano no dia a dia ou no trabalho.",
+          "O aprendizado dura mais quando você usa o conteúdo e a comunidade que gosta juntos,",
+          "Estamos projetando o fluxo para que continue de forma natural."
+        ]
+      },
+      "stats": {
+        "duration": {
+          "label": "Duração do aprendizado",
+          "desc": "Estamos projetando o fluxo para que você possa permanecer mais tempo do que quando estuda sozinho com materiais didáticos."
+        },
+        "persona": {
+          "label": "Tipo de persona",
+          "desc": "Estamos considerando tipos de alunos de vários países e objetivos e revisando telas e funcionalidades."
+        },
+        "scenario": {
+          "label": "Cenário de aprendizado",
+          "desc": "Estamos continuamente construindo cenários de aprendizado em unidades de cena sobre quando você ligaria o ARA em determinadas situações."
+        }
+      },
+      "reviews": {
+        "sarah": {
+          "country": "Estados Unidos · US",
+          "persona": "Iniciante em coreano que começou com dramas",
+          "text": "Até agora, eu dependia apenas das legendas para entender a história, então frequentemente perdia expressões importantes. No ARA, as expressões principais são destacadas cena por cena, então eu entendo \"Ah, é assim que se usa essa expressão nesta situação\". Também é divertido assistir ao mesmo episódio novamente e reduzir as legendas uma a uma."
+        },
+        "diego": {
+          "country": "Espanha · ES",
+          "persona": "Aprendiz prático se preparando para intercâmbio ou estudos no exterior",
+          "text": "Antes de ir para o intercâmbio, queria estudar expressões que realmente usaria. Gostei que os diálogos das animações estão organizados por situação, permitindo aprender a distinguir entre \"expressões do dia a dia\" e \"expressões que devem ser usadas com cuidado\"."
+        },
+        "meilin": {
+          "country": "Singapura · SG",
+          "persona": "Aprendiz intermediário/avançado que quer melhorar a fala",
+          "text": "Conheço um pouco de gramática e vocabulário, mas sempre tive dificuldade em me expressar verbalmente. No ARA, ao ver uma história e escrever breves impressões ou reações, eles corrigem para expressões mais naturais. Usando essas frases no feed ou DM, sinto que estou recuperando a habilidade de falar aos poucos."
+        },
+        "alexey": {
+          "country": "Rússia · RU",
+          "persona": "Aprendiz profissional que precisa de expressões de negócios",
+          "text": "Precisava de expressões de negócios para me comunicar com parceiros coreanos. Comparando as falas de adultos e crianças, superiores e subordinados nas animações, pude aprender expressões adequadas para cada situação de forma natural. Foi impressionante entender o contexto, não apenas traduzir."
+        },
+        "hana": {
+          "country": "Japão · JP",
+          "persona": "Aprendiz de autoaperfeiçoamento que perde facilmente a rotina",
+          "text": "Quando estudava com livros, perdia o ritmo em poucos dias. No ARA, mesmo assistindo a uma história curta, já aprendo algo, então não me sinto sobrecarregado. Entro pensando \"só até esta cena hoje\" e acabei criando uma rotina de acessar diariamente."
+        }
+      },
+      "notice": {
+        "mobile": "A resenha que você está vendo agora é um exemplo de cenário baseado nas personas de aprendizes que o ARA definiu.",
+        "desktop": "A resenha que você está vendo agora não é baseada em dados de usuários reais, mas em personas de aprendizes que o ARA tem como alvo. Após o lançamento oficial, esta seção será continuamente atualizada com histórias de aprendizes reais."
+      }
+    }
+  },
+  "find_email": {
+    "nickname_label": [
+      "Apelido",
+      "Digite o apelido",
+      "E-mail de recuperação",
+      "E-mail de recuperação registrado no momento da inscrição",
+      "Pergunta definida por você",
+      "Resposta",
+      "Digite a resposta",
+      "Encontrar e-mail",
+      "Procurando...",
+      "Seu endereço de e-mail",
+      "Nenhuma informação correspondente encontrada.",
+      "Nenhuma informação de recuperação registrada.",
+      "Por favor, insira o apelido.",
+      "Por favor, insira o e-mail de recuperação.",
+      "Por favor, insira a resposta.",
+      "Voltar para o login",
+      "Por favor, escolha um método",
+      "Definir nova senha",
+      "Nova senha",
+      "Digite a nova senha"
+    ],
+    "error_no_recovery": [
+      "Nenhuma informação de recuperação registrada.",
+      "Por favor, insira o apelido.",
+      "Por favor, insira o e-mail de recuperação.",
+      "Por favor, insira a resposta.",
+      "Voltar para o login",
+      "Por favor, escolha um método.",
+      "Definir nova senha",
+      "Nova senha",
+      "Insira a nova senha",
+      "Confirmação de senha",
+      "Digite a senha novamente",
+      "Alterar senha",
+      "Alterando...",
+      "Alteração de senha concluída",
+      "Senha alterada com sucesso.",
+      "Fazer login",
+      "Por favor, insira a senha.",
+      "A senha deve ter pelo menos 8 caracteres.",
+      "As senhas não coincidem.",
+      "Falha ao alterar a senha.",
+      "Mais",
+      "Vocabulário",
+      "Ver meu vocabulário",
+      "Usuário removido",
+      "Erro"
+    ],
+    "title": "Encontrar e-mail",
+    "method_select": "Escolher método de busca",
+    "method_recovery_email": "Encontrar por e-mail de recuperação",
+    "method_question": "Encontrar por pergunta de recuperação",
+    "nickname_placeholder": "Digite o apelido",
+    "recovery_email_label": "E-mail de recuperação",
+    "recovery_email_placeholder": "E-mail de recuperação registrado no momento da inscrição",
+    "your_question": "Pergunta definida por você",
+    "answer_label": "Resposta",
+    "answer_placeholder": "Digite a resposta",
+    "find_button": "Encontrar e-mail",
+    "finding": "Procurando...",
+    "result_found": "Seu endereço de e-mail",
+    "error_not_found": "Nenhuma informação correspondente encontrada.",
+    "error_nickname_required": "Por favor, insira o apelido.",
+    "error_recovery_email_required": "Por favor, insira o e-mail de recuperação.",
+    "error_answer_required": "Por favor, insira a resposta.",
+    "back_to_login": "Voltar para o login",
+    "select_method": "Por favor, escolha um método"
+  },
+  "update_password": {
+    "confirm_password_label": [
+      "Confirmar senha",
+      "Digite a senha novamente",
+      "Alterar senha",
+      "Alterando...",
+      "Alteração de senha concluída",
+      "Senha alterada com sucesso.",
+      "Entrar",
+      "Por favor, insira a senha.",
+      "A senha deve ter pelo menos 8 caracteres.",
+      "As senhas não coincidem.",
+      "Falha ao alterar a senha.",
+      "Mais",
+      "Vocabulário",
+      "Ver meu vocabulário",
+      "Usuário desativado",
+      "Erro",
+      "Tentar novamente",
+      "Hoje",
+      "Ontem",
+      "Pouco tempo atrás"
+    ],
+    "title": "Definir nova senha",
+    "new_password_label": "Nova senha",
+    "new_password_placeholder": "Digite a nova senha",
+    "confirm_password_placeholder": "Digite a senha novamente",
+    "update_button": "Alterar senha",
+    "updating": "Alterando...",
+    "success_title": "Alteração de senha concluída",
+    "success_message": "A senha foi alterada com sucesso.",
+    "go_to_login": "Fazer login",
+    "error_required": "Por favor, insira a senha.",
+    "error_length": "A senha deve ter pelo menos 8 caracteres.",
+    "error_mismatch": "As senhas não coincidem.",
+    "error_failed": "Falha ao alterar a senha."
+  },
+  "recovery_reminder": {
+    "later": [
+      "Fazer mais tarde",
+      "Leve",
+      "Configurações do sistema",
+      "A empresa coleta e utiliza o mínimo de informações pessoais necessárias para fornecer o serviço e as destrói sem demora após atingir o objetivo da coleta.",
+      "Item principal",
+      "Itens coletados, finalidade da coleta e uso, período de retenção e uso",
+      "Status de fornecimento e delegação de processamento de informações pessoais a terceiros",
+      "Direitos do usuário (acesso, correção, exclusão, suspensão de processamento) e métodos de exercício",
+      "Responsável pela proteção de informações pessoais e contato",
+      "Fechar",
+      "Política de privacidade",
+      "Consentimento de marketing",
+      "Recebimento de e-mail",
+      "Recebimento de SMS",
+      "Notificações push",
+      "Perguntas frequentes (FAQ)",
+      "Confira as principais perguntas sobre conta, pagamento, segurança, etc.",
+      "Consulta 1:1",
+      "Dias úteis 09:00~18:00 (exceto feriados)",
+      "Gerencie a lista de usuários bloqueados.",
+      "Seguidores",
+      "Ver perfil",
+      "Foto de capa",
+      "Selecionar foto de capa",
+      "Tamanho recomendado: 1500x500px"
+    ],
+    "title": "Aviso de fortalecimento da segurança da conta",
+    "desc": "Para recuperar sua conta com segurança caso perca a senha, configure perguntas de recuperação e e-mail.",
+    "action": "Configurar agora"
+  },
+  "voca": {
+    "pos": {
+      "noun": "substantivo",
+      "verb": "Verbo",
+      "adjective": "adjetivo",
+      "adverb": "Advérbio",
+      "pronoun": "pronome",
+      "numeral": "investigação",
+      "determiner": "adjetivo determinante",
+      "particle": "Pesquisa",
+      "interjection": "interjeição"
+    }
+  },
+  "not_found": {
+    "discovery": "Encontramos uma página perdida",
+    "title": "Esta é uma cena que ainda não foi escrita no roteiro",
+    "description": "Ainda não há episódios de ARA disponíveis neste endereço. Que tal voltar para a página inicial e continuar desfrutando de outros conteúdos K para aprender coreano e cultura?",
+    "quote_part1": "“Algum dia esta página também",
+    "quote_accent": "Uma cena",
+    "quote_part2": "Será preenchido.”",
+    "feedback_prefix": "Se você tiver alguma funcionalidade ou ideia que esperava nesta página, sinta-se à vontade para deixá-la no menu de feedback dentro do ARA",
+    "feedback_suffix": "Por favor, entre em contato através de."
+  },
+  "community": {
+    "seo": {
+      "title": "Comunidade | ARA - Aprenda coreano com conteúdo K",
+      "description": "Esta é a comunidade ARA onde aprendizes de todo o mundo se reúnem. Aprenda coreano através de conteúdo K, comunique-se com amigos e aproveite as culturas de diferentes países.",
+      "keywords": "ARA, aprendizado de coreano, Aprenda coreano, Cultura coreana, K-POP, K-Drama, K-Cultura, intercâmbio de idiomas, feed, aprendizes globais",
+      "og_title": "Comunidade ARA - Plataforma global de aprendizado baseada em conteúdo K",
+      "og_description": "Aprenda coreano com K-Content e comunique-se com alunos de todo o mundo no feed global ARA."
+    },
+    "title": "Comunidade",
+    "no_results": "Nenhum resultado encontrado.",
+    "no_posts": "Ainda não há notícias compartilhadas.",
+    "all_posts_loaded": "Você verificou todas as notícias.",
+    "hidden_content": "Postagem oculta pelo administrador.",
+    "deleted_post": "Esta postagem foi removida por violação de política.",
+    "edit_post": "Editar postagem"
+  },
+  "home": {
+    "stats_new": [
+      "Nova palavra",
+      "Aprendizado contínuo",
+      "Meta de hoje {{count}} itens",
+      "Progresso recente de aprendizado",
+      "Continuar aprendendo",
+      "Recomendação de hoje",
+      "Ver mais",
+      "Estatísticas semanais de aprendizado",
+      "Progresso por área",
+      "{{percent}}% concluído",
+      "Tempo restante {{time}}"
+    ],
+    "greeting_night": "Boa noite / É madrugada",
+    "greeting_morning": "Bom dia",
+    "greeting_afternoon": "Olá",
+    "greeting_evening": "Olá (noite)",
+    "stats_due": "Revisão planejada",
+    "stats_streak": "Aprendizado contínuo",
+    "goal_text": "Meta de hoje {{count}} itens",
+    "recent_progress": "Progresso recente de aprendizado",
+    "continue_learning": "Continuar aprendendo",
+    "today_recommendation": "Recomendação de hoje",
+    "more": "Ver mais",
+    "weekly_stats": "Estatísticas semanais de aprendizado",
+    "field_progress": "Progresso por área",
+    "percent_complete": "{{percent}}% concluído",
+    "time_left": "Tempo restante {{time}}"
+  },
+  "marketing": {
+    "subscription": {
+      "title": "Assinatura do Project ARA!"
+    }
   }
 }

@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import imageCompression from 'browser-image-compression';
 import type { UIReply } from '@/types/sns';
 import { getBanMessage } from '@/utils/banUtils';
+import SeagullIcon from '@/components/common/SeagullIcon';
 
 type EditorMode = 'tweet' | 'reply';
 
@@ -68,7 +69,7 @@ export interface SnsInlineEditorHandle {
 const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>((props, ref) => {
   const { t } = useTranslation();
   const { mode, onCancel } = props;
-  const { user, isBanned, bannedUntil } = useAuth();
+  const { user, userPlan, isBanned, bannedUntil } = useAuth();
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [profileNickname, setProfileNickname] = useState<string>('');
@@ -389,10 +390,19 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
     <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-4 bg-white dark:bg-background">
       <div className="flex items-start gap-3">
         {/* 내 아바타 */}
-        <Avatar>
-          <AvatarImage src={profileAvatar || '/default-avatar.svg'} alt="me" />
-          <AvatarFallback>{t('common.me', 'ME')}</AvatarFallback>
-        </Avatar>
+        <div className={`relative flex-shrink-0 ${userPlan === 'premium' ? 'rounded-full p-[2px] bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] shadow-[0_2px_10px_rgba(0,191,165,0.4)]' : ''}`}>
+          <Avatar className="border-2 border-white dark:border-background">
+            <AvatarImage src={profileAvatar || '/default-avatar.svg'} alt="me" />
+            <AvatarFallback>{t('common.me', 'ME')}</AvatarFallback>
+          </Avatar>
+          {userPlan === 'premium' && (
+            <div className="absolute -top-1.5 -left-1.5 z-10 p-[2px] bg-white dark:bg-background rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.1)] transition-transform hover:scale-110 -rotate-12">
+              <div className="bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] w-[15px] h-[15px] rounded-full flex items-center justify-center shadow-[inset_0_1px_3px_rgba(255,255,255,0.5)]">
+                <SeagullIcon size={12} className="text-white drop-shadow-sm" />
+              </div>
+            </div>
+          )}
+        </div>
         {/* 입력 영역 */}
         <div className="flex-1">
           <textarea

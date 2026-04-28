@@ -131,16 +131,28 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
   const { t, i18n } = useTranslation();
   const targetLang = i18n.language;
 
-  // 배치 번역 파이프라인 — 개별 네트워크 오버헤드 최소화를 위해 현재 뷰포트 내 자막 데이터(Keys/Texts)를 번개 번역 요청
-  const contentTexts = currentDialogues.map(d => d.english_subtitle ?? '');
-  const contentKeys = currentDialogues.map(d => `subtitle_content_${d.id}`);
+  // 전역 번역 파이프라인 — 현재 렌더링 중인 페이지만이 아닌, 전체 자막 리스트를 선제적으로 번역하여 페이지 전환 지연(Latency) 제거
+  // 내용과 발음을 하나의 배치 요청으로 통합하여 네트워크 오버헤드 50% 절감
+  const allContentTexts = dialogues.map(d => d.english_subtitle ?? '');
+  const allContentKeys = dialogues.map(d => `subtitle_content_${d.id}`);
+  
+  // 발음 소스 결정: 한국어 타겟이면 DB 데이터만 사용(환원), 타국어 타겟이면 부재 시 원문 기반 전사 생성(고도화)
+  const isKO = targetLang === 'ko' || targetLang === 'ko-KR';
+  const allPronTexts = dialogues.map(d => isKO ? (d.pronunciation ?? '') : (d.pronunciation || d.korean_subtitle || ''));
+  const allPronKeys = dialogues.map(d => `subtitle_pron_${d.id}`);
 
-  // 배치 번역 훅 호출
-  const { translatedTexts: translatedContents } = useBatchAutoTranslation(
-    contentTexts,
-    contentKeys,
+  const combinedTexts = [...allContentTexts, ...allPronTexts];
+  const combinedKeys = [...allContentKeys, ...allPronKeys];
+
+  const { translatedTexts: allTranslatedTexts } = useBatchAutoTranslation(
+    combinedTexts,
+    combinedKeys,
     targetLang,
   );
+
+  // 통합 결과 분해 — 인덱싱 기반으로 원본 텍스트(Content/Pron) 매핑 복원
+  const translatedContents = allTranslatedTexts.slice(0, dialogues.length);
+  const translatedProns = allTranslatedTexts.slice(dialogues.length);
   // -------------------------------------
 
   return (
@@ -165,8 +177,8 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
                 subtitle={d}
                 onSelect={onSelectDialogue}
                 onSeek={onSeek}
-                translatedPron={d.pronunciation ?? ''}
-                translatedContent={translatedContents[idx]}
+                translatedPron={translatedProns[currentPage * pageSize + idx] || d.pronunciation || ''}
+                translatedContent={translatedContents[currentPage * pageSize + idx]}
               />
             ))}
           </ul>

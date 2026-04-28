@@ -249,7 +249,7 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
       .or(
         `and(user1_id.eq.${currentUser.profileId},user1_active.eq.true),and(user2_id.eq.${currentUser.profileId},user2_active.eq.true)`,
       )
-      .order('last_message_at', { ascending: false });
+      .order('last_message_at', { ascending: false, nullsFirst: false });
 
     if (chatsError) {
       console.error('채팅방 목록 조회 오류:', chatsError);

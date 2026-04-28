@@ -66,6 +66,10 @@ const customStorage = {
  */
 export const supabase = createClient<DatabaseWithRPC>(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
+    lock: async (_name: string, _acquireTimeout: number, acquire: () => Promise<any>) => {
+      // Navigator LockManager warning suppressor: Directly executes the acquisition
+      return await acquire();
+    },
     storage: customStorage,
     autoRefreshToken: true,
     persistSession: true,

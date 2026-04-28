@@ -73,7 +73,8 @@
 }
 
 .chatPage :global(.chat-list-header) {
-  padding: 17px 20px;
+  padding: 16px 20px; /* chat-room-header와 동일하게 16px로 통일 */
+  height: 65px; /* 고정 높이 적용 */
   border-bottom: 1px solid hsl(var(--border));
   display: flex;
   justify-content: space-between;
@@ -366,6 +367,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
+  height: 65px; /* 헤더 전체 높이를 고정하여 구분선 일치 보장 */
   border-bottom: 1px solid hsl(var(--border));
   background-color: hsl(var(--secondary));
 }

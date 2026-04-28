@@ -8,8 +8,11 @@ import { useSiteSettings } from '../../contexts/SiteSettingsContext';
 import { X, Bell, Info, AlertTriangle, CheckCircle, Megaphone, ExternalLink } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useMarketingBanners } from '@/hooks/useMarketingBanners';
+import { useAutoTranslation } from '@/hooks/useAutoTranslation';
+import { useTranslation } from 'react-i18next';
 
 export function GlobalNoticeBar() {
+    const { t, i18n } = useTranslation();
     const { settings } = useSiteSettings();
     const [notice, setNotice] = useState<import('../../contexts/SiteSettingsContext').SiteSettings['global_notice'] | null>(null);
     const [isVisible, setIsVisible] = useState(false);
@@ -93,14 +96,14 @@ export function GlobalNoticeBar() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className={`relative z-[110] w-full ${getColorClasses()} py-2 px-4 shadow-md overflow-hidden`}
+                        className={`relative z-[110] w-full ${getColorClasses()} py-1 px-4 shadow-none overflow-hidden`}
                     >
                         <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
                             <span className="shrink-0 animate-pulse">
                                 {getIcon()}
                             </span>
                             <p className="text-sm font-bold text-center break-keep">
-                                {notice.text}
+                                <NoticeText text={notice.text} />
                             </p>
                             <button 
                                 onClick={() => setIsVisible(false)}
@@ -121,14 +124,13 @@ export function GlobalNoticeBar() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="relative z-[109] w-full py-2 px-4 shadow-sm overflow-hidden cursor-pointer"
+                        className="relative z-[109] w-full py-1 px-4 shadow-none overflow-hidden cursor-pointer"
                         style={{ backgroundColor: banner.bg_color, color: banner.text_color }}
                         onClick={() => handleBannerClick(banner)}
                     >
                         <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
-                            <Megaphone className="w-4 h-4 shrink-0" />
                             <p className="text-sm font-bold text-center break-keep">
-                                {banner.content || banner.title}
+                                <BannerText banner={banner} />
                             </p>
                             {banner.link_url && (
                                 <ExternalLink className="w-3.5 h-3.5 shrink-0 opacity-70" />
@@ -145,4 +147,28 @@ export function GlobalNoticeBar() {
             </AnimatePresence>
         </>
     );
+}
+
+function NoticeText({ text }: { text: string }) {
+    const { i18n } = useTranslation();
+    // Use the text content itself as part of the ID to force a refresh when it changes
+    const noticeId = `global_notice_${text.substring(0, 20).replace(/\s/g, '_')}`;
+    const { translatedText } = useAutoTranslation(text, noticeId, i18n.language);
+    return <>{translatedText || text}</>;
+}
+
+function BannerText({ banner }: { banner: any }) {
+    const { t, i18n } = useTranslation();
+    const content = banner.content || banner.title;
+
+    // [Surgical Tip] 마케팅 구독 수동 번역 키 우선 적용 (번역 딜레이 방지)
+    if (banner.id?.includes('subscription') || banner.title?.toLowerCase().includes('subscription') || banner.content?.toLowerCase().includes('subscription')) {
+        const manualTitle = t('marketing.subscription.title');
+        if (manualTitle && manualTitle !== 'marketing.subscription.title') {
+            return <>{manualTitle}</>;
+        }
+    }
+
+    const { translatedText } = useAutoTranslation(content, `top_banner_${banner.id}`, i18n.language);
+    return <>{translatedText || content}</>;
 }

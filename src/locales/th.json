@@ -11,7 +11,9 @@
     "post": "โพสต์",
     "admin": "โหมดผู้ดูแลระบบ",
     "admin_dashboard": "แดชบอร์ดผู้ดูแลระบบ",
-    "goods": "ร้านค้า"
+    "goods": "ร้านค้า",
+    "voca": "สมุดคำศัพท์",
+    "admin_goods": "การจัดการสินค้า"
   },
   "notification": {
     "like_feed": "ถูกใจโพสต์ของคุณ",
@@ -60,8 +62,23 @@
       "reporter_target": "<strong>• ผู้ที่ถูกรายงาน:</strong> {{target}}",
       "reporter_reason": "<strong>• เหตุผล:</strong> {{reason}}",
       "reporter_action": "<strong>• มาตรการที่ดำเนินการ:</strong> {{action}}",
-      "reporter_footer": "<br/>ขอบคุณที่เป็นห่วงเป็นใยเสมอมา"
-    }
+      "reporter_footer": "<br/>ขอบคุณที่เป็นห่วงเป็นใยเสมอมา",
+      "ban_permanent": "Your account has been permanently banned.",
+      "ban_permanent_desc": "Account access has been permanently restricted by administrators.",
+      "ban_temporary_title": "Account access restricted.",
+      "ban_temporary_desc": "Access restricted by administrator until {{date}}.",
+      "security_contact_admin": "Contact system administrator if you believe this is an error.",
+      "identifier_label": "Your Identifier",
+      "security_denied_ip": "Access denied: Unauthorized IP address.",
+      "security_denied_generic": "Access restricted by security policy."
+    },
+    "new_arrived": "มีการแจ้งเตือนใหม่เข้ามา",
+    "photo_content": "[รูปภาพ]",
+    "follow_you": "เริ่มติดตามคุณ",
+    "follow_request": "ส่งคำขอติดตาม",
+    "accept": "ยอมรับ",
+    "decline": "ปฏิเสธ",
+    "no_content_available": "ไม่สามารถโหลดเนื้อหาได้"
   },
   "study": {
     "studylist": "รายการการเรียนรู้",
@@ -71,8 +88,8 @@
       "all": "ทั้งหมด",
       "drama": "ละคร",
       "movie": "ภาพยนตร์",
-      "entertainment": "บันเทิง",
-      "music": "เพลง"
+      "music": "เพลง",
+      "show": "รายการบันเทิง"
     },
     "level": {
       "title": "ระดับ",
@@ -98,12 +115,75 @@
     "meta_desc_default": "เรียนภาษาเกาหลีที่ ARA",
     "study_card_title": "การ์ดเรียนรู้",
     "vocab_explanation": "คำศัพท์",
-    "culture_note": "วัฒนธรรม",
+    "culture_note": {
+      "title": "วัฒนธรรม",
+      "loading": "...",
+      "error": "Error",
+      "empty": "Empty",
+      "default_title": "วัฒนธรรม",
+      "empty_list": "No data"
+    },
     "subtitle_title": "คำบรรยาย",
     "subtitle_loading": "กำลังโหลดคำบรรยาย...",
     "subtitle_no_data": "ไม่มีข้อมูลคำบรรยาย",
     "login_required": "ต้องเข้าสู่ระบบ",
-    "preview": "ดูตัวอย่าง"
+    "preview": "ดูตัวอย่าง",
+    "voca": {
+      "pos": {
+        "noun": "Noun",
+        "verb": "Verb",
+        "adjective": "Adjective",
+        "adverb": "Adverb",
+        "pronoun": "Pronoun",
+        "numeral": "Numeral",
+        "particle": "Particle",
+        "interjection": "Interjection",
+        "determiner": "Determiner"
+      },
+      "example_label": "ตัวอย่าง",
+      "delete_confirm": {
+        "title_single": "ลบคำศัพท์",
+        "title_all": "ลบทั้งหมด",
+        "desc_single": "คุณต้องการลบคำนี้หรือไม่?",
+        "desc_all": "คุณต้องการลบคำทั้งหมดหรือไม่?"
+      },
+      "description": "คุณสามารถรวบรวมคำที่บันทึกไว้ได้",
+      "title": "สมุดคำศัพท์",
+      "btn_quiz": "แบบทดสอบ",
+      "btn_back_to_study": "ไปที่การเรียนรู้",
+      "search_placeholder": "ค้นหาคำศัพท์/ความหมาย/ตัวอย่าง/ชนิดของคำ/การออกเสียง",
+      "status_title": "สถานะการเรียนรู้",
+      "status_all": "ทั้งหมด",
+      "btn_delete_all": "ลบทั้งหมด",
+      "btn_delete_all_title": "รีเซ็ตสมุดคำศัพท์",
+      "empty_message": "ไม่มีคำศัพท์ที่บันทึกไว้",
+      "empty_cta": "ลองบันทึกคำศัพท์จากหน้าการเรียนรู้",
+      "modal_cta": "ไปที่ตอน",
+      "episode_cta": "ย้ายไปที่ตอน",
+      "aria_delete": "ลบคำศัพท์",
+      "status_learning": "กำลังเรียนรู้",
+      "status_known": "เรียนรู้เสร็จสิ้น",
+      "status_unknown": "ยังไม่ได้เรียนรู้"
+    },
+    "culture_note_label": "วัฒนธรรม",
+    "promotion": {
+      "premium_title": "Project ARA พรีเมียม",
+      "premium_desc": "พบกับการเรียนรู้ที่ไม่มีโฆษณาและตอนพิเศษ",
+      "ad_badge": "โฆษณา",
+      "promo_badge": "โปรโมชั่น",
+      "guide_alt_1": "คู่มือการใช้ ARA Study 1",
+      "guide_alt_2": "คู่มือการใช้ ARA Study 2",
+      "guide_alt_3": "คำแนะนำการใช้ ARA Study 3",
+      "guide_alt_4": "คำแนะนำการใช้ ARA Study 4",
+      "guide_alt_5": "คำแนะนำการใช้ ARA Study 5"
+    },
+    "episode_label": "ตอน",
+    "scene_label": "ฉาก",
+    "voca_btn": "สมุดคำศัพท์ของฉัน",
+    "meta_desc_scene": "ลองฝึกฟังและแสดงออกภาษาเกาหลีด้วย {{contents}} {{episode}} {{scene}} ฉาก",
+    "aria_prev_episode": "ตอนก่อนหน้า",
+    "aria_next_episode": "ตอนถัดไป",
+    "meta_title": "ARA - แพลตฟอร์มการเรียนภาษาเกาหลีที่ใช้เนื้อหา K-Content"
   },
   "auth": {
     "login": "เข้าสู่ระบบ",
@@ -147,7 +227,21 @@
     "restore_desc_2": "คุณต้องการกู้คืนบัญชีของคุณหรือไม่?",
     "restore_remaining": "เหลือเวลา {{days}} วันจนกว่าจะลบถาวร",
     "restore_confirm": "กู้คืนบัญชี",
-    "signin": "เข้าสู่ระบบ"
+    "signin": "เข้าสู่ระบบ",
+    "relink_previously_unlinked": "นี่คือบัญชี SNS ที่ถูกยกเลิกก่อนหน้านี้",
+    "check_verification_email": "กรุณาตรวจสอบลิงก์ยืนยันที่ส่งไปยังอีเมลของคุณ",
+    "profile_not_found_contact_admin": "โปรไฟล์ยังไม่ได้ถูกสร้าง กรุณาติดต่อผู้ดูแลระบบ",
+    "auth_failed": "การยืนยันล้มเหลว",
+    "relink_notice_title": "คำแนะนำการเชื่อมต่อ SNS ใหม่",
+    "relink_security_guide": "เพื่อความปลอดภัย กรุณาเข้าสู่ระบบด้วยอีเมลของคุณ จากนั้นไปที่ [การตั้งค่า > การจัดการการเชื่อมต่อ SNS] เพื่อเชื่อมต่อใหม่ด้วยตัวเอง",
+    "relink_cross_account_desc": "บัญชี {{provider}} นี้เคยเชื่อมต่อกับบัญชี <span class=\"font-bold text-primary\">{{email}}</span> มาก่อน",
+    "relink_manual_guide": "เพื่อความปลอดภัย กรุณาเข้าสู่ระบบด้วยอีเมลของคุณ จากนั้นไปที่ [การตั้งค่า] เพื่อเชื่อมต่อใหม่",
+    "choose_start_method": "คุณต้องการเริ่มต้นด้วยอีเมลใด?",
+    "login_with_email": "เข้าสู่ระบบด้วยอีเมล",
+    "duplicate_prevent_title": "คำแนะนำการป้องกันการซ้ำซ้อนของบัญชี SNS",
+    "preview_alt": "ดูตัวอย่าง",
+    "cover_preview_alt": "ดูตัวอย่างหน้าปก",
+    "ban_message_template": "ในสถานะจำกัดการใช้งาน คุณไม่สามารถ {{action}} ได้\nระยะเวลาจำกัดการใช้งาน: ~{{date}} (เหลืออีก {{days}} วัน)"
   },
   "signup": {
     "title_social": "ลงทะเบียนโซเชียล",
@@ -187,6 +281,7 @@
     "already_in_use": "ถูกใช้แล้ว",
     "gender_male": "ชาย",
     "gender_female": "หญิง",
+    "gender_other": "อื่นๆ",
     "label_gender": "เพศ",
     "error_gender_required": "กรุณาเลือกเพศ",
     "label_birth": "วันเกิด",
@@ -215,26 +310,29 @@
     "agree_and_close": "ยอมรับและปิด"
   },
   "recovery": {
-    "section_title": "ข้อมูลการกู้คืนอีเมล (จำเป็น)",
-    "section_description": "ใช้เพื่อกู้คืนบัญชีของคุณหากคุณลืมอีเมล",
-    "question_label": "เลือกคำถาม",
-    "question_placeholder": "เลือกคำถาม",
+    "section_description": "ตั้งค่าช่องทางในการกู้คืนบัญชีอย่างปลอดภัยกรณีลืม ID/รหัสผ่าน",
+    "partial_setup_guide": "สามารถกู้คืนบัญชีได้แม้จะตั้งค่าเพียงคำถามเพื่อความปลอดภัยหรืออีเมลสำรองเท่านั้น",
+    "set_question_title": "ตั้งค่าคำถามคำถามเพื่อความปลอดภัย",
+    "question_label": "คำถามเพื่อความปลอดภัย",
+    "question_placeholder": "กรุณาเลือกคำถาม",
     "answer_label": "คำตอบ",
-    "answer_placeholder": "ป้อนคำตอบของคุณ (ขั้นต่ำ 2 ตัวอักษร)",
-    "temp_email_label": "อีเมลสำรอง",
-    "temp_email_placeholder": "example@email.com",
-    "temp_email_description": "ที่อยู่อีเมลเพิ่มเติมสำหรับรับลิงก์กู้คืนหากคุณไม่สามารถเข้าถึงบัญชีหลักได้",
-    "question_favorite_color": "สีที่คุณชอบคืออะไร?",
-    "question_pet_name": "ชื่อสัตว์เลี้ยงตัวแรกของคุณคืออะไร?",
-    "question_birthplace": "คุณเกิดที่เมืองไหน?",
-    "question_first_school": "ชื่อโรงเรียนแรกของคุณคืออะไร?",
-    "question_favorite_teacher": "ชื่อครูที่น่าจดจำที่สุดของคุณคืออะไร?",
+    "answer_placeholder": "กรุณากรอกคำตอบ (อย่างน้อย 2 ตัวอักษร)",
+    "answer_placeholder_already_set": "ตั้งคำตอบเรียบร้อยแล้ว (สามารถแก้ไขได้)",
+    "set_email_title": "ตั้งค่าอีเมลสำรอง",
+    "temp_email_label": "ที่อยู่อีเมล",
+    "temp_email_placeholder": "กรอกอีเมลสำหรับกู้คืน",
+    "temp_email_description": "กรุณากรอกที่อยู่อีเมลอื่นที่นอกเหนือจากอีเมลหลัก",
+    "question_favorite_color": "สีที่ชอบที่สุดคืออะไร?",
+    "question_pet_name": "ชื่อสัตว์เลี้ยงตัวแรกคืออะไร?",
+    "question_birthplace": "บ้านเกิดของคุณคือที่ไหน?",
+    "question_first_school": "โรงเรียนแรกที่คุณเข้าเรียนคือที่ไหน?",
+    "question_favorite_teacher": "ครูที่จำได้แม่นที่สุดคือใคร?",
     "question_childhood_nickname": "ชื่อเล่นตอนเด็กของคุณคืออะไร?",
-    "question_mothers_maiden": "นามสกุลเดิมของแม่คุณคืออะไร?",
-    "question_favorite_food": "อาหารที่คุณชอบที่สุดคืออะไร?",
-    "question_first_car": "รถคันแรกของคุณเป็นรุ่นอะไร?",
-    "question_favorite_movie": "ภาพยนตร์ที่คุณชอบที่สุดคืออะไร?",
-    "question_parents_met_city": "พ่อแม่ของคุณพบกันที่เมืองไหน?"
+    "question_mothers_maiden": "ชื่อของแม่คืออะไร?",
+    "question_favorite_food": "อาหารที่ชอบที่สุดคืออะไร?",
+    "question_first_car": "รถคันแรกของคุณคือรุ่นอะไร?",
+    "question_favorite_movie": "ภาพยนตร์เรื่องโปรดที่สุดคืออะไร?",
+    "question_parents_met_city": "เมืองที่พ่อแม่พบกันครั้งแรกคือที่ไหน?"
   },
   "validation": {
     "required_email": "กรุณากรอกอีเมล",
@@ -270,8 +368,9 @@
     "recovery_question_required": "กรุณาเลือกคำถาม",
     "recovery_answer_required": "กรุณากรอกคำตอบ",
     "recovery_answer_too_short": "คำตอบต้องมีอย่างน้อย 2 ตัวอักษร",
-    "recovery_email_invalid": "รูปแบบอีเมลไม่ถูกต้อง",
-    "recovery_email_same_as_primary": "ไม่สามารถใช้อีเมลเดียวกับที่ลงทะเบียนได้"
+    "recovery_email_invalid": "กรุณากรอกที่อยู่อีเมลที่ถูกต้อง",
+    "recovery_email_same_as_primary": "ไม่สามารถใช้อีเมลเดียวกับที่ลงทะเบียนได้",
+    "check_duplicate": "ตรวจสอบความซ้ำซ้อน"
   },
   "common": {
     "ara_team": "ทีมงาน ARA",
@@ -321,92 +420,260 @@
       "dismissed": "รายงานถูกยกเลิก"
     },
     "cancel_like": "เลิกถูกใจ",
-    "success_like": "ถูกใจ"
+    "success_like": "ถูกใจ",
+    "sponsored": "ได้รับการสนับสนุน",
+    "translated": "แปลแล้ว",
+    "auto_translated": "แปลโดย AI โดยอัตโนมัติ",
+    "view_details": "ดูรายละเอียด",
+    "read_more": "ดูรายละเอียด",
+    "add": "เพิ่ม",
+    "block_modal_title": "Are you sure you want to block?",
+    "block_modal_notice_1": "You will automatically leave the 1:1 chat with this user.",
+    "block_modal_notice_2": "You will not receive any more messages from this user.",
+    "block_modal_notice_3": "This user's posts will be hidden from the community feed.",
+    "block_modal_notice_4": "This user's comments will be masked in the community.",
+    "block_modal_warning": "You can manage blocked users in 'Settings > Blocked Users'.",
+    "unblock_modal_title": "Do you want to unblock this user?",
+    "or": "or",
+    "checking": "Checking...",
+    "date_format_short": "d เดือน M",
+    "thumbnail": "ภาพขนาดย่อ",
+    "image_count": "รูปภาพ {{count}} รูป",
+    "retry": "ลองใหม่อีกครั้ง",
+    "scroll_to_top": "เลื่อนไปด้านบนสุด",
+    "user_initials": "ผู้ใช้",
+    "more": "เพิ่มเติม",
+    "my_voca": "สมุดคำศัพท์",
+    "view_voca": "ดูสมุดคำศัพท์ของฉัน",
+    "deleted_user": "ผู้ใช้ที่ยกเลิก",
+    "error_label": "ข้อผิดพลาด",
+    "today": "วันนี้",
+    "yesterday": "เมื่อวาน",
+    "just_now": "เมื่อสักครู่",
+    "error_image_size": "ขนาดของไฟล์ {{name}} เกินกว่า {{size}}",
+    "block_user": "บล็อกคุณ",
+    "unblock_user": "ยกเลิกการบล็อกคุณ",
+    "block_user_desc": "หากบล็อกแล้วจะไม่สามารถดูโปรไฟล์ของกันและกันได้ และไม่สามารถส่งแชทได้",
+    "blocked_user_alert": "ผู้ใช้ที่ถูกบล็อก",
+    "blocked_users": "ผู้ใช้ที่ถูกบล็อก",
+    "blocked_users_desc": "จัดการรายชื่อผู้ใช้ที่บล็อก",
+    "no_blocked_users": "ไม่มีผู้ใช้ที่ถูกบล็อก",
+    "confirm_unblock": "คุณแน่ใจหรือว่าต้องการยกเลิกการบล็อก?",
+    "edit_mode": "เปลี่ยนเป็นโหมดแก้ไข",
+    "blocked_comment_msg": "ความคิดเห็นจากผู้ที่คุณบล็อก",
+    "view_content": "ดูเนื้อหา",
+    "hide_content": "ซ่อนอีกครั้ง",
+    "mask_comments": "ปิดบังความคิดเห็น",
+    "hide_posts": "ซ่อนโพสต์",
+    "anonymous": "ไม่ระบุชื่อ",
+    "share_default_text": "เรียนภาษาเกาหลีอย่างสนุกสนาน! แบ่งปันฉากการเรียนรู้ที่ ARA",
+    "copy_link_prompt": "คัดลอกลิงก์ด้านล่าง:",
+    "submitting": "กำลังส่ง...",
+    "user": "ผู้ใช้",
+    "unknown": "ไม่ทราบ",
+    "premium_member": "สมาชิกพรีเมียม",
+    "country": "ประเทศ",
+    "edited": "แก้ไขแล้ว",
+    "hidden": "ซ่อน",
+    "show_more": "เพิ่มเติม",
+    "collapse": "ย่อ",
+    "hidden_content": "เนื้อหาที่ซ่อนอยู่",
+    "deleted_post": "โพสต์ที่ถูกลบ",
+    "edit_post": "แก้ไขโพสต์",
+    "upload_success": "อัปโหลดเสร็จสิ้น!",
+    "upload_failed": "อัปโหลดล้มเหลว",
+    "remask": "ซ่อนอีกครั้ง",
+    "add_image": "เพิ่มรูปภาพ",
+    "uploading": "กำลังอัปโหลด...",
+    "prompt_image_url": "กรุณาใส่ URL ของรูปภาพ",
+    "add_url": "เพิ่ม URL",
+    "image_reply": "รูปภาพตอบกลับ",
+    "image_tweet": "รูปภาพโพสต์",
+    "me": "ฉัน",
+    "avatar": "อวาตาร์",
+    "preview": "ดูตัวอย่าง",
+    "advertisement": "โฆษณา",
+    "replies": "ความคิดเห็น",
+    "likes": "ชอบ",
+    "views": "จำนวนการดู"
   },
   "settings": {
-    "languageSelect": "เลือกภาษา",
+    "languageSelect": "ภาษา",
     "themeSelect": "เลือกธีม",
     "theme_options": {
       "light": "สว่าง",
       "dark": "มืด",
       "system": "ระบบ"
     },
-    "system": "ตั้งค่าระบบ",
-    "language": "ภาษา",
     "theme": "ธีม",
-    "notifications": "ตั้งค่าการแจ้งเตือน",
-    "alarm_comment": "แจ้งเตือนความคิดเห็น",
-    "alarm_comment_desc": "รับการแจ้งเตือนเมื่อมีคนแสดงความคิดเห็นในโพสต์ของคุณ",
-    "alarm_like": "ถูกใจ",
-    "alarm_like_desc": "รับการแจ้งเตือนเมื่อมีคนถูกใจโพสต์ของคุณ",
-    "alarm_follow": "ติดตาม",
-    "alarm_follow_desc": "รับการแจ้งเตือนเมื่อมีคนติดตามคุณ",
-    "privacy": "ความเป็นส่วนตัว",
-    "change_password": "เปลี่ยนรหัสผ่าน",
-    "connect_sns": "เชื่อมต่อบัญชีโซเชียล",
-    "withdraw": "ลบบัญชี",
-    "withdraw_phrase": "ฉันต้องการลบบัญชี",
-    "withdraw_grace_period_1": "มีระยะเวลาผ่อนผัน 7 วันเมื่อร้องขอการลบ",
-    "withdraw_grace_period_2": "คุณสามารถกู้คืนบัญชีของคุณได้ทันทีโดยเข้าสู่ระบบภายใน 7 วัน",
-    "withdraw_grace_period_3": "หลังจาก 7 วัน จะไม่สามารถกู้คืนได้ และข้อมูลจะถูกลบถาวรหลังจาก 30 วัน",
-    "withdraw_verify_placeholder": "โปรดพิมพ์ \"{{phrase}}\" เพื่อยืนยัน",
-    "withdraw_modal_title": "คุณแน่ใจหรือไม่ว่าต้องการลบบัญชีของคุณ?",
-    "withdraw_warning_1": "ข้อมูลบัญชีของคุณไม่สามารถกู้คืนได้",
-    "withdraw_warning_2": "โพสต์และความคิดเห็นทั้งหมดจะถูกลบ",
-    "withdraw_warning_3": "ข้อมูลการติดตามจะหายไป",
-    "withdraw_warning_4": "การกระทำนี้ไม่สามารถยกเลิกได้",
-    "confirm_password": "ยืนยันรหัสผ่าน",
-    "confirm_password_placeholder": "ป้อนรหัสผ่าน",
-    "confirm_password_desc": "โปรดป้อนรหัสผ่านเพื่อยืนยันตัวตนของคุณ",
-    "confirm_email": "ยืนยันอีเมล",
-    "confirm_email_desc": "โปรดป้อนที่อยู่อีเมลเพื่อยืนยันตัวตนของคุณ",
-    "withdraw_verify_label": "การยืนยัน",
-    "withdraw_btn_cancel": "ยกเลิก",
-    "withdraw_btn_processing": "กำลังดำเนินการ...",
-    "withdraw_btn_confirm": "ลบบัญชี",
-    "pw_change_guide": "เราแนะนำให้ใช้อย่างน้อย 8 ตัวอักษรที่มีการผสมผสานระหว่างตัวอักษร ตัวเลข และสัญลักษณ์",
-    "current_pw": "รหัสผ่านปัจจุบัน",
-    "current_pw_placeholder": "ป้อนรหัสผ่านปัจจุบัน",
-    "new_pw": "รหัสผ่านใหม่",
-    "new_pw_placeholder": "ป้อนรหัสผ่านใหม่",
-    "confirm_new_pw": "ยืนยันรหัสผ่านใหม่",
-    "confirm_new_pw_placeholder": "ป้อนรหัสผ่านใหม่เนอีกครั้ง",
-    "pw_mismatch": "รหัสผ่านใหม่ไม่ตรงกัน",
-    "pw_check_req": "โปรดตรวจสอบรหัสผ่านของคุณ (อย่างน้อย 8 ตัวอักษรและตรงกัน)",
-    "hide": "ซ่อน",
-    "show": "แสดง",
-    "sns_connect_desc": "เชื่อมต่อบัญชีของคุณกับการเข้าสู่ระบบโซเชียลเพื่อการเข้าถึงและการกู้คืนที่ง่ายขึ้น",
-    "connect_google": "เชื่อมต่อบัญชี Google",
-    "connect_kakao": "เชื่อมต่อบัญชี Kakao",
-    "sns_connect_note": "คุณสามารถยกเลิกการเชื่อมต่อบัญชีที่เชื่อมโยงในการตั้งค่า > ความเป็นส่วนตัวได้ตลอดเวลา (เร็วๆ นี้)",
-    "account_settings": "การตั้งค่า",
-    "support_policy": "การสนับสนุนและนโยบาย",
-    "help_center": "ศูนย์ช่วยเหลือ",
-    "terms": "ข้อกำหนดการบริการ",
-    "privacy_policy": "นโยบายความเป็นส่วนตัว",
-    "marketing_consent": "การยินยอมการตลาด",
+    "system": "ระบบ",
+    "language": "ภาษา",
     "title_language": "เปลี่ยนภาษา",
     "title_theme": "เปลี่ยนธีม",
     "title_password_change": "เปลี่ยนรหัสผ่าน",
-    "title_sns_connect": "เชื่อมต่อบัญชีโซเชียล",
+    "title_recovery": "การตั้งค่าการกู้คืนบัญชี",
+    "title_sns_connect": "เชื่อมต่อบัญชี SNS",
     "title_withdraw": "ลบบัญชี",
-    "title_terms": "เงื่อนไขการให้บริการ",
+    "title_terms": "ข้อกำหนดการใช้งาน",
     "title_privacy": "นโยบายความเป็นส่วนตัว",
     "title_marketing": "ความยินยอมทางการตลาด",
     "title_support": "ศูนย์ช่วยเหลือ",
     "security_title": "การตั้งค่าความปลอดภัย",
     "session_management": "การจัดการเซสชัน",
-    "withdraw_reason_label": "เหตุผลการถอนตัว",
-    "withdraw_reason_placeholder": "เลือกเหตุผล",
-    "withdraw_detail_placeholder": "โปรดระบุรายละเอียด",
-    "reason_low_usage": "ไม่ได้ใช้บ่อย",
-    "reason_rejoin": "เพื่อสมัครใหม่",
-    "reason_privacy": "กังวลเรื่องความเป็นส่วนตัว",
-    "reason_feature": "ไม่พอใจในฟีเจอร์",
-    "reason_other": "อื่นๆ",
+    "notifications": "การแจ้งเตือน",
+    "alarm_comment": "ความคิดเห็น",
+    "alarm_comment_desc": "รับการแจ้งเตือนเมื่อมีคนแสดงความคิดเห็นในโพสต์ของคุณ",
+    "alarm_like": "ถูกใจ",
+    "alarm_like_desc": "รับการแจ้งเตือนเมื่อมีคนกดถูกใจโพสต์ของคุณ",
+    "alarm_follow": "ผู้ติดตาม",
+    "alarm_follow_desc": "รับการแจ้งเตือนเมื่อมีคนติดตามคุณ",
     "alarm_chat": "การแจ้งเตือนแชท",
-    "alarm_chat_desc": "รับการแจ้งเตือนเมื่อคุณได้รับข้อความแชทใหม่",
-    "saved": "บันทึกการตั้งค่าแล้ว"
+    "alarm_chat_desc": "รับการแจ้งเตือนเมื่อได้รับข้อความแชทใหม่",
+    "privacy": "ความเป็นส่วนตัว",
+    "change_password": "เปลี่ยนรหัสผ่าน",
+    "connect_sns": "เชื่อมต่อ SNS",
+    "withdraw": "ลบบัญชี",
+    "withdraw_phrase": "ลบบัญชีของฉัน",
+    "withdraw_grace_period_1": "มีระยะเวลาผ่อนผัน 7 วันเมื่อส่งคำขอลบบัญชี",
+    "withdraw_grace_period_2": "คุณสามารถกู้คืนบัญชีได้ทันทีโดยเข้าสู่ระบบภายใน 7 วัน",
+    "withdraw_grace_period_3": "หลังจาก 7 วัน การกู้คืนเป็นไปไม่ได้ และข้อมูลจะถูกลบอย่างถาวรหลังจาก 30 วัน",
+    "withdraw_verify_placeholder": "กรุณาพิมพ์ \"{{phrase}}\" เพื่อยืนยัน",
+    "withdraw_modal_title": "คุณแน่ใจหรือไม่ว่าต้องการลบบัญชีของคุณ?",
+    "withdraw_warning_1": "ข้อมูลบัญชีของคุณไม่สามารถกู้คืนได้",
+    "withdraw_warning_2": "โพสต์และความคิดเห็นทั้งหมดจะถูกลบ",
+    "withdraw_warning_3": "ข้อมูลผู้ติดตาม/กำลังติดตามจะสูญหาย",
+    "withdraw_warning_4": "การกระทำนี้ไม่สามารถเลิกทำได้",
+    "confirm_password": "รหัสผ่าน",
+    "confirm_password_placeholder": "ป้อนรหัสผ่านของคุณ",
+    "confirm_password_desc": "กรุณาป้อนรหัสผ่านของคุณเพื่อยืนยัน",
+    "confirm_email": "อีเมล",
+    "confirm_email_desc": "กรุณาป้อนอีเมลของคุณอย่างถูกต้อง",
+    "withdraw_verify_label": "การยืนยัน",
+    "withdraw_btn_cancel": "ยกเลิก",
+    "withdraw_btn_processing": "กำลังดำเนินการ...",
+    "withdraw_btn_confirm": "ลบ",
+    "pw_change_guide": "เราแนะนำให้ใช้อย่างน้อย 8 ตัวอักษรที่ผสมผสานตัวอักษร ตัวเลข และสัญลักษณ์",
+    "current_pw": "รหัสผ่านปัจจุบัน",
+    "current_pw_placeholder": "ป้อนรหัสผ่านปัจจุบัน",
+    "new_pw": "รหัสผ่านใหม่",
+    "new_pw_placeholder": "ป้อนรหัสผ่านใหม่",
+    "confirm_new_pw": "ยืนยันรหัสผ่านใหม่",
+    "confirm_new_pw_placeholder": "ป้อนรหัสผ่านใหม่อีกครั้ง",
+    "pw_mismatch": "รหัสผ่านใหม่ไม่ตรงกัน",
+    "pw_check_req": "กรุณาตรวจสอบรหัสผ่าน (ขั้นต่ำ 8 ตัวอักษรและตรงกัน)",
+    "hide": "ซ่อน",
+    "show": "แสดง",
+    "sns_connect_desc": "เชื่อมต่อบัญชีของคุณกับโซเชียลล็อกอินเพื่อการเข้าถึงและการกู้คืนที่ง่ายขึ้น",
+    "connect_google": "เชื่อมต่อบัญชี Google",
+    "connect_kakao": "เชื่อมต่อบัญชี Kakao",
+    "sns_connect_note": "คุณสามารถยกเลิกการเชื่อมต่อบัญชีที่เชื่อมต่อได้ในการตั้งค่า > ความเป็นส่วนตัว ได้ทุกเมื่อ (เร็วๆ นี้)",
+    "account_settings": "การตั้งค่า",
+    "support_policy": "การสนับสนุนและนโยบาย",
+    "help_center": "ศูนย์ช่วยเหลือ",
+    "terms": "ข้อกำหนดการใช้งาน",
+    "privacy_policy": {
+      "item_2": "การให้ข้อมูลส่วนบุคคลแก่บุคคลที่สามและการมอบหมายการประมวลผล",
+      "summary": "บริษัทเก็บรวบรวมและใช้ข้อมูลส่วนบุคคลขั้นต่ำเพื่อให้บริการ และจะทำลายข้อมูลทันทีหลังจากบรรลุวัตถุประสงค์ในการเก็บรวบรวม",
+      "items_title": "รายการหลัก",
+      "item_1": "รายการที่เก็บรวบรวม, วัตถุประสงค์ในการเก็บรวบรวมและใช้, ระยะเวลาการเก็บและใช้",
+      "item_3": "สิทธิของผู้ใช้ (การเข้าถึง, การแก้ไข, การลบ, การหยุดการประมวลผล) และวิธีการใช้สิทธิ",
+      "item_4": "ผู้รับผิดชอบการคุ้มครองข้อมูลส่วนบุคคลและข้อมูลติดต่อ",
+      "close": "ปิด"
+    },
+    "marketing_consent": {
+      "title": "การยินยอมการตลาด",
+      "email": "การรับอีเมล",
+      "sms": "การรับ SMS",
+      "push": "การแจ้งเตือนแบบพุช"
+    },
+    "saved": "บันทึกการตั้งค่าแล้ว",
+    "subscription_coupon": "การสมัครสมาชิกและสิทธิประโยชน์",
+    "alarm_push": "การแจ้งเตือนแบบพุช",
+    "alarm_email": "การแจ้งเตือนทางอีเมล",
+    "theme_dark": "โหมดมืด",
+    "plan": "แผนการสมัครสมาชิก",
+    "coupon": "คูปอง",
+    "premium": "พรีเมียม",
+    "set_password": "ตั้งรหัสผ่าน",
+    "current_pw_incorrect": "รหัสผ่านปัจจุบันไม่ถูกต้อง",
+    "pw_change_error": "เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน",
+    "pw_change_success": "เปลี่ยนรหัสผ่านสำเร็จ",
+    "pw_set_guide": "ตั้งรหัสผ่านสำหรับบัญชีโซเชียลล็อกอินของคุณ",
+    "pw_set_success": "ตั้งรหัสผ่านสำเร็จ",
+    "email_info_missing": "ไม่พบข้อมูลอีเมล",
+    "email": "อีเมล",
+    "connected": "เชื่อมต่อแล้ว",
+    "not_connected": "ไม่ได้เชื่อมต่อ",
+    "connect": "เชื่อมต่อ",
+    "unlink": "ยกเลิกการเชื่อมต่อ",
+    "unlink_confirm_title": "ยกเลิกการเชื่อมต่อบัญชี",
+    "linked_accounts": "บัญชีที่เชื่อมต่อ",
+    "social_login_active": "โซเชียลล็อกอินใช้งานอยู่",
+    "sns_connect_failed": "ไม่สามารถเชื่อมต่อบัญชี SNS ได้",
+    "sns_unlink_confirm_msg": "คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการเชื่อมต่อบัญชีนี้?",
+    "sns_unlink_failed": "ไม่สามารถยกเลิกการเชื่อมต่อบัญชี SNS ได้",
+    "sns_unlink_success": "ยกเลิกการเชื่อมต่อบัญชี SNS แล้ว",
+    "sns_unlink_last_method": "ต้องมีวิธีเข้าสู่ระบบอย่างน้อยหนึ่งวิธี",
+    "sns_unlink_warning": "คุณจะไม่สามารถเข้าสู่ระบบด้วยวิธีนี้ได้หลังจากยกเลิกการเชื่อมต่อ",
+    "close": "ปิด",
+    "blocked_users": "ผู้ใช้ที่ถูกบล็อก",
+    "no_blocked_users": "ไม่มีผู้ใช้ที่ถูกบล็อก",
+    "confirm_unblock": "คุณแน่ใจหรือไม่ว่าต้องการปลดบล็อกผู้ใช้นี้?",
+    "no_changes_or_invalid": "ไม่มีการเปลี่ยนแปลงหรือข้อมูลไม่ถูกต้อง",
+    "withdraw_error": "เกิดข้อผิดพลาดในการลบบัญชี",
+    "password_incorrect": "รหัสผ่านไม่ถูกต้อง",
+    "email_mismatch_error": "อีเมลที่ป้อนไม่ถูกต้อง",
+    "withdraw_reason_label": "เหตุผลในการลบบัญชี",
+    "withdraw_reason_placeholder": "เลือกเหตุผล",
+    "withdraw_detail_placeholder": "กรุณาให้รายละเอียด",
+    "reason_low_usage": "ไม่ค่อยได้ใช้งาน",
+    "reason_rejoin": "ต้องการสมัครใหม่",
+    "reason_privacy": "ปัญหาด้านความเป็นส่วนตัว",
+    "reason_feature": "ไม่พอใจกับฟีเจอร์",
+    "reason_other": "อื่นๆ",
+    "language_select_aria": "การเลือกภาษา",
+    "theme_select_aria": "การเลือกธีม",
+    "coupons": {
+      "no_subscription_data": "ไม่พบข้อมูลการสมัครสมาชิก",
+      "no_vip_available": "ไม่มีสิทธิประโยชน์ VIP ในขณะนี้",
+      "vip_success_title": "🎁 ได้รับสิทธิประโยชน์ VIP ลับแล้ว!",
+      "vip_success_code": "รหัสคูปอง: {{code}} (ส่วนลด 99%)",
+      "vip_success_desc": "ป้อนรหัสเมื่อชำระเงินเพื่อรับสิทธิ์",
+      "discount_percent": "ส่วนลด {{value}}%",
+      "discount_fixed": "₩{{value}} โบนัส",
+      "btn_redeem": "ใช้คูปอง",
+      "btn_claim_vip": "รับคูปอง VIP",
+      "redeem_title": "ใช้คูปอง",
+      "redeem_placeholder": "ป้อนรหัสคูปอง",
+      "redeem_success": "ใช้คูปองสำเร็จ!",
+      "redeem_success_desc": "{{name}} (ส่วนลด {{discount}})",
+      "redeem_fail": "รหัสคูปองไม่ถูกต้อง",
+      "redeem_error": "เกิดข้อผิดพลาดในการตรวจสอบคูปอง",
+      "no_history": "ไม่มีประวัติ",
+      "no_subscription": "ไม่มีข้อมูลการสมัครสมาชิก",
+      "plan_label": "แผน {{plan}}",
+      "cancel_success": "ยกเลิกการสมัครสมาชิกสำเร็จ",
+      "cancel_error": "เกิดข้อผิดพลาดในการยกเลิก: {{error}}",
+      "history_title": "ประวัติการสมัครสมาชิกและคูปอง",
+      "vip_already_claimed": "คุณได้รับสิทธิ์ VIP ของเดือนนี้แล้ว",
+      "vip_benefit_title": "สิทธิประโยชน์ VIP รายเดือน",
+      "vip_benefit_desc": "คูปองพิเศษสำหรับสมาชิก Premium+",
+      "status": {
+        "active": "ใช้งานอยู่",
+        "cancelled": "ยกเลิกแล้ว",
+        "expired": "หมดอายุ"
+      }
+    },
+    "customer_center": {
+      "contact_1on1_title": "สอบถาม 1:1",
+      "contact_1on1_desc": "ติดต่อทีมสนับสนุน ARA โดยตรง",
+      "faq_title": "คำถามที่พบบ่อย",
+      "faq_desc": "ดูคำถามและคำตอบที่พบบ่อย"
+    },
+    "theme_light": "แสง",
+    "theme_system": "การตั้งค่าระบบ",
+    "privacy_policy_title": "นโยบายการประมวลผลข้อมูลส่วนบุคคล",
+    "blocked_users_desc": "จัดการรายชื่อผู้ใช้ที่ถูกบล็อก"
   },
   "profile": {
     "edit_profile": "แก้ไขโปรไฟล์",
@@ -434,7 +701,35 @@
     "nickname_change_forbidden": "ไม่สามารถเปลี่ยนชื่อเล่นได้อีก",
     "country_change_warning": "⚠️ คุณสามารถเปลี่ยนประเทศได้เพียงครั้งเดียว",
     "country_disabled_reason": "ประเทศถูกเปลี่ยนไปแล้วหนึ่งครั้ง",
-    "country_change_forbidden": "ไม่สามารถเปลี่ยนประเทศได้อีก"
+    "country_change_forbidden": "ไม่สามารถเปลี่ยนประเทศได้อีก",
+    "no_followers": "ยังไม่มีผู้ติดตาม",
+    "following_list": "รายการที่ติดตาม",
+    "no_following": "ยังไม่มีคนที่คุณกำลังติดตาม",
+    "view_profile": "ดูโปรไฟล์",
+    "cover_photo": "รูปภาพหน้าปก",
+    "select_cover": "เลือกภาพหน้าปก",
+    "cover_photo_hint": "ขนาดที่แนะนำ: 1500x500px",
+    "follow": "ติดตาม",
+    "unfollow": "เลิกติดตาม",
+    "followers_count": "ผู้ติดตาม {{count}} คน",
+    "following_count": "กำลังติดตาม {{count}} คน",
+    "followers_list": "รายชื่อผู้ติดตาม",
+    "search_users": "ค้นหาผู้ใช้...",
+    "drag_to_reposition": "ลากเพื่อปรับตำแหน่ง",
+    "follow_feature_coming_soon": "ฟังก์ชันติดตามจะพร้อมให้บริการเร็วๆ นี้",
+    "turn_on_notifications": "เปิดการแจ้งเตือน",
+    "turn_off_notifications": "ปิดการแจ้งเตือน",
+    "followed": "ติดตาม",
+    "unfollowed": "เลิกติดตาม",
+    "already_following": "คุณติดตามอยู่แล้ว",
+    "cannot_follow_self": "ไม่สามารถติดตามตัวเองได้",
+    "notifications_updated": "การตั้งค่าการแจ้งเตือนถูกเปลี่ยนแปลงแล้ว",
+    "blocked": "บล็อกเสร็จสิ้น",
+    "unblocked": "ยกเลิกการบล็อก",
+    "already_blocked": "คุณบล็อกอยู่แล้ว",
+    "cannot_block_self": "คุณไม่สามารถบล็อกตัวเองได้",
+    "block_list": "รายการบล็อก",
+    "no_blocked_users": "ไม่มีผู้ใช้ที่ถูกบล็อก"
   },
   "tweets": {
     "placeholder_tweet": "เกิดอะไรขึ้นบ้าง?",
@@ -470,7 +765,10 @@
     "deleted_or_not_exist": "โพสต์นี้ถูกลบหรือไม่มีอยู่",
     "deleted_while_viewing": "โพสต์นี้ถูกลบแล้ว",
     "login_to_reply": "คุณสามารถเขียนความคิดเห็นได้หลังจากเข้าสู่ระบบ",
-    "join_community_desc": "โปรดลงชื่อเข้าใช้หรือสมัครสมาชิกเพื่อเข้าร่วมชุมชน"
+    "join_community_desc": "โปรดลงชื่อเข้าใช้หรือสมัครสมาชิกเพื่อเข้าร่วมชุมชน",
+    "liked_feed": "ชอบโพสต์ของคุณ",
+    "reply_to_tweet": "ตอบกลับโพสต์",
+    "compose_tweet": "สร้างโพสต์ใหม่"
   },
   "trending": {
     "title": "เทรนด์สำหรับคุณ",
@@ -488,7 +786,7 @@
     "loading": "กำลังโหลด...",
     "me": "ฉัน",
     "unknown": "ไม่ทราบ",
-    "today": "วันนี้",
+    "anonymous": "ไม่ระบุตัวตน",
     "exit": "ออก",
     "search_placeholder": "ค้นหาข้อความ",
     "search_btn": "ค้นหา",
@@ -536,7 +834,15 @@
     "attach_file": "ไฟล์",
     "confirm_exit_title": "ออกจากแชท?",
     "confirm_exit_desc": "คุณจะกลับไปยังรายการแชท",
-    "exit_success": "ออกจากห้องแชทแล้ว"
+    "exit_success": "ออกจากห้องแชทแล้ว",
+    "translate_error_generic": "เกิดข้อผิดพลาดระหว่างการแปล",
+    "block_messages": "บล็อกข้อความ",
+    "creating_chat": "กำลังสร้างห้องแชท...",
+    "translate_error_untranslatable": "ไม่สามารถแปลประโยคที่ไม่สามารถเข้าใจความหมายได้",
+    "translate_error_api": "คำขอ API ล้มเหลว",
+    "scroll_to_bottom": "เลื่อนลงไปด้านล่างสุด",
+    "deleted_message": "ข้อความถูกลบโดยผู้ดูแลระบบ",
+    "aria_send_message": "ส่งข้อความ"
   },
   "footer": {
     "brand": {
@@ -553,7 +859,7 @@
     "columns": {
       "product": {
         "title": "ผลิตภัณฑ์",
-        "features": "คุณสมบัติ",
+        "features": "คุณลักษณะ",
         "enterprise": "องค์กร",
         "security": "ความปลอดภัย",
         "pricing": "ราคา"
@@ -563,6 +869,7 @@
         "documentation": "เอกสาร",
         "api": "API",
         "community": "ชุมชน",
+        "webinars": "เวบินาร์",
         "help_center": "ศูนย์ช่วยเหลือ"
       },
       "company": {
@@ -570,70 +877,110 @@
         "about": "เกี่ยวกับเรา",
         "careers": "ร่วมงานกับเรา",
         "blog": "บล็อก",
-        "contact": "ติดต่อเรา"
+        "contact": "ติดต่อเรา",
+        "office": "สำนักงาน"
       }
     },
     "newsletter": {
-      "title": "สมัครรับข้อมูล",
-      "desc": "รับข่าวสารและฟีเจอร์ล่าสุด",
-      "placeholder": "ที่อยู่อีเมล"
+      "title": "จดหมายข่าว",
+      "desc": "เข้าร่วมกับผู้เรียนกว่า 10,000 คนและรับเคล็ดลับและฟีเจอร์ล่าสุด",
+      "placeholder": "ใส่ที่อยู่อีเมล"
     },
     "bottom": {
-      "rights": "© {{year}} Ara Inc.",
+      "rights": "© {{year}} Ara Inc. สงวนลิขสิทธิ์",
       "terms": "เงื่อนไข",
       "privacy": "ความเป็นส่วนตัว",
       "cookies": "คุกกี้"
+    },
+    "office": {
+      "address_name": "สำนักงานใหญ่โซล",
+      "address": "123 Teheran-ro, Gangnam-gu, Seoul",
+      "tel": "โทร: +82 2-1234-5678",
+      "registration": "เลขทะเบียนธุรกิจ: 123-45-67890"
     }
   },
   "goods": {
-    "hero_title": "ร้านค้า",
-    "category_all": "ทั้งหมด",
-    "items": {
-      "hoodie": {
-        "title": "เสื้อฮู้ดลายเซ็น",
-        "desc": "เสื้อฮู้ดผ้าฝ้ายพรีเมียมพร้อมโลโก้ลายเซ็น สวมใส่สบายเหมาะสำหรับทุกวัน"
-      },
-      "tote_bag": {
-        "title": "ถุงผ้าลดโลกร้อน",
-        "desc": "กระเป๋าผ้าแคนวาสรักษ์โลก ทนทานและจุของได้เยอะสำหรับของใช้จำเป็น"
-      },
-      "note_set": {
-        "title": "ชุดสมุดบันทึกพรีเมียม",
-        "desc": "ชุดสมุดบันทึกกระดาษคุณภาพสูง เหมาะสำหรับการเรียนและจดบันทึก"
-      },
-      "planner": {
-        "title": "แพลนเนอร์ดิจิทัล 2026",
-        "desc": "แพลนเนอร์ดิจิทัลครบวงจรสำหรับ iPad/แท็บเล็ต จัดระเบียบปี 2026 ของคุณอย่างมีประสิทธิภาพ"
-      },
-      "cap": {
-        "title": "หมวกแก๊ปโลโก้",
-        "desc": "หมวกแก๊ปมีสไตล์พร้อมโลโก้ปัก สายรัดปรับได้เพื่อความพอดี"
-      },
-      "tumbler": {
-        "title": "แก้วเก็บความเย็นมินิมอล",
-        "desc": "แก้วน้ำสเตนเลส เก็บความร้อน/เย็นได้นาน 12 ชั่วโมง"
+    "title": "ร้านขายสินค้า",
+    "subtitle": "พบกับสินค้าอย่างเป็นทางการที่สะท้อนความเป็นตัวตนของ ARA",
+    "product_details": "รายละเอียดสินค้า",
+    "product_options": "เลือกตัวเลือก",
+    "product_recommendations": "คุณอาจจะชอบสิ่งนี้",
+    "total_amount": "ราคารวม",
+    "checkout_total": "ยอดชำระทั้งหมด",
+    "price_unit": "฿",
+    "percent_suffix": "%",
+    "checkout_loading": "กำลังดำเนินการชำระเงิน...",
+    "checkout_success": "ชำระเงินเรียบร้อยแล้ว!",
+    "checkout_error": "เกิดข้อผิดพลาดระหว่างการชำระเงิน",
+    "badge": {
+      "new": "ใหม่",
+      "best": "ขายดี",
+      "soldout": "สินค้าหมด",
+      "sale": "ลดราคา",
+      "off_pattern": "ลด {{percent}}%"
+    },
+    "reviews": {
+      "title": "รีวิว",
+      "count": "{{count}} รีวิว",
+      "rating_average": "คะแนนเฉลี่ย",
+      "photo_review": "ดูเฉพาะรีวิวที่มีรูปภาพ",
+      "write_btn": "เขียนรีวิว",
+      "verified_purchase": "ยืนยันการซื้อแล้ว",
+      "helpful": "มีประโยชน์",
+      "no_reviews": "ยังไม่มีรีวิว",
+      "be_first": "เป็นคนแรกที่รีวิว!",
+      "be_first_desc": "แบ่งปันประสบการณ์ของคุณและช่วยผู้ซื้อรายอื่น",
+      "load_more": "โหลดเพิ่มเติม",
+      "view_all": "ดูทั้งหมด",
+      "translate_btn": "แปล",
+      "show_original": "ดูต้นฉบับ",
+      "no_stats": "ไม่มีข้อมูล",
+      "positive_ratio": "สัดส่วนรีวิวเชิงบวก",
+      "waiting_first": "รอรีวิวแรก",
+      "buyer_only_error": "เฉพาะผู้ซื้อเท่านั้นที่สามารถเขียนรีวิวได้",
+      "modal": {
+        "how_was_it": "สินค้าเป็นอย่างไรบ้าง?",
+        "detail_review": "รายละเอียดรีวิว",
+        "placeholder": "กรุณาใส่รีวิวของคุณ",
+        "add_photo": "เพิ่มรูปภาพ (สูงสุด 3 รูป)",
+        "empty_content": "กรุณาใส่เนื้อหารีวิว",
+        "success": "รีวิวของคุณถูกบันทึกแล้ว!"
       }
     },
-    "price_unit": "$",
+    "coupon": {
+      "apply": "ใช้คูปอง",
+      "apply_btn": "ใช้",
+      "placeholder": "ใส่รหัสคูปอง",
+      "applied": "ใช้คูปองแล้ว!",
+      "invalid": "รหัสคูปองไม่ถูกต้อง",
+      "error": "เกิดข้อผิดพลาดในการตรวจสอบคูปอง"
+    },
+    "category_all": "ทั้งหมด",
     "category_clothing": "เสื้อผ้า",
     "category_accessories": "เครื่องประดับ",
-    "category_digital": "ดิจิทัล",
     "category_stationery": "เครื่องเขียน",
-    "new_arrival": "ใหม่",
-    "best_seller": "ขายดี",
-    "sold_out": "หมด",
+    "category_digital": "ดิจิทัล",
+    "related_products": "สินค้าที่เกี่ยวข้อง",
     "product_not_found": "ไม่พบสินค้า",
-    "reviews_count": "{{count}} รีวิว",
-    "free_shipping": "ส่งฟรีเมื่อซื้อครบ $50",
-    "authentic_guarantee": "รับประกันของแท้",
-    "option_color": "สี",
-    "option_size": "ขนาด",
-    "add_to_cart": "เพิ่มลงรถเข็น",
-    "product_details": "รายละเอียดสินค้า",
-    "related_items": "คุณอาจจะชอบสิ่งนี้",
+    "back_to_list": "กลับไปที่รายการ",
     "buy_now": "ซื้อเลย",
-    "quantity": "จำนวน",
-    "back_to_list": "กลับไปที่รายการ"
+    "free_shipping": "ส่งฟรี",
+    "authentic_guarantee": "ของแท้ 100%",
+    "coming_soon": "เร็วๆ นี้",
+    "notice_banner": "ร้านขายสินค้าอย่างเป็นทางการกำลังเตรียมการ",
+    "option": {
+      "size": "ขนาด",
+      "color": "สี"
+    },
+    "alt": {
+      "main_image": "รูปภาพสินค้าหลัก",
+      "gallery_image": "รูปภาพแกลเลอรี",
+      "detail_image": "รูปภาพรายละเอียด",
+      "store_membership": "สมาชิกที่จัดร้าน ARA",
+      "hero_bg": "พื้นหลังฮีโร่",
+      "review_image": "รูปภาพรีวิวของผู้ใช้",
+      "preview_image": "ตัวอย่างการอัปโหลด"
+    }
   },
   "translation": {
     "login_required": "กรุณาเข้าสู่ระบบเพื่อใช้ฟังก์ชันการแปล",
@@ -647,7 +994,20 @@
       "harmful": "เนื้อหาที่เป็นอันตราย",
       "inappropriate": "เนื้อหาที่ไม่เหมาะสม",
       "other": "อื่นๆ (กรอกเอง)"
-    }
+    },
+    "title": "Report",
+    "desc": "Please select a reason for the report. Processing may be delayed if there is no valid reason.",
+    "reason_label": "Select Reason",
+    "description_label": "Details",
+    "description_placeholder": "Please describe the reason for reporting in detail.",
+    "success": "Report has been submitted.",
+    "status": {
+      "dismissed": "ปฏิเสธการรายงาน"
+    },
+    "report": "รายงาน",
+    "select_placeholder": "กรุณาเลือกเหตุผล",
+    "select_reason": "กรุณาเลือกเหตุผลในการรายงาน",
+    "enter_description": "กรุณาใส่เหตุผลโดยละเอียด"
   },
   "admin": {
     "report_processed": "ดำเนินการรายงานแล้ว",
@@ -670,5 +1030,569 @@
     "content_deleted": "{{type}} (ID: {{id}}) deleted.",
     "logged_out": "Logged out",
     "logout_error": "Error during logout"
+  },
+  "policy": {
+    "close": "ปิด",
+    "help_center": {
+      "intro": "หากคุณพบปัญหาใดๆ ขณะใช้บริการ โปรดติดต่อเราได้ทุกเมื่อผ่านช่องทางด้านล่าง",
+      "email_title": "สอบถามทางอีเมล",
+      "email_address": "koreara25@gmail.com",
+      "email_hours": "วันทำการ 10:00 ~ 18:00 (เวลาเกาหลี ปิดวันเสาร์-อาทิตย์และวันหยุดนักขัตฤกษ์)",
+      "app_report_title": "แจ้งปัญหา/สอบถามในแอป",
+      "app_report_post": "คุณสามารถรายงานได้โดยตรงจากเมนูที่มุมขวาบนของโพสต์และคอมเมนต์",
+      "app_report_dm": "คุณยังสามารถรายงานจากรายการ DM > โปรไฟล์ผู้ใช้ > เมนูรายงาน/บล็อก",
+      "faq_title": "คำถามที่พบบ่อย (FAQ)",
+      "faq_account": "บัญชี/รหัสผ่าน ปัญหาการเข้าสู่ระบบ",
+      "faq_report": "การแจ้งปัญหา/บล็อก และแนวทางปฏิบัติของชุมชน",
+      "faq_privacy": "สอบถามเกี่ยวกับข้อมูล/ความเป็นส่วนตัว",
+      "faq_note": "หน้า FAQ จะถูกเพิ่มเมื่อเปิดตัวอย่างเป็นทางการ"
+    },
+    "terms": {
+      "title": "เงื่อนไขการใช้งาน",
+      "purpose": {
+        "h": "มาตรา 1 (วัตถุประสงค์)",
+        "body": "เงื่อนไขเหล่านี้มีวัตถุประสงค์เพื่อควบคุมสิทธิ หน้าที่ และความรับผิดชอบระหว่างบริษัทและสมาชิกเกี่ยวกับการใช้บริการ SNS/ชุมชน (รวมถึงมือถือ/เว็บ ซึ่งต่อไปนี้จะเรียกว่า \"บริการ\") ที่จัดเตรียมโดย \"ARA\" (ซึ่งต่อไปนี้จะเรียกว่า \"บริษัท\")"
+      },
+      "definition": {
+        "h": "มาตรา 2 (คำนิยาม)",
+        "member": "\"สมาชิก\" หมายถึงบุคคลที่ตกลงตามเงื่อนไขของบริษัทและสร้างบัญชีเพื่อใช้บริการ",
+        "content": "\"เนื้อหา\" หมายถึงข้อมูลทั้งหมดรวมถึงข้อความ รูปภาพ เสียง วิดีโอ ลิงก์ ฯลฯ ที่สมาชิกอัปโหลด/ส่ง/โพสต์ในบริการ",
+        "paid_service": "\"บริการแบบชำระเงิน\" หมายถึงบริการที่ใช้โดยการชำระค่าธรรมเนียม เช่น รายการดิจิทัล การสมัครสมาชิก การลบโฆษณา ฯลฯ"
+      },
+      "contract": {
+        "h": "มาตรา 3 (การจัดทำและความสมบูรณ์ของสัญญาการใช้งาน)",
+        "agreement": "สัญญาการใช้งานจะเกิดขึ้นเมื่อสมาชิกตกลงตามเงื่อนไขและนโยบายความเป็นส่วนตัวและเสร็จสิ้นกระบวนการลงทะเบียน",
+        "verification": "อาจมีการกำหนดขั้นตอนการยืนยันตัวตน รวมถึงการเข้าสู่ระบบโซเชียล",
+        "age_limit": "บุคคลที่มีอายุต่ำกว่า 14 ปีไม่สามารถลงทะเบียนได้ บริษัทอาจขอเอกสารยืนยันอายุหากจำเป็น"
+      },
+      "community": {
+        "h": "มาตรา 4 (การดำเนินงานของชุมชนและการกระทำที่ต้องห้าม)",
+        "guidelines": "สมาชิกต้องปฏิบัติตามกฎหมาย เงื่อนไข และแนวทางปฏิบัติของชุมชน",
+        "prohibited_content": "ห้ามโพสต์/ส่ง/ส่งเสริมเนื้อหาที่ละเมิดสิทธิของผู้อื่น หรือที่ผิดกฎหมาย เป็นอันตราย เลือกปฏิบัติ สร้างความเกลียดชัง ลามกอนาจาร หรือรุนแรง",
+        "prohibited_actions": "ห้ามรวบรวม/เผยแพร่ข้อมูลส่วนบุคคลโดยไม่ได้รับอนุญาต สแปม/โฆษณา/ฟิชชิ่ง การแบ่งปันบัญชี และการเข้าถึง/ขูดข้อมูลอัตโนมัติ",
+        "violations": "บริษัทอาจลบโพสต์หรือระงับบัญชีชั่วคราวหรือถาวรในกรณีที่มีการละเมิดแนวทางปฏิบัติ"
+      },
+      "member_duty": {
+        "h": "มาตรา 5 (ความรับผิดชอบของสมาชิก)",
+        "password": "สมาชิกมีหน้าที่รับผิดชอบในการจัดการรหัสผ่านบัญชีของตน",
+        "identity": "สมาชิกต้องไม่ขโมยตัวตนหรือวิธีการชำระเงินของผู้อื่น หรือลงทะเบียนข้อมูลที่เป็นเท็จ",
+        "ai_output": "ต้องไม่ใช้คุณลักษณะ AI ในลักษณะที่ละเมิดสิทธิของบุคคลที่สาม"
+      },
+      "license": {
+        "h": "มาตรา 6 (สิทธิในเนื้อหาและใบอนุญาต)",
+        "copyright": "ลิขสิทธิ์ของเนื้อหาที่โพสต์โดยสมาชิกเป็นของสมาชิก",
+        "grant": "สมาชิกอนุญาตให้บริษัทใช้เนื้อหาเพื่อวัตถุประสงค์ในการดำเนินงานและส่งเสริมการบริการโดยไม่ผูกขาดและไม่มีค่าใช้จ่าย",
+        "responsibility": "สมาชิกต้องรับผิดชอบทางกฎหมายอย่างเต็มที่สำหรับเนื้อหาที่ละเมิดสิทธิของผู้อื่น"
+      },
+      "ai": {
+        "h": "มาตรา 7 (ประกาศเกี่ยวกับคุณลักษณะ AI)",
+        "usage": "บริการอาจใช้คุณลักษณะ AI สำหรับการแนะนำและการสร้างเนื้อหา",
+        "disclaimer": "ผลลัพธ์ของ AI อาจมีข้อผิดพลาดและจัดทำขึ้นเพื่อการอ้างอิงเท่านั้น"
+      },
+      "payment": {
+        "h": "มาตรา 8 (บริการแบบชำระเงินและการชำระเงิน)",
+        "pricing": "ราคาและนโยบายการคืนเงินสำหรับบริการแบบชำระเงินจะได้รับแจ้งแยกต่างหาก",
+        "policy": "นโยบายของ App Store / Payment Gateway อาจมีผลบังคับเหนือกว่า"
+      },
+      "service_change": {
+        "h": "มาตรา 9 (การเปลี่ยนแปลง/การระงับบริการ)",
+        "body": "บริษัทอาจเปลี่ยนแปลงหรือระงับบริการทั้งหมดหรือบางส่วนเพื่อความจำเป็นทางเทคนิคหรือการดำเนินงานโดยมีการแจ้งล่วงหน้า"
+      },
+      "termination": {
+        "h": "มาตรา 10 (การยกเลิกและข้อจำกัด)",
+        "withdrawal": "สมาชิกสามารถยกเลิกบัญชีได้ทุกเมื่อในการตั้งค่า",
+        "restriction": "บริษัทอาจจำกัดการเข้าถึงหรือระงับบัญชีเนื่องจากมีการละเมิดแนวทางปฏิบัติ"
+      },
+      "ip_report": {
+        "h": "มาตรา 11 (การละเมิดทรัพย์สินทางปัญญาและการโพสต์ซ้ำ)",
+        "takedown": "บริษัทอาจบล็อกหรือลบเนื้อหาชั่วคราวเมื่อมีการเรียกร้องการละเมิดสิทธิที่ถูกต้อง",
+        "counter": "ผู้เขียนสามารถขอโพสต์ซ้ำได้โดยการส่งหลักฐานโต้แย้ง"
+      },
+      "disclaimer": {
+        "h": "มาตรา 12 (การยกเว้นความรับผิดชอบ)",
+        "force_majeure": "บริษัทจะไม่รับผิดชอบต่อความเสียหายที่เกิดจากเหตุสุดวิสัย",
+        "disputes": "ข้อพิพาทระหว่างสมาชิกหรือกับบุคคลที่สามจะถูกจัดการโดยคู่สัญญาเอง"
+      },
+      "law": {
+        "h": "มาตรา 13 (กฎหมายที่ใช้บังคับและเขตอำนาจศาล)",
+        "body": "เงื่อนไขเหล่านี้อยู่ภายใต้กฎหมายของสาธารณรัฐเกาหลี"
+      },
+      "notice": {
+        "h": "มาตรา 14 (การแก้ไขและการแจ้งเตือน)",
+        "body": "บริษัทอาจเปลี่ยนเงื่อนไขโดยแจ้งล่วงหน้าอย่างน้อย 7 วัน"
+      },
+      "more_detail_hint": "คลิกที่แต่ละมาตราเพื่อดูรายละเอียดทั้งหมด"
+    },
+    "privacy": {
+      "title": "นโยบายความเป็นส่วนตัว",
+      "collect": {
+        "h": "มาตรา 1 (ข้อมูลที่รวบรวม)",
+        "required_title": "จำเป็น",
+        "required_items": "อีเมล, รหัสผ่าน (hash), ชื่อเล่น, รหัสบริการ (UID)",
+        "optional_title": "ไม่บังคับ",
+        "optional_items": "วันเกิด, เพศ, รูปโปรไฟล์, ประเทศ/ภาษา, ข้อมูลแนะนำตัว",
+        "auto_title": "การรวบรวมอัตโนมัติ",
+        "auto_items": "บันทึกการเข้าถึง, ข้อมูลอุปกรณ์, คุกกี้, บันทึกการขัดข้อง",
+        "social_title": "การเข้าสู่ระบบโซเชียล",
+        "social_items": "ชื่อผู้ให้บริการ/อีเมลตามนโยบายของพวกเขา"
+      },
+      "purpose": {
+        "h": "มาตรา 2 (วัตถุประสงค์ของการใช้)",
+        "account": "การลงทะเบียน / การยืนยันตัวตน / การจัดการบัญชี",
+        "sns_features": "คุณลักษณะ SNS พื้นฐาน เช่น การแนะนำเพื่อนและฟีด",
+        "support": "การสนับสนุนลูกค้า, การแจ้งเตือน, การปรับปรุงบริการ",
+        "analytics": "สถิติและการแนะนำส่วนบุคคล",
+        "security": "ความปลอดภัยและการป้องกันการทุจริต",
+        "payment": "การชำระเงิน/การคืนเงินสำหรับบริการแบบชำระเงิน"
+      },
+      "share": {
+        "h": "มาตรา 3 (การแบ่งปันกับบุคคลที่สาม)",
+        "principle": "บริษัทจะไม่ให้ข้อมูลแก่บุคคลที่สามโดยไม่ได้รับความยินยอม",
+        "outsourcing": "งานบางอย่างอาจได้รับความไว้วางใจให้พันธมิตรผู้เชี่ยวชาญ (การโฮสต์, การวิเคราะห์)",
+        "legal": "มีข้อยกเว้นสำหรับคำขอทางกฎหมาย"
+      },
+      "xborder": {
+        "h": "มาตรา 4 (การโอนย้ายข้ามพรมแดน)",
+        "body": "ข้อมูลอาจถูกจัดเก็บไว้ในเซิร์ฟเวอร์ที่ตั้งอยู่ในต่างประเทศ"
+      },
+      "store": {
+        "h": "มาตรา 5 (ระยะเวลาการเก็บรักษา)",
+        "withdrawal": "ข้อมูลจะถูกทำลายเมื่อยกเลิกบัญชี เว้นแต่จะมีภาระผูกพันตามกฎหมาย",
+        "legal_retention": "ระยะเวลาตามกฎหมายจะมีผลกับข้อมูลการชำระเงินและการสื่อสาร",
+        "backup": "ข้อมูลสำรองจะถูกทำลายเป็นระยะๆ"
+      },
+      "security": {
+        "h": "มาตรา 6 (มาตรการรักษาความปลอดภัย)",
+        "encryption": "การจัดเก็บรหัสผ่านและข้อมูลที่ละเอียดอ่อนแบบเข้ารหัส",
+        "access_control": "การลดสิทธิการเข้าถึงให้น้อยที่สุดและการตรวจสอบเป็นประจำ",
+        "logs": "การบันทึกการเข้าถึง",
+        "backup_recovery": "ระบบสำรองและกู้คืนเพื่อความปลอดภัย"
+      },
+      "rights": {
+        "h": "มาตรา 7 (สิทธิของผู้ใช้งาน)",
+        "data_rights": "ผู้ใช้งานสามารถขอเข้าถึง แก้ไข หรือลบข้อมูลของตนได้",
+        "settings": "สามารถเปลี่ยนการตั้งค่าได้ในโปรไฟล์",
+        "cookies": "สามารถจัดการการตั้งค่าคุกกี้ผ่านเบราว์เซอร์"
+      },
+      "children": {
+        "h": "มาตรา 8 (การคุ้มครองเด็ก)",
+        "body": "ไม่อนุญาตให้ลงทะเบียนสำหรับเด็กอายุต่ำกว่า 14 ปี"
+      },
+      "notice": {
+        "h": "มาตรา 9 (การแก้ไข)",
+        "body": "นโยบายนี้สามารถเปลี่ยนแปลงได้โดยแจ้งล่วงหน้า 7 วัน"
+      },
+      "contact": {
+        "h": "มาตรา 10 (เจ้าหน้าที่คุ้มครองข้อมูลความเป็นส่วนตัว)",
+        "name": "ชื่อ: Gildong Hong",
+        "email": "อีเมล: privacy@ara-service.com",
+        "hours": "เวลาให้คำปรึกษา: วันทำการ 10:00~18:00"
+      }
+    },
+    "marketing": {
+      "title": "ความยินยอมในการรับข้อมูลทางการตลาด",
+      "purpose": {
+        "h": "มาตรา 1 (วัตถุประสงค์)",
+        "body": "ให้ข้อมูลที่เป็นประโยชน์ (ข่าวสาร, กิจกรรม, โปรโมชั่น) ผ่านทางอีเมล/พุช/SMS"
+      },
+      "contents": {
+        "h": "มาตรา 2 (เนื้อหา)",
+        "features": "สรุปคุณลักษณะใหม่และฟีดที่แนะนำ",
+        "events": "ข้อมูลเกี่ยวกับกิจกรรมและแคมเปญ",
+        "discounts": "ส่วนลด คูปอง และสิทธิประโยชน์ของพันธมิตร",
+        "reports": "รายงานส่วนบุคคล (สรุปกิจกรรม)"
+      },
+      "channels": {
+        "h": "มาตรา 3 (ช่องทางและการตั้งค่า)",
+        "individual": "ความยินยอมสามารถจัดการได้ตามช่องทาง",
+        "settings": "สามารถเปลี่ยนแปลงได้ในการตั้งค่า > การแจ้งเตือน/การตลาด",
+        "apply": "การยกเลิกจะมีผลตั้งแต่การส่งครั้งถัดไป"
+      },
+      "partners": {
+        "h": "มาตรา 4 (การตลาดของบุคคลที่สาม)",
+        "body": "งานการส่งบางอย่างอาจได้รับความไว้วางใจให้ตัวแทน"
+      },
+      "note": {
+        "h": "มาตรา 5 (การแจ้งเตือนที่จำเป็น)",
+        "body": "การแจ้งเตือนการดำเนินงานที่จำเป็นอาจถูกส่งโดยไม่ต้องขอความยินยอม"
+      }
+    }
+  },
+  "subscription": {
+    "back": "ย้อนกลับ",
+    "title_prefix": "เลือก",
+    "title_highlight": "แผนของคุณ",
+    "description": "เลือกแผนที่เหมาะสมกับความต้องการของคุณและเพลิดเพลินกับสิทธิประโยชน์ระดับพรีเมียม",
+    "popular_badge": "แนะนำ",
+    "subscribe_now": "สมัครสมาชิกตอนนี้",
+    "current_plan": "แผนปัจจุบัน",
+    "active_status": "ใช้งานอยู่",
+    "payment_date": "วันที่ชำระเงินครั้งถัดไป",
+    "upgrade_plan": "อัปเกรดแผน",
+    "manage_plan": "จัดการแผน",
+    "vip_box": "เปิดกล่อง VIP",
+    "history": "ประวัติการสมัครสมาชิก",
+    "total_count": "รวม {{count}} รายการ →",
+    "more_count": "+ อีก {{count}} รายการ",
+    "recent_coupons": "คูปองล่าสุด",
+    "history_all": "ประวัติทั้งหมด",
+    "premium_only": "เนื้อหาพิเศษสำหรับพรีเมียม",
+    "guaranteed_payment": "รับประกันการชำระเงินที่ปลอดภัย",
+    "secure_payment": "การชำระเงินที่ปลอดภัย",
+    "cancel_anytime": "ยกเลิกได้ทุกเมื่อ",
+    "all_cards_supported": "รองรับบัตรทุกประเภท",
+    "plans": {
+      "free": {
+        "title": "แผนฟรี",
+        "desc": "สำหรับผู้ที่ต้องการเพียงพื้นฐาน",
+        "interval": "เดือน",
+        "feature_voca": "เข้าถึงคำศัพท์พื้นฐาน",
+        "feature_community": "การมีส่วนร่วมในชุมชน",
+        "feature_badge": "เข็มกลัดพรีเมียม",
+        "feature_ads": "ประสบการณ์ที่ไม่มีโฆษณา",
+        "feature_promo": "โปรโมชั่นสุดพิเศษ"
+      },
+      "basic": {
+        "title": "แผนพื้นฐาน",
+        "desc": "สำหรับผู้เรียนที่กระตือรือร้น",
+        "interval": "เดือน",
+        "feature_voca": "เข้าถึงคำศัพท์ทั้งหมด",
+        "feature_community": "การมีส่วนร่วมในชุมชน",
+        "feature_ads": "ประสบการณ์ที่ไม่มีโฆษณา",
+        "feature_badge": "เข็มกลัดพรีเมียม",
+        "feature_promo": "โปรโมชั่นสุดพิเศษ"
+      },
+      "premium": {
+        "title": "แผนพรีเมียม",
+        "desc": "แผนที่รวบรวมทุกอย่างพร้อมสิทธิประโยชน์ทั้งหมด",
+        "interval": "เดือน",
+        "feature_course": "เข้าถึงคอร์สทั้งหมด",
+        "feature_profile": "เข็มกลัดโปรไฟล์พรีเมียม",
+        "feature_ads": "ประสบการณ์ที่ไม่มีโฆษณา",
+        "feature_badge": "เข็มกลัดพรีเมียม",
+        "feature_coupon": "คูปองพิเศษรายเดือน"
+      }
+    },
+    "errors": {
+      "login_required": "กรุณาเข้าสู่ระบบเพื่อสมัครสมาชิก",
+      "already_free": "คุณกำลังใช้งานแผนฟรีอยู่แล้ว",
+      "cancel_success": "ยกเลิกการสมัครสมาชิกเรียบร้อยแล้ว",
+      "cancel_fail": "เกิดข้อผิดพลาดในการยกเลิก: {{error}}",
+      "coupon_success": "ใช้คูปองเรียบร้อยแล้ว!",
+      "coupon_invalid": "รหัสคูปองไม่ถูกต้อง",
+      "coupon_error": "เกิดข้อผิดพลาดในการตรวจสอบคูปอง"
+    },
+    "cancel_confirm": {
+      "title": "ยกเลิกการสมัครสมาชิก",
+      "desc": "คุณแน่ใจหรือไม่ว่าต้องการยกเลิก? แผนของคุณจะถูกเปลี่ยนเป็นแผนฟรี",
+      "btn_confirm": "ยกเลิกการสมัครสมาชิก",
+      "btn_cancel": "ใช้งานสมาชิกต่อ"
+    },
+    "payment_modal": {
+      "title": "รายละเอียดการชำระเงิน",
+      "promo_code": "รหัสโปรโมชั่น",
+      "coupon_placeholder": "ใส่รหัสคูปอง",
+      "apply": "นำไปใช้",
+      "coupon_applied": "ใช้คูปอง {{name}} เรียบร้อยแล้ว",
+      "card_info": "ข้อมูลบัตร",
+      "card_number": "หมายเลขบัตร",
+      "expiry": "ดด / ปป",
+      "cvc": "CVC",
+      "pay_now": "ชำระเงิน {{price}}",
+      "payment_success": "ชำระเงินเรียบร้อยแล้ว!",
+      "plan_applied": "เปิดใช้งานแผน {{plan}} แล้ว",
+      "payment_fail": "การชำระเงินล้มเหลว: {{error}}",
+      "test_warning": "⚠️ นี่คือการจำลองการชำระเงินทดสอบ จะไม่มีการเรียกเก็บเงินจริง",
+      "cancel_confirm_title": "ยกเลิกการสมัครสมาชิก",
+      "cancel_confirm_desc": "คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการสมัครสมาชิก?",
+      "cancel_subscription": "ยกเลิกการสมัครสมาชิก",
+      "keep_subscription": "ใช้งานสมาชิกต่อ"
+    }
+  },
+  "reset_password": {
+    "title": "Reset Password",
+    "success_title": "Reset Link Sent",
+    "success_message": "A password reset link has been sent to your email address.",
+    "check_inbox": "Please check your inbox.",
+    "back_to_login": "Back to Login",
+    "email_label": "Email Address",
+    "email_placeholder": "Enter your email",
+    "sending": "Sending...",
+    "send_reset_link": "Send Reset Link",
+    "error_email_required": "Email is required.",
+    "error_invalid_email": "Please enter a valid email."
+  },
+  "landing": {
+    "badge": "เรียนรู้ภาษาเกาหลีผ่านเรื่องราว · ชุมชน",
+    "title_1": "เรียนรู้ภาษาโดยใช้เนื้อหา",
+    "title_2": "ประสบการณ์ที่เชื่อมโยงด้วยวัฒนธรรม",
+    "description": "เรียนรู้สำนวนผ่านตอนที่ผลิตเองและนิทานพื้นบ้านเกาหลี",
+    "description2": "พื้นที่เรียนรู้ภาษาเกาหลี ARA ที่เขียน แก้ไข และแบ่งปันกับเพื่อนทั่วโลก",
+    "point_1": "การเรียนรู้ผ่านตอนที่มีพื้นฐานจากเรื่องราว",
+    "point_2": "เข้าใจสำนวนผ่านนิทานพื้นบ้าน",
+    "point_3": "ชุมชนการเรียนรู้ระดับโลก",
+    "cta_start": "เริ่มต้นทันที",
+    "cta_explore": "สำรวจเนื้อหา",
+    "scroll_hint": "เลื่อนเพื่อสำรวจ",
+    "nav_top": "ด้านบนสุด",
+    "nav_how": "วิธีการเรียนรู้",
+    "nav_problems": "ค่านิยมหลัก",
+    "nav_features": "ฟังก์ชันหลัก",
+    "nav_contents": "เนื้อหา",
+    "nav_stories": "รีวิวการเรียนรู้",
+    "nav_start": "เริ่มต้น",
+    "nav_contact": "ติดต่อ",
+    "aria_badge": "แนะนำแพลตฟอร์ม",
+    "aria_start": "เริ่มต้นทันที",
+    "aria_explore": "สำรวจเนื้อหา",
+    "cta_badge_text": "ผู้เรียนที่สมัครวันนี้",
+    "cta_title_1": "ภาษาเกาหลี, ไม่ใช่ 'การเรียน'",
+    "cta_title_2": "เริ่มต้นด้วย 'ประสบการณ์'",
+    "cta_description": "สมัครตอนนี้และเริ่มคอร์สเรียนแรกของคุณด้วยฉากจากละครยอดนิยม",
+    "cta_start_free": "เริ่มต้นฟรี",
+    "problem_title": "คุณเคยมีความกังวลแบบนี้ไหม?",
+    "problem_desc": "ARA เริ่มต้นจากความกังวลที่ผู้เรียนจริงๆ พูดถึงมากที่สุด",
+    "problem_badge": "ความกังวลจริง",
+    "problems": {
+      "1": "แม้จะดูละคร แต่ก็พลาดการแสดงออกที่สำคัญไป",
+      "2": "ฉันอยากเรียนภาษาเกาหลีที่ใช้ในสถานการณ์จริง แต่ไม่รู้ว่าจะเริ่มยังไง",
+      "3": "แม้จะเรียนรู้สำนวน แต่ก็ไม่เข้าใจว่าจะใช้ในเรื่องราวอย่างไร",
+      "4": "ไม่มีเนื้อหาที่ฉันสามารถดูได้อย่างสนุกสนานตามระดับของฉัน",
+      "5": "การเรียนคนเดียวทำให้ยากที่จะทำต่อเนื่อง"
+    },
+    "how_it_works_badge": "วิธีการทำงาน",
+    "how_it_works_title": "กระบวนการเรียนรู้ของ ARA ดำเนินไปเช่นนี้",
+    "guide_alt": "คู่มือ ARA {{index}}",
+    "popular": {
+      "title": "คุณจะได้เรียนรู้ด้วยเนื้อหาแบบนี้",
+      "description": "กระบวนการเรียนรู้ถูกจัดขึ้นโดยเน้นเนื้อหาแอนิเมชันที่สร้างขึ้นเองจากนิทานพื้นบ้านและตำนาน",
+      "loading": "กำลังโหลดเนื้อหายอดนิยม..."
+    },
+    "solution": {
+      "title": "ทำไมต้อง ARA?",
+      "description": [
+        "ไม่ใช่แค่การท่องจำคำศัพท์ แต่รวมถึงการไหลและอารมณ์ในเนื้อหา",
+        "เราตั้งเป้าหมายให้การเรียนรู้เป็นสิ่งที่จดจำได้ร่วมกัน",
+        "ออกแบบให้ประสบการณ์การเรียนรู้และชุมชนสองอย่างนี้เชื่อมต่อกันอย่างเป็นธรรมชาติในหน้าจอเดียว"
+      ],
+      "features": {
+        "1": {
+          "title": "การเรียนรู้ที่มีพื้นฐานจากเรื่องราว",
+          "desc": "ติดตามตอนหนึ่งของแอนิเมชันนิทานพื้นบ้านและนิทานปรัมปราเพื่อเรียนรู้คำศัพท์ สำนวน และบริบททางวัฒนธรรมไปพร้อมกัน"
+        },
+        "2": {
+          "title": "เรียนรู้โครงสร้างขณะใช้งาน",
+          "desc": "ลองใช้สำนวนทันทีหลังเรียนรู้ และเรียนรู้สำนวนที่เป็นธรรมชาติมากขึ้นด้วยประโยคตัวอย่างและคำติชม"
+        },
+        "3": {
+          "title": "ชุมชนระดับโลก",
+          "desc": "ผู้เรียนจากภาษาพื้นฐานที่แตกต่างกันมารวมตัวกัน แบ่งปันประสบการณ์การใช้ภาษาเกาหลีที่เชื่อมโยงด้วยเรื่องราว"
+        }
+      }
+    },
+    "slider": {
+      "preview": {
+        "title": "เรียนรู้สำนวนภาษาเกาหลีผ่านเรื่องราว",
+        "subtitle": "สำนวนและนัยในบทสนทนาตามสถานการณ์อย่างเป็นธรรมชาติ",
+        "bullets": [
+          "บทสนทนา → ความเข้าใจสำนวน",
+          "สถานการณ์การใช้ & เคล็ดลับวัฒนธรรม",
+          "รวมแบบฝึกหัดสั้น ๆ"
+        ],
+        "ctaLabel": "ดูตัวอย่างตอน",
+        "alt": "หน้าจอการเรียนรู้ตอนที่อิงจากเรื่องราว"
+      },
+      "folktale": {
+        "title": "พบกับภาษาเกาหลีผ่านนิทานพื้นบ้านและนิทานปรัมปรา",
+        "subtitle": "อ่านเรื่องราวเก่าในภาษาเกาหลีสมัยใหม่อีกครั้ง",
+        "bullets": [
+          "เนื้อหานิทานพื้นบ้าน & นิทานปรัมปรา",
+          "คำอธิบายเกี่ยวกับวัฒนธรรมและภูมิหลังในสำนวน",
+          "ชุดแนะนำสำหรับผู้เริ่มต้น"
+        ],
+        "ctaLabel": "ดูตัวอย่างเนื้อหานิทาน",
+        "alt": "เนื้อหาการเรียนรู้เกี่ยวกับนิทานพื้นบ้านและตำนานเกาหลี"
+      },
+      "community": {
+        "title": "ฝึกฝนกับเพื่อนจากทั่วโลก",
+        "subtitle": "แบ่งปันประโยคและรับความคิดเห็นจากผู้เรียนหลายภาษา",
+        "bullets": [
+          "ชุมชนผู้ใช้หลายภาษา",
+          "แลกเปลี่ยนประโยคสั้นๆ",
+          "แบ่งปันเคล็ดลับสำนวน/วัฒนธรรม"
+        ],
+        "ctaLabel": "ดูตัวอย่างชุมชน",
+        "alt": "ตัวอย่างกิจกรรมชุมชนระดับโลก"
+      }
+    },
+    "testimonials": {
+      "title": {
+        "line1": "ARA ถูกออกแบบมาเพื่อผู้เรียนเหล่านี้",
+        "line2": "โดยคำนึงถึง"
+      },
+      "description": {
+        "intro": "แม้ยังไม่เปิดตัวอย่างเป็นทางการ แต่ ARA ไม่ได้ถูกออกแบบมาเพื่อผู้เรียนเพียงคนเดียว",
+        "highlight": "แต่สำหรับผู้เรียนหลายประเภท",
+        "body": "กำลังถูกสร้างขึ้นโดยจินตนาการร่วมกัน",
+        "detail": [
+          "ตั้งแต่ผู้ที่เพิ่งเริ่มเรียนภาษาเกาหลีไปจนถึงผู้ที่เตรียมตัวสำหรับการทำงานหรือการศึกษาในต่างประเทศ",
+          "จนถึงพนักงานที่ต้องใช้ภาษาเกาหลีในชีวิตประจำวันหรือการทำงาน",
+          "การเรียนรู้จะยาวนานขึ้นเมื่อใช้เนื้อหาและชุมชนที่ชื่นชอบร่วมกัน",
+          "กำลังออกแบบโฟลว์เพื่อให้การเรียนรู้ดำเนินไปอย่างเป็นธรรมชาติ"
+        ]
+      },
+      "stats": {
+        "duration": {
+          "label": "ระยะเวลาการเรียนรู้",
+          "desc": "กำลังออกแบบโฟลว์เพื่อให้สามารถอยู่ได้นานกว่าการเรียนด้วยตัวเองจากตำราเพียงอย่างเดียว"
+        },
+        "persona": {
+          "label": "ประเภทบุคลิกภาพ",
+          "desc": "กำลังพิจารณาหน้าจอและฟังก์ชันโดยสมมติประเภทผู้เรียนที่มีเป้าหมายและประเทศต่างๆ"
+        },
+        "scenario": {
+          "label": "สถานการณ์การเรียนรู้",
+          "desc": "กำลังสร้างสถานการณ์การเรียนรู้ในระดับฉากเพื่อดูว่าในสถานการณ์ใดที่จะเปิด ARA"
+        }
+      },
+      "reviews": {
+        "sarah": {
+          "country": "สหรัฐอเมริกา · US",
+          "persona": "ผู้เรียนระดับเริ่มต้นที่เริ่มเรียนภาษาเกาหลีจากละคร",
+          "text": "ที่ผ่านมาเคยพึ่งพาคำบรรยายในการดูเรื่องราวจึงมักพลาดการแสดงออกที่สำคัญบ่อยๆ ใน ARA จะมีการแบ่งฉากและชี้ให้เห็นการแสดงออกที่สำคัญ ทำให้เข้าใจว่า “อ๋อ ในสถานการณ์นี้ใช้คำนี้” และยังสนุกกับการดูตอนเดิมอีกครั้งโดยลดคำบรรยายทีละน้อย"
+        },
+        "diego": {
+          "country": "สเปน · ES",
+          "persona": "ผู้เรียนที่เตรียมตัวสำหรับการทำงานและการศึกษาในต่างประเทศ",
+          "text": "ก่อนที่จะไปทำงานในต่างประเทศ ฉันอยากเรียนรู้การใช้สำนวนที่ใช้จริงในชีวิตประจำวัน การสนทนาในแอนิเมชันถูกจัดเรียงตามสถานการณ์ ทำให้ฉันสามารถแยกแยะได้ว่า 'คำพูดที่ใช้ในชีวิตประจำวัน' และ 'สำนวนที่ต้องระวังในการใช้' ได้ดี"
+        },
+        "meilin": {
+          "country": "สิงคโปร์ · SG",
+          "persona": "ผู้เรียนระดับกลางถึงสูงที่ต้องการพัฒนาทักษะการพูด",
+          "text": "ฉันรู้ไวยากรณ์และคำศัพท์ในระดับหนึ่งแล้ว แต่การพูดออกมาเป็นประโยคยังคงยากเสมอ เมื่อฉันดูเรื่องราวใน ARA และเขียนความรู้สึกหรือปฏิกิริยาสั้น ๆ มันจะช่วยแก้ไขให้เป็นสำนวนที่เป็นธรรมชาติมากขึ้น ฉันรู้สึกว่าทักษะการพูดของฉันเริ่มดีขึ้นเมื่อได้ลองใช้ประโยคนั้นในฟีดหรือ DM"
+        },
+        "alexey": {
+          "country": "รัสเซีย · RU",
+          "persona": "ผู้เรียนที่เป็นพนักงานและต้องการสำนวนทางธุรกิจ",
+          "text": "ฉันต้องการสำนวนทางธุรกิจเพราะมีการสื่อสารกับพาร์ทเนอร์ชาวเกาหลีบ่อยครั้ง การเปรียบเทียบสำนวนระหว่างผู้ใหญ่และเด็ก หรือระหว่างผู้ที่มีตำแหน่งสูงกว่าและต่ำกว่าในแอนิเมชัน ช่วยให้ฉันเรียนรู้สำนวนที่เหมาะสมกับสถานการณ์ได้อย่างเป็นธรรมชาติ สิ่งที่น่าประทับใจคือการเข้าใจบริบทมากกว่าการแปลตรงตัว"
+        },
+        "hana": {
+          "country": "ญี่ปุ่น · JP",
+          "persona": "ผู้เรียนที่ต้องการพัฒนาตนเองแต่มีปัญหาในการรักษารูทีน",
+          "text": "เมื่อฉันเรียนด้วยตำราเรียน รูทีนมักจะขาดตอนหลังจากไม่กี่วัน แต่ใน ARA การดูเรื่องราวสั้น ๆ หนึ่งตอนก็เพียงพอสำหรับการเรียนรู้ ทำให้ไม่มีความกดดัน ฉันเริ่มมีรูทีนในการเข้ามาเรียนทุกวันโดยธรรมชาติ"
+        }
+      },
+      "notice": {
+        "mobile": "รีวิวที่คุณกำลังดูอยู่ตอนนี้เป็นตัวอย่างรีวิวแบบสถานการณ์ที่สร้างขึ้นจากบุคลิกของผู้เรียนที่ ARA กำหนดไว้",
+        "desktop": "รีวิวที่คุณกำลังดูอยู่ตอนนี้ไม่ใช่ข้อมูลจากผู้ใช้จริง แต่เป็นรีวิวแบบสถานการณ์ที่สร้างขึ้นจากบุคลิกของผู้เรียนที่ ARA ตั้งเป้าไว้ หลังจากเปิดตัวอย่างเป็นทางการ ส่วนนี้จะได้รับการอัปเดตด้วยเรื่องราวจากผู้เรียนจริง"
+      }
+    }
+  },
+  "find_email": {
+    "nickname_label": "ชื่อเล่น",
+    "error_no_recovery": "ไม่มีข้อมูลการกู้คืนที่ลงทะเบียน",
+    "title": "ค้นหาอีเมล",
+    "method_select": "เลือกวิธีการค้นหา",
+    "method_recovery_email": "ค้นหาด้วยอีเมลกู้คืน",
+    "method_question": "ค้นหาด้วยคำถามการกู้คืน",
+    "nickname_placeholder": "กรุณาใส่ชื่อเล่น",
+    "recovery_email_label": "อีเมลกู้คืน",
+    "recovery_email_placeholder": "อีเมลกู้คืนที่ลงทะเบียนเมื่อสมัคร",
+    "your_question": "คำถามที่คุณตั้งไว้",
+    "answer_label": "คำตอบ",
+    "answer_placeholder": "กรุณาใส่คำตอบ",
+    "find_button": "ค้นหาอีเมล",
+    "finding": "กำลังค้นหา...",
+    "result_found": "ที่อยู่อีเมลของคุณ",
+    "error_not_found": "ไม่มีข้อมูลที่ตรงกัน",
+    "error_nickname_required": "กรุณาใส่ชื่อเล่นของคุณ",
+    "error_recovery_email_required": "กรุณาใส่อีเมลกู้คืนของคุณ",
+    "error_answer_required": "กรุณาใส่คำตอบของคุณ",
+    "back_to_login": "กลับไปที่การเข้าสู่ระบบ",
+    "select_method": "กรุณาเลือกวิธี"
+  },
+  "update_password": {
+    "confirm_password_label": "ยืนยันรหัสผ่าน",
+    "title": "ตั้งรหัสผ่านใหม่",
+    "new_password_label": "รหัสผ่านใหม่",
+    "new_password_placeholder": "กรุณาใส่รหัสผ่านใหม่",
+    "confirm_password_placeholder": "ใส่รหัสผ่านอีกครั้ง",
+    "update_button": "เปลี่ยนรหัสผ่าน",
+    "updating": "กำลังเปลี่ยน...",
+    "success_title": "เปลี่ยนรหัสผ่านเสร็จสิ้น",
+    "success_message": "รหัสผ่านถูกเปลี่ยนเรียบร้อยแล้ว",
+    "go_to_login": "เข้าสู่ระบบ",
+    "error_required": "กรุณาใส่รหัสผ่านของคุณ",
+    "error_length": "รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร",
+    "error_mismatch": "รหัสผ่านไม่ตรงกัน",
+    "error_failed": "การเปลี่ยนรหัสผ่านล้มเหลว"
+  },
+  "recovery_reminder": {
+    "later": "ทำในภายหลัง",
+    "title": "คำแนะนำในการเพิ่มความปลอดภัยของบัญชี",
+    "desc": "โปรดตั้งคำถามการกู้คืนและอีเมลเพื่อให้สามารถกู้คืนบัญชีได้อย่างปลอดภัยเมื่อคุณลืมรหัสผ่าน",
+    "action": "ตั้งค่าตอนนี้"
+  },
+  "voca": {
+    "pos": {
+      "noun": "คำนาม",
+      "verb": "คำกริยา",
+      "adjective": "คำคุณศัพท์",
+      "adverb": "คำวิเศษณ์",
+      "pronoun": "สรรพนาม",
+      "numeral": "การสืบสวน",
+      "determiner": "คำคุณศัพท์",
+      "particle": "การสำรวจ",
+      "interjection": "คำอุทาน"
+    }
+  },
+  "not_found": {
+    "discovery": "พบหน้าที่หลงทาง",
+    "title": "ยังไม่มีการเขียนสคริปต์สำหรับฉากนี้",
+    "description": "ที่อยู่นี้ยังไม่มีตอนของ ARA พร้อมใช้งาน ลองกลับไปที่หน้าหลักและสนุกกับภาษาและวัฒนธรรมเกาหลีผ่าน K-คอนเทนต์อื่น ๆ กันไหม?",
+    "quote_part1": "“สักวันหนึ่งหน้านี้ก็",
+    "quote_accent": "ฉากหนึ่ง",
+    "quote_part2": "จะถูกเติมเต็ม”",
+    "feedback_prefix": "หากคุณมีฟังก์ชันหรือไอเดียที่คาดหวังในหน้านี้ คุณสามารถแสดงความคิดเห็นได้อย่างสะดวกในเมนูข้อเสนอแนะภายใน ARA",
+    "feedback_suffix": "กรุณาติดต่อทาง {{contact_method}}"
+  },
+  "community": {
+    "seo": {
+      "title": "ชุมชน | ARA - เรียนภาษาเกาหลีผ่าน K-คอนเทนต์",
+      "description": "นี่คือชุมชน ARA ที่ผู้เรียนทั่วโลกมารวมตัวกัน เรียนภาษาเกาหลีผ่าน K-คอนเทนต์ สื่อสารกับเพื่อน ๆ และสนุกกับวัฒนธรรมของแต่ละประเทศ",
+      "keywords": "ARA, การเรียนภาษาเกาหลี, เรียนภาษาเกาหลี, วัฒนธรรมเกาหลี, K-POP, K-Drama, K-Culture, การแลกเปลี่ยนภาษา, ฟีด, ผู้เรียนทั่วโลก",
+      "og_title": "ชุมชน ARA - แพลตฟอร์มการเรียนรู้ระดับโลกที่ใช้ K-คอนเทนต์เป็นพื้นฐาน",
+      "og_description": "เรียนภาษาเกาหลีผ่าน K-คอนเทนต์ และสื่อสารกับผู้เรียนจากทั่วโลกในฟีดบ้านระดับโลก ARA"
+    },
+    "title": "ชุมชน",
+    "no_results": "ไม่พบผลการค้นหา",
+    "no_posts": "ยังไม่มีข่าวที่แชร์",
+    "all_posts_loaded": "คุณได้ตรวจสอบข่าวทั้งหมดแล้ว",
+    "hidden_content": "โพสต์นี้ถูกซ่อนโดยผู้ดูแลระบบ",
+    "deleted_post": "โพสต์นี้ถูกลบเนื่องจากละเมิดนโยบาย",
+    "edit_post": "แก้ไขโพสต์"
+  },
+  "home": {
+    "greeting_morning": "สวัสดีตอนเช้า",
+    "greeting_night": "ราตรีสวัสดิ์ / เป็นเวลาเช้ามืด",
+    "greeting_afternoon": "สวัสดี",
+    "greeting_evening": "สวัสดี (ตอนเย็น)",
+    "stats_due": "เตรียมทบทวน",
+    "stats_new": "คำศัพท์ใหม่",
+    "stats_streak": "การเรียนรู้ต่อเนื่อง",
+    "goal_text": "เป้าหมายของวันนี้ {{count}} รายการ",
+    "recent_progress": "ความคืบหน้าในการเรียนล่าสุด",
+    "continue_learning": "เรียนรู้ต่อ",
+    "today_recommendation": "คำแนะนำวันนี้",
+    "more": "เพิ่มเติม",
+    "weekly_stats": "สถิติการเรียนรู้รายสัปดาห์",
+    "field_progress": "ความก้าวหน้าตามสาขา",
+    "percent_complete": "{{percent}}% เสร็จสิ้น",
+    "time_left": "เวลาที่เหลือ {{time}}"
+  },
+  "marketing": {
+    "subscription": {
+      "title": "การสมัครสมาชิก Project ARA!"
+    }
   }
 }

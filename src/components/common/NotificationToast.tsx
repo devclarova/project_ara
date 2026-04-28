@@ -145,6 +145,8 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
+      data-notification-type={type}
+      data-is-notification="true"
       className={`flex items-start space-x-3 w-full group animate-in fade-in slide-in-from-right-4 duration-300 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 p-2 rounded-2xl transition-all active:scale-[0.98] ${onClick ? '' : 'pointer-events-none'}`}
     >
        {/* Layout Composition: Implements a hierarchical arrangement of avatar assets, status indicators, and notification payloads. */}

@@ -54,7 +54,7 @@ const StudyCard: React.FC<StudyCardProps> = ({ subtitle, studyId, noteText }) =>
                   : 'bg-white dark:bg-secondary text-gray-700 border dark:text-gray-300'
               }`}
             >
-              {t('study.culture_note')}
+              {t('study.culture_note_label')}
             </button>
           </div>
 

@@ -25,12 +25,14 @@ import ScrollToTop from './components/common/ScrollToTop';
 const ProfileSettings = React.lazy(() => import('./components/profile/ProfileSettings'));
 import { ThemeProvider, useTheme } from './components/theme-provider';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { BlockedUsersProvider } from './contexts/BlockedUsersContext';
 import { DirectChatProvider } from './contexts/DirectChatContext';
 import { NewChatNotificationProvider } from './contexts/NewChatNotificationContext';
 import { PresenceProvider } from './contexts/PresenceContext';
 import { SiteSettingsProvider, useSiteSettings } from './contexts/SiteSettingsContext';
 import { DocumentMetadataManager } from './components/common/DocumentMetadataManager';
 import { SecurityGuard } from './components/common/SecurityGuard';
+import { GlobalToastSound } from './components/common/GlobalToastSound';
 import { supabase } from './lib/supabase';
 import RecoveryReminderModal from './components/auth/RecoveryReminderModal';
 
@@ -198,27 +200,15 @@ function RequireAdmin() {
 function AppInner() {
   const { settings } = useSiteSettings();
   const location = useLocation();
-  const { session } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { session, isAdmin } = useAuth();
   
   useUserTracker();
-
-  useEffect(() => {
-    const checkAdmin = async () => {
-      if (!session) return;
-      const { data } = await (supabase.from('profiles') as any)
-        .select('is_admin')
-        .eq('user_id', session.user.id)
-        .maybeSingle();
-      setIsAdmin(!!data?.is_admin);
-    };
-    checkAdmin();
-  }, [session]);
 
   const maintenance = settings?.maintenance_mode;
   const showMaintenance = maintenance?.enabled && !isAdmin && !location.pathname.startsWith('/admin');
   const hideHeader = HIDE_HEADER_PATHS.some(path => location.pathname.startsWith(path));
-  const hideFooter = hideHeader || location.pathname.startsWith('/chat');
+  const isLanding = location.pathname === '/' || location.pathname === '/landing';
+  const hideFooter = hideHeader || location.pathname.startsWith('/chat') || isLanding;
 
   return (
     <SecurityGuard>
@@ -349,24 +339,27 @@ const ThemedToaster = () => {
 const App = () => {
   return (
     <AuthProvider>
-      <SiteSettingsProvider>
+      <BlockedUsersProvider>
         <ThemeProvider defaultTheme="system" storageKey="theme-mode">
-          <PresenceProvider>
-            <NewChatNotificationProvider>
-              <DirectChatProvider>
-                <ThemedToaster />
-                <Router>
-                  <GlobalNotificationListener />
-                  <GlobalBanListener />
-                  <GlobalUserStatusTracker />
-                  <RecoveryReminderModal />
-                  <AppInner />
-                </Router>
-              </DirectChatProvider>
-            </NewChatNotificationProvider>
-          </PresenceProvider>
+          <SiteSettingsProvider>
+            <PresenceProvider>
+              <NewChatNotificationProvider>
+                <DirectChatProvider>
+                  <GlobalToastSound />
+                  <ThemedToaster />
+                  <Router>
+                    <GlobalNotificationListener />
+                    <GlobalBanListener />
+                    <GlobalUserStatusTracker />
+                    <RecoveryReminderModal />
+                    <AppInner />
+                  </Router>
+                </DirectChatProvider>
+              </NewChatNotificationProvider>
+            </PresenceProvider>
+          </SiteSettingsProvider>
         </ThemeProvider>
-      </SiteSettingsProvider>
+      </BlockedUsersProvider>
     </AuthProvider>
   );
 };

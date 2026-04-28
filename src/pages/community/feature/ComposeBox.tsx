@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import SeagullIcon from '@/components/common/SeagullIcon';
 import { Button } from '@/components/ui/button';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -37,8 +38,26 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user, isBanned, bannedUntil } = useAuth(); // Add destructuring
+  const { user, userPlan, profileId, isBanned, bannedUntil } = useAuth();
+  const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+  const [profileNickname, setProfileNickname] = useState<string | null>(null);
   const maxLength = 280;
+
+  // 사용자 프로필 이미지 로드
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+      const { data } = await (supabase.from('profiles') as any)
+        .select('avatar_url, nickname')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (data) {
+        setProfileAvatar(data.avatar_url);
+        setProfileNickname(data.nickname);
+      }
+    };
+    loadProfile();
+  }, [user]);
 
   const emojis = ['😀', '😂', '🥰', '😍', '🤔', '👍', '❤️', '🔥', '💯', '🎉', '🚀', '✨'];
 
@@ -160,10 +179,19 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
       <div className="flex space-x-3 w-full">
         {/* ✅ 프로필 아바타 */}
         <div className="flex-shrink-0">
-          <Avatar className="w-10 h-10">
-            <AvatarImage src="/default-avatar.svg" alt={t('common.avatar', 'User avatar')} />
-            <AvatarFallback>{t('common.user_initials', 'U')}</AvatarFallback>
-          </Avatar>
+          <div className={`relative w-10 h-10 ${userPlan === 'premium' ? 'rounded-full p-[2px] bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] shadow-[0_2px_10px_rgba(0,191,165,0.4)]' : ''}`}>
+            <Avatar className="w-full h-full border-2 border-white dark:border-background">
+              <AvatarImage src={profileAvatar || '/default-avatar.svg'} alt={profileNickname || t('common.avatar', 'User avatar')} />
+              <AvatarFallback>{(profileNickname || 'U').charAt(0).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            {userPlan === 'premium' && (
+              <div className="absolute -top-1.5 -left-1.5 z-10 p-[2px] bg-white dark:bg-background rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.1)] transition-transform hover:scale-110 -rotate-12">
+                <div className="bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] w-[15px] h-[15px] rounded-full flex items-center justify-center shadow-[inset_0_1px_3px_rgba(255,255,255,0.5)]">
+                  <SeagullIcon size={12} className="text-white drop-shadow-sm" />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ✅ 입력 필드 */}

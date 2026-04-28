@@ -130,20 +130,19 @@ export const formatChatListDate = (dateString: string): string => {
     const locale = getLocale();
 
     if (isToday(date)) {
-      return format(date, 'p', { locale }); // Time
+      return format(date, 'a hh:mm', { locale }); // 오전 08:15 / AM 08:15
     }
 
     if (isYesterday(date)) {
       return i18n.t('common.yesterday', '어제');
     }
 
+    // 언어 무관 숫자 포맷 — 번역 키 의존 제거로 모든 로케일에서 안정적 표시
     if (isSameYear(date, new Date())) {
-      // Use i18next translation for date format patterns if needed, 
-      // but MMM d is generally fine for English date-fns
-      return format(date, i18n.t('common.date_format_short', 'M월 d일'), { locale });
+      return format(date, 'M. d.');
     }
 
-    return format(date, 'yyyy. M. d.', { locale }); // Standard short date
+    return format(date, 'yyyy. M. d.');
   } catch {
     return '';
   }

@@ -6,7 +6,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
-const BATCH_TRANSLATION_VERSION = 'v3_local_api';
+const BATCH_TRANSLATION_VERSION = 'v6_enhanced_quality';
+
+const batchMemoryCache: Record<string, string> = {};
 
 interface UseBatchAutoTranslationResult {
   translatedTexts: (string | null)[];
@@ -37,6 +39,9 @@ export const useBatchAutoTranslation = (
       return;
     }
 
+    // 🔄 Ensure state length matches new texts length to avoid index mismatch errors
+    setTranslatedTexts(new Array(texts.length).fill(null));
+
     // 한국어 타겟이면 번역 불필요 (원본 그대로 리턴)
     if (targetLang === 'ko' || targetLang === 'ko-KR') {
       setTranslatedTexts(texts);
@@ -59,34 +64,64 @@ export const useBatchAutoTranslation = (
         const uniqueKeys = cacheKeyInfos.map(k => `${k}_${BATCH_TRANSLATION_VERSION}`);
 
         // 2. Check DB Cache
-        const finalResults = [...translatedTexts];
-        let cacheMap: Record<string, string> = {};
+        const finalResults = new Array(texts.length).fill(null);
 
-        if (user) {
-             const { data: cachedData } = await (supabase.from('translations') as any)
-               .select('content_id, translated_text')
-               .in('content_id', uniqueKeys)
-               .eq('target_lang', targetLang);
-             
-             cacheMap = (cachedData || []).reduce((acc: Record<string, string>, curr: any) => {
-               acc[curr.content_id] = curr.translated_text; 
-               return acc;
-             }, {} as Record<string, string>);
-        }
-
-        // Identify missing items
-        const missingIndices: number[] = [];
+        // Phase 1: 메모리 + sessionStorage 캐시 즉시 적용 (네트워크 0회)
+        const afterLocalCache: number[] = [];
         texts.forEach((text, idx) => {
             const uniqueId = uniqueKeys[idx];
-            
-            if (cacheMap[uniqueId]) {
-                finalResults[idx] = cacheMap[uniqueId];
-            } else if (text && text.trim()) {
-                missingIndices.push(idx);
+            const memoryKey = `${uniqueId}_${targetLang}`;
+            if (batchMemoryCache[memoryKey]) {
+                finalResults[idx] = batchMemoryCache[memoryKey];
             } else {
-                finalResults[idx] = text; 
+                try {
+                    const stored = sessionStorage.getItem(`ara_bt_${memoryKey}`);
+                    if (stored) {
+                        finalResults[idx] = stored;
+                        batchMemoryCache[memoryKey] = stored;
+                    } else {
+                        afterLocalCache.push(idx);
+                    }
+                } catch { afterLocalCache.push(idx); }
             }
         });
+
+        // 로컬 캐시 히트분 즉시 반영
+        if (mounted) setTranslatedTexts([...finalResults]);
+
+        // Phase 2: DB 캐시 조회 (미번역 항목만)
+        let cacheMap: Record<string, string> = {};
+        if (user && afterLocalCache.length > 0) {
+            const keysToQuery = afterLocalCache.map(i => uniqueKeys[i]);
+            const { data: cachedData } = await (supabase.from('translations') as any)
+              .select('content_id, translated_text')
+              .in('content_id', keysToQuery)
+              .eq('target_lang', targetLang);
+            cacheMap = (cachedData || []).reduce((acc: Record<string, string>, curr: any) => {
+              acc[curr.content_id] = curr.translated_text;
+              return acc;
+            }, {} as Record<string, string>);
+        }
+
+        // DB 히트분 반영 + 최종 미번역 목록 산출
+        const missingIndices: number[] = [];
+        afterLocalCache.forEach(idx => {
+            const uniqueId = uniqueKeys[idx];
+            const memoryKey = `${uniqueId}_${targetLang}`;
+            if (cacheMap[uniqueId]) {
+                const val = cacheMap[uniqueId];
+                finalResults[idx] = val;
+                batchMemoryCache[memoryKey] = val;
+                try { sessionStorage.setItem(`ara_bt_${memoryKey}`, val); } catch {}
+            } else if (texts[idx] && texts[idx].trim()) {
+                missingIndices.push(idx);
+            } else {
+                finalResults[idx] = texts[idx];
+            }
+        });
+
+        // DB 히트분 즉시 반영
+        if (mounted && afterLocalCache.length > 0) setTranslatedTexts([...finalResults]);
 
         // If everything is cached or empty, we are done
         if (missingIndices.length === 0) {
@@ -99,30 +134,28 @@ export const useBatchAutoTranslation = (
 
         const inputsToTranslate = missingIndices.map(i => texts[i]);
 
-        // 3. call Local Server API
-        const response = await fetch('/api/translate-batch', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              texts: inputsToTranslate,
-              targetLang
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error(`Translation API Error: ${response.status}`);
+        // 3. Parallel Batch Processing — Split large batches into smaller chunks for faster OpenAI parallel inference
+        const CHUNK_SIZE = 15;
+        const chunks: string[][] = [];
+        for (let i = 0; i < inputsToTranslate.length; i += CHUNK_SIZE) {
+            chunks.push(inputsToTranslate.slice(i, i + CHUNK_SIZE));
         }
 
-        const data = await response.json();
-        const parsedResults = data.translations; // Expect { translations: [] }
+        const chunkPromises = chunks.map(chunk => 
+            fetch('/api/translate-batch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ texts: chunk, targetLang }),
+            }).then(async r => {
+                if (!r.ok) throw new Error(`API Error: ${r.status}`);
+                const data = await r.json();
+                return data.translations as string[];
+            })
+        );
+
+        const chunkedResults = await Promise.all(chunkPromises);
+        const parsedResults = chunkedResults.flat();
         
-        if (!parsedResults || !Array.isArray(parsedResults)) {
-             throw new Error('Invalid API Response Format');
-        }
-
-        // Apply results
         if (parsedResults.length === inputsToTranslate.length) {
              const upsertData: any[] = [];
 
@@ -130,6 +163,9 @@ export const useBatchAutoTranslation = (
                 const tr = parsedResults[i];
                 if (tr) {
                     finalResults[originalIdx] = tr;
+                    const mk = `${uniqueKeys[originalIdx]}_${targetLang}`;
+                    batchMemoryCache[mk] = tr;
+                    try { sessionStorage.setItem(`ara_bt_${mk}`, tr); } catch {}
                     
                     if (user) {
                         upsertData.push({

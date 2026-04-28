@@ -181,7 +181,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
           toast.success(
             <div className="flex flex-col gap-1">
               <span className="font-bold">{t('settings.coupons.redeem_success')}</span>
-              <span className="text-sm opacity-90">{t('settings.coupons.redeem_success_desc', { name: rpcData.title || rpcData.promotion?.name, discount: (rpcData.discount_type || rpcData.promotion?.discount_type) === 'percent' ? `${rpcData.discount_value || rpcData.promotion?.discount_value}%` : `₩${(rpcData.discount_value || rpcData.promotion?.discount_value || 0).toLocaleString()}` })}</span>
+              <span className="text-sm opacity-90">{t('settings.coupons.redeem_success_desc', { name: t(rpcData.title || rpcData.promotion?.name), discount: (rpcData.discount_type || rpcData.promotion?.discount_type) === 'percent' ? `${rpcData.discount_value || rpcData.promotion?.discount_value}%` : `₩${(rpcData.discount_value || rpcData.promotion?.discount_value || 0).toLocaleString()}` })}</span>
             </div>
           );
           
@@ -207,7 +207,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
   const confirmCancelAction = async () => {
     setLoading(true);
     try {
-      if (!subscription) throw new Error('구독 정보가 없습니다.');
+      if (!subscription) throw new Error(t('settings.coupons.no_subscription_data'));
       const { error } = await (supabase.from('subscriptions') as any)
         .update({ status: 'cancelled' })
         .eq('id', subscription.id);
@@ -262,7 +262,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
         .maybeSingle();
 
       if (!promoData) {
-          toast.error('현재 준비된 VIP 혜택이 없습니다. 관리자에게 문의하세요.');
+          toast.error(t('settings.coupons.no_vip_available'));
           return;
       }
 
@@ -278,9 +278,9 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
 
       toast.success(
         <div className="flex flex-col gap-1">
-            <span className="font-bold text-[#00F0FF]">🎁 VIP 시크릿 혜택 지급 완료!</span>
-            <span className="text-sm opacity-90 text-gray-200">쿠폰 코드: {secretCode} (99% 할인)</span>
-            <span className="text-[10px] text-gray-400">결제 시 위 코드를 입력하여 혜택을 받으세요.</span>
+            <span className="font-bold text-[#00F0FF]">{t('settings.coupons.vip_success_title')}</span>
+            <span className="text-sm opacity-90 text-gray-200">{t('settings.coupons.vip_success_code', { code: secretCode })}</span>
+            <span className="text-[10px] text-gray-400">{t('settings.coupons.vip_success_desc')}</span>
         </div>,
         { duration: 6000 }
       );
@@ -305,9 +305,9 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
 
   const currentPlan = subscription?.plan || 'free';
   const planDetails = {
-    free:    { label: '무료 플랜',    tag: 'Free',    color: 'text-gray-500',                      bg: 'bg-gray-100 dark:bg-zinc-800' },
-    basic:   { label: '베이직 플랜',  tag: 'Basic',   color: 'text-blue-600 dark:text-blue-400',  bg: 'bg-blue-100 dark:bg-blue-500/10' },
-    premium: { label: '프리미엄 플랜', tag: 'Premium', color: 'text-[#00BFA5]',                   bg: 'bg-[#00BFA5]/10' }
+    free:    { label: t('subscription.plans.free.title'),    tag: 'Free',    color: 'text-gray-500',                      bg: 'bg-gray-100 dark:bg-zinc-800' },
+    basic:   { label: t('subscription.plans.basic.title'),  tag: 'Basic',   color: 'text-blue-600 dark:text-blue-400',  bg: 'bg-blue-100 dark:bg-blue-500/10' },
+    premium: { label: t('subscription.plans.premium.title'), tag: 'Premium', color: 'text-[#00BFA5]',                   bg: 'bg-[#00BFA5]/10' }
   };
   const uiPlan = planDetails[currentPlan as keyof typeof planDetails] || planDetails.free;
 
@@ -350,7 +350,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
               <SeagullIcon size={17} className={uiPlan.color} />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-medium text-gray-400 leading-none mb-0.5 whitespace-nowrap">현재 이용 중인 플랜</p>
+              <p className="text-xs font-medium text-gray-400 leading-none mb-0.5 whitespace-nowrap">{t('subscription.current_plan', '현재 이용 중인 플랜')}</p>
               <span className={`text-sm font-bold whitespace-nowrap ${
                 currentPlan === 'premium' ? 'text-[#007A6E] dark:text-[#00F0FF]' : 'text-gray-900 dark:text-white'
               }`}>
@@ -370,12 +370,12 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
                   ? 'bg-[#00BFA5]/20 text-[#00BFA5]'
                   : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
               }`}>
-                <CheckCircle2 size={10} /> 활성
+                <CheckCircle2 size={10} /> {t('subscription.active_status', '활성')}
               </span>
             )}
             {subscription?.ends_at && (
               <span className="text-xs text-gray-400 whitespace-nowrap">
-                결제일: {format(new Date(subscription.ends_at), 'yy.MM.dd')}
+                {t('subscription.payment_date', '결제일')}: {format(new Date(subscription.ends_at), 'yy.MM.dd')}
               </span>
             )}
           </div>
@@ -390,7 +390,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
                 : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
               }`}
             >
-              <span className="whitespace-nowrap">{currentPlan === 'free' ? '요금제 업그레이드' : '요금제 관리'}</span>
+              <span className="whitespace-nowrap">{currentPlan === 'free' ? t('subscription.upgrade_plan', '요금제 업그레이드') : t('subscription.manage_plan', '요금제 관리')}</span>
               <ArrowRight size={14} className="flex-shrink-0 group-hover/btn:translate-x-0.5 transition-transform" />
             </Link>
 
@@ -403,7 +403,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
                 {isIssuingVip ? <Loader2 size={15} className="animate-spin" /> : (
                   <>
                     <Bird size={15} className="text-[#00BFA5] flex-shrink-0" />
-                    <span className="whitespace-nowrap">VIP 상자 열기</span>
+                    <span className="whitespace-nowrap">{t('subscription.vip_box', 'VIP 상자 열기')}</span>
                   </>
                 )}
               </button>
@@ -425,14 +425,14 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <h4 className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-            <CalendarClock size={13} /> 구독 이력
+            <CalendarClock size={13} /> {t('subscription.history', '구독 이력')}
           </h4>
           {subscriptionHistory.length > 3 && (
             <button
               onClick={() => setIsHistoryModalOpen(true)}
               className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors whitespace-nowrap"
             >
-              전체 {subscriptionHistory.length}건 →
+              {t('subscription.total_count', '전체 {{count}}건 →', { count: subscriptionHistory.length })}
             </button>
           )}
         </div>
@@ -451,7 +451,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
                 onClick={() => setIsHistoryModalOpen(true)}
                 className="w-full py-1.5 text-xs text-gray-400 hover:text-primary transition-colors rounded-xl border border-dashed border-gray-200 dark:border-white/10 hover:border-primary/30"
               >
-                + {subscriptionHistory.length - 3}건 더 보기
+                {t('subscription.more_count', '+ {{count}}건 더 보기', { count: subscriptionHistory.length - 3 })}
               </button>
             )}
           </div>
@@ -490,7 +490,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
       {/* 쿠폰 사용 내역 */}
       <div className="space-y-2">
         <h4 className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-          <History size={13} /> 최근 쿠폰 기록
+          <History size={13} /> {t('subscription.recent_coupons', '최근 쿠폰 기록')}
         </h4>
 
         {usageHistory.length === 0 ? (
@@ -502,17 +502,28 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
             {usageHistory.map((usage) => {
               const promo = usage.coupons?.promotions;
               if (!promo) return null;
+              
+              // 쿠폰 코드 마스킹 처리 (보안)
+              const maskCode = (code: string) => {
+                if (!code) return '';
+                const parts = code.split('-');
+                if (parts.length > 1) {
+                  return `${parts[0]}-****`;
+                }
+                return code.substring(0, 4) + '****';
+              };
+
               return (
                 <div key={usage.id} className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl border border-gray-100 dark:border-white/5 bg-white dark:bg-zinc-900">
                   <div className="flex flex-col gap-0.5 min-w-0">
                     <span className="font-semibold text-xs text-gray-900 dark:text-white truncate">{promo.title}</span>
-                    <span className="text-xs text-gray-400 font-mono">{usage.coupons?.code}</span>
+                    <span className="text-xs text-gray-400 font-mono">{maskCode(usage.coupons?.code || '')}</span>
                   </div>
                   <div className="flex flex-col items-end gap-0.5 shrink-0">
                     <span className="font-bold text-primary text-xs whitespace-nowrap">
                       {promo.discount_type === 'percent'
-                        ? `${promo.discount_value}% 할인`
-                        : `₩${promo.discount_value.toLocaleString()} 혜택`
+                        ? t('settings.coupons.discount_percent', { value: promo.discount_value })
+                        : t('settings.coupons.discount_fixed', { value: promo.discount_value.toLocaleString() })
                       }
                     </span>
                     <span className="text-xs text-gray-400 whitespace-nowrap">
@@ -538,7 +549,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/10">
               <h3 className="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
-                <CalendarClock size={15} className="text-primary" /> 구독 전체 이력
+                <CalendarClock size={15} className="text-primary" /> {t('subscription.history_all', '구독 전체 이력')}
               </h3>
               <button
                 onClick={() => setIsHistoryModalOpen(false)}

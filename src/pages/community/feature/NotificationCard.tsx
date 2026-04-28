@@ -107,7 +107,7 @@ export default function NotificationCard({
         'es': es, 'pt': pt, 'pt-br': ptBR, 'ru': ru, 'fi': fi,
         'vi': vi, 'th': th, 'hi': hi, 'bn': bn, 'ar': arSA
       };
-      const currentLang = i18n.language.toLowerCase();
+      const currentLang = (i18n.language || 'en').toLowerCase();
       const baseLang = currentLang.split('-')[0];
       const currentDateLocale = localeMap[currentLang] || localeMap[baseLang] || enUS;
 

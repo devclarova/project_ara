@@ -9,18 +9,29 @@ import { useEffect, useState } from 'react';
 // 간단한 캐시 객체
 const memoryCache: Record<string, string> = {};
 
-const TRANSLATION_VERSION = 'v14_local_api'; // Bump version
+const TRANSLATION_VERSION = 'v18_enhanced_quality'; // 발음 전사 강화 + 번역 품질 개선 버전
 
-// --- Concurrency Limiter ---
-const MAX_CONCURRENCY = 10;
+// --- Concurrency Limiter & Throttling ---
+const MAX_CONCURRENCY = 20; // 동시 요청 수 극대화
+const REQUEST_GAP_MS = 10; // 요청 간 최소 간격 최소화
 let activeCount = 0;
+let lastRequestTime = 0;
 const requestQueue: (() => void)[] = [];
 
 const processQueue = () => {
-  while (requestQueue.length > 0 && activeCount < MAX_CONCURRENCY) {
-    const next = requestQueue.shift();
-    next?.();
-  }
+    if (requestQueue.length === 0 || activeCount >= MAX_CONCURRENCY) return;
+
+    const now = Date.now();
+    const timeSinceLast = now - lastRequestTime;
+    const waitTime = Math.max(0, REQUEST_GAP_MS - timeSinceLast);
+
+    setTimeout(() => {
+        if (requestQueue.length > 0 && activeCount < MAX_CONCURRENCY) {
+            const next = requestQueue.shift();
+            lastRequestTime = Date.now();
+            next?.();
+        }
+    }, waitTime);
 };
 
 const enqueueRequest = (fn: () => Promise<void>) => {
@@ -38,11 +49,8 @@ const enqueueRequest = (fn: () => Promise<void>) => {
       }
     };
 
-    if (activeCount < MAX_CONCURRENCY) {
-      run();
-    } else {
-      requestQueue.push(run);
-    }
+    requestQueue.push(run);
+    processQueue();
   });
 };
 

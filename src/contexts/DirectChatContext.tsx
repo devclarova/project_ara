@@ -167,7 +167,15 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       try {
         const response = await getChatList();
         if (response.success && response.data) {
-          setChats(response.data);
+          // DB의 last_message_at이 stale한 경우가 있으므로, last_message.created_at과 비교하여 더 최신인 값으로 정렬
+          const sorted = [...response.data].sort((a: any, b: any) => {
+            const aDb = new Date(a.last_message_at || 0).getTime();
+            const aMsg = new Date(a.last_message?.created_at || 0).getTime();
+            const bDb = new Date(b.last_message_at || 0).getTime();
+            const bMsg = new Date(b.last_message?.created_at || 0).getTime();
+            return Math.max(bDb, bMsg) - Math.max(aDb, aMsg);
+          });
+          setChats(sorted);
           const unreadChatsCount = response.data.filter((chat: any) => {
             // Ref를 사용하여 최신 차단 정보 보되 의존성 제거
             if (blockedIdsRef.current.has(chat.other_user.id)) return false;
@@ -772,14 +780,23 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
   }, []);
 
   // 실시간 메시지 구독 및 파이프라인(Realtime Processing Pipeline) — Supabase Realtime을 통한 유입 메시지 감지, 이미지 지연 로딩 처리 및 멀티 탭 동기화
+  const channelIdRef = useRef(0);
   useEffect(() => {
     if (!currentUserId) return;
+
+    // 재구독 시 이전 채널명과 충돌 방지
+    channelIdRef.current += 1;
+    const channelName = `direct_chat_unified_${currentUserId}_${channelIdRef.current}`;
+
+    // console.log('[RT-DEBUG] 실시간 구독 설정됨. currentUserId:', currentUserId, 'channel:', channelName);
 
     const handleNewMessage = async (payload: import('@supabase/supabase-js').RealtimePostgresInsertPayload<import('../types/database').MessagesRow>) => {
       let newMessage = payload.new as any;
       const chatId = newMessage.chat_id;
       
-      if (blockedUserIds.has(newMessage.sender_id)) return;
+      // console.log('[RT-DEBUG] INSERT 이벤트 수신:', { chatId, senderId: newMessage.sender_id, currentChatId: currentChatId.current, messageId: newMessage.id });
+      
+      if (blockedIdsRef.current.has(newMessage.sender_id)) return;
 
       const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
       for (let i = 0; i < 3; i++) {
@@ -791,7 +808,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
 
           if (fullMessage) {
             newMessage = fullMessage;
-            if (fullMessage.attachments && fullMessage.attachments.length > 0) break;
+            break;
           }
         } catch (e) {}
         if (i < 2) await delay(500);
@@ -819,7 +836,9 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
             return next;
           }
 
-          return [...prev, { ...newMessage, sender: senderProfile, attachments: newMessage.attachments ?? [] }];
+          const added = [...prev, { ...newMessage, sender: senderProfile, attachments: newMessage.attachments ?? [] }];
+          added.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+          return added;
         });
 
         if (newMessage.sender_id !== currentUserId) {
@@ -856,7 +875,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     };
 
     const channel = supabase
-      .channel(`direct_chat_unified_${currentUserId}`)
+      .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages' }, 
         (payload: any) => {
         if (payload.eventType === 'INSERT') {
@@ -878,10 +897,12 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           }));
         }
       })
-      .subscribe();
+      .subscribe((status: string) => {
+        // console.log('[RT-DEBUG] 채널 상태:', status);
+      });
 
     return () => { supabase.removeChannel(channel); };
-  }, [currentUserId, loadChats, fetchProfileByAuthId, blockedUserIds]);
+  }, [currentUserId, loadChats, fetchProfileByAuthId]);
 
   const hasNewChatNotification = useMemo(
     () => chats.some((chat: any) => !blockedUserIds.has(chat.other_user.id) && (chat.unread_count || 0) > 0),

@@ -1,9 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 type Mode = 'year' | 'month' | 'day';
 
-const WEEK_DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+// 로케일 기반 요일 약어 생성 — 일요일(0)부터 토요일(6)까지
+function buildWeekDays(locale: string): string[] {
+  const fmt = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+  // 2024-01-07 = 일요일
+  return Array.from({ length: 7 }, (_, i) => fmt.format(new Date(2024, 0, 7 + i)));
+}
 
 function pad(n: number) {
   return String(n).padStart(2, '0');
@@ -22,7 +27,8 @@ export default function BirthInput({
   error = false,
   errorMessage,
 }: BirthInputProps): JSX.Element {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const weekDays = useMemo(() => buildWeekDays(i18n.language), [i18n.language]);
   const defaultErrorMessage = errorMessage || t('signup.error_birth_required');
   // 법정 연령 제한 상수 — 서비스 정책 및 관련 법규에 따른 만 14세 미만 가입 제한을 처리하기 위한 기준일 산출
   const maxDate14 = (() => {
@@ -259,7 +265,7 @@ export default function BirthInput({
               aria-label="Change view mode"
             >
               {mode === 'day' &&
-                new Date(viewYear, viewMonth, 1).toLocaleString(undefined, {
+                new Date(viewYear, viewMonth, 1).toLocaleString(i18n.language, {
                   month: 'long',
                   year: 'numeric',
                 })}
@@ -317,7 +323,7 @@ export default function BirthInput({
                 const disabled =
                   viewYear > maxDate14.getFullYear() ||
                   (viewYear === maxDate14.getFullYear() && m > maxDate14.getMonth());
-                const label = new Date(2000, m, 1).toLocaleString(undefined, { month: 'short' });
+                const label = new Date(2000, m, 1).toLocaleString(i18n.language, { month: 'short' });
                 return (
                   <button
                     key={m}
@@ -345,7 +351,7 @@ export default function BirthInput({
           {mode === 'day' && (
             <>
               <div className="grid grid-cols-7 text-xs text-center px-2 pt-2">
-                {WEEK_DAYS.map(wd => (
+                {weekDays.map(wd => (
                   <div key={wd} className="py-1 font-medium text-gray-600 dark:text-gray-300">
                     {wd}
                   </div>

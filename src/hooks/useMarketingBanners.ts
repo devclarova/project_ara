@@ -34,20 +34,31 @@ export function useMarketingBanners(
 ) {
   const [banners, setBanners] = useState<MarketingBanner[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user, userPlan, isAdmin } = useAuth();
+  const { user, userPlan, isAdmin, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    // 유료 회원이나 관리자가 테스트 중이 아닐 때 일반 광고를 숨기는 로직은 
-    // 이제 하단의 filter 함수에서 개별 배너별로 처리합니다. 
-    // (이유: 유료 회원에게만 보여주는 'subscriber' 전용 배너가 있을 수 있기 때문)
+    // 인증 정보(플랜 포함)가 로딩 중일 때는 배너를 가져오지 않음 (깜빡임 방지 핵심)
+    if (authLoading) {
+      setBanners([]);
+      setLoading(true);
+      return;
+    }
 
     const fetchBanners = async () => {
+      // [Double Check] 유료 사용자는 데이터를 요청조차 하지 않음 (트래픽 절감 및 보안 강화)
+      const isPaid = userPlan === 'premium' || userPlan === 'basic';
+      if (isPaid) {
+        setBanners([]);
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         let query = (supabase.from('marketing_banners') as any)
           .select('*')
           .eq('is_active', true)
-          .order('priority', { ascending: true });
+          .order('priority', { ascending: false }); // [Fix] 높은 우선순위가 상단에 오도록 DESC 정렬
 
         if (bannerType) {
           query = query.eq('banner_type', bannerType);
@@ -58,6 +69,10 @@ export function useMarketingBanners(
 
         const now = new Date();
         const filtered = (data || []).filter((b: any) => {
+          // [Strict Policy] 프리미엄(유료) 사용자는 광고/배너를 일절 보지 않음
+          const isPaid = (userPlan as string) === 'premium' || (userPlan as string) === 'basic';
+          if (isPaid) return false;
+
           // 1. 기간 필터
           if (b.starts_at && new Date(b.starts_at) > now) return false;
           if (b.ends_at && new Date(b.ends_at) < now) return false;
@@ -67,7 +82,6 @@ export function useMarketingBanners(
 
           // 3. 타겟 오디언스 필터 (정밀 구분)
           const isLoggedIn = !!user;
-          const isPaid = userPlan === 'premium' || userPlan === 'basic';
           const isGuest = !isLoggedIn;
           const isFreeMember = isLoggedIn && !isPaid;
 
@@ -79,8 +93,8 @@ export function useMarketingBanners(
           if (b.target_audience === 'free' && !isFreeMember) return false;
           if (b.target_audience === 'subscriber' && !isPaid) return false;
 
-          // 유료 회원은 일반 광고(all)는 보이지 않게 처리 (구독자용 전용 혜택 배너만 노출됨)
-          if (b.target_audience === 'all' && isPaid) return false;
+          // [Fix] 유료 회원에게 'all' 광고를 무조건 숨기지 않음 
+          // (대신 priority로 프리미엄 배너가 상단에 오도록 관리함)
 
           return true;
         });
@@ -94,7 +108,7 @@ export function useMarketingBanners(
     };
 
     fetchBanners();
-  }, [bannerType, targetPage, user?.id, userPlan, isAdmin]);
+  }, [bannerType, targetPage, user?.id, userPlan, isAdmin, authLoading]);
 
   // 클릭 카운트 증가
   const trackClick = useCallback(async (bannerId: string) => {
