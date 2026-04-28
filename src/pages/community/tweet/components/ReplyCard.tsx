@@ -799,7 +799,7 @@ export function ReplyCard({
 
               <span className="mx-1 text-gray-500 dark:text-gray-400">·</span>
               <span className="text-gray-500 dark:text-gray-400 text-xs shrink-0 self-center">
-                · {formatSmartDate(createdAt)}
+                {formatSmartDate(createdAt)}
                 {isEdited && <span className="ml-1 text-[10px] text-gray-400">{t('common.edited', '수정됨')}</span>}
               </span>
               {isAdmin && reply.is_hidden && (

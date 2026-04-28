@@ -24,6 +24,10 @@ export type EditorCreatedTweet = {
     name: string;
     username: string;
     avatar: string;
+    plan?: string;
+    countryFlag?: string | null;
+    countryName?: string | null;
+    banned_until?: string | null;
   };
   content: string;
   image?: string | string[];
@@ -74,6 +78,8 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
   const [profileId, setProfileId] = useState<string | null>(null);
   const [profileNickname, setProfileNickname] = useState<string>('');
   const [profileUserId, setProfileUserId] = useState<string>('');
+  const [profileCountryFlag, setProfileCountryFlag] = useState<string | null>(null);
+  const [profileCountryName, setProfileCountryName] = useState<string | null>(null);
   const [value, setValue] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -98,16 +104,29 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
-      const { data, error } = await (supabase.from('profiles') as any)
-        .select('id, avatar_url, nickname, user_id')
+      const { data: profile, error: pError } = await (supabase.from('profiles') as any)
+        .select('id, avatar_url, nickname, user_id, country')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (!error && data) {
-        setProfileAvatar(data.avatar_url);
-        setProfileId(data.id);
-        setProfileNickname(data.nickname ?? '');
-        setProfileUserId(data.user_id ?? '');
+      if (!pError && profile) {
+        setProfileAvatar(profile.avatar_url);
+        setProfileId(profile.id);
+        setProfileNickname(profile.nickname ?? '');
+        setProfileUserId(profile.user_id ?? '');
+        
+        // 국가 정보 추가 조회
+        if (profile.country) {
+          const { data: cData } = await (supabase.from('countries') as any)
+            .select('name, flag_url')
+            .eq('id', profile.country)
+            .maybeSingle();
+          
+          if (cData) {
+            setProfileCountryFlag(cData.flag_url);
+            setProfileCountryName(cData.name);
+          }
+        }
       }
     };
     loadProfile();
@@ -309,15 +328,14 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
                id: profileId,
                name: profileNickname || t('common.unknown', 'Unknown'),
                username: profileUserId || user.id,
-               avatar: profileAvatar ?? '/default-avatar.svg'
+               avatar: profileAvatar ?? '/default-avatar.svg',
+               plan: userPlan || (user as any).plan || 'free',
+               countryFlag: profileCountryFlag,
+               countryName: profileCountryName,
+               banned_until: bannedUntil || null
            },
            content: finalContent,
-           timestamp: new Date().toLocaleString('ko-KR', {
-               hour: '2-digit',
-               minute: '2-digit',
-               month: 'short',
-               day: 'numeric',
-           }),
+           timestamp: inserted.created_at || new Date().toISOString(),
            createdAt: inserted.created_at || new Date().toISOString(),
            stats: {
                replies: 0,
@@ -370,6 +388,10 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
             name: profileNickname || t('common.unknown', 'Unknown'),
             username: profileUserId || user.id,
             avatar: profileAvatar ?? '/default-avatar.svg',
+            plan: userPlan || (user as any).plan || 'free',
+            countryFlag: profileCountryFlag,
+            countryName: profileCountryName,
+            banned_until: bannedUntil || null
           },
           content: finalContent,
           image: undefined,
