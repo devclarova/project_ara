@@ -27,8 +27,7 @@ export default function FooterSection() {
           {/* 브랜드 슬로건 */}
           <div className="flex-1">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter leading-[1.1] mb-4">
-              Connect <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-600">Culture</span>,<br />
-              Expand <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-primary">World</span>.
+              {t('footer.brand.slogan_main')}
             </h2>
             <p className="text-base md:text-lg text-muted-foreground/80 font-medium max-w-lg mb-5">
               {t('footer.brand.slogan_sub')}
@@ -64,31 +63,28 @@ export default function FooterSection() {
           <FooterColumn title={t('footer.columns.product.title')}>
             <FooterLink>{t('footer.columns.product.features')}</FooterLink>
             <FooterLink>{t('footer.columns.product.pricing')}</FooterLink>
-            <FooterLink>{t('footer.columns.product.enterprise')}</FooterLink>
             <FooterLink>{t('footer.columns.product.security')}</FooterLink>
           </FooterColumn>
           
           <FooterColumn title={t('footer.columns.resources.title')}>
-            <FooterLink>{t('footer.columns.resources.documentation')}</FooterLink>
             <FooterLink>{t('footer.columns.resources.community')}</FooterLink>
-            <FooterLink>{t('footer.columns.resources.webinars')}</FooterLink>
             <FooterLink>{t('footer.columns.resources.help_center')}</FooterLink>
           </FooterColumn>
 
           <FooterColumn title={t('footer.columns.company.title')}>
              <FooterLink>{t('footer.columns.company.about')}</FooterLink>
-             <FooterLink>{t('footer.columns.company.careers')}</FooterLink>
-             <FooterLink>{t('footer.columns.company.blog')}</FooterLink>
              <FooterLink>{t('footer.columns.company.contact')}</FooterLink>
           </FooterColumn>
 
           {/* 오피스 정보 */}
           <div className="flex flex-col gap-4">
-            <h3 className="font-bold text-foreground">{t('footer.columns.company.office')}</h3>
+            <h3 className="font-bold text-foreground">{t('footer.office.address_name')}</h3>
             <address className="not-italic text-sm text-muted-foreground leading-relaxed">
               <span className="block font-medium text-foreground mb-1">{t('footer.office.address_name')}</span>
               {t('footer.office.address')}<br />
-              <a href="mailto:hello@ara.com" className="block mt-2 hover:text-primary transition-colors">hello@ara.com</a>
+              <a href={`mailto:${t('footer.office.email')}`} className="block mt-2 hover:text-primary transition-colors">
+                {t('footer.office.email')}
+              </a>
             </address>
           </div>
         </div>
@@ -98,7 +94,7 @@ export default function FooterSection() {
           <div className="flex items-center gap-2">
             <span className="text-xl font-black tracking-tighter">ARA</span>
             <span className="text-xs text-muted-foreground ml-2" translate="no">
-              © 2026 Ara — Dive into Korean. Made with 🌊
+              © {currentYear} ARA — Dive into Korean. Made with 🌊
             </span>
           </div>
 
