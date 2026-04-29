@@ -272,6 +272,13 @@ const LandingPage = ({ onSignup }: HomeProps) => {
         })}
       </div>
 
+      {/* 전체 배경 장식 */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-primary/25 blur-[120px] dark:bg-primary/25" />
+        <div className="absolute top-[30%] -right-[10%] w-[40%] h-[40%] rounded-full bg-primary/20 blur-[100px] dark:bg-primary/20" />
+        <div className="absolute -bottom-[10%] left-[20%] w-[40%] h-[40%] rounded-full bg-sky-400/20 blur-[120px] dark:bg-sky-500/18" />
+      </div>
+
       <HeroSection onSignup={onSignup} />
       <HowItWorksSection />
       <ProblemSection />

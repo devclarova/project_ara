@@ -35,8 +35,6 @@ export default function HeroSection({ onSignup }: HeroProps) {
     relative overflow-hidden 
     min-h-[calc(100vh-80px)]
     flex items-center
-    bg-gradient-to-b from-primary/5 via-white to-sky-50 
-    dark:from-background dark:via-background dark:to-background
     pt-0
   "
       initial={{ opacity: 0, y: 24 }}
@@ -44,18 +42,6 @@ export default function HeroSection({ onSignup }: HeroProps) {
       transition={{ duration: 0.6, ease: 'easeOut' }}
     >
       {/* 배경 장식 */}
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute -left-10 -top-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl dark:bg-primary/25"
-        animate={{ y: [-12, 12] }}
-        transition={{ duration: 8, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
-      />
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute -right-10 bottom-0 h-64 w-64 rounded-full bg-sky-200/40 blur-3xl dark:bg-sky-700/40"
-        animate={{ y: [10, -10] }}
-        transition={{ duration: 10, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
-      />
 
       {/* 안쪽 레이아웃 */}
       <div className="w-full max-w-screen-xl mx-auto px-6 pt-8 pb-12 md:pt-10 md:pb-14 lg:pt-12 lg:pb-16 flex flex-col lg:flex-row items-center gap-10 lg:gap-12">

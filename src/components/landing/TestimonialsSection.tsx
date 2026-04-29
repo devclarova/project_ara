@@ -85,7 +85,6 @@ export default function TestimonialsSection() {
       id="testimonials"
       className="
         relative overflow-x-hidden 
-        bg-white dark:bg-background 
         min-h-[calc(100vh-100px)]
         flex items-center
       "
@@ -95,8 +94,6 @@ export default function TestimonialsSection() {
       transition={{ duration: 0.5 }}
     >
       {/* 배경 포인트 */}
-      <div className="pointer-events-none absolute -left-10 -top-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl dark:bg-primary/25" />
-      <div className="pointer-events-none absolute -right-10 bottom-0 h-64 w-64 rounded-full bg-sky-200/40 blur-3xl dark:bg-sky-700/40" />
 
       {/* 다른 섹션과 패딩/높이 통일 */}
       <div className="w-full max-w-screen-xl mx-auto px-6 pt-8 pb-12 md:pt-10 md:pb-14 lg:pt-12 lg:pb-16">
