@@ -626,7 +626,7 @@ export function ReplyCard({
         ${containerClasses} 
         group relative cursor-pointer outline-none transition-all duration-300 w-full
         ${depth > 0 ? 'bg-secondary/[0.02] dark:bg-primary/[0.01]' : 'bg-white dark:bg-background'}
-        hover:bg-primary/[0.06] dark:hover:bg-primary/[0.08]
+        hover:bg-[#e0f5f1] dark:hover:bg-primary/[0.08]
       `}
       style={{
         paddingLeft: 16 + depth * 40, // Base 16px + Depth Offset

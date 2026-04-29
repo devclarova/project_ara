@@ -305,7 +305,7 @@ export default function ProfileTweets({
 
   return (
     <div className="">
-      <div className="flex flex-col gap-4 pb-10">
+      <div className="flex flex-col pb-10">
         {tweets.map((item: any) =>
           item.type === 'reply' ? (
             <ReplyCard
