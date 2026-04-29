@@ -8,7 +8,6 @@ import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
 
 
-import CTASection from '@/components/landing/CTASection';
 import FooterSection from '@/components/landing/FooterSection';
 import HeroSection from '@/components/landing/HeroSection';
 import HowItWorksSection from '@/components/landing/HowItWorksSection';
@@ -32,7 +31,6 @@ type SectionId =
   | 'features'
   | 'contents'
   | 'testimonials'
-  | 'cta'
   | 'footer';
 
 const sectionOrder: SectionId[] = [
@@ -42,7 +40,6 @@ const sectionOrder: SectionId[] = [
   'features',
   'contents',
   'testimonials',
-  'cta',
   'footer',
 ];
 
@@ -250,7 +247,6 @@ const LandingPage = ({ onSignup }: HomeProps) => {
           { id: 'features' as SectionId, label: t('landing.nav_features', 'Features') },
           { id: 'contents' as SectionId, label: t('landing.nav_contents', 'Contents') },
           { id: 'testimonials' as SectionId, label: t('landing.nav_stories', 'Stories') },
-          { id: 'cta' as SectionId, label: t('landing.nav_start', 'Start') },
           { id: 'footer' as SectionId, label: t('landing.nav_contact', 'Contact') },
         ].map(({ id, label }) => {
           const isActive = activeSection === id;
@@ -282,7 +278,6 @@ const LandingPage = ({ onSignup }: HomeProps) => {
       <SolutionSection />
       <PopularContentSection />
       <TestimonialsSection />
-      <CTASection onSignup={onSignup} />
       <FooterSection />
     </main>
   );
