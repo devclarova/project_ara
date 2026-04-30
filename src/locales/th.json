@@ -1423,10 +1423,10 @@
       "cookies": "คุกกี้"
     },
     "office": {
-      "address_name": "สำนักงานใหญ่โซล",
-      "address": "123 Teheran-ro, Gangnam-gu, Seoul",
-      "tel": "โทร: +82 2-1234-5678",
-      "registration": "เลขทะเบียนธุรกิจ: 123-45-67890",
+      "address_name": "สำนักงานใหญ่แดกู",
+      "address": "แดกู",
+      "tel": "010-0000-0000",
+      "registration": "000-00-00000",
       "email": "koreara25@gmail.com"
     }
   },

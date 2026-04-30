@@ -520,6 +520,11 @@ export default function TweetDetailCard({
       return;
     }
 
+    // 번역 캐시 무효화 (게시글 내용이 바뀌었으므로 기존 번역 삭제)
+    await (supabase.from('translations') as any)
+      .delete()
+      .like('content_id', `tweet_${tweet.id}%`);
+
     skipNextPropSync.current = true;
     setCurrentContent(finalHtml);
     setCurrentUpdatedAt(nowIso);

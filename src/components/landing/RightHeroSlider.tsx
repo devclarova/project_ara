@@ -68,7 +68,7 @@ export default function RightHeroSlider() {
   const slides = getSlides(t);
 
   return (
-    <div className="w-full max-w-[360px] sm:max-w-[420px] max-h-[520px]">
+    <div className="w-full max-w-[360px] sm:max-w-[420px]">
       <div
         className="
       relative rounded-[26px]

@@ -91,7 +91,7 @@ export const useBatchAutoTranslation = (
 
         // Phase 2: DB 캐시 조회 (미번역 항목만)
         let cacheMap: Record<string, string> = {};
-        if (user && afterLocalCache.length > 0) {
+        if (afterLocalCache.length > 0) {
             const keysToQuery = afterLocalCache.map(i => uniqueKeys[i]);
             const { data: cachedData } = await (supabase.from('translations') as any)
               .select('content_id, translated_text')

@@ -46,9 +46,9 @@ export default function HeroSection({ onSignup }: HeroProps) {
       {/* 안쪽 레이아웃 */}
       <div className="w-full max-w-screen-xl mx-auto px-6 pt-8 pb-12 md:pt-10 md:pb-14 lg:pt-12 lg:pb-16 flex flex-col lg:flex-row items-center gap-10 lg:gap-12">
         {/* 왼쪽 텍스트 */}
-        <div className="w-full lg:w-1/2 space-y-6 text-center lg:text-left">
+        <div className="w-full lg:w-1/2 space-y-6 text-center lg:text-start">
           <motion.div
-            className="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/70 dark:bg-secondary/80 px-3 py-1 text-[11px] font-medium text-primary shadow-sm backdrop-blur mx-auto lg:mx-0"
+            className="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/70 dark:bg-secondary/80 px-3 py-1 text-[11px] font-medium text-primary shadow-sm backdrop-blur mx-auto lg:ms-0"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -59,7 +59,7 @@ export default function HeroSection({ onSignup }: HeroProps) {
             {t('landing.badge')}
           </motion.div>
 
-          <h1 className="max-w-xl mx-auto lg:mx-0 text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-slate-900 dark:text-gray-100 break-keep">
+          <h1 className="max-w-xl mx-auto lg:ms-0 text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-slate-900 dark:text-gray-100 break-words md:break-keep">
             <span className="bg-gradient-to-r from-primary to-sky-500 bg-clip-text text-transparent">
               {t('landing.title_1')}
             </span>
@@ -69,7 +69,7 @@ export default function HeroSection({ onSignup }: HeroProps) {
             </span>
           </h1>
 
-          <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base md:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0 break-keep">
+          <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base md:text-lg leading-relaxed max-w-xl mx-auto lg:ms-0 break-words md:break-keep">
             {t('landing.description')}
             <br />
             {t('landing.description2')}

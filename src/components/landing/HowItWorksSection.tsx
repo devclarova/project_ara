@@ -57,7 +57,7 @@ export default function HowItWorksSection() {
           <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
             {t('landing.how_it_works_badge')}
           </p>
-          <h2 className="mt-2 text-2xl md:text-3xl font-bold text-slate-900 dark:text-gray-100 break-keep">
+          <h2 className="mt-2 text-2xl md:text-3xl font-bold text-slate-900 dark:text-gray-100 break-words md:break-keep">
             {t('landing.how_it_works_title')}
           </h2>
         </div>

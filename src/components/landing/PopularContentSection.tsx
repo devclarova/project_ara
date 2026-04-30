@@ -148,10 +148,10 @@ export default function PopularContentSection() {
       <div className="w-full max-w-screen-xl mx-auto px-6 pt-8 pb-12 md:pt-10 md:pb-14 lg:pt-12 lg:pb-16">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8 md:mb-10">
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-gray-100 mb-2 break-keep">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-gray-100 mb-2 break-words md:break-keep">
               {CONTENT_INTRO.title}
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base break-keep">
+            <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base break-words md:break-keep">
               {CONTENT_INTRO.description}
             </p>
           </div>

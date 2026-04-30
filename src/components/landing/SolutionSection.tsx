@@ -46,11 +46,11 @@ export default function SolutionSection() {
       {/* 다른 섹션과 패딩/높이 통일 */}
       <div className="w-full max-w-screen-xl mx-auto px-6 pt-8 pb-12 md:pt-10 md:pb-14 lg:pt-12 lg:pb-16 grid gap-10 md:gap-16 md:grid-cols-[0.75fr,1.25fr] items-start">
         <div className="space-y-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-gray-100 break-keep">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-gray-100 break-words md:break-keep">
             {WHY_ARA.title}
           </h2>
 
-          <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base leading-relaxed break-keep">
+          <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base leading-relaxed break-words md:break-keep">
             {WHY_ARA.description[0]}
             <br />
             <span className="font-semibold">{WHY_ARA.description[1]}</span>
@@ -60,12 +60,12 @@ export default function SolutionSection() {
         </div>
 
         <div className="relative">
-          <div className="absolute left-3 top-0 bottom-0 w-[2px] bg-gradient-to-b from-primary/40 via-sky-200 to-transparent dark:from-primary/70 dark:via-slate-700/70" />
+          <div className="absolute start-3 top-0 bottom-0 w-[2px] bg-gradient-to-b from-primary/40 via-sky-200 to-transparent dark:from-primary/70 dark:via-slate-700/70" />
           <div className="space-y-8">
             {items.map((item, index) => (
               <motion.div
                 key={`feature-${index}`}
-                className="relative pl-8"
+                className="relative ps-8"
                 initial={{ opacity: 0, x: 24 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ amount: 0.3, once: true }}
@@ -75,10 +75,10 @@ export default function SolutionSection() {
                   <div className="text-xs uppercase tracking-[0.12em] text-primary/70 mb-1">
                     feature 0{index + 1}
                   </div>
-                  <h3 className="text-base md:text-lg font-semibold text-slate-900 dark:text-gray-100 mb-1.5 break-keep">
+                  <h3 className="text-base md:text-lg font-semibold text-slate-900 dark:text-gray-100 mb-1.5 break-words md:break-keep">
                     {item.title}
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed break-keep">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed break-words md:break-keep">
                     {item.desc}
                   </p>
                 </div>

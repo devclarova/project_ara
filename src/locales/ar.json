@@ -2736,10 +2736,10 @@
       "cookies": "ملفات تعريف الارتباط"
     },
     "office": {
-      "address_name": "المقر الرئيسي في سيول",
-      "address": "123 Teheran-ro, Gangnam-gu, Seoul",
-      "tel": "Tel: +82 2-1234-5678",
-      "registration": "رقم تسجيل الأعمال: 123-45-67890",
+      "address_name": "مقر ديغو الرئيسي",
+      "address": "ديغو",
+      "tel": "010-0000-0000",
+      "registration": "000-00-00000",
       "email": "koreara25@gmail.com"
     }
   },

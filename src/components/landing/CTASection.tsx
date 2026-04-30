@@ -34,8 +34,8 @@ export default function CTASection({ onSignup }: CTAProps) {
       transition={{ duration: 0.5 }}
     >
       {/* 배경 포인트 */}
-      <div className="pointer-events-none absolute -left-10 -top-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl dark:bg-primary/25" />
-      <div className="pointer-events-none absolute -right-10 bottom-0 h-64 w-64 rounded-full bg-sky-200/40 blur-3xl dark:bg-sky-700/40" />
+      <div className="pointer-events-none absolute -start-10 -top-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl dark:bg-primary/25" />
+      <div className="pointer-events-none absolute -end-10 bottom-0 h-64 w-64 rounded-full bg-sky-200/40 blur-3xl dark:bg-sky-700/40" />
 
       {/* 🔧 다른 섹션과 패딩/높이 리듬 통일 */}
       <div className="w-full max-w-screen-xl mx-auto px-6 pt-8 pb-12 md:pt-10 md:pb-14 lg:pt-12 lg:pb-16 flex justify-center">
@@ -44,7 +44,7 @@ export default function CTASection({ onSignup }: CTAProps) {
             {t('landing.cta_badge_text')} <span className="font-semibold text-primary">+42</span>
           </div>
 
-          <h2 className="text-2xl md:text-3xl font-bold mb-3 text-slate-900 dark:text-gray-100 break-keep">
+          <h2 className="text-2xl md:text-3xl font-bold mb-3 text-slate-900 dark:text-gray-100 break-words md:break-keep">
             {t('landing.cta_title_1')}
             <br />
             <span className="bg-gradient-to-r from-primary to-sky-500 bg-clip-text text-transparent">
@@ -52,7 +52,7 @@ export default function CTASection({ onSignup }: CTAProps) {
             </span>
           </h2>
 
-          <p className="text-gray-600 dark:text-gray-300 mb-8 text-sm md:text-base max-w-xl mx-auto break-keep">
+          <p className="text-gray-600 dark:text-gray-300 mb-8 text-sm md:text-base max-w-xl mx-auto break-words md:break-keep">
             {t('landing.cta_description')}
           </p>
 

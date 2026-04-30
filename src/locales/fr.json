@@ -1886,10 +1886,10 @@
       "cookies": "Cookies"
     },
     "office": {
-      "address_name": "Siège social de Séoul",
-      "address": "123 Teheran-ro, Gangnam-gu, Séoul",
-      "tel": "Tel : +82 2-1234-5678",
-      "registration": "Numéro d'enregistrement de l'entreprise : 123-45-67890",
+      "address_name": "Siège de Daegu",
+      "address": "Daegu",
+      "tel": "010-0000-0000",
+      "registration": "000-00-00000",
       "email": "koreara25@gmail.com"
     }
   },

@@ -1819,10 +1819,10 @@
       "cookies": "Evästeet"
     },
     "office": {
-      "address_name": "Soulin pääkonttori",
-      "address": "123 Teheran-ro, Gangnam-gu, Soul",
-      "tel": "Puh: +82 2-1234-5678",
-      "registration": "Yritysrekisterinumero: 123-45-67890",
+      "address_name": "Daegun pääkonttori",
+      "address": "Daegu",
+      "tel": "010-0000-0000",
+      "registration": "000-00-00000",
       "email": "koreara25@gmail.com"
     }
   },

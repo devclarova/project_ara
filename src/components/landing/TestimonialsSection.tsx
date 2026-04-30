@@ -102,13 +102,13 @@ export default function TestimonialsSection() {
           {/* 왼쪽 영역 */}
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold mb-3 text-slate-900 dark:text-gray-100 break-keep">
+              <h2 className="text-2xl md:text-3xl font-bold mb-3 text-slate-900 dark:text-gray-100 break-words md:break-keep">
                 {LEARNER_INTRO.title.line1}
                 <br className="hidden sm:block" />
                 {LEARNER_INTRO.title.line2}
               </h2>
 
-              <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base leading-relaxed break-keep">
+              <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base leading-relaxed break-words md:break-keep">
                 {LEARNER_INTRO.description.intro}
                 <br />
                 <span className="font-semibold">{LEARNER_INTRO.description.highlight}</span>
@@ -132,11 +132,11 @@ export default function TestimonialsSection() {
                   key={`stat-${index}`}
                   className="rounded-2xl bg-gray-50 dark:bg-secondary px-3 py-2 sm:px-4 sm:py-3 shadow-sm border border-gray-100 dark:border-slate-700 h-full flex flex-col"
                 >
-                  <div className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1 break-keep">
+                  <div className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1 break-words md:break-keep">
                     {stat.label}
                   </div>
                   <div className="text-lg sm:text-xl font-bold text-primary mb-1">{stat.value}</div>
-                  <div className="hidden sm:block text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed break-keep flex-1">
+                  <div className="hidden sm:block text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed break-words md:break-keep flex-1">
                     {stat.desc}
                   </div>
                 </div>
@@ -145,7 +145,7 @@ export default function TestimonialsSection() {
           </div>
 
           {/* 오른쪽 영역 */}
-          <div className="w-full mt-10 md:mt-0 md:justify-self-end max-w-full overflow-hidden">
+          <div className="w-full mt-10 md:mt-0 md:justify-self-end max-w-full overflow-hidden text-start">
             <BaseCarousel autoplay loop slidesPerView={1} spaceBetween={20}>
               {reviews.map((r, index) => (
                 <SwiperSlide key={`review-${index}`} className="pb-10">
@@ -165,10 +165,10 @@ export default function TestimonialsSection() {
 
                     <div className="inline-flex items-center gap-2 rounded-full bg-primary/5 px-2.5 py-1 text-[10px] text-primary mb-3 max-w-max">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      <span className="break-keep">{r.persona}</span>
+                      <span className="break-words md:break-keep">{r.persona}</span>
                     </div>
 
-                    <p className="text-gray-700 dark:text-gray-200 text-sm leading-relaxed break-keep flex-1">
+                    <p className="text-gray-700 dark:text-gray-200 text-sm leading-relaxed break-words md:break-keep flex-1">
                       &quot;{r.text}&quot;
                     </p>
                   </div>
@@ -177,10 +177,10 @@ export default function TestimonialsSection() {
             </BaseCarousel>
 
             {/* 설명 문구 */}
-            <p className="mt-4 text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed break-keep sm:hidden">
+            <p className="mt-4 text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed break-words md:break-keep sm:hidden">
               {REVIEW_NOTICE.mobile}
             </p>
-            <p className="mt-4 text-xs text-gray-500 dark:text-gray-400 leading-relaxed break-keep hidden sm:block">
+            <p className="mt-4 text-xs text-gray-500 dark:text-gray-400 leading-relaxed break-words md:break-keep hidden sm:block">
               {REVIEW_NOTICE.desktop}
             </p>
           </div>

@@ -111,19 +111,17 @@ export default function TranslateButton({
       const targetLang = await getUserTargetLang();
 
       // (2) Translation Cache Strategy: Checks for pre-existing translation records to reduce redundant API overhead.
-      if (userId) {
-        const { data: existing } = await (supabase.from('translations') as any)
-          .select('translated_text')
-          .eq('content_id', contentId)
-          .eq('user_id', userId)
-          .eq('target_lang', targetLang)
-          .maybeSingle();
+      const { data: existing } = await (supabase.from('translations') as any)
+        .select('translated_text')
+        .eq('content_id', contentId)
+        .eq('target_lang', targetLang)
+        .limit(1)
+        .maybeSingle();
 
-        if (existing) {
-          setTranslated(existing.translated_text);
-          setIsLoading(false);
-          return;
-        }
+      if (existing) {
+        setTranslated(existing.translated_text);
+        setIsLoading(false);
+        return;
       }
 
       // (3) Input Sanitization: Filters out semantically invalid content using the serverless detection engine.

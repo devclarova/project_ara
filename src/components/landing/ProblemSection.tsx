@@ -30,10 +30,10 @@ export default function ProblemSection() {
       {/* 🔧 Hero / HowItWorks와 패딩 통일 */}
       <div className="w-full max-w-screen-xl mx-auto px-6 pt-8 pb-12 md:pt-10 md:pb-14 lg:pt-12 lg:pb-16">
         <div className="max-w-2xl mx-auto text-center mb-10">
-          <h2 className="text-2xl md:text-3xl font-bold mb-3 text-slate-900 dark:text-gray-100 break-keep">
+          <h2 className="text-2xl md:text-3xl font-bold mb-3 text-slate-900 dark:text-gray-100 break-words md:break-keep">
             {t('landing.problem_title')}
           </h2>
-          <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base break-keep">
+          <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base break-words md:break-keep">
             {t('landing.problem_desc')}
           </p>
         </div>
@@ -42,7 +42,7 @@ export default function ProblemSection() {
           {problems.map((text, idx) => (
             <div key={idx} className={`flex ${idx % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
               <motion.div
-                className="max-w-[80%] rounded-2xl bg-white dark:bg-secondary px-4 py-3 text-sm text-left shadow-sm border border-sky-100 dark:border-slate-700"
+                className="max-w-[80%] rounded-2xl bg-white dark:bg-secondary px-4 py-3 text-sm text-start shadow-sm border border-sky-100 dark:border-slate-700"
                 initial={{ opacity: 0, y: 16, scale: 0.98 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ amount: 0.4, once: true }}
@@ -56,7 +56,7 @@ export default function ProblemSection() {
                     {t('landing.problem_badge')}
                   </span>
                 </div>
-                <p className="text-gray-800 dark:text-gray-100 break-keep">{text}</p>
+                <p className="text-gray-800 dark:text-gray-100 break-words md:break-keep">{text}</p>
               </motion.div>
             </div>
           ))}
