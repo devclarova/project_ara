@@ -17,7 +17,8 @@ export default function ProblemSection() {
       className="
         relative overflow-x-hidden 
         min-h-[calc(100vh-100px)]
-        flex items-center
+        flex items-center justify-center
+        py-16 lg:py-0
       "
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}

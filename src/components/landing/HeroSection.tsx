@@ -34,8 +34,8 @@ export default function HeroSection({ onSignup }: HeroProps) {
       className="
     relative overflow-hidden 
     min-h-[calc(100vh-80px)]
-    flex items-center
-    pt-0
+    flex items-center justify-center
+    py-16 lg:py-0
   "
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}

@@ -43,7 +43,7 @@ export default function HowItWorksSection() {
     <motion.section
       id="how-it-works"
       ref={sectionRef}
-      className="relative overflow-hidden min-h-[calc(100vh-100px)] flex items-center"
+      className="relative overflow-hidden min-h-[calc(100vh-100px)] flex items-center justify-center py-16 lg:py-0"
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ amount: 0.3, once: true }}

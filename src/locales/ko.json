@@ -552,7 +552,10 @@
     "translated": "번역됨",
     "auto_translated": "AI로 자동 번역됨",
     "add": "추가",
-    "unblock_modal_title": "정말 차단을 해제하시겠습니까?"
+    "unblock_modal_title": "정말 차단을 해제하시겠습니까?",
+    "upload_image_only": "이미지 파일만 업로드할 수 있습니다.",
+    "upload_video_size_limit": "동영상 용량은 10MB를 초과할 수 없습니다.",
+    "upload_file_size_limit": "파일 용량은 5MB를 초과할 수 없습니다."
   },
   "voca": {
     "pos": {
@@ -1415,7 +1418,6 @@
       "placeholder": "이메일 주소 입력"
     },
     "bottom": {
-      "rights": "© {{year}} Ara Inc. All rights reserved.",
       "terms": "이용약관",
       "privacy": "개인정보처리방침",
       "cookies": "쿠키"
