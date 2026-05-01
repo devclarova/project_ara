@@ -555,7 +555,9 @@
     "unblock_modal_title": "정말 차단을 해제하시겠습니까?",
     "upload_image_only": "이미지 파일만 업로드할 수 있습니다.",
     "upload_video_size_limit": "동영상 용량은 10MB를 초과할 수 없습니다.",
-    "upload_file_size_limit": "파일 용량은 5MB를 초과할 수 없습니다."
+    "upload_file_size_limit": "파일 용량은 5MB를 초과할 수 없습니다.",
+    "coming_soon": "곧 만나요!",
+    "coming_soon_desc": "지금 열심히 준비하고 있습니다. 더 멋진 기능으로 찾아뵐게요! 🚀"
   },
   "voca": {
     "pos": {

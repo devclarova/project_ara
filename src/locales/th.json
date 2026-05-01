@@ -555,7 +555,9 @@
     "unblock_modal_title": "Do you want to unblock this user?",
     "upload_image_only": "สามารถอัปโหลดได้เฉพาะไฟล์รูปภาพเท่านั้น",
     "upload_video_size_limit": "ขนาดวิดีโอต้องไม่เกิน 10MB",
-    "upload_file_size_limit": "ขนาดไฟล์ต้องไม่เกิน 5MB"
+    "upload_file_size_limit": "ขนาดไฟล์ต้องไม่เกิน 5MB",
+    "coming_soon": "Coming Soon!",
+    "coming_soon_desc": "We are preparing hard now. We will find you with better features! 🚀"
   },
   "voca": {
     "pos": {

@@ -910,7 +910,9 @@
     "unblock_modal_title": "Do you want to unblock this user?",
     "upload_image_only": "Seuls les fichiers images peuvent être téléchargés.",
     "upload_video_size_limit": "La taille de la vidéo ne peut pas dépasser 10 Mo.",
-    "upload_file_size_limit": "La taille du fichier ne peut pas dépasser 5 Mo."
+    "upload_file_size_limit": "La taille du fichier ne peut pas dépasser 5 Mo.",
+    "coming_soon": "Coming Soon!",
+    "coming_soon_desc": "We are preparing hard now. We will find you with better features! 🚀"
   },
   "voca": {
     "pos": {

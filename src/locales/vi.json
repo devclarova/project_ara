@@ -555,7 +555,9 @@
     "unblock_modal_title": "Do you want to unblock this user?",
     "upload_image_only": "Chỉ có thể tải lên các tệp hình ảnh.",
     "upload_video_size_limit": "Dung lượng video không được vượt quá 10MB.",
-    "upload_file_size_limit": "Dung lượng tệp không được vượt quá 5MB."
+    "upload_file_size_limit": "Dung lượng tệp không được vượt quá 5MB.",
+    "coming_soon": "Coming Soon!",
+    "coming_soon_desc": "We are preparing hard now. We will find you with better features! 🚀"
   },
   "voca": {
     "pos": {

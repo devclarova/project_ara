@@ -1106,7 +1106,9 @@
     "unblock_modal_title": "هل أنت متأكد أنك تريد إلغاء الحظر؟",
     "upload_image_only": "يمكن تحميل ملفات الصور فقط.",
     "upload_video_size_limit": "لا يمكن أن يتجاوز حجم الفيديو 10 ميجابايت.",
-    "upload_file_size_limit": "لا يمكن أن يتجاوز حجم الملف 5 ميجابايت."
+    "upload_file_size_limit": "لا يمكن أن يتجاوز حجم الملف 5 ميجابايت.",
+    "coming_soon": "Coming Soon!",
+    "coming_soon_desc": "We are preparing hard now. We will find you with better features! 🚀"
   },
   "voca": {
     "pos": {

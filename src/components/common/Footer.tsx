@@ -156,7 +156,6 @@ export default function Footer() {
               <h3 className="font-bold text-sm text-foreground">{t('footer.columns.product.title')}</h3>
               <div className="flex flex-col gap-2">
                 <FooterLink onClick={(e) => handleLinkClick(e, 'unimpl')}>{t('footer.columns.product.features')}</FooterLink>
-                <FooterLink onClick={(e) => handleLinkClick(e, 'unimpl')}>{t('footer.columns.product.enterprise')}</FooterLink>
                 <FooterLink onClick={(e) => handleLinkClick(e, 'unimpl')}>{t('footer.columns.product.security')}</FooterLink>
                 <FooterLink onClick={(e) => handleLinkClick(e, 'unimpl')}>{t('footer.columns.product.pricing')}</FooterLink>
               </div>
@@ -164,7 +163,6 @@ export default function Footer() {
             <div className="flex flex-col gap-3">
               <h3 className="font-bold text-sm text-foreground">{t('footer.columns.resources.title')}</h3>
               <div className="flex flex-col gap-2">
-                <FooterLink onClick={(e) => handleLinkClick(e, 'unimpl')}>{t('footer.columns.resources.documentation')}</FooterLink>
                 <FooterLink onClick={(e) => handleLinkClick(e, 'unimpl')}>{t('footer.columns.resources.api')}</FooterLink>
                 <FooterLink onClick={(e) => handleLinkClick(e, 'impl', '/sns')}>{t('footer.columns.resources.community')}</FooterLink>
                 <FooterLink onClick={(e) => handleLinkClick(e, 'policy', 'support')}>{t('footer.columns.resources.help_center')}</FooterLink>
@@ -174,8 +172,6 @@ export default function Footer() {
               <h3 className="font-bold text-sm text-foreground">{t('footer.columns.company.title')}</h3>
               <div className="flex flex-col gap-2">
                 <FooterLink onClick={(e) => handleLinkClick(e, 'unimpl')}>{t('footer.columns.company.about')}</FooterLink>
-                <FooterLink onClick={(e) => handleLinkClick(e, 'unimpl')}>{t('footer.columns.company.careers')}</FooterLink>
-                <FooterLink onClick={(e) => handleLinkClick(e, 'unimpl')}>{t('footer.columns.company.blog')}</FooterLink>
                 <FooterLink onClick={(e) => handleLinkClick(e, 'unimpl')}>{t('footer.columns.company.contact')}</FooterLink>
               </div>
             </div>
@@ -334,7 +330,11 @@ export default function Footer() {
       <Modal
         isOpen={!!policyModalOpen}
         onClose={() => setPolicyModalOpen(null)}
-        title={policyModalOpen === 'terms' ? t('footer.bottom.terms') : t('footer.bottom.privacy')}
+        title={
+          policyModalOpen === 'terms' ? t('footer.bottom.terms') : 
+          policyModalOpen === 'privacy' ? t('footer.bottom.privacy') : 
+          t('footer.columns.resources.help_center')
+        }
         className={
           policyModalOpen === 'support' 
             ? "max-w-3xl h-[600px] w-full mx-4 flex flex-col" // Help Center: 적당한 크기

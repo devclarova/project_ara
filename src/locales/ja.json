@@ -555,7 +555,9 @@
     "unblock_modal_title": "本当にブロックを解除しますか？",
     "upload_image_only": "画像ファイルのみアップロード可能です。",
     "upload_video_size_limit": "動画の容量は10MBを超えることはできません。",
-    "upload_file_size_limit": "ファイルの容量は5MBを超えることはできません。"
+    "upload_file_size_limit": "ファイルの容量は5MBを超えることはできません。",
+    "coming_soon": "Coming Soon!",
+    "coming_soon_desc": "We are preparing hard now. We will find you with better features! 🚀"
   },
   "voca": {
     "pos": {

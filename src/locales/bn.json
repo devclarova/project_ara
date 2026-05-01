@@ -966,7 +966,9 @@
     "unblock_modal_title": "Do you want to unblock this user?",
     "upload_image_only": "শুধুমাত্র ছবি ফাইল আপলোড করা যাবে।",
     "upload_video_size_limit": "ভিডিওর আকার ১০ মেগাবাইটের বেশি হতে পারবে না।",
-    "upload_file_size_limit": "ফাইলের আকার ৫ মেগাবাইটের বেশি হতে পারবে না।"
+    "upload_file_size_limit": "ফাইলের আকার ৫ মেগাবাইটের বেশি হতে পারবে না।",
+    "coming_soon": "Coming Soon!",
+    "coming_soon_desc": "We are preparing hard now. We will find you with better features! 🚀"
   },
   "voca": {
     "pos": {

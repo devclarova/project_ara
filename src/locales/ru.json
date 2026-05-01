@@ -816,7 +816,9 @@
     "unblock_modal_title": "Do you want to unblock this user?",
     "upload_image_only": "Можно загружать только файлы изображений.",
     "upload_video_size_limit": "Размер видео не может превышать 10 МБ.",
-    "upload_file_size_limit": "Размер файла не может превышать 5 МБ."
+    "upload_file_size_limit": "Размер файла не может превышать 5 МБ.",
+    "coming_soon": "Coming Soon!",
+    "coming_soon_desc": "We are preparing hard now. We will find you with better features! 🚀"
   },
   "voca": {
     "pos": {

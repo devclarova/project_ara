@@ -841,7 +841,9 @@
     "unblock_modal_title": "Do you want to unblock this user?",
     "upload_image_only": "Vain kuvatiedostoja voidaan ladata.",
     "upload_video_size_limit": "Videon koko ei saa ylittää 10 Mt.",
-    "upload_file_size_limit": "Tiedoston koko ei saa ylittää 5 Mt."
+    "upload_file_size_limit": "Tiedoston koko ei saa ylittää 5 Mt.",
+    "coming_soon": "Coming Soon!",
+    "coming_soon_desc": "We are preparing hard now. We will find you with better features! 🚀"
   },
   "voca": {
     "pos": {

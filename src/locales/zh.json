@@ -555,7 +555,9 @@
     "unblock_modal_title": "确定要取消屏蔽吗？",
     "upload_image_only": "只能上传图片文件。",
     "upload_video_size_limit": "视频大小不能超过 10MB。",
-    "upload_file_size_limit": "文件大小不能超过 5MB。"
+    "upload_file_size_limit": "文件大小不能超过 5MB。",
+    "coming_soon": "Coming Soon!",
+    "coming_soon_desc": "We are preparing hard now. We will find you with better features! 🚀"
   },
   "voca": {
     "pos": {
