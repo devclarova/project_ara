@@ -265,7 +265,7 @@ export default function StudyVocaPage() {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(9);
-  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 400 : false);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 570 : false);
 
   useEffect(() => {
     document.title = `${t('study.voca.title')} | ARA`;
@@ -352,7 +352,7 @@ export default function StudyVocaPage() {
   useEffect(() => {
     const updatePageSize = () => {
       const width = window.innerWidth;
-      setIsMobile(width < 400);
+      setIsMobile(width < 570);
 
       if (width < 640) {
         setPageSize(4);

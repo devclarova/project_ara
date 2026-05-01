@@ -4,6 +4,7 @@ import ConfirmModal from '../common/ConfirmModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Volume2 } from 'lucide-react';
+import { useTTS } from '@/hooks/useTTS';
 
 type OxQuestion = {
   term: string;
@@ -34,6 +35,7 @@ export default function OxQuizModal({
   const [confirmClose, setConfirmClose] = useState(false);
   const [sessionStats, setSessionStats] = useState<Record<string, { id: string; correct: number; wrong: number; status: string; cCount: number; wCount: number }>>({});
   const { user } = useAuth();
+  const { speakWord } = useTTS();
 
   const [wrongHistory, setWrongHistory] = useState<
     { term: string; shown: string; correct: string; answer: 'O' | 'X' }[]
@@ -104,14 +106,6 @@ export default function OxQuizModal({
 
   const progress = useMemo(() => (timeLeft / DURATION) * 100, [timeLeft]);
 
-  const speakWord = (text: string) => {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'ko-KR';
-    utter.rate = 0.9;
-    window.speechSynthesis.speak(utter);
-  };
 
   const answer = (pick: 'O' | 'X') => {
     if (!q || feedback || finished) return;

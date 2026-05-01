@@ -3,7 +3,8 @@ import type { VocabItem } from './QuizMenuModal';
 import ConfirmModal from '../common/ConfirmModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { Volume2 } from 'lucide-react';
+import { Volume2, Trophy, ArrowRight, RotateCcw, X } from 'lucide-react';
+import { useTTS } from '@/hooks/useTTS';
 
 export default function McqQuizModal({
   isOpen,
@@ -15,6 +16,7 @@ export default function McqQuizModal({
   pool: VocabItem[];
 }) {
   const TOTAL = Math.min(10, pool.length || 1);
+  const { speakWord } = useTTS();
   const MAX_LIFE = 3;
 
   const [questions, setQuestions] = useState<VocabItem[]>([]);
@@ -186,14 +188,6 @@ export default function McqQuizModal({
 
   const progress = ((current + 1) / TOTAL) * 100;
   
-  const speakWord = (text: string) => {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'ko-KR';
-    utter.rate = 0.9;
-    window.speechSynthesis.speak(utter);
-  };
 
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">

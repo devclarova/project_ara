@@ -4,6 +4,7 @@ import ConfirmModal from '../common/ConfirmModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Volume2 } from 'lucide-react';
+import { useTTS } from '@/hooks/useTTS';
 
 function shuffle<T>(arr: T[]) {
   return [...arr].sort(() => Math.random() - 0.5);
@@ -50,19 +51,12 @@ export default function MatchingQuizModal({
   const [confirmClose, setConfirmClose] = useState(false);
   const [errorIds, setErrorIds] = useState<Set<string>>(new Set());
   const { user } = useAuth();
+  const { speakWord } = useTTS();
 
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const leftRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const rightRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
-  const speakWord = (text: string) => {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'ko-KR';
-    utter.rate = 0.9;
-    window.speechSynthesis.speak(utter);
-  };
 
   useEffect(() => {
     if (!isOpen) return;

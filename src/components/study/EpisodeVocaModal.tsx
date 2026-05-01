@@ -17,6 +17,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTTS } from '@/hooks/useTTS';
 
 export type EpisodeWord = {
   id: string;
@@ -89,7 +90,7 @@ export default function EpisodeVocaModal({
   const [index, setIndex] = useState(0);
   const [showOriginal, setShowOriginal] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [ttsSpeaking, setTtsSpeaking] = useState(false);
+  const { speakWord, isSpeaking: ttsSpeaking, stopSpeaking } = useTTS();
   const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
@@ -338,37 +339,24 @@ export default function EpisodeVocaModal({
 
   const handleSpeak = () => {
     if (!word) return;
-    const synth = window.speechSynthesis;
-    if (!synth) return;
-
     if (ttsSpeaking) {
-      synth.cancel();
-      setTtsSpeaking(false);
+      stopSpeaking();
       return;
     }
 
-    const utter = new SpeechSynthesisUtterance(word.ko);
-    
-    // 타겟 언어 설정에 따른 TTS 발음 코드 동적 할당 (영어만 나오는 문제 해결)
-    if (targetLang.startsWith('en')) utter.lang = 'en-US';
-    else if (targetLang.startsWith('ja')) utter.lang = 'ja-JP';
-    else if (targetLang.startsWith('zh')) utter.lang = 'zh-CN';
-    else if (targetLang.startsWith('vi')) utter.lang = 'vi-VN';
-    else utter.lang = 'ko-KR'; // ARA의 주 학습 대상인 한국어를 기본값으로 유지하되 타켓 매칭
+    let langCode = 'ko-KR';
+    if (targetLang.startsWith('en')) langCode = 'en-US';
+    else if (targetLang.startsWith('ja')) langCode = 'ja-JP';
+    else if (targetLang.startsWith('zh')) langCode = 'zh-CN';
+    else if (targetLang.startsWith('vi')) langCode = 'vi-VN';
 
-    utter.onstart = () => setTtsSpeaking(true);
-    utter.onend = () => setTtsSpeaking(false);
-    utter.onerror = () => setTtsSpeaking(false);
-
-    synth.cancel();
-    synth.speak(utter);
+    speakWord(word.ko, langCode);
   };
 
   useEffect(() => {
     if (isOpen) return;
-    window.speechSynthesis?.cancel?.();
-    setTtsSpeaking(false);
-  }, [isOpen]);
+    stopSpeaking();
+  }, [isOpen, stopSpeaking]);
 
   const episodeHref = useMemo(() => {
     if (!word) return null;
