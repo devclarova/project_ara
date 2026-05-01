@@ -85,7 +85,7 @@ export default function TestimonialsSection() {
       id="testimonials"
       className="
         relative overflow-x-hidden 
-        min-h-[calc(100vh-100px)]
+        min-h-fit lg:min-h-[calc(100vh-100px)]
         flex items-center justify-center
         py-16 lg:py-0
       "
@@ -103,40 +103,36 @@ export default function TestimonialsSection() {
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl md:text-3xl font-bold mb-3 text-slate-900 dark:text-gray-100 break-words md:break-keep">
-                {LEARNER_INTRO.title.line1}
-                <br className="hidden sm:block" />
-                {LEARNER_INTRO.title.line2}
+                {LEARNER_INTRO.title.line1} {LEARNER_INTRO.title.line2}
               </h2>
 
               <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base leading-relaxed break-words md:break-keep">
-                {LEARNER_INTRO.description.intro}
-                <br />
-                <span className="font-semibold">{LEARNER_INTRO.description.highlight}</span>
+                {LEARNER_INTRO.description.intro}{' '}
+                <span className="font-semibold">{LEARNER_INTRO.description.highlight}</span>{' '}
                 {LEARNER_INTRO.description.body}
-                <br />
-                <span className="hidden sm:inline">
-                  {LEARNER_INTRO.description.detail[0]}
-                  <br />
-                  {LEARNER_INTRO.description.detail[1]}
-                  <br />
-                  {LEARNER_INTRO.description.detail[2]}
-                  <br />
-                  {LEARNER_INTRO.description.detail[3]}
-                </span>
               </p>
+              
+              <ul className="mt-4 space-y-1 text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
+                {LEARNER_INTRO.description.detail.map((item, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="mt-1.5 w-1 h-1 rounded-full bg-primary/40 shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {stats.map((stat, index) => (
                 <div
                   key={`stat-${index}`}
-                  className="rounded-2xl bg-gray-50 dark:bg-secondary px-3 py-2 sm:px-4 sm:py-3 shadow-sm border border-gray-100 dark:border-slate-700 h-full flex flex-col"
+                  className="rounded-2xl bg-gray-50 dark:bg-secondary px-3 py-3 sm:px-4 sm:py-3 shadow-sm border border-gray-100 dark:border-slate-700 h-full flex flex-col"
                 >
                   <div className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1 break-words md:break-keep">
                     {stat.label}
                   </div>
                   <div className="text-lg sm:text-xl font-bold text-primary mb-1">{stat.value}</div>
-                  <div className="hidden sm:block text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed break-words md:break-keep flex-1">
+                  <div className="text-[10px] sm:text-[11px] text-gray-400 dark:text-gray-400 leading-snug break-words md:break-keep flex-1">
                     {stat.desc}
                   </div>
                 </div>

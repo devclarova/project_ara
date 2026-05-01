@@ -32,7 +32,7 @@ export default function SolutionSection() {
       id="features"
       className="
         relative overflow-x-hidden 
-        min-h-[calc(100vh-100px)]
+        min-h-fit lg:min-h-[calc(100vh-100px)]
         flex items-center justify-center
         py-16 lg:py-0
       "
@@ -51,10 +51,8 @@ export default function SolutionSection() {
           </h2>
 
           <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base leading-relaxed break-words md:break-keep">
-            {WHY_ARA.description[0]}
-            <br />
-            <span className="font-semibold">{WHY_ARA.description[1]}</span>
-            <br />
+            {WHY_ARA.description[0]}{' '}
+            <span className="font-semibold">{WHY_ARA.description[1]}</span>{' '}
             {WHY_ARA.description[2]}
           </p>
         </div>

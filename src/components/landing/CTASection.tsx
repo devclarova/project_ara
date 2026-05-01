@@ -21,12 +21,13 @@ export default function CTASection({ onSignup }: CTAProps) {
   return (
     <motion.section
       id="cta"
-      className="
+        className="
         relative overflow-x-hidden 
         bg-gradient-to-b from-primary/5 via-white to-sky-50 
         dark:from-background dark:via-background dark:to-background
-        min-h-[calc(100vh-100px)]
+        min-h-fit md:min-h-[calc(100vh-100px)]
         flex items-center
+        py-12 md:py-0
       "
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -45,8 +46,7 @@ export default function CTASection({ onSignup }: CTAProps) {
           </div>
 
           <h2 className="text-2xl md:text-3xl font-bold mb-3 text-slate-900 dark:text-gray-100 break-words md:break-keep">
-            {t('landing.cta_title_1')}
-            <br />
+            {t('landing.cta_title_1')}{' '}
             <span className="bg-gradient-to-r from-primary to-sky-500 bg-clip-text text-transparent">
               {t('landing.cta_title_2')}
             </span>

@@ -126,7 +126,9 @@ const LandingPage = ({ onSignup }: HomeProps) => {
   // 휠 이벤트 커스텀 가로채기(Hijacking) — 브라우저 기본 스크롤 억제 및 섹션 단위 물리 스냅 구현
   useEffect(() => {
     const handleResize = () => {
-      // 리사이즈 후 조건 재검증을 위한 placeholder — 필요 시 뷰포트 상태 업데이트 로직 추가 지점
+      // 리사이즈 시 누적된 휠 델타 및 스크롤 상태를 초기화하여 방향 반전 버그 방지
+      wheelDeltaYRef.current = 0;
+      isScrollingRef.current = false;
     };
     window.addEventListener('resize', handleResize);
 
