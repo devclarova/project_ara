@@ -499,7 +499,7 @@ export default function EpisodeVocaModal({
                              active:scale-[0.99] transition flex items-center justify-center gap-0 sm:gap-2"
                 >
                   <RefreshCw size={22} />
-                  <span className="hidden sm:inline text-[14px]">
+                  <span className="hidden sm:inline text-[14px] truncate">
                     {showOriginal ? t('study.voca.view_translation', '번역 보기') : t('study.voca.view_original', '원문 보기')}
                   </span>
                 </button>
@@ -515,7 +515,7 @@ export default function EpisodeVocaModal({
                              disabled:opacity-50 dark:bg-white/10 dark:hover:bg-white/15 dark:text-gray-100"
                 >
                   {ttsSpeaking ? <VolumeX size={22} /> : <Volume2 size={22} />}
-                  <span className="hidden sm:inline text-[14px]">
+                  <span className="hidden sm:inline text-[14px] truncate">
                     {ttsSpeaking ? t('study.voca.stop_tts_short', '중지') : t('study.voca.play_tts_short', '발음')}
                   </span>
                 </button>
@@ -539,7 +539,7 @@ export default function EpisodeVocaModal({
                              disabled:opacity-50 dark:bg-white/10 dark:hover:bg-white/15 dark:text-gray-100"
                   >
                     <BookOpen size={22} />
-                    <span className="hidden sm:inline text-[14px]">
+                    <span className="hidden sm:inline text-[14px] truncate">
                       {isVocaPage ? (episodeCtaLabel ?? t('study.voca.go_episode_short', '에피소드')) : t('study.voca.go_voca_short', '단어장')}
                     </span>
                   </button>
