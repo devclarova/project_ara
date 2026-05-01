@@ -85,9 +85,9 @@ export default function TestimonialsSection() {
       id="testimonials"
       className="
         relative overflow-x-hidden 
-        bg-white dark:bg-background 
-        min-h-[calc(100vh-100px)]
-        flex items-center
+        min-h-fit lg:min-h-[calc(100vh-100px)]
+        flex items-center justify-center
+        py-16 lg:py-0
       "
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -95,8 +95,6 @@ export default function TestimonialsSection() {
       transition={{ duration: 0.5 }}
     >
       {/* 배경 포인트 */}
-      <div className="pointer-events-none absolute -left-10 -top-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl dark:bg-primary/25" />
-      <div className="pointer-events-none absolute -right-10 bottom-0 h-64 w-64 rounded-full bg-sky-200/40 blur-3xl dark:bg-sky-700/40" />
 
       {/* 다른 섹션과 패딩/높이 통일 */}
       <div className="w-full max-w-screen-xl mx-auto px-6 pt-8 pb-12 md:pt-10 md:pb-14 lg:pt-12 lg:pb-16">
@@ -104,41 +102,37 @@ export default function TestimonialsSection() {
           {/* 왼쪽 영역 */}
           <div className="space-y-6">
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold mb-3 text-slate-900 dark:text-gray-100 break-keep">
-                {LEARNER_INTRO.title.line1}
-                <br className="hidden sm:block" />
-                {LEARNER_INTRO.title.line2}
+              <h2 className="text-2xl md:text-3xl font-bold mb-3 text-slate-900 dark:text-gray-100 break-words md:break-keep">
+                {LEARNER_INTRO.title.line1} {LEARNER_INTRO.title.line2}
               </h2>
 
-              <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base leading-relaxed break-keep">
-                {LEARNER_INTRO.description.intro}
-                <br />
-                <span className="font-semibold">{LEARNER_INTRO.description.highlight}</span>
+              <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base leading-relaxed break-words md:break-keep">
+                {LEARNER_INTRO.description.intro}{' '}
+                <span className="font-semibold">{LEARNER_INTRO.description.highlight}</span>{' '}
                 {LEARNER_INTRO.description.body}
-                <br />
-                <span className="hidden sm:inline">
-                  {LEARNER_INTRO.description.detail[0]}
-                  <br />
-                  {LEARNER_INTRO.description.detail[1]}
-                  <br />
-                  {LEARNER_INTRO.description.detail[2]}
-                  <br />
-                  {LEARNER_INTRO.description.detail[3]}
-                </span>
               </p>
+              
+              <ul className="mt-4 space-y-1 text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
+                {LEARNER_INTRO.description.detail.map((item, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="mt-1.5 w-1 h-1 rounded-full bg-primary/40 shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {stats.map((stat, index) => (
                 <div
                   key={`stat-${index}`}
-                  className="rounded-2xl bg-gray-50 dark:bg-secondary px-3 py-2 sm:px-4 sm:py-3 shadow-sm border border-gray-100 dark:border-slate-700 h-full flex flex-col"
+                  className="rounded-2xl bg-gray-50 dark:bg-secondary px-3 py-3 sm:px-4 sm:py-3 shadow-sm border border-gray-100 dark:border-slate-700 h-full flex flex-col"
                 >
-                  <div className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1 break-keep">
+                  <div className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mb-1 break-words md:break-keep">
                     {stat.label}
                   </div>
                   <div className="text-lg sm:text-xl font-bold text-primary mb-1">{stat.value}</div>
-                  <div className="hidden sm:block text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed break-keep flex-1">
+                  <div className="text-[10px] sm:text-[11px] text-gray-400 dark:text-gray-400 leading-snug break-words md:break-keep flex-1">
                     {stat.desc}
                   </div>
                 </div>
@@ -147,7 +141,7 @@ export default function TestimonialsSection() {
           </div>
 
           {/* 오른쪽 영역 */}
-          <div className="w-full mt-10 md:mt-0 md:justify-self-end max-w-full overflow-hidden">
+          <div className="w-full mt-10 md:mt-0 md:justify-self-end max-w-full overflow-hidden text-start">
             <BaseCarousel autoplay loop slidesPerView={1} spaceBetween={20}>
               {reviews.map((r, index) => (
                 <SwiperSlide key={`review-${index}`} className="pb-10">
@@ -167,10 +161,10 @@ export default function TestimonialsSection() {
 
                     <div className="inline-flex items-center gap-2 rounded-full bg-primary/5 px-2.5 py-1 text-[10px] text-primary mb-3 max-w-max">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      <span className="break-keep">{r.persona}</span>
+                      <span className="break-words md:break-keep">{r.persona}</span>
                     </div>
 
-                    <p className="text-gray-700 dark:text-gray-200 text-sm leading-relaxed break-keep flex-1">
+                    <p className="text-gray-700 dark:text-gray-200 text-sm leading-relaxed break-words md:break-keep flex-1">
                       &quot;{r.text}&quot;
                     </p>
                   </div>
@@ -179,10 +173,10 @@ export default function TestimonialsSection() {
             </BaseCarousel>
 
             {/* 설명 문구 */}
-            <p className="mt-4 text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed break-keep sm:hidden">
+            <p className="mt-4 text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed break-words md:break-keep sm:hidden">
               {REVIEW_NOTICE.mobile}
             </p>
-            <p className="mt-4 text-xs text-gray-500 dark:text-gray-400 leading-relaxed break-keep hidden sm:block">
+            <p className="mt-4 text-xs text-gray-500 dark:text-gray-400 leading-relaxed break-words md:break-keep hidden sm:block">
               {REVIEW_NOTICE.desktop}
             </p>
           </div>

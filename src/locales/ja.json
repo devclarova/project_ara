@@ -5,15 +5,37 @@
     "community": "コミュニティ",
     "chat": "チャット",
     "notifications": "おしらせ",
-    "more": "もっと見る",
     "settings": "せってい",
+    "more": "もっと見る",
+    "voca": "単語帳",
     "profile": "プロフィール",
     "post": "とうこう",
     "admin": "管理者モード",
     "admin_dashboard": "管理者ダッシュボード",
-    "goods": "グッズ",
-    "voca": "単語帳",
-    "admin_goods": "商品管理"
+    "admin_goods": "商品管理",
+    "goods": "グッズ"
+  },
+  "admin": {
+    "report_processed": "通報が処理されました。",
+    "report_rejected": "通報が却下されました。",
+    "no_permission": "管理者権限がありません。",
+    "login_success": "管理者ログイン成功。",
+    "permission_check_error": "Error checking permissions.",
+    "study_deleted": "学習コンテンツが削除されました。",
+    "study_uploaded": "学習コンテンツのアップロードに成功しました！",
+    "goods_registered": "商品が正常に登録されました！",
+    "option_group_delete_wip": "Option group deletion (WIP)",
+    "option_group_add_wip": "Option group addition (WIP)",
+    "goods_deleted": "商品が削除されました。",
+    "content_deleted": "{{type}} (ID: {{id}}) deleted.",
+    "goods_hidden": "商品を非表示にしました",
+    "goods_visible": "商品を表示しました",
+    "study_hidden": "学習コンテンツを非表示にしました",
+    "study_visible": "学習コンテンツを表示しました",
+    "logged_out": "Logged out",
+    "logout_error": "Error during logout",
+    "reason": "運営チームの理由",
+    "review_comment": "運営チームの審査意見"
   },
   "notification": {
     "like_feed": "あなたのフィードに「いいね」をしましたよ。",
@@ -33,11 +55,12 @@
     "action_comment": "あなたのフィードにコメントを残しましたよ。",
     "action_like_comment": "あなたのコメントに「いいね」しました。",
     "action_like_feed": "あなたのフィードが好きです！",
+    "action_mention": "あなたをメンションしました。",
+    "action_repost": "投稿を共有しました。",
     "no_notifications": "まだ新しいおしらせはありません。",
     "delete_confirm_title": "通知を削除",
     "delete_confirm_desc": "この通知を削除しますか？",
-    "action_mention": "あなたをメンションしました。",
-    "action_repost": "投稿を共有しました。",
+    "photo_content": "[写真]",
     "tab_all": "すべて",
     "tab_likes": "いいね",
     "tab_comments": "コメント",
@@ -50,9 +73,9 @@
     "follow_request": "さんからフォローリクエストが届きました",
     "accept": "承認",
     "decline": "拒否",
-    "no_content_available": "内容を読み込めません",
     "tab_system": "システム",
     "system_notice": "システム通知",
+    "no_content_available": "内容を読み込めません",
     "system": {
       "ban_title": "[ARA運営チーム] サービス利用制限のご案内",
       "ban_prefix": "こんにちは、ARA運営チームです。<br/>お客様のアカウントに対して利用制限措置が適用されましたので、ご案内申し上げます。",
@@ -77,20 +100,24 @@
       "ban_temporary_desc": "管理者によって{{date}}まで利用が制限されています。",
       "security_denied_ip": "アクセス拒否: 未承認のIPアドレス。",
       "security_denied_generic": "セキュリティポリシーによってアクセスが制限されています。"
-    },
-    "photo_content": "[写真]"
+    }
   },
   "study": {
     "studylist": "学習リスト",
-    "search_placeholder": "けんさく...",
-    "no_content": "コンテンツが見つかりませんでした。",
     "category": {
       "all": "すべて",
       "drama": "ドラマ",
       "movie": "映画",
-      "entertainment": "バラエティ",
-      "music": "音楽",
-      "show": "バラエティ"
+      "show": "バラエティ",
+      "music": "音楽"
+    },
+    "culture_note": {
+      "title": "ぶんかノート",
+      "loading": "文化ノートを読み込み中...",
+      "error": "文化ノートを読み込めませんでした。",
+      "empty": "このシーンには文化ノートがありません。",
+      "default_title": "ぶんかノート",
+      "empty_list": "登録された文化ノートが見つかりません。"
     },
     "level": {
       "title": "なんいど",
@@ -104,65 +131,23 @@
       "next": "つぎへ",
       "start": "はじめる",
       "close": "閉じる",
-      "never_show": "今後表示しない",
-      "cta_start": "今すぐはじめる",
-      "cta_explore": "コンテンツをみる",
-      "scroll_hint": "スクロールしてさがしてね"
+      "never_show": "今後表示しない"
     },
-    "formats": {
-      "episode": "第{{val}}話",
-      "scene": "シーン {{val}}"
-    },
+    "search_placeholder": "けんさく...",
+    "no_content": "コンテンツが見つかりませんでした。",
     "no_title": "タイトルがありません",
     "no_episode": "エピソードがありません",
+    "episode_label": "エピソード",
+    "scene_label": "シーン",
+    "voca_btn": "私の単語帳",
     "share_text_prefix": "K-コンテンツで学ぼう: ",
     "meta_desc_default": "ARAで楽しく韓国語を学びましょう！",
-    "study_card_title": "がくしゅうカード",
-    "vocab_explanation": "たんごのせつめい",
-    "culture_note": {
-      "title": "ぶんかノート",
-      "default_title": "ぶんかノート",
-      "loading": "文化ノートを読み込み中...",
-      "error": "文化ノートを読み込めませんでした。",
-      "empty": "このシーンには文化ノートがありません。",
-      "empty_list": "登録された文化ノートが見つかりません。"
-    },
-    "subtitle_title": "字幕",
-    "subtitle_loading": "字幕を読み込み中...",
-    "subtitle_no_data": "字幕データがありません。",
-    "has_content": "コンテンツがあります",
-    "login_required": "ログインが必要です",
-    "preview": "プレビュー",
-    "meta_title": "ARA - K-コンテンツベースの韓国語学習プラットフォーム",
     "meta_desc_scene": "K-コンテンツのシーンで韓国語を学ぶ: {{contents}} {{episode}} {{scene}}",
     "aria_prev_episode": "前のエピソード",
     "aria_next_episode": "次のエピソード",
-    "culture_note_label": "ぶんかノート",
-    "voca": {
-      "example_label": "れいぶん",
-      "delete_confirm": {
-        "title_single": "単語削除",
-        "title_all": "全削除",
-        "desc_single": "単語を削除しますか？",
-        "desc_all": "全ての単語を削除しますか？"
-      },
-      "title": "単語帳",
-      "description": "保存した単語をまとめて見ることができます。",
-      "btn_quiz": "クイズ",
-      "btn_back_to_study": "学習へ",
-      "search_placeholder": "単語/意味/例文/品詞/発音 検索",
-      "status_title": "学習状態",
-      "status_all": "全体",
-      "btn_delete_all": "全体削除",
-      "btn_delete_all_title": "単語帳初期化",
-      "empty_message": "保存された単語がありません。",
-      "empty_cta": "学習ページで単語を保存してみましょう。",
-      "modal_cta": "エピソードへ",
-      "episode_cta": "エピソードに移動",
-      "aria_delete": "単語削除",
-      "status_learning": "学習中",
-      "status_unknown": "未学習",
-      "status_known": "학습 완료"
+    "formats": {
+      "episode": "第{{val}}話",
+      "scene": "シーン {{val}}"
     },
     "promotion": {
       "premium_title": "Project ARA プレミアム",
@@ -175,12 +160,65 @@
       "guide_alt_4": "ARA Study 利用方法案内 4",
       "guide_alt_5": "ARA Study 利用方法案内 5"
     },
-    "episode_label": "エピソード",
-    "scene_label": "シーン",
-    "voca_btn": "私の単語帳"
+    "voca": {
+      "aria_bookmark_remove": "Remove bookmark",
+      "aria_bookmark_save": "Save bookmark",
+      "aria_delete": "単語削除",
+      "btn_back_to_study": "学習へ",
+      "btn_delete_all": "全体削除",
+      "btn_delete_all_title": "単語帳初期化",
+      "btn_quiz": "クイズ",
+      "delete_confirm": {
+        "title_single": "単語削除",
+        "title_all": "全削除",
+        "desc_single": "単語を削除しますか？",
+        "desc_all": "全ての単語を削除しますか？"
+      },
+      "description": "保存した単語をまとめて見ることができます。",
+      "empty_cta": "学習ページで単語を保存してみましょう。",
+      "empty_message": "保存された単語がありません。",
+      "episode_cta": "エピソードに移動",
+      "error": "Error loading words",
+      "example_label": "れいぶん",
+      "go_episode": "Go to episode",
+      "go_episode_short": "Episode",
+      "go_voca": "Go to vocabulary",
+      "go_voca_short": "Vocab",
+      "loading": "Loading words...",
+      "modal_cta": "エピソードへ",
+      "modal_default_title": "Word Card",
+      "modal_title": "Word Card",
+      "no_words": "No words found.",
+      "no_words_to_show": "No words to show.",
+      "play_tts": "Listen to pronunciation",
+      "play_tts_short": "Pronounce",
+      "search_placeholder": "単語/意味/例文/品詞/発音 検索",
+      "status_all": "全体",
+      "status_known": "学習完了",
+      "status_learning": "学習中",
+      "status_title": "学習状態",
+      "status_unknown": "未学習",
+      "stop_tts": "Stop pronunciation",
+      "stop_tts_short": "Stop",
+      "title": "単語帳",
+      "view_original": "View Original",
+      "view_translation": "View Translation",
+      "word_card": "Word Card",
+      "word_image": "Word Image"
+    },
+    "study_card_title": "がくしゅうカード",
+    "vocab_explanation": "たんごのせつめい",
+    "subtitle_title": "字幕",
+    "subtitle_loading": "字幕を読み込み中...",
+    "subtitle_no_data": "字幕データがありません。",
+    "login_required": "ログインが必要です",
+    "preview": "プレビュー",
+    "meta_title": "ARA - K-コンテンツベースの韓国語学習プラットフォーム",
+    "culture_note_label": "ぶんかノート"
   },
   "auth": {
     "login": "ログイン",
+    "signin": "ログイン",
     "signup": "会員登録",
     "logout": "ログアウト",
     "login_needed": "ログインが必要です！",
@@ -198,11 +236,10 @@
     "login_with_google": "Googleでログイン",
     "login_with_kakao": "Kakaoでログイン",
     "verification_sent": "認証メールをお送りしました！",
+    "check_verification_email": "メールで送信された認証リンクを確認してくださいね。",
     "email_verification_failed": "メール認証に失敗しました。",
     "verify_before_login": "ログイン前にメール認証をおこなってください。",
     "invalid_credentials": "メールまたはパスワードがちがいます。",
-    "check_verification_email": "メールで送信された認証リンクを確認してくださいね。",
-    "session_expired": "セッションがきれてしまいました。",
     "avatar_upload_failed": "プロフィール画像のアップロードに失敗しました。",
     "profile_save_failed": "プロフィールの保存に失敗しました。",
     "network_error": "ネットワークエラーが発生しました。",
@@ -222,7 +259,7 @@
     "restore_desc_2": "アカウントを復元して再利用しますか？",
     "restore_remaining": "完全削除まであと{{days}}日です。",
     "restore_confirm": "アカウントを復元する",
-    "signin": "ログイン",
+    "profile_not_found_contact_admin": "プロフィールが作成されていません。管理者にお問い合わせください。",
     "auth_failed": "認証に失敗しました。",
     "relink_notice_title": "SNS再接続案内",
     "relink_previously_unlinked": "以前に解除されたSNSアカウントです",
@@ -232,10 +269,61 @@
     "choose_start_method": "どのメールで始めますか？",
     "login_with_email": "メールでログイン",
     "duplicate_prevent_title": "SNSアカウント重複防止案内",
-    "profile_not_found_contact_admin": "プロフィールが作成されていません。管理者にお問い合わせください。",
     "preview_alt": "プレビュー",
     "cover_preview_alt": "カバープレビュー",
     "ban_message_template": "利用制限状態では{{action}}できません。\n利用制限期間: ~{{date}} ({{days}}日残り)"
+  },
+  "find_email": {
+    "title": "メール探し",
+    "method_select": "検索方法を選択",
+    "method_recovery_email": "復旧メールで検索",
+    "method_question": "復旧質問で検索",
+    "nickname_label": "ニックネーム",
+    "nickname_placeholder": "ニックネームを入力してください",
+    "recovery_email_label": "復旧メール",
+    "recovery_email_placeholder": "登録時に登録した復旧メール",
+    "your_question": "会員が設定した質問",
+    "answer_label": "回答",
+    "answer_placeholder": "回答を入力してください",
+    "find_button": "メールを検索",
+    "finding": "検索中...",
+    "result_found": "会員様のメールアドレス",
+    "error_not_found": "一致する情報がありません。",
+    "error_no_recovery": "登録された復旧情報がありません。",
+    "error_nickname_required": "ニックネームを入力してください。",
+    "error_recovery_email_required": "復旧メールを入力してください。",
+    "error_answer_required": "回答を入力してください。",
+    "back_to_login": "ログインに戻る",
+    "select_method": "方法を選択してください"
+  },
+  "reset_password": {
+    "title": "パスワードをリセット",
+    "email_label": "メール",
+    "email_placeholder": "登録したメールアドレス",
+    "send_reset_link": "リセットリンクを送信",
+    "sending": "送信中...",
+    "success_title": "メール送信完了",
+    "success_message": "パスワードリセットリンクがメールで送信されました。",
+    "check_inbox": "受信トレイを確認してください。",
+    "error_email_required": "メールアドレスを入力してください。",
+    "error_invalid_email": "有効なメールアドレスを入力してください。",
+    "back_to_login": "ログインに戻る"
+  },
+  "update_password": {
+    "title": "新しいパスワードを設定",
+    "new_password_label": "新しいパスワード",
+    "new_password_placeholder": "新しいパスワードを入力",
+    "confirm_password_label": "パスワード確認",
+    "confirm_password_placeholder": "パスワードを再入力",
+    "update_button": "パスワード変更",
+    "updating": "変更中...",
+    "success_title": "パスワード変更完了",
+    "success_message": "パスワードが正常に変更されました。",
+    "go_to_login": "ログインする",
+    "error_required": "パスワードを入力してください。",
+    "error_length": "パスワードは8文字以上である必要があります。",
+    "error_mismatch": "パスワードが一致しません。",
+    "error_failed": "パスワードの変更に失敗しました。"
   },
   "signup": {
     "title_social": "ソーシャル会員登録",
@@ -304,12 +392,15 @@
     "agree_and_close": "同意して閉じる"
   },
   "recovery": {
-    "section_title": "メール回復情報（必須）",
     "section_description": "ID/PW紛失時に備え、アカウントを安全に復元するための手段を設定します。",
+    "partial_setup_guide": "セキュリティ質問または復元メールのいずれかを設定するだけで、アカウント復元が可能です。",
+    "set_question_title": "セキュリティ質問の設定",
     "question_label": "セキュリティ質問",
     "question_placeholder": "質問を選択してください",
     "answer_label": "回答",
     "answer_placeholder": "回答を入力してください（2文字以上）",
+    "answer_placeholder_already_set": "回答はすでに設定されています（変更可能）",
+    "set_email_title": "復元メールの設定",
     "temp_email_label": "メールアドレス",
     "temp_email_placeholder": "復元用メールアドレスを入力",
     "temp_email_description": "メインのメールアドレス以外のメールアドレスを入力してください。",
@@ -323,13 +414,10 @@
     "question_favorite_food": "一番好きな食べ物は何ですか?",
     "question_first_car": "初めての車のモデルは?",
     "question_favorite_movie": "人生で一番好きな映画は?",
-    "question_parents_met_city": "両親が初めて出会った街は?",
-    "partial_setup_guide": "セキュリティ質問または復元メールのいずれかを設定するだけで、アカウント復元が可能です。",
-    "set_question_title": "セキュリティ質問の設定",
-    "answer_placeholder_already_set": "回答はすでに設定されています（変更可能）",
-    "set_email_title": "復元メールの設定"
+    "question_parents_met_city": "両親が初めて出会った街は?"
   },
   "validation": {
+    "recovery_email_same_as_primary": "登録と同じメールアドレスは使用できません。",
     "required_email": "メールアドレスを入力してください",
     "required_password": "パスワードを入力してください",
     "required_nickname": "ニックネームを入力してください",
@@ -363,69 +451,14 @@
     "recovery_question_required": "質問を選択してください",
     "recovery_answer_required": "回答を入力してください",
     "recovery_answer_too_short": "回答は2文字以上である必要があります。",
-    "recovery_email_invalid": "有効なメールアドレスを入力してください。",
-    "recovery_email_same_as_primary": "登録と同じメールアドレスは使用できません。",
-    "check_duplicate": "重複確認"
-  },
-  "footer": {
-    "brand": {
-      "slogan_main": "Connect Culture, Expand World.",
-      "slogan_sub": "言語の壁を越えて真のコミュニケーションを体験してください。"
-    },
-    "social": {
-      "youtube": "YouTube",
-      "instagram": "Instagram",
-      "threads": "Threads",
-      "x": "X",
-      "facebook": "Facebook"
-    },
-    "columns": {
-      "product": {
-        "title": "製品",
-        "features": "機能",
-        "enterprise": "エンタープライズ",
-        "security": "セキュリティ",
-        "pricing": "価格"
-      },
-      "resources": {
-        "title": "リソース",
-        "documentation": "ドキュメント",
-        "api": "APIリファレンス",
-        "community": "コミュニティ",
-        "webinars": "ウェビナー",
-        "help_center": "ヘルプセンター"
-      },
-      "company": {
-        "title": "会社",
-        "about": "会社紹介",
-        "careers": "採用",
-        "blog": "ブログ",
-        "contact": "お問い合わせ",
-        "office": "オフィス"
-      }
-    },
-    "newsletter": {
-      "title": "最新ニュースを受け取る",
-      "desc": "10,000人以上の学習者とともにサービスチップとアップデートのニュースを逃さないでください。",
-      "placeholder": "メールアドレス入力"
-    },
-    "bottom": {
-      "rights": "© {{year}} Ara Inc. All rights reserved.",
-      "terms": "利用規約",
-      "privacy": "個人情報保護方針",
-      "cookies": "クッキー"
-    },
-    "office": {
-      "address_name": "ソウル本社",
-      "address": "ソウル特別市江南区テヘラン路 123",
-      "tel": "Tel: +82 2-1234-5678",
-      "registration": "事業者登録番号: 123-45-67890"
-    }
+    "recovery_email_invalid": "有効なメールアドレスを入力してください。"
   },
   "common": {
+    "or": "または",
     "ara_team": "ARA運営チーム",
     "online": "オンライン",
     "offline": "オフライン",
+    "more": "もっと見る",
     "save": "保存する",
     "saving": "保存中...",
     "apply": "適用する",
@@ -436,18 +469,25 @@
     "permanent": "永久",
     "days": "日",
     "edit": "編集する",
+    "my_voca": "単語帳",
+    "view_voca": "私の単語帳を見る",
     "my_profile": "マイプロフィール",
     "my_account": "マイアカウント",
     "view_profile": "プロフィールを見る",
     "settings_desc": "プロフィール/せってい",
+    "deleted_user": "退会したユーザー",
     "search": "検索",
     "search_placeholder": "検索...",
     "back": "戻る",
     "loading": "読み込み中...",
+    "checking": "確認中...",
+    "error_label": "エラー",
     "error": "エラーが発生しました。",
-    "close": "閉じる",
-    "share": "共有する",
-    "link_copied": "リンクをコピーしました！",
+    "retry": "再試行",
+    "today": "今日",
+    "yesterday": "昨日",
+    "just_now": "少し前",
+    "date_format_short": "M月d日",
     "error_profile_load": "プロフィール情報の読み込みに失敗しました",
     "error_profile_missing": "プロフィール情報がありません。再ログインしてください",
     "error_profile_loading": "プロフィール情報を読み込み中です。しばらくお待ちください",
@@ -455,50 +495,31 @@
     "error_profile_not_load": "プロフィールを読み込めません",
     "error_like": "「いいね」処理中にエラーが発生しました",
     "error_delete": "削除中にエラーが発生しました",
+    "error_image_size": "{{name}} ファイルのサイズが {{size}} を超えています。",
     "success_delete": "削除しました",
     "success_report": "通報が送信されました。",
     "success_block": "ユーザーをブロックしました。",
     "error_no_profile": "プロフィールが存在しません",
     "error_empty_content": "内容が空です",
-    "block": "ブロック",
-    "unblock": "ブロック解除",
-    "report": "通報",
-    "reason": "通報理由",
-    "status": {
-      "dismissed": "通報却下"
-    },
-    "edit_mode": "編集モードに切り替えます。",
-    "block_success": "{{name}}さんをブロックしました。",
-    "unblock_success": "{{name}}さんのブロックを解除しました。",
-    "cancel_like": "いいねを取り消しました",
-    "success_like": "いいねしました",
-    "unknown": "不明",
-    "anonymous": "匿名",
-    "block_user_desc": "ブロックするとお互いのプロフィールを見られず、チャットを送信できません。",
-    "thumbnail": "サムネイル",
-    "image_reply": "返信画像",
+    "close": "閉じる",
+    "share": "共有する",
+    "link_copied": "リンクをコピーしました！",
     "block_user": "さんをブロックする",
-    "premium_member": "プレミアムメンバー",
-    "replies": "コメント",
-    "or": "または",
-    "more": "もっと見る",
-    "my_voca": "単語帳",
-    "view_voca": "私の単語帳を見る",
-    "deleted_user": "退会したユーザー",
-    "checking": "確認中...",
-    "error_label": "エラー",
-    "retry": "再試行",
-    "today": "今日",
-    "yesterday": "昨日",
-    "just_now": "少し前",
-    "date_format_short": "M月d日",
-    "error_image_size": "{{name}} ファイルのサイズが {{size}} を超えています。",
     "unblock_user": "さんのブロック解除",
+    "block_user_desc": "ブロックするとお互いのプロフィールを見られず、チャットを送信できません。",
     "blocked_user_alert": "ブロックされたユーザーです。",
     "blocked_users": "ブロックされたユーザー",
     "blocked_users_desc": "ブロックしたユーザーのリストを管理します。",
     "no_blocked_users": "ブロックしたユーザーがいません。",
     "confirm_unblock": "本当にブロックを解除しますか？",
+    "block": "ブロック",
+    "unblock": "ブロック解除",
+    "report": "通報",
+    "edit_mode": "編集モードに切り替えます。",
+    "block_success": "{{name}}さんをブロックしました。",
+    "unblock_success": "{{name}}さんのブロックを解除しました。",
+    "cancel_like": "いいねを取り消しました",
+    "success_like": "いいねしました",
     "blocked_comment_msg": "ブロックした相手のコメントです。",
     "view_content": "内容を見る",
     "hide_content": "再び隠す",
@@ -510,11 +531,15 @@
     "block_modal_notice_3": "コミュニティで相手の投稿が隠されます。",
     "block_modal_notice_4": "相手のコメントがマスキング処理されて表示されます。",
     "block_modal_warning": "ブロック情報は「設定 > ブロックされたユーザー」で管理できます。",
+    "anonymous": "匿名",
     "share_default_text": "楽しく韓国語を学びましょう！ARAで学習シーンを共有します。",
     "copy_link_prompt": "以下のリンクをコピーしてください：",
     "submitting": "提出中...",
+    "thumbnail": "サムネイル",
     "scroll_to_top": "一番上にスクロール",
     "user": "ユーザー",
+    "unknown": "不明",
+    "premium_member": "プレミアムメンバー",
     "country": "国",
     "edited": "修正済み",
     "hidden": "非表示",
@@ -531,6 +556,7 @@
     "prompt_image_url": "画像URLを入力してください",
     "add_url": "URLを追加",
     "image_count": "画像{{count}}個",
+    "image_reply": "返信画像",
     "image_tweet": "投稿画像",
     "me": "私",
     "avatar": "アバター",
@@ -538,6 +564,7 @@
     "user_initials": "ユーザー",
     "advertisement": "広告",
     "sponsored": "スポンサー",
+    "replies": "コメント",
     "likes": "いいね",
     "views": "再生回数",
     "view_details": "もっと見る",
@@ -545,9 +572,159 @@
     "translated": "翻訳済み",
     "auto_translated": "AIによる自動翻訳",
     "add": "追加",
-    "unblock_modal_title": "本当にブロックを解除しますか？"
+    "unblock_modal_title": "本当にブロックを解除しますか？",
+    "upload_image_only": "画像ファイルのみアップロード可能です。",
+    "upload_video_size_limit": "動画の容量は10MBを超えることはできません。",
+    "upload_file_size_limit": "ファイルの容量は5MBを超えることはできません。",
+    "coming_soon": "Coming Soon!",
+    "coming_soon_desc": "We are preparing hard now. We will find you with better features! 🚀"
+  },
+  "voca": {
+    "pos": {
+      "noun": "名詞",
+      "verb": "動詞",
+      "adjective": "形容詞",
+      "adverb": "副詞",
+      "pronoun": "代名詞",
+      "numeral": "数詞",
+      "determiner": "連体詞",
+      "particle": "助詞",
+      "interjection": "感嘆詞"
+    }
+  },
+  "goods": {
+    "title": "グッズショップ",
+    "subtitle": "ARAのアイデンティティを込めた公式グッズをご覧ください",
+    "product_details": "商品詳細",
+    "product_options": "オプション選択",
+    "product_recommendations": "このような商品はいかがですか？",
+    "total_amount": "合計金額",
+    "checkout_total": "総支払金額",
+    "price_unit": "$",
+    "percent_suffix": "%",
+    "checkout_loading": "決済進行中...",
+    "checkout_success": "決済が完了しました！",
+    "checkout_error": "決済処理中にエラーが発生しました。",
+    "badge": {
+      "new": "新規",
+      "best": "人気",
+      "soldout": "売り切れ",
+      "sale": "セール",
+      "off_pattern": "{{percent}}% セール"
+    },
+    "reviews": {
+      "title": "ユーザーレビュー",
+      "count": "{{count}}件のレビュー",
+      "rating_average": "平均評価",
+      "photo_review": "写真付きレビューのみ表示",
+      "write_btn": "レビューを書く",
+      "verified_purchase": "購入者認証",
+      "helpful": "役に立った",
+      "no_reviews": "まだレビューがありません。",
+      "be_first": "最初のレビューを残してください！",
+      "be_first_desc": "最初のレビューを書いて、他の購入者の参考にしてください。",
+      "load_more": "もっと見る",
+      "view_all": "すべて表示",
+      "translate_btn": "翻訳する",
+      "show_original": "原文を見る",
+      "no_stats": "データなし",
+      "positive_ratio": "肯定的なレビューの割合",
+      "waiting_first": "最初のレビューをお待ちしています",
+      "buyer_only_error": "購入者のみレビューを書くことができます。",
+      "modal": {
+        "how_was_it": "商品はいかがでしたか？",
+        "detail_review": "詳細レビュー",
+        "placeholder": "レビュー内容を入力してください。",
+        "add_photo": "写真添付（最大3枚）",
+        "empty_content": "レビュー内容を入力してください。",
+        "success": "貴重なレビューが登録されました！"
+      }
+    },
+    "coupon": {
+      "apply": "クーポン適用",
+      "apply_btn": "適用",
+      "placeholder": "クーポンコードを入力してください",
+      "applied": "クーポンが適用されました！",
+      "invalid": "無効なクーポンです。",
+      "error": "クーポン確認中にエラーが発生しました。"
+    },
+    "category_all": "すべて",
+    "category_clothing": "衣類",
+    "category_accessories": "アクセサリー",
+    "category_stationery": "文房具",
+    "category_digital": "デジタル",
+    "related_products": "関連商品",
+    "product_not_found": "商品が見つかりません",
+    "back_to_list": "一覧に戻る",
+    "buy_now": "今すぐ購入",
+    "free_shipping": "$50以上で送料無料",
+    "authentic_guarantee": "正規品保証",
+    "coming_soon": "準備中...",
+    "notice_banner": "公式グッズショップ準備中です。",
+    "option": {
+      "size": "サイズ",
+      "color": "色"
+    },
+    "alt": {
+      "main_image": "商品代表画像",
+      "gallery_image": "ギャラリー画像",
+      "detail_image": "詳細画像",
+      "store_membership": "ARAグッズストアメンバーシップ",
+      "hero_bg": "ヒーロー背景",
+      "review_image": "ユーザーレビュー画像",
+      "preview_image": "アップロードプレビュー"
+    }
+  },
+  "not_found": {
+    "discovery": "迷子のページを見つけました",
+    "title": "まだスクリプトが書かれていないシーンです",
+    "description": "このアドレスにはまだARAのエピソードが準備されていません。ホームに戻って他のKコンテンツで韓国語と文化を引き続き楽しんでみませんか？",
+    "quote_part1": "「いつかこのページも",
+    "quote_accent": "一つのシーン",
+    "quote_part2": "で埋められるでしょう。」",
+    "feedback_prefix": "このページで期待していた機能やアイデアがあれば、ARA内のフィードバックメニューで気軽に残すか",
+    "feedback_suffix": "にご連絡ください。"
+  },
+  "recovery_reminder": {
+    "title": "アカウントセキュリティ強化のご案内",
+    "desc": "パスワードを紛失した際にアカウントを安全に復旧できるよう、復旧用の質問とメールアドレスを設定してください。",
+    "action": "今すぐ設定する",
+    "later": "後でやる"
   },
   "settings": {
+    "no_changes_or_invalid": "変更がないか、入力情報が正しくありません。",
+    "saved": "設定が保存されました。",
+    "coupons": {
+      "no_subscription_data": "購読情報がありません。",
+      "no_vip_available": "現在準備されているVIP特典はありません。管理者にお問い合わせください。",
+      "vip_success_title": "🎁 VIPシークレット特典の支給完了！",
+      "vip_success_code": "クーポンコード: {{code}} (99%割引)",
+      "vip_success_desc": "決済時に上記のコードを入力して特典を受けてください。",
+      "discount_percent": "{{value}}%割引",
+      "discount_fixed": "₩{{value}}特典",
+      "history_title": "購読およびクーポン履歴",
+      "no_history": "履歴がありません。",
+      "plan_label": "{{plan}} プラン",
+      "status": {
+        "active": "利用中",
+        "cancelled": "解約済み",
+        "expired": "期限切れ"
+      },
+      "redeem_title": "クーポン登録",
+      "redeem_placeholder": "クーポンコードを入力してください",
+      "btn_redeem": "クーポン登録",
+      "vip_benefit_title": "今月のVIP特典",
+      "vip_benefit_desc": "プレミアム以上の会員のための特別なクーポンを確認してください。",
+      "btn_claim_vip": "VIPクーポンを受け取る",
+      "vip_already_claimed": "今月のVIP特典はすでに受け取られました。来月をお待ちください！",
+      "redeem_success": "クーポン登録成功！",
+      "redeem_success_desc": "{{name}} ({{discount}} 割引)",
+      "redeem_fail": "無効なクーポンです。",
+      "redeem_error": "クーポン確認中にエラーが発生しました。",
+      "cancel_success": "購読が正常に解約されました。",
+      "cancel_error": "解約中にエラーが発生しました: {{error}}",
+      "no_subscription": "購読情報がありません。"
+    },
     "languageSelect": "げんごせんたく",
     "themeSelect": "テーマ選択",
     "theme_options": {
@@ -558,9 +735,15 @@
     "system": "システム設定",
     "language": "言語",
     "theme": "テーマ",
+    "theme_light": "ライト",
+    "theme_dark": "ダーク",
+    "theme_system": "システム設定",
+    "language_select_aria": "言語選択",
+    "theme_select_aria": "テーマ選択",
     "title_language": "言語変更",
     "title_theme": "テーマ変更",
     "title_password_change": "パスワード変更",
+    "title_recovery": "アカウント復旧設定",
     "title_sns_connect": "SNS連携",
     "title_withdraw": "アカウント退会",
     "title_terms": "利用規約",
@@ -572,10 +755,16 @@
     "notifications": "通知設定",
     "alarm_comment": "コメント通知",
     "alarm_comment_desc": "投稿にコメントが付いた時に通知します。",
+    "withdraw_grace_period_1": "退会申請時には7日間の猶予期間が適用されます。",
+    "withdraw_grace_period_2": "7日以内にログインすると、アカウントを即座に復元できます。",
+    "withdraw_grace_period_3": "7日が経過すると復元は不可能になり、30日後にデータが完全に削除されます。",
+    "alarm_push": "プッシュ通知",
     "alarm_like": "いいね通知",
     "alarm_like_desc": "投稿にいいねされた時に通知します。",
     "alarm_follow": "フォロー通知",
     "alarm_follow_desc": "誰かにフォローされた時に通知します。",
+    "alarm_chat": "チャット通知",
+    "alarm_chat_desc": "新しいメッセージが届いた時に通知します。",
     "privacy": "プライバシー設定",
     "change_password": "パスワード変更",
     "connect_sns": "SNSアカウント連携",
@@ -583,9 +772,6 @@
     "withdraw_phrase": "アカウントを削除しますか？",
     "withdraw_verify_placeholder": "確認のために「{{phrase}}」と入力してください。",
     "withdraw_modal_title": "本当にアカウントを削除しますか？",
-    "withdraw_grace_period_1": "退会申請時には7日間の猶予期間が適用されます。",
-    "withdraw_grace_period_2": "7日以内にログインすると、アカウントを即座に復元できます。",
-    "withdraw_grace_period_3": "7日が経過すると復元は不可能になり、30日後にデータが完全に削除されます。",
     "withdraw_warning_1": "アカウント情報は復元できません。",
     "withdraw_warning_2": "すべての投稿とコメントが削除されます。",
     "withdraw_warning_3": "フォロー・フォロワー情報が失われます。",
@@ -613,11 +799,6 @@
     "sns_connect_desc": "SNSログインでアカウントをつなげると、アクセスが簡単になります。",
     "connect_google": "Googleアカウントをつなげる",
     "connect_kakao": "Kakaoアカウントをつなげる",
-    "sns_connect_note": "設定 > プライバシーでいつでも連携を解除できます。（近日公開）",
-    "account_settings": "アカウント設定",
-    "support_policy": "サポート & ポリシー",
-    "help_center": "ヘルプセンター",
-    "terms": "利用規約",
     "privacy_policy": {
       "summary": "会社はサービス提供のために最小限の個人情報を収集・利用し、収集目的達成後、遅滞なく破棄します。",
       "items_title": "核心項目",
@@ -627,11 +808,37 @@
       "item_4": "個人情報保護責任者および連絡先",
       "close": "閉じる"
     },
+    "sns_connect_failed": "SNS接続に失敗しました。",
+    "sns_unlink_last_method": "少なくとも1つのログイン方法が必要です。",
+    "sns_unlink_failed": "SNSの接続解除に失敗しました。",
+    "sns_unlink_success": "SNS接続が解除されました。",
+    "linked_accounts": "接続されたアカウント",
+    "connected": "接続済み",
+    "not_connected": "未接続",
+    "social_login_active": "ソーシャルログイン使用可能",
+    "unlink": "解除",
+    "connect": "接続",
+    "sns_connect_note": "設定 > プライバシーでいつでも連携を解除できます。（近日公開）",
+    "unlink_confirm_title": "アカウント接続解除",
+    "sns_unlink_confirm_msg": "アカウントの接続を解除しますか？",
+    "sns_unlink_warning": "接続を解除すると、その方法でログインできなくなります。",
+    "email": "メール",
+    "account_settings": "アカウント設定",
+    "support_policy": "サポート & ポリシー",
+    "help_center": "ヘルプセンター",
+    "terms": "利用規約",
+    "privacy_policy_title": "プライバシーポリシー",
     "marketing_consent": {
       "title": "マーケティング同意",
       "email": "メール受信",
       "sms": "SMS受信",
       "push": "プッシュ通知"
+    },
+    "customer_center": {
+      "faq_title": "よくある質問（FAQ）",
+      "faq_desc": "アカウント、支払い、セキュリティなどの主要な質問を確認してください。",
+      "contact_1on1_title": "1:1 問い合わせ",
+      "contact_1on1_desc": "平日 09:00～18:00（祝日を除く）"
     },
     "email_info_missing": "メールアドレス情報が見つかりません。カスタマーサポートにお問い合わせください。",
     "password_incorrect": "パスワードが正しくありません。",
@@ -645,72 +852,7 @@
     "reason_privacy": "個人情報/セキュリティの懸念",
     "reason_feature": "機能に不満がある",
     "reason_other": "その他",
-    "alarm_chat": "チャット通知",
-    "alarm_chat_desc": "新しいメッセージが届いた時に通知します。",
-    "saved": "設定が保存されました。",
-    "title_recovery": "アカウント復旧設定",
-    "privacy_policy_title": "プライバシーポリシー",
-    "close": "閉じる",
-    "coupons": {
-      "status": {
-        "active": "利用中",
-        "cancelled": "解約済み",
-        "expired": "期限切れ"
-      },
-      "vip_success_title": "🎁 VIPシークレット特典の支給完了！",
-      "redeem_fail": "無効なクーポンです。",
-      "cancel_success": "購読が正常に解約されました。",
-      "no_subscription_data": "購読情報がありません。",
-      "no_vip_available": "現在準備されているVIP特典はありません。管理者にお問い合わせください。",
-      "vip_success_code": "クーポンコード: {{code}} (99%割引)",
-      "vip_success_desc": "決済時に上記のコードを入力して特典を受けてください。",
-      "discount_percent": "{{value}}%割引",
-      "discount_fixed": "₩{{value}}特典",
-      "history_title": "購読およびクーポン履歴",
-      "no_history": "履歴がありません。",
-      "plan_label": "{{plan}} プラン",
-      "redeem_title": "クーポン登録",
-      "redeem_placeholder": "クーポンコードを入力してください",
-      "btn_redeem": "クーポン登録",
-      "vip_benefit_title": "今月のVIP特典",
-      "vip_benefit_desc": "プレミアム以上の会員のための特別なクーポンを確認してください。",
-      "btn_claim_vip": "VIPクーポンを受け取る",
-      "vip_already_claimed": "今月のVIP特典はすでに受け取られました。来月をお待ちください！",
-      "redeem_success": "クーポン登録成功！",
-      "redeem_success_desc": "{{name}} ({{discount}} 割引)",
-      "redeem_error": "クーポン確認中にエラーが発生しました。",
-      "cancel_error": "解約中にエラーが発生しました: {{error}}",
-      "no_subscription": "購読情報がありません。"
-    },
-    "customer_center": {
-      "faq_title": "よくある質問（FAQ）",
-      "faq_desc": "アカウント、支払い、セキュリティなどの主要な質問を確認してください。",
-      "contact_1on1_title": "1:1 問い合わせ",
-      "contact_1on1_desc": "平日 09:00～18:00（祝日を除く）"
-    },
-    "sns_unlink_failed": "SNSの接続解除に失敗しました。",
     "subscription_coupon": "サブスクリプションと特典",
-    "no_changes_or_invalid": "変更がないか、入力情報が正しくありません。",
-    "connect": "接続",
-    "blocked_users_desc": "ブロックしたユーザーのリストを管理します。",
-    "theme_light": "ライト",
-    "theme_dark": "ダーク",
-    "theme_system": "システム設定",
-    "language_select_aria": "言語選択",
-    "theme_select_aria": "テーマ選択",
-    "alarm_push": "プッシュ通知",
-    "sns_connect_failed": "SNS接続に失敗しました。",
-    "sns_unlink_last_method": "少なくとも1つのログイン方法が必要です。",
-    "sns_unlink_success": "SNS接続が解除されました。",
-    "linked_accounts": "接続されたアカウント",
-    "connected": "接続済み",
-    "not_connected": "未接続",
-    "social_login_active": "ソーシャルログイン使用可能",
-    "unlink": "解除",
-    "unlink_confirm_title": "アカウント接続解除",
-    "sns_unlink_confirm_msg": "アカウントの接続を解除しますか？",
-    "sns_unlink_warning": "接続を解除すると、その方法でログインできなくなります。",
-    "email": "メール",
     "alarm_email": "メール通知",
     "plan": "料金プラン",
     "coupon": "クーポン登録",
@@ -721,7 +863,9 @@
     "pw_change_success": "パスワードが正常に変更されました。",
     "pw_set_guide": "ソーシャルログインアカウントにパスワードを設定して、メールでもログインできます。",
     "pw_set_success": "パスワードが正常に設定されました。",
+    "close": "閉じる",
     "blocked_users": "ブロックされたユーザー",
+    "blocked_users_desc": "ブロックしたユーザーのリストを管理します。",
     "no_blocked_users": "ブロックしたユーザーはいません。",
     "confirm_unblock": "本当にブロックを解除しますか？"
   },
@@ -738,8 +882,12 @@
     },
     "no_posts": "投稿がありません。",
     "no_replies": "返信がありません。",
+    "view_profile": "プロフィールを見る",
     "profile_optional": "プロフィール設定（任意）",
     "profile_image": "プロフィール画像",
+    "cover_photo": "カバー写真",
+    "select_cover": "カバー写真を選択",
+    "cover_photo_hint": "推奨サイズ: 1500x500px",
     "select_image": "画像を選んでください",
     "bio": "自己紹介",
     "bio_placeholder": "自分について紹介してくださいね",
@@ -752,6 +900,7 @@
     "country_change_warning": "⚠️ 国籍の変更は1回のみ可能です。",
     "country_disabled_reason": "国籍は既に1回変更されています。",
     "country_change_forbidden": "国籍は再度変更できません。",
+    "follow": "フォロー",
     "unfollow": "フォロー解除",
     "followers_count": "フォロワー {{count}}人",
     "following_count": "{{count}}人をフォロー中",
@@ -760,14 +909,9 @@
     "no_followers": "まだフォロワーがいません",
     "no_following": "まだフォロー中のユーザーがいません",
     "search_users": "ユーザーを検索...",
-    "follow_feature_coming_soon": "フォロー機能は近日公開予定です",
-    "follow": "フォロー",
-    "turn_on_notifications": "通知をオンにする",
-    "view_profile": "プロフィールを見る",
-    "cover_photo": "カバー写真",
-    "select_cover": "カバー写真を選択",
-    "cover_photo_hint": "推奨サイズ: 1500x500px",
     "drag_to_reposition": "ドラッグして位置を調整",
+    "follow_feature_coming_soon": "フォロー機能は近日公開予定です",
+    "turn_on_notifications": "通知をオンにする",
     "turn_off_notifications": "通知をオフにする",
     "followed": "フォロー",
     "unfollowed": "フォローを解除",
@@ -814,7 +958,6 @@
     "deleted_reply": "削除された返信です",
     "deleted_or_not_exist": "削除されたか存在しない投稿です",
     "deleted_while_viewing": "この投稿は削除されました。",
-    "login_to_reply": "ログイン後、コメントを書くことができます。",
     "join_community_desc": "コミュニティに参加するには、ログインまたは会員登録してください。",
     "liked_feed": "あなたの投稿が気に入っています。",
     "reply_to_tweet": "投稿に返信する",
@@ -836,9 +979,6 @@
     "loading": "読み込み中...",
     "me": "自分",
     "unknown": "不明",
-    "today": "今日",
-    "exit": "退出",
-    "search_placeholder": "メッセージをけんさく",
     "search_btn": "けんさく",
     "search_hint": "メッセージ内容をけんさくします。",
     "no_result": "結果が見つかりませんでした。",
@@ -862,11 +1002,12 @@
     "notice_profanity": "⚠️ 罵倒語・嫌悪表現・差別的発言は自動的に検出・マスキング/ブロックされます。繰り返すと制裁される可能性があります。",
     "notice_blocked": "🚫 不適切な表現が含まれているため、送信がブロックされました。",
     "notice_masked": "🔒 一部の単語はポリシーに従ってマスキングされています。",
+    "block_messages": "メッセージをブロック",
     "title_direct_chat": "チャット",
+    "action_exit": "退出",
     "btn_leave": "たいしゅつ",
     "btn_new_chat": "新しいチャットを始める",
     "title_chat_room": "チャットルーム",
-    "action_exit": "退出",
     "search_placeholder_history": "チャットルームまたは会話内容を検索しています...",
     "search_result_rooms": "チャットルーム",
     "search_result_messages": "会話内容",
@@ -886,13 +1027,28 @@
     "confirm_exit_desc": "退出すると会話一覧に戻ります。",
     "exit_success": "チャットルームから退出しました。",
     "creating_chat": "チャットルームを作成中...",
-    "block_messages": "メッセージをブロック",
     "translate_error_untranslatable": "意味を理解できず翻訳できない文です。",
     "translate_error_generic": "翻訳中にエラーが発生しました。",
     "translate_error_api": "APIリクエスト失敗",
     "scroll_to_bottom": "一番下までスクロール",
     "deleted_message": "管理者によって削除されたメッセージです。",
     "aria_send_message": "メッセージ送信"
+  },
+  "community": {
+    "title": "コミュニティ",
+    "no_results": "検索結果がありません。",
+    "no_posts": "まだ共有されたニュースがありません。",
+    "all_posts_loaded": "すべてのニュースを確認しました。",
+    "hidden_content": "管理者によって非表示にされた投稿です。",
+    "deleted_post": "この投稿はポリシー違反のため削除されました。",
+    "edit_post": "投稿を編集",
+    "seo": {
+      "title": "コミュニティ | ARA - Kコンテンツで学ぶ韓国語",
+      "description": "世界中の学習者が集まるARAコミュニティです。Kコンテンツを通じて韓国語を学び、友達と交流し、各国の文化を楽しんでください。",
+      "keywords": "ARA、韓国語学習、韓国語を学ぶ、韓国文化、K-POP、K-ドラマ、K-カルチャー、言語交換、フィード、グローバル学習者",
+      "og_title": "ARAコミュニティ - Kコンテンツ基盤のグローバル学習プラットフォーム",
+      "og_description": "Kコンテンツで韓国語を学び、世界各国の学習者と交流するグローバルホームフィードARA。"
+    }
   },
   "policy": {
     "close": "閉じる",
@@ -1080,193 +1236,22 @@
       }
     }
   },
-  "goods": {
-    "hero_title": "公式ストア",
-    "hero_desc": "あなたの学習を応援する特別なアイテムを見つけましょう。",
-    "category_all": "すべて",
-    "category_clothing": "衣類",
-    "category_accessories": "アクセサリー",
-    "category_digital": "デジタル",
-    "new_arrival": "新着",
-    "best_seller": "人気",
-    "sold_out": "完売",
-    "price_unit": "$",
-    "items": {
-      "hoodie": {
-        "title": "シグネチャーパーカー",
-        "desc": "シグネチャーロゴ入りのプレミアムコットンパーカー。日常使いに最適な快適なフィット感です。"
-      },
-      "tote_bag": {
-        "title": "エコトートバッグ",
-        "desc": "環境に優しいキャンバストートバッグ。丈夫で必需品をたっぷり収納できます。"
-      },
-      "note_set": {
-        "title": "プレミアムノートセット",
-        "desc": "高品質な紙で作られたノートセット。勉強や日記に最適です。"
-      },
-      "planner": {
-        "title": "2026 デジタルプランナー",
-        "desc": "iPad/タブレット用オールインワンデジタルプランナー。2026年を効率的に計画しましょう。"
-      },
-      "cap": {
-        "title": "ロゴキャップ",
-        "desc": "刺繍ロゴ入りのスタイリッシュなボールキャップ。調節可能なストラップでフィット感を調整できます。"
-      },
-      "tumbler": {
-        "title": "ミニマリストタンブラー",
-        "desc": "ステンレス製タンブラー。12時間保温・保冷が可能です。"
-      }
-    },
-    "category_stationery": "文房具",
-    "product_not_found": "商品が見つかりません",
-    "reviews_count": "レビュー {{count}}件",
-    "free_shipping": "$50以上で送料無料",
-    "authentic_guarantee": "正規品保証",
-    "option_color": "カラー",
-    "option_size": "サイズ",
-    "add_to_cart": "カートに入れる",
-    "product_details": "商品詳細",
-    "related_items": "こちらもおすすめ",
-    "buy_now": "今すぐ購入",
-    "quantity": "数量",
-    "back_to_list": "一覧に戻る",
-    "title": "グッズショップ",
-    "subtitle": "ARAのアイデンティティを込めた公式グッズをご覧ください",
-    "coming_soon": "準備中...",
-    "badge": {
-      "new": "新規",
-      "best": "人気",
-      "sale": "セール",
-      "off_pattern": "{{percent}}% セール",
-      "soldout": "売り切れ"
-    },
-    "cart": "カート",
-    "total_amount": "合計金額",
-    "reviews": {
-      "modal": {
-        "how_was_it": "商品はいかがでしたか？",
-        "detail_review": "詳細レビュー",
-        "placeholder": "レビュー内容を入力してください。",
-        "add_photo": "写真添付（最大3枚）",
-        "empty_content": "レビュー内容を入力してください。",
-        "success": "貴重なレビューが登録されました！"
-      },
-      "title": "ユーザーレビュー",
-      "count": "{{count}}件のレビュー",
-      "rating_average": "平均評価",
-      "photo_review": "写真付きレビューのみ表示",
-      "write_btn": "レビューを書く",
-      "verified_purchase": "購入者認証",
-      "helpful": "役に立った",
-      "no_reviews": "まだレビューがありません。",
-      "be_first": "最初のレビューを残してください！",
-      "be_first_desc": "最初のレビューを書いて、他の購入者の参考にしてください。",
-      "load_more": "もっと見る",
-      "view_all": "すべて表示",
-      "translate_btn": "翻訳する",
-      "show_original": "原文を見る",
-      "no_stats": "データなし",
-      "positive_ratio": "肯定的なレビューの割合",
-      "waiting_first": "最初のレビューをお待ちしています",
-      "buyer_only_error": "購入者のみレビューを書くことができます。"
-    },
-    "coupon": {
-      "apply": "クーポン適用",
-      "apply_btn": "適用",
-      "placeholder": "クーポンコードを入力してください",
-      "applied": "クーポンが適用されました！",
-      "invalid": "無効なクーポンです。",
-      "error": "クーポン確認中にエラーが発生しました。"
-    },
-    "option": {
-      "size": "サイズ",
-      "color": "色"
-    },
-    "alt": {
-      "main_image": "商品代表画像",
-      "gallery_image": "ギャラリー画像",
-      "detail_image": "詳細画像",
-      "store_membership": "ARAグッズストアメンバーシップ",
-      "hero_bg": "ヒーロー背景",
-      "review_image": "ユーザーレビュー画像",
-      "preview_image": "アップロードプレビュー"
-    },
-    "product_options": "オプション選択",
-    "product_recommendations": "このような商品はいかがですか？",
-    "checkout_total": "総支払金額",
-    "percent_suffix": "%",
-    "checkout_loading": "決済進行中...",
-    "checkout_success": "決済が完了しました！",
-    "checkout_error": "決済処理中にエラーが発生しました。",
-    "related_products": "関連商品",
-    "notice_banner": "公式グッズショップ準備中です。"
-  },
-  "translation": {
-    "login_required": "ログイン後に翻訳機能をご利用いただけます。",
-    "guest_limit_reached": "無料翻訳の回数を使い切りました。ログインして続けてください。"
-  },
-  "report": {
-    "reason": "通報理由",
-    "reasons": {
-      "spam": "スパム / 不適切な宣伝",
-      "abuse": "悪口 / 誹謗中傷",
-      "harmful": "有害なコンテンツ",
-      "inappropriate": "不適切な内容",
-      "other": "その他 (直接入力)"
-    },
-    "status": {
-      "dismissed": "報告却下"
-    },
-    "select_placeholder": "理由を選択してください",
-    "report": "報告",
-    "desc": "報告理由を選択してください。妥当な理由がない場合、処理が遅れることがあります。",
-    "reason_label": "理由選択",
-    "description_label": "詳細内容",
-    "description_placeholder": "報告理由を詳しく記入してください。",
-    "select_reason": "報告理由を選択してください。",
-    "enter_description": "詳細理由を入力してください。",
-    "success": "報告が受理されました。",
-    "title": "報告する"
-  },
-  "admin": {
-    "report_processed": "通報が処理されました。",
-    "report_rejected": "通報が却下されました。",
-    "no_permission": "管理者権限がありません。",
-    "login_success": "管理者ログイン成功。",
-    "signin": "ログイン",
-    "reason": "運営チームの理由",
-    "review_comment": "運営チームの審査意見",
-    "study_deleted": "学習コンテンツが削除されました。",
-    "study_uploaded": "学習コンテンツのアップロードに成功しました！",
-    "goods_registered": "商品が正常に登録されました！",
-    "goods_deleted": "商品が削除されました。",
-    "goods_hidden": "商品を非表示にしました",
-    "goods_visible": "商品を表示しました",
-    "study_hidden": "学習コンテンツを非表示にしました",
-    "study_visible": "学習コンテンツを表示しました",
-    "permission_check_error": "Error checking permissions.",
-    "option_group_delete_wip": "Option group deletion (WIP)",
-    "option_group_add_wip": "Option group addition (WIP)",
-    "content_deleted": "{{type}} (ID: {{id}}) deleted.",
-    "logged_out": "Logged out",
-    "logout_error": "Error during logout"
-  },
   "landing": {
-    "badge": "物語で学ぶ韓国語 · コミュニティ",
-    "title_1": "コンテンツで言語を学ぶ",
-    "title_2": "文化でつながる体験",
-    "description": "自作エピソードと韓国の昔話・説話を通じて学ぶ表現",
-    "description2": "世界中の友達と一緒に書いて、直して、共有する韓国語学習スペースARA",
-    "point_1": "物語ベースのエピソード学習",
-    "point_2": "昔話・説話で表現理解",
-    "point_3": "グローバル学習コミュニティ",
-    "cta_start": "今すぐ始める",
-    "cta_explore": "コンテンツを見回す",
-    "scroll_hint": "スクロールして探索",
-    "nav_top": "最上部",
+    "badge": "アニメで学ぶ韓国語 · グローバルコミュニティ",
+    "title_1": "アニメで生きた韓国語を学び",
+    "title_2": "世界中の仲間と一緒に成長しよう",
+    "description": "自社制作アニメで韓国人が実際に使う表現を学ぶ",
+    "description2": "SNSで直接使い、1:1チャットで交流する韓国語学習プラットフォーム ARA",
+    "point_1": "自社制作アニメ学習",
+    "point_2": "字幕・単語・発音・文化ノート",
+    "point_3": "グローバルSNSコミュニティ",
+    "cta_start": "無料で始める",
+    "cta_explore": "コンテンツを見る",
+    "scroll_hint": "Scroll to explore",
+    "nav_top": "トップ",
     "nav_how": "学習方法",
-    "nav_problems": "核心価値",
-    "nav_features": "主要機能",
+    "nav_problems": "コアバリュー",
+    "nav_features": "主な機能",
     "nav_contents": "コンテンツ",
     "nav_stories": "学習レビュー",
     "nav_start": "始める",
@@ -1274,81 +1259,81 @@
     "aria_badge": "プラットフォーム紹介",
     "aria_start": "今すぐ始める",
     "aria_explore": "コンテンツを見る",
-    "cta_badge_text": "今日登録した学習者",
-    "cta_title_1": "韓国語、『勉強』ではなく",
-    "cta_title_2": "『体験』として始めましょう",
-    "cta_description": "今すぐ登録して人気ドラマのシーンで作る自分だけの最初の学習コースを始めましょう。",
+    "cta_badge_text": "本日参加した学習者",
+    "cta_title_1": "韓国語を「勉強」ではなく",
+    "cta_title_2": "「体験」として始めよう",
+    "cta_description": "今すぐ登録して、人気ドラマのシーンで作る初めての学習コースを始めよう。",
     "cta_start_free": "無料で始める",
-    "problem_title": "こんな悩み、考えたことありますか？",
-    "problem_desc": "ARAは実際の学習者が最も多く話した悩みから始まりました。",
-    "problem_badge": "リアルな悩み",
+    "problem_title": "こんな経験、ありませんか？",
+    "problem_desc": "ARAは実際の学習者が最もよく話す経験から生まれました。",
+    "problem_badge": "リアルな経験",
     "problems": {
-      "1": "ドラマを見ても重要な表現がただ通り過ぎてしまいます。",
-      "2": "実際の状況で使う韓国語を学びたいけど、方法がわかりません。",
-      "3": "表現を学んでも、物語の中でどう使われるのかピンときません。",
-      "4": "自分のレベルに合った楽しめるコンテンツがありません。",
-      "5": "一人で勉強すると、続けるのが難しいです。"
+      "1": "ドラマを見ても大事な表現がそのまま流れてしまう。",
+      "2": "実際の場面で使う韓国語を学びたいけど、方法がわからない。",
+      "3": "表現を学んでも、文脈の中でどう使われるか感覚がつかめない。",
+      "4": "自分のレベルで楽しめるコンテンツがない。",
+      "5": "一人で勉強を続けるのが難しい。"
     },
-    "how_it_works_badge": "仕組み",
-    "how_it_works_title": "ARA学習の流れはこのように進みます",
-    "guide_alt": "ARAガイド{{index}}",
+    "how_it_works_badge": "HOW IT WORKS",
+    "how_it_works_title": "ARAの学習フローはこう進みます",
+    "guide_alt": "ARAガイド {{index}}",
     "popular": {
-      "title": "このようなコンテンツで学びます",
-      "description": "昔話や説話を基にしたオリジナルアニメーションコンテンツを中心に学習の流れが構成されます。",
-      "loading": "人気コンテンツを読み込んでいます..."
+      "title": "こんなコンテンツで学びます",
+      "description": "日常アニメから昔話、韓国文化まで、多彩な自社制作コンテンツで学習の流れが組まれています。",
+      "loading": "人気コンテンツを読み込み中..."
     },
     "solution": {
       "title": "なぜARAなのか？",
       "description": [
-        "単語だけを覚える学習ではなく、コンテンツの流れや感情まで",
-        "一緒に記憶される学習を目指して作りました。",
-        "学習とコミュニティ、二つの体験が一画面で自然に続くように設計しました。"
+        "単語を暗記するだけでなく、コンテンツの流れや感情まで",
+        "一緒に記憶される学習を目指しています。",
+        "学習とコミュニティ、2つの体験が1つの画面で自然につながるよう設計しました。"
       ],
       "features": {
         "1": {
-          "title": "物語ベースの学習",
-          "desc": "昔話・説話アニメーションのエピソードを追いながら、語彙、表現、文化的文脈を一緒に学びます。"
+          "title": "自社制作アニメ学習",
+          "desc": "日常・昔話・韓国文化アニメで、韓国人が実際に使う生きた表現を学びます。"
         },
         "2": {
-          "title": "使いながら学ぶ構造",
-          "desc": "学習後すぐに表現を使ってみて、例文とフィードバックでより自然な表現を学びます。"
+          "title": "字幕・単語・発音・文化ノート",
+          "desc": "1本のアニメで字幕、単語、発音はもちろん、表現の文化的背景まで担った文化ノートで深く理解できます。"
         },
         "3": {
-          "title": "グローバルコミュニティ",
-          "desc": "異なる言語と背景を持つ学習者が集まり、物語でつながる韓国語使用体験を共有します。"
+          "title": "SNSとチャットで直接使う",
+          "desc": "異なる言語や背景を持つ学習者が集まり、学んだ表現をSNSで直接使い、1:1チャットで交流しながら自然に定着します。"
         }
       }
     },
     "slider": {
       "preview": {
         "title": "物語で学ぶ韓国語表現",
-        "subtitle": "状況の中の会話で表現とニュアンスを自然に",
+        "subtitle": "場面の会話で表現とニュアンスを自然に",
         "bullets": [
           "会話 → 表現理解",
-          "使用状況 & 文化のヒント",
-          "短い練習問題を含む"
+          "使用場面 & 文化ティップ",
+          "短い練習問題付き"
         ],
         "ctaLabel": "エピソードプレビュー",
         "alt": "物語ベースのエピソード学習画面"
       },
       "folktale": {
         "title": "昔話・説話で出会う韓国語",
-        "subtitle": "昔話を現代韓国語で読み直します",
+        "subtitle": "昔の話を現代韓国語で読み直す",
         "bullets": [
           "昔話 & 説話コンテンツ",
-          "表現の中の文化と背景の説明",
-          "初心者向けおすすめパック"
+          "表現の文化・背景説明",
+          "初心者向けおすすめセット"
         ],
-        "ctaLabel": "童話コンテンツプレビュー",
-        "alt": "韓国の伝説と物語学習コンテンツ"
+        "ctaLabel": "昔話コンテンツプレビュー",
+        "alt": "韓国昔話・説話学習コンテンツ"
       },
       "community": {
-        "title": "世界中の友達と一緒に練習",
-        "subtitle": "様々な言語の学習者と文を共有し、フィードバックを受け取ります",
+        "title": "世界中の仲間と一緒に練習",
+        "subtitle": "様々な言語の学習者と文を共有しフィードバックをもらう",
         "bullets": [
           "多言語ユーザーコミュニティ",
-          "短い文の交流",
-          "表現/文化のヒント共有"
+          "短い文章交流",
+          "表現・文化ティップ共有"
         ],
         "ctaLabel": "コミュニティプレビュー",
         "alt": "グローバルコミュニティ活動例"
@@ -1356,66 +1341,143 @@
     },
     "testimonials": {
       "title": {
-        "line1": "ARAはこのような学習者を",
-        "line2": "思い浮かべて設計されています"
+        "line1": "ARAはこんな学習者のために",
+        "line2": "作られました"
       },
       "description": {
-        "intro": "まだ正式リリース前ですが、ARAは一人の典型的な学習者を思い浮かべるのではなく",
+        "intro": "まだ正式ローンチ前ですが、ARAは一人の典型的な学習者を想像するのではなく、",
         "highlight": "様々なタイプの学習者",
-        "body": "一緒に想像しながら作られています。",
+        "body": "を一緒に想像しながら作られています。",
         "detail": [
-          "韓国語を始めたばかりの人からワーホリ・留学を準備する人、",
-          "日常や仕事で韓国語を使わなければならない会社員まで。",
-          "好きなコンテンツとコミュニティを一緒に使うと学習がより長く、",
-          "自然に続くようにフローを設計しています。"
+          "韓国語を始めたばかりの方からワーホリ・留学を準備する方、",
+          "日常や仕事で韓国語が必要な方まで。",
+          "好きなコンテンツとコミュニティを一緒に使うと学習が長く、",
+          "自然に続くフローを設計しています。"
         ]
       },
       "stats": {
         "duration": {
-          "label": "学習持続時間",
-          "desc": "一人で教材だけで勉強するよりも長く続けられるようにフローを設計しています。"
+          "label": "学習継続時間",
+          "desc": "教材だけで勉強するより長く留まれるようフローを設計しています。"
         },
         "persona": {
           "label": "ペルソナタイプ",
-          "desc": "様々な国・様々な目標を持つ学習者タイプを想定して画面と機能を検討しています。"
+          "desc": "様々な国・目標を持つ学習者タイプを設定し、画面と機能を検討しています。"
         },
         "scenario": {
           "label": "学習シナリオ",
-          "desc": "どのような状況でARAを起動するか、シーン単位で学習シナリオを積み重ねています。"
+          "desc": "どんな場面でARAを開くか、場面単位で学習シナリオを積み重ねています。"
         }
       },
       "reviews": {
         "sarah": {
           "country": "アメリカ · US",
-          "persona": "ドラマで韓国語を始めた初級学習者",
-          "text": "これまでは字幕に頼って話を見ていたので、重要な表現をよく見逃していました。ARAでは一つのシーンごとに重要な表現を指摘してくれるので、「ああ、この状況でこの言葉を使うんだ」と理解できます。同じエピソードを見直しながら字幕を一つずつ減らしていく楽しみも生まれました。"
+          "persona": "ドラマから韓国語を始めた初級学習者",
+          "text": "ずっと字幕だけに頼って見ていたので大事な表現をよく見逃していました。ARAでは場面ごとに分けてキーとなる表現を教えてくれるので「あ、この場面ではこう言うんだ」と理解できます。同じエピソードを見返しながら字幕を一枚ずつ減らす楽しみもできました。"
         },
         "diego": {
           "country": "スペイン · ES",
-          "persona": "ワーホリ・留学準備中の実践型学習者",
-          "text": "ワーホリに行く前に実際に使う表現を中心に勉強したかったです。アニメーションの中の会話が状況別に整理されていて、「日常で使う言葉」、「注意して使うべき表現」を区別して学べたのが良かったです。"
+          "persona": "就職・留学準備中の実践型学習者",
+          "text": "ワーホリ前に実際に使う表現を中心に勉強したかったです。アニメの会話が場面別に整理されているので「日常で使う言葉」と「気をつけて使うべき表現」を区別して覚えられたのが良かったです。"
         },
         "meilin": {
           "country": "シンガポール · SG",
-          "persona": "話せるようになりたい中・上級学習者",
-          "text": "文法や単語はある程度知っているけど、話すのがいつも難しかったです。ARAでストーリーを見て短く感想やリアクションを書くと、より自然な表現に直してくれます。その文をそのままフィードやDMで使ってみると、話す感覚が少しずつ戻ってくる感じがしました。"
+          "persona": "話すきっかけを作りたい中上級学習者",
+          "text": "文法や単語はある程度わかるのに、言葉にするのがいつも難しかったです。ARAで物語を見て短い感想やリアクションを書くと、より自然な表現に直してくれます。その文をそのままフィードやDMで使ってみると話す感覚が少しずつ戻ってくる気がしました。"
         },
         "alexey": {
           "country": "ロシア · RU",
-          "persona": "ビジネス表現が必要な社会人学習者",
-          "text": "韓国のパートナーとコミュニケーションを取ることが多く、ビジネス表現が必要でした。アニメーションの中で大人と子供、上司と部下の話し方を比較しながら、状況に合った表現を自然に学ぶことができました。単なる翻訳ではなく、文脈を理解できる点が印象的でした。"
+          "persona": "ビジネス表現が必要な会社員学習者",
+          "text": "韓国のパートナーとやり取りが多くてビジネス表現が必要でした。アニメの中で大人と子供、上司と部下の話し方を比べながら、場面に合った表現を自然に覚えられました。単なる翻訳ではなく文脈を理解できるのが印象的でした。"
         },
         "hana": {
           "country": "日本 · JP",
-          "persona": "ルーチンが途切れがちな自己啓発型学習者",
-          "text": "教材で勉強すると数日で流れが途切れてしまいました。ARAでは短いストーリーを一つ見るだけで学習できるので負担がありません。「今日はこのシーンまで」と思って始めたら、自然に毎日アクセスするルーチンができました。"
+          "persona": "ルーティンが続きにくい自己啓発型学習者",
+          "text": "教材で勉強していると数日で流れが途切れていました。ARAでは短い物語を一本見るだけで学習になるので負担がありません。「今日はこの場面まで」と入ってきたのに自然に毎日アクセスするルーティンができました。"
         }
       },
       "notice": {
-        "mobile": "今ご覧になっているレビューは、ARAが想定した学習者ペルソナを基に構成したシナリオ型の例示レビューです。",
-        "desktop": "今ご覧になっているレビューは実際のユーザーデータではなく、ARAがターゲットとしている学習者ペルソナを基に構成したシナリオ型レビューです。正式ローンチ後には、実際の学習者のストーリーと共にこのセクションが随時更新される予定です。"
+        "mobile": "表示されているレビューはARAが想定した学習者ペルソナをもとに構成したシナリオ型サンプルレビューです。",
+        "desktop": "表示されているレビューは実際のユーザーデータではなく、ARAがターゲットとする学習者ペルソナをもとに構成したシナリオ型レビューです。正式ローンチ後は実際の学習者の声とともにこのセクションが更新される予定です。"
       }
     }
+  },
+  "footer": {
+    "brand": {
+      "slogan_main": "Korean Through Stories, Connected by Culture.",
+      "slogan_sub": "アニメで学び、コミュニティで共に成長しよう。"
+    },
+    "social": {
+      "youtube": "YouTube",
+      "instagram": "Instagram",
+      "threads": "Threads",
+      "x": "X",
+      "facebook": "Facebook"
+    },
+    "columns": {
+      "product": {
+        "title": "製品",
+        "features": "機能",
+        "pricing": "料金プラン",
+        "roadmap": "ロードマップ",
+        "security": "セキュリティ"
+      },
+      "resources": {
+        "title": "リソース",
+        "api": "APIリファレンス",
+        "community": "コミュニティ",
+        "help_center": "ヘルプセンター"
+      },
+      "company": {
+        "title": "会社",
+        "about": "会社概要",
+        "contact": "お問い合わせ"
+      }
+    },
+    "newsletter": {
+      "title": "最新情報を受け取る",
+      "desc": "ARAの新しいコンテンツとアップデート情報をいち早く受け取ろう。",
+      "placeholder": "メールアドレスを入力"
+    },
+    "bottom": {
+      "terms": "利用規約",
+      "privacy": "プライバシーポリシー",
+      "cookies": "クッキー"
+    },
+    "office": {
+      "address_name": "大邱本社",
+      "address": "大邱広域市",
+      "tel": "010-0000-0000",
+      "registration": "000-00-00000",
+      "email": "koreara25@gmail.com"
+    }
+  },
+  "translation": {
+    "login_required": "ログイン後に翻訳機能をご利用いただけます。",
+    "guest_limit_reached": "無料翻訳の回数を使い切りました。ログインして続けてください。"
+  },
+  "report": {
+    "report": "報告",
+    "reason": "通報理由",
+    "status": {
+      "dismissed": "報告却下"
+    },
+    "desc": "報告理由を選択してください。妥当な理由がない場合、処理が遅れることがあります。",
+    "reason_label": "理由選択",
+    "description_label": "詳細内容",
+    "description_placeholder": "報告理由を詳しく記入してください。",
+    "select_placeholder": "理由を選択してください",
+    "select_reason": "報告理由を選択してください。",
+    "enter_description": "詳細理由を入力してください。",
+    "success": "報告が受理されました。",
+    "reasons": {
+      "spam": "スパム / 不適切な宣伝",
+      "abuse": "悪口 / 誹謗中傷",
+      "harmful": "有害なコンテンツ",
+      "inappropriate": "不適切な内容",
+      "other": "その他 (直接入力)"
+    },
+    "title": "報告する"
   },
   "home": {
     "greeting_night": "こんばんは / 夜明けです",
@@ -1434,103 +1496,6 @@
     "field_progress": "分野別進捗",
     "percent_complete": "{{percent}}% 完了",
     "time_left": "のこり {{time}}"
-  },
-  "recovery_reminder": {
-    "title": "アカウントセキュリティ強化のご案内",
-    "desc": "パスワードを紛失した際にアカウントを安全に復旧できるよう、復旧用の質問とメールアドレスを設定してください。",
-    "action": "今すぐ設定する",
-    "later": "後でやる"
-  },
-  "find_email": {
-    "nickname_placeholder": "ニックネームを入力してください",
-    "result_found": "会員様のメールアドレス",
-    "title": "メール探し",
-    "method_select": "検索方法を選択",
-    "method_recovery_email": "復旧メールで検索",
-    "method_question": "復旧質問で検索",
-    "nickname_label": "ニックネーム",
-    "recovery_email_label": "復旧メール",
-    "recovery_email_placeholder": "登録時に登録した復旧メール",
-    "your_question": "会員が設定した質問",
-    "answer_label": "回答",
-    "answer_placeholder": "回答を入力してください",
-    "find_button": "メールを検索",
-    "finding": "検索中...",
-    "error_not_found": "一致する情報がありません。",
-    "error_no_recovery": "登録された復旧情報がありません。",
-    "error_nickname_required": "ニックネームを入力してください。",
-    "error_recovery_email_required": "復旧メールを入力してください。",
-    "error_answer_required": "回答を入力してください。",
-    "back_to_login": "ログインに戻る",
-    "select_method": "方法を選択してください"
-  },
-  "reset_password": {
-    "sending": "送信中...",
-    "title": "パスワードをリセット",
-    "email_label": "メール",
-    "email_placeholder": "登録したメールアドレス",
-    "send_reset_link": "リセットリンクを送信",
-    "success_title": "メール送信完了",
-    "success_message": "パスワードリセットリンクがメールで送信されました。",
-    "check_inbox": "受信トレイを確認してください。",
-    "error_email_required": "メールアドレスを入力してください。",
-    "error_invalid_email": "有効なメールアドレスを入力してください。",
-    "back_to_login": "ログインに戻る"
-  },
-  "update_password": {
-    "error_failed": "パスワードの変更に失敗しました。",
-    "updating": "変更中...",
-    "title": "新しいパスワードを設定",
-    "new_password_label": "新しいパスワード",
-    "new_password_placeholder": "新しいパスワードを入力",
-    "confirm_password_label": "パスワード確認",
-    "confirm_password_placeholder": "パスワードを再入力",
-    "update_button": "パスワード変更",
-    "success_title": "パスワード変更完了",
-    "success_message": "パスワードが正常に変更されました。",
-    "go_to_login": "ログインする",
-    "error_required": "パスワードを入力してください。",
-    "error_length": "パスワードは8文字以上である必要があります。",
-    "error_mismatch": "パスワードが一致しません。"
-  },
-  "voca": {
-    "pos": {
-      "noun": "名詞",
-      "verb": "動詞",
-      "adjective": "形容詞",
-      "adverb": "副詞",
-      "pronoun": "代名詞",
-      "numeral": "数詞",
-      "determiner": "連体詞",
-      "particle": "助詞",
-      "interjection": "感嘆詞"
-    }
-  },
-  "not_found": {
-    "discovery": "迷子のページを見つけました",
-    "title": "まだスクリプトが書かれていないシーンです",
-    "description": "このアドレスにはまだARAのエピソードが準備されていません。ホームに戻って他のKコンテンツで韓国語と文化を引き続き楽しんでみませんか？",
-    "quote_part1": "「いつかこのページも",
-    "quote_accent": "一つのシーン",
-    "quote_part2": "で埋められるでしょう。」",
-    "feedback_prefix": "このページで期待していた機能やアイデアがあれば、ARA内のフィードバックメニューで気軽に残すか",
-    "feedback_suffix": "にご連絡ください。"
-  },
-  "community": {
-    "seo": {
-      "title": "コミュニティ | ARA - Kコンテンツで学ぶ韓国語",
-      "description": "世界中の学習者が集まるARAコミュニティです。Kコンテンツを通じて韓国語を学び、友達と交流し、各国の文化を楽しんでください。",
-      "keywords": "ARA、韓国語学習、韓国語を学ぶ、韓国文化、K-POP、K-ドラマ、K-カルチャー、言語交換、フィード、グローバル学習者",
-      "og_title": "ARAコミュニティ - Kコンテンツ基盤のグローバル学習プラットフォーム",
-      "og_description": "Kコンテンツで韓国語を学び、世界各国の学習者と交流するグローバルホームフィードARA。"
-    },
-    "title": "コミュニティ",
-    "no_results": "検索結果がありません。",
-    "no_posts": "まだ共有されたニュースがありません。",
-    "all_posts_loaded": "すべてのニュースを確認しました。",
-    "hidden_content": "管理者によって非表示にされた投稿です。",
-    "deleted_post": "この投稿はポリシー違反のため削除されました。",
-    "edit_post": "投稿を編集"
   },
   "subscription": {
     "plans": {
@@ -1555,50 +1520,15 @@
         "feature_promo": "専用プロモーション"
       },
       "premium": {
-        "feature_profile": "プレミアムプロフィールバッジ",
         "title": "プレミアムプラン",
         "desc": "すべての特典を享受するオールインワンプラン",
         "interval": "ヶ月",
         "feature_course": "全コース利用",
+        "feature_profile": "プレミアムプロフィールバッジ",
         "feature_ads": "広告削除",
         "feature_badge": "プレミアムバッジ",
         "feature_coupon": "月別専用クーポン"
       }
-    },
-    "payment_modal": {
-      "pay_now": "{{price}} を支払う",
-      "title": "決済情報",
-      "promo_code": "プロモーションコード",
-      "coupon_placeholder": "クーポンコードを入力してください",
-      "apply": "適用",
-      "coupon_applied": "{{name}}クーポンが適用されました",
-      "card_info": "カード情報",
-      "card_number": "カード番号",
-      "expiry": "有効期限 (MM/YY)",
-      "cvc": "CVC",
-      "payment_success": "決済が完了しました！",
-      "plan_applied": "{{plan}}プランが適用されました。",
-      "payment_fail": "決済失敗: {{error}}",
-      "test_warning": "⚠️ これはテスト決済シミュレーションです。実際の決済は行われません。",
-      "cancel_confirm_title": "購読解除",
-      "cancel_confirm_desc": "本当に購読を解除しますか？",
-      "cancel_subscription": "購読解除",
-      "keep_subscription": "購読を維持"
-    },
-    "errors": {
-      "coupon_error": "クーポン検証中にエラーが発生しました。",
-      "login_required": "購読にはログインが必要です。",
-      "already_free": "すでに無料プランを使用中です。",
-      "cancel_success": "購読が正常に解除されました。",
-      "cancel_fail": "解除中にエラーが発生しました: {{error}}",
-      "coupon_success": "クーポンが適用されました！",
-      "coupon_invalid": "無効なクーポンです。"
-    },
-    "cancel_confirm": {
-      "title": "購読を解約",
-      "desc": "本当に購読を解約しますか？無料プランに変更されます。",
-      "btn_confirm": "解約する",
-      "btn_cancel": "維持する"
     },
     "current_plan": "現在のプラン",
     "active_status": "アクティブ",
@@ -1612,6 +1542,26 @@
     "recent_coupons": "最近のクーポン",
     "history_all": "全履歴",
     "premium_only": "プレミアム専用コンテンツ",
+    "payment_modal": {
+      "title": "決済情報",
+      "promo_code": "プロモーションコード",
+      "coupon_placeholder": "クーポンコードを入力してください",
+      "apply": "適用",
+      "coupon_applied": "{{name}}クーポンが適用されました",
+      "card_info": "カード情報",
+      "card_number": "カード番号",
+      "expiry": "有効期限 (MM/YY)",
+      "cvc": "CVC",
+      "pay_now": "{{price}} を支払う",
+      "payment_success": "決済が完了しました！",
+      "plan_applied": "{{plan}}プランが適用されました。",
+      "payment_fail": "決済失敗: {{error}}",
+      "test_warning": "⚠️ これはテスト決済シミュレーションです。実際の決済は行われません。",
+      "cancel_confirm_title": "購読解除",
+      "cancel_confirm_desc": "本当に購読を解除しますか？",
+      "cancel_subscription": "購読解除",
+      "keep_subscription": "購読を維持"
+    },
     "back": "戻る",
     "title_prefix": "自分だけのプランを",
     "title_highlight": "選んでください",
@@ -1621,7 +1571,22 @@
     "guaranteed_payment": "安全な決済を保証します",
     "secure_payment": "安全な決済",
     "cancel_anytime": "いつでも解約可能",
-    "all_cards_supported": "すべてのカードに対応"
+    "all_cards_supported": "すべてのカードに対応",
+    "errors": {
+      "login_required": "購読にはログインが必要です。",
+      "already_free": "すでに無料プランを使用中です。",
+      "cancel_success": "購読が正常に解除されました。",
+      "cancel_fail": "解除中にエラーが発生しました: {{error}}",
+      "coupon_success": "クーポンが適用されました！",
+      "coupon_invalid": "無効なクーポンです。",
+      "coupon_error": "クーポン検証中にエラーが発生しました。"
+    },
+    "cancel_confirm": {
+      "title": "購読を解約",
+      "desc": "本当に購読を解約しますか？無料プランに変更されます。",
+      "btn_confirm": "解約する",
+      "btn_cancel": "維持する"
+    }
   },
   "marketing": {
     "subscription": {

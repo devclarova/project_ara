@@ -278,36 +278,37 @@ export function ReplyCard({
     }
   };
 
-  const [isLikeProcessing, setIsLikeProcessing] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
 
   // 댓글 좋아요 토글
   const toggleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
     closeInteractions();
     if (disableInteractions) return;
-    if (isLikeProcessing) return;
+    if (isLiking) return;
 
     if (!authUser) {
       toast.error(t('auth.login_needed'));
       return;
     }
-    const currentProfileId = await ensureMyProfileId();
-    if (!currentProfileId) {
-      toast.error(t('common.error_profile_loading'));
-      return;
-    }
 
-    setIsLikeProcessing(true);
-
-    // Toggle optimistic
-    const nextLiked = !liked;
-    const nextCount = nextLiked ? likeCount + 1 : Math.max(0, likeCount - 1);
-
-    setLiked(nextLiked);
-    setLikeCount(nextCount);
-    onLike?.(reply.id, nextLiked ? 1 : -1);
+    setIsLiking(true);
 
     try {
+      const currentProfileId = await ensureMyProfileId();
+      if (!currentProfileId) {
+        toast.error(t('common.error_profile_loading'));
+        return;
+      }
+
+      // Toggle optimistic
+      const nextLiked = !liked;
+      const nextCount = nextLiked ? likeCount + 1 : Math.max(0, likeCount - 1);
+
+      setLiked(nextLiked);
+      setLikeCount(nextCount);
+      onLike?.(reply.id, nextLiked ? 1 : -1);
+
       if (!nextLiked) {
         // 좋아요 취소
         const { error: deleteError } = await (supabase.from('tweet_replies_likes') as any)
@@ -346,8 +347,10 @@ export function ReplyCard({
 
             if (!existingNoti) {
               // 상호 차단 관계인 경우 알림 생성을 스킵함
-              const isBlockedRelation = receiverProfile.id && ((blockedIds ?? []).includes(receiverProfile.id) || (blockingMeIds ?? []).includes(receiverProfile.id));
-              
+              const isBlockedRelation =
+                receiverProfile.id &&
+                ((blockedIds ?? []).includes(receiverProfile.id) || (blockingMeIds ?? []).includes(receiverProfile.id));
+
               if (!isBlockedRelation) {
                 await (supabase.from('notifications') as any).insert({
                   receiver_id: receiverProfile.id,
@@ -365,12 +368,14 @@ export function ReplyCard({
     } catch (err: unknown) {
       console.error('좋아요 처리 실패:', getErrorMessage(err));
       toast.error(t('common.error_like'));
-      // Rollback
-      setLiked(!nextLiked);
-      setLikeCount(likeCount); // Revert to original
-      onLike?.(reply.id, !nextLiked ? 1 : -1);
+      
+      // Rollback optimistic update
+      // catch 블록 진입 시점에 nextLiked가 정의되어 있다면 반대 값으로 복구
+      setLiked(prev => !prev);
+      setLikeCount(prev => (liked ? prev + 1 : Math.max(0, prev - 1))); // 원래 liked가 true였으면 취소 실패이므로 +1, false였으면 추가 실패이므로 -1
+      onLike?.(reply.id, liked ? 1 : -1);
     } finally {
-      setIsLikeProcessing(false);
+      setIsLiking(false);
     }
   };
 
@@ -621,7 +626,7 @@ export function ReplyCard({
         ${containerClasses} 
         group relative cursor-pointer outline-none transition-all duration-300 w-full
         ${depth > 0 ? 'bg-secondary/[0.02] dark:bg-primary/[0.01]' : 'bg-white dark:bg-background'}
-        hover:bg-primary/[0.06] dark:hover:bg-primary/[0.08]
+        hover:bg-[#e0f5f1] dark:hover:bg-primary/[0.08]
       `}
       style={{
         paddingLeft: 16 + depth * 40, // Base 16px + Depth Offset

@@ -102,41 +102,55 @@ export function useAutoTranslation(text: string, contentId: string, targetLang: 
 
           const { data: { user } } = await supabase.auth.getUser();
 
-          // 5. If logged in, check Supabase first
-          if (user) {
-            const { data: existing } = await (supabase.from('translations') as any)
-              .select('translated_text')
-              .eq('content_id', uniqueId)
-              .eq('target_lang', targetLang)
-              .maybeSingle();
+          // 5. Check Supabase (DB Cache)
+          const { data: existing } = await (supabase.from('translations') as any)
+            .select('translated_text')
+            .eq('content_id', uniqueId)
+            .eq('target_lang', targetLang)
+            .maybeSingle();
 
-            if (existing) {
-              const val = existing.translated_text;
-              memoryCache[cacheKey] = val;
-              try { sessionStorage.setItem(cacheKey, val); } catch {}
-              
-              if (mounted) {
-                setTranslatedText(val);
-                setIsLoading(false);
-              }
-              return;
+          if (existing) {
+            const val = existing.translated_text;
+            memoryCache[cacheKey] = val;
+            try { sessionStorage.setItem(cacheKey, val); } catch {}
+            
+            if (mounted) {
+              setTranslatedText(val);
+              setIsLoading(false);
             }
+            return;
           }
 
           // 6. Call Local Server API
-          const response = await fetch('/api/translate-single', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              text,
-              targetLang,
-            }),
-          });
+          let retryCount = 0;
+          const MAX_RETRIES = 3;
+          const BACKOFF_MS = [1000, 2000, 4000];
+          let response: Response | null = null;
+
+          while (retryCount <= MAX_RETRIES) {
+            response = await fetch('/api/translate-single', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                text,
+                targetLang,
+              }),
+            });
+
+            if (response.status === 429 && retryCount < MAX_RETRIES) {
+              const waitTime = BACKOFF_MS[retryCount];
+              console.warn(`Translation API 429: Retrying in ${waitTime}ms... (${retryCount + 1}/${MAX_RETRIES})`);
+              await new Promise(resolve => setTimeout(resolve, waitTime));
+              retryCount++;
+              continue;
+            }
+            break;
+          }
   
-          if (!response.ok) {
-             console.error('Translation API Error:', response.status);
+          if (!response || !response.ok) {
+             console.error('Translation API Error:', response?.status);
              return;
           }
   

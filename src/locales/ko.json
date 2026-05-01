@@ -179,6 +179,26 @@
       "status_learning": "학습 중",
       "status_known": "학습 완료",
       "status_unknown": "미학습",
+      "modal_default_title": "단어 카드",
+      "modal_title": "단어 카드",
+      "aria_bookmark_remove": "북마크 해제",
+      "aria_bookmark_save": "북마크 저장",
+      "word_card": "단어 카드",
+      "word_image": "단어 이미지",
+      "view_translation": "번역 보기",
+      "view_original": "원문 보기",
+      "stop_tts": "발음 중지",
+      "play_tts": "발음 듣기",
+      "stop_tts_short": "중지",
+      "play_tts_short": "발음",
+      "go_episode": "에피소드로 이동",
+      "go_voca": "단어장으로 이동",
+      "go_episode_short": "에피소드로",
+      "go_voca_short": "단어장",
+      "no_words_to_show": "표시할 단어가 없어요.",
+      "loading": "단어 로딩 중...",
+      "error": "단어 로딩 오류",
+      "no_words": "단어를 찾을 수 없습니다.",
       "delete_confirm": {
         "title_single": "단어 삭제",
         "title_all": "전체 삭제",
@@ -552,7 +572,12 @@
     "translated": "번역됨",
     "auto_translated": "AI로 자동 번역됨",
     "add": "추가",
-    "unblock_modal_title": "정말 차단을 해제하시겠습니까?"
+    "unblock_modal_title": "정말 차단을 해제하시겠습니까?",
+    "upload_image_only": "이미지 파일만 업로드할 수 있습니다.",
+    "upload_video_size_limit": "동영상 용량은 10MB를 초과할 수 없습니다.",
+    "upload_file_size_limit": "파일 용량은 5MB를 초과할 수 없습니다.",
+    "coming_soon": "곧 만나요!",
+    "coming_soon_desc": "지금 열심히 준비하고 있습니다. 더 멋진 기능으로 찾아뵐게요! 🚀"
   },
   "voca": {
     "pos": {
@@ -1212,14 +1237,14 @@
     }
   },
   "landing": {
-    "badge": "이야기로 배우는 한국어 · 커뮤니티",
-    "title_1": "콘텐츠로 언어를 배우고",
-    "title_2": "문화로 연결되는 경험",
-    "description": "자체 제작 에피소드와 한국 전래동화·설화를 통해 배우는 표현들",
-    "description2": "전 세계 친구들과 함께 쓰고, 고치고, 나누는 한국어 학습 공간 ARA",
-    "point_1": "이야기 기반 에피소드 학습",
-    "point_2": "전래동화·설화로 표현 이해",
-    "point_3": "글로벌 학습 커뮤니티",
+    "badge": "애니메이션으로 배우는 한국어 · 글로벌 커뮤니티",
+    "title_1": "살아있는 한국어를 애니메이션으로 배우고",
+    "title_2": "전 세계 친구들과 함께 성장하세요",
+    "description": "자체 제작 애니메이션으로 한국인이 실제로 쓰는 표현을 배우고",
+    "description2": "SNS로 직접 사용하고 1:1 채팅으로 소통하는 한국어 학습 플랫폼 ARA",
+    "point_1": "자체 제작 애니메이션 학습",
+    "point_2": "자막·단어·발음·문화노트",
+    "point_3": "글로벌 SNS 커뮤니티",
     "cta_start": "바로 시작하기",
     "cta_explore": "콘텐츠 둘러보기",
     "scroll_hint": "Scroll to explore",
@@ -1239,9 +1264,9 @@
     "cta_title_2": "'경험'으로 시작하세요",
     "cta_description": "지금 가입하고 인기 드라마 장면으로 만드는 나만의 첫 번째 학습 코스를 시작해 보세요.",
     "cta_start_free": "무료로 시작하기",
-    "problem_title": "혹시 이런 고민, 해본 적 있나요?",
-    "problem_desc": "ARA는 실제 학습자들이 가장 많이 이야기한 고민에서 출발했습니다.",
-    "problem_badge": "real 고민",
+    "problem_title": "혹시 이런 경험, 해본 적 있나요?",
+    "problem_desc": "ARA는 실제 학습자들이 가장 많이 이야기한 경험에서 출발했습니다.",
+    "problem_badge": "real 경험",
     "problems": {
       "1": "드라마를 봐도 중요한 표현이 그냥 지나가버려요.",
       "2": "실제 상황에서 쓰는 한국어를 배우고 싶은데 방법을 모르겠어요.",
@@ -1254,7 +1279,7 @@
     "guide_alt": "ARA 가이드 {{index}}",
     "popular": {
       "title": "이런 콘텐츠로 배우게 돼요",
-      "description": "전래동화와 설화를 바탕으로 한 자체 애니메이션 콘텐츠를 중심으로 학습 흐름이 구성됩니다.",
+      "description": "실생활 애니메이션부터 전래동화, 한국 문화까지 다양한 자체 제작 콘텐츠로 학습 흐름이 구성됩니다.",
       "loading": "인기 콘텐츠를 불러오는 중이에요..."
     },
     "solution": {
@@ -1266,16 +1291,16 @@
       ],
       "features": {
         "1": {
-          "title": "이야기 기반 학습",
-          "desc": "전래동화·설화 애니메이션 한 에피소드를 따라가며 어휘, 표현, 문화적 맥락을 함께 익힙니다."
+          "title": "자체 제작 애니메이션 학습",
+          "desc": "실생활·전래동화·한국 문화 애니메이션으로 한국인이 실제로 쓰는 살아있는 표현을 배웁니다."
         },
         "2": {
-          "title": "사용하면서 배우는 구조",
-          "desc": "학습 후 바로 표현을 써보고, 예시 문장과 피드백으로 더 자연스러운 표현을 익힙니다."
+          "title": "자막·단어·발음·문화노트",
+          "desc": "한 편의 애니메이션으로 자막, 단어, 발음은 물론 표현 속 문화적 배경까지 담은 문화노트로 깊이 있게 이해할 수 있습니다."
         },
         "3": {
-          "title": "글로벌 커뮤니티",
-          "desc": "서로 다른 언어와 배경을 가진 학습자들이 모여, 이야기로 연결되는 한국어 사용 경험을 나눕니다."
+          "title": "SNS와 채팅으로 직접 사용하기",
+          "desc": "서로 다른 언어와 배경을 가진 학습자들이 모여, 배운 표현을 SNS에서 직접 쓰고 1:1 채팅으로 교류하며 학습이 자연스럽게 이어집니다."
         }
       }
     },
@@ -1317,7 +1342,7 @@
     "testimonials": {
       "title": {
         "line1": "ARA는 이런 학습자들을",
-        "line2": "떠올리며 설계되고 있어요"
+        "line2": "위해 만들어졌어요"
       },
       "description": {
         "intro": "아직 정식 출시 전이지만, ARA는 한 명의 전형적인 학습자를 떠올리기보다",
@@ -1352,7 +1377,7 @@
         },
         "diego": {
           "country": "스페인 · ES",
-          "persona": "워홀·유학 준비 중인 실전형 학습자",
+          "persona": "취업·유학 준비 중인 실전형 학습자",
           "text": "워홀 가기 전에 실제로 쓸 표현 위주로 공부하고 싶었어요. 애니메이션 속 대화가 상황별로 정리되어 있어서, “일상에서 쓰는 말”, “조심해서 써야 하는 표현”을 구분해서 익힐 수 있었던 게 좋았습니다."
         },
         "meilin": {
@@ -1379,8 +1404,8 @@
   },
   "footer": {
     "brand": {
-      "slogan_main": "Connect Culture, Expand World.",
-      "slogan_sub": "언어의 장벽을 넘어 진정한 소통을 경험하세요."
+      "slogan_main": "Korean Through Stories, Connected by Culture.",
+      "slogan_sub": "애니메이션으로 배우고, 커뮤니티로 함께 성장하세요."
     },
     "social": {
       "youtube": "YouTube",
@@ -1393,43 +1418,38 @@
       "product": {
         "title": "제품",
         "features": "기능",
-        "enterprise": "엔터프라이즈",
-        "security": "보안",
-        "pricing": "가격"
+        "pricing": "요금제",
+        "roadmap": "로드맵",
+        "security": "보안"
       },
       "resources": {
         "title": "리소스",
-        "documentation": "문서",
         "api": "API 레퍼런스",
         "community": "커뮤니티",
-        "webinars": "웨비나",
         "help_center": "도움말 센터"
       },
       "company": {
         "title": "회사",
         "about": "회사 소개",
-        "careers": "채용",
-        "blog": "블로그",
-        "contact": "문의하기",
-        "office": "오피스"
+        "contact": "문의하기"
       }
     },
     "newsletter": {
       "title": "최신 소식 받기",
-      "desc": "10,000명 이상의 학습자와 함께 서비스 팁과 업데이트 소식을 놓치지 마세요.",
+      "desc": "ARA의 새로운 콘텐츠와 업데이트 소식을 가장 먼저 받아보세요.",
       "placeholder": "이메일 주소 입력"
     },
     "bottom": {
-      "rights": "© {{year}} Ara Inc. All rights reserved.",
       "terms": "이용약관",
       "privacy": "개인정보처리방침",
       "cookies": "쿠키"
     },
     "office": {
-      "address_name": "서울 본사",
-      "address": "서울특별시 강남구 테헤란로 123",
-      "tel": "Tel: +82 2-1234-5678",
-      "registration": "사업자등록번호: 123-45-67890"
+      "address_name": "대구 본사",
+      "address": "대구광역시",
+      "tel": "010-0000-0000",
+      "registration": "000-00-00000",
+      "email": "koreara25@gmail.com"
     }
   },
   "translation": {
@@ -1573,4 +1593,4 @@
       "title": "아라 구독!"
     }
   }
-}
+}

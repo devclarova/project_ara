@@ -238,7 +238,7 @@ export default function ProfileAsap() {
   }
   return (
     // 프로필 레이아웃 컨테이너 — 뷰포트 중앙 정렬 및 플랜별(Premium) 특화 시각 효과 적용
-    <div className={`min-h-screen relative overflow-hidden ${userProfile.plan === 'premium' ? 'bg-[#0a1a14] dark:bg-[#050d0a]' : 'bg-white dark:bg-background'}`}>
+    <div className={`min-h-screen relative overflow-hidden ${userProfile.plan === 'premium' ? 'bg-white dark:bg-[#0a1a14]' : 'bg-white dark:bg-background'}`}>
       {userProfile.plan === 'premium' && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
           <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[50vh] bg-[#00BFA5]/10 rounded-[100%] blur-[120px] opacity-70 animate-pulse mix-blend-screen" style={{ animationDuration: '8s' }}></div>
@@ -250,18 +250,18 @@ export default function ProfileAsap() {
         {/* 가운데 프로필 컬럼 */}
         <div className={`w-full max-w-2xl lg:max-w-3xl border-x ${userProfile.plan === 'premium' ? 'border-[#00BFA5]/20 bg-transparent' : 'border-gray-200 dark:border-gray-700 dark:bg-background'}`}>
           {/* 상단 네비게이션 레이어 — 스티키 레이아웃 기반의 이름 노출 및 뒤로가기 액션 제어 */}
-          <div className={`sticky top-0 backdrop-blur-md border-b p-4 z-20 ${userProfile.plan === 'premium' ? 'bg-[#0a1a14]/80 border-[#00BFA5]/20 shadow-[0_4px_20px_rgba(0,191,165,0.05)]' : 'bg-white/80 dark:bg-background/80 border-gray-200 dark:border-gray-700'}`}>
+          <div className={`sticky top-0 backdrop-blur-md border-b p-4 z-20 ${userProfile.plan === 'premium' ? 'bg-[#ccede8]/80 border-[#00BFA5]/20 shadow-[0_4px_20px_rgba(0,191,165,0.05)]' : 'bg-white/80 dark:bg-background/80 border-gray-200 dark:border-gray-700'}`}>
             <div className="flex items-center">
               {/* 뒤로가기 */}
               <button
                 onClick={() => navigate(-1)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition-colors"
+                className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${userProfile.plan === 'premium' ? 'hover:bg-[#b2e0da]/50' : 'hover:bg-gray-100 dark:hover:bg-primary/10'}`}
               >
                 <i className="ri-arrow-left-line text-xl text-gray-700 dark:text-gray-100" />
               </button>
               {/* 이름 */}
               <div className="flex flex-col ml-3 justify-center">
-                <h1 className={`text-xl font-bold flex items-center ${userProfile.plan === 'premium' ? 'text-[#00F0FF]' : 'text-gray-900 dark:text-gray-100'}`}>
+                <h1 className={`text-xl font-bold flex items-center ${userProfile.plan === 'premium' ? 'text-[#00796B] dark:text-[#00F0FF]' : 'text-gray-900 dark:text-gray-100'}`}>
                   {userProfile.name}
                   {userProfile.plan === 'premium' && (
                     <SeagullIcon size={20} className="ml-1 text-[#00BFA5] drop-shadow-[0_0_8px_rgba(0,191,165,0.8)]" />
@@ -281,7 +281,7 @@ export default function ProfileAsap() {
                       e.stopPropagation();
                       setShowMenu(prev => !prev);
                     }}
-                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition"
+                    className={`w-8 h-8 flex items-center justify-center rounded-full transition ${userProfile.plan === 'premium' ? 'hover:bg-[#b2e0da]/50' : 'hover:bg-gray-100 dark:hover:bg-primary/10'}`}
                   >
                     <i className="ri-more-fill text-gray-500 dark:text-gray-400 text-lg" />
                   </button>
@@ -293,7 +293,7 @@ export default function ProfileAsap() {
                           setShowMenu(false);
                           setShowReportModal(true);
                         }}
-                        className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 flex items-center gap-2 text-gray-800 dark:text-gray-200 text-sm"
+                        className={`w-full text-left px-4 py-3 flex items-center gap-2 text-gray-800 dark:text-gray-200 text-sm ${userProfile.plan === 'premium' ? 'hover:bg-[#b2e0da]/50' : 'hover:bg-gray-100 dark:hover:bg-white/10'}`}
                       >
                         <i className="ri-flag-line" />
                         {t('common.report')}

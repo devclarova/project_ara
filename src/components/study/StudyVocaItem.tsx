@@ -104,7 +104,7 @@ const StudyVocaItem = ({
   return (
     <div className="p-3 border dark:border-gray-600 rounded-lg bg-white dark:bg-secondary shadow-sm hover:bg-gray-50 dark:hover:bg-primary/5 transition-colors w-full min-h-[140px] h-full flex flex-col cursor-pointer">
       <div className="flex items-baseline gap-2">
-        <h4 className="font-semibold dark:text-gray-300">{displayTerm}</h4>
+        <h4 className="font-semibold dark:text-gray-300 break-all">{displayTerm}</h4>
 
         {displayPron ? (
           <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
@@ -120,7 +120,7 @@ const StudyVocaItem = ({
       ) : null}
 
       {displayMeaning ? (
-        <div className="mt-1 text-sm text-gray-700 dark:text-gray-300 font-medium">
+        <div className="mt-1 text-sm text-gray-700 dark:text-gray-300 font-medium break-words line-clamp-2">
           {displayMeaning}
         </div>
       ) : null}

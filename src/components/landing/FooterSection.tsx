@@ -16,8 +16,8 @@ export default function FooterSection() {
     <footer id="footer" className="relative w-full min-h-screen bg-white dark:bg-black text-foreground border-t border-black/5 dark:border-white/10 mt-auto flex flex-col">
       {/* 배경 장식 (은은한 그라데이션) */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-[50%] -left-[20%] w-[70%] h-[70%] rounded-full bg-primary/5 blur-[120px]" />
-        <div className="absolute top-[20%] -right-[20%] w-[60%] h-[60%] rounded-full bg-purple-500/5 blur-[100px]" />
+        <div className="absolute -top-[50%] -start-[20%] w-[70%] h-[70%] rounded-full bg-primary/5 blur-[120px]" />
+        <div className="absolute top-[20%] -end-[20%] w-[60%] h-[60%] rounded-full bg-purple-500/5 blur-[100px]" />
       </div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8 pt-10 pb-8 flex-1 flex flex-col justify-center">
@@ -27,8 +27,7 @@ export default function FooterSection() {
           {/* 브랜드 슬로건 */}
           <div className="flex-1">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter leading-[1.1] mb-4">
-              Connect <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-600">Culture</span>,<br />
-              Expand <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-primary">World</span>.
+              {t('footer.brand.slogan_main')}
             </h2>
             <p className="text-base md:text-lg text-muted-foreground/80 font-medium max-w-lg mb-5">
               {t('footer.brand.slogan_sub')}
@@ -36,12 +35,12 @@ export default function FooterSection() {
             
             <Link to="/signup" className="group inline-flex items-center gap-3 px-6 py-3 bg-primary text-primary-foreground rounded-full text-base font-bold transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/20">
               {t('landing.cta_start')}
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform" />
             </Link>
           </div>
 
           {/* 뉴스레터 구독 */}
-          <div className="lg:w-[360px] flex flex-col justify-end">
+          <div className="lg:w-full lg:max-w-[360px] flex flex-col justify-end">
             <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-3">{t('footer.newsletter.title')}</h3>
             <div className="relative group">
               <input 
@@ -49,7 +48,7 @@ export default function FooterSection() {
                 placeholder={t('footer.newsletter.placeholder')}
                 className="w-full bg-transparent border-b-2 border-border py-3 text-base focus:outline-none focus:border-primary transition-colors placeholder:text-muted-foreground/50"
               />
-              <button className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-primary transition-colors">
+              <button className="absolute end-0 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-primary transition-colors rtl:rotate-180">
                 <ArrowRight className="w-5 h-5" />
               </button>
             </div>
@@ -64,31 +63,28 @@ export default function FooterSection() {
           <FooterColumn title={t('footer.columns.product.title')}>
             <FooterLink>{t('footer.columns.product.features')}</FooterLink>
             <FooterLink>{t('footer.columns.product.pricing')}</FooterLink>
-            <FooterLink>{t('footer.columns.product.enterprise')}</FooterLink>
             <FooterLink>{t('footer.columns.product.security')}</FooterLink>
           </FooterColumn>
           
           <FooterColumn title={t('footer.columns.resources.title')}>
-            <FooterLink>{t('footer.columns.resources.documentation')}</FooterLink>
             <FooterLink>{t('footer.columns.resources.community')}</FooterLink>
-            <FooterLink>{t('footer.columns.resources.webinars')}</FooterLink>
             <FooterLink>{t('footer.columns.resources.help_center')}</FooterLink>
           </FooterColumn>
 
           <FooterColumn title={t('footer.columns.company.title')}>
              <FooterLink>{t('footer.columns.company.about')}</FooterLink>
-             <FooterLink>{t('footer.columns.company.careers')}</FooterLink>
-             <FooterLink>{t('footer.columns.company.blog')}</FooterLink>
              <FooterLink>{t('footer.columns.company.contact')}</FooterLink>
           </FooterColumn>
 
           {/* 오피스 정보 */}
           <div className="flex flex-col gap-4">
-            <h3 className="font-bold text-foreground">{t('footer.columns.company.office')}</h3>
+            <h3 className="font-bold text-foreground">{t('footer.office.address_name')}</h3>
             <address className="not-italic text-sm text-muted-foreground leading-relaxed">
               <span className="block font-medium text-foreground mb-1">{t('footer.office.address_name')}</span>
               {t('footer.office.address')}<br />
-              <a href="mailto:hello@ara.com" className="block mt-2 hover:text-primary transition-colors">hello@ara.com</a>
+              <a href={`mailto:${t('footer.office.email')}`} className="block mt-2 hover:text-primary transition-colors">
+                {t('footer.office.email')}
+              </a>
             </address>
           </div>
         </div>
@@ -97,8 +93,8 @@ export default function FooterSection() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-border/40">
           <div className="flex items-center gap-2">
             <span className="text-xl font-black tracking-tighter">ARA</span>
-            <span className="text-xs text-muted-foreground ml-2" translate="no">
-              © 2026 Ara — Dive into Korean. Made with 🌊
+            <span className="text-xs text-muted-foreground ms-2" translate="no">
+              © {currentYear} ARA — Dive into Korean. Made with 🌊
             </span>
           </div>
 
@@ -129,7 +125,7 @@ function FooterLink({ children }: { children: React.ReactNode }) {
   return (
     <Link to="#" className="text-sm text-muted-foreground hover:text-primary transition-colors w-fit relative group">
       {children}
-      <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
+      <span className="absolute -bottom-1 start-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
     </Link>
   );
 }

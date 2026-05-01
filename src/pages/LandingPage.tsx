@@ -8,7 +8,6 @@ import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
 
 
-import CTASection from '@/components/landing/CTASection';
 import FooterSection from '@/components/landing/FooterSection';
 import HeroSection from '@/components/landing/HeroSection';
 import HowItWorksSection from '@/components/landing/HowItWorksSection';
@@ -32,7 +31,6 @@ type SectionId =
   | 'features'
   | 'contents'
   | 'testimonials'
-  | 'cta'
   | 'footer';
 
 const sectionOrder: SectionId[] = [
@@ -42,7 +40,6 @@ const sectionOrder: SectionId[] = [
   'features',
   'contents',
   'testimonials',
-  'cta',
   'footer',
 ];
 
@@ -129,7 +126,9 @@ const LandingPage = ({ onSignup }: HomeProps) => {
   // 휠 이벤트 커스텀 가로채기(Hijacking) — 브라우저 기본 스크롤 억제 및 섹션 단위 물리 스냅 구현
   useEffect(() => {
     const handleResize = () => {
-      // 리사이즈 후 조건 재검증을 위한 placeholder — 필요 시 뷰포트 상태 업데이트 로직 추가 지점
+      // 리사이즈 시 누적된 휠 델타 및 스크롤 상태를 초기화하여 방향 반전 버그 방지
+      wheelDeltaYRef.current = 0;
+      isScrollingRef.current = false;
     };
     window.addEventListener('resize', handleResize);
 
@@ -250,7 +249,6 @@ const LandingPage = ({ onSignup }: HomeProps) => {
           { id: 'features' as SectionId, label: t('landing.nav_features', 'Features') },
           { id: 'contents' as SectionId, label: t('landing.nav_contents', 'Contents') },
           { id: 'testimonials' as SectionId, label: t('landing.nav_stories', 'Stories') },
-          { id: 'cta' as SectionId, label: t('landing.nav_start', 'Start') },
           { id: 'footer' as SectionId, label: t('landing.nav_contact', 'Contact') },
         ].map(({ id, label }) => {
           const isActive = activeSection === id;
@@ -276,13 +274,19 @@ const LandingPage = ({ onSignup }: HomeProps) => {
         })}
       </div>
 
+      {/* 전체 배경 장식 */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-primary/25 blur-[120px] dark:bg-primary/25" />
+        <div className="absolute top-[30%] -right-[10%] w-[40%] h-[40%] rounded-full bg-primary/20 blur-[100px] dark:bg-primary/20" />
+        <div className="absolute -bottom-[10%] left-[20%] w-[40%] h-[40%] rounded-full bg-sky-400/20 blur-[120px] dark:bg-sky-500/18" />
+      </div>
+
       <HeroSection onSignup={onSignup} />
       <HowItWorksSection />
       <ProblemSection />
       <SolutionSection />
       <PopularContentSection />
       <TestimonialsSection />
-      <CTASection onSignup={onSignup} />
       <FooterSection />
     </main>
   );

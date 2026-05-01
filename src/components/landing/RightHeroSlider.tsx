@@ -68,7 +68,7 @@ export default function RightHeroSlider() {
   const slides = getSlides(t);
 
   return (
-    <div className="w-full max-w-[360px] sm:max-w-[420px] max-h-[520px]">
+    <div className="w-full max-w-[360px] sm:max-w-[420px]">
       <div
         className="
       relative rounded-[26px]
@@ -97,7 +97,10 @@ export default function RightHeroSlider() {
               } as React.CSSProperties
             }
             className="hero-slider"
-            pagination={{ clickable: true }}
+            pagination={{ 
+              el: '.hero-pagination',
+              clickable: true 
+            }}
             loop
             aria-live="polite"
           >
@@ -107,7 +110,7 @@ export default function RightHeroSlider() {
                   className="
                 relative rounded-3xl
                
-                p-4 sm:p-5
+                p-4 sm:p-5 pb-8
           
                 flex flex-col h-full
               "
@@ -163,6 +166,8 @@ export default function RightHeroSlider() {
               </SwiperSlide>
             ))}
           </Swiper>
+          {/* 🔧 pagination을 별도 공간으로 분리하여 겹침 방지 */}
+          <div className="hero-pagination flex justify-center gap-1.5 py-4" />
         </div>
       </div>
     </div>

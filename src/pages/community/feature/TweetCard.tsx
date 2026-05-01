@@ -558,7 +558,7 @@ export default function TweetCard({
   return (
     <div
       data-tweet-id={id}
-      className="relative px-4 py-3 cursor-pointer transition-colors border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-background hover:bg-gray-50/50 dark:hover:bg-primary/10"
+      className="relative px-4 py-3 cursor-pointer transition-colors border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-background hover:bg-[#e0f5f1] dark:hover:bg-primary/10"
       onClick={handleCardClickSafe}
     >
       {/* Refactored Layout: Header Row (Avatar+Meta) + Full Width Content */}

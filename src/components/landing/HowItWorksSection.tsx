@@ -43,15 +43,13 @@ export default function HowItWorksSection() {
     <motion.section
       id="how-it-works"
       ref={sectionRef}
-      className="relative overflow-hidden min-h-[calc(100vh-100px)] flex items-center bg-white dark:bg-background"
+      className="relative overflow-hidden min-h-[calc(100vh-100px)] flex items-center justify-center py-16 lg:py-0"
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ amount: 0.3, once: true }}
       transition={{ duration: 0.6 }}
     >
       {/* 배경 장식 */}
-      <div className="pointer-events-none absolute -left-10 -top-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl dark:bg-primary/25" />
-      <div className="pointer-events-none absolute -right-10 bottom-0 h-64 w-64 rounded-full bg-sky-200/40 blur-3xl dark:bg-sky-700/40" />
 
       {/* 🔧 히어로와 동일한 패딩으로 조정 */}
       <div className="w-full max-w-screen-xl mx-auto px-6 pt-8 pb-12 md:pt-10 md:pb-14 lg:pt-12 lg:pb-16">
@@ -59,7 +57,7 @@ export default function HowItWorksSection() {
           <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
             {t('landing.how_it_works_badge')}
           </p>
-          <h2 className="mt-2 text-2xl md:text-3xl font-bold text-slate-900 dark:text-gray-100 break-keep">
+          <h2 className="mt-2 text-2xl md:text-3xl font-bold text-slate-900 dark:text-gray-100 break-words md:break-keep">
             {t('landing.how_it_works_title')}
           </h2>
         </div>

@@ -33,36 +33,22 @@ export default function HeroSection({ onSignup }: HeroProps) {
       id="hero"
       className="
     relative overflow-hidden 
-    min-h-[calc(100vh-80px)]
-    flex items-center
-    bg-gradient-to-b from-primary/5 via-white to-sky-50 
-    dark:from-background dark:via-background dark:to-background
-    pt-0
+    min-h-fit lg:min-h-[calc(100vh-80px)]
+    flex items-center justify-center
+    py-16 lg:py-0
   "
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
     >
       {/* 배경 장식 */}
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute -left-10 -top-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl dark:bg-primary/25"
-        animate={{ y: [-12, 12] }}
-        transition={{ duration: 8, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
-      />
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute -right-10 bottom-0 h-64 w-64 rounded-full bg-sky-200/40 blur-3xl dark:bg-sky-700/40"
-        animate={{ y: [10, -10] }}
-        transition={{ duration: 10, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
-      />
 
       {/* 안쪽 레이아웃 */}
-      <div className="w-full max-w-screen-xl mx-auto px-6 pt-8 pb-12 md:pt-10 md:pb-14 lg:pt-12 lg:pb-16 flex flex-col lg:flex-row items-center gap-10 lg:gap-12">
+      <div className="w-full max-w-screen-xl mx-auto px-6 pt-4 pb-12 md:pt-6 md:pb-14 lg:pt-8 lg:pb-16 flex flex-col lg:flex-row items-center gap-10 lg:gap-12">
         {/* 왼쪽 텍스트 */}
-        <div className="w-full lg:w-1/2 space-y-6 text-center lg:text-left">
+        <div className="w-full lg:w-1/2 space-y-6 text-center lg:text-start">
           <motion.div
-            className="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/70 dark:bg-secondary/80 px-3 py-1 text-[11px] font-medium text-primary shadow-sm backdrop-blur mx-auto lg:mx-0"
+            className="inline-flex items-center gap-2 rounded-full border border-primary/10 bg-white/70 dark:bg-secondary/80 px-3 py-1 text-[11px] font-medium text-primary shadow-sm backdrop-blur mx-auto lg:ms-0"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -73,20 +59,14 @@ export default function HeroSection({ onSignup }: HeroProps) {
             {t('landing.badge')}
           </motion.div>
 
-          <h1 className="max-w-xl mx-auto lg:mx-0 text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-slate-900 dark:text-gray-100 break-keep">
+          <h1 className="max-w-xl mx-auto lg:ms-0 text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-slate-900 dark:text-gray-100 break-words md:break-keep">
             <span className="bg-gradient-to-r from-primary to-sky-500 bg-clip-text text-transparent">
-              {t('landing.title_1')}
-            </span>
-            <br className="hidden sm:block" />
-            <span className="bg-gradient-to-r from-primary to-sky-500 bg-clip-text text-transparent">
-              {t('landing.title_2')}
+              {t('landing.title_1')} {t('landing.title_2')}
             </span>
           </h1>
 
-          <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base md:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0 break-keep">
-            {t('landing.description')}
-            <br />
-            {t('landing.description2')}
+          <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base md:text-lg leading-relaxed max-w-xl mx-auto lg:ms-0 break-words md:break-keep">
+            {t('landing.description')} {t('landing.description2')}
           </p>
 
           {/* 핵심 포인트 3개 */}
@@ -138,13 +118,13 @@ export default function HeroSection({ onSignup }: HeroProps) {
         </div>
 
         {/* 오른쪽: 슬라이더 카드 */}
-        <div className="w-full lg:w-1/2 flex justify-center mt-8 lg:mt-0">
+        <div className="w-full lg:w-1/2 flex justify-center mt-10 mb-14 lg:my-0">
           <RightHeroSlider />
         </div>
       </div>
 
-      {/* 스크롤 유도 */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center text-[11px] text-gray-400 dark:text-gray-400">
+      {/* 🔧 데스크톱에서 잘리지 않도록 하단 간격 상향 조정 및 z-index 최상위 확보 */}
+      <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex flex-col items-center text-[11px] text-gray-400 dark:text-gray-400 z-50">
         <span>{t('landing.scroll_hint')}</span>
         <span className="mt-1 animate-bounce text-lg">⌄</span>
       </div>
