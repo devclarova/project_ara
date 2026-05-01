@@ -15,6 +15,7 @@ import { deleteMyVoca, fetchMyVoca, updateMyVocaStatus, type UserVocaRow } from 
 import { useAutoTranslation } from '@/hooks/useAutoTranslation';
 import { ArrowLeft, Gamepad2, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import FilterDropdown from '@/components/study/FilterDropdown';
@@ -30,6 +31,7 @@ type VocabItem = {
   image_url?: string | null;
   status: 'unknown' | 'learning' | 'known';
   wrongCount: number;
+  correctCount?: number;
   createdAt: string;
   updatedAt: string;
 
@@ -101,15 +103,15 @@ function VocabCard({ v, onOpen, onDelete, onChangeStatus }: VocabCardProps) {
     targetLang,
   );
 
-  const { translatedText: translatedTerm } = useAutoTranslation(
-    v.term,
-    `voca_page_term_${v.id}`,
+  const { translatedText: translatedPos } = useAutoTranslation(
+    posSrc,
+    `voca_pos_${v.id}`,
     targetLang,
   );
 
-  const { translatedText: translatedPos } = useAutoTranslation(
-    posSrc,
-    `voca_page_pos_${v.id}`,
+  const { translatedText: translatedPron } = useAutoTranslation(
+    v.pron ?? '',
+    `voca_pron_${v.id}`,
     targetLang,
   );
 
@@ -130,12 +132,34 @@ function VocabCard({ v, onOpen, onDelete, onChangeStatus }: VocabCardProps) {
   const mappedPosKey = posMap[cleanPos];
   const mappedPos = mappedPosKey ? t(mappedPosKey) : null;
 
-  const displayTerm = isKorean ? v.term : (normalize(translatedTerm) || v.term);
+  const displayTerm = v.term;
+  const displayPron = isKorean ? v.pron : (translatedPron?.trim() || v.pron);
   const displayMeaning = isKorean ? meaningSrc : translatedMeaning?.trim() || meaningSrc;
   const displayExample = isKorean
     ? exampleKoSrc || exampleTrSrc
     : translatedExampleKo?.trim() || exampleTrSrc || exampleKoSrc;
   const displayPos = isKorean ? posSrc : (mappedPos || translatedPos?.trim() || posSrc);
+
+  const statusStyles: Record<VocabItem['status'], { bg: string; text: string; dot: string; border: string }> = {
+    unknown: {
+      bg: 'bg-[#F1EFE8]',
+      text: 'text-[#5F5E5A]',
+      dot: 'bg-[#888780]',
+      border: 'border-[#888780]',
+    },
+    learning: {
+      bg: 'bg-[#E0F7F4]',
+      text: 'text-[#007A6A]',
+      dot: 'bg-[#00BFA5]',
+      border: 'border-[#00BFA5]',
+    },
+    known: {
+      bg: 'bg-[#C2EFE9]',
+      text: 'text-[#005C50]',
+      dot: 'bg-[#00A88F]',
+      border: 'border-[#00A88F]',
+    },
+  };
 
   return (
     <div
@@ -152,8 +176,8 @@ function VocabCard({ v, onOpen, onDelete, onChangeStatus }: VocabCardProps) {
           <div className="flex items-center gap-2 min-w-0">
             <div className="font-bold text-gray-900 dark:text-gray-100 truncate">{displayTerm}</div>
 
-            {v.pron && (
-              <div className="text-[11px] text-gray-400 whitespace-nowrap">[{v.pron}]</div>
+            {displayPron && (
+              <div className="text-[11px] text-gray-400 whitespace-nowrap">[{displayPron}]</div>
             )}
           </div>
           {displayPos ? (
@@ -166,17 +190,25 @@ function VocabCard({ v, onOpen, onDelete, onChangeStatus }: VocabCardProps) {
           <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">{displayMeaning}</div>
         </div>
 
-        <button
-          onClick={e => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="p-1.5 rounded-md ring-1 ring-gray-200 hover:bg-gray-50 dark:hover:bg-gray-900 transition"
-          aria-label={t('study.voca.aria_delete')}
-          title={t('study.voca.aria_delete')}
-        >
-          <Trash2 size={14} className="text-gray-500" />
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {/* 상태 뱃지 (Dot + Text) */}
+          <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap ${statusStyles[v.status].bg} ${statusStyles[v.status].text}`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${statusStyles[v.status].dot}`} />
+            {t(`study.voca.status_${v.status}`)}
+          </div>
+
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="p-1.5 rounded-md ring-1 ring-gray-200 hover:bg-gray-50 dark:hover:bg-gray-900 transition"
+            aria-label={t('study.voca.aria_delete')}
+            title={t('study.voca.aria_delete')}
+          >
+            <Trash2 size={14} className="text-gray-500" />
+          </button>
+        </div>
       </div>
 
       {displayExample && (
@@ -185,23 +217,27 @@ function VocabCard({ v, onOpen, onDelete, onChangeStatus }: VocabCardProps) {
         </div>
       )}
 
-      <div className="mt-3 flex items-center gap-1">
-        {(['unknown', 'learning', 'known'] as const).map(st => (
-          <button
-            key={st}
-            onClick={e => {
-              e.stopPropagation();
-              onChangeStatus(st);
-            }}
-            className={`text-[11px] px-2 py-1 rounded-full ring-1 transition ${
-              v.status === st
-                ? 'ring-primary/60 bg-primary-50 text-primary'
-                : 'ring-primary/60 hover:ring-primary'
-            }`}
-          >
-            {t(`study.voca.status_${st}`, st)}
-          </button>
-        ))}
+      <div className="mt-4 flex items-center gap-2">
+        {(['unknown', 'learning', 'known'] as const).map(st => {
+          const isActive = v.status === st;
+          const style = statusStyles[st];
+          return (
+            <button
+              key={st}
+              onClick={e => {
+                e.stopPropagation();
+                onChangeStatus(st);
+              }}
+              className={`text-[11px] px-3 py-1 rounded-full transition-all border ${
+                isActive
+                  ? `${style.bg} ${style.text} ${style.border} font-medium`
+                  : 'border-gray-300 text-gray-400 bg-transparent hover:border-gray-400'
+              }`}
+            >
+              {t(`study.voca.status_${st}`, st)}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -229,6 +265,7 @@ export default function StudyVocaPage() {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(9);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 400 : false);
 
   useEffect(() => {
     document.title = `${t('study.voca.title')} | ARA`;
@@ -249,6 +286,7 @@ export default function StudyVocaPage() {
         image_url: r.image_url ?? undefined,
         status: r.status,
         wrongCount: r.wrong_count,
+        correctCount: r.correct_count,
         createdAt: r.created_at,
         updatedAt: r.updated_at,
         sourceStudyPath: r.source_study_path ?? undefined,
@@ -314,6 +352,7 @@ export default function StudyVocaPage() {
   useEffect(() => {
     const updatePageSize = () => {
       const width = window.innerWidth;
+      setIsMobile(width < 400);
 
       if (width < 640) {
         setPageSize(4);
@@ -410,10 +449,10 @@ export default function StudyVocaPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2 sm:justify-end">
+          <div className="flex items-center gap-2 sm:justify-end w-full sm:w-auto">
             <button
               onClick={() => setQuizMenuOpen(true)}
-              className="shrink-0 px-4 py-2 rounded-xl ring-1 ring-gray-200 hover:ring-primary/50 hover:bg-primary/20 transition text-sm flex items-center gap-2"
+              className="flex-1 sm:flex-initial px-3 py-2 rounded-xl ring-1 ring-gray-200 hover:ring-primary/50 hover:bg-primary/20 transition text-sm flex items-center justify-center gap-2"
             >
               <Gamepad2 size={16} />
               {t('study.voca.btn_quiz')}
@@ -421,7 +460,7 @@ export default function StudyVocaPage() {
 
             <button
               onClick={() => navigate('/studylist')}
-              className="shrink-0 px-4 py-2 rounded-xl ring-1 ring-gray-200 hover:ring-primary/50 hover:bg-primary/20 transition text-sm flex items-center gap-2"
+              className="flex-1 sm:flex-initial px-3 py-2 rounded-xl ring-1 ring-gray-200 hover:ring-primary/50 hover:bg-primary/20 transition text-sm flex items-center justify-center gap-2"
             >
               <ArrowLeft size={16} />
               {t('study.voca.btn_back_to_study')}
@@ -429,32 +468,47 @@ export default function StudyVocaPage() {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex items-center gap-2">
           <input
             value={q}
             onChange={e => setQ(e.target.value)}
-            placeholder={t('study.voca.search_placeholder')}
-            className="flex-1 px-3 py-2 rounded-xl ring-1 ring-gray-200 bg-white dark:bg-secondary"
+            placeholder={(() => {
+              const text = isMobile
+                ? t('study.voca.search_placeholder_short')
+                : t('study.voca.search_placeholder');
+              if (isMobile && text.length > 20) return text.slice(0, 20) + '...';
+              return text;
+            })()}
+            className="flex-1 px-3 h-[46px] sm:h-11 rounded-xl ring-1 ring-gray-200 bg-white dark:bg-secondary outline-none focus:ring-1 focus:ring-primary/50 text-sm"
           />
-          <FilterDropdown
-            value={status}
-            onApply={value => setStatus(value as 'all' | 'unknown' | 'learning' | 'known')}
-            title={t('study.voca.status_title')}
-            options={[
-              { label: t('study.voca.status_all'), value: 'all' },
-              { label: t('study.voca.status_unknown'), value: 'unknown' },
-              { label: t('study.voca.status_learning'), value: 'learning' },
-              { label: t('study.voca.status_known'), value: 'known' },
-            ]}
-          />
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Filter: Mobile Icon only / Desktop Text + Icon */}
+            <div className="[&_span]:hidden sm:[&_span]:inline-block [&_button]:w-[46px] [&_button]:h-[46px] sm:[&_button]:w-auto sm:[&_button]:h-11 [&_button]:rounded-xl sm:[&_button]:rounded-full [&_button]:px-0 sm:[&_button]:px-4 [&_i]:text-[20px] sm:[&_i]:text-lg">
+              <FilterDropdown
+                value={status}
+                onApply={value => setStatus(value as 'all' | 'unknown' | 'learning' | 'known')}
+                title={t('study.voca.status_title')}
+                options={[
+                  { label: t('study.voca.status_all'), value: 'all' },
+                  { label: t('study.voca.status_unknown'), value: 'unknown' },
+                  { label: t('study.voca.status_learning'), value: 'learning' },
+                  { label: t('study.voca.status_known'), value: 'known' },
+                ]}
+              />
+            </div>
 
-          <button
-            onClick={openDeleteAllConfirm}
-            className="px-3 py-2 rounded-xl ring-1 ring-gray-200 hover:bg-gray-50 dark:hover:bg-gray-900 transition text-sm"
-            title={t('study.voca.btn_delete_all_title')}
-          >
-            {t('study.voca.btn_delete_all')}
-          </button>
+            {/* Delete All: Mobile Icon only / Desktop Text */}
+            <button
+              onClick={openDeleteAllConfirm}
+              className="w-[46px] h-[46px] sm:w-auto sm:h-11 rounded-xl sm:rounded-full ring-1 ring-gray-200 dark:ring-white/10 bg-white/70 dark:bg-white/5 text-gray-700 dark:text-gray-200 flex items-center justify-center sm:px-4 transition-all hover:ring-red-500/50 hover:bg-red-500/20 dark:hover:bg-red-500/25"
+              title={t('study.voca.btn_delete_all_title')}
+            >
+              <Trash2 size={20} className="sm:hidden text-gray-700 dark:text-gray-200" />
+              <span className="hidden sm:inline text-sm font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap">
+                {t('study.voca.btn_delete_all')}
+              </span>
+            </button>
+          </div>
         </div>
 
         {filtered.length === 0 ? (
@@ -514,21 +568,25 @@ export default function StudyVocaPage() {
       <QuizMenuModal
         isOpen={quizMenuOpen}
         onClose={() => setQuizMenuOpen(false)}
+        onSelectQuiz={(type) => {
+          setQuizMenuOpen(false);
+          setActiveQuiz(type);
+        }}
         totalCount={items.length}
         matchingCount={matchingPool.length}
         pool={items}
       />
 
       {activeQuiz === 'mcq' && (
-        <McqQuizModal isOpen onClose={() => setActiveQuiz(null)} pool={items} />
+        <McqQuizModal isOpen onClose={() => { setActiveQuiz(null); reload(); }} pool={items} />
       )}
 
       {activeQuiz === 'ox' && (
-        <OxQuizModal isOpen onClose={() => setActiveQuiz(null)} pool={items} />
+        <OxQuizModal isOpen onClose={() => { setActiveQuiz(null); reload(); }} pool={items} />
       )}
 
       {activeQuiz === 'matching' && (
-        <MatchingQuizModal isOpen onClose={() => setActiveQuiz(null)} pool={matchingPool} />
+        <MatchingQuizModal isOpen onClose={() => { setActiveQuiz(null); reload(); }} pool={matchingPool} />
       )}
 
       <ConfirmModal

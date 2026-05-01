@@ -219,6 +219,7 @@
       "play_tts": "Listen to pronunciation",
       "play_tts_short": "Pronounce",
       "search_placeholder": "Etsi sana/merkitys/esimerkki/sanaluokka/ääntäminen",
+      "search_placeholder_short": "Hae",
       "status_all": "Kaikki",
       "status_known": "Oppiminen valmis",
       "status_learning": "Oppiminen käynnissä",

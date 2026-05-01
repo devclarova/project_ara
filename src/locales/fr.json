@@ -219,6 +219,7 @@
       "play_tts": "Listen to pronunciation",
       "play_tts_short": "Pronounce",
       "search_placeholder": "Recherche de mot/sens/exemple/partie du discours/prononciation",
+      "search_placeholder_short": "Recherche",
       "status_all": "Tout",
       "status_known": "Apprentissage terminé",
       "status_learning": "En cours d'apprentissage",

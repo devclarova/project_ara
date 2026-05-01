@@ -22,6 +22,9 @@ export type UserVocaRow = {
 
   status: VocaStatus;
   wrong_count: number;
+  correct_count: number;
+  last_studied_at?: string | null;
+  next_review_at?: string | null;
 
   source_study_path?: string | null;
   source_study_title?: string | null;

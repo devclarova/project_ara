@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import McqQuizModal from './McqQuizModal';
-import MatchingQuizModal from './MatchingQuizModal';
-import OxQuizModal from './OxQuizModal';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export type VocabItem = {
   id: string;
   term: string;
   meaning: string;
   wrongCount?: number;
+  correctCount?: number;
+  status?: 'unknown' | 'learning' | 'known';
 };
 
 export default function QuizMenuModal({
@@ -16,12 +16,14 @@ export default function QuizMenuModal({
   totalCount,
   matchingCount,
   pool,
+  onSelectQuiz,
 }: {
   isOpen: boolean;
   onClose: () => void;
   totalCount: number;
   matchingCount: number;
   pool: VocabItem[];
+  onSelectQuiz?: (type: 'mcq' | 'ox' | 'matching') => void;
 }) {
   const cards = useMemo(
     () => [
@@ -54,7 +56,6 @@ export default function QuizMenuModal({
   );
 
   const [idx, setIdx] = useState(0);
-  const [activeQuiz, setActiveQuiz] = useState<null | 'mcq' | 'ox' | 'matching'>(null);
 
   useEffect(() => {
     if (isOpen) setIdx(0);
@@ -88,7 +89,8 @@ export default function QuizMenuModal({
   const next = () => setIdx(i => Math.min(cards.length - 1, i + 1));
 
   const openQuiz = (key: 'mcq' | 'ox' | 'matching') => {
-    setActiveQuiz(key);
+    onClose();
+    onSelectQuiz?.(key);
   };
 
   return (
@@ -171,20 +173,20 @@ export default function QuizMenuModal({
               <button
                 type="button"
                 onClick={prev}
-                className="absolute left-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white/85 hover:bg-white ring-1 ring-black/10 shadow-sm flex items-center justify-center"
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white/20 hover:bg-white/30 dark:bg-black/40 dark:hover:bg-black/50 ring-1 ring-black/5 dark:ring-white/10 shadow-sm flex items-center justify-center backdrop-blur-sm transition-all"
                 aria-label="이전 퀴즈"
               >
-                ←
+                <ChevronLeft className="text-gray-800 dark:text-white" size={20} />
               </button>
             )}
             {!isLast && (
               <button
                 type="button"
                 onClick={next}
-                className="absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white/85 hover:bg-white ring-1 ring-black/10 shadow-sm flex items-center justify-center"
+                className="absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white/20 hover:bg-white/30 dark:bg-black/40 dark:hover:bg-black/50 ring-1 ring-black/5 dark:ring-white/10 shadow-sm flex items-center justify-center backdrop-blur-sm transition-all"
                 aria-label="다음 퀴즈"
               >
-                →
+                <ChevronRight className="text-gray-800 dark:text-white" size={20} />
               </button>
             )}
           </div>
@@ -244,18 +246,6 @@ export default function QuizMenuModal({
           팁: 4지선다는 보기를 만들기 위해 단어가 4개 이상일 때 가장 자연스러워요.
         </div>
       </div>
-
-      {/* 퀴즈 모달들 */}
-      {activeQuiz === 'mcq' && (
-        <McqQuizModal isOpen onClose={() => setActiveQuiz(null)} pool={pool} />
-      )}
-
-      {activeQuiz === 'ox' && (
-        <OxQuizModal isOpen onClose={() => setActiveQuiz(null)} pool={pool} />
-      )}
-      {activeQuiz === 'matching' && (
-        <MatchingQuizModal isOpen onClose={() => setActiveQuiz(null)} pool={pool} />
-      )}
     </div>
   );
 }

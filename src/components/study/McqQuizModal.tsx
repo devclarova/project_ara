@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { VocabItem } from './QuizMenuModal';
 import ConfirmModal from '../common/ConfirmModal';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
+import { Volume2 } from 'lucide-react';
 
 export default function McqQuizModal({
   isOpen,
@@ -24,6 +27,8 @@ export default function McqQuizModal({
   const [finished, setFinished] = useState(false);
   const [wrongHistory, setWrongHistory] = useState<{ term: string; correct: string }[]>([]);
   const [confirmClose, setConfirmClose] = useState(false);
+  const [sessionResults, setSessionResults] = useState<{ id: string; correct: boolean; status?: string; cCount: number; wCount: number }[]>([]);
+  const { user } = useAuth();
 
   const shuffle = <T,>(arr: T[]): T[] => [...arr].sort(() => Math.random() - 0.5);
 
@@ -41,6 +46,7 @@ export default function McqQuizModal({
     setFinished(false);
     setWrongHistory([]);
     setConfirmClose(false);
+    setSessionResults([]);
   }, [isOpen, pool, TOTAL]);
 
   useEffect(() => {
@@ -66,6 +72,18 @@ export default function McqQuizModal({
     const isCorrect = choice === correct;
 
     setSelected(choice);
+
+    // Track result for persistence
+    setSessionResults(prev => [
+      ...prev,
+      {
+        id: questions[current].id,
+        correct: isCorrect,
+        status: questions[current].status,
+        cCount: questions[current].correctCount || 0,
+        wCount: questions[current].wrongCount || 0,
+      },
+    ]);
 
     if (isCorrect) {
       setScore(s => s + 1);
@@ -110,19 +128,79 @@ export default function McqQuizModal({
     setLife(MAX_LIFE);
     setCombo(0);
     setSelected(null);
-    setFinished(false);
     setWrongHistory([]);
     setConfirmClose(false);
+    setSessionResults([]);
+    // Ensure state updates are processed before showing the quiz again
+    setTimeout(() => setFinished(false), 0);
+  };
+
+  useEffect(() => {
+    if (finished && sessionResults.length > 0 && user) {
+      saveResults();
+    }
+  }, [finished]);
+
+  const saveResults = async () => {
+    try {
+      // 1. Update user_voca table
+      for (const res of sessionResults) {
+        let nextStatus = res.status || 'unknown';
+        let nextCorrectCount = res.correct ? res.cCount + 1 : res.cCount;
+
+        if (res.correct) {
+          if (res.status === 'unknown') nextStatus = 'learning';
+          else if (res.status === 'learning' && res.cCount >= 1) nextStatus = 'known';
+        } else {
+          if (res.status === 'known') nextStatus = 'learning';
+          else if (res.status === 'learning') {
+            nextStatus = 'learning';
+            nextCorrectCount = 0;
+          }
+        }
+
+        await (supabase.from('user_voca') as any)
+          .update({
+            status: nextStatus,
+            correct_count: nextCorrectCount,
+            wrong_count: res.correct ? res.wCount : res.wCount + 1,
+            last_studied_at: new Date().toISOString(),
+          } as any)
+          .eq('user_id', user?.id)
+          .eq('word_key', res.id);
+      }
+
+      // 2. Insert into quiz_results
+      const accuracy = TOTAL > 0 ? Math.round((score / TOTAL) * 100) : 0;
+      await (supabase.from('quiz_results') as any).insert({
+        user_id: user?.id,
+        quiz_type: 'mcq',
+        total: TOTAL,
+        score: score,
+        accuracy: accuracy,
+      });
+    } catch (err) {
+      console.error('[McqQuizModal] Failed to save results:', err);
+    }
   };
 
   const progress = ((current + 1) / TOTAL) * 100;
+  
+  const speakWord = (text: string) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'ko-KR';
+    utter.rate = 0.9;
+    window.speechSynthesis.speak(utter);
+  };
 
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
 
       <div
-        className="relative w-full max-w-xl bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-2xl ring-1 ring-gray-200 dark:ring-gray-700 overflow-y-auto max-h-[85vh]"
+        className="relative w-full max-w-xl bg-white dark:bg-gray-900 rounded-3xl p-5 sm:p-6 shadow-2xl ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden"
         onMouseDownCapture={e => e.stopPropagation()}
         onTouchStartCapture={e => e.stopPropagation()}
       >
@@ -153,22 +231,31 @@ export default function McqQuizModal({
 
         {!finished ? (
           <>
-            <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full mb-6 overflow-hidden">
+            <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mb-4 sm:mb-6 overflow-hidden">
               <div
                 className="h-full bg-emerald-500 transition-all duration-500"
                 style={{ width: `${progress}%` }}
               />
             </div>
 
-            <div className="flex justify-between items-center mb-6">
-              <div className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+            <div className="flex justify-between items-center mb-4 sm:mb-6">
+              <div className="text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-300">
                 문제 {current + 1} / {TOTAL}
               </div>
-              <div className="text-red-500 text-lg">{'❤️'.repeat(life)}</div>
+              <div className="text-red-500 text-base sm:text-lg">{'❤️'.repeat(life)}</div>
             </div>
 
-            <div className="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white">
-              {questions[current]?.term}
+            <div className="flex items-center justify-center gap-2 mb-4 sm:mb-8">
+              <div className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                {questions[current]?.term}
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); speakWord(questions[current]?.term); }}
+                className="p-1.5 rounded-full text-gray-400 hover:text-primary hover:bg-primary/10 transition"
+                aria-label="발음 듣기"
+              >
+                <Volume2 size={22} />
+              </button>
             </div>
 
             {combo >= 2 && (
@@ -177,7 +264,7 @@ export default function McqQuizModal({
               </div>
             )}
 
-            <div className="grid gap-3">
+            <div className="grid gap-2 sm:gap-3">
               {choices.map(choice => {
                 const correct = questions[current]?.meaning;
                 let style =

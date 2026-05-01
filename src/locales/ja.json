@@ -193,6 +193,7 @@
       "play_tts": "Listen to pronunciation",
       "play_tts_short": "Pronounce",
       "search_placeholder": "単語/意味/例文/品詞/発音 検索",
+      "search_placeholder_short": "検索",
       "status_all": "全体",
       "status_known": "学習完了",
       "status_learning": "学習中",
