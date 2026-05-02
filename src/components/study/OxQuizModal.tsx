@@ -357,7 +357,7 @@ export default function OxQuizModal({
                 <div className="flex items-center justify-center gap-2">
                   <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{q?.term}</div>
                   <button
-                    onClick={(e) => { e.stopPropagation(); speakWord(q?.term || ''); }}
+                    onClick={(e) => { e.stopPropagation(); speakWord(q?.term || '', 'ko-KR'); }}
                     className="p-1.5 rounded-full text-gray-400 hover:text-primary hover:bg-primary/10 transition"
                     aria-label="발음 듣기"
                   >

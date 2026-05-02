@@ -244,7 +244,7 @@ export default function McqQuizModal({
                 {questions[current]?.term}
               </div>
               <button
-                onClick={(e) => { e.stopPropagation(); speakWord(questions[current]?.term); }}
+                onClick={(e) => { e.stopPropagation(); speakWord(questions[current]?.term, 'ko-KR'); }}
                 className="p-1.5 rounded-full text-gray-400 hover:text-primary hover:bg-primary/10 transition"
                 aria-label="발음 듣기"
               >

@@ -259,7 +259,7 @@ export default function MatchingQuizModal({
                             disabled={isMatched}
                             onClick={() => {
                               setSelectedLeft(item.id);
-                              speakWord(item.term);
+                              speakWord(item.term, 'ko-KR');
                             }}
                             className={`w-[130px] p-2.5 rounded-xl text-left font-semibold text-sm transition ${isMatched ? 'bg-emerald-500 text-white' : isSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-800'}`}
                           >
@@ -299,7 +299,7 @@ export default function MatchingQuizModal({
                             disabled={isMatched}
                             onClick={() => {
                               setSelectedLeft(item.id);
-                              speakWord(item.term);
+                              speakWord(item.term, 'ko-KR');
                             }}
                             className={`w-[170px] p-3 rounded-xl text-left font-semibold transition ${isMatched ? 'bg-emerald-500 text-white' : isSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-800 hover:scale-[1.02]'}`}
                           >

@@ -350,7 +350,7 @@ export default function EpisodeVocaModal({
     else if (targetLang.startsWith('zh')) langCode = 'zh-CN';
     else if (targetLang.startsWith('vi')) langCode = 'vi-VN';
 
-    speakWord(word.ko, langCode);
+    speakWord(word.ko, 'ko-KR');
   };
 
   useEffect(() => {
