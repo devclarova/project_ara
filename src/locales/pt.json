@@ -1811,7 +1811,11 @@
     "newsletter": {
       "title": "Newsletter",
       "desc": "Junte-se a mais de 10.000 alunos e receba as melhores dicas e funções.",
-      "placeholder": "Endereço de email"
+      "placeholder": "Endereço de email",
+      "success": "Subscrito com sucesso!",
+      "error_duplicate": "Este e-mail já está registado.",
+      "error_invalid": "Formato de e-mail inválido.",
+      "error_general": "Ocorreu um erro durante o registo. Por favor, tente novamente mais tarde."
     },
     "bottom": {
       "terms": "Termos",

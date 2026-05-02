@@ -1808,7 +1808,10 @@
     "newsletter": {
       "title": "Uutiskirje",
       "desc": "Liity yli 10 000 oppijan joukkoon ja saat parhaat vinkit ja toiminnot.",
-      "placeholder": "Sähköpostiosoite"
+      "placeholder": "Sähköpostiosoite",
+      "success": "Tilaus onnistui!",
+      "error_duplicate": "Tämä sähköposti on jo rekisteröity.",
+      "error_invalid": "Virheellinen sähköpostiosoite."
     },
     "bottom": {
       "terms": "Ehdot",

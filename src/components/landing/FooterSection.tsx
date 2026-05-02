@@ -1,6 +1,9 @@
-import { Facebook, Instagram, Youtube, ArrowRight } from 'lucide-react';
+import { Facebook, Instagram, Youtube, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import type { DatabaseWithRPC } from '@/types/supabase-augment';
 
 /**
  * High-End Premium Footer Section for Landing Page
@@ -9,8 +12,63 @@ import { useTranslation } from 'react-i18next';
  * - 정교한 호버 인터랙션 및 타이포그래피
  */
 export default function FooterSection() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const currentYear = new Date().getFullYear();
+
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loading || submitted) return;
+    setErrorMsg(null);
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setErrorMsg(t('footer.newsletter.error_invalid'));
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Use locally typed client for waitlist operation to bypass global type inference issues
+      const { error } = await (supabase as unknown as {
+        from: (table: 'waitlist') => {
+          insert: (data: { email: string; language: string }) => Promise<{ error: any }>;
+        };
+      })
+        .from('waitlist')
+        .insert({ email, language: i18n.language });
+
+      if (error) {
+        const isDuplicate = 
+          error.code === '23505' || 
+          error.code === 'PGRST116' ||
+          (error as any).status === 409 ||
+          (error as any).statusCode === 409 ||
+          String(error.message ?? '').toLowerCase().includes('duplicate') ||
+          String(error.message ?? '').toLowerCase().includes('unique') ||
+          String(error.message ?? '').toLowerCase().includes('already');
+
+        if (isDuplicate) {
+          setErrorMsg(t('footer.newsletter.error_duplicate'));
+        } else {
+          setErrorMsg(t('footer.newsletter.error_general'));
+        }
+      } else {
+        setSubmitted(true);
+        setEmail('');
+      }
+    } catch (err) {
+      console.error('[waitlist]', JSON.stringify(err));
+      setErrorMsg(t('footer.newsletter.error_general'));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <footer id="footer" className="relative w-full min-h-screen bg-white dark:bg-black text-foreground border-t border-black/5 dark:border-white/10 mt-auto flex flex-col">
@@ -42,16 +100,39 @@ export default function FooterSection() {
           {/* 뉴스레터 구독 */}
           <div className="lg:w-full lg:max-w-[360px] flex flex-col justify-end">
             <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-3">{t('footer.newsletter.title')}</h3>
-            <div className="relative group">
-              <input 
-                type="email" 
-                placeholder={t('footer.newsletter.placeholder')}
-                className="w-full bg-transparent border-b-2 border-border py-3 text-base focus:outline-none focus:border-primary transition-colors placeholder:text-muted-foreground/50"
-              />
-              <button className="absolute end-0 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-primary transition-colors rtl:rotate-180">
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            </div>
+            
+            {submitted ? (
+              <div className="flex items-center gap-2 text-primary font-bold py-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <CheckCircle2 className="w-5 h-5" />
+                <span>{t('footer.newsletter.success')}</span>
+              </div>
+            ) : (
+              <>
+                <form onSubmit={handleSubmit} className="relative group">
+                  <input 
+                    type="email" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
+                    placeholder={t('footer.newsletter.placeholder')}
+                    className="w-full bg-transparent border-b-2 border-border py-3 text-base focus:outline-none focus:border-primary transition-colors placeholder:text-muted-foreground/50 disabled:opacity-50"
+                  />
+                  <button 
+                    type="submit"
+                    disabled={loading}
+                    className="absolute end-0 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-primary transition-colors rtl:rotate-180 disabled:opacity-50"
+                  >
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                </form>
+                {errorMsg && (
+                  <p className="text-xs text-red-500 mt-2 font-medium animate-in fade-in duration-300">
+                    {errorMsg}
+                  </p>
+                )}
+              </>
+            )}
+            
             <p className="text-xs text-muted-foreground/60 mt-3">
               {t('footer.newsletter.desc')}
             </p>

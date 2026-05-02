@@ -1438,7 +1438,11 @@
     "newsletter": {
       "title": "Đăng ký nhận tin",
       "desc": "Tham gia cùng hơn 10.000 người học và nhận các mẹo và tính năng mới nhất.",
-      "placeholder": "Nhập địa chỉ email"
+      "placeholder": "Nhập địa chỉ email",
+      "success": "Đăng ký thành công!",
+      "error_duplicate": "Email này đã được đăng ký.",
+      "error_invalid": "Định dạng email không hợp lệ.",
+      "error_general": "Đã xảy ra lỗi trong quá trình đăng ký. Vui lòng thử lại sau."
     },
     "bottom": {
       "terms": "Điều khoản",

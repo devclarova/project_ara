@@ -1438,7 +1438,11 @@
     "newsletter": {
       "title": "Newsletter",
       "desc": "Rejoignez plus de 10 000 apprenants et recevez les meilleurs conseils et fonctionnalités.",
-      "placeholder": "Adresse e-mail"
+      "placeholder": "Adresse e-mail",
+      "success": "Inscription réussie !",
+      "error_duplicate": "Cet e-mail est déjà enregistré.",
+      "error_invalid": "Format d'e-mail invalide.",
+      "error_general": "Une erreur est survenue lors de l'inscription. Veuillez réessayer plus tard."
     },
     "bottom": {
       "terms": "Conditions",

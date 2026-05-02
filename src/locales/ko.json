@@ -1438,7 +1438,11 @@
     "newsletter": {
       "title": "최신 소식 받기",
       "desc": "ARA의 새로운 콘텐츠와 업데이트 소식을 가장 먼저 받아보세요.",
-      "placeholder": "이메일 주소 입력"
+      "placeholder": "이메일 주소 입력",
+      "success": "성공적으로 등록되었습니다!",
+      "error_duplicate": "이미 등록된 이메일입니다.",
+      "error_invalid": "올바른 이메일 형식이 아닙니다.",
+      "error_general": "등록 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
     },
     "bottom": {
       "terms": "이용약관",
