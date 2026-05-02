@@ -34,6 +34,8 @@ type VideoRow = {
   study: { title: string; short_description: string | null } | Array<{ title: string; short_description: string | null }> | null;
 };
 
+import FloatingButtons from '@/components/common/FloatingButtons';
+
 const StudyPage = () => {
   const { contents, episode, scene } = useParams<{
     contents: string;
@@ -599,9 +601,11 @@ const StudyPage = () => {
           </div>
         </div>
         <SignInModal isOpen={showSignIn} onClose={() => setShowSignIn(false)} />
+        <FloatingButtons />
       </div>
     </>
   );
 };
+
 
 export default StudyPage;

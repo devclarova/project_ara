@@ -34,7 +34,9 @@ const LEANING_GUIDE_SLIDES = (t: any) => [
   { id: 'leaning-5', image: '/images/leaning_guide_5.gif', alt: t('study.promotion.guide_alt_5') },
 ];
 
-const StudyListPage = () => {
+import FloatingButtons from '@/components/common/FloatingButtons';
+
+export default function StudyListPage() {
   const { t, i18n } = useTranslation();
   const targetLang = i18n.language;
   const navigate = useNavigate();
@@ -345,33 +347,36 @@ const StudyListPage = () => {
           </main>
         </div>
       </div>
+      
+      <FloatingButtons />
     </div>
   );
 };
 
+
 function BannerTitle({ banner, fallback }: { banner: any, fallback: string }) {
   const { t, i18n } = useTranslation();
   const title = banner?.title || '';
+  const { translatedText } = useAutoTranslation(title, `banner_title_inline_${banner?.id}`, i18n.language);
 
   // [Surgical Tip] 마케팅 구독 수동 번역 키 우선 적용 (번역 딜레이 방지)
   if (banner?.id?.includes('subscription') || title.toLowerCase().includes('subscription')) {
     const manualTitle = t('marketing.subscription.title');
     if (manualTitle && manualTitle !== 'marketing.subscription.title') {
       return (
-      <h4 className="text-sm sm:text-[13px] md:text-base font-black text-white leading-tight tracking-tight drop-shadow-sm line-clamp-1">
-        {manualTitle}
-      </h4>
-    );
+        <h4 className="text-sm sm:text-[13px] md:text-base font-black text-white leading-tight tracking-tight drop-shadow-sm line-clamp-1">
+          {manualTitle}
+        </h4>
+      );
+    }
   }
+
+  return (
+    <h4 className="text-sm sm:text-[13px] md:text-base font-black text-white leading-tight tracking-tight drop-shadow-sm line-clamp-1">
+      {translatedText || title || fallback}
+    </h4>
+  );
 }
 
-const { translatedText } = useAutoTranslation(title, `banner_title_inline_${banner?.id}`, i18n.language);
+// End of file
 
-return (
-  <h4 className="text-sm sm:text-[13px] md:text-base font-black text-white leading-tight tracking-tight drop-shadow-sm line-clamp-1">
-    {translatedText || title || fallback}
-  </h4>
-);
-}
-
-export default StudyListPage;

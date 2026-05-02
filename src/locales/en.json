@@ -537,6 +537,8 @@
     "copy_link_prompt": "Copy the link below:",
     "submitting": "Submitting...",
     "thumbnail": "Thumbnail",
+    "chatbot": "ARA Chatbot",
+    "feedback": "Leave Feedback",
     "scroll_to_top": "Scroll to top",
     "user": "User",
     "unknown": "Unknown",

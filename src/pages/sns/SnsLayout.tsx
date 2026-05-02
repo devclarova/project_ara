@@ -6,7 +6,7 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import TrendsPanel from '../community/feature/TrendsPanel';
-import ScrollToTopButton from '@/components/common/ScrollToTopButton';
+import FloatingButtons from '@/components/common/FloatingButtons';
 import { useMarketingBanners } from '@/hooks/useMarketingBanners';
 import { ExternalLink, Megaphone } from 'lucide-react';
 import { useBatchAutoTranslation } from '@/hooks/useBatchAutoTranslation';
@@ -46,8 +46,9 @@ export default function SnsLayout({
 
   return (
     <div className="bg-white dark:bg-background">
-      {/* [Restore] Original layout border positioning for ScrollToTopButton (Precision target 813px inside, restore desktop) */}
-      <ScrollToTopButton className="bottom-10 right-12 lg:right-10 xl:right-[calc(50vw-345px)] z-[400]" />
+      {/* [Restore] Original layout border positioning for FloatingButtons (Precision target 813px inside, restore desktop) */}
+      <FloatingButtons className="bottom-10 right-12 lg:right-10 xl:right-[calc(50vw-345px)] z-[400]" />
+
       
       <div className="mx-auto max-w-7xl px-4 sm:px-5 lg:px-6">
         <div className="grid w-full gap-4 lg:gap-6 grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px]">

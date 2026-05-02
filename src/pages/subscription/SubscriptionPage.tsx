@@ -14,6 +14,8 @@ import SeagullIcon from '@/components/common/SeagullIcon';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import { getErrorMessage } from '@/lib/utils';
 
+import FloatingButtons from '@/components/common/FloatingButtons';
+
 export default function SubscriptionPage() {
   const { t } = useTranslation();
   const { session, userPlan, refreshUserPlan } = useAuth();
@@ -510,6 +512,9 @@ export default function SubscriptionPage() {
           </div>
         </div>
       )}
+      
+      <FloatingButtons />
     </div>
   );
 }
+

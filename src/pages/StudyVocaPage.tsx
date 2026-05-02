@@ -243,6 +243,8 @@ function VocabCard({ v, onOpen, onDelete, onChangeStatus }: VocabCardProps) {
   );
 }
 
+import FloatingButtons from '@/components/common/FloatingButtons';
+
 export default function StudyVocaPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -600,6 +602,9 @@ export default function StudyVocaPage() {
         onConfirm={handleConfirmDelete}
         onCancel={closeConfirm}
       />
+
+      <FloatingButtons />
     </div>
   );
 }
+

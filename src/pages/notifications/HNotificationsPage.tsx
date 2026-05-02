@@ -56,6 +56,8 @@ interface NotificationQueryResult {
   reply: { content: string | null } | null;
 }
 
+import FloatingButtons from '@/components/common/FloatingButtons';
+
 export default function HNotificationsPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -537,6 +539,9 @@ export default function HNotificationsPage() {
           </div>
         </div>
       )}
+
+      <FloatingButtons />
     </div>
   );
 }
+

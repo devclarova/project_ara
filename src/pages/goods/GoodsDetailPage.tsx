@@ -42,6 +42,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import TranslateButton from '@/components/common/TranslateButton';
 import { useAutoTranslation } from '@/hooks/useAutoTranslation';
+import FloatingButtons from '@/components/common/FloatingButtons';
 
 
 
@@ -864,6 +865,7 @@ export default function GoodsDetailPage() {
           </div>
         )}
       </AnimatePresence>
+      <FloatingButtons />
     </div>
   );
 }
