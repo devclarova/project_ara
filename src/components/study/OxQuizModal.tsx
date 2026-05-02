@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { VocabItem } from './QuizMenuModal';
 import ConfirmModal from '../common/ConfirmModal';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
+import { Volume2 } from 'lucide-react';
+import { useTTS } from '@/hooks/useTTS';
 
 type OxQuestion = {
   term: string;
@@ -29,6 +33,9 @@ export default function OxQuizModal({
   const [shake, setShake] = useState(false);
   const [penaltyFlash, setPenaltyFlash] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
+  const [sessionStats, setSessionStats] = useState<Record<string, { id: string; correct: number; wrong: number; status: string; cCount: number; wCount: number }>>({});
+  const { user } = useAuth();
+  const { speakWord } = useTTS();
 
   const [wrongHistory, setWrongHistory] = useState<
     { term: string; shown: string; correct: string; answer: 'O' | 'X' }[]
@@ -66,9 +73,11 @@ export default function OxQuizModal({
   const resetAll = () => {
     setTimeLeft(DURATION);
     setScore(0);
-    setFinished(false);
     setWrongHistory([]);
+    setSessionStats({});
     setQ(makeQuestion());
+    // Ensure state updates are processed
+    setTimeout(() => setFinished(false), 0);
   };
 
   useEffect(() => {
@@ -97,6 +106,7 @@ export default function OxQuizModal({
 
   const progress = useMemo(() => (timeLeft / DURATION) * 100, [timeLeft]);
 
+
   const answer = (pick: 'O' | 'X') => {
     if (!q || feedback || finished) return;
 
@@ -107,6 +117,23 @@ export default function OxQuizModal({
 
     if (ok) {
       setScore(s => s + 1);
+      
+      // Track for persistence
+      setSessionStats(prev => {
+        const wordId = (pool.find(v => v.term === q.term) as any)?.id || q.term;
+        const current = prev[wordId] || { 
+          id: wordId, 
+          correct: 0, 
+          wrong: 0, 
+          status: (pool.find(v => v.term === q.term) as any)?.status || 'unknown',
+          cCount: (pool.find(v => v.term === q.term) as any)?.correctCount || 0,
+          wCount: (pool.find(v => v.term === q.term) as any)?.wrongCount || 0
+        };
+        return {
+          ...prev,
+          [wordId]: { ...current, correct: current.correct + 1 }
+        };
+      });
     } else {
       setTimeLeft(prev => {
         const newTime = prev - PENALTY;
@@ -135,6 +162,23 @@ export default function OxQuizModal({
           answer: pick,
         },
       ]);
+
+      // Track for persistence
+      setSessionStats(prev => {
+        const wordId = (pool.find(v => v.term === q.term) as any)?.id || q.term;
+        const current = prev[wordId] || { 
+          id: wordId, 
+          correct: 0, 
+          wrong: 0, 
+          status: (pool.find(v => v.term === q.term) as any)?.status || 'unknown',
+          cCount: (pool.find(v => v.term === q.term) as any)?.correctCount || 0,
+          wCount: (pool.find(v => v.term === q.term) as any)?.wrongCount || 0
+        };
+        return {
+          ...prev,
+          [wordId]: { ...current, wrong: current.wrong + 1 }
+        };
+      });
     }
 
     setTimeout(() => {
@@ -148,6 +192,69 @@ export default function OxQuizModal({
     if (score >= 25) return { emoji: '🔥', text: '엄청 잘했어요!' };
     if (score >= 15) return { emoji: '👏', text: '좋아요!' };
     return { emoji: '💪', text: '다음엔 더 높게!' };
+  };
+
+  useEffect(() => {
+    if (finished && Object.keys(sessionStats).length > 0 && user) {
+      saveResults();
+    }
+  }, [finished]);
+
+  const saveResults = async () => {
+    try {
+      // 1. Update user_voca table
+      for (const key in sessionStats) {
+        const stats = sessionStats[key];
+        
+        // Simple net logic: if they got it right more than wrong, or just at least once right?
+        // The user's rules: "unknown + 정답 -> learning", etc.
+        // For OX Speed, if it appears multiple times, we'll apply the logic sequentially for each hit/miss?
+        // That's complex. Let's simplify: if they had any 'wrong' in this session, it's a 'wrong' event for status.
+        // If they had only 'correct', it's a 'correct' event.
+        // Actually, let's just use the final count: if correct > 0 and wrong === 0, it's a correct event.
+        // If wrong > 0, it's a wrong event.
+        
+        const isOverallCorrect = stats.correct > 0 && stats.wrong === 0;
+        const isOverallWrong = stats.wrong > 0;
+
+        let nextStatus = stats.status || 'unknown';
+        let nextCorrectCount = stats.cCount + stats.correct;
+
+        if (isOverallCorrect) {
+          if (stats.status === 'unknown') nextStatus = 'learning';
+          else if (stats.status === 'learning' && stats.cCount >= 1) nextStatus = 'known';
+        } else if (isOverallWrong) {
+          if (stats.status === 'known') nextStatus = 'learning';
+          else if (stats.status === 'learning') {
+            nextStatus = 'learning';
+            nextCorrectCount = 0;
+          }
+        }
+
+        await (supabase.from('user_voca') as any)
+          .update({
+            status: nextStatus,
+            correct_count: nextCorrectCount,
+            wrong_count: stats.wCount + stats.wrong,
+            last_studied_at: new Date().toISOString(),
+          } as any)
+          .eq('user_id', user?.id)
+          .eq('word_key', stats.id);
+      }
+
+      // 2. Insert into quiz_results
+      const totalAttempted = score + wrongHistory.length;
+      const accuracy = totalAttempted > 0 ? Math.round((score / totalAttempted) * 100) : 0;
+      await (supabase.from('quiz_results') as any).insert({
+        user_id: user?.id,
+        quiz_type: 'ox',
+        total: totalAttempted,
+        score: score,
+        accuracy: accuracy,
+      });
+    } catch (err) {
+      console.error('[OxQuizModal] Failed to save results:', err);
+    }
   };
 
   if (!isOpen) return null;
@@ -183,7 +290,7 @@ export default function OxQuizModal({
         <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
 
         <div
-          className={`relative w-full max-w-xl bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-2xl ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden ${
+          className={`relative w-full max-w-xl bg-white dark:bg-gray-900 rounded-3xl p-5 sm:p-6 shadow-2xl ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden ${
             shake ? 'shake-x' : ''
           }`}
           onMouseDownCapture={e => e.stopPropagation()}
@@ -221,7 +328,7 @@ export default function OxQuizModal({
               </div>
 
               {/* 타이머 */}
-              <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full mb-6 overflow-hidden">
+              <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mb-4 sm:mb-6 overflow-hidden">
                 <div
                   className={`h-full transition-all duration-500 ${
                     timeLeft <= 10 ? 'bg-red-500' : 'bg-emerald-500'
@@ -231,8 +338,8 @@ export default function OxQuizModal({
               </div>
 
               {/* 상단 정보 (가운데에 -2초) */}
-              <div className="relative flex items-center justify-between mb-6">
-                <div className="font-semibold text-gray-600 dark:text-gray-300">⏱ {timeLeft}s</div>
+              <div className="relative flex items-center justify-between mb-4 sm:mb-6">
+                <div className="text-sm font-semibold text-gray-600 dark:text-gray-300">⏱ {timeLeft}s</div>
 
                 {/* 가운데 슬롯 */}
                 <div className="pointer-events-none absolute left-1/2 -translate-x-1/2">
@@ -246,9 +353,18 @@ export default function OxQuizModal({
                 <div className="font-bold text-gray-900 dark:text-white">점수 {score}</div>
               </div>
 
-              <div className="rounded-3xl ring-1 ring-gray-200 dark:ring-gray-700 p-5 bg-gray-50 dark:bg-gray-800/40 text-center">
-                <div className="text-2xl font-bold text-gray-900 dark:text-white">{q?.term}</div>
-                <div className="mt-4 text-xl font-semibold text-gray-900 dark:text-white">
+              <div className="rounded-3xl ring-1 ring-gray-200 dark:ring-gray-700 p-4 sm:p-5 bg-gray-50 dark:bg-gray-800/40 text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{q?.term}</div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); speakWord(q?.term || '', 'ko-KR'); }}
+                    className="p-1.5 rounded-full text-gray-400 hover:text-primary hover:bg-primary/10 transition"
+                    aria-label="발음 듣기"
+                  >
+                    <Volume2 size={18} />
+                  </button>
+                </div>
+                <div className="mt-3 sm:mt-4 text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
                   “ {q?.shownMeaning} ”
                 </div>
               </div>

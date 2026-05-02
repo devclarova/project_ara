@@ -193,6 +193,7 @@
       "play_tts": "Listen to pronunciation",
       "play_tts_short": "Pronounce",
       "search_placeholder": "ค้นหาคำศัพท์/ความหมาย/ตัวอย่าง/ชนิดของคำ/การออกเสียง",
+      "search_placeholder_short": "ค้นหา",
       "status_all": "ทั้งหมด",
       "status_known": "เรียนรู้เสร็จสิ้น",
       "status_learning": "กำลังเรียนรู้",
@@ -1437,7 +1438,11 @@
     "newsletter": {
       "title": "จดหมายข่าว",
       "desc": "เข้าร่วมกับผู้เรียนกว่า 10,000 คนและรับเคล็ดลับและฟีเจอร์ล่าสุด",
-      "placeholder": "ใส่ที่อยู่อีเมล"
+      "placeholder": "ใส่ที่อยู่อีเมล",
+      "success": "สมัครรับข้อมูลสำเร็จแล้ว!",
+      "error_duplicate": "อีเมลนี้ลงทะเบียนแล้ว",
+      "error_invalid": "รูปแบบอีเมลไม่ถูกต้อง",
+      "error_general": "เกิดข้อผิดพลาดระหว่างการลงทะเบียน โปรดลองอีกครั้งในภายหลัง"
     },
     "bottom": {
       "terms": "เงื่อนไข",

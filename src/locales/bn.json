@@ -250,6 +250,7 @@
       "play_tts": "Listen to pronunciation",
       "play_tts_short": "Pronounce",
       "search_placeholder": "শব্দ/অর্থ/উদাহরণ/পদ/উচ্চারণ অনুসন্ধান",
+      "search_placeholder_short": "অনুসন্ধান",
       "status_all": "সমগ্র",
       "status_known": "শিক্ষা সম্পন্ন",
       "status_learning": "শিক্ষার মধ্যে",
@@ -1991,7 +1992,11 @@
     "newsletter": {
       "title": "নিউজলেটার",
       "desc": "১০,০০০-এর বেশি শিক্ষার্থীর সাথে যোগ দিন এবং সর্বশেষ টিপস এবং ফিচার পান।",
-      "placeholder": "ইমেল ঠিকানা প্রবেশ করুন"
+      "placeholder": "ইমেল ঠিকানা প্রবেশ করুন",
+      "success": "সফলভাবে সাবস্ক্রাইব করা হয়েছে!",
+      "error_duplicate": "এই ইমেলটি ইতিমধ্যে নিবন্ধিত হয়েছে।",
+      "error_invalid": "অবৈধ ইমেল বিন্যাস।",
+      "error_general": "নিবন্ধনের সময় একটি ত্রুটি ঘটেছে। দয়া করে পরে আবার চেষ্টা করুন।"
     },
     "bottom": {
       "terms": "শর্তাবলী",

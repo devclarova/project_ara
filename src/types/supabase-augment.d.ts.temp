@@ -1,0 +1,100 @@
+import type { Database as BaseDB } from './database';
+
+export type Database = BaseDB;
+
+/**
+ * Merge Utility
+ * - 목적: 기존 인터페이스의 특정 키를 새로운 타입으로 안전하게 덮어쓰기 위함
+ */
+type Merge<T, U> = Omit<T, keyof U> & U;
+
+export type DatabaseWithRPC = Merge<
+  Database,
+  {
+    public: Merge<
+      Database['public'],
+      {
+        Tables: Database['public']['Tables'] & {
+          tts_cache: {
+            Row: {
+              text_key: string;
+              lang: string;
+              audio_base64: string;
+              created_at: string;
+            };
+            Insert: {
+              text_key: string;
+              lang: string;
+              audio_base64: string;
+              created_at?: string;
+            };
+            Update: {
+              text_key?: string;
+              lang?: string;
+              audio_base64?: string;
+              created_at?: string;
+            };
+          };
+          site_config: {
+            Row: {
+              id: number;
+              notice_enabled: boolean;
+              notice_text: string | null;
+              notice_color: 'blue' | 'red' | 'amber' | 'emerald' | null;
+              maintenance_enabled: boolean;
+              maintenance_message: string | null;
+              maintenance_end_time: string | null;
+              site_title: string;
+              site_description: string | null;
+              site_logo_url: string | null;
+              sec_ip_restriction: boolean;
+              sec_ip_whitelist: string[];
+              updated_at: string;
+              toast_sound_url: string | null;
+            };
+            Insert: {
+              id?: number;
+              notice_enabled?: boolean;
+              notice_text?: string | null;
+              notice_color?: 'blue' | 'red' | 'amber' | 'emerald' | null;
+              maintenance_enabled?: boolean;
+              maintenance_message?: string | null;
+              maintenance_end_time?: string | null;
+              site_title?: string;
+              site_description?: string | null;
+              site_logo_url?: string | null;
+              sec_ip_restriction?: boolean;
+              sec_ip_whitelist?: string[];
+              updated_at?: string;
+              toast_sound_url?: string | null;
+            };
+            Update: {
+              id?: number;
+              notice_enabled?: boolean;
+              notice_text?: string | null;
+              notice_color?: 'blue' | 'red' | 'amber' | 'emerald' | null;
+              maintenance_enabled?: boolean;
+              maintenance_message?: string | null;
+              maintenance_end_time?: string | null;
+              site_title?: string;
+              site_description?: string | null;
+              site_logo_url?: string | null;
+              sec_ip_restriction?: boolean;
+              sec_ip_whitelist?: string[];
+              updated_at?: string;
+              toast_sound_url?: string | null;
+            };
+          };
+          // ... (Restoring other tables from previous view)
+          direct_chats: Merge<Database['public']['Tables']['direct_chats'], {
+             Row: Database['public']['Tables']['direct_chats']['Row'] & {
+               user_pair_low: string | null;
+               user_pair_high: string | null;
+             }
+          }>;
+          // Wait, I should just use the original content but fix the Merge structure if it was broken.
+        };
+      }
+    >;
+  }
+>;

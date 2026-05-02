@@ -97,7 +97,9 @@ export default function LanguageSwitcher({ open, onOpenChange }: LanguageSwitche
           {/* Visual Indicator: Replaces the generic globe icon with a glossy flag asset corresponding to the active locale. */}
           {(() => {
             // 언어 코드 정규화: 'ko-KR' -> 'ko', 'en-US' -> 'en'
-            const normalizedLang = i18n.language.split('-')[0];
+            // 단, 'pt-br'은 예외적으로 전체 코드를 유지하여 브라질 국기가 표시되도록 함.
+            const raw = i18n.language.toLowerCase();
+            const normalizedLang = raw === 'pt-br' ? 'pt-br' : raw.split('-')[0];
             const currentIso = LANG_TO_ISO[normalizedLang];
             const currentEmoji = EMOJI_FLAGS[normalizedLang];
             const currentFlagUrl = currentIso ? flagMap[currentIso] : null;

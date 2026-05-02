@@ -193,6 +193,7 @@
       "play_tts": "Listen to pronunciation",
       "play_tts_short": "Pronounce",
       "search_placeholder": "Search Word/Meaning/Example/Speech Part/Pronunciation",
+      "search_placeholder_short": "Search",
       "status_all": "All",
       "status_known": "Completed",
       "status_learning": "In progress",
@@ -1437,7 +1438,11 @@
     "newsletter": {
       "title": "Stay up to date",
       "desc": "Be the first to receive ARA's new content and update news.",
-      "placeholder": "Enter email address"
+      "placeholder": "Enter email address",
+      "success": "Successfully subscribed!",
+      "error_duplicate": "This email is already registered.",
+      "error_invalid": "Invalid email format.",
+      "error_general": "An error occurred during registration. Please try again later."
     },
     "bottom": {
       "terms": "Terms",

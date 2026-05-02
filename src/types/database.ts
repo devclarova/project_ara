@@ -1664,6 +1664,27 @@ export type Database = {
           },
         ];
       };
+      tts_cache: {
+        Row: {
+          text_key: string;
+          lang: string;
+          audio_base64: string;
+          created_at: string;
+        };
+        Insert: {
+          text_key: string;
+          lang: string;
+          audio_base64: string;
+          created_at?: string;
+        };
+        Update: {
+          text_key?: string;
+          lang?: string;
+          audio_base64?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       post_like_counts: {

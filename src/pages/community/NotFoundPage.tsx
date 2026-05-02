@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 
 export default function NotFoundPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
   const handleGoHome = () => navigate('/');
@@ -76,7 +76,7 @@ export default function NotFoundPage() {
         </motion.div>
 
         {/* 타이틀 / 서브 타이틀 – 줄내림 전부 자동 */}
-        <h1 className="text-2xl sm:text-[1.7rem] md:text-3xl font-semibold text-gray-900 dark:text-gray-50 break-keep whitespace-normal">
+        <h1 className={`text-2xl sm:text-[1.7rem] md:text-3xl font-semibold text-gray-900 dark:text-gray-50 whitespace-normal ${i18n.language?.startsWith('ja') ? 'break-words' : 'break-keep'}`}>
           {t('not_found.title')}
         </h1>
         <p className="mt-3 text-sm sm:text-base leading-relaxed text-gray-500 dark:text-gray-300">

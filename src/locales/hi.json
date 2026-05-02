@@ -219,6 +219,7 @@
       "play_tts": "Listen to pronunciation",
       "play_tts_short": "Pronounce",
       "search_placeholder": "शब्द/अर्थ/उदाहरण/श्रेणी/उच्चारण खोजें",
+      "search_placeholder_short": "खोजें",
       "status_all": "संपूर्ण",
       "status_known": "अध्ययन पूरा",
       "status_learning": "अध्ययन में",
@@ -1797,7 +1798,11 @@
     "newsletter": {
       "title": "न्यूज़लेटर",
       "desc": "10,000 से अधिक शिक्षार्थियों से जुड़ें और नवीनतम टिप्स और सुविधाएँ प्राप्त करें।",
-      "placeholder": "ईमेल दर्ज करें"
+      "placeholder": "ईमेल दर्ज करें",
+      "success": "सफलतापूर्वक सब्सक्राइब किया गया!",
+      "error_duplicate": "यह ईमेल पहले से ही पंजीकृत है।",
+      "error_invalid": "अमान्य ईमेल प्रारूप।",
+      "error_general": "पंजीकरण के दौरान एक त्रुटि हुई। कृपया बाद में पुनः प्रयास करें।"
     },
     "bottom": {
       "terms": "शर्तें",

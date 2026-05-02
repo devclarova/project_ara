@@ -619,6 +619,75 @@ app.post('/api/analytics', async (req, res) => {
   }
 });
 
+app.post('/api/tts', async (req, res) => {
+  try {
+    const { text, lang = 'ko-KR' } = req.body as { text: string; lang: string };
+
+    if (!text) return res.status(400).json({ error: 'Missing text' });
+
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    // 1. 캐시 확인
+    const { data: cached } = await supabaseAdmin
+      .from('tts_cache')
+      .select('audio_base64')
+      .eq('text_key', text)
+      .eq('lang', lang)
+      .maybeSingle();
+
+    if (cached?.audio_base64) {
+      return res.status(200).json({ audioContent: cached.audio_base64 });
+    }
+
+    // 2. 캐시 미스 → Google TTS 호출
+    const apiKey = process.env.GOOGLE_TTS_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'Server configuration error' });
+
+    const ttsResponse = await fetch(
+      `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          input: { text },
+          voice: {
+            languageCode: lang,
+            name: lang === 'ko-KR' ? 'ko-KR-Neural2-A' : undefined,
+            ssmlGender: 'FEMALE'
+          },
+          audioConfig: { audioEncoding: 'MP3' },
+        }),
+      }
+    );
+
+    if (!ttsResponse.ok) {
+      const errorData = await ttsResponse.json();
+      return res.status(ttsResponse.status).json({ error: errorData.error?.message || 'TTS API error' });
+    }
+
+    const data = await ttsResponse.json();
+    const audioContent = data.audioContent;
+
+    // 3. 캐시 저장
+    if (audioContent) {
+      await supabaseAdmin
+        .from('tts_cache')
+        .upsert(
+          { text_key: text, lang, audio_base64: audioContent },
+          { onConflict: 'text_key,lang' }
+        );
+    }
+
+    return res.status(200).json({ audioContent });
+  } catch (error) {
+    console.error('TTS proxy error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Local API server running at http://localhost:${PORT}`);
 });

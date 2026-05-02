@@ -306,7 +306,8 @@
       "no_words_to_show": "No words to show.",
       "play_tts": "Listen to pronunciation",
       "play_tts_short": "Pronounce",
-      "search_placeholder": "بحث عن كلمة/معنى/مثال/نوع الكلمة/النطق",
+      "search_placeholder": "بحث عن كلمة/معنى/مثال/جزء من الكلام/نطق",
+      "search_placeholder_short": "بحث",
       "status_all": "الكل",
       "status_known": "اكتمل التعلم",
       "status_learning": "قيد التعلم",
@@ -2724,7 +2725,11 @@
     "newsletter": {
       "title": "النشرة الإخبارية",
       "desc": "انضم إلى أكثر من 10,000 متعلم واحصل على أحدث النصائح والميزات.",
-      "placeholder": "أدخل البريد الإلكتروني"
+      "placeholder": "أدخل البريد الإلكتروني",
+      "success": "تم الاشتراك بنجاح!",
+      "error_duplicate": "هذا البريد الإلكتروني مسجل بالفعل.",
+      "error_invalid": "تنسيق البريد الإلكتروني غير صالح.",
+      "error_general": "حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى لاحقًا."
     },
     "bottom": {
       "terms": "الشروط",

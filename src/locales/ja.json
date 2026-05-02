@@ -193,6 +193,7 @@
       "play_tts": "Listen to pronunciation",
       "play_tts_short": "Pronounce",
       "search_placeholder": "単語/意味/例文/品詞/発音 検索",
+      "search_placeholder_short": "検索",
       "status_all": "全体",
       "status_known": "学習完了",
       "status_learning": "学習中",
@@ -1437,7 +1438,11 @@
     "newsletter": {
       "title": "最新情報を受け取る",
       "desc": "ARAの新しいコンテンツとアップデート情報をいち早く受け取ろう。",
-      "placeholder": "メールアドレスを入力"
+      "placeholder": "メールアドレスを入力",
+      "success": "登録が完了しました！",
+      "error_duplicate": "このメールアドレスは既に登録されています。",
+      "error_invalid": "有効なメールアドレス形式ではありません。",
+      "error_general": "登録中にエラーが発生しました。しばらくしてからもう一度お試しください。"
     },
     "bottom": {
       "terms": "利用規約",

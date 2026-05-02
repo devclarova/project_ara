@@ -1,0 +1,32 @@
+import type { Database as BaseDB } from './database';
+
+type Merge<T, U> = Omit<T, keyof U> & U;
+
+export type DatabaseWithRPC = Merge<BaseDB, {
+  public: Merge<BaseDB['public'], {
+    Tables: Merge<BaseDB['public']['Tables'], {
+      tts_cache: {
+        Row: {
+          text_key: string;
+          lang: string;
+          audio_base64: string;
+          created_at: string;
+        };
+        Insert: {
+          text_key: string;
+          lang: string;
+          audio_base64: string;
+          created_at?: string;
+        };
+        Update: {
+          text_key?: string;
+          lang?: string;
+          audio_base64?: string;
+          created_at?: string;
+        };
+      };
+    }>;
+  }>;
+}>;
+
+export type Database = BaseDB;

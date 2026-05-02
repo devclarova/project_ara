@@ -218,7 +218,8 @@
       "no_words_to_show": "No words to show.",
       "play_tts": "Listen to pronunciation",
       "play_tts_short": "Pronounce",
-      "search_placeholder": "Búsqueda de palabra/significado/ejemplo/parte del discurso/pronunciación",
+      "search_placeholder": "Buscar palabra/significado/pronunciación y más",
+      "search_placeholder_short": "Buscar",
       "status_all": "Todo",
       "status_known": "Aprendizaje completado",
       "status_learning": "En aprendizaje",
@@ -1875,7 +1876,11 @@
     "newsletter": {
       "title": "Boletín",
       "desc": "Únete a más de 10,000 estudiantes y recibe los mejores consejos y funciones.",
-      "placeholder": "Correo electrónico"
+      "placeholder": "Correo electrónico",
+      "success": "¡Suscrito con éxito!",
+      "error_duplicate": "Este correo electrónico ya está registrado.",
+      "error_invalid": "Formato de correo electrónico no válido.",
+      "error_general": "Ocurrió un error durante el registro. Por favor, inténtelo de nuevo más tarde."
     },
     "bottom": {
       "terms": "Términos",

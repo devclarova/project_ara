@@ -166,6 +166,7 @@
       "btn_quiz": "퀴즈",
       "btn_back_to_study": "학습으로",
       "search_placeholder": "단어/뜻/예문/품사/발음 검색",
+      "search_placeholder_short": "검색",
       "status_title": "학습 상태",
       "status_all": "전체",
       "btn_delete_all": "전체 삭제",
@@ -1437,7 +1438,11 @@
     "newsletter": {
       "title": "최신 소식 받기",
       "desc": "ARA의 새로운 콘텐츠와 업데이트 소식을 가장 먼저 받아보세요.",
-      "placeholder": "이메일 주소 입력"
+      "placeholder": "이메일 주소 입력",
+      "success": "성공적으로 등록되었습니다!",
+      "error_duplicate": "이미 등록된 이메일입니다.",
+      "error_invalid": "올바른 이메일 형식이 아닙니다.",
+      "error_general": "등록 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
     },
     "bottom": {
       "terms": "이용약관",
