@@ -3,6 +3,7 @@ import { ArrowUp, Bot, MessageSquarePlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import FeedbackModal from './FeedbackModal';
+import ChatbotModal from './ChatbotModal';
 import { useFeedbackTrigger } from '@/hooks/useFeedbackTrigger';
 
 
@@ -16,6 +17,7 @@ export default function FloatingButtons({ className }: FloatingButtonsProps) {
   const [isFeedbackHovered, setIsFeedbackHovered] = useState(false);
   const [isScrollHovered, setIsScrollHovered] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const { t } = useTranslation();
 
   const { shouldShow, isAutoTriggered, onDismiss, onComplete } = useFeedbackTrigger();
@@ -48,7 +50,7 @@ export default function FloatingButtons({ className }: FloatingButtonsProps) {
   };
 
   const handleChatbotClick = () => {
-    console.log('Chatbot clicked');
+    setIsChatbotOpen(true);
   };
 
   const handleFeedbackClick = () => {
@@ -155,9 +157,11 @@ export default function FloatingButtons({ className }: FloatingButtonsProps) {
         }}
         isAutoTriggered={isAutoTriggered}
       />
-    </div>
 
+      <ChatbotModal 
+        isOpen={isChatbotOpen}
+        onClose={() => setIsChatbotOpen(false)}
+      />
+    </div>
   );
 }
-
-
