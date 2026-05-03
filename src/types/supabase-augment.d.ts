@@ -74,6 +74,9 @@ export type DatabaseWithRPC = Merge<
                 page_path: string | null;
                 rating: number | null;
                 user_id: string | null;
+                status: 'unread' | 'read' | 'replied' | null;
+                admin_reply: string | null;
+                replied_at: string | null;
               };
               Insert: {
                 area?: string | null;
@@ -84,6 +87,9 @@ export type DatabaseWithRPC = Merge<
                 page_path?: string | null;
                 rating?: number | null;
                 user_id?: string | null;
+                status?: 'unread' | 'read' | 'replied' | null;
+                admin_reply?: string | null;
+                replied_at?: string | null;
               };
               Update: {
                 area?: string | null;
@@ -94,6 +100,9 @@ export type DatabaseWithRPC = Merge<
                 page_path?: string | null;
                 rating?: number | null;
                 user_id?: string | null;
+                status?: 'unread' | 'read' | 'replied' | null;
+                admin_reply?: string | null;
+                replied_at?: string | null;
               };
               Relationships: [];
             };

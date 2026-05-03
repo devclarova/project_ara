@@ -49,6 +49,7 @@ const AdminHome = React.lazy(() => import('./pages/admin/AdminHome'));
 const AdminLayout = React.lazy(() => import('./pages/admin/AdminLayout'));
 const AdminLogin = React.lazy(() => import('./pages/admin/AdminLogin'));
 const AdminReports = React.lazy(() => import('./pages/admin/AdminReports'));
+const AdminFeedback = React.lazy(() => import('./pages/admin/AdminFeedback'));
 const AdminSettings = React.lazy(() => import('./pages/admin/AdminSettings'));
 const AdminStudyManagement = React.lazy(() => import('./pages/admin/AdminStudyManagement'));
 const AdminStudyUpload = React.lazy(() => import('./pages/admin/AdminStudyUpload'));
@@ -269,6 +270,7 @@ function AppInner() {
                       <Route path="goods/manage" element={<AdminGoodsManagement />} />
                       <Route path="banners" element={<AdminBannerManager />} />
                       <Route path="promotions" element={<AdminPromotionsPage />} />
+                      <Route path="feedback" element={<AdminFeedback />} />
                     </Route>
                   </Route>
 
