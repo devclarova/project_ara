@@ -3,6 +3,7 @@ import { ArrowUp, Bot, MessageSquarePlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import FeedbackModal from './FeedbackModal';
+import { useFeedbackTrigger } from '@/hooks/useFeedbackTrigger';
 
 
 interface FloatingButtonsProps {
@@ -16,6 +17,14 @@ export default function FloatingButtons({ className }: FloatingButtonsProps) {
   const [isScrollHovered, setIsScrollHovered] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const { t } = useTranslation();
+
+  const { shouldShow, isAutoTriggered, onDismiss, onComplete } = useFeedbackTrigger();
+
+  useEffect(() => {
+    if (shouldShow && !isFeedbackModalOpen) {
+      setIsFeedbackModalOpen(true);
+    }
+  }, [shouldShow, isFeedbackModalOpen]);
 
 
   useEffect(() => {
@@ -49,7 +58,7 @@ export default function FloatingButtons({ className }: FloatingButtonsProps) {
 
   return (
     <div className={cn(
-      "fixed bottom-[24px] right-[20px] z-[49] flex flex-col items-center gap-[10px]",
+      "fixed bottom-[24px] right-[20px] z-[40] flex flex-col items-center gap-[10px]",
       className
     )}>
       {/* 챗봇 버튼 */}
@@ -134,7 +143,17 @@ export default function FloatingButtons({ className }: FloatingButtonsProps) {
 
       <FeedbackModal 
         isOpen={isFeedbackModalOpen} 
-        onClose={() => setIsFeedbackModalOpen(false)} 
+        onClose={() => {
+          setIsFeedbackModalOpen(false);
+          if (isAutoTriggered) {
+            onDismiss();
+          }
+        }}
+        onComplete={() => {
+          onComplete();
+          // Modal closing is handled by user clicking 'Close' button inside FeedbackModal
+        }}
+        isAutoTriggered={isAutoTriggered}
       />
     </div>
 

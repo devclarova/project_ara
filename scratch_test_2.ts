@@ -1,7 +1,10 @@
 import { supabase } from './src/lib/supabase';
+import type { DatabaseWithRPC } from './src/types/supabase-augment';
+
+type Tables = DatabaseWithRPC['public']['Tables'];
+type FeedbackTable = Tables['feedback'];
 
 async function test() {
-  const query = supabase.from('tts_cache');
-  // @ts-expect-error - check type
-  type T = typeof query;
+  const x = supabase.from('feedback');
+  console.log(x);
 }

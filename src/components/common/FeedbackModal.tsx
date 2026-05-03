@@ -14,6 +14,7 @@ type FeedbackInsert = DatabaseWithRPC['public']['Tables']['feedback']['Insert'];
 interface FeedbackModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onComplete?: () => void;
   isAutoTriggered?: boolean;
 }
 
@@ -36,7 +37,7 @@ const PATH_TO_LABEL: Record<string, string> = {
   '/notifications': '알림',
 };
 
-export default function FeedbackModal({ isOpen, onClose, isAutoTriggered = false }: FeedbackModalProps) {
+export default function FeedbackModal({ isOpen, onClose, onComplete, isAutoTriggered = false }: FeedbackModalProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
   
@@ -93,13 +94,13 @@ export default function FeedbackModal({ isOpen, onClose, isAutoTriggered = false
         rating: selectedRating,
         content: content.trim()
       };
-      const { error: insertError } = await (supabase as any)
-        .from('feedback')
-        .insert([payload]);
+      // @ts-expect-error: Known issue with Supabase generic inference on intersection types
+      const { error: insertError } = await supabase.from('feedback').insert([payload]);
 
       if (insertError) throw insertError;
 
       setIsSuccess(true);
+      onComplete?.();
     } catch (err: unknown) {
       console.error('Feedback submission error:', err);
       setError(t('common.feedback_error', '피드백 전송 중 오류가 발생했습니다. 다시 시도해 주세요.'));

@@ -64,6 +64,39 @@ export type DatabaseWithRPC = Merge<
                 updated_at?: string;
               };
             };
+            feedback: {
+              Row: {
+                area: string | null;
+                category: string | null;
+                content: string;
+                created_at: string;
+                id: string;
+                page_path: string | null;
+                rating: number | null;
+                user_id: string | null;
+              };
+              Insert: {
+                area?: string | null;
+                category?: string | null;
+                content: string;
+                created_at?: string;
+                id?: string;
+                page_path?: string | null;
+                rating?: number | null;
+                user_id?: string | null;
+              };
+              Update: {
+                area?: string | null;
+                category?: string | null;
+                content?: string;
+                created_at?: string;
+                id?: string;
+                page_path?: string | null;
+                rating?: number | null;
+                user_id?: string | null;
+              };
+              Relationships: [];
+            };
             // Direct Chat Tables
             direct_chats: {
               Row: {

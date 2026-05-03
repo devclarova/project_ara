@@ -47,7 +47,7 @@ export default function SnsLayout({
   return (
     <div className="bg-white dark:bg-background">
       {/* [Restore] Original layout border positioning for FloatingButtons (Precision target 813px inside, restore desktop) */}
-      <FloatingButtons className="bottom-10 right-12 lg:right-10 xl:right-[calc(50vw-345px)] z-[400]" />
+      <FloatingButtons className="bottom-10 right-12 lg:right-10 xl:right-[calc(50vw-345px)] z-[40]" />
 
       
       <div className="mx-auto max-w-7xl px-4 sm:px-5 lg:px-6">
