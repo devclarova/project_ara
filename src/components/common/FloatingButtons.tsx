@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { ArrowUp, Bot, MessageSquarePlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import FeedbackModal from './FeedbackModal';
+
 
 interface FloatingButtonsProps {
   className?: string;
@@ -12,7 +14,9 @@ export default function FloatingButtons({ className }: FloatingButtonsProps) {
   const [isChatHovered, setIsChatHovered] = useState(false);
   const [isFeedbackHovered, setIsFeedbackHovered] = useState(false);
   const [isScrollHovered, setIsScrollHovered] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const { t } = useTranslation();
+
 
   useEffect(() => {
     const toggleVisibility = () => {
@@ -39,8 +43,9 @@ export default function FloatingButtons({ className }: FloatingButtonsProps) {
   };
 
   const handleFeedbackClick = () => {
-    console.log('Feedback clicked');
+    setIsFeedbackModalOpen(true);
   };
+
 
   return (
     <div className={cn(
@@ -126,7 +131,13 @@ export default function FloatingButtons({ className }: FloatingButtonsProps) {
           <ArrowUp size={20} />
         </button>
       </div>
+
+      <FeedbackModal 
+        isOpen={isFeedbackModalOpen} 
+        onClose={() => setIsFeedbackModalOpen(false)} 
+      />
     </div>
+
   );
 }
 

@@ -16,6 +16,7 @@ export type MessagesUpdate = Database['public']['Tables']['messages']['Update'];
 
 export type Dialogues = Database['public']['Tables']['dialogues']['Row'];
 
+
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
@@ -408,7 +409,45 @@ export type Database = {
           },
         ];
       };
+      feedback: {
+        Row: {
+          area: string | null;
+          category: string | null;
+          content: string;
+          created_at: string;
+          id: string;
+          page_path: string | null;
+          rating: number | null;
+          user_id: string | null;
+        };
+        Insert: {
+          area?: string | null;
+          category?: string | null;
+          content: string;
+          created_at?: string;
+          id?: string;
+          page_path?: string | null;
+          rating?: number | null;
+          user_id?: string | null;
+        };
+        Update: {
+          area?: string | null;
+          category?: string | null;
+          content?: string;
+          created_at?: string;
+          id?: string;
+          page_path?: string | null;
+          rating?: number | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       direct_messages: {
+
+
+
+
+
         Row: {
           chat_id: string;
           content: string;
