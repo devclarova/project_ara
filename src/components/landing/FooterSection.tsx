@@ -60,7 +60,50 @@ export default function FooterSection() {
         }
       } else {
         setSubmitted(true);
+        const submittedEmail = email; // Store email before clearing state
         setEmail('');
+
+        // [EMAIL] Send confirmation email asynchronously
+        try {
+          const emailHtml = `
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Welcome to ARA</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f6f9fb;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0f172a;line-height:1.6">
+    <div style="max-width:640px;margin:0 auto;padding:24px">
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:40px 32px;box-shadow:0 4px 16px rgba(0,0,0,.04)">
+        <img src="https://lsjozpktmapfqxqyaarw.supabase.co/storage/v1/object/public/avatars/avatars/sample_font_logo.png" alt="ARA Logo" style="display:block;margin:0 auto 20px auto;width:80px;height:auto" />
+        <h1 style="font-size:22px;font-weight:700;text-align:center;color:#111827;margin-bottom:8px">The waves are bringing something exciting — ride them with us! 🌊</h1>
+        <p style="font-size:15px;color:#374151;margin:10px 0">Hi there,</p>
+        <p style="font-size:15px;color:#374151;margin:10px 0">Thank you for joining ARA. You're now officially in line for early access and the latest updates.</p>
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin:20px 0">
+          <p style="font-size:13px;color:#6b7280;margin-bottom:4px">Registered Email</p>
+          <p style="font-size:15px;color:#374151;margin:0;font-weight:600">${submittedEmail}</p>
+        </div>
+        <p style="font-size:15px;color:#374151;margin:10px 0">We'll notify you as soon as we have exciting news or updates to share.</p>
+        <p style="font-size:12px;color:#6b7280;margin:10px 0">Stay tuned and get ready to dive into Korean!</p>
+      </div>
+      <div style="text-align:center;font-size:12px;color:#9ca3af;margin-top:24px">© 2026 ARA — Dive into Korean. Made with 🌊</div>
+    </div>
+  </body>
+</html>
+`;
+          fetch(`${window.location.origin}/api/send-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: submittedEmail,
+              subject: `[ARA] The waves are bringing something exciting — ride them with us! 🌊`,
+              html: emailHtml
+            })
+          }).catch(e => console.error('Waitlist email failed:', e));
+        } catch (emailError) {
+          console.error('Waitlist email error:', emailError);
+        }
       }
     } catch (err) {
       console.error('[waitlist]', JSON.stringify(err));

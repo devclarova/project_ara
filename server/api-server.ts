@@ -796,7 +796,7 @@ app.post('/api/send-email', async (req, res) => {
       to: [to],
       subject: subject,
       html: html,
-      reply_to: 'koreara25@gmail.com'
+      replyTo: 'koreara25@gmail.com'
     });
 
     if (error) {
