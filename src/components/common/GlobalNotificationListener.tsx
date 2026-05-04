@@ -139,7 +139,7 @@ export const GlobalNotificationListener: React.FC = () => {
                     } else if (newNotif.type === 'follow' && senderProfile?.nickname) {
                        navigate(`/profile/${encodeURIComponent(senderProfile.nickname)}`);
                     } else {
-                       navigate('/sns');
+                       navigate('/hnotifications');
                     }
                   }}
                   toastId={t}
