@@ -152,30 +152,62 @@ export default function FeedbackActionModal({ feedback, isOpen, onClose, onResol
           if (!emailFetchError && userEmail) {
             // [EMAIL] Call send-email API
             const emailHtml = `
-              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-                <h2 style="color: #4F46E5;">ARA 피드백 답변 알림</h2>
-                <p>안녕하세요, <strong>${feedback.profiles?.nickname || '사용자'}</strong>님.</p>
-                <p>남겨주신 소중한 피드백에 대해 관리자가 답변을 등록했습니다.</p>
-                <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                  <p style="font-size: 14px; color: #6b7280; margin-bottom: 5px;">문의 내용:</p>
-                  <p style="margin-top: 0;">${feedback.content}</p>
-                  <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 15px 0;">
-                  <p style="font-size: 14px; color: #6b7280; margin-bottom: 5px;">관리자 답변:</p>
-                  <p style="margin-top: 0; font-weight: bold;">${replyContent.trim()}</p>
-                </div>
-                <p>항상 저희 서비스를 이용해 주셔서 감사합니다.</p>
-                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #9ca3af;">
-                  <p>본 메일은 발신 전용입니다. 문의 사항은 앱 내 고객센터를 이용해 주세요.</p>
-                </div>
-              </div>
-            `;
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>A reply to your feedback – ARA</title>
+    <style>
+      body{margin:0;padding:0;background:#f6f9fb;font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;color:#0f172a;line-height:1.6}
+      .container{max-width:640px;margin:0 auto;padding:24px}
+      .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:40px 32px;box-shadow:0 4px 16px rgba(0,0,0,.04)}
+      .logo{display:block;margin:0 auto 20px auto;width:80px;height:auto}
+      h1{font-size:22px;font-weight:700;text-align:center;color:#111827;margin-bottom:8px}
+      p{font-size:15px;color:#374151;margin:10px 0}
+      .box{background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin:20px 0}
+      .label{font-size:13px;color:#6b7280;margin-bottom:4px}
+      .muted{font-size:12px;color:#6b7280;word-break:break-all}
+      footer{text-align:center;font-size:12px;color:#9ca3af;margin-top:24px}
+      @media (prefers-color-scheme: dark){
+        body{background:#0b1220;color:#e2e8f0}
+        .card{background:#111827;border-color:#1f2937}
+        .box{background:#1f2937;border-color:#374151}
+        h1{color:#f3f4f6}
+        p{color:#d1d5db}
+        .muted{color:#9ca3af}
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <img src="https://lsjozpktmapfqxqyaarw.supabase.co/storage/v1/object/public/avatars/avatars/sample_font_logo.png" alt="ARA Logo" class="logo" />
+        <h1>We've replied to your feedback</h1>
+        <p>Hi <strong>${feedback.profiles?.nickname || 'there'}</strong>,</p>
+        <p>Thank you for your valuable feedback. Our team has left a reply.</p>
+        <div class="box">
+          <p class="label">Your feedback</p>
+          <p>${feedback.content}</p>
+          <hr style="border:0;border-top:1px solid #e5e7eb;margin:12px 0" />
+          <p class="label">Our reply</p>
+          <p style="font-weight:600">${replyContent.trim()}</p>
+        </div>
+        <p class="muted">You can reply to this email if you have further questions.</p>
+      </div>
+      <footer>© 2026 ARA — Dive into Korean. Made with 🌊</footer>
+    </div>
+  </body>
+</html>
+`;
 
             await fetch(`${window.location.origin}/api/send-email`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 to: userEmail,
-                subject: '[ARA] 고객님의 피드백에 대한 관리자 답변이 등록되었습니다.',
+                subject: '[ARA] A reply to your feedback',
                 html: emailHtml
               })
             }).catch(e => console.error('Email API call failed:', e));
