@@ -101,6 +101,9 @@ export function ReplyCard({
   const [liked, setLiked] = useState(reply.liked ?? false);
   const [likeCount, setLikeCount] = useState(reply.stats?.likes ?? 0);
   const [showMenu, setShowMenu] = useState(false);
+  const [isHiddenLocal, setIsHiddenLocal] = useState(reply.is_hidden || false);
+  const [showAdminConfirm, setShowAdminConfirm] = useState(false);
+  const [isAdminHiding, setIsAdminHiding] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
@@ -143,7 +146,11 @@ export function ReplyCard({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isSoftDeleted = !!reply.deleted_at;
-  const isHiddenContent = reply.is_hidden && !isAdmin;
+  const isHiddenContent = isHiddenLocal && !isAdmin;
+
+  useEffect(() => {
+    setIsHiddenLocal(reply.is_hidden || false);
+  }, [reply.is_hidden]);
 
   // rawContent는 초기값/동기화용으로만 두고
   const rawContent =
@@ -273,8 +280,37 @@ export function ReplyCard({
       setShowDialog(false);
       setShowMenu(false);
       onDeleted?.(reply.id);
-    } catch (err: unknown) {
-      toast.error(t('common.error_delete'));
+    } catch (err: any) {
+      toast.error(t('tweet.delete_failed'));
+    }
+  };
+
+  /** 관리자용 게시물 숨김/해제 처리 */
+  const handleToggleAdminHide = async () => {
+    setIsAdminHiding(true);
+    try {
+      const newHiddenStatus = !isHiddenLocal;
+      const { error } = await (supabase as any).rpc('toggle_content_hidden', {
+        p_type: 'reply',
+        p_id: reply.id,
+        p_hidden: newHiddenStatus
+      });
+
+      if (error) throw error;
+
+      setIsHiddenLocal(newHiddenStatus);
+      toast.success(newHiddenStatus ? '게시물이 숨김 처리되었습니다.' : '게시물 숨김이 해제되었습니다.');
+      
+      // 스토어 동기화 (댓글은 SnsStore에 직접 tweet 내부에 있을 수 있으나, 일단 전역 업데이트 시도)
+      // (ReplyCard는 대개 개별 상태로 관리되므로 isHiddenLocal 업데이트로 충분함)
+      // 하지만 SnsStore에 updateReply가 있다면 호출해주면 좋음.
+    } catch (err) {
+      console.error('Error toggling hide status:', err);
+      toast.error(t('common.error_admin_action', '관리자 작업 중 오류가 발생했습니다.'));
+    } finally {
+      setIsAdminHiding(false);
+      setShowAdminConfirm(false);
+      setShowMenu(false);
     }
   };
 
@@ -897,6 +933,25 @@ export function ReplyCard({
                     />
                   </>
                 )}
+
+                {/* 관리자 전용 메뉴 */}
+                {isAdmin && (
+                  <>
+                    <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
+                    <button
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        setShowAdminConfirm(true);
+                        setShowMenu(false);
+                      }}
+                      className={`w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-sm flex items-center gap-2 ${isHiddenLocal ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}
+                    >
+                      <i className={isHiddenLocal ? 'ri-eye-line' : 'ri-eye-off-line'} />
+                      <span>{isHiddenLocal ? t('common.unhide', '숨김 해제') : t('common.hide', '숨기기')}</span>
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -1229,6 +1284,40 @@ export function ReplyCard({
                 className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
               >
                 {t('common.delete')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 관리자 액션 확인 다이얼로그 */}
+      {showAdminConfirm && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[1000]">
+          <div
+            ref={dialogRef}
+            className="bg-white dark:bg-secondary rounded-2xl p-6 w-[90%] max-w-sm shadow-lg relative"
+            onClick={e => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
+              {isHiddenLocal ? t('admin.unhide_title', '게시물 숨김 해제') : t('admin.hide_title', '게시물 숨기기')}
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+              {isHiddenLocal ? t('admin.unhide_confirm_msg', '이 게시물의 숨김을 해제하시겠습니까?') : t('admin.hide_confirm_msg', '이 게시물을 숨기시겠습니까?')}
+            </p>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowAdminConfirm(false)}
+                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10"
+                disabled={isAdminHiding}
+              >
+                {t('common.cancel', '취소')}
+              </button>
+              <button
+                onClick={handleToggleAdminHide}
+                className={`px-4 py-2 rounded-lg text-white ${isHiddenLocal ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-600 hover:bg-amber-700'}`}
+                disabled={isAdminHiding}
+              >
+                {isAdminHiding ? t('common.processing', '처리 중...') : t('common.confirm', '확인')}
               </button>
             </div>
           </div>
