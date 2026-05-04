@@ -393,6 +393,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setIsAdmin(false);
       setBannedUntil(null);
       setIsBannedState(false);
+      setUserPlan('free');
       try {
         localStorage.removeItem(DRAFT_KEY);
         localStorage.removeItem('guest-translation-count');
