@@ -115,8 +115,7 @@ const AdminFeedback = () => {
       setTotalCount(count || 0);
 
       // 2. Get paginated data
-      console.log('query params:', { page, filterStatus, filterCategory, filterRating });
-      console.log('range:', (page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE - 1);
+
       let query = (supabase.from('feedback') as any)
         .select('*')
         .order('created_at', { ascending: false })
@@ -133,8 +132,7 @@ const AdminFeedback = () => {
       }
 
       const { data, error } = await query;
-      console.log('feedback data:', data);
-      console.log('feedback error:', error);
+
       if (error) throw error;
       
       const feedbacksData = data || [];
@@ -181,14 +179,13 @@ const AdminFeedback = () => {
     // unread 상태면 read로 업데이트
     if (feedback.status === 'unread') {
       try {
-        console.log('feedback status:', feedback.status);
-        console.log('updating to read...');
+
         const { error } = await (supabase as any)
           .from('feedback')
           .update({ status: 'read' })
           .eq('id', feedback.id);
         
-        console.log('update error:', error);
+
         
         if (error) throw error;
         
