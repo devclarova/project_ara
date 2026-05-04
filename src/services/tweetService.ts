@@ -393,7 +393,7 @@ export const tweetService = {
    * Fetch replies for a specific tweet
    * supports pagination or loading all (for jumping to a comment)
    */
-  async getRepliesByTweetId(tweetId: string, page: number, loadAll = false, profileId?: string | null): Promise<UIReply[]> {
+  async getRepliesByTweetId(tweetId: string, page: number, loadAll = false, profileId?: string | null, isAdmin: boolean = false): Promise<UIReply[]> {
     let query = (supabase.from('tweet_replies') as any)
       .select(
         `id, content, created_at, updated_at, deleted_at, is_hidden, parent_reply_id, root_reply_id, profiles:author_id (id, nickname, user_id, avatar_url, banned_until, plan, country), tweet_replies_likes (count)`,
@@ -459,15 +459,23 @@ export const tweetService = {
           root_reply_id: r.root_reply_id ?? null,
           user: {
             id: r.profiles?.id ?? '00000000-0000-0000-0000-000000000000',
-            name: r.profiles?.nickname ?? 'Unknown',
-            username: r.profiles?.user_id ?? 'anonymous',
-            avatar: r.profiles?.avatar_url ?? '/default-avatar.svg',
+            name: r.is_hidden && r.profiles?.id !== profileId && !isAdmin 
+              ? 'Unknown' 
+              : (r.profiles?.nickname ?? 'Unknown'),
+            username: r.is_hidden && r.profiles?.id !== profileId && !isAdmin 
+              ? 'anonymous' 
+              : (r.profiles?.user_id ?? 'anonymous'),
+            avatar: r.is_hidden && r.profiles?.id !== profileId && !isAdmin 
+              ? '/default-avatar.svg' 
+              : (r.profiles?.avatar_url ?? '/default-avatar.svg'),
             banned_until: r.profiles?.banned_until ?? null,
             plan: r.profiles?.plan,
             countryFlag: countryId ? countryMap.get(String(countryId))?.flag_url : null,
             countryName: countryId ? countryMap.get(String(countryId))?.name : null,
           },
-          content: r.content,
+          content: r.is_hidden && r.profiles?.id !== profileId && !isAdmin 
+            ? '' 
+            : r.content,
           deleted_at: r.deleted_at,
           is_hidden: r.is_hidden,
           timestamp: r.created_at,

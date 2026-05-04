@@ -1,3 +1,4 @@
+import React from 'react';
 import BlockButton from '@/components/common/BlockButton';
 import TranslateButton from '@/components/common/TranslateButton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -17,7 +18,7 @@ import ReportModal from '@/components/common/ReportModal';
 import { useBlockedUsers } from '@/hooks/useBlockedUsers';
 import { formatSmartDate } from '@/utils/dateUtils';
 import { ensureMyProfileId } from '@/lib/ensureMyProfileId';
-import { getErrorMessage } from '@/utils/errorMessage';
+import { getErrorMessage, htmlToPlainText } from '@/utils/errorMessage';
 
 import ModalImageSlider from './ModalImageSlider';
 import SeagullIcon from '@/components/common/SeagullIcon';
@@ -76,24 +77,25 @@ interface ReplyCardProps {
   setEditingReplyId?: (id: string | null) => void;
 }
 
-export function ReplyCard({
-  reply,
-  onDeleted,
-  onLike,
-  onReply,
-  onCommentClick,
-  highlight = false,
-  onClick,
-  onAvatarClick,
-  disableInteractions = false,
-  isAdminView = false,
-  depth = 0,
-  isLastChild = false,
-  ancestorsLast = [],
-  hasChildren = false,
-  editingReplyId,
-  setEditingReplyId,
-}: ReplyCardProps) {
+export function ReplyCard(props: ReplyCardProps) {
+  const {
+    reply,
+    onDeleted,
+    onLike,
+    onReply,
+    onCommentClick,
+    highlight = false,
+    onClick,
+    onAvatarClick,
+    disableInteractions = false,
+    isAdminView = false,
+    depth = 0,
+    isLastChild = false,
+    ancestorsLast = [],
+    hasChildren = false,
+    editingReplyId,
+    setEditingReplyId,
+  } = props;
   const navigate = useNavigate();
   const params = useParams();
   const { user: authUser, isAdmin, profileId } = useAuth();
@@ -109,6 +111,7 @@ export function ReplyCard({
 
   const menuRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+  const adminDialogRef = useRef<HTMLDivElement>(null);
   const [translated, setTranslated] = useState<string>('');
   const [modalIndex, setModalIndex] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
@@ -154,15 +157,18 @@ export function ReplyCard({
 
   // rawContent는 초기값/동기화용으로만 두고
   const rawContent =
-    (isSoftDeleted || isHiddenContent) && !isAdminView 
-      ? (isSoftDeleted ? t('community.deleted_post', '관리자에 의해 삭제된 메시지입니다.') : t('community.hidden_content', '관리자에 의해 숨김 처리된 콘텐츠입니다.')) 
+    isSoftDeleted && !isAdminView 
+      ? t('community.deleted_post', '관리자에 의해 삭제된 메시지입니다.') 
       : (reply.content ?? '');
 
   const [currentContent, setCurrentContent] = useState(rawContent);
 
-  // 실제 화면에 표시할 건 currentContent를 쓰기
-  const displayContent =
-    isSoftDeleted && !isAdminView ? t('community.deleted_post', '관리자에 의해 삭제된 메시지입니다.') : currentContent;
+  // 실제 화면에 표시할 건 파생 변수 displayContent를 사용 (isHiddenContent 즉시 반영)
+  const displayContent = isHiddenContent
+    ? t('community.hidden_content', '관리자에 의해 숨김 처리된 콘텐츠입니다.')
+    : isSoftDeleted && !isAdminView
+      ? t('community.deleted_post', '관리자에 의해 삭제된 메시지입니다.')
+      : currentContent;
 
   const safeContent = DOMPurify.sanitize(displayContent, {
     ADD_TAGS: ['iframe', 'video', 'source', 'img'],
@@ -228,6 +234,17 @@ export function ReplyCard({
     if (showDialog) document.addEventListener('mousedown', handleOutside);
     return () => document.removeEventListener('mousedown', handleOutside);
   }, [showDialog]);
+
+  // 관리자 다이얼로그 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleOutside = (e: MouseEvent) => {
+      if (adminDialogRef.current && !adminDialogRef.current.contains(e.target as Node)) {
+        setShowAdminConfirm(false);
+      }
+    };
+    if (showAdminConfirm) document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [showAdminConfirm]);
 
   // 이미지 추출
   useEffect(() => {
@@ -779,7 +796,7 @@ export function ReplyCard({
         )}
       </div>
 
-      <div className="flex space-x-3 relative z-10">
+      <div className="flex space-x-3 relative">
         <div
           onClick={handleAvatarClick}
           className={`flex-shrink-0 self-start cursor-pointer transition-all duration-300 active:scale-95 z-20 ${isDeletedUser ? 'cursor-default' : ''} ${!isDeletedUser && reply.user.plan === 'premium' ? 'rounded-full p-[2px] bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] shadow-[0_2px_10px_rgba(0,191,165,0.4)]' : ''}`}
@@ -809,7 +826,15 @@ export function ReplyCard({
                   className={`font-bold text-gray-900 dark:text-gray-100 truncate ${isDeletedUser ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
                   onClick={handleAvatarClick}
                 >
-                  {isDeletedUser ? t('deleted_user') : reply.user.name}
+                  {isHiddenContent ? (
+                    <span className="text-gray-400 text-sm">
+                      {t('community.hidden_comment', '숨겨진 댓글')}
+                    </span>
+                  ) : isDeletedUser ? (
+                    t('deleted_user')
+                  ) : (
+                    reply.user.name
+                  )}
                 </span>
                 {!isDeletedUser && (
                   <OnlineIndicator
@@ -822,24 +847,20 @@ export function ReplyCard({
               <BanBadge bannedUntil={reply.user.banned_until ?? null} size="xs" className="ml-1" />
 
               {/* 작성자 국가 표시 (국기 또는 지구본) */}
-              {authorCountryFlagUrl && !isDeletedUser && (
+              {(isHiddenContent || !isDeletedUser) && (
                 <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 h-5 ml-1">
-                  <img
-                    src={authorCountryFlagUrl}
-                    alt={authorCountryName ?? t('common.country', '국가')}
-                    title={authorCountryName ?? ''}
-                    className="w-5 h-3.5 rounded-[2px] object-cover"
-                  />
-                </Badge>
-              )}
-
-              {!authorCountryFlagUrl && authorCountryName && (
-                <Badge
-                  variant="secondary"
-                  className="flex items-center px-1 py-0.5 ml-1.5"
-                  title={authorCountryName}
-                >
-                  <span className="text-xs">🌐</span>
+                  {isHiddenContent ? (
+                    <span className="text-xs">🌐</span>
+                  ) : authorCountryFlagUrl ? (
+                    <img
+                      src={authorCountryFlagUrl}
+                      alt={authorCountryName ?? t('common.country', '국가')}
+                      title={authorCountryName ?? ''}
+                      className="w-5 h-3.5 rounded-[2px] object-cover"
+                    />
+                  ) : authorCountryName ? (
+                    <span className="text-xs">🌐</span>
+                  ) : null}
                 </Badge>
               )}
 
@@ -848,7 +869,7 @@ export function ReplyCard({
                 {formatSmartDate(createdAt)}
                 {isEdited && <span className="ml-1 text-[10px] text-gray-400">{t('common.edited', '수정됨')}</span>}
               </span>
-              {isAdmin && reply.is_hidden && (
+              {isAdmin && isHiddenLocal && (
                 <Badge variant="outline" className="ml-2 border-amber-500 text-amber-500 text-[10px] py-0 h-4 self-center">
                   {t('common.hidden', '숨김')}
                 </Badge>
@@ -868,16 +889,18 @@ export function ReplyCard({
                   <span>{t('common.remask', '다시 숨기기')}</span>
                 </button>
               )}
-              <button
-                onClick={e => {
-                  e.stopPropagation();
-                  closeEditIfNeeded();
-                  setShowMenu(v => !v);
-                }}
-                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition"
-              >
-                <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
-              </button>
+              {(isAdmin || !isHiddenContent) && (
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    closeEditIfNeeded();
+                    setShowMenu(v => !v);
+                  }}
+                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition"
+                >
+                  <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
+                </button>
+              )}
             </div>
 
             {/* 더보기 메뉴 */}
@@ -1113,7 +1136,7 @@ export function ReplyCard({
                   }}
                 />
                 {/* 번역 버튼 */}
-                {!isSoftDeleted && plainTextContent.trim().length > 0 && (
+                {!isHiddenContent && !isSoftDeleted && plainTextContent.trim().length > 0 && (
                   <TranslateButton
                     text={plainTextContent}
                     contentId={`reply_${reply.id}`}
@@ -1202,7 +1225,7 @@ export function ReplyCard({
           )}
 
           {/* 액션 버튼 */}
-          {!isEditing && (
+          {!isEditing && !isHiddenContent && (
             <div className="flex items-center justify-start gap-4 max-w-md mt-2 text-gray-500 dark:text-gray-400">
               {/* Reply */}
               <button
@@ -1294,7 +1317,7 @@ export function ReplyCard({
       {showAdminConfirm && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[1000]">
           <div
-            ref={dialogRef}
+            ref={adminDialogRef}
             className="bg-white dark:bg-secondary rounded-2xl p-6 w-[90%] max-w-sm shadow-lg relative"
             onClick={e => e.stopPropagation()}
           >

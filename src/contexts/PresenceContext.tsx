@@ -61,7 +61,7 @@ export const PresenceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // 1. 전역 통계 새로고침 (관리자 전용)
   // ============================================================
   const refreshStats = useCallback(async () => {
-    if (!isAdmin || !isOnline()) return;
+    if (!user || !isAdmin || !isOnline()) return;
     
     try {
       await retryWithBackoff(async () => {
