@@ -114,7 +114,7 @@ export default function FeedbackActionModal({ feedback, isOpen, onClose, onResol
 
       if (error) throw error;
       
-      // Send in-app notification to user
+      // Send in-app notification and Email to user
       if (feedback.user_id) {
         try {
           const { data: { user: adminUser } } = await supabase.auth.getUser();
@@ -143,9 +143,46 @@ export default function FeedbackActionModal({ feedback, isOpen, onClose, onResol
                 content: `피드백에 관리자 답변이 등록되었습니다: ${replyContent.trim().slice(0, 50)}${replyContent.trim().length > 50 ? '...' : ''}`
               });
           }
+
+          // [EMAIL] Fetch recipient email via RPC
+          const { data: userEmail, error: emailFetchError } = await (supabase as any).rpc('get_user_email_admin', {
+            p_user_id: feedback.user_id
+          });
+
+          if (!emailFetchError && userEmail) {
+            // [EMAIL] Call send-email API
+            const emailHtml = `
+              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+                <h2 style="color: #4F46E5;">ARA 피드백 답변 알림</h2>
+                <p>안녕하세요, <strong>${feedback.profiles?.nickname || '사용자'}</strong>님.</p>
+                <p>남겨주신 소중한 피드백에 대해 관리자가 답변을 등록했습니다.</p>
+                <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                  <p style="font-size: 14px; color: #6b7280; margin-bottom: 5px;">문의 내용:</p>
+                  <p style="margin-top: 0;">${feedback.content}</p>
+                  <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 15px 0;">
+                  <p style="font-size: 14px; color: #6b7280; margin-bottom: 5px;">관리자 답변:</p>
+                  <p style="margin-top: 0; font-weight: bold;">${replyContent.trim()}</p>
+                </div>
+                <p>항상 저희 서비스를 이용해 주셔서 감사합니다.</p>
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #9ca3af;">
+                  <p>본 메일은 발신 전용입니다. 문의 사항은 앱 내 고객센터를 이용해 주세요.</p>
+                </div>
+              </div>
+            `;
+
+            await fetch(`${window.location.origin}/api/send-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: userEmail,
+                subject: '[ARA] 고객님의 피드백에 대한 관리자 답변이 등록되었습니다.',
+                html: emailHtml
+              })
+            }).catch(e => console.error('Email API call failed:', e));
+          }
         } catch (notifError) {
-          console.error('Failed to send notification:', notifError);
-          // Non-blocking error for notification
+          console.error('Failed to send notification or email:', notifError);
+          // Non-blocking error for notification/email
         }
       }
 

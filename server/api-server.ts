@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
 import path from 'path';
+import { Resend } from 'resend';
 
 dotenv.config();
 
@@ -770,6 +771,42 @@ app.post('/api/chatbot', async (req, res) => {
     });
   } catch (error) {
     console.error('Chatbot error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/send-email', async (req, res) => {
+  try {
+    const { to, subject, html } = req.body;
+
+    if (!to || !subject || !html) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      console.error('RESEND_API_KEY is not set');
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
+
+    const resend = new Resend(apiKey);
+
+    const { data, error } = await resend.emails.send({
+      from: 'ARA Support <support@mail.arakorean.com>',
+      to: [to],
+      subject: subject,
+      html: html,
+      reply_to: 'koreara25@gmail.com'
+    });
+
+    if (error) {
+      console.error('Resend API error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    return res.status(200).json({ data });
+  } catch (error) {
+    console.error('Send email error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
