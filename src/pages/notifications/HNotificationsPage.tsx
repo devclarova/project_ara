@@ -450,7 +450,7 @@ export default function HNotificationsPage() {
                         avatar:
                           n.type === 'system'
                             ? '/images/sample_font_logo.png'
-                            : n.sender?.avatar || '/default-avatar.svg',
+                            : n.sender?.avatar || '/images/ara_basic_profile.png',
                         bio: n.sender?.bio,
                       },
                       action:

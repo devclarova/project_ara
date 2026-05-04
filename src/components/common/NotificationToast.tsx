@@ -161,7 +161,7 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
        <div className="flex-shrink-0 relative">
         <div className={`absolute -inset-1 rounded-full opacity-10 blur-[2px] transition-opacity group-hover:opacity-20 ${styles.iconBg}`}></div>
         <Avatar className="w-10 h-10 border border-white/20 dark:border-white/10 shadow-sm relative z-10">
-          <AvatarImage src={sender.avatar_url || '/default-avatar.svg'} alt={sender.nickname} />
+          <AvatarImage src={sender.avatar_url || '/images/ara_basic_profile.png'} alt={sender.nickname} />
           <AvatarFallback className="bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
             {sender.nickname?.[0]?.toUpperCase() || 'U'}
           </AvatarFallback>

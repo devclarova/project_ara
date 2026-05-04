@@ -291,7 +291,7 @@ function Header() {
   };
   // 실제 보여줄 값
   const displayNickname = profileNickname ?? fallbackNickname;
-  const headerAvatar = profileAvatar ?? '/default-avatar.svg';
+  const headerAvatar = profileAvatar ?? '/images/ara_basic_profile.png';
   return (
     <div
       className="relative inset-x-0 top-0 z-[90] flex justify-between items-center px-4 sm:px-8 lg:px-12 xl:px-24 2xl:px-36 py-2

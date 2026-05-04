@@ -333,7 +333,7 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
                id: profileId,
                name: profileNickname || t('common.unknown', 'Unknown'),
                username: profileUserId || user.id,
-               avatar: profileAvatar ?? '/default-avatar.svg',
+               avatar: profileAvatar ?? '/images/ara_basic_profile.png',
                plan: userPlan || (user as any).plan || 'free',
                countryFlag: profileCountryFlag,
                countryName: profileCountryName,
@@ -392,7 +392,7 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
             id: profileId,
             name: profileNickname || t('common.unknown', 'Unknown'),
             username: profileUserId || user.id,
-            avatar: profileAvatar ?? '/default-avatar.svg',
+            avatar: profileAvatar ?? '/images/ara_basic_profile.png',
             plan: userPlan || (user as any).plan || 'free',
             countryFlag: profileCountryFlag,
             countryName: profileCountryName,
@@ -472,7 +472,7 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
         {/* 내 아바타 */}
         <div className={`relative flex-shrink-0 ${userPlan === 'premium' ? 'rounded-full p-[2px] bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] shadow-[0_2px_10px_rgba(0,191,165,0.4)]' : ''}`}>
           <Avatar className="border-2 border-white dark:border-background">
-            <AvatarImage src={profileAvatar || '/default-avatar.svg'} alt="me" />
+            <AvatarImage src={profileAvatar || '/images/ara_basic_profile.png'} alt="me" />
             <AvatarFallback>{t('common.me', 'ME')}</AvatarFallback>
           </Avatar>
           {userPlan === 'premium' && (

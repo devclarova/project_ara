@@ -609,7 +609,7 @@ export default function TweetCard({
           <div className={`w-10 h-10 relative ${user.plan === 'premium' && !isDeletedUser ? 'rounded-full p-[2px] bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] shadow-[0_2px_10px_rgba(0,191,165,0.4)]' : ''}`}>
             <Avatar className="w-full h-full border-2 border-white dark:border-background">
               <AvatarImage
-                src={user.avatar || '/default-avatar.svg'}
+                src={user.avatar || '/images/ara_basic_profile.png'}
                 alt={isDeletedUser ? t('deleted_user') : user.name}
               />
               <AvatarFallback>

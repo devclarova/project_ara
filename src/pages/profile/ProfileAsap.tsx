@@ -140,7 +140,7 @@ export default function ProfileAsap() {
         user_id: profile.user_id,
         name: profile.nickname ?? t('common.unknown'),
         username: profile.user_id,
-        avatar: profile.avatar_url ?? '/default-avatar.svg',
+        avatar: profile.avatar_url ?? '/images/ara_basic_profile.png',
         bio: profile.bio ?? t('profile.no_bio_placeholder'),
         country: countryName,
         countryFlagUrl: countryFlagUrl,

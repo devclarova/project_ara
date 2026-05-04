@@ -107,7 +107,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
           <div className="absolute -bottom-12 left-8 p-1 bg-white dark:bg-zinc-900 rounded-full shadow-lg">
             <div className="relative w-24 h-24 rounded-full bg-zinc-100 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 overflow-hidden shadow-inner">
               <img 
-                src={user.avatar_url || '/images/default-avatar.svg'} 
+                src={user.avatar_url || '/images/images/ara_basic_profile.png'} 
                 alt="avatar" 
                 className="w-full h-full object-cover"
               />

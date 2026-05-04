@@ -639,7 +639,7 @@ export function ReplyCard(props: ReplyCardProps) {
           <div className="flex items-center space-x-3 opacity-60 grayscale">
             <div className="relative">
               <Avatar className="w-10 h-10 border-2 border-white/50 dark:border-black/20">
-                <AvatarImage src="/default-avatar.svg" />
+                <AvatarImage src="/images/ara_basic_profile.png" />
                 <AvatarFallback>?</AvatarFallback>
               </Avatar>
               <div className="absolute -bottom-1 -right-1 bg-gray-200 dark:bg-gray-700 rounded-full p-0.5">
@@ -803,7 +803,7 @@ export function ReplyCard(props: ReplyCardProps) {
         >
           <Avatar className="w-10 h-10 border-2 border-white dark:border-background shadow-sm">
             <AvatarImage
-              src={reply.user.avatar || '/default-avatar.svg'}
+              src={reply.user.avatar || '/images/ara_basic_profile.png'}
               alt={isDeletedUser ? t('deleted_user') : reply.user.name}
             />
             <AvatarFallback>{isDeletedUser ? '?' : reply.user.name.charAt(0)}</AvatarFallback>

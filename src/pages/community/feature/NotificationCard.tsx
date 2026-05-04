@@ -360,7 +360,7 @@ export default function NotificationCard({
         <div onClick={handleAvatarClick} className="cursor-pointer flex-shrink-0 relative">
           <Avatar className="w-10 h-10">
             <AvatarImage
-              src={notification.user.avatar || '/default-avatar.svg'}
+              src={notification.user.avatar || '/images/ara_basic_profile.png'}
               alt={notification.user.name}
             />
             <AvatarFallback>

@@ -173,7 +173,7 @@ export default function FollowersModal({
                   >
                     <div className="flex items-start gap-3">
                       <Avatar className="w-12 h-12 flex-shrink-0">
-                        <AvatarImage src={user.avatar || '/default-avatar.svg'} alt={user.name} />
+                        <AvatarImage src={user.avatar || '/images/ara_basic_profile.png'} alt={user.name} />
                         <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
                       </Avatar>
 

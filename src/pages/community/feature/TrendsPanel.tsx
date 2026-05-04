@@ -165,7 +165,7 @@ export default function TrendsPanel({
                         <div className={`${isPremium ? 'rounded-full p-[2px] bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] shadow-[0_2px_10px_rgba(0,191,165,0.4)]' : ''}`}>
                           <Avatar className={`w-9 h-9 border ${isPremium ? 'border-white dark:border-background' : 'border-black/5 dark:border-white/10'}`}>
                             <AvatarImage
-                              src={tweet.profiles?.avatar_url || '/default-avatar.svg'}
+                              src={tweet.profiles?.avatar_url || '/images/ara_basic_profile.png'}
                               alt={tweet.profiles?.nickname || t('common.user', 'User')}
                             />
                             <AvatarFallback>

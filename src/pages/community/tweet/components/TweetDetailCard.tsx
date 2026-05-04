@@ -598,7 +598,7 @@ export default function TweetDetailCard({
         >
           <Avatar className="border-2 border-white dark:border-background">
             <AvatarImage
-              src={tweet.user.avatar || '/default-avatar.svg'}
+              src={tweet.user.avatar || '/images/ara_basic_profile.png'}
               alt={isDeletedUser ? t('deleted_user') : tweet.user.name}
             />
             <AvatarFallback>

@@ -39,7 +39,7 @@ export default function ReplyComposer({ onReply }: ReplyComposerProps) {
       <div className="flex space-x-3">
         {/* shadcn Avatar */}
         <Avatar className="h-10 w-10">
-          <AvatarImage src="/default-avatar.svg" alt="Your avatar" />
+          <AvatarImage src="/images/ara_basic_profile.png" alt="Your avatar" />
           <AvatarFallback>YOU</AvatarFallback>
         </Avatar>
 

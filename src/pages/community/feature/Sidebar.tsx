@@ -214,7 +214,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
             className="w-full flex items-center justify-center lg:justify-start space-x-0 lg:space-x-3 p-2 lg:p-3 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition-colors cursor-pointer"
           >
             <Avatar className="w-10 h-10">
-              <AvatarImage src={profile.avatar_url || '/default-avatar.svg'} />
+              <AvatarImage src={profile.avatar_url || '/images/ara_basic_profile.png'} />
               <AvatarFallback>
                 {profile.nickname ? profile.nickname.charAt(0).toUpperCase() : 'U'}
               </AvatarFallback>

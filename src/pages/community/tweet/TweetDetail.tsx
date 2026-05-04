@@ -428,7 +428,7 @@ export default function TweetDetail() {
               id: profile?.id,
               name: profile?.nickname ?? t('common.unknown', 'Unknown'),
               username: profile?.user_id ?? t('common.anonymous', 'anonymous'),
-              avatar: profile?.avatar_url ?? '/default-avatar.svg',
+              avatar: profile?.avatar_url ?? '/images/ara_basic_profile.png',
               plan: profile?.plan,
             },
             content: newReply.content,

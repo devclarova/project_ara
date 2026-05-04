@@ -133,7 +133,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
           id: data.profiles?.id || '',
           name: data.profiles?.nickname || t('common.unknown', 'Unknown'),
           username: data.profiles?.user_id || t('common.anonymous', 'anonymous'),
-          avatar: data.profiles?.avatar_url || '/default-avatar.svg',
+          avatar: data.profiles?.avatar_url || '/images/ara_basic_profile.png',
         },
         content: data.content,
         image: data.image_url || '',

@@ -499,7 +499,7 @@ export default function ProfileHeader({
           <div className="w-32 h-32 rounded-full border-4 border-white bg-white overflow-hidden shadow-md dark:border-gray-900 dark:bg-gray-900">
             <Avatar className="w-full h-full">
               <AvatarImage
-                src={previewAvatar || userProfile.avatar || '/default-avatar.svg'}
+                src={previewAvatar || userProfile.avatar || '/images/ara_basic_profile.png'}
                 alt={userProfile.name}
               />
               <AvatarFallback>{userProfile.name.charAt(0).toUpperCase()}</AvatarFallback>
