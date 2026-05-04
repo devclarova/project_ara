@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Volume2 } from 'lucide-react';
 import { useTTS } from '@/hooks/useTTS';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 function shuffle<T>(arr: T[]) {
   return [...arr].sort(() => Math.random() - 0.5);
@@ -211,6 +212,8 @@ export default function MatchingQuizModal({
       console.error('[MatchingQuizModal] Failed to save results:', err);
     }
   };
+
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 

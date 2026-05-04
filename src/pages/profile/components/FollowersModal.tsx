@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 export interface FollowUser {
   id: string;
@@ -50,6 +51,8 @@ export default function FollowersModal({
     setActiveTab(initialTab);
     setSearchQuery('');
   }, [initialTab, isOpen]);
+
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 

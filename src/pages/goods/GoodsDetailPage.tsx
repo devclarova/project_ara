@@ -43,6 +43,7 @@ import { supabase } from '@/lib/supabase';
 import TranslateButton from '@/components/common/TranslateButton';
 import { useAutoTranslation } from '@/hooks/useAutoTranslation';
 import FloatingButtons from '@/components/common/FloatingButtons';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 
 
@@ -146,6 +147,8 @@ export default function GoodsDetailPage() {
     };
     fetchData();
   }, [id]);
+
+  useBodyScrollLock(isReviewModalOpen);
 
   if (loading) {
     return (

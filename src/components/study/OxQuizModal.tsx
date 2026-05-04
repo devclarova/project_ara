@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Volume2 } from 'lucide-react';
 import { useTTS } from '@/hooks/useTTS';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 type OxQuestion = {
   term: string;
@@ -256,6 +257,8 @@ export default function OxQuizModal({
       console.error('[OxQuizModal] Failed to save results:', err);
     }
   };
+
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 

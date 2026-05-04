@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
 import { getErrorMessage } from '@/utils/errorMessage';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 interface SanctionDialogProps {
   isOpen: boolean;
@@ -206,6 +207,8 @@ const SanctionDialog: React.FC<SanctionDialogProps> = ({
       setIsProcessing(false);
     }
   };
+
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 

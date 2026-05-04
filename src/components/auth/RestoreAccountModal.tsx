@@ -1,5 +1,5 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 interface RestoreAccountModalProps {
   isOpen: boolean;
@@ -15,6 +15,8 @@ export default function RestoreAccountModal({
   daysRemaining = 7,
 }: RestoreAccountModalProps) {
   const { t } = useTranslation();
+
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 

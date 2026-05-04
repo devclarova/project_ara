@@ -123,6 +123,10 @@ body {
 .prevent-scroll {
   overflow: hidden !important;
 }
+
+body.prevent-scroll .floating-buttons {
+  display: none !important;
+}
 @layer base {
   a {
     text-decoration: none;

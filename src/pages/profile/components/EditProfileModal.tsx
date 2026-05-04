@@ -153,6 +153,8 @@ export default function EditProfileModal({
       fetchCountries();
     }
   }, [isOpen, userProfile]);
+  useBodyScrollLock(isOpen);
+
   if (!isOpen) return null;
   const handleInputChange = (field: 'name' | 'bio' | 'country', value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));

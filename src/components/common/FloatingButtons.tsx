@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ArrowUp, Bot, MessageSquarePlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
@@ -58,9 +59,9 @@ export default function FloatingButtons({ className }: FloatingButtonsProps) {
   };
 
 
-  return (
+  return createPortal(
     <div className={cn(
-      "fixed bottom-[24px] right-[20px] z-[40] flex flex-col items-center gap-[10px]",
+      "fixed bottom-[24px] right-[20px] z-[40] flex flex-col items-center gap-[10px] floating-buttons",
       className
     )}>
       {/* 챗봇 버튼 */}
@@ -162,6 +163,7 @@ export default function FloatingButtons({ className }: FloatingButtonsProps) {
         isOpen={isChatbotOpen}
         onClose={() => setIsChatbotOpen(false)}
       />
-    </div>
+    </div>,
+    document.body
   );
 }

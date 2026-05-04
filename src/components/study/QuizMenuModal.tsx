@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 export type VocabItem = {
   id: string;
@@ -61,22 +62,7 @@ export default function QuizMenuModal({
     if (isOpen) setIdx(0);
   }, [isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const prevOverflow = document.body.style.overflow;
-    const prevPaddingRight = document.body.style.paddingRight;
-
-    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
-    document.body.style.overflow = 'hidden';
-    if (scrollBarWidth > 0) document.body.style.paddingRight = `${scrollBarWidth}px`;
-
-    // 뷰포트 스크롤 제어 — 모달 활성화 시 배경 스크롤을 차단하고 레이아웃 뒤틀림 방지를 위해 스크롤바 너비를 패딩으로 보정
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      document.body.style.paddingRight = prevPaddingRight;
-    };
-  }, [isOpen]);
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 

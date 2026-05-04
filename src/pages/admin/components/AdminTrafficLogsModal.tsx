@@ -25,6 +25,7 @@ import {
   Share2,
   UserCheck
 } from 'lucide-react';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { getErrorMessage } from '@/utils/errorMessage';
@@ -90,7 +91,6 @@ const AdminTrafficLogsModal: React.FC<AdminTrafficLogsModalProps> = ({
       fetchLogs();
       const pollInterval = setInterval(fetchLogs, 10000);
       
-      document.body.style.overflow = 'hidden';
       const timer = setTimeout(() => {
         setRenderCharts(true);
         window.dispatchEvent(new Event('resize'));
@@ -99,13 +99,13 @@ const AdminTrafficLogsModal: React.FC<AdminTrafficLogsModalProps> = ({
       return () => {
          clearInterval(pollInterval);
          clearTimeout(timer);
-         document.body.style.overflow = 'unset';
       };
     } else {
       setRenderCharts(false);
-      document.body.style.overflow = 'unset';
     }
   }, [isOpen]);
+
+  useBodyScrollLock(isOpen || !!selectedLog);
 
   const fetchLogs = async () => {
     try {

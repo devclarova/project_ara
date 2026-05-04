@@ -6,6 +6,7 @@ import RichTextEditor from '../editor/RichTextEditor';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { getBanMessage } from '@/utils/banUtils';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 interface TweetModalProps {
   onClose: () => void;
@@ -157,6 +158,8 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
       setIsSubmitting(false);
     }
   };
+
+  useBodyScrollLock(true);
 
   return (
     <div

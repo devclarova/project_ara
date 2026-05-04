@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTTS } from '@/hooks/useTTS';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 export type EpisodeWord = {
   id: string;
@@ -104,29 +105,6 @@ export default function EpisodeVocaModal({
     setShowOriginal(false);
     setImgError(false);
   }, [index, isOpen]);
-
-  // 뷰포트 고정 — 모달 활성화 시 배경 스크롤을 차단하고 현재 스크롤 위치를 고정 (Scroll Jump 방지)
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const scrollY = window.scrollY;
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.left = '0';
-    document.body.style.right = '';
-    document.body.style.width = '100%';
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-      window.scrollTo(0, scrollY);
-    };
-  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
