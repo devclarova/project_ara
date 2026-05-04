@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import FeedbackModal from './FeedbackModal';
 import ChatbotModal from './ChatbotModal';
 import { useFeedbackTrigger } from '@/hooks/useFeedbackTrigger';
+import { useAuth } from '@/contexts/AuthContext';
 
 
 interface FloatingButtonsProps {
@@ -20,6 +21,7 @@ export default function FloatingButtons({ className }: FloatingButtonsProps) {
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const { t } = useTranslation();
+  const { user } = useAuth();
 
   const { shouldShow, isAutoTriggered, onDismiss, onComplete } = useFeedbackTrigger();
 
@@ -58,6 +60,7 @@ export default function FloatingButtons({ className }: FloatingButtonsProps) {
     setIsFeedbackModalOpen(true);
   };
 
+  if (!user) return null;
 
   return createPortal(
     <div className={cn(
