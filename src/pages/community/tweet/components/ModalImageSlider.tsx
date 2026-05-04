@@ -113,7 +113,7 @@ export default function ModalImageSlider({
       }}
     >
       <div
-        className="relative w-[min(750px,90vw)] h-[min(90vh,900px)] bg-white/90 dark:bg-black/30 backdrop-blur-md flex items-center justify-center rounded-xl overflow-hidden select-none"
+        className="relative w-[min(750px,90vw)] max-h-[90vh] bg-white/90 dark:bg-black/30 backdrop-blur-md flex items-center justify-center rounded-xl overflow-hidden select-none"
         onClick={e => e.stopPropagation()}
       >
         {/* 닫기 버튼 */}

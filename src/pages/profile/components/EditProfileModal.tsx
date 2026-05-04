@@ -232,8 +232,15 @@ export default function EditProfileModal({
     try {
       let avatarUrl = userProfile.avatar;
       let bannerUrl = userProfile.banner ?? null;
-      if (avatarFile) avatarUrl = await uploadImage(avatarFile, 'avatars');
-      // 1) 사용자가 삭제 버튼 눌렀다면 → previewBanner가 null
+
+      // 1) 아바타 삭제 처리 (기본 이미지로 리셋)
+      if (avatarFile === null && previewAvatar === '/images/ara_basic_profile.png') {
+        avatarUrl = '/images/ara_basic_profile.png';
+      } else if (avatarFile) {
+        avatarUrl = await uploadImage(avatarFile, 'avatars');
+      }
+
+      // 2) 사용자가 배너 삭제 버튼 눌렀다면 → previewBanner가 null
       if (previewBanner === null) {
         await deleteOldBanner();
         bannerUrl = null; // DB에서 제거할 값
@@ -339,19 +346,6 @@ export default function EditProfileModal({
                     className="w-full h-full object-cover cursor-grab"
                     style={{ objectPosition: `center ${bannerPosY}%` }}
                   />
-                  {/* 삭제 버튼 */}
-                  {!isDragging && (
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        setPreviewBanner(null);
-                        setBannerFile(null);
-                      }}
-                      className="absolute top-2 right-2 bg-black/60 text-white w-8 h-8 flex items-center justify-center rounded-full hover:bg-black/80 transition z-50"
-                    >
-                      <i className="ri-delete-bin-line text-lg" />
-                    </button>
-                  )}
                 </>
               )}
               {previewBanner && !isDragging && (
@@ -359,14 +353,11 @@ export default function EditProfileModal({
                   드래그해서 위치 조절
                 </div>
               )}
+              {/* 배너 편집/삭제 버튼 — 우측 상단 항상 노출 */}
               {!isDragging && (
-                <div
-                  className="absolute inset-0 bg-black/30 flex items-center justify-center
-                opacity-0 hover:opacity-100 transition
-                pointer-events-none"
-                >
-                  <label className="w-10 h-10 bg-black/50 rounded-full flex items-center justify-center cursor-pointer hover:bg-black/70 pointer-events-auto">
-                    <i className="ri-camera-line text-white text-lg"></i>
+                <div className="absolute top-2 right-2 flex items-center gap-2 z-50">
+                  <label className="w-8 h-8 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center cursor-pointer hover:bg-black/70 transition border border-white/10">
+                    <i className="ri-camera-line text-white text-sm"></i>
                     <input
                       type="file"
                       accept="image/*"
@@ -374,15 +365,28 @@ export default function EditProfileModal({
                       onChange={e => handleFileChange(e, 'banner')}
                     />
                   </label>
+                  {previewBanner && (
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setPreviewBanner(null);
+                        setBannerFile(null);
+                      }}
+                      className="w-8 h-8 bg-black/50 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-red-500/60 transition border border-white/10"
+                    >
+                      <i className="ri-delete-bin-line text-sm" />
+                    </button>
+                  )}
                 </div>
               )}
             </div>
             {/* Avatar */}
-            <div className="absolute -bottom-8 left-2">
+            <div className="absolute -bottom-8 left-2 group/avatar">
               <div className="w-20 h-20 rounded-full border-4 border-white bg-white overflow-hidden relative dark:border-gray-900 dark:bg-gray-900">
                 <img src={previewAvatar} alt="Avatar" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition">
-                  <label className="w-8 h-8 bg-black/50 rounded-full flex items-center justify-center cursor-pointer hover:bg-black/70">
+                {/* 호버 오버레이 — 변경/삭제 아이콘 중앙 배치 */}
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-2 opacity-0 group-hover/avatar:opacity-100 transition">
+                  <label className="w-8 h-8 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center cursor-pointer hover:bg-black/70 transition border border-white/10">
                     <i className="ri-camera-line text-white text-sm"></i>
                     <input
                       type="file"
@@ -391,6 +395,18 @@ export default function EditProfileModal({
                       onChange={e => handleFileChange(e, 'avatar')}
                     />
                   </label>
+                  {previewAvatar !== '/images/ara_basic_profile.png' && (
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setPreviewAvatar('/images/ara_basic_profile.png');
+                        setAvatarFile(null);
+                      }}
+                      className="w-8 h-8 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-red-500/60 transition border border-white/10"
+                    >
+                      <i className="ri-delete-bin-line text-white text-sm" />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
