@@ -60,7 +60,7 @@ export default function FloatingButtons({ className }: FloatingButtonsProps) {
     setIsFeedbackModalOpen(true);
   };
 
-  if (!user) return null;
+
 
   return createPortal(
     <div className={cn(
@@ -95,33 +95,35 @@ export default function FloatingButtons({ className }: FloatingButtonsProps) {
         </button>
       </div>
 
-      {/* 피드백 버튼 */}
-      <div className="group relative flex items-center">
-        <span 
-          className="pointer-events-none absolute right-[54px] whitespace-nowrap rounded-md px-2 py-1 text-xs opacity-0 ring-1 transition-opacity duration-300 group-hover:opacity-100 bg-white dark:bg-neutral-900"
-          style={{ 
-            color: 'var(--color-text-primary)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-            border: '0.5px solid var(--color-border-secondary)'
-          }}
-        >
-          {t('common.feedback', '피드백 남기기')}
-        </span>
-        <button
-          onClick={handleFeedbackClick}
-          onMouseEnter={() => setIsFeedbackHovered(true)}
-          onMouseLeave={() => setIsFeedbackHovered(false)}
-          className="flex h-[44px] w-[44px] items-center justify-center rounded-full border-[0.5px] border-[var(--color-border-secondary)] transition-all duration-300 bg-white dark:bg-neutral-900"
-          style={{
-            background: isFeedbackHovered ? '#00BFA5' : undefined,
-            color: isFeedbackHovered ? 'white' : '#00BFA5',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-          }}
-          aria-label={t('common.feedback', '피드백 남기기')}
-        >
-          <MessageSquarePlus size={20} />
-        </button>
-      </div>
+      {/* 피드백 버튼 (로그인 시에만 표시) */}
+      {user && (
+        <div className="group relative flex items-center">
+          <span 
+            className="pointer-events-none absolute right-[54px] whitespace-nowrap rounded-md px-2 py-1 text-xs opacity-0 ring-1 transition-opacity duration-300 group-hover:opacity-100 bg-white dark:bg-neutral-900"
+            style={{ 
+              color: 'var(--color-text-primary)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              border: '0.5px solid var(--color-border-secondary)'
+            }}
+          >
+            {t('common.feedback', '피드백 남기기')}
+          </span>
+          <button
+            onClick={handleFeedbackClick}
+            onMouseEnter={() => setIsFeedbackHovered(true)}
+            onMouseLeave={() => setIsFeedbackHovered(false)}
+            className="flex h-[44px] w-[44px] items-center justify-center rounded-full border-[0.5px] border-[var(--color-border-secondary)] transition-all duration-300 bg-white dark:bg-neutral-900"
+            style={{
+              background: isFeedbackHovered ? '#00BFA5' : undefined,
+              color: isFeedbackHovered ? 'white' : '#00BFA5',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+            }}
+            aria-label={t('common.feedback', '피드백 남기기')}
+          >
+            <MessageSquarePlus size={20} />
+          </button>
+        </div>
+      )}
 
       {/* 스크롤업 버튼 */}
       <div 
