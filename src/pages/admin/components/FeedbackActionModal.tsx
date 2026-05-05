@@ -61,9 +61,16 @@ interface FeedbackActionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onResolve: () => void;
+  tableType?: 'feedback' | 'inquiry';
 }
 
-export default function FeedbackActionModal({ feedback, isOpen, onClose, onResolve }: FeedbackActionModalProps) {
+export default function FeedbackActionModal({ 
+  feedback, 
+  isOpen, 
+  onClose, 
+  onResolve,
+  tableType = 'feedback'
+}: FeedbackActionModalProps) {
   const { t } = useTranslation();
   const [replyContent, setReplyContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -104,7 +111,7 @@ export default function FeedbackActionModal({ feedback, isOpen, onClose, onResol
       const now = new Date().toISOString();
       
       const { error } = await (supabase as any)
-        .from('feedback')
+        .from(tableType)
         .update({
           status: 'replied',
           admin_reply: replyContent.trim(),
@@ -173,7 +180,7 @@ export default function FeedbackActionModal({ feedback, isOpen, onClose, onResol
           <p style="font-size:13px;color:#6b7280;margin-bottom:4px">Our reply</p>
           <p style="font-size:15px;color:#374151;margin:0;font-weight:600">${replyContent.trim()}</p>
         </div>
-        <p style="font-size:12px;color:#6b7280;margin:10px 0">You can reply to this email if you have further questions.</p>
+        <p style="font-size:12px;color:#6b7280;margin:10px 0">If you have any questions, feel free to reply to this email or use the inquiry feature on our service.</p>
       </div>
       <div style="text-align:center;font-size:12px;color:#9ca3af;margin-top:24px">© 2026 ARA — Dive into Korean. Made with 🌊</div>
     </div>

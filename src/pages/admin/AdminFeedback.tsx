@@ -28,6 +28,29 @@ type FeedbackWithUser = Feedback & {
   } | null;
 };
 
+// Inquiry 타입 추가
+export type Inquiry = {
+  id: string;
+  user_id: string;
+  category: string;
+  subject: string;
+  content: string;
+  status: 'unread' | 'read' | 'replied';
+  admin_reply?: string;
+  replied_at?: string;
+  created_at: string;
+  page_path?: string | null;
+  area?: string | null;
+};
+
+type InquiryWithUser = Inquiry & {
+  profiles?: {
+    user_id: string;
+    nickname: string;
+    avatar_url: string | null;
+  } | null;
+};
+
 const PATH_TO_LABEL: Record<string, string> = {
   '/': '랜딩 페이지',
   '/sns': '커뮤니티 피드',
@@ -60,6 +83,7 @@ const getPageLabel = (path: string | null) => {
 
 const AdminFeedback = () => {
   const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<'feedback' | 'inquiry'>('feedback');
   
   // Filters
   const [filterStatus, setFilterStatus] = useState<'all' | 'unread' | 'read' | 'replied'>('all');
@@ -74,8 +98,8 @@ const AdminFeedback = () => {
   const ITEMS_PER_PAGE = 20;
 
   const [loading, setLoading] = useState(true);
-  const [feedbacks, setFeedbacks] = useState<FeedbackWithUser[]>([]);
-  const [selectedFeedback, setSelectedFeedback] = useState<FeedbackWithUser | null>(null);
+  const [feedbacks, setFeedbacks] = useState<(FeedbackWithUser | InquiryWithUser)[]>([]);
+  const [selectedFeedback, setSelectedFeedback] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showUserProfileModal, setShowUserProfileModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -93,9 +117,10 @@ const AdminFeedback = () => {
 
   const fetchFeedbacks = useCallback(async () => {
     setLoading(true);
+    const tableName = activeTab === 'feedback' ? 'feedback' : 'inquiries';
     try {
       // 1. Get total count for pagination
-      let countQuery = (supabase.from('feedback') as any)
+      let countQuery = (supabase.from(tableName) as any)
         .select('*', { count: 'exact', head: true });
       
       if (filterStatus !== 'all') {
@@ -104,7 +129,7 @@ const AdminFeedback = () => {
       if (filterCategory !== 'all') {
         countQuery = countQuery.eq('category', filterCategory);
       }
-      if (filterRating !== 'all') {
+      if (activeTab === 'feedback' && filterRating !== 'all') {
         countQuery = countQuery.eq('rating', parseInt(filterRating));
       }
 
@@ -116,7 +141,7 @@ const AdminFeedback = () => {
 
       // 2. Get paginated data
 
-      let query = (supabase.from('feedback') as any)
+      let query = (supabase.from(tableName) as any)
         .select('*')
         .order('created_at', { ascending: false })
         .range((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE - 1);
@@ -127,7 +152,7 @@ const AdminFeedback = () => {
       if (filterCategory !== 'all') {
         query = query.eq('category', filterCategory);
       }
-      if (filterRating !== 'all') {
+      if (activeTab === 'feedback' && filterRating !== 'all') {
         query = query.eq('rating', parseInt(filterRating));
       }
 
@@ -157,17 +182,18 @@ const AdminFeedback = () => {
       setFeedbacks(enhancedFeedbacks);
     } catch (error: unknown) {
       console.error('Error fetching feedbacks:', getErrorMessage(error));
-      toast.error('피드백 목록을 불러오는 데 실패했습니다.');
+      toast.error(`${activeTab === 'feedback' ? '피드백' : '문의'} 목록을 불러오는 데 실패했습니다.`);
     } finally {
       setLoading(false);
     }
-  }, [filterStatus, filterCategory, filterRating, page, debouncedSearch]); // Note: local debounced search filtering handled in client if needed, but here we just rely on DB for now. (Actually, search is hard to do across all text fields easily without RPC, so we will do client side filter for search term if needed, or just let DB do exact match. For now, we will do basic DB fetch and client-side search text filtering if it's small, but pagination makes client search tricky. We will use ilike if we had it, but we can't easily. So we will just fetch and then filter locally? No, let's keep it simple.)
+  }, [filterStatus, filterCategory, filterRating, page, debouncedSearch, activeTab]);
 
   useEffect(() => {
     fetchFeedbacks();
   }, [fetchFeedbacks]);
 
-  const handleOpenModal = async (feedback: FeedbackWithUser) => {
+  const handleOpenModal = async (feedback: any) => {
+    const tableName = activeTab === 'feedback' ? 'feedback' : 'inquiries';
     // unread 상태면 모달에도 바로 read로 전달
     const updatedFeedback = (feedback.status === 'unread' || !feedback.status)
       ? { ...feedback, status: 'read' as const }
@@ -181,7 +207,7 @@ const AdminFeedback = () => {
       try {
 
         const { error } = await (supabase as any)
-          .from('feedback')
+          .from(tableName)
           .update({ status: 'read' })
           .eq('id', feedback.id);
         
@@ -210,11 +236,29 @@ const AdminFeedback = () => {
     <div className="w-full h-[calc(100vh-140px)] flex flex-col p-4 md:p-6 gap-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 flex-wrap [word-break:keep-all]">
-             <MessageSquare className="text-primary" /> 피드백 관리
-          </h1>
+          <div className="flex items-center gap-4 mb-1">
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 flex-wrap [word-break:keep-all]">
+               <MessageSquare className="text-primary" /> {activeTab === 'feedback' ? '피드백 관리' : '문의 관리'}
+            </h1>
+            <div className="flex bg-secondary border border-border rounded-xl p-1 shadow-sm ml-2">
+              <button 
+                onClick={() => { setActiveTab('feedback'); setPage(1); setFeedbacks([]); }}
+                className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${activeTab === 'feedback' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                피드백
+              </button>
+              <button 
+                onClick={() => { setActiveTab('inquiry'); setPage(1); setFeedbacks([]); }}
+                className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${activeTab === 'inquiry' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                문의
+              </button>
+            </div>
+          </div>
           <p className="text-sm text-muted-foreground mt-1">
-            사용자가 남긴 소중한 피드백을 확인하고 답변을 등록하세요.
+            {activeTab === 'feedback' 
+              ? '사용자가 남긴 소중한 피드백을 확인하고 답변을 등록하세요.' 
+              : '사용자의 1:1 문의 내역을 확인하고 답변을 등록하세요.'}
           </p>
         </div>
         
@@ -252,19 +296,21 @@ const AdminFeedback = () => {
             <option value="other">기타</option>
           </select>
 
-          {/* Rating Filter */}
-          <select
-            value={filterRating}
-            onChange={(e) => { setFilterRating(e.target.value as any); setPage(1); }}
-            className="px-3 py-2 bg-secondary border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 text-muted-foreground hover:text-foreground outline-none"
-          >
-            <option value="all">모든 별점</option>
-            <option value="5">★★★★★ (5점)</option>
-            <option value="4">★★★★☆ (4점)</option>
-            <option value="3">★★★☆☆ (3점)</option>
-            <option value="2">★★☆☆☆ (2점)</option>
-            <option value="1">★☆☆☆☆ (1점)</option>
-          </select>
+          {/* Rating Filter (Feedback Only) */}
+          {activeTab === 'feedback' && (
+            <select
+              value={filterRating}
+              onChange={(e) => { setFilterRating(e.target.value as any); setPage(1); }}
+              className="px-3 py-2 bg-secondary border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 text-muted-foreground hover:text-foreground outline-none"
+            >
+              <option value="all">모든 별점</option>
+              <option value="5">★★★★★ (5점)</option>
+              <option value="4">★★★★☆ (4점)</option>
+              <option value="3">★★★☆☆ (3점)</option>
+              <option value="2">★★☆☆☆ (2점)</option>
+              <option value="1">★☆☆☆☆ (1점)</option>
+            </select>
+          )}
 
           <button 
              onClick={fetchFeedbacks}
@@ -292,15 +338,15 @@ const AdminFeedback = () => {
                     <th className="py-4 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">제출 일시</th>
                     <th className="py-4 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">작성자</th>
                     <th className="py-4 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">카테고리</th>
-                    <th className="py-4 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">별점</th>
-                    <th className="py-4 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">내용 (미리보기)</th>
+                    {activeTab === 'feedback' && <th className="py-4 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">별점</th>}
+                    <th className="py-4 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{activeTab === 'feedback' ? '내용 (미리보기)' : '제목 (내용)'}</th>
                     <th className="py-4 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">발생 페이지/영역</th>
                     <th className="py-4 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px]">관리</th>
                 </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                 {feedbacks
-                    .filter(f => !debouncedSearch || f.content.toLowerCase().includes(debouncedSearch.toLowerCase()))
+                    .filter(f => !debouncedSearch || f.content.toLowerCase().includes(debouncedSearch.toLowerCase()) || ((f as any).subject?.toLowerCase().includes(debouncedSearch.toLowerCase())))
                     .map((feedback) => (
                     <tr 
                         key={feedback.id} 
@@ -358,29 +404,33 @@ const AdminFeedback = () => {
                             {feedback.category || '기타'}
                         </span>
                     </td>
+                    {activeTab === 'feedback' && (
                     <td className="py-4 px-6 whitespace-nowrap">
                         <div className="flex text-amber-400 text-xs">
                             {Array.from({ length: 5 }).map((_, i) => (
-                                <span key={i} className={i < (feedback.rating || 0) ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600'}>
+                                <span key={i} className={i < ((feedback as any).rating || 0) ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600'}>
                                 ★
                                 </span>
                             ))}
                         </div>
                     </td>
+                    )}
                     <td className="py-4 px-6">
                         <p className="text-sm text-foreground/90 truncate max-w-[300px]">
-                            {feedback.content.length > 50 ? `${feedback.content.substring(0, 50)}...` : feedback.content}
+                            {activeTab === 'feedback' 
+                              ? (feedback.content.length > 50 ? `${feedback.content.substring(0, 50)}...` : feedback.content)
+                              : ((feedback as any).subject || (feedback.content.length > 50 ? `${feedback.content.substring(0, 50)}...` : feedback.content))}
                         </p>
                     </td>
                     <td className="py-4 px-6">
                         <div className="flex flex-col gap-1.5">
                             <div className="flex">
-                                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[11px] font-medium text-gray-600 dark:text-gray-400 truncate max-w-[150px]" title={feedback.page_path || '-'}>
-                                    {getPageLabel(feedback.page_path)}
+                                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[11px] font-medium text-gray-600 dark:text-gray-400 truncate max-w-[150px]" title={(feedback as any).page_path || '-'}>
+                                    {getPageLabel((feedback as any).page_path ?? null)}
                                 </span>
                             </div>
-                            <span className="text-[10px] text-muted-foreground truncate max-w-[150px] pl-0.5" title={feedback.area || '-'}>
-                                {feedback.area || '-'}
+                            <span className="text-[10px] text-muted-foreground truncate max-w-[150px] pl-0.5" title={(feedback as any).area || '-'}>
+                                {(feedback as any).area || '-'}
                             </span>
                         </div>
                     </td>
@@ -443,6 +493,7 @@ const AdminFeedback = () => {
         onResolve={() => {
             fetchFeedbacks();
         }} 
+        tableType={activeTab}
       />
 
       <UserProfileModal 

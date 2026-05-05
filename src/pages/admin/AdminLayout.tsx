@@ -56,7 +56,8 @@ const AdminLayout = () => {
     else if (path.startsWith('/admin/reports')) pageTitle = '신고 및 문의';
     else if (path.startsWith('/admin/analytics')) pageTitle = '통계 및 분석';
     else if (path.startsWith('/admin/users')) pageTitle = '사용자 관리';
-    else if (path.startsWith('/admin/feedback')) pageTitle = '피드백 관리';
+    else if (path.startsWith('/admin/notification-center')) pageTitle = '알림 발송 센터';
+    else if (path.startsWith('/admin/feedback')) pageTitle = '피드백 및 문의 관리';
     else if (path.startsWith('/admin/banners')) pageTitle = '배너 관리';
     else if (path.startsWith('/admin/promotions')) pageTitle = '프로모션/쿠폰';
     else if (path.startsWith('/admin/settings')) pageTitle = '관리자 설정';
@@ -239,6 +240,12 @@ const AdminLayout = () => {
               to="/admin/users"
               icon={Users}
               label="사용자 관리"
+              onClick={() => setSidebarOpen(false)}
+            />
+            <NavItem
+              to="/admin/notification-center"
+              icon={Bell}
+              label="알림 발송 센터"
               onClick={() => setSidebarOpen(false)}
             />
             <NavItem
