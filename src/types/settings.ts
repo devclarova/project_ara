@@ -17,7 +17,7 @@ export type SettingsLayoutProps = {
 
 export type ActiveSetting = 'password' | 'recovery' | 'sns' | 'withdraw' | 'blocked_users' | null;
 
-export type ActiveKey = 'terms' | 'privacy' | 'marketing' | 'support' | null;
+export type ActiveKey = 'terms' | 'privacy' | 'marketing' | 'faq' | 'inquiry' | null;
 
 export type ActiveSystem = 'language' | 'theme' | null;
 

@@ -172,7 +172,7 @@ export default function Footer() {
               <h3 className="font-bold text-sm text-foreground">{t('footer.columns.company.title')}</h3>
               <div className="flex flex-col gap-2">
                 <FooterLink onClick={(e) => handleLinkClick(e, 'unimpl')}>{t('footer.columns.company.about')}</FooterLink>
-                <FooterLink onClick={(e) => handleLinkClick(e, 'unimpl')}>{t('footer.columns.company.contact')}</FooterLink>
+                <FooterLink onClick={(e) => handleLinkClick(e, 'impl', '/settings?tab=policy')}>{t('footer.columns.company.contact')}</FooterLink>
               </div>
             </div>
             <div className="col-span-2 md:col-span-4 lg:col-span-1 flex flex-col gap-3 min-w-[220px]">

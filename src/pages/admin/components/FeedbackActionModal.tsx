@@ -75,11 +75,17 @@ export default function FeedbackActionModal({
   const [replyContent, setReplyContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUserProfileModal, setShowUserProfileModal] = useState(false);
+  const [localStatus, setLocalStatus] = useState<Feedback['status']>(null);
+  const [localAdminReply, setLocalAdminReply] = useState<string | null>(null);
+  const [localRepliedAt, setLocalRepliedAt] = useState<string | null>(null);
 
   // Initialize reply content when modal opens with existing reply
   React.useEffect(() => {
     if (isOpen && feedback) {
       setReplyContent(feedback.admin_reply || '');
+      setLocalStatus(feedback.status);
+      setLocalAdminReply(feedback.admin_reply);
+      setLocalRepliedAt(feedback.replied_at);
       
       // If unread, mark as read automatically when opening
       if (feedback.status === 'unread' || !feedback.status) {
@@ -87,12 +93,17 @@ export default function FeedbackActionModal({
       }
     } else {
       setReplyContent('');
+      setLocalStatus(null);
+      setLocalAdminReply(null);
+      setLocalRepliedAt(null);
     }
   }, [isOpen, feedback]);
 
   const markAsRead = async (id: string) => {
     try {
-      await (supabase as any).from('feedback').update({ status: 'read' }).eq('id', id);
+      const tableName = tableType === 'inquiry' ? 'inquiries' : 'feedback';
+      await (supabase as any).from(tableName).update({ status: 'read' }).eq('id', id);
+      setLocalStatus('read');
       onResolve(); // Update parent list without closing modal
     } catch (error) {
       console.error('Failed to mark as read', error);
@@ -111,7 +122,7 @@ export default function FeedbackActionModal({
       const now = new Date().toISOString();
       
       const { error } = await (supabase as any)
-        .from(tableType)
+        .from(tableType === 'inquiry' ? 'inquiries' : tableType)
         .update({
           status: 'replied',
           admin_reply: replyContent.trim(),
@@ -120,6 +131,10 @@ export default function FeedbackActionModal({
         .eq('id', feedback.id);
 
       if (error) throw error;
+      
+      setLocalStatus('replied');
+      setLocalAdminReply(replyContent.trim());
+      setLocalRepliedAt(now);
       
       // Send in-app notification and Email to user
       if (feedback.user_id) {
@@ -206,7 +221,7 @@ export default function FeedbackActionModal({
 
       toast.success('답변이 등록되었습니다.');
       onResolve();
-      onClose();
+      // Keep modal open to show the updated status
     } catch (error: unknown) {
       console.error('Reply submission error:', getErrorMessage(error));
       toast.error('답변 등록에 실패했습니다.');
@@ -231,12 +246,12 @@ export default function FeedbackActionModal({
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full border shadow-sm ${
-                  feedback.status === 'replied' ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' :
-                  feedback.status === 'read' ? 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-800' :
+                  localStatus === 'replied' ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' :
+                  localStatus === 'read' ? 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-800' :
                   'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800'
                 }`}>
-                  {feedback.status === 'replied' ? '답변완료' :
-                   feedback.status === 'read' ? '읽음' : '안읽음'}
+                  {localStatus === 'replied' ? '답변완료' :
+                   localStatus === 'read' ? '읽음' : '안읽음'}
                 </span>
                 <span className="text-sm font-semibold text-foreground">
                   {feedback.category || '기타'}
@@ -311,17 +326,17 @@ export default function FeedbackActionModal({
             <MessageSquare size={16} className="text-primary" /> 관리자 답변
           </h3>
           
-          {feedback.status === 'replied' ? (
+          {localStatus === 'replied' ? (
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle size={14} className="text-primary" />
                 <span className="text-xs font-bold text-primary">답변 완료</span>
                 <span className="text-xs text-muted-foreground ml-auto">
-                  {feedback.replied_at ? new Date(feedback.replied_at).toLocaleString() : ''}
+                  {localRepliedAt ? new Date(localRepliedAt).toLocaleString() : ''}
                 </span>
               </div>
               <div className="text-sm whitespace-pre-wrap leading-relaxed text-foreground">
-                {feedback.admin_reply}
+                {localAdminReply}
               </div>
             </div>
           ) : (
@@ -331,6 +346,7 @@ export default function FeedbackActionModal({
                 onChange={(e) => setReplyContent(e.target.value)}
                 placeholder="사용자에게 전달할 답변을 입력하세요..."
                 className="w-full min-h-[150px] p-4 bg-secondary border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-y"
+                style={{ outline: 'none' }}
               />
               <div className="flex justify-end gap-2">
                 <button 

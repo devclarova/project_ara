@@ -24,8 +24,10 @@ export function getPolicyTitle(active: ActiveKey) {
       return 'settings.title_privacy';
     case 'marketing':
       return 'settings.title_marketing';
-    case 'support':
-      return 'settings.title_support';
+    case 'faq':
+      return 'settings.title_faq';
+    case 'inquiry':
+      return 'settings.title_inquiry';
     default:
       return '';
   }

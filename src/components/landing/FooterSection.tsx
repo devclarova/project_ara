@@ -197,7 +197,7 @@ export default function FooterSection() {
 
           <FooterColumn title={t('footer.columns.company.title')}>
              <FooterLink>{t('footer.columns.company.about')}</FooterLink>
-             <FooterLink>{t('footer.columns.company.contact')}</FooterLink>
+             <FooterLink to="/settings?tab=policy">{t('footer.columns.company.contact')}</FooterLink>
           </FooterColumn>
 
           {/* 오피스 정보 */}
@@ -245,9 +245,9 @@ function FooterColumn({ title, children }: { title: string; children: React.Reac
   );
 }
 
-function FooterLink({ children }: { children: React.ReactNode }) {
+function FooterLink({ children, to = "#" }: { children: React.ReactNode; to?: string }) {
   return (
-    <Link to="#" className="text-sm text-muted-foreground hover:text-primary transition-colors w-fit relative group">
+    <Link to={to} className="text-sm text-muted-foreground hover:text-primary transition-colors w-fit relative group">
       {children}
       <span className="absolute -bottom-1 start-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
     </Link>
