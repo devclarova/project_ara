@@ -85,6 +85,7 @@ interface AdminUser {
   total_count: number;
   received_reports_count: number;
   is_tracked?: boolean;
+  plan?: string;
 }
 
 const UserManagement = () => {
@@ -722,6 +723,7 @@ const UserManagement = () => {
                 <th className="px-6 py-4 whitespace-nowrap">국적/성별</th>
                 <th className="px-6 py-4 whitespace-nowrap">생년월일</th>
                 <th className="px-6 py-4 whitespace-nowrap">권한</th>
+                <th className="px-6 py-4 whitespace-nowrap">구독</th>
                 <th className="px-6 py-4 whitespace-nowrap">상태/접속</th>
                 <th className="px-6 py-4 whitespace-nowrap">가입일/마지막 활동</th>
                 <th className="px-6 py-4 text-right whitespace-nowrap">관리</th>
@@ -814,6 +816,17 @@ const UserManagement = () => {
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border ${getRoleColor(user.is_admin)}`}>
                       {user.is_admin && <Shield size={12} />}
                       {user.is_admin ? '관리자' : '일반 사용자'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold border ${
+                      user.plan?.toLowerCase() === 'premium' 
+                        ? 'bg-primary/10 text-primary border-primary/20' 
+                        : user.plan?.toLowerCase() === 'basic'
+                          ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800'
+                          : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700'
+                    }`}>
+                      {user.plan?.toUpperCase() || 'FREE'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
