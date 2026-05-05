@@ -132,7 +132,7 @@ const ChatMessageItem = ({
     <div className={`flex flex-col gap-1 w-full mb-4 ${isMyMessage ? 'items-end' : 'items-start'}`}>
       <div className={`flex gap-2 items-start ${isMyMessage ? 'flex-row-reverse' : 'flex-row'}`}>
         <Avatar className="w-8 h-8 flex-shrink-0">
-          <AvatarImage src={sender?.avatar_url || '/images/images/ara_basic_profile.png'} />
+          <AvatarImage src={sender?.avatar_url || '/images/ara_basic_profile.png'} />
           <AvatarFallback>?</AvatarFallback>
         </Avatar>
 
@@ -445,7 +445,7 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
         id: (profiles.id as string) || activity.author_id,
         name: (profiles.nickname as string) || (profiles.name as string) || '알 수 없음',
         username: (profiles.user_id as string) || (profiles.username as string) || '',
-        avatar: (profiles.avatar_url as string) || (profiles.avatar as string) || '/images/images/ara_basic_profile.png',
+        avatar: (profiles.avatar_url as string) || (profiles.avatar as string) || '/images/ara_basic_profile.png',
         banned_until: profiles.banned_until,
       },
       content: activity.content || '',
@@ -599,7 +599,7 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
     const mediaText = mediaLabels.length > 0 ? mediaLabels.join(' ') : '';
     const plainContent = stripHtml(activity.content || '');
     const displayContent = plainContent || (images.length > 0 ? (isReply ? '(이미지 댓글)' : '(이미지 게시글)') : '내용 없음');
-    const avatar = activity.profiles?.avatar_url || activity.user?.avatar || '/images/images/ara_basic_profile.png';
+    const avatar = activity.profiles?.avatar_url || activity.user?.avatar || '/images/ara_basic_profile.png';
     const nickname = activity.profiles?.nickname || activity.user?.name || (activity.author_id === user?.profile_id ? user?.nickname : '알 수 없음');
     return (
       <div onClick={onClick} className={`p-4 rounded-2xl border cursor-pointer transition-all hover:border-primary/50 group flex gap-3 ${activity.deleted_at ? 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800' : 'bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 shadow-sm'} relative overflow-hidden`}>
@@ -714,8 +714,8 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
                     <div key={c.id} onClick={() => { setSelectedChat(c); fetchChatMessages(c.id); }} className="p-4 rounded-2xl border bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 hover:border-primary/50 cursor-pointer transition-all flex items-center justify-between shadow-sm group">
                       <div className="flex items-center gap-3">
                         <div className="flex -space-x-2">
-                          <img src={c.user1?.avatar_url || '/images/images/ara_basic_profile.png'} className="w-8 h-8 rounded-full border-2 border-white dark:border-zinc-900 object-cover bg-zinc-100" />
-                          <img src={c.user2?.avatar_url || '/images/images/ara_basic_profile.png'} className="w-8 h-8 rounded-full border-2 border-white dark:border-zinc-900 object-cover bg-zinc-100" />
+                          <img src={c.user1?.avatar_url || '/images/ara_basic_profile.png'} className="w-8 h-8 rounded-full border-2 border-white dark:border-zinc-900 object-cover bg-zinc-100" />
+                          <img src={c.user2?.avatar_url || '/images/ara_basic_profile.png'} className="w-8 h-8 rounded-full border-2 border-white dark:border-zinc-900 object-cover bg-zinc-100" />
                         </div>
                         <div><p className="text-sm font-bold text-zinc-800 dark:text-zinc-200">{c.user1?.nickname || 'Unknown'} & {c.user2?.nickname || 'Unknown'}</p><p className="text-[10px] text-zinc-400">마지막 대화: {c.last_message_at ? format(new Date(c.last_message_at), 'yyyy-MM-dd HH:mm') : '-'}</p></div>
                       </div>
