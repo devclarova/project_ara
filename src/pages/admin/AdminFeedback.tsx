@@ -237,8 +237,8 @@ const AdminFeedback = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
         <div>
           <div className="flex items-center gap-4 mb-1">
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 flex-wrap [word-break:keep-all]">
-               <MessageSquare className="text-primary" /> {activeTab === 'feedback' ? '피드백 관리' : '문의 관리'}
+            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 min-w-[140px]">
+               <MessageSquare className="text-primary flex-shrink-0" /> 피드백/문의 관리
             </h1>
             <div className="flex bg-secondary border border-border rounded-xl p-1 shadow-sm ml-2">
               <button 

@@ -251,7 +251,7 @@ const AdminLayout = () => {
             <NavItem
               to="/admin/feedback"
               icon={MessageSquare}
-              label="피드백 관리"
+              label="피드백/문의 관리"
               onClick={() => setSidebarOpen(false)}
             />
 
