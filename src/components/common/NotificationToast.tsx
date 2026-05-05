@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { formatRelativeTime, formatMessageTime } from '@/utils/dateUtils';
 
 interface NotificationToastProps {
-  type: 'chat' | 'comment' | 'like' | 'mention' | 'follow' | 'repost' | 'reply' | 'system' | 'like_comment' | 'like_feed';
+  type: 'chat' | 'comment' | 'like' | 'mention' | 'follow' | 'repost' | 'reply' | 'system' | 'like_comment' | 'like_feed' | 'updates';
   sender: {
     nickname: string;
     avatar_url: string | null;
@@ -130,6 +130,14 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
         iconBg: 'bg-amber-100 dark:bg-amber-800',
         textColor: 'text-amber-600 dark:text-amber-400',
         badgeColor: 'text-amber-500'
+      };
+      case 'updates': return {
+        icon: '📢',
+        label: t('notification.tab_updates', '소식'),
+        bgColor: 'bg-primary/5 dark:bg-primary/10',
+        iconBg: 'bg-primary/20 dark:bg-primary/30',
+        textColor: 'text-primary',
+        badgeColor: 'text-primary'
       };
       default: return {
         icon: '📢',

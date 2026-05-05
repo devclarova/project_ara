@@ -25,7 +25,7 @@ import { useFollow } from '@/hooks/useFollow';
  interface NotificationCardProps {
    notification: {
      id: string;
-     type: 'like' | 'comment' | 'repost' | 'mention' | 'follow' | 'reply' | 'system' | 'like_comment' | 'like_feed';
+     type: 'like' | 'comment' | 'repost' | 'mention' | 'follow' | 'reply' | 'system' | 'like_comment' | 'like_feed' | 'updates';
      user: {
        id: string;
        name: string;
@@ -88,6 +88,7 @@ export default function NotificationCard({
       case 'follow':
         return '👤';
       case 'system':
+      case 'updates':
         return '📢';
       default:
         return '📢';
@@ -184,6 +185,7 @@ export default function NotificationCard({
       case 'repost':
       case 'mention':
       case 'follow':
+      case 'updates':
         return 'text-primary';
       default:
         return 'text-gray-500 dark:text-gray-400';
@@ -228,7 +230,7 @@ export default function NotificationCard({
   
   // 어떤 타입에 대해 내용 박스를 보여줄지 결정
   const shouldShowPreview =
-    (notification.type === 'comment' || notification.type === 'like' || notification.type === 'mention' || notification.type === 'reply' || notification.type === 'system') 
+    (notification.type === 'comment' || notification.type === 'like' || notification.type === 'mention' || notification.type === 'reply' || notification.type === 'system' || notification.type === 'updates') 
     && (!!contentText || !!imageUrl || isCommentLikeWithoutContent);
 
   const unreadClasses = !notification.isRead
@@ -253,8 +255,8 @@ export default function NotificationCard({
       onMarkAsRead(notification.id);
     }
 
-    // 시스템 알림은 이동 로직 없이 읽음 처리만 함
-    if (notification.type === 'system') return;
+    // 시스템 알림이나 소식(updates) 알림은 이동 로직 없이 읽음 처리만 함
+    if (notification.type === 'system' || notification.type === 'updates') return;
 
     const targetProfile = `/profile/${encodeURIComponent(notification.user.username)}`;
     const targetSns = `/sns/${notification.tweetId}`;
@@ -426,11 +428,11 @@ export default function NotificationCard({
               <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-200 whitespace-pre-wrap break-words flex-1 leading-relaxed w-full">
                 {isCommentLikeWithoutContent 
                   ? t('notification.no_content_available', '내용을 불러올 수 없습니다')
-                  : notification.type === 'system' 
+                  : (notification.type === 'system' || notification.type === 'updates') 
                     ? <div 
                         className="text-sm text-gray-800 dark:text-gray-200 break-words leading-relaxed"
                         dangerouslySetInnerHTML={{ 
-                          __html: DOMPurify.sanitize(getSystemNotificationContent(notification.content)) 
+                          __html: DOMPurify.sanitize(notification.type === 'system' ? getSystemNotificationContent(notification.content) : (notification.content || '')) 
                         }} 
                       />
                     : <span className="line-clamp-2">{contentText}</span>
