@@ -4,6 +4,7 @@
  * - 방법(How): 복합 필터(난이도, 카테고리) 기반의 데이터 조회와 하위 에셋 일괄 삭제 무결성 처리를 수행함
  */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Search, Edit, Trash2, Eye, EyeOff, ChevronDown, Calendar, BookOpen, 
   Star, StarOff, RefreshCw, ChevronLeft, ChevronRight, Loader2,
@@ -740,8 +741,8 @@ const AdminStudyManagement = () => {
       )}
 
       {/* 데이터 폐기 최종 확인 레이어 — 물리적 삭제 전 무결성 손실 방지용 확약 모달 */}
-      {deleteModalOpen && selectedStudy && (
-        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
+      {deleteModalOpen && selectedStudy && createPortal(
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-[130] p-4">
           <div className="bg-background rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-2xl border border-gray-200 dark:border-gray-700">
             <h3 className="text-base sm:text-lg font-bold text-foreground mb-2">학습 콘텐츠 삭제</h3>
             <p className="text-sm text-muted-foreground mb-1">
@@ -771,13 +772,14 @@ const AdminStudyManagement = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* 전역 미리보기 모달 — 사용자 페이지(SNS/Study)와 동일한 형태의 결과값 검증 환경 제공 */}
-      {previewModalOpen && previewStudy && (
-        <div className="fixed inset-0 bg-black/60 dark:bg-black/80 flex items-center justify-center z-[100] p-2 sm:p-4 animate-in fade-in duration-300">
-          <div className="bg-background rounded-[2rem] max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col scale-in animate-in zoom-in-95 duration-300">
+      {/* 전역 미리보기 모달 — createPortal로 document.body에 렌더링하여 AdminLayout stacking context 탈출 */}
+      {previewModalOpen && previewStudy && createPortal(
+        <div className="fixed inset-0 bg-black/60 dark:bg-black/80 flex items-center justify-center z-[130] p-2 sm:p-4 animate-in fade-in duration-300">
+          <div className="bg-background rounded-[2rem] max-w-2xl w-full max-h-[90vh] shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col scale-in animate-in zoom-in-95 duration-300 overflow-hidden">
             {/* Header */}
             <div className="p-4 sm:p-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-background/50 backdrop-blur-md sticky top-0 z-10">
               <div className="flex items-center gap-3 min-w-0">
@@ -798,8 +800,9 @@ const AdminStudyManagement = () => {
             </div>
             
             <div className="flex-1 overflow-y-auto custom-scrollbar">
+              <div className="space-y-6">
               {/* Hero Image Section */}
-              <div className="relative w-full aspect-video bg-muted overflow-hidden sm:rounded-b-2xl shadow-inner">
+              <div className="relative aspect-video bg-muted overflow-hidden rounded-2xl shadow-inner mx-4 sm:mx-6 mt-4 sm:mt-6">
                 {previewStudy.poster_image_url ? (
                   <img src={previewStudy.poster_image_url} alt="" className="w-full h-full object-cover transition-transform duration-700 hover:scale-110" />
                 ) : (
@@ -826,7 +829,7 @@ const AdminStudyManagement = () => {
                 </div>
               </div>
 
-              <div className="p-5 sm:p-6 space-y-6">
+              <div className="px-4 sm:px-6 pb-6 space-y-6">
                 {/* Custom Tab Navigation */}
                 <div className="flex p-1 bg-secondary/50 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-700 sticky top-2 z-20 shadow-sm">
                   {[
@@ -1029,6 +1032,7 @@ const AdminStudyManagement = () => {
                 </div>
               </div>
             </div>
+          </div>
 
             {/* Footer Actions */}
             <div className="p-5 border-t border-gray-100 dark:border-gray-800 bg-background/50 backdrop-blur-md flex gap-3">
@@ -1049,7 +1053,8 @@ const AdminStudyManagement = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
