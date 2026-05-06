@@ -165,7 +165,7 @@ export function ReplyInput({
       user: {
         name: myNickname,
         username: user.id,
-        avatar: myAvatar || '/default-avatar.svg',
+        avatar: myAvatar || '/images/ara_basic_profile.png',
       },
       stats: {
         replies: 0,
@@ -185,7 +185,7 @@ export function ReplyInput({
     <div className="ml-10 mt-3">
       <div className="flex items-start gap-3">
         <Avatar className="w-8 h-8">
-          <AvatarImage src={myAvatar || '/default-avatar.svg'} />
+          <AvatarImage src={myAvatar || '/images/ara_basic_profile.png'} />
           <AvatarFallback>U</AvatarFallback>
         </Avatar>
 

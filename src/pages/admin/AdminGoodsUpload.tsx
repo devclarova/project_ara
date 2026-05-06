@@ -350,18 +350,28 @@ const AdminGoodsUpload = () => {
           </button>
         </div>
 
+        {/* 1410px 미만에서 강제 세로 배열 및 UI 최적화를 위한 오버라이드 스타일 */}
+        <style>{`
+          @media (max-width: 1409px) {
+            .admin-grid-container { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
+            .admin-sidebar, .admin-main-content { grid-column: span 1 / span 1 !important; }
+            .admin-preview-card { max-width: 896px !important; width: 100% !important; }
+            .admin-preview-image { max-height: 360px !important; width: 100% !important; max-width: 400px !important; }
+          }
+        `}</style>
+
         {/* Layout Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 admin-grid-container">
           
           {/* Sidebar */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="lg:col-span-3 space-y-6 admin-sidebar">
             {/* 실시간 렌더링 시뮬레이션 카드 — 현재 입력 상태를 최종 UI와 대조 피드백 */}
-            <div className="p-3 sm:p-4 rounded-[2rem] bg-white dark:bg-zinc-900 border border-white/20 dark:border-white/5 space-y-2 shadow-xl max-w-[280px] mx-auto lg:max-w-none">
+            <div className="p-3 sm:p-4 rounded-[2rem] bg-white dark:bg-zinc-900 border border-white/20 dark:border-white/5 space-y-2 shadow-xl max-w-[280px] mx-auto lg:max-w-none admin-preview-card">
                <div className="flex items-center gap-2 mb-1">
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                   <span className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em]">실시간 미리보기</span>
                </div>
-               <div className="aspect-square rounded-2xl bg-gray-100 dark:bg-zinc-800 overflow-hidden relative group border border-gray-200 dark:border-white/5 max-h-[200px] mx-auto transition-all duration-500 hover:scale-[1.02]">
+               <div className="aspect-square rounded-2xl bg-gray-100 dark:bg-zinc-800 overflow-hidden relative group border border-gray-200 dark:border-white/5 mx-auto max-h-[200px] transition-all duration-500 hover:scale-[1.02] admin-preview-image">
                   {mainImage ? (
                     <img src={mainImage} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="Preview" />
                   ) : (
@@ -386,7 +396,7 @@ const AdminGoodsUpload = () => {
           </div>
 
           {/* Main Form Content */}
-          <div className="lg:col-span-9 rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-white/20 dark:border-white/5 overflow-hidden shadow-2xl">
+          <div className="lg:col-span-9 rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-white/20 dark:border-white/5 overflow-hidden shadow-2xl admin-main-content">
             <div className="p-10">
               <form onSubmit={handleSubmit} className="space-y-8">
                 

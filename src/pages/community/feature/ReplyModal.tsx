@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import RichTextEditor from '../editor/RichTextEditor';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 interface ReplyModalProps {
   tweetId: string; // 부모 트윗 ID
@@ -104,6 +105,8 @@ export default function ReplyModal({ tweetId, onClose }: ReplyModalProps) {
       setIsSubmitting(false);
     }
   };
+
+  useBodyScrollLock(true);
 
   return (
     <div

@@ -11,7 +11,8 @@ import {
   Info,
   Globe,
   Circle,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -49,6 +50,9 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
   const { isUserOnline } = usePresence();
   const [tracking, setTracking] = React.useState<any>(null); // Keeping any for complex traffic log
   const [trackingLoading, setTrackingLoading] = React.useState(false);
+  const [subscriptions, setSubscriptions] = React.useState<any[]>([]);
+  const [visibleCount, setVisibleCount] = React.useState(5);
+  const [financeLoading, setFinanceLoading] = React.useState(false);
   
   React.useEffect(() => {
     const fetchTracking = async () => {
@@ -67,6 +71,29 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
       }
     };
     if (isOpen) fetchTracking();
+  }, [user, isOpen]);
+
+  React.useEffect(() => {
+    const fetchFinanceData = async () => {
+      if (!user?.profile_id && !user?.id) return;
+      setFinanceLoading(true);
+      try {
+        const targetId = user.profile_id || user.id;
+        const { supabase } = await import('@/lib/supabase');
+        
+        // Fetch Subscriptions (All)
+        const { data: subData } = await (supabase.from('subscriptions') as any)
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        setSubscriptions(subData || []);
+      } catch (error: unknown) {
+        console.error('Error fetching finance data:', getErrorMessage(error));
+      } finally {
+        setFinanceLoading(false);
+      }
+    };
+    if (isOpen) fetchFinanceData();
   }, [user, isOpen]);
 
   if (!user) return null;
@@ -107,7 +134,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
           <div className="absolute -bottom-12 left-8 p-1 bg-white dark:bg-zinc-900 rounded-full shadow-lg">
             <div className="relative w-24 h-24 rounded-full bg-zinc-100 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 overflow-hidden shadow-inner">
               <img 
-                src={user.avatar_url || '/images/default-avatar.svg'} 
+                src={user.avatar_url || '/images/ara_basic_profile.png'} 
                 alt="avatar" 
                 className="w-full h-full object-cover"
               />
@@ -221,6 +248,66 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
              ) : (
                 <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-700 text-center text-sm text-zinc-500">
                    기록된 유입 트래킹 데이터가 없습니다. (최근 연동된 시스템이거나 Ad-block 영향일 수 있습니다)
+                </div>
+             )}
+          </div>
+
+          {/* Subscription & Payment History */}
+          <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 space-y-6">
+             <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-2">
+                   <Shield size={16} className="text-primary" /> 구독 및 결제 정보
+                </h3>
+                {financeLoading && <Loader2 className="animate-spin text-zinc-400" size={16} />}
+             </div>
+
+             {/* Subscription List */}
+             {subscriptions.length > 0 ? (
+                <div className="space-y-3">
+                   <div className="grid grid-cols-1 gap-3">
+                      {subscriptions.slice(0, visibleCount).map((sub) => (
+                         <div key={sub.id} className={`p-4 rounded-2xl border ${
+                            sub.status === 'active' 
+                               ? 'bg-primary/5 dark:bg-primary/10 border-primary/20' 
+                               : 'bg-zinc-50 dark:bg-zinc-800/50 border-zinc-100 dark:border-zinc-800 opacity-70'
+                         }`}>
+                            <div className="flex justify-between items-start mb-2">
+                               <div className="flex items-center gap-2">
+                                  <span className="text-[10px] font-black text-primary uppercase tracking-widest">플랜</span>
+                                  <p className="text-sm font-black text-zinc-900 dark:text-white">{sub.plan?.toUpperCase()}</p>
+                               </div>
+                               <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                  sub.status === 'active' ? 'bg-emerald-100 text-emerald-600' : 'bg-zinc-200 text-zinc-500'
+                               }`}>
+                                  {sub.status === 'active' ? '활성' : (sub.status === 'cancelled' ? '해지됨' : '만료')}
+                               </span>
+                            </div>
+                            <div className="flex flex-wrap gap-x-6 gap-y-1">
+                               <p className="text-[10px] text-zinc-500 flex items-center gap-1">
+                                  <span>시작:</span> 
+                                  <span className="font-bold text-zinc-700 dark:text-zinc-300">{formatDate(sub.starts_at)}</span>
+                               </p>
+                               <p className="text-[10px] text-zinc-500 flex items-center gap-1">
+                                  <span>종료:</span> 
+                                  <span className="font-bold text-zinc-700 dark:text-zinc-300">{sub.ends_at ? formatDate(sub.ends_at) : '무제한'}</span>
+                               </p>
+                            </div>
+                         </div>
+                      ))}
+                   </div>
+                   
+                   {visibleCount < subscriptions.length && (
+                      <button 
+                         onClick={() => setVisibleCount(prev => prev + 5)}
+                         className="w-full py-2 text-[11px] font-bold text-primary hover:bg-primary/5 rounded-xl transition-all border border-dashed border-primary/30"
+                      >
+                         더보기 ({subscriptions.length - visibleCount}건 남음)
+                      </button>
+                   )}
+                </div>
+             ) : (
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-700 text-center text-sm text-zinc-500">
+                   구독 내역이 없습니다. (무료 사용자)
                 </div>
              )}
           </div>

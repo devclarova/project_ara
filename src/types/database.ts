@@ -16,6 +16,7 @@ export type MessagesUpdate = Database['public']['Tables']['messages']['Update'];
 
 export type Dialogues = Database['public']['Tables']['dialogues']['Row'];
 
+
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
@@ -409,6 +410,11 @@ export type Database = {
         ];
       };
       direct_messages: {
+
+
+
+
+
         Row: {
           chat_id: string;
           content: string;

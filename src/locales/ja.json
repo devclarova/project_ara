@@ -537,6 +537,8 @@
     "copy_link_prompt": "以下のリンクをコピーしてください：",
     "submitting": "提出中...",
     "thumbnail": "サムネイル",
+    "chatbot": "ARAチャットボット",
+    "feedback": "フィードバックを送る",
     "scroll_to_top": "一番上にスクロール",
     "user": "ユーザー",
     "unknown": "不明",

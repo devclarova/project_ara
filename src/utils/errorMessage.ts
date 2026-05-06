@@ -24,3 +24,17 @@ export function getErrorMessage(error: unknown): string {
 export function isError(error: unknown): error is Error {
   return error instanceof Error;
 }
+
+/** HTML 문자열에서 텍스트만 추출 (ReplyCard 등에서 사용) */
+export function htmlToPlainText(html: string): string {
+  if (!html) return '';
+  // 브라우저 환경이 아닐 경우(SSR 등)를 대비한 체크
+  if (typeof window === 'undefined') return html;
+  try {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || '';
+  } catch (e) {
+    // 대체 수단: 간단한 정규식으로 태그 제거
+    return html.replace(/<[^>]*>/g, '');
+  }
+}

@@ -16,7 +16,7 @@ import ProfileTweets from './components/ProfileTweets';
 import EditProfileModal from './components/EditProfileModal';
 import ReportModal from '@/components/common/ReportModal';
 import BlockButton from '@/components/common/BlockButton';
-import ScrollToTopButton from '@/components/common/ScrollToTopButton';
+import FloatingButtons from '@/components/common/FloatingButtons';
 import { formatBanPeriod, isBanned } from '@/utils/banUtils';
 import { addYears } from 'date-fns';
 import { getErrorMessage } from '@/utils/errorMessage';
@@ -140,7 +140,7 @@ export default function ProfileAsap() {
         user_id: profile.user_id,
         name: profile.nickname ?? t('common.unknown'),
         username: profile.user_id,
-        avatar: profile.avatar_url ?? '/default-avatar.svg',
+        avatar: profile.avatar_url ?? '/images/ara_basic_profile.png',
         bio: profile.bio ?? t('profile.no_bio_placeholder'),
         country: countryName,
         countryFlagUrl: countryFlagUrl,
@@ -245,7 +245,7 @@ export default function ProfileAsap() {
           <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vh] bg-[#00E5FF]/10 rounded-[100%] blur-[100px] opacity-60 animate-pulse mix-blend-screen" style={{ animationDuration: '12s' }}></div>
         </div>
       )}
-      <ScrollToTopButton className="bottom-10 right-6 lg:right-16 xl:right-[calc(50vw-500px)] z-50" />
+      <FloatingButtons className="bottom-10 right-6 lg:right-16 xl:right-[calc(50vw-500px)] z-[40]" />
       <div className="flex justify-center relative z-10">
         {/* 가운데 프로필 컬럼 */}
         <div className={`w-full max-w-2xl lg:max-w-3xl border-x ${userProfile.plan === 'premium' ? 'border-[#00BFA5]/20 bg-transparent' : 'border-gray-200 dark:border-gray-700 dark:bg-background'}`}>

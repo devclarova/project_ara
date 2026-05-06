@@ -6,6 +6,7 @@ import RichTextEditor from '../editor/RichTextEditor';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { getBanMessage } from '@/utils/banUtils';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 interface TweetModalProps {
   onClose: () => void;
@@ -133,7 +134,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
           id: data.profiles?.id || '',
           name: data.profiles?.nickname || t('common.unknown', 'Unknown'),
           username: data.profiles?.user_id || t('common.anonymous', 'anonymous'),
-          avatar: data.profiles?.avatar_url || '/default-avatar.svg',
+          avatar: data.profiles?.avatar_url || '/images/ara_basic_profile.png',
         },
         content: data.content,
         image: data.image_url || '',
@@ -157,6 +158,8 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
       setIsSubmitting(false);
     }
   };
+
+  useBodyScrollLock(true);
 
   return (
     <div

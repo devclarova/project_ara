@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 export interface FollowUser {
   id: string;
@@ -50,6 +51,8 @@ export default function FollowersModal({
     setActiveTab(initialTab);
     setSearchQuery('');
   }, [initialTab, isOpen]);
+
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 
@@ -173,7 +176,7 @@ export default function FollowersModal({
                   >
                     <div className="flex items-start gap-3">
                       <Avatar className="w-12 h-12 flex-shrink-0">
-                        <AvatarImage src={user.avatar || '/default-avatar.svg'} alt={user.name} />
+                        <AvatarImage src={user.avatar || '/images/ara_basic_profile.png'} alt={user.name} />
                         <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
                       </Avatar>
 

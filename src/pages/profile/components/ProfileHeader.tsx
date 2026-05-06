@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { uploadProfileImage } from '@/utils/profileImage';
+
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import type { UserProfile } from '../ProfileAsap';
@@ -24,6 +24,7 @@ import Modal from '@/components/common/Modal';
 import { useDirectChat } from '@/contexts/DirectChatContext';
 import { getErrorMessage } from '@/utils/errorMessage';
 import type { FeedItem } from '@/types/sns';
+import ModalImageSlider from '../../community/tweet/components/ModalImageSlider';
 
 type LocalFeedItem = FeedItem & {
   isLiked?: boolean;
@@ -78,14 +79,9 @@ export default function ProfileHeader({
 }: ProfileHeaderProps) {
   const { t } = useTranslation();
   const { user, isBanned, bannedUntil } = useAuth();
-  const [uploading, setUploading] = useState(false);
   const [previewAvatar, setPreviewAvatar] = useState(userProfile.avatar);
   const [previewBanner, setPreviewBanner] = useState(userProfile.banner ?? null);
   const [bannerPosY, setBannerPosY] = useState(userProfile.bannerPositionY ?? 50);
-  const [isDragging, setIsDragging] = useState(false);
-  const startYRef = useRef(0);
-  const startPosRef = useRef(bannerPosY);
-  const bannerPosYRef = useRef(bannerPosY);
   const [translated, setTranslated] = useState<string>('');
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [followersModalTab, setFollowersModalTab] = useState<'followers' | 'following'>(
@@ -100,6 +96,9 @@ export default function ProfileHeader({
   const [myProfileId, setMyProfileId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { createDirectChat } = useDirectChat();
+
+  const [modalImages, setModalImages] = useState<string[]>([]);
+  const [modalImageIndex, setModalImageIndex] = useState(0);
 
   // Real follow hook integration
   // IMPORTANT: Use profile.id (not user_id) for foreign key relations
@@ -123,33 +122,6 @@ export default function ProfileHeader({
   useEffect(() => {
     setBannerPosY(userProfile.bannerPositionY ?? 50);
   }, [userProfile.bannerPositionY]);
-
-  // 배너 위치 이동
-  useEffect(() => {
-    if (!isDragging) return;
-    const handleMouseMove = (e: MouseEvent) => {
-      const diff = e.clientY - startYRef.current;
-      const next = startPosRef.current + diff / 2;
-      setBannerPosY(Math.max(0, Math.min(100, next)));
-    };
-    const stopDragging = async () => {
-      setIsDragging(false);
-      await saveBannerPosition(bannerPosYRef.current);
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', stopDragging);
-    window.addEventListener('mouseleave', stopDragging);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', stopDragging);
-      window.removeEventListener('mouseleave', stopDragging);
-    };
-  }, [isDragging]);
-
-  // 최신 위치 보존
-  useEffect(() => {
-    bannerPosYRef.current = bannerPosY;
-  }, [bannerPosY]);
 
   useEffect(() => {
     setPreviewAvatar(userProfile.avatar);
@@ -190,71 +162,7 @@ export default function ProfileHeader({
     return id;
   };
 
-  const handleFileChange = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    type: 'avatar' | 'banner',
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
 
-    const previewUrl = URL.createObjectURL(file);
-    type === 'avatar' ? setPreviewAvatar(previewUrl) : setPreviewBanner(previewUrl);
-
-    try {
-      setUploading(true);
-      const imageUrl = await uploadProfileImage(
-        userProfile.user_id,
-        file,
-        type === 'avatar' ? 'avatars' : 'banners',
-      );
-
-      const { error } = await (supabase.from('profiles') as any)
-        .update(type === 'avatar' ? { avatar_url: imageUrl } : { banner_url: imageUrl })
-        .eq('user_id', userProfile.user_id);
-
-      if (error) throw error;
-
-      onProfileUpdated?.({
-        ...userProfile,
-        banner: type === 'banner' ? imageUrl : userProfile.banner,
-      });
-
-      // Dispatch event for Header update if it's avatar
-      if (type === 'avatar') {
-        window.dispatchEvent(
-          new CustomEvent('profile:updated', {
-            detail: {
-              nickname: userProfile.name, // keep existing nickname
-              avatar_url: imageUrl,
-            },
-          }),
-        );
-      }
-      toast.success(t('common.image_updated', '이미지가 업데이트되었습니다.'));
-    } catch (err) {
-      console.error(err);
-      toast.error(t('common.upload_failed', '이미지 업로드 실패'));
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const saveBannerPosition = async (pos: number) => {
-    const { error } = await (supabase.from('profiles') as any)
-      .update({
-        banner_position_y: Math.round(pos),
-      })
-      .eq('user_id', userProfile.user_id);
-
-    if (error) {
-      toast.error(t('common.save_failed', '저장 실패'));
-    } else {
-      onProfileUpdated?.({
-        ...userProfile,
-        bannerPositionY: Math.round(pos),
-      });
-    }
-  };
 
   const getMyProfileId = async () => {
     if (!user) return null;
@@ -450,7 +358,7 @@ export default function ProfileHeader({
   return (
     <div className="relative bg-white dark:bg-background">
       {/* 배너 */}
-      <div className="relative group">
+      <div className="relative">
         {userProfile.banner ? (
           <div className="h-48 sm:h-64 relative overflow-hidden">
             <img
@@ -458,15 +366,14 @@ export default function ProfileHeader({
               alt="Profile banner"
               draggable={false}
               onDragStart={e => e.preventDefault()}
-              onMouseDown={e => {
-                if (!isOwnProfile) return;
-                setIsDragging(true);
-                startYRef.current = e.clientY;
-                startPosRef.current = bannerPosY;
+              className="w-full h-full object-cover object-center cursor-pointer"
+              onClick={() => {
+                const url = previewBanner || userProfile.banner;
+                if (url) {
+                  setModalImages([url]);
+                  setModalImageIndex(0);
+                }
               }}
-              className={`w-full h-full object-cover object-center ${
-                isDragging ? 'cursor-grabbing select-none' : 'cursor-grab'
-              }`}
               style={{ objectPosition: `center ${bannerPosY}%` }}
               decoding="async"
             />
@@ -474,56 +381,28 @@ export default function ProfileHeader({
         ) : (
           <div className="h-48 sm:h-64 bg-gradient-to-r from-[#00dbaa] via-[#00bfa5] to-[#009e89]" />
         )}
-        {isOwnProfile && !isDragging && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-xs text-white bg-black/50 px-2 py-1 rounded pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            {t('profile.drag_to_reposition', '드래그해서 위치 조절')}
-          </div>
-        )}
-        {isOwnProfile && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition pointer-events-none">
-            <label className="w-10 h-10 bg-black/60 rounded-full flex items-center justify-center cursor-pointer pointer-events-auto">
-              <i className="ri-camera-line text-white text-lg" />
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={e => handleFileChange(e, 'banner')}
-              />
-            </label>
-          </div>
-        )}
       </div>
       <div className="px-4 pb-4">
         {/* 아바타 */}
-        <div className="relative -mt-16 mb-1 group w-32 h-32">
+        <div className="relative -mt-16 mb-1 w-32 h-32">
           <div className="w-32 h-32 rounded-full border-4 border-white bg-white overflow-hidden shadow-md dark:border-gray-900 dark:bg-gray-900">
-            <Avatar className="w-full h-full">
-              <AvatarImage
-                src={previewAvatar || userProfile.avatar || '/default-avatar.svg'}
-                alt={userProfile.name}
-              />
-              <AvatarFallback>{userProfile.name.charAt(0).toUpperCase()}</AvatarFallback>
-            </Avatar>
-          </div>
-          {isOwnProfile && (
-            <div className="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition pointer-events-none">
-              <label className="w-9 h-9 bg-black/60 rounded-full flex items-center justify-center cursor-pointer pointer-events-auto">
-                <i className="ri-camera-line text-white" />
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={e => handleFileChange(e, 'avatar')}
+             <Avatar 
+                className="w-full h-full cursor-pointer"
+                onClick={() => {
+                  const url = previewAvatar || userProfile.avatar || '/images/ara_basic_profile.png';
+                  setModalImages([url]);
+                  setModalImageIndex(0);
+                }}
+              >
+                <AvatarImage
+                  src={previewAvatar || userProfile.avatar || '/images/ara_basic_profile.png'}
+                  alt={userProfile.name}
                 />
-              </label>
-            </div>
-          )}
-        </div>
-        {uploading && (
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20">
-            <span className="text-sm text-muted-foreground">{followersCount.toLocaleString()}</span>
+                <AvatarFallback>{userProfile.name.charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
           </div>
-        )}
+        </div>
+
         {/* 내 프로필일 때만 “프로필 편집” 버튼 */}
         {isOwnProfile ? (
           <div className="flex justify-end mb-4 -mt-8 relative z-10">
@@ -744,9 +623,19 @@ export default function ProfileHeader({
               <i className="ri-calendar-line" />
               {t('profile.joined', { date: userProfile.joinDate })}
             </span>
-          </div>
+           </div>
         </div>
       </div>
+
+      {/* 이미지 확대 슬라이더 모달 */}
+      {modalImages.length > 0 && (
+        <ModalImageSlider
+          allImages={modalImages}
+          modalIndex={modalImageIndex}
+          setModalIndex={setModalImageIndex}
+          onClose={() => setModalImages([])}
+        />
+      )}
 
       {/* 팔로워/팔로잉 모달 */}
       <FollowersModal

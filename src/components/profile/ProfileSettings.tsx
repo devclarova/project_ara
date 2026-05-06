@@ -85,13 +85,21 @@ export default function ProfileSettings() {
   }, [settingsTitle]);
 
   useEffect(() => {
+    // 1. Priority: Navigation State (Internal Route)
     if (state?.activeTab) {
       setActiveId(state.activeTab);
-      if (isMobile) {
-        setShowMenuOnMobile(false);
-      }
+      if (isMobile) setShowMenuOnMobile(false);
+      return;
     }
-  }, [state, isMobile]);
+
+    // 2. Secondary: URL Query Parameters (External Link)
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get('tab');
+    if (tabParam) {
+      setActiveId(tabParam as MenuId);
+      if (isMobile) setShowMenuOnMobile(false);
+    }
+  }, [state, location.search, isMobile]);
 
   // 어댑티브 뷰포트 분석 엔진(Adaptive Viewport Engine) — 윈도우 크기 변화를 실시간 감지하여 모바일/데스크톱 UI 전이 제어
   useEffect(() => {

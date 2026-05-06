@@ -174,7 +174,7 @@ export default function InlineReplyEditor({ tweetId, onReplyCreated }: InlineRep
       <div className="flex items-start gap-3">
         {/* 내 아바타 */}
         <Avatar>
-          <AvatarImage src={profileAvatar || '/default-avatar.svg'} alt="me" />
+          <AvatarImage src={profileAvatar || '/images/ara_basic_profile.png'} alt="me" />
           <AvatarFallback>ME</AvatarFallback>
         </Avatar>
 

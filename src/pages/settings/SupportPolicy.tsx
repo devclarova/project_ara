@@ -4,7 +4,8 @@
  * - 방법(How): 각 정책 항목을 개별 Row로 구성하고, 선택 시 전용 하위 뷰(TermsView, PrivacyPolicyView 등)를 모달 기반으로 렌더링함
  */
 import Modal from '@/components/common/Modal';
-import CustomerCenterView from '@/components/settings/CustomerCenterView';
+import FAQView from '@/components/settings/FAQView';
+import InquiryView from '@/components/settings/InquiryView';
 import MarketingConsentView from '@/components/settings/MarketingConsentView';
 import PrivacyPolicyView from '@/components/settings/PrivacyPolicyView';
 import { Row } from '@/components/settings/Row';
@@ -43,10 +44,11 @@ export default function SupportPolicy({ onBackToMenu, searchQuery }: PrivacySett
         </div>
 
         <div className="space-y-2">
+          <Row label={t('settings.title_faq')} onClick={() => open('faq')} searchQuery={searchQuery} />
           <Row label={t('settings.terms')} onClick={() => open('terms')} searchQuery={searchQuery} />
           <Row label={t('settings.title_privacy')} onClick={() => open('privacy')} searchQuery={searchQuery} />
           <Row label={t('settings.title_marketing')} onClick={() => open('marketing')} searchQuery={searchQuery} />
-          <Row label={t('settings.help_center')} onClick={() => open('support')} searchQuery={searchQuery} />
+          <Row label={t('settings.title_inquiry')} onClick={() => open('inquiry')} searchQuery={searchQuery} />
         </div>
 
         {/* 하단 여백 */}
@@ -60,10 +62,11 @@ export default function SupportPolicy({ onBackToMenu, searchQuery }: PrivacySett
         title={t(getPolicyTitle(active))}
         contentClassName="flex-1 min-h-0 bg-white dark:bg-secondary overflow-hidden relative flex flex-col"
       >
+        {active === 'faq' && <FAQView onClose={close} onOpenInquiry={() => open('inquiry')} />}
         {active === 'terms' && <TermsView onClose={close} />}
         {active === 'privacy' && <PrivacyPolicyView onClose={close} />}
         {active === 'marketing' && <MarketingConsentView onClose={close} />}
-        {active === 'support' && <CustomerCenterView onClose={close} />}
+        {active === 'inquiry' && <InquiryView onClose={close} />}
       </Modal>
     </div>
   );

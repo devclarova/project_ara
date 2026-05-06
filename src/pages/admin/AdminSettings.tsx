@@ -37,6 +37,13 @@ interface SiteSettings {
   toast_sound_url: string | null;
 }
 
+interface AiSettings {
+  chatbot_system_prompt: string;
+  chatbot_model: string;
+  chatbot_max_tokens: number;
+  chatbot_temperature: number;
+}
+
 const AdminSettings = () => {
   const [activeTab, setActiveTab] = useState('general');
   const [loading, setLoading] = useState(true);
@@ -52,6 +59,13 @@ const AdminSettings = () => {
     notifications: { email_daily_report: true, email_security_alert: true, push_new_report: true, push_resource_warning: false },
     integrations: { supabase_url: import.meta.env.VITE_SUPABASE_URL || '', ga4_id: 'G-ARA2026PRJ' },
     toast_sound_url: null
+  });
+
+  const [aiSettings, setAiSettings] = useState<AiSettings>({
+    chatbot_system_prompt: '',
+    chatbot_model: 'gpt-4o-mini',
+    chatbot_max_tokens: 500,
+    chatbot_temperature: 0.7
   });
 
   useEffect(() => {
@@ -74,6 +88,8 @@ const AdminSettings = () => {
   const fetchSettings = async () => {
     try {
       setLoading(true);
+      
+      // 1. 일반 설정 조회
       const { data, error } = await (supabase.from('site_settings') as any).select('*');
       if (error) throw error;
 
@@ -84,6 +100,23 @@ const AdminSettings = () => {
         });
         setSettings(newSettings);
       }
+
+      // 2. AI 설정 조회
+      const { data: aiData, error: aiError } = await (supabase.from('ai_settings') as any)
+        .select('*')
+        .eq('id', 1)
+        .maybeSingle();
+      
+      if (aiError) throw aiError;
+      if (aiData) {
+        setAiSettings({
+          chatbot_system_prompt: aiData.chatbot_system_prompt,
+          chatbot_model: aiData.chatbot_model,
+          chatbot_max_tokens: aiData.chatbot_max_tokens,
+          chatbot_temperature: Number(aiData.chatbot_temperature)
+        });
+      }
+
     } catch (error: unknown) {
       console.error('Error fetching settings:', getErrorMessage(error));
       toast.error('설정을 불러오는 데 실패했습니다.');
@@ -97,6 +130,19 @@ const AdminSettings = () => {
     try {
       setSaving(true);
       
+      // AI 설정 먼저 저장 (새 탭 대응)
+      const { error: aiSaveError } = await (supabase.from('ai_settings') as any)
+        .update({
+          chatbot_system_prompt: aiSettings.chatbot_system_prompt,
+          chatbot_model: aiSettings.chatbot_model,
+          chatbot_max_tokens: aiSettings.chatbot_max_tokens,
+          chatbot_temperature: aiSettings.chatbot_temperature,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', 1);
+
+      if (aiSaveError) throw aiSaveError;
+
       // Step A: Hybrid Migration Logic - Check for modernized 'site_config' table existence
       const { error: probeError } = await (supabase.from('site_config') as any).select('id').limit(1).maybeSingle();
       const hasModernTable = !probeError || (probeError as unknown as { code: string }).code !== 'PGRST205';
@@ -177,6 +223,7 @@ const AdminSettings = () => {
     { id: 'security', label: '보안 및 로그인', icon: Shield, description: '접근 제어 및 인증 정책 관리' },
     { id: 'notifications', label: '알림 채널', icon: Bell, description: '이메일 및 시스템 푸시 설정' },
     { id: 'integrations', label: 'API 및 외부 연동', icon: Layout, description: 'Supabase, GA4 등 외부 서비스 연동' },
+    { id: 'ai', label: 'AI 설정', icon: Zap, description: '챗봇 프롬프트 및 파라미터 관리' },
     { id: 'system', label: '시스템 도구', icon: Database, description: 'DB 최적화 및 캐시 관리' },
   ];
 
@@ -637,6 +684,88 @@ const AdminSettings = () => {
              </div>
            )}
 
+           {/* 4. AI 설정 탭 — 챗봇 프롬프트 및 파라미터 제어 */}
+           {activeTab === 'ai' && (
+             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+               <SectionCard title="챗봇 시스템 엔진" icon={Zap} description="학습 어시스턴트의 페르소나와 동작 규칙을 정의합니다.">
+                 <div className="space-y-6">
+                   <div>
+                     <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-3">시스템 프롬프트 (System Prompt)</label>
+                     <textarea 
+                        value={aiSettings.chatbot_system_prompt}
+                        onChange={(e) => setAiSettings(prev => ({ ...prev, chatbot_system_prompt: e.target.value }))}
+                        placeholder="AI의 역할을 정의해 주세요..."
+                        className="form-textarea w-full bg-background border-border text-foreground rounded-2xl text-sm focus:ring-primary/20 h-80 resize-none leading-relaxed p-5"
+                     />
+                     <p className="text-[10px] text-muted-foreground mt-2 px-1">
+                        프롬프트 변경 시 기존 대화 흐름에 즉시 영향을 주므로 신중히 수정해 주세요.
+                     </p>
+                   </div>
+ 
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-border">
+                     <div className="group">
+                        <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 ml-1">언어 모델 (LLM Model)</label>
+                        <select 
+                          value={aiSettings.chatbot_model}
+                          onChange={(e) => setAiSettings(prev => ({ ...prev, chatbot_model: e.target.value }))}
+                          className="form-select w-full bg-background border-border rounded-xl font-bold py-3 text-sm focus:ring-primary/20"
+                        >
+                           <option value="gpt-4.1-nano">GPT-4.1 Nano (가장 저렴)</option>
+                           <option value="gpt-4.1-mini">GPT-4.1 Mini (균형)</option>
+                           <option value="gpt-4o-mini">GPT-4o Mini (추천: 가성비 및 속도)</option>
+                           <option value="gpt-4o">GPT-4o (고성능: 복잡한 추론 필요 시)</option>
+                        </select>
+                     </div>
+                     <div className="group">
+                        <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 ml-1">최대 토큰 (Max Tokens)</label>
+                        <div className="flex items-center gap-3">
+                           <input 
+                             type="number" 
+                             min={100}
+                             max={2000}
+                             value={aiSettings.chatbot_max_tokens}
+                             onChange={(e) => setAiSettings(prev => ({ ...prev, chatbot_max_tokens: parseInt(e.target.value) || 100 }))}
+                             className="form-input w-full bg-background border-border rounded-xl font-bold py-3 text-center" 
+                           />
+                           <span className="text-sm font-bold text-muted-foreground bg-muted px-4 py-3 rounded-xl border border-border">Tokens</span>
+                        </div>
+                     </div>
+                   </div>
+ 
+                   <div className="pt-6 border-t border-border">
+                     <div className="flex items-center justify-between mb-4">
+                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">창의성 수치 (Temperature: {aiSettings.chatbot_temperature.toFixed(1)})</label>
+                        <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                           {aiSettings.chatbot_temperature <= 0.3 ? '보수적/일관적' : aiSettings.chatbot_temperature >= 0.8 ? '창의적/다양함' : '균형 잡힘'}
+                        </span>
+                     </div>
+                     <input 
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={aiSettings.chatbot_temperature}
+                        onChange={(e) => setAiSettings(prev => ({ ...prev, chatbot_temperature: parseFloat(e.target.value) }))}
+                        className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                     />
+                     <div className="flex justify-between mt-2 px-1">
+                        <span className="text-[10px] text-muted-foreground">0.0 (Precise)</span>
+                        <span className="text-[10px] text-muted-foreground">1.0 (Creative)</span>
+                     </div>
+                   </div>
+                 </div>
+               </SectionCard>
+ 
+               <div className="bg-gradient-to-r from-primary/10 to-transparent p-6 rounded-2xl border border-primary/20 flex items-center gap-4">
+                  <div className="p-3 bg-primary/10 text-primary rounded-xl"><Monitor size={24} /></div>
+                  <div>
+                     <p className="font-bold text-foreground">실시간 API 서버 연동</p>
+                     <p className="text-xs text-muted-foreground">변경사항 저장 시 `api/chatbot` 엔드포인트와 로컬 API 서버에 즉시 반영됩니다.</p>
+                  </div>
+               </div>
+             </div>
+           )}
+ 
            {/* System Settings Tab */}
            {activeTab === 'system' && (
              <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">

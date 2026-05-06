@@ -11,7 +11,7 @@ export const GlobalToastSound = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
   // 재생 대상 타입 정의 (NotificationToast의 type 속성과 일치)
-  const ALLOWED_TYPES = ['chat', 'comment', 'like', 'follow', 'system', 'mention', 'repost', 'reply', 'like_comment', 'like_feed'];
+  const ALLOWED_TYPES = ['chat', 'comment', 'like', 'follow', 'system', 'mention', 'repost', 'reply', 'like_comment', 'like_feed', 'updates'];
 
 
   // 음원 미리 로드

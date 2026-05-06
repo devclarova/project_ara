@@ -42,6 +42,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import TranslateButton from '@/components/common/TranslateButton';
 import { useAutoTranslation } from '@/hooks/useAutoTranslation';
+import FloatingButtons from '@/components/common/FloatingButtons';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 
 
@@ -145,6 +147,8 @@ export default function GoodsDetailPage() {
     };
     fetchData();
   }, [id]);
+
+  useBodyScrollLock(isReviewModalOpen);
 
   if (loading) {
     return (
@@ -864,6 +868,7 @@ export default function GoodsDetailPage() {
           </div>
         )}
       </AnimatePresence>
+      <FloatingButtons />
     </div>
   );
 }

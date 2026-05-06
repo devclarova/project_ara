@@ -13,6 +13,8 @@ import { Helmet } from 'react-helmet-async';
 import type { FeedItem } from '@/types/sns';
 import { useTranslation } from 'react-i18next';
 
+import FloatingButtons from '@/components/common/FloatingButtons';
+
 export default function CommunityLayout() {
   const { t } = useTranslation();
   const [showTweetModal, setShowTweetModal] = useState(false);
@@ -110,7 +112,10 @@ export default function CommunityLayout() {
             onClose={() => setShowReplyModal(false)}
           />
         )}
+        
+        <FloatingButtons />
       </div>
     </>
   );
 }
+

@@ -15,6 +15,7 @@ import { CATEGORIES } from './data';
 import Modal from '@/components/common/Modal';
 import { useMarketingBanners } from '@/hooks/useMarketingBanners';
 import { useAutoTranslation } from '@/hooks/useAutoTranslation';
+import FloatingButtons from '@/components/common/FloatingButtons';
 
 function BannerItem({ banner, trackClick, trackView }: { banner: any, trackClick: any, trackView: any }) {
   const { i18n } = useTranslation();
@@ -245,6 +246,8 @@ export default function GoodsPage() {
           </div>
         )}
       </div>
+
+      <FloatingButtons />
     </div>
   );
 }

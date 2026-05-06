@@ -181,7 +181,7 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
         user: {
           name: data.profiles?.nickname ?? t('common.unknown', 'Unknown'),
           username: data.profiles?.username ?? data.profiles?.nickname ?? t('common.anonymous', 'user'),
-          avatar: data.profiles?.avatar_url ?? '/default-avatar.svg',
+          avatar: data.profiles?.avatar_url ?? '/images/ara_basic_profile.png',
         },
         content: data.content,
         image: data.image_url ?? undefined, // ✅ image_url → image
@@ -226,7 +226,7 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
         <div className="flex-shrink-0">
           <div className={`relative w-10 h-10 ${userPlan === 'premium' ? 'rounded-full p-[2px] bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] shadow-[0_2px_10px_rgba(0,191,165,0.4)]' : ''}`}>
             <Avatar className="w-full h-full border-2 border-white dark:border-background">
-              <AvatarImage src={profileAvatar || '/default-avatar.svg'} alt={profileNickname || t('common.avatar', 'User avatar')} />
+              <AvatarImage src={profileAvatar || '/images/ara_basic_profile.png'} alt={profileNickname || t('common.avatar', 'User avatar')} />
               <AvatarFallback>{(profileNickname || 'U').charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
             {userPlan === 'premium' && (

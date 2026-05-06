@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Volume2, Trophy, ArrowRight, RotateCcw, X } from 'lucide-react';
 import { useTTS } from '@/hooks/useTTS';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 export default function McqQuizModal({
   isOpen,
@@ -64,6 +65,8 @@ export default function McqQuizModal({
 
     setChoices(shuffle([correct, ...wrongs]));
   }, [current, questions, pool]);
+
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 

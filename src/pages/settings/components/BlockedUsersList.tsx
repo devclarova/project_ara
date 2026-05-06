@@ -36,7 +36,7 @@ export default function BlockedUsersList() {
         <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg bg-card/50">
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={user.avatar_url || '/default-avatar.svg'} alt={user.nickname || 'User'} />
+              <AvatarImage src={user.avatar_url || '/images/ara_basic_profile.png'} alt={user.nickname || 'User'} />
               <AvatarFallback>{(user.nickname || 'U').substring(0, 1)}</AvatarFallback>
             </Avatar>
             <div>

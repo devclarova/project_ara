@@ -43,6 +43,8 @@ const sectionOrder: SectionId[] = [
   'footer',
 ];
 
+import FloatingButtons from '@/components/common/FloatingButtons';
+
 const LandingPage = ({ onSignup }: HomeProps) => {
   const { t } = useTranslation();
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -50,8 +52,6 @@ const LandingPage = ({ onSignup }: HomeProps) => {
   const isScrollingRef = useRef(false);
   const wheelDeltaYRef = useRef(0);
   const touchStartYRef = useRef<number | null>(null);
-
-
 
   // 스크롤 프로그레스 및 가시 영역 내 최인접 섹션 식별 로직
   useEffect(() => {
@@ -230,8 +230,6 @@ const LandingPage = ({ onSignup }: HomeProps) => {
         <meta name="description" content={t('landing.description')} />
       </Helmet>
 
-
-
       {/* 전역 스크롤 프로그레스 바 — 전체 콘텐츠 대비 현재 열람 위치를 시각적 게이지로 표현 */}
       <div className="fixed left-0 top-0 z-40 w-full h-0.5 bg-transparent">
         <div
@@ -288,8 +286,11 @@ const LandingPage = ({ onSignup }: HomeProps) => {
       <PopularContentSection />
       <TestimonialsSection />
       <FooterSection />
+      
+      <FloatingButtons />
     </main>
   );
 };
+
 
 export default LandingPage;

@@ -537,6 +537,8 @@
     "copy_link_prompt": "请复制以下链接：",
     "submitting": "提交中...",
     "thumbnail": "缩略图",
+    "chatbot": "ARA聊天机器人",
+    "feedback": "发送反馈",
     "scroll_to_top": "滚动至顶部",
     "user": "用户",
     "unknown": "未知",
