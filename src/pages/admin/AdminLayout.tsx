@@ -22,6 +22,7 @@ import {
   Megaphone,
   Ticket,
   MessageSquare,
+  CreditCard,
 } from 'lucide-react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import ThemeSwitcher from '../../components/common/ThemeSwitcher';
@@ -60,6 +61,7 @@ const AdminLayout = () => {
     else if (path.startsWith('/admin/feedback')) pageTitle = '피드백 및 문의 관리';
     else if (path.startsWith('/admin/banners')) pageTitle = '배너 관리';
     else if (path.startsWith('/admin/promotions')) pageTitle = '프로모션/쿠폰';
+    else if (path.startsWith('/admin/subscription-plans')) pageTitle = '구독 플랜 관리';
     else if (path.startsWith('/admin/settings')) pageTitle = '관리자 설정';
 
     document.title = `${pageTitle} | ARA Admin`;
@@ -268,6 +270,12 @@ const AdminLayout = () => {
               to="/admin/promotions"
               icon={Ticket}
               label="프로모션/쿠폰"
+              onClick={() => setSidebarOpen(false)}
+            />
+            <NavItem
+              to="/admin/subscription-plans"
+              icon={CreditCard}
+              label="구독 플랜 관리"
               onClick={() => setSidebarOpen(false)}
             />
 
