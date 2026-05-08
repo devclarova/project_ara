@@ -174,7 +174,7 @@ export default function SubscriptionPage() {
       // 3. 신규 구독 insert (Simulation: Store as pending_paddle in DB)
       const { error: subError } = await (supabase as any).from('subscriptions').insert({
         user_id: session.user.id,
-        plan: selectedPlan.id,
+        plan: selectedPlan.name,
         status: 'active',
         starts_at: new Date().toISOString(),
         ends_at: nextDate.toISOString(),
@@ -283,7 +283,7 @@ export default function SubscriptionPage() {
 
             {/* Billing Cycle Toggle */}
             <div className="flex items-center justify-center gap-4">
-              <span className={`text-sm font-black transition-colors ${billingCycle === 'monthly' ? 'text-[#00BFA5]' : 'text-gray-400'}`}>Monthly</span>
+              <span className={`text-sm font-black transition-colors ${billingCycle === 'monthly' ? 'text-[#00BFA5]' : 'text-gray-400'}`}>월간</span>
               <button 
                 onClick={() => setBillingCycle(prev => prev === 'monthly' ? 'yearly' : 'monthly')}
                 className="relative w-14 h-7 bg-gray-200 dark:bg-zinc-800 rounded-full p-1 transition-colors"
@@ -295,8 +295,8 @@ export default function SubscriptionPage() {
                 />
               </button>
               <div className="flex items-center gap-2">
-                <span className={`text-sm font-black transition-colors ${billingCycle === 'yearly' ? 'text-[#00BFA5]' : 'text-gray-400'}`}>Yearly</span>
-                <span className="bg-[#00BFA5]/10 text-[#00BFA5] text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">Save 25%</span>
+                <span className={`text-sm font-black transition-colors ${billingCycle === 'yearly' ? 'text-[#00BFA5]' : 'text-gray-400'}`}>연간</span>
+                <span className="bg-[#00BFA5]/10 text-[#00BFA5] text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">25% 절약</span>
               </div>
             </div>
           </div>
@@ -340,7 +340,7 @@ export default function SubscriptionPage() {
                         ${price.toFixed(2)}
                       </span>
                       <span className={`font-bold ${plan.is_popular ? 'text-gray-500' : 'text-gray-400'}`}>
-                        /{billingCycle === 'monthly' ? 'mo' : 'yr'}
+                        /{billingCycle === 'monthly' ? '월' : '년'}
                       </span>
                     </div>
                     {billingCycle === 'yearly' && savings > 0 && (
@@ -479,7 +479,7 @@ export default function SubscriptionPage() {
                 
                 <div className="mt-6 p-6 bg-gray-50 dark:bg-white/5 rounded-[2rem] inline-block border border-gray-100 dark:border-white/5">
                   <span className="text-4xl font-black dark:text-white tracking-tighter">${calculatePrice(selectedPlan).toFixed(2)}</span>
-                  <span className="text-sm font-black text-gray-400 ml-1">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+                  <span className="text-sm font-black text-gray-400 ml-1">/{billingCycle === 'monthly' ? '월' : '년'}</span>
                 </div>
               </div>
 
