@@ -9,6 +9,8 @@ import { toast } from 'sonner';
 import { Edit2, Plus, Trash2, Ticket, Play, Square, Loader2, Copy } from 'lucide-react';
 import Modal from '../../components/common/Modal';
 import { getErrorMessage } from '@/utils/errorMessage';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ChevronDown } from 'lucide-react';
 
 // Types
 interface Promotion {
@@ -493,10 +495,27 @@ const AdminPromotionsPage = () => {
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-muted-foreground mb-1">할인 방식</label>
-                    <select value={promoForm.discount_type} onChange={e => setPromoForm({...promoForm, discount_type: e.target.value as 'percent' | 'fixed'})} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
-                        <option value="percent">퍼센트 할인 (%)</option>
-                        <option value="fixed">고정 금액 할인 (₩)</option>
-                    </select>
+                    {(() => {
+                      const discountTypeLabel = promoForm.discount_type === 'percent' ? '퍼센트 할인 (%)' : '고정 금액 할인 ($)';
+                      return (
+                        <DropdownMenu modal={false}>
+                          <DropdownMenuTrigger 
+                            style={{ border: '1px solid #d1d5db' }}
+                            className="flex items-center justify-between gap-2 w-full px-3 py-2 text-sm bg-background border border-gray-300 dark:border-zinc-600 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary hover:bg-muted transition-colors data-[state=open]:ring-2 data-[state=open]:ring-primary/20 data-[state=open]:border-primary"
+                          >
+                            <span>{discountTypeLabel}</span>
+                            <ChevronDown size={14} className="opacity-50 shrink-0" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            onCloseAutoFocus={(e) => e.preventDefault()}
+                            className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-xl shadow-xl border border-gray-100 dark:border-gray-700/70 bg-white dark:bg-secondary z-[200]"
+                          >
+                            <DropdownMenuItem onClick={() => setPromoForm({...promoForm, discount_type: 'percent'})}>퍼센트 할인 (%)</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setPromoForm({...promoForm, discount_type: 'fixed'})}>고정 금액 할인 ($)</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      );
+                    })()}
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-muted-foreground mb-1">할인 수치 🔴</label>
@@ -508,11 +527,28 @@ const AdminPromotionsPage = () => {
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-muted-foreground mb-1">지원 대상</label>
-                    <select value={promoForm.target_type} onChange={e => setPromoForm({...promoForm, target_type: e.target.value as 'all' | 'new_user' | 'subscriber'})} className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
-                        <option value="all">모든 사용자</option>
-                        <option value="new_user">신규 가입자 (첫주문)</option>
-                        <option value="subscriber">프리미엄 구독자 전용</option>
-                    </select>
+                    {(() => {
+                      const targetLabels: Record<string, string> = { all: '모든 사용자', new_user: '신규 가입자 (첫주문)', subscriber: '프리미엄 구독자 전용' };
+                      return (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger 
+                            style={{ border: '1px solid #d1d5db' }}
+                            className="flex items-center justify-between gap-2 w-full px-3 py-2 text-sm bg-background border border-gray-300 dark:border-zinc-600 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary hover:bg-muted transition-colors data-[state=open]:ring-2 data-[state=open]:ring-primary/20 data-[state=open]:border-primary"
+                          >
+                            <span>{targetLabels[promoForm.target_type || 'all']}</span>
+                            <ChevronDown size={14} className="opacity-50 shrink-0" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            onCloseAutoFocus={(e) => e.preventDefault()}
+                            className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-xl shadow-xl border border-gray-100 dark:border-gray-700/70 bg-white dark:bg-secondary z-[200]"
+                          >
+                            <DropdownMenuItem onClick={() => setPromoForm({...promoForm, target_type: 'all'})}>모든 사용자</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setPromoForm({...promoForm, target_type: 'new_user'})}>신규 가입자 (첫주문)</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setPromoForm({...promoForm, target_type: 'subscriber'})}>프리미엄 구독자 전용</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      );
+                    })()}
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-muted-foreground mb-1">시작일자 🔴</label>

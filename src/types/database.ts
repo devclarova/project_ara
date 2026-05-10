@@ -738,6 +738,17 @@ export type Database = {
           user_id: string;
           username: string | null;
           banned_until: string | null;
+          is_admin: boolean;
+          plan: string | null;
+          deleted_at: string | null;
+          banner_position_y: number | null;
+          nickname_updated_at: string | null;
+          country_updated_at: string | null;
+          last_known_country: string | null;
+          last_sign_in_at: string | null;
+          recovery_question: string | null;
+          recovery_answer_hash: string | null;
+          recovery_email: string | null;
         };
         Insert: {
           age_confirmed?: boolean;
@@ -769,6 +780,17 @@ export type Database = {
           user_id: string;
           username?: string | null;
           banned_until?: string | null;
+          is_admin?: boolean;
+          plan?: string | null;
+          deleted_at?: string | null;
+          banner_position_y?: number | null;
+          nickname_updated_at?: string | null;
+          country_updated_at?: string | null;
+          last_known_country?: string | null;
+          last_sign_in_at?: string | null;
+          recovery_question?: string | null;
+          recovery_answer_hash?: string | null;
+          recovery_email?: string | null;
         };
         Update: {
           age_confirmed?: boolean;
@@ -800,6 +822,17 @@ export type Database = {
           user_id?: string;
           username?: string | null;
           banned_until?: string | null;
+          is_admin?: boolean;
+          plan?: string | null;
+          deleted_at?: string | null;
+          banner_position_y?: number | null;
+          nickname_updated_at?: string | null;
+          country_updated_at?: string | null;
+          last_known_country?: string | null;
+          last_sign_in_at?: string | null;
+          recovery_question?: string | null;
+          recovery_answer_hash?: string | null;
+          recovery_email?: string | null;
         };
         Relationships: [];
       };
@@ -1691,6 +1724,138 @@ export type Database = {
         };
         Relationships: [];
       };
+      subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          plan: string;
+          status: string;
+          starts_at: string;
+          ends_at: string | null;
+          created_at: string;
+          updated_at: string | null;
+          payment_method: string | null;
+          coupon_id: string | null;
+          billing_cycle: 'monthly' | 'yearly' | null;
+          paddle_customer_id: string | null;
+          paddle_subscription_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          plan: string;
+          status: string;
+          starts_at: string;
+          ends_at?: string | null;
+          created_at?: string;
+          updated_at?: string | null;
+          payment_method?: string | null;
+          coupon_id?: string | null;
+          billing_cycle?: 'monthly' | 'yearly' | null;
+          paddle_customer_id?: string | null;
+          paddle_subscription_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          plan?: string;
+          status?: string;
+          starts_at?: string;
+          ends_at?: string | null;
+          created_at?: string;
+          updated_at?: string | null;
+          payment_method?: string | null;
+          coupon_id?: string | null;
+          billing_cycle?: 'monthly' | 'yearly' | null;
+          paddle_customer_id?: string | null;
+          paddle_subscription_id?: string | null;
+        };
+        Relationships: [];
+      };
+      plan_configs: {
+        Row: {
+          id: string;
+          name: string;
+          display_name: string;
+          description: string | null;
+          monthly_price: number;
+          yearly_price: number;
+          is_active: boolean;
+          is_popular: boolean;
+          sort_order: number;
+          color: string | null;
+          features: { label: string; active: boolean }[];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          display_name: string;
+          description?: string | null;
+          monthly_price?: number;
+          yearly_price?: number;
+          is_active?: boolean;
+          is_popular?: boolean;
+          sort_order?: number;
+          color?: string | null;
+          features?: { label: string; active: boolean }[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          display_name?: string;
+          description?: string | null;
+          monthly_price?: number;
+          yearly_price?: number;
+          is_active?: boolean;
+          is_popular?: boolean;
+          sort_order?: number;
+          color?: string | null;
+          features?: { label: string; active: boolean }[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      plan_promotions: {
+        Row: {
+          id: string;
+          plan_id: string | null;
+          label: string;
+          discount_type: 'percentage' | 'fixed';
+          discount_value: number;
+          is_active: boolean;
+          starts_at: string | null;
+          ends_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          plan_id?: string | null;
+          label: string;
+          discount_type: 'percentage' | 'fixed';
+          discount_value: number;
+          is_active?: boolean;
+          starts_at?: string | null;
+          ends_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          plan_id?: string | null;
+          label?: string;
+          discount_type?: 'percentage' | 'fixed';
+          discount_value?: number;
+          is_active?: boolean;
+          starts_at?: string | null;
+          ends_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       post_like_counts: {
@@ -1789,6 +1954,27 @@ export type Database = {
           in_nick: string;
         };
         Returns: string;
+      };
+      validate_coupon: {
+        Args: { p_code: string; p_user_id: string };
+        Returns: {
+          is_valid: boolean;
+          reason: string | null;
+          promotion: {
+            id: string;
+            name: string;
+            discount_type: 'percentage' | 'fixed';
+            discount_value: number;
+          } | null;
+        };
+      };
+      check_user_subscription: {
+        Args: { p_user_id: string };
+        Returns: void;
+      };
+      expire_subscriptions: {
+        Args: Record<string, never>;
+        Returns: void;
       };
     };
     Enums: {

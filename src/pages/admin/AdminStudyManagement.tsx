@@ -13,8 +13,8 @@ import {
 import { getErrorMessage } from '@/utils/errorMessage';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 // ─── Types ───────────────────────────────────────────────────
 interface VideoData {
@@ -75,7 +75,6 @@ const ALL_LEVELS = ['전체', '초급', '중급', '고급'];
 
 // ─── Component ───────────────────────────────────────────────
 const AdminStudyManagement = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
 
   // 메인 콘텐츠 리스트 및 통계 데이터 상태 관리
@@ -396,30 +395,48 @@ const AdminStudyManagement = () => {
           <div className="flex gap-2">
             {/* Category Filter */}
             <div className="relative flex-1 sm:flex-none">
-              <select
-                value={filterCategory}
-                onChange={(e) => { setFilterCategory(e.target.value); setPage(1); }}
-                className="w-full sm:w-auto appearance-none px-3 py-2 pr-8 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary bg-background text-foreground outline-none cursor-pointer"
-              >
-                {ALL_CATEGORIES.map((c: any) => (
-                  <option key={c} value={c}>{c === '전체' ? '전체 카테고리' : c}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={14} />
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger 
+                  style={{ border: '1px solid #d1d5db' }}
+                  className="flex items-center justify-between gap-2 w-full px-3 py-2 text-sm bg-background border border-gray-300 dark:border-zinc-600 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary hover:bg-muted transition-colors data-[state=open]:ring-2 data-[state=open]:ring-primary/20 data-[state=open]:border-primary"
+                >
+                  <span>{filterCategory === '전체' ? '전체 카테고리' : filterCategory}</span>
+                  <ChevronDown size={14} className="opacity-50 shrink-0" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                  className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-xl shadow-xl border border-gray-100 dark:border-gray-700/70 bg-white dark:bg-secondary z-[200]"
+                >
+                  {ALL_CATEGORIES.map((c: any) => (
+                    <DropdownMenuItem key={c} onClick={() => { setFilterCategory(c); setPage(1); }}>
+                      {c === '전체' ? '전체 카테고리' : c}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             {/* Level Filter */}
             <div className="relative flex-1 sm:flex-none">
-              <select
-                value={filterLevel}
-                onChange={(e) => { setFilterLevel(e.target.value); setPage(1); }}
-                className="w-full sm:w-auto appearance-none px-3 py-2 pr-8 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary bg-background text-foreground outline-none cursor-pointer"
-              >
-                {ALL_LEVELS.map(l => (
-                  <option key={l} value={l}>{l === '전체' ? '전체 난이도' : l}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={14} />
+              <DropdownMenu>
+                <DropdownMenuTrigger 
+                  style={{ border: '1px solid #d1d5db' }}
+                  className="flex items-center justify-between gap-2 w-full px-3 py-2 text-sm bg-background border border-gray-300 dark:border-zinc-600 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary hover:bg-muted transition-colors data-[state=open]:ring-2 data-[state=open]:ring-primary/20 data-[state=open]:border-primary"
+                >
+                  <span>{filterLevel === '전체' ? '전체 난이도' : filterLevel}</span>
+                  <ChevronDown size={14} className="opacity-50 shrink-0" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                  className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-xl shadow-xl border border-gray-100 dark:border-gray-700/70 bg-white dark:bg-secondary z-[200]"
+                >
+                  {ALL_LEVELS.map(l => (
+                    <DropdownMenuItem key={l} onClick={() => { setFilterLevel(l); setPage(1); }}>
+                      {l === '전체' ? '전체 난이도' : l}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>

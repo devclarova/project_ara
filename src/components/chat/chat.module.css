@@ -69,7 +69,8 @@
   flex-direction: column;
   background-color: hsl(var(--secondary));
   position: relative;
-  /* border-right removed */
+  overflow: hidden;
+  min-height: 0;
 }
 
 .chatPage :global(.chat-list-header) {
@@ -210,6 +211,7 @@
 .chatPage :global(.chat-items) {
   flex: 1;
   overflow-y: auto;
+  min-height: 0;
 }
 /* .chatPage :global(.chat-items)::-webkit-scrollbar {
   display: none;

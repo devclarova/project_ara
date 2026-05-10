@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '@/utils/errorMessage';
 
 /**
@@ -11,7 +10,6 @@ import { getErrorMessage } from '@/utils/errorMessage';
  * - 방법(How): URL 토큰 파싱 후 Supabase 세션을 수립하고 권한 검증 라우트로 리다이렉트를 처리함
  */
 const AdminAuthCallback = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,7 +21,7 @@ const AdminAuthCallback = () => {
         if (sessionError) throw sessionError;
         
         if (!session) {
-          toast.error(t('auth.auth_failed'));
+          toast.error('인증에 실패했습니다.');
           navigate('/admin/login');
           return;
         }
@@ -37,7 +35,7 @@ const AdminAuthCallback = () => {
         if (userError) {
           // 사용자 프로필 데이터 누락 예외 처리 — 신규 가입 후 프로필 생성 전 또는 비가입자 접근 방지
           if (userError.code === 'PGRST116') {
-            toast.error(t('auth.profile_not_found_contact_admin'));
+            toast.error('프로필을 찾을 수 없습니다. 관리자에게 문의하세요.');
             await supabase.auth.signOut();
             navigate('/admin/login');
             return;
@@ -48,17 +46,17 @@ const AdminAuthCallback = () => {
         if (!userData?.is_admin) {
           // 비인가 사용자 접근 차단 — 일반 사용자 계정의 관리 센터 진입 방지 및 세션 강제 종료
           await supabase.auth.signOut();
-          toast.error(t('admin.no_permission'));
+          toast.error('관리자 권한이 없습니다.');
           navigate('/admin/login');
           return;
         }
 
         // 인증 및 권한 검증 성공 — 보안 세션 확정 후 관리 대시보드로 이동 처리
-        toast.success(t('admin.login_success'));
+        toast.success('로그인 성공');
         navigate('/admin');
       } catch (error: unknown) {
         console.error('Admin auth callback error:', getErrorMessage(error));
-        toast.error(t('auth.auth_failed'));
+        toast.error('인증에 실패했습니다.');
         navigate('/admin/login');
       }
     };

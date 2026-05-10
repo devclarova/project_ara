@@ -22,6 +22,7 @@ import {
   Megaphone,
   Ticket,
   MessageSquare,
+  CreditCard,
 } from 'lucide-react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import ThemeSwitcher from '../../components/common/ThemeSwitcher';
@@ -60,6 +61,7 @@ const AdminLayout = () => {
     else if (path.startsWith('/admin/feedback')) pageTitle = '피드백 및 문의 관리';
     else if (path.startsWith('/admin/banners')) pageTitle = '배너 관리';
     else if (path.startsWith('/admin/promotions')) pageTitle = '프로모션/쿠폰';
+    else if (path.startsWith('/admin/subscription-plans')) pageTitle = '구독 플랜 관리';
     else if (path.startsWith('/admin/settings')) pageTitle = '관리자 설정';
 
     document.title = `${pageTitle} | ARA Admin`;
@@ -151,8 +153,18 @@ const AdminLayout = () => {
     };
   }, [sidebarOpen]);
 
+  // 컴포넌트 마운트/언마운트 시 html overflow 처리 useEffect 추가
+  useEffect(() => {
+    const html = document.documentElement;
+    const prev = html.style.overflowY;
+    html.style.overflowY = 'auto';
+    return () => {
+      html.style.overflowY = prev;
+    };
+  }, []);
+
   return (
-    <div className="h-full w-full flex-1 min-h-0 flex bg-background font-sans text-foreground overflow-hidden">
+    <div className="h-full w-full flex-1 min-h-0 flex bg-background font-sans text-foreground">
       {/* 사이드바 네비게이션 — 해상도별 가변 레이아웃(Mobile: Drawer, Desktop: Fixed) 적용 */}
       <aside 
         className={`fixed inset-y-0 left-0 z-[120] w-64 bg-secondary border-r border-gray-300 dark:border-gray-600 transform transition-transform duration-300 ease-in-out select-none [-webkit-tap-highlight-color:transparent] ${
@@ -270,6 +282,12 @@ const AdminLayout = () => {
               label="프로모션/쿠폰"
               onClick={() => setSidebarOpen(false)}
             />
+            <NavItem
+              to="/admin/subscription-plans"
+              icon={CreditCard}
+              label="구독 플랜 관리"
+              onClick={() => setSidebarOpen(false)}
+            />
 
             <div className="pt-4 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               설정
@@ -323,7 +341,7 @@ const AdminLayout = () => {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 h-full relative">
         {/* 상단 고정 헤더 — 뷰포트 최상단 레이어 정책 및 불투명도 가공(Backdrop-blur) 적용 */}
         <header className="h-14 sm:h-16 bg-secondary/80 backdrop-blur-md border-b border-gray-300 dark:border-gray-600 flex items-center justify-between px-3 sm:px-4 md:px-6 sticky top-0 z-[110] shadow-sm flex-shrink-0">
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 min-w-0 flex-1">

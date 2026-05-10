@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import SeagullIcon from '@/components/common/SeagullIcon';
+import PlanBadge from '@/components/common/PlanBadge';
 import { Button } from '@/components/ui/button';
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -224,19 +224,12 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
       <div className="flex space-x-3 w-full">
         {/* ✅ 프로필 아바타 */}
         <div className="flex-shrink-0">
-          <div className={`relative w-10 h-10 ${userPlan === 'premium' ? 'rounded-full p-[2px] bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] shadow-[0_2px_10px_rgba(0,191,165,0.4)]' : ''}`}>
+          <PlanBadge plan={userPlan}>
             <Avatar className="w-full h-full border-2 border-white dark:border-background">
               <AvatarImage src={profileAvatar || '/images/ara_basic_profile.png'} alt={profileNickname || t('common.avatar', 'User avatar')} />
               <AvatarFallback>{(profileNickname || 'U').charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
-            {userPlan === 'premium' && (
-              <div className="absolute -top-1.5 -left-1.5 z-10 p-[2px] bg-white dark:bg-background rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.1)] transition-transform hover:scale-110 -rotate-12">
-                <div className="bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] w-[15px] h-[15px] rounded-full flex items-center justify-center shadow-[inset_0_1px_3px_rgba(255,255,255,0.5)]">
-                  <SeagullIcon size={12} className="text-white drop-shadow-sm" />
-                </div>
-              </div>
-            )}
-          </div>
+          </PlanBadge>
         </div>
 
         {/* ✅ 입력 필드 */}

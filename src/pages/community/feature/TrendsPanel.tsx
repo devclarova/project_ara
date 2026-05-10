@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import SeagullIcon from '@/components/common/SeagullIcon';
+import PlanBadge from '@/components/common/PlanBadge';
 import { motion } from 'framer-motion';
 
 interface TrendingTweet {
@@ -162,7 +162,7 @@ export default function TrendsPanel({
                         }}
                         className="flex-shrink-0 pt-0.5 relative"
                       >
-                        <div className={`${isPremium ? 'rounded-full p-[2px] bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] shadow-[0_2px_10px_rgba(0,191,165,0.4)]' : ''}`}>
+                        <PlanBadge plan={tweet.profiles?.plan} size="sm">
                           <Avatar className={`w-9 h-9 border ${isPremium ? 'border-white dark:border-background' : 'border-black/5 dark:border-white/10'}`}>
                             <AvatarImage
                               src={tweet.profiles?.avatar_url || '/images/ara_basic_profile.png'}
@@ -174,14 +174,7 @@ export default function TrendsPanel({
                                 : 'U'}
                             </AvatarFallback>
                           </Avatar>
-                        </div>
-                        {isPremium && (
-                          <div className="absolute -top-1.5 -left-1.5 z-10 p-[2px] bg-white dark:bg-background rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.1)] transition-transform hover:scale-110 -rotate-12">
-                            <div className="bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] w-[15px] h-[15px] rounded-full flex items-center justify-center shadow-[inset_0_1px_3px_rgba(255,255,255,0.5)]">
-                              <SeagullIcon size={12} className="text-white drop-shadow-sm" />
-                            </div>
-                          </div>
-                        )}
+                        </PlanBadge>
                       </div>
 
                       <div className="flex-1 min-w-0">

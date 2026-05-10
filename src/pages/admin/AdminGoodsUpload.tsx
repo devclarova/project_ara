@@ -21,7 +21,6 @@ import {
   ChevronLeft
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { goodsService } from '@/services/goodsService';
 import { getErrorMessage } from '@/utils/errorMessage';
@@ -43,7 +42,6 @@ interface ProductVariantUI {
 }
 
 const AdminGoodsUpload = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState<'basic' | 'detail' | 'options'>('basic');

@@ -10,10 +10,11 @@ import {
   Clock,
   User,
   Star,
-  Eye
+  Eye,
+  ChevronDown
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { getErrorMessage } from '@/utils/errorMessage';
 import FeedbackActionModal, { type Feedback } from './components/FeedbackActionModal';
@@ -82,7 +83,6 @@ const getPageLabel = (path: string | null) => {
 };
 
 const AdminFeedback = () => {
-  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'feedback' | 'inquiry'>('feedback');
   
   // Filters
@@ -283,33 +283,59 @@ const AdminFeedback = () => {
           </div>
 
           {/* Category Filter */}
-          <select
-            value={filterCategory}
-            onChange={(e) => { setFilterCategory(e.target.value); setPage(1); }}
-            className="px-3 py-2 bg-secondary border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 text-muted-foreground hover:text-foreground outline-none"
-          >
-            <option value="all">모든 카테고리</option>
-            <option value="bug">버그</option>
-            <option value="feature">기능 제안</option>
-            <option value="ui">UI/UX</option>
-            <option value="content">콘텐츠</option>
-            <option value="other">기타</option>
-          </select>
+          {(() => {
+            const categoryLabels: Record<string, string> = { all: '모든 카테고리', bug: '버그', feature: '기능 제안', ui: 'UI/UX', content: '콘텐츠', other: '기타' };
+            return (
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger
+                  style={{ border: '1px solid #d1d5db' }}
+                  className="flex items-center justify-between gap-2 w-[160px] px-3 py-2 text-sm bg-background rounded-lg outline-none data-[state=open]:ring-2 data-[state=open]:ring-primary/20 hover:bg-muted transition-colors"
+                >
+                  <span>{categoryLabels[filterCategory] ?? '모든 카테고리'}</span>
+                  <ChevronDown size={14} className="opacity-50 shrink-0" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                  className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-xl shadow-xl border border-gray-100 dark:border-gray-700/70 bg-white dark:bg-secondary z-[200]"
+                >
+                  <DropdownMenuItem onClick={() => { setFilterCategory('all'); setPage(1); }}>모든 카테고리</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setFilterCategory('bug'); setPage(1); }}>버그</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setFilterCategory('feature'); setPage(1); }}>기능 제안</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setFilterCategory('ui'); setPage(1); }}>UI/UX</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setFilterCategory('content'); setPage(1); }}>콘텐츠</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setFilterCategory('other'); setPage(1); }}>기타</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          })()}
 
           {/* Rating Filter (Feedback Only) */}
           {activeTab === 'feedback' && (
-            <select
-              value={filterRating}
-              onChange={(e) => { setFilterRating(e.target.value as any); setPage(1); }}
-              className="px-3 py-2 bg-secondary border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 text-muted-foreground hover:text-foreground outline-none"
-            >
-              <option value="all">모든 별점</option>
-              <option value="5">★★★★★ (5점)</option>
-              <option value="4">★★★★☆ (4점)</option>
-              <option value="3">★★★☆☆ (3점)</option>
-              <option value="2">★★☆☆☆ (2점)</option>
-              <option value="1">★☆☆☆☆ (1점)</option>
-            </select>
+            (() => {
+              const ratingLabels: Record<string, string> = { all: '모든 별점', '5': '★★★★★ (5점)', '4': '★★★★☆ (4점)', '3': '★★★☆☆ (3점)', '2': '★★☆☆☆ (2점)', '1': '★☆☆☆☆ (1점)' };
+              return (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    style={{ border: '1px solid #d1d5db' }}
+                    className="flex items-center justify-between gap-2 w-[160px] px-3 py-2 text-sm bg-background rounded-lg outline-none data-[state=open]:ring-2 data-[state=open]:ring-primary/20 hover:bg-muted transition-colors"
+                  >
+                    <span>{ratingLabels[filterRating.toString()] ?? '모든 별점'}</span>
+                    <ChevronDown size={14} className="opacity-50 shrink-0" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    onCloseAutoFocus={(e) => e.preventDefault()}
+                    className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-xl shadow-xl border border-gray-100 dark:border-gray-700/70 bg-white dark:bg-secondary z-[200]"
+                  >
+                    <DropdownMenuItem onClick={() => { setFilterRating('all'); setPage(1); }}>모든 별점</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setFilterRating('5'); setPage(1); }}>★★★★★ (5점)</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setFilterRating('4'); setPage(1); }}>★★★★☆ (4점)</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setFilterRating('3'); setPage(1); }}>★★★☆☆ (3점)</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setFilterRating('2'); setPage(1); }}>★★☆☆☆ (2점)</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setFilterRating('1'); setPage(1); }}>★☆☆☆☆ (1점)</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              );
+            })()
           )}
 
           <button 

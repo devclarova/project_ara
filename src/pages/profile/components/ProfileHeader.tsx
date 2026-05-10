@@ -20,6 +20,7 @@ import { getBanMessage } from '@/utils/banUtils';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import { useNavigate } from 'react-router-dom';
 import { useBlock } from '@/hooks/useBlock';
+import SeagullIcon from '@/components/common/SeagullIcon';
 import Modal from '@/components/common/Modal';
 import { useDirectChat } from '@/contexts/DirectChatContext';
 import { getErrorMessage } from '@/utils/errorMessage';

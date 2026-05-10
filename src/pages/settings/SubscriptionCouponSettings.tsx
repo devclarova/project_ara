@@ -78,6 +78,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
   const [validating, setValidating] = useState(false);
   
   // 상태 관리
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [subscription, setSubscription] = useState<SubscriptionItem | null>(null);
   const [subscriptionHistory, setSubscriptionHistory] = useState<SubscriptionItem[]>([]);
   const [usageHistory, setUsageHistory] = useState<CouponUsage[]>([]);
@@ -87,7 +88,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
 
   useEffect(() => {
     fetchData();
-  }, [session]);
+  }, [session, refreshTrigger]);
 
   const fetchData = async () => {
     if (!session?.user?.id) return;
@@ -102,14 +103,14 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
         .limit(1)
         .maybeSingle();
         
-      setSubscription(subData);
-
       // 2. 전체 구독 이력 (active / cancelled / expired 모두)
       const { data: historyData } = await (supabase.from('subscriptions') as any)
         .select('id, plan, status, created_at, ends_at')
         .eq('user_id', session.user.id)
         .order('created_at', { ascending: false })
         .limit(10);
+
+      setSubscription(subData);
 
       setSubscriptionHistory(historyData ?? []);
 
@@ -222,6 +223,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
       toast.success(t('settings.coupons.cancel_success'));
       // 재조회 및 전역 상태 리프레시
       await refreshUserPlan();
+      setRefreshTrigger(prev => prev + 1);
       fetchData();
     } catch (err: unknown) {
       toast.error(t('settings.coupons.cancel_error', { error: getErrorMessage(err) }));

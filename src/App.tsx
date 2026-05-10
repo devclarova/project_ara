@@ -55,6 +55,7 @@ const AdminSettings = React.lazy(() => import('./pages/admin/AdminSettings'));
 const AdminStudyManagement = React.lazy(() => import('./pages/admin/AdminStudyManagement'));
 const AdminStudyUpload = React.lazy(() => import('./pages/admin/AdminStudyUpload'));
 const UserManagement = React.lazy(() => import('./pages/admin/UserManagement'));
+const AdminSubscriptionManager = React.lazy(() => import('./pages/admin/AdminSubscriptionManager'));
 
 const AuthCallback = React.lazy(() => import('./pages/auth/AuthCallback'));
 const SignInPage = React.lazy(() => import('./pages/auth/SignInPage'));
@@ -271,6 +272,7 @@ function AppInner() {
                       <Route path="goods/manage" element={<AdminGoodsManagement />} />
                       <Route path="banners" element={<AdminBannerManager />} />
                       <Route path="promotions" element={<AdminPromotionsPage />} />
+                      <Route path="subscription-plans" element={<AdminSubscriptionManager />} />
                       <Route path="feedback" element={<AdminFeedback />} />
                       <Route path="notification-center" element={<AdminNotificationCenter />} />
                     </Route>

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import Modal from '@/components/common/Modal';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -71,7 +70,6 @@ export default function FeedbackActionModal({
   onResolve,
   tableType = 'feedback'
 }: FeedbackActionModalProps) {
-  const { t } = useTranslation();
   const [replyContent, setReplyContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUserProfileModal, setShowUserProfileModal] = useState(false);
