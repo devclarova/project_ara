@@ -250,7 +250,7 @@ export default function ProfileAsap() {
         {/* 가운데 프로필 컬럼 */}
         <div className={`w-full max-w-2xl lg:max-w-3xl border-x ${userProfile.plan === 'premium' ? 'border-[#00BFA5]/20 bg-transparent' : 'border-gray-200 dark:border-gray-700 dark:bg-background'}`}>
           {/* 상단 네비게이션 레이어 — 스티키 레이아웃 기반의 이름 노출 및 뒤로가기 액션 제어 */}
-          <div className={`sticky top-0 backdrop-blur-md border-b p-4 z-20 ${userProfile.plan === 'premium' ? 'bg-[#ccede8]/80 border-[#00BFA5]/20 shadow-[0_4px_20px_rgba(0,191,165,0.05)]' : 'bg-white/80 dark:bg-background/80 border-gray-200 dark:border-gray-700'}`}>
+          <div className={`sticky top-0 backdrop-blur-md border-b p-4 z-20 ${userProfile.plan === 'premium' ? 'bg-[#ccede8]/80 dark:bg-[#03A595]/20 border-[#00BFA5]/20 shadow-[0_4px_20px_rgba(0,191,165,0.05)]' : 'bg-white/80 dark:bg-background/80 border-gray-200 dark:border-gray-700'}`}>
             <div className="flex items-center">
               {/* 뒤로가기 */}
               <button
@@ -261,15 +261,15 @@ export default function ProfileAsap() {
               </button>
               {/* 이름 */}
               <div className="flex flex-col ml-3 justify-center">
-                <h1 className={`text-xl font-bold flex items-center ${userProfile.plan === 'premium' ? 'text-[#00796B] dark:text-[#00F0FF]' : 'text-gray-900 dark:text-gray-100'}`}>
+                <h1 className={`text-xl font-bold flex items-center ${userProfile.plan === 'premium' ? 'text-[#007A6E] dark:text-[#00E5FF]' : 'text-gray-900 dark:text-gray-100'}`}>
                   {userProfile.name}
                   {userProfile.plan === 'premium' && (
                     <SeagullIcon size={20} className="ml-1 text-[#00BFA5] drop-shadow-[0_0_8px_rgba(0,191,165,0.8)]" />
                   )}
                 </h1>
-                {userProfile.plan === 'premium' && (
-                  <span className="text-[10px] font-black tracking-widest uppercase text-[#00BFA5] opacity-80 leading-none mt-0.5">
-                    {t('profile.premium_member')}
+                {(userProfile.plan === 'premium' || userProfile.plan === 'basic') && (
+                  <span className={`text-[10px] font-black tracking-widest uppercase opacity-80 leading-none mt-0.5 ${userProfile.plan === 'premium' ? 'text-[#00BFA5] dark:text-[#00E5FF]' : 'text-[#6366f1] dark:text-indigo-400'}`}>
+                    {userProfile.plan === 'premium' ? 'Premium Member' : userProfile.plan === 'basic' ? 'Basic Member' : ''}
                   </span>
                 )}
               </div>

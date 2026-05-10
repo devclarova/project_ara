@@ -41,10 +41,10 @@ const SeagullIcon: React.FC<SeagullIconProps> = ({
       style={{ display: 'inline-block', verticalAlign: 'middle', overflow: 'visible' }}
     >
       {/* Render Integrity: Employs a static SVG path to guarantee zero-latency rendering and consistent visual weight. */}
-      <path d={premiumPath} />
+      <path d={premiumPath} strokeWidth="0.3" stroke="currentColor" />
       
       {/* Discreet accent circle for the head's presence */}
-      <circle cx="16.5" cy="11" r="0.6" opacity="0.3" />
+      <circle cx="16.5" cy="11" r="0.6" opacity="0.6" />
     </motion.svg>
   );
 };

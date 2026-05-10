@@ -173,9 +173,6 @@ export default function AdminSubscriptionManager() {
             key="plans" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
           >
-            {/* Yearly Discount Management Card */}
-            <YearlyDiscountCard plans={plans} onUpdate={fetchData} />
-
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold flex items-center gap-2">
                 <List size={18} className="text-[#00BFA5]" /> 전체 플랜 ({plans.length})
@@ -240,6 +237,9 @@ export default function AdminSubscriptionManager() {
                 </div>
               ))}
             </div>
+
+            {/* Yearly Discount Management Card */}
+            <YearlyDiscountCard plans={plans} onUpdate={fetchData} />
           </motion.div>
         ) : (
           <motion.div 
@@ -826,15 +826,15 @@ const YearlyDiscountCard = ({ plans, onUpdate }: { plans: PlanConfig[], onUpdate
   };
 
   return (
-    <div className="bg-gradient-to-br from-zinc-900 to-black rounded-[2.5rem] p-8 text-white border border-white/5 shadow-2xl relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-64 h-64 bg-[#00BFA5]/10 blur-[100px] rounded-full -mr-32 -mt-32" />
+    <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 text-gray-900 dark:text-white border border-gray-200 dark:border-white/10 shadow-2xl relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-64 h-64 bg-[#00BFA5]/5 blur-[100px] rounded-full -mr-32 -mt-32" />
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
         <div>
           <h3 className="text-2xl font-black mb-2 flex items-center gap-2">
             <Percent size={24} className="text-[#00BFA5]" /> 연간 할인 설정
           </h3>
-          <p className="text-sm text-gray-400 font-medium">월간 가격 대비 연간 구독 할인율을 일괄 조정합니다.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">월간 가격 대비 연간 구독 할인율을 일괄 조정합니다.</p>
         </div>
         <button 
           onClick={handleSaveAll} disabled={loading}
@@ -846,7 +846,7 @@ const YearlyDiscountCard = ({ plans, onUpdate }: { plans: PlanConfig[], onUpdate
 
       <div className="grid grid-cols-1 sm:grid-cols-2 min-[1410px]:grid-cols-4 gap-4 mt-8 relative z-10">
         {plans.map(plan => (
-          <div key={plan.id} className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-colors">
+          <div key={plan.id} className="bg-gray-50 dark:bg-zinc-800/50 border border-gray-200 dark:border-white/10 rounded-2xl p-5 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
             <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">{plan.display_name}</p>
             <div className="flex items-center gap-3">
               <div className="flex-1 space-y-1">
@@ -856,7 +856,7 @@ const YearlyDiscountCard = ({ plans, onUpdate }: { plans: PlanConfig[], onUpdate
                   placeholder="0"
                   value={discounts[plan.id] ?? ''}
                   onChange={e => handleDiscountChange(plan.id, Number(e.target.value))}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm font-black outline-none focus:ring-1 focus:ring-[#00BFA5]"
+                  className="w-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2 text-sm font-black text-gray-900 dark:text-white outline-none focus:ring-1 focus:ring-[#00BFA5]"
                 />
               </div>
               <div className="flex-1 space-y-1">

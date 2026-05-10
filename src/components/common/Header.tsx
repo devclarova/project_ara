@@ -25,6 +25,7 @@ import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 import { OnlineIndicator } from './OnlineIndicator';
 import SeagullIcon from './SeagullIcon';
+import PlanBadge from '@/components/common/PlanBadge';
 
 function Header() {
   const { t, i18n } = useTranslation();
@@ -408,19 +409,12 @@ function Header() {
                   title="내 프로필"
                   aria-expanded={isProfileMenuOpen}
                 >
-                  <div className={`relative flex-shrink-0 ${userPlan === 'premium' ? 'rounded-full p-[2px] bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] shadow-[0_2px_10px_rgba(0,191,165,0.4)]' : ''}`}>
+                  <PlanBadge plan={userPlan}>
                     <Avatar className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-white dark:border-secondary">
                       <AvatarImage src={headerAvatar} alt={displayNickname} />
                       <AvatarFallback>{displayNickname.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
-                    {userPlan === 'premium' && (
-                      <div className="absolute -top-1.5 -left-1.5 z-10 p-[2px] bg-white dark:bg-secondary rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.1)] transition-transform hover:scale-110 -rotate-12">
-                        <div className="bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] w-[15px] h-[15px] rounded-full flex items-center justify-center shadow-[inset_0_1px_3px_rgba(255,255,255,0.5)]">
-                          <SeagullIcon size={12} className="text-white drop-shadow-sm" />
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  </PlanBadge>
                   <div className="flex flex-col items-start min-w-0">
                     <div className="relative inline-flex items-center">
                       <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 group-hover:opacity-80 whitespace-nowrap">
@@ -682,7 +676,7 @@ function Header() {
             setIsOpen(false);
           }}
         >
-          <div className={`relative flex-shrink-0 ${userPlan === 'premium' ? 'rounded-full p-[2px] bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] shadow-[0_2px_10px_rgba(0,191,165,0.4)]' : ''}`}>
+          <PlanBadge plan={userPlan} size="sm">
             <Avatar className="w-8 h-8 border-2 border-white dark:border-secondary">
               <AvatarImage src={headerAvatar} alt={displayNickname} />
               <AvatarFallback>
@@ -693,14 +687,7 @@ function Header() {
                 )}
               </AvatarFallback>
             </Avatar>
-            {user && userPlan === 'premium' && (
-              <div className="absolute -top-1.5 -left-1.5 z-10 p-[2px] bg-white dark:bg-secondary rounded-full shadow-[0_2px_5px_rgba(0,0,0,0.1)] transition-transform hover:scale-110 -rotate-12">
-                <div className="bg-gradient-to-br from-[#00E5FF] via-[#00BFA5] to-[#00796B] w-[15px] h-[15px] rounded-full flex items-center justify-center shadow-[inset_0_1px_3px_rgba(255,255,255,0.5)]">
-                  <SeagullIcon size={12} className="text-white drop-shadow-sm" />
-                </div>
-              </div>
-            )}
-          </div>
+          </PlanBadge>
           <div className="flex-1">
             <div className="relative inline-flex items-center">
               <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
