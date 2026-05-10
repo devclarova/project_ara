@@ -80,7 +80,7 @@ const FilterDropdown = ({
       </button>
 
       {open && (
-        <div className="absolute right-0 lg:right-auto lg:left-0 mt-2 w-56 rounded-2xl ring-1 ring-gray-200 dark:ring-white/10 bg-white dark:bg-secondary shadow-xl z-[999] overflow-hidden">
+        <div className="absolute right-0 lg:right-auto lg:left-0 mt-2 w-56 rounded-xl ring-1 ring-gray-200 dark:ring-white/10 bg-white dark:bg-secondary shadow-xl z-[999] overflow-hidden">
           <div className="p-4 space-y-4">
             {/* 난이도 */}
             <div>

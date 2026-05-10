@@ -11,6 +11,7 @@ import {
   Film, Edit, Loader2, ImageIcon,
   CheckCircle2, AlertCircle, Upload, Eye, EyeOff, Star
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/utils/errorMessage';
@@ -665,24 +666,55 @@ const AdminStudyUpload = () => {
             <div>
               <label className={labelCls}>카테고리</label>
               <div className="relative">
-                <select name="categories" value={videoInfo.categories} onChange={handleVideoChange} className={selectCls}>
-                <option value="드라마">드라마</option>
-                <option value="영화">영화</option>
-                <option value="예능">예능</option>
-                <option value="음악">음악</option>
-              </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={14} />
+                {(() => {
+                  const categoryLabels: Record<string, string> = { '드라마': '드라마', '영화': '영화', '예능': '예능', '음악': '음악' };
+                  return (
+                    <DropdownMenu modal={false}>
+                      <DropdownMenuTrigger
+                        style={{ border: '1px solid #d1d5db' }}
+                        className="flex items-center justify-between gap-2 w-full px-3 py-2 text-sm bg-background rounded-lg outline-none data-[state=open]:ring-2 data-[state=open]:ring-primary/20 hover:bg-muted transition-colors"
+                      >
+                        <span>{videoInfo.categories || '드라마'}</span>
+                        <ChevronDown size={14} className="opacity-50 shrink-0" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        onCloseAutoFocus={(e) => e.preventDefault()}
+                        className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-xl shadow-xl border border-gray-100 dark:border-gray-700/70 bg-white dark:bg-secondary z-[200]"
+                      >
+                        <DropdownMenuItem onClick={() => setVideoInfo((prev: any) => ({ ...prev, categories: '드라마' }))}>드라마</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setVideoInfo((prev: any) => ({ ...prev, categories: '영화' }))}>영화</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setVideoInfo((prev: any) => ({ ...prev, categories: '예능' }))}>예능</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setVideoInfo((prev: any) => ({ ...prev, categories: '음악' }))}>음악</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                })()}
               </div>
             </div>
             <div>
               <label className={labelCls}>난이도</label>
               <div className="relative">
-                <select name="level" value={videoInfo.level} onChange={handleVideoChange} className={selectCls}>
-                <option value="초급">초급</option>
-                <option value="중급">중급</option>
-                <option value="고급">고급</option>
-              </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={14} />
+                {(() => {
+                  return (
+                    <DropdownMenu modal={false}>
+                      <DropdownMenuTrigger
+                        style={{ border: '1px solid #d1d5db' }}
+                        className="flex items-center justify-between gap-2 w-full px-3 py-2 text-sm bg-background rounded-lg outline-none data-[state=open]:ring-2 data-[state=open]:ring-primary/20 hover:bg-muted transition-colors"
+                      >
+                        <span>{videoInfo.level || '초급'}</span>
+                        <ChevronDown size={14} className="opacity-50 shrink-0" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        onCloseAutoFocus={(e) => e.preventDefault()}
+                        className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-xl shadow-xl border border-gray-100 dark:border-gray-700/70 bg-white dark:bg-secondary z-[200]"
+                      >
+                        <DropdownMenuItem onClick={() => setVideoInfo((prev: any) => ({ ...prev, level: '초급' }))}>초급</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setVideoInfo((prev: any) => ({ ...prev, level: '중급' }))}>중급</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setVideoInfo((prev: any) => ({ ...prev, level: '고급' }))}>고급</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                })()}
               </div>
             </div>
           </div>
@@ -691,12 +723,28 @@ const AdminStudyUpload = () => {
           <div>
             <label className={labelCls}>요구 멤버십 등급</label>
             <div className="relative">
-              <select name="required_plan" value={studyInfo.required_plan} onChange={handleStudyChange} className={selectCls}>
-                <option value="free">Free (전체 공개)</option>
-                <option value="basic">Basic (베이직 이상)</option>
-                <option value="premium">🌟 Premium (VIP 전용)</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={14} />
+              {(() => {
+                const planLabels: Record<string, string> = { free: 'Free (전체 공개)', basic: 'Basic (베이직 이상)', premium: '🌟 Premium (VIP 전용)' };
+                return (
+                  <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger
+                      style={{ border: '1px solid #d1d5db' }}
+                      className="flex items-center justify-between gap-2 w-full px-3 py-2 text-sm bg-background rounded-lg outline-none data-[state=open]:ring-2 data-[state=open]:ring-primary/20 hover:bg-muted transition-colors"
+                    >
+                      <span>{planLabels[studyInfo.required_plan] ?? 'Free (전체 공개)'}</span>
+                      <ChevronDown size={14} className="opacity-50 shrink-0" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      onCloseAutoFocus={(e) => e.preventDefault()}
+                      className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-xl shadow-xl border border-gray-100 dark:border-gray-700/70 bg-white dark:bg-secondary z-[200]"
+                    >
+                      <DropdownMenuItem onClick={() => setStudyInfo((prev) => ({ ...prev, required_plan: 'free' }))}>Free (전체 공개)</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setStudyInfo((prev) => ({ ...prev, required_plan: 'basic' }))}>Basic (베이직 이상)</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setStudyInfo((prev) => ({ ...prev, required_plan: 'premium' }))}>🌟 Premium (VIP 전용)</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                );
+              })()}
             </div>
           </div>
 

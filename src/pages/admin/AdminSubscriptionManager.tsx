@@ -6,8 +6,9 @@ import {
   TrendingUp, Activity, Layout, Filter,
   Save, AlertCircle, ChevronRight, MoreHorizontal,
   Calendar, Percent, DollarSign, List,
-  ArrowUpDown, Hash, Layers, Ticket
+  ArrowUpDown, Hash, Layers, Ticket, ChevronDown
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -676,15 +677,31 @@ const PromoEditModal = ({ isOpen, onClose, promo, plans, onSuccess }: any) => {
 
           <div className="space-y-2">
             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">적용 플랜</label>
-            <select 
-              value={formData.plan_id || ''} onChange={e => setFormData({...formData, plan_id: e.target.value || null})}
-              className="w-full bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/10 rounded-2xl px-5 py-4 text-sm font-bold outline-none focus:ring-2 focus:ring-[#00BFA5] transition-all appearance-none"
-            >
-              <option value="">전체 플랜에 적용</option>
-              {plans.map((p: any) => (
-                <option key={p.id} value={p.id}>{p.display_name}</option>
-              ))}
-            </select>
+            {(() => {
+              const selectedPlan = plans.find((p: any) => p.id === formData.plan_id);
+              return (
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger
+                    style={{ border: '1px solid #d1d5db' }}
+                    className="flex items-center justify-between gap-2 w-full px-5 py-4 text-sm bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/10 rounded-2xl outline-none data-[state=open]:ring-2 data-[state=open]:ring-primary/20 hover:bg-muted transition-colors font-bold"
+                  >
+                    <span>{selectedPlan ? selectedPlan.display_name : '전체 플랜에 적용'}</span>
+                    <ChevronDown size={14} className="opacity-50 shrink-0" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    onCloseAutoFocus={(e) => e.preventDefault()}
+                    className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-xl shadow-xl border border-gray-100 dark:border-gray-700/70 bg-white dark:bg-secondary z-[200]"
+                  >
+                    <DropdownMenuItem onClick={() => setFormData({ ...formData, plan_id: null })}>전체 플랜에 적용</DropdownMenuItem>
+                    {plans.map((p: any) => (
+                      <DropdownMenuItem key={p.id} onClick={() => setFormData({ ...formData, plan_id: p.id })}>
+                        {p.display_name}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              );
+            })()}
           </div>
 
           <div className="grid grid-cols-2 gap-6">

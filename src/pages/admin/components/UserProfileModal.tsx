@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { useTranslation } from 'react-i18next';
 import { usePresence } from '@/contexts/PresenceContext';
 import { getErrorMessage } from '@/utils/errorMessage';
 

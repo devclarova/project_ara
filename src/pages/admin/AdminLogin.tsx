@@ -7,12 +7,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Mail, Lock, Home } from 'lucide-react';
 import { getErrorMessage } from '@/utils/errorMessage';
 
 const AdminLogin = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -75,17 +73,17 @@ const AdminLogin = () => {
       if (!userData?.is_admin) {
         // 비인가 접근 거부 — 보안 정책에 따른 세션 즉시 취소 및 비인가 피드백 제공
         await supabase.auth.signOut();
-        toast.error(t('admin.no_permission'));
+        toast.error('관리자 권한이 없습니다.');
         setIsLoading(false);
         return;
       }
 
       // 최종 인가 승인 — 권한 검증 완료 후 관리 시스템 메인 진입
-      toast.success(t('admin.login_success'));
+      toast.success('로그인 성공');
       navigate('/admin');
     } catch (error: unknown) {
       console.error('Admin check error:', error);
-      toast.error(t('admin.permission_check_error'));
+      toast.error('권한 확인 중 오류가 발생했습니다.');
       setIsLoading(false);
     }
   };

@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 import Modal from '@/components/common/Modal';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -91,8 +90,15 @@ type ReportedChatMessage = import('@/types/database').Database['public']['Tables
 // Report Context Type (Parent tweet or Chat history)
 type ReportActionContext = ReportTarget | ReportedChatMessage[] | null;
 
+const REPORT_REASONS: Record<string, string> = {
+  spam: '스팸 / 부적절한 홍보',
+  abuse: '욕설 / 비하 발언',
+  harmful: '유해한 콘텐츠',
+  inappropriate: '부적절한 내용',
+  other: '기타 (직접 입력)'
+};
+
 export default function ReportActionModal({ report, isOpen, onClose, onResolve }: ReportActionModalProps) {
-  const { t, i18n } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [targetData, setTargetData] = useState<ReportTarget | null>(null);
   const [contextData, setContextData] = useState<ReportActionContext>(null);
@@ -739,7 +745,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
             <div className="bg-background border border-border rounded-xl p-4 shadow-sm">
                 <h4 className="text-xs font-bold text-muted-foreground uppercase mb-2">신고 사유</h4>
                 <p className="text-lg font-semibold text-foreground mb-1 capitalize">
-                    {t(`report.reasons.${report.reason}`, report.reason)}
+                    {REPORT_REASONS[report.reason] || report.reason}
                 </p>
                 {report.description && (
                     <p className="text-sm text-muted-foreground bg-secondary p-2 rounded-lg italic">
@@ -791,7 +797,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                     {fetchedReporter.gender && (
                                         <span className="flex items-center gap-1 bg-secondary/50 px-1.5 py-0.5 rounded border border-border/50">
                                             <i className={`ri-${fetchedReporter.gender === 'Male' ? 'men' : 'women'}-line`} />
-                                            <span>{fetchedReporter.gender === 'Male' ? t('signup.gender_male', '남성') : t('signup.gender_female', '여성')}</span>
+                                            <span>{fetchedReporter.gender === 'Male' ? '남성' : '여성'}</span>
                                         </span>
                                     )}
                                     {fetchedReporter.birthday && (
@@ -840,7 +846,7 @@ export default function ReportActionModal({ report, isOpen, onClose, onResolve }
                                         {profile.gender && (
                                             <span className="flex items-center gap-1 bg-white dark:bg-black/20 px-1.5 py-0.5 rounded border border-red-100 dark:border-red-900/30">
                                                 <i className={`ri-${profile.gender === 'Male' ? 'men' : 'women'}-line`} />
-                                                <span>{profile.gender === 'Male' ? t('signup.gender_male', '남성') : t('signup.gender_female', '여성')}</span>
+                                                <span>{profile.gender === 'Male' ? '남성' : '여성'}</span>
                                             </span>
                                         )}
                                         {profile.birthday && (

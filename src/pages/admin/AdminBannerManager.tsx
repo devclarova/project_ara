@@ -6,14 +6,27 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  Image, Plus, Edit, Trash2, Eye, EyeOff, BarChart3, Search,
-  ExternalLink, Calendar, Monitor, Loader2, X, ChevronDown
+  Plus,
+  Monitor,
+  Edit,
+  Trash2,
+  Eye,
+  EyeOff,
+  Image,
+  ExternalLink,
+  Search,
+  X,
+  Loader2,
+  ChevronDown,
+  Upload,
+  BarChart3,
+  Calendar
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { getErrorMessage } from '@/utils/errorMessage';
-import { Upload } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 // 데이터 엔티티 및 스키마 인터페이스 정의
 interface MarketingBanner {
@@ -312,19 +325,30 @@ const AdminBannerManager = () => {
               className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/30 outline-none transition-all"
             />
           </div>
-          <div className="relative">
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="appearance-none pl-4 pr-10 py-3.5 rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 text-sm font-medium cursor-pointer outline-none focus:ring-2 focus:ring-primary/20"
-            >
-              <option value="all">모든 타입</option>
-              {BANNER_TYPES.map(t => (
-                <option key={t.value} value={t.value}>{t.icon} {t.label}</option>
-              ))}
-            </select>
-            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          </div>
+          {(() => {
+            return (
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger
+                  style={{ border: '1px solid #d1d5db' }}
+                  className="flex items-center justify-between gap-2 min-w-[140px] px-4 py-3.5 rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-white/10 text-sm font-medium cursor-pointer outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                >
+                  <span>{filterType === 'all' ? '모든 타입' : BANNER_TYPES.find(t => t.value === filterType)?.label}</span>
+                  <ChevronDown size={14} className="opacity-50 shrink-0" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                  className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-xl shadow-xl border border-gray-100 dark:border-gray-700/70 bg-white dark:bg-secondary z-[200]"
+                >
+                  <DropdownMenuItem onClick={() => setFilterType('all')}>모든 타입</DropdownMenuItem>
+                  {BANNER_TYPES.map(t => (
+                    <DropdownMenuItem key={t.value} onClick={() => setFilterType(t.value)}>
+                      {t.icon} {t.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          })()}
         </div>
 
         {/* Banner List */}
@@ -490,15 +514,30 @@ const AdminBannerManager = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">배너 타입 *</label>
-                  <select
-                    value={form.banner_type}
-                    onChange={e => setForm(f => ({ ...f, banner_type: e.target.value as MarketingBanner['banner_type'] }))}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-zinc-800 border border-transparent focus:border-primary/20 outline-none text-sm"
-                  >
-                    {BANNER_TYPES.map(t => (
-                      <option key={t.value} value={t.value}>{t.icon} {t.label}</option>
-                    ))}
-                  </select>
+                  {(() => {
+                    const selectedType = BANNER_TYPES.find(t => t.value === form.banner_type);
+                    return (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          style={{ border: '1px solid #d1d5db' }}
+                          className="flex items-center justify-between gap-2 w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-zinc-800 border border-transparent focus:border-primary/20 outline-none text-sm data-[state=open]:ring-2 data-[state=open]:ring-primary/20 hover:bg-muted transition-colors"
+                        >
+                          <span>{selectedType ? `${selectedType.icon} ${selectedType.label}` : '타입 선택'}</span>
+                          <ChevronDown size={14} className="opacity-50 shrink-0" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          onCloseAutoFocus={(e) => e.preventDefault()}
+                          className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-xl shadow-xl border border-gray-100 dark:border-gray-700/70 bg-white dark:bg-secondary z-[200]"
+                        >
+                          {BANNER_TYPES.map(t => (
+                            <DropdownMenuItem key={t.value} onClick={() => setForm(f => ({ ...f, banner_type: t.value as MarketingBanner['banner_type'] }))}>
+                              {t.icon} {t.label}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    );
+                  })()}
                 </div>
                 <div>
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">상태</label>

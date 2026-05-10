@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import { addYears, addDays } from 'date-fns';
 import { Ban, X, Info } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
 import { getErrorMessage } from '@/utils/errorMessage';
@@ -31,7 +30,6 @@ const SanctionDialog: React.FC<SanctionDialogProps> = ({
   mode = 'ban',
   reportId
 }) => {
-  const { t, i18n } = useTranslation();
   const [banDuration, setBanDuration] = useState<number | 'permanent' | 'custom'>(1);
   const [customDays, setCustomDays] = useState('');
   const [reason, setReason] = useState('');

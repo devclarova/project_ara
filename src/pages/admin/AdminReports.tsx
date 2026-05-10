@@ -16,7 +16,6 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
@@ -54,9 +53,19 @@ interface Report {
     avatar_url: string;
   };
 }
+ 
+const REPORT_REASONS: Record<string, string> = {
+  spam: '스팸 / 부적절한 홍보',
+  hate: '혐오 발언 / 차별',
+  abuse: '욕설 / 비하 발언',
+  harassment: '괴롭힘 / 위협',
+  misinformation: '허위사실 / 가짜뉴스',
+  inappropriate: '부적절한 콘텐츠',
+  copyright: '저작권 침해',
+  other: '기타 (직접입력)',
+};
 
 const AdminReports = () => {
-  const { t, i18n } = useTranslation();
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'resolved' | 'dismissed'>('all');
   const [loading, setLoading] = useState(true);
   const [reports, setReports] = useState<Report[]>([]);
@@ -155,7 +164,7 @@ const AdminReports = () => {
     } finally {
       setLoading(false);
     }
-  }, [filterStatus, debouncedSearch, t]);
+  }, [filterStatus, debouncedSearch]);
 
   useEffect(() => {
     fetchReports();
@@ -251,7 +260,7 @@ const AdminReports = () => {
                   const lowerSearch = debouncedSearch.toLowerCase();
                   
                   // 다국어 사유 로컬 매칭 — i18n 번역 결과 기반 텍스트 가시성 검색 수행
-                  const translatedReason = t(`report.reasons.${report.reason}`, { defaultValue: report.reason }).toLowerCase();
+                  const translatedReason = (REPORT_REASONS[report.reason] ?? report.reason).toLowerCase();
                   if (translatedReason.includes(lowerSearch)) return true;
 
                   // 사용자 식별 데이터 매칭 — 신고자 및 피신고자 닉네임 교차 검색
@@ -317,7 +326,7 @@ const AdminReports = () => {
                     </span>
                   </td>
                   <td className="py-4 px-6">
-                    <p className="text-sm font-semibold text-foreground/90 break-keep">{t(`report.reasons.${report.reason}`, { defaultValue: report.reason })}</p>
+                    <p className="text-sm font-semibold text-foreground/90 break-keep">{REPORT_REASONS[report.reason] ?? report.reason}</p>
                     {report.description && report.target_type !== 'chat' && (
                         <p className="text-xs text-muted-foreground/80 truncate max-w-[240px] mt-0.5 break-all" title={report.description}>
                             {report.description}

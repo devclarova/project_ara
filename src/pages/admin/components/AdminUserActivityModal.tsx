@@ -41,7 +41,6 @@ import TranslateButton from '@/components/common/TranslateButton';
 import UserProfileModal from './UserProfileModal';
 import { formatMessageTime, formatDividerDate, formatSmartDate } from '@/utils/dateUtils';
 import HighlightText from '@/components/common/HighlightText';
-import { useTranslation } from 'react-i18next';
 
 interface AdminUserActivityModalProps {
   isOpen: boolean;
@@ -282,7 +281,6 @@ const AdminUserActivityModal: React.FC<AdminUserActivityModalProps> = ({ isOpen,
   const [mediaList, setMediaList] = useState<MediaItem[]>([]);
   const [initialMediaId, setInitialMediaId] = useState<string | undefined>(undefined);
   const chatBodyRef = useRef<HTMLDivElement>(null);
-  const { t } = useTranslation();
 
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [activeProfile, setActiveProfile] = useState<{ id: string; nickname: string; avatar_url: string | null } | null>(null);

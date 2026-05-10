@@ -18,7 +18,6 @@ import {
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/utils/errorMessage';
-import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
@@ -34,7 +33,6 @@ interface TargetUser {
 }
 
 const AdminNotificationCenter = () => {
-  const { t } = useTranslation();
   
   // Form State
   const [title, setTitle] = useState('');

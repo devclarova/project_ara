@@ -7,15 +7,14 @@ import React, { useState } from 'react';
 import { Search, Edit, Trash2, Eye, EyeOff, ChevronDown, Calendar, Package, DollarSign, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns';
 import { goodsService } from '@/services/goodsService';
 import type { Product } from '@/services/goodsService';
 import { getErrorMessage } from '@/utils/errorMessage';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const AdminGoodsManagement = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -77,7 +76,7 @@ const AdminGoodsManagement = () => {
       const { error } = await (supabase.from('products') as any).delete().eq('id', selectedProduct);
       if (error) throw error;
       setGoods(goods.filter((p: any) => p.id !== selectedProduct));
-      toast.success(t('admin.goods_deleted'));
+      toast.success('상품이 삭제되었습니다.');
       setDeleteModalOpen(false);
       setSelectedProduct(null);
     } catch (err: unknown) {
@@ -147,31 +146,55 @@ const AdminGoodsManagement = () => {
 
             <div className="flex flex-wrap gap-4">
                <div className="relative min-w-[160px]">
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="w-full h-14 pl-6 pr-12 bg-white dark:bg-zinc-800 rounded-2xl border border-gray-100 dark:border-white/5 outline-none font-bold text-xs appearance-none cursor-pointer"
-                  >
-                    <option value="all">모든 판매 상태</option>
-                    <option value="active">현재 판매중</option>
-                    <option value="soldout">완판/품절</option>
-                    <option value="draft">임시 저정본</option>
-                  </select>
-                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                  {(() => {
+                    const statusLabels: Record<string, string> = { all: '모든 판매 상태', active: '현재 판매중', soldout: '완판/품절', draft: '임시 저장본' };
+                    return (
+                      <DropdownMenu modal={false}>
+                        <DropdownMenuTrigger 
+                          style={{ border: '1px solid #d1d5db' }}
+                          className="flex items-center justify-between gap-2 w-full h-14 pl-6 pr-4 text-sm bg-background border border-gray-300 dark:border-zinc-600 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary hover:bg-muted transition-colors font-bold data-[state=open]:ring-2 data-[state=open]:ring-primary/20 data-[state=open]:border-primary"
+                        >
+                          <span>{statusLabels[filterStatus] ?? '모든 판매 상태'}</span>
+                          <ChevronDown size={14} className="opacity-50 shrink-0" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          onCloseAutoFocus={(e) => e.preventDefault()}
+                          className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-xl shadow-xl border border-gray-100 dark:border-gray-700/70 bg-white dark:bg-secondary z-[200]"
+                        >
+                          <DropdownMenuItem onClick={() => setFilterStatus('all')}>모든 판매 상태</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setFilterStatus('active')}>현재 판매중</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setFilterStatus('soldout')}>완판/품절</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setFilterStatus('draft')}>임시 저장본</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    );
+                  })()}
                </div>
 
                <div className="relative min-w-[160px]">
-                  <select 
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="w-full h-14 pl-6 pr-12 bg-white dark:bg-zinc-800 rounded-2xl border border-gray-100 dark:border-white/5 outline-none font-bold text-xs appearance-none cursor-pointer"
-                  >
-                    <option value="all">전체 카테고리</option>
-                    <option value="clothing">인기 의류</option>
-                    <option value="accessories">액세서리</option>
-                    <option value="stationery">프리미엄 문구</option>
-                  </select>
-                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                  {(() => {
+                    const categoryLabels: Record<string, string> = { all: '전체 카테고리', clothing: '인기 의류', accessories: '액세서리', stationery: '프리미엄 문구' };
+                    return (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger 
+                          style={{ border: '1px solid #d1d5db' }}
+                          className="flex items-center justify-between gap-2 w-full h-14 pl-6 pr-4 text-sm bg-background border border-gray-300 dark:border-zinc-600 rounded-lg outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary hover:bg-muted transition-colors font-bold data-[state=open]:ring-2 data-[state=open]:ring-primary/20 data-[state=open]:border-primary"
+                        >
+                          <span>{categoryLabels[categoryFilter] ?? '전체 카테고리'}</span>
+                          <ChevronDown size={14} className="opacity-50 shrink-0" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          onCloseAutoFocus={(e) => e.preventDefault()}
+                          className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-xl shadow-xl border border-gray-100 dark:border-gray-700/70 bg-white dark:bg-secondary z-[200]"
+                        >
+                          <DropdownMenuItem onClick={() => setCategoryFilter('all')}>전체 카테고리</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setCategoryFilter('clothing')}>인기 의류</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setCategoryFilter('accessories')}>액세서리</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setCategoryFilter('stationery')}>프리미엄 문구</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    );
+                  })()}
                </div>
             </div>
           </div>

@@ -25,7 +25,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { getErrorMessage } from '@/utils/errorMessage';
@@ -69,7 +68,6 @@ interface AdminProfile {
 }
 
 const AdminContentModeration = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<ContentType>('post');
