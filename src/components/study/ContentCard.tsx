@@ -161,7 +161,11 @@ const ContentCard = ({
     return s ? `${basePath}/${c}/${e}/${s}` : `${basePath}/${c}/${e}`;
   };
 
-  const isPremiumLocked = required_plan === 'premium' && userPlan !== 'premium' && !isAdmin;
+  const PLAN_LEVEL: Record<string, number> = { free: 0, basic: 1, premium: 2 };
+  const requiredLevel = PLAN_LEVEL[required_plan ?? 'free'] ?? 0;
+  const userLevel = PLAN_LEVEL[userPlan ?? 'free'] ?? 0;
+  const isLocked = !isAdmin && requiredLevel > userLevel;
+  const lockLabel = required_plan === 'premium' ? 'Premium Only' : required_plan === 'basic' ? 'Basic+' : '';
 
   const handleClick = () => {
     if (!contents || !episode) return;
@@ -171,7 +175,7 @@ const ContentCard = ({
       return;
     }
 
-    if (isPremiumLocked) {
+    if (isLocked) {
       navigate('/subscription');
       return;
     }
@@ -198,16 +202,16 @@ const ContentCard = ({
         )}
 
         {/* 동적 권한 제어 오버레이 */}
-        {((isGuest && !isPreview) || isPremiumLocked) && (
-          <div className={`absolute inset-0 flex items-center justify-center z-10 transition-colors ${isPremiumLocked ? 'bg-black/60 backdrop-grayscale backdrop-blur-sm' : 'bg-black/40 backdrop-blur-[2px] group-hover:bg-black/50'}`}>
+        {((isGuest && !isPreview) || isLocked) && (
+          <div className={`absolute inset-0 flex items-center justify-center z-10 transition-colors ${isLocked ? 'bg-black/60 backdrop-grayscale backdrop-blur-sm' : 'bg-black/40 backdrop-blur-[2px] group-hover:bg-black/50'}`}>
             <div className="relative group/lock flex flex-col items-center">
-              <div className={`absolute inset-0 blur-xl rounded-full transform scale-150 transition-opacity duration-500 ${isPremiumLocked ? 'bg-[#00BFA5]/40 opacity-50 group-hover:opacity-100' : 'bg-primary/30 opacity-0 group-hover:opacity-100'}`}></div>
-              <div className={`p-3 rounded-full border backdrop-blur-md shadow-2xl relative z-10 transform group-hover:scale-110 transition-transform duration-300 ${isPremiumLocked ? 'bg-[#0a1a14]/80 border-[#00BFA5]/50' : 'bg-white/10 border-white/30'}`}>
-                <i className={`ri-lock-2-fill text-2xl drop-shadow-md ${isPremiumLocked ? 'text-[#00F0FF]' : 'text-white'}`}></i>
+              <div className={`absolute inset-0 blur-xl rounded-full transform scale-150 transition-opacity duration-500 ${isLocked ? 'bg-[#00BFA5]/40 opacity-50 group-hover:opacity-100' : 'bg-primary/30 opacity-0 group-hover:opacity-100'}`}></div>
+              <div className={`p-3 rounded-full border backdrop-blur-md shadow-2xl relative z-10 transform group-hover:scale-110 transition-transform duration-300 ${isLocked ? 'bg-[#0a1a14]/80 border-[#00BFA5]/50' : 'bg-white/10 border-white/30'}`}>
+                <i className={`ri-lock-2-fill text-2xl drop-shadow-md ${isLocked ? 'text-[#00F0FF]' : 'text-white'}`}></i>
               </div>
-              {isPremiumLocked && (
+              {isLocked && (
                 <span className="mt-3 relative z-10 text-[#00F0FF] text-xs font-black tracking-widest uppercase drop-shadow-lg">
-                  Premium Only
+                  {lockLabel}
                 </span>
               )}
             </div>
@@ -319,10 +323,10 @@ const ContentCard = ({
           </div>
 
           {/* 잠금 상태면 추가 표시 */}
-          {((isGuest && !isPreview) || isPremiumLocked) && (
-            <div className={`mt-1.5 text-xs font-semibold py-1.5 rounded-lg flex items-center justify-center gap-1 ${isPremiumLocked ? 'text-[#AA771C] bg-[#D4AF37]/20 border border-[#D4AF37]/30' : 'text-rose-500 bg-rose-50 dark:bg-rose-900/20'}`}>
+          {((isGuest && !isPreview) || isLocked) && (
+            <div className={`mt-1.5 text-xs font-semibold py-1.5 rounded-lg flex items-center justify-center gap-1 ${isLocked ? 'text-[#AA771C] bg-[#D4AF37]/20 border border-[#D4AF37]/30' : 'text-rose-500 bg-rose-50 dark:bg-rose-900/20'}`}>
               <i className="ri-lock-2-line"></i>
-              {isPremiumLocked ? `👑 ${t('subscription.premium_only')}` : t('study.login_required')}
+              {isLocked ? (required_plan === 'premium' ? `👑 ${t('subscription.premium_only')}` : `💎 ${lockLabel}`) : t('study.login_required')}
             </div>
           )}
         </div>

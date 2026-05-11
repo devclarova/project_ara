@@ -157,7 +157,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
 
     setIsAdmin(!!data.is_admin);
-    setUserPlan(data.plan || 'free');
+    
+    // check_user_subscription RPC 호출 (만료 체크 + profiles 동기화)
+    await (supabase as any).rpc('check_user_subscription', { p_user_id: userId });
+
+    // 동기화 후 profiles에서 최신 plan 조회
+    const { data: updatedProfile } = await (supabase.from('profiles') as any)
+      .select('plan')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    const activePlan = updatedProfile?.plan || 'free';
+    setUserPlan(activePlan);
 
     if (data.deleted_at) {
       const deletedAt = new Date(data.deleted_at);

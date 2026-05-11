@@ -71,7 +71,7 @@ function SubscriptionHistoryItem({ item }: { item: SubscriptionItem }) {
 
 export default function SubscriptionCouponSettings({ onBackToMenu }: SubscriptionCouponSettingsProps) {
   const { t } = useTranslation();
-  const { session, refreshUserPlan } = useAuth();
+  const { session, refreshUserPlan, userPlan } = useAuth();
   
   const [loading, setLoading] = useState(true);
   const [couponCode, setCouponCode] = useState('');
@@ -88,7 +88,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
 
   useEffect(() => {
     fetchData();
-  }, [session, refreshTrigger]);
+  }, [session, refreshTrigger, userPlan]);
 
   const fetchData = async () => {
     if (!session?.user?.id) return;
