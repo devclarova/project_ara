@@ -14,6 +14,7 @@ interface StudyVocaItemProps {
   translatedExampleProp?: string;
   translatedPosProp?: string;
   isTranslating?: boolean;
+  disableIndividualTranslation?: boolean;
 }
 
 const StudyVocaItem = ({
@@ -24,6 +25,7 @@ const StudyVocaItem = ({
   translatedExampleProp,
   translatedPosProp,
   isTranslating,
+  disableIndividualTranslation = false,
 }: StudyVocaItemProps) => {
   const { i18n, t } = useTranslation();
   const targetLang = i18n.language;
@@ -35,10 +37,10 @@ const StudyVocaItem = ({
   const pronSrc = normalize(item.pron);
 
   // 개별 자동 번역 로직 — 부모로부터 주입된 Props가 있거나 부모 배치가 로딩 중이면 개별 요청 차단 (429 방지)
-  const shouldSkipIndividual = Boolean(translatedMeaningProp) || isTranslating;
-  const shouldSkipPron = Boolean(translatedPronProp) || isTranslating;
-  const shouldSkipExample = Boolean(translatedExampleProp) || isTranslating;
-  const shouldSkipPos = Boolean(translatedPosProp) || isTranslating;
+  const shouldSkipIndividual = disableIndividualTranslation || Boolean(translatedMeaningProp) || isTranslating;
+  const shouldSkipPron = disableIndividualTranslation || Boolean(translatedPronProp) || isTranslating;
+  const shouldSkipExample = disableIndividualTranslation || Boolean(translatedExampleProp) || isTranslating;
+  const shouldSkipPos = disableIndividualTranslation || Boolean(translatedPosProp) || isTranslating;
 
   const { translatedText: translatedMeaningHook } = useAutoTranslation(
     shouldSkipIndividual ? '' : meaningSrc,

@@ -257,6 +257,7 @@ const StudyVoca = ({
                 translatedExampleProp={translatedTexts[data.length * 2 + globalIdx] || undefined}
                 translatedPosProp={translatedTexts[data.length * 3 + globalIdx] || undefined}
                 isTranslating={isTranslating}
+                disableIndividualTranslation={true}
               />
             </div>
           );
