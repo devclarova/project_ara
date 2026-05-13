@@ -11,7 +11,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { NavLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAutoTranslation } from '@/hooks/useAutoTranslation';
+import { useBatchAutoTranslation } from '@/hooks/useBatchAutoTranslation';
 import StudyCard from '../components/study/StudyCard';
 import StudySubtitles from '../components/study/StudySubtitles';
 import VideoPlayer, { type VideoPlayerHandle } from '../components/study/VideoPlayer';
@@ -82,17 +82,68 @@ const StudyPage = () => {
 
   const effectiveTitle = parentTitle || study?.contents || '';
   
-  const { translatedText: translatedTitle } = useAutoTranslation(effectiveTitle, `study_title_${study?.study_id || study?.id}`, targetLang);
-  const { translatedText: translatedRuntime } = useAutoTranslation(study?.runtime || '', `study_runtime_${study?.id}`, targetLang);
-  const { translatedText: translatedRuntimeBucket } = useAutoTranslation(study?.runtime_bucket || '', `study_runtime_bucket_${study?.id}`, targetLang);
-  const { translatedText: translatedLevel } = useAutoTranslation(study?.level || '', `study_level_${study?.id}`, targetLang);
-  const { translatedText: translatedCategory } = useAutoTranslation(study?.categories || '', `category_${study?.id}`, targetLang);
-  const { translatedText: translatedEpisode } = useAutoTranslation(study?.episode || '', `study_episode_${study?.id}`, targetLang);
   const parentShortDesc = study?.study && !Array.isArray(study.study) 
     ? study.study.short_description 
     : (Array.isArray(study?.study) ? study?.study[0]?.short_description : null);
-  
-  const { translatedText: translatedDescription } = useAutoTranslation(parentShortDesc || '', `study_desc_${study?.study_id || study?.id}`, targetLang);
+
+  // 로컬 헬퍼: 모든 타입을 안전하게 문자열로 변환하여 trim() 에러 방지 (unknown 타입 가드 적용)
+  const toMetaText = (val: unknown): string => {
+    if (val == null) return '';
+
+    if (typeof val === 'string') return val;
+    if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+
+    if (Array.isArray(val)) {
+      return val
+        .filter((item): item is string | number | boolean =>
+          typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean'
+        )
+        .map(String)
+        .join(', ');
+    }
+
+    return '';
+  };
+
+  // 번역 텍스트 및 키 배열 구성 (study 로드 전 undefined 키 생성 방지 가드 포함)
+  const metaTexts = useMemo(() => {
+    if (!study) return [];
+    return [
+      toMetaText(effectiveTitle),
+      toMetaText(study.runtime),
+      toMetaText(study.runtime_bucket),
+      toMetaText(study.level),
+      toMetaText(study.categories),
+      toMetaText(study.episode),
+      toMetaText(parentShortDesc),
+    ];
+  }, [study, effectiveTitle, parentShortDesc]);
+
+  const metaKeys = useMemo(() => {
+    if (!study) return [];
+    const studyIdKey = study.study_id || study.id;
+    return [
+      `study_title_${studyIdKey}`,
+      `study_runtime_${study.id}`,
+      `study_runtime_bucket_${study.id}`,
+      `study_level_${study.id}`,
+      `category_${study.id}`,
+      `study_episode_${study.id}`,
+      `study_desc_${studyIdKey}`,
+    ];
+  }, [study]);
+
+  const { translatedTexts: metaTranslations } = useBatchAutoTranslation(metaTexts, metaKeys, targetLang);
+
+  const [
+    translatedTitle,
+    translatedRuntime,
+    translatedRuntimeBucket,
+    translatedLevel,
+    translatedCategory,
+    translatedEpisode,
+    translatedDescription,
+  ] = metaTranslations.length > 0 ? metaTranslations : new Array(7).fill(null);
 
   const formatValue = (key: string, val: string | number | null | undefined) => {
     if (!val) return '';
