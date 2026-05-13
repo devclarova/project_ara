@@ -1,3 +1,32 @@
 {
-  "recommendations": ["denoland.vscode-deno"]
+  "recommendations": [
+    "bracketpaircolordlw.bracket-pair-color-dlw",
+    "burkeholland.simple-react-snippets",
+    "catppuccin.catppuccin-vsc",
+    "dbaeumer.vscode-eslint",
+    "dracula-theme.theme-dracula",
+    "dsznajder.es7-react-js-snippets",
+    "ecmel.vscode-html-css",
+    "enkia.tokyo-night",
+    "esbenp.prettier-vscode",
+    "formulahendry.auto-close-tag",
+    "glenn2223.live-sass",
+    "kisstkondoros.vscode-gutter-preview",
+    "mrmlnc.vscode-postcss-sorting",
+    "ms-ceintl.vscode-language-pack-ko",
+    "oderwat.indent-rainbow",
+    "pkief.material-icon-theme",
+    "pranaygp.vscode-css-peek",
+    "prasadbobby.auto-rename-tag",
+    "ritwickdey.liveserver",
+    "robbowen.synthwave-vscode",
+    "sdras.night-owl",
+    "shd101wyy.markdown-preview-enhanced",
+    "solnurkarim.html-to-css-autocompletion",
+    "styled-components.vscode-styled-components",
+    "svelte.svelte-vscode",
+    "usernamehw.errorlens",
+    "webrender.synthwave-x-fluoromachine",
+    "denoland.vscode-deno"
+  ]
 }

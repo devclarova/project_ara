@@ -9,9 +9,10 @@ interface SubtitleItemProps {
   onSeek?: (start: number) => void;
   translatedPron?: string | null;
   translatedContent?: string | null;
+  isTranslating?: boolean;
 }
 
-const SubtitleItem: React.FC<SubtitleItemProps> = ({ subtitle, onSelect, onSeek, translatedPron, translatedContent }) => {
+const SubtitleItem: React.FC<SubtitleItemProps> = ({ subtitle, onSelect, onSeek, translatedPron, translatedContent, isTranslating }) => {
 
   return (
     <li className="p-2.5 sm:p-3 bg-white/50 dark:bg-secondary rounded-xl shadow-sm border border-gray-200 dark:border-gray-600 cursor-default">
@@ -28,17 +29,21 @@ const SubtitleItem: React.FC<SubtitleItemProps> = ({ subtitle, onSelect, onSeek,
         </button>
       )}
       {/* 지역화 데이터 바인딩 — 번역 파이프라인에서 수신된 발음/내용 데이터가 존재할 경우 우선 렌더링, 부재 시 원문 노출 */}
-      {(translatedPron || subtitle.pronunciation) && (
-        <div className="block w-full text-base sm:text-lg text-gray-500 dark:text-gray-400 text-left mt-1 cursor-default select-text">
-          [{translatedPron || subtitle.pronunciation}]
-        </div>
-      )}
+      <div className="block w-full text-base sm:text-lg text-gray-500 dark:text-gray-400 text-left mt-1 min-h-[1.5em]">
+        {isTranslating
+          ? <span className="inline-block h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          : (translatedPron?.trim() || subtitle.pronunciation?.trim())
+            ? `[${translatedPron?.trim() || subtitle.pronunciation?.trim()}]`
+            : <span className="inline-block h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+        }
+      </div>
       {/* 내용 번역 (또는 원본) */}
-      {(translatedContent || subtitle.english_subtitle) && (
-        <div className="block w-full text-base sm:text-lg text-gray-700 dark:text-gray-300 text-left mt-0.5 cursor-default select-text">
-          {translatedContent || subtitle.english_subtitle}
-        </div>
-      )}
+      <div className="block w-full text-base sm:text-lg text-gray-700 dark:text-gray-300 text-left mt-0.5 cursor-default select-text min-h-[1.5em]">
+        {isTranslating
+          ? <span className="inline-block h-5 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          : (translatedContent || subtitle.english_subtitle) || ''
+        }
+      </div>
     </li>
   );
 };

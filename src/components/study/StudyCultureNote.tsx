@@ -118,7 +118,7 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
   const combinedTexts = useMemo(() => combinedItems.map(i => i.text), [combinedItems]);
   const combinedKeys = useMemo(() => combinedItems.map(i => i.key), [combinedItems]);
 
-  const { translatedTexts } = useBatchAutoTranslation(combinedTexts, combinedKeys, targetLang);
+  const { translatedTexts, loading: isTranslating } = useBatchAutoTranslation(combinedTexts, combinedKeys, targetLang);
 
   // 현재 보고 있는 문화 노트로 이동
   const handleNextNote = () => {
@@ -139,7 +139,17 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
     return <p className="p-3 text-sm text-red-600">{t('study.culture_note.error', { error })}</p>;
   }
 
-  if (loading) return <p className="p-3 text-sm text-gray-500">{t('study.culture_note.loading')}</p>;
+  if (loading) return (
+    <div className="p-4 bg-white dark:bg-secondary border dark:border-gray-600 rounded-lg shadow-sm space-y-3 animate-pulse">
+      <div className="h-5 w-40 bg-gray-200 dark:bg-gray-700 rounded" />
+      <div className="h-4 w-56 bg-gray-200 dark:bg-gray-700 rounded" />
+      <div className="space-y-2 mt-2">
+        <div className="h-3.5 w-full bg-gray-200 dark:bg-gray-700 rounded" />
+        <div className="h-3.5 w-5/6 bg-gray-200 dark:bg-gray-700 rounded" />
+        <div className="h-3.5 w-4/6 bg-gray-200 dark:bg-gray-700 rounded" />
+      </div>
+    </div>
+  );
 
   if (data.length === 0) {
     return (
@@ -193,6 +203,7 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
         translatedSubtitle={noteSubtitle}
         translatedContents={noteList}
         isKorean={isKorean}
+        isTranslating={isTranslating}
       />
 
       {/* 버튼들 */}

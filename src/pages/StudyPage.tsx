@@ -51,7 +51,7 @@ const StudyPage = () => {
   const isGuestRoute = location.pathname.startsWith('/guest-study');
   const basePath = isGuestRoute ? '/guest-study' : '/study';
 
-  const { user } = useAuth();
+  const { user, userPlan, isAdmin } = useAuth();
   const isGuest = !user;
   const [showSignIn, setShowSignIn] = useState(false);
 
@@ -215,6 +215,19 @@ const StudyPage = () => {
           }
         }
 
+        // 플랜별 접근 제어
+        if (!isGuest && data) {
+          const studyData = data.study as { required_plan?: string } | { required_plan?: string }[] | null;
+          const requiredPlan = Array.isArray(studyData) ? studyData[0]?.required_plan : studyData?.required_plan;
+          const PLAN_LEVEL: Record<string, number> = { free: 0, basic: 1, premium: 2 };
+          const requiredLevel = PLAN_LEVEL[requiredPlan ?? 'free'] ?? 0;
+          const userLevel = PLAN_LEVEL[userPlan ?? 'free'] ?? 0;
+          if (requiredLevel > userLevel) {
+            navigate('/subscription');
+            return;
+          }
+        }
+
         setStudy((data as unknown as VideoRow) ?? null);
         setLoading(false);
         return;
@@ -241,6 +254,19 @@ const StudyPage = () => {
           setShowSignIn(true);
           setStudy(null);
           setLoading(false);
+          return;
+        }
+      }
+
+      // 플랜별 접근 제어
+      if (!isGuest && row) {
+        const studyData = row.study as { required_plan?: string } | { required_plan?: string }[] | null;
+        const requiredPlan = Array.isArray(studyData) ? studyData[0]?.required_plan : studyData?.required_plan;
+        const PLAN_LEVEL: Record<string, number> = { free: 0, basic: 1, premium: 2 };
+        const requiredLevel = PLAN_LEVEL[requiredPlan ?? 'free'] ?? 0;
+        const userLevel = PLAN_LEVEL[userPlan ?? 'free'] ?? 0;
+        if (requiredLevel > userLevel) {
+          navigate('/subscription');
           return;
         }
       }

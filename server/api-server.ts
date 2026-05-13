@@ -129,7 +129,7 @@ app.post('/api/detect-language', async (req, res) => {
 다음 문장이 의미 있는 자연어, 감탄사, 또는 강조 기호가 포함된 유효한 소통용 문장인지 판별해라.
 - 의미 있는 단어, 문장, 일상적인 감탄사(ㅋㅋ, ㅎㅎ, wow 등), 강조 기호(~, !, ?)가 포함된 경우 → "valid"
 - 완전히 무작위인 글자 나열이나 의미를 부여할 수 없는 자음/모음의 단순 나열(예: 뷃둙훽뤰줻, asdfasdf) → "invalid"
-설명 없이 valid 또는 invalid만 출력.
+- 설명 없이 valid 또는 invalid만 출력.
     `;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -205,27 +205,43 @@ app.post('/api/translate-batch', async (req, res) => {
 
     const targetLanguageName = langCodeToName[targetLang] || targetLang;
 
-    const systemPrompt = `You are a high-performance translation and localization engine for the ARA Global Platform.
+    const systemPrompt = `You are an elite-tier translation and phonetic transcription engine for ARA (Korean Learning App).
 Target Language: ${targetLanguageName} (Code: ${targetLang})
-Primary Context: E-commerce Shopping (Product names, Options like Color/Size, Reviews) and K-Content.
+Context: Korean Subtitles, K-Pop Lyrics, K-Drama.
 
 Output Format: JSON Object with key "translations" containing an Array of Strings.
 Example: { "translations": ["Translated Text 1", "Translated Text 2"] }
 
-CRITICAL RULES (Follow Strictly):
-1. **ZERO REFUSAL POLICY**: NEVER return messages like "I cannot translate", "Sorry", "I need more context", or "Provide more details". 
-   - If the input is too short, an identifier, or you are unsure, simply return the ORIGINAL text as the translation.
-2. **NO EXPLANATIONS / NO APOLOGIES**: Return ONLY the translated strings. Do NOT include any meta-comments, apologies, or explanations in the response.
-3. **PRONUNCIATION / TRANSCRIPTION**:
-   - If the input text is wrapped in square brackets (e.g. "[ha-da]") or matches a pronunciation identifier, it is a **Korean pronunciation guide**.
-   - Transcribe this pronunciation into the script/phonetic notation of the **${targetLanguageName}**.
-   - For example, if target is Russian, transcribe "[ha-da]" into Cyrillic "[ха-да]". 
-4. **Product Options (Size, Color, etc.)**: 
-   - Maintain global standard codes (S, M, L, XL, XXL) as Latin characters. 
-   - Translate actual words (e.g., "Red", "Blue", "Black", "Small", "Regular") naturally into ${targetLanguageName}.
-   - If an option is an arbitrary value (e.g. "100ml", "Type A"), preserve its core meaning or return as-is if it's a technical code.
-5. **No Korean Characters**: The output MUST NOT contain any Korean characters (Hangul).
-6. **JSON Consistency**: Ensure the result is valid JSON matching the requested count of items.
+STRICT BATCH RULES:
+1. Return exactly one output string for each input item.
+2. Preserve the exact input order. Do not merge, split, skip, summarize, or reorder items.
+3. The translations array length MUST exactly equal the input texts array length.
+4. If an input item is empty, return an empty string for that item.
+
+CRITICAL TRANSLATION RULES:
+1. **Target Language Only & No Hangul**: 
+   - Translate all content (Korean/English) into ${targetLanguageName}.
+   - AI outputs MUST NOT contain any Hangul characters (original Korean is handled by the UI).
+2. **Proper Nouns & Artists**:
+   - Use official international names (e.g., IU, BTS, BLACKPINK).
+   - If no official name exists, transliterate the sound into ${targetLanguageName} script. Never leave as Hangul.
+3. **Pronunciation ([PRON:...]) Task**:
+   - Perform **Phonetic Transcription ONLY**. Never translate meaning. Help a native speaker of ${targetLanguageName} pronounce the Korean sound accurately using their native script and reading conventions.
+   - en: Standard English romanization (e.g., ha-da).
+   - ja: Katakana only (e.g., ハダ).
+   - zh: Learner-friendly Pinyin or notation.
+   - ru: Cyrillic only (e.g., хада).
+   - vi: Use Vietnamese alphabet and reading habits to approximate the Korean sound. **Strictly avoid Korean Revised Romanization (RR) or generic English-style hyphenated romanization.** Do NOT output RR-style forms (e.g., hae-ju-da, yeop, geu-nyang, mo-reu-da). Do not simply add Vietnamese letters or accents to an English/RR base. For long sentences, maintain a natural Vietnamese-readable phonetic flow and avoid mechanical syllable-by-syllable hyphenation (e.g., mwol-hae-jwo-ya...).
+   - bn: Bengali script only.
+   - ar: Arabic script only.
+   - hi: Devanagari script only.
+   - th: Thai script only.
+   - es, fr, de, pt, pt-br, fi, id, it, tr: Use the language's native alphabet and reading conventions to represent the sound accurately. Do not use generic English-style romanization.
+4. **Music Titles**:
+   - Format: "Artist - Translated Title". Ensure both Artist and Title are in ${targetLanguageName} script or international names (No Hangul).
+   - DO NOT combine original and translation (No "Original (Translation)").
+5. **Format & Integrity**:
+   - Return valid JSON only. No markdown, no quotes wrapping the array items, no explanations.
 `;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -235,7 +251,7 @@ CRITICAL RULES (Follow Strictly):
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: JSON.stringify({ texts }) },
@@ -297,34 +313,36 @@ app.post('/api/translate-single', async (req, res) => {
     const japaneseGuideline = targetLang === 'ja' 
       ? '\n- For Japanese: Use hiragana (ひらがな) and katakana (カタカナ) as much as possible. Minimize the use of kanji (漢字). Prefer simpler, more accessible Japanese.'
       : '';
-
-    const systemPrompt = `You are an expert translator and localization specialist for the ARA Global Platform (E-commerce Goods Store & Language Learning).
+    const systemPrompt = `You are an elite-tier translation and phonetic transcription engine for ARA (Korean Learning App).
 Target Language: ${targetLanguageName} (Code: ${targetLang})
+Context: Korean Subtitles, K-Pop Lyrics, K-Drama, Vocabulary.
 
-Your goal is to provide **natural, fluently written translations** suitable for a premium shopping and learning experience.
-
-CRITICAL RULES:
-1. **TARGET LANGUAGE ONLY**: The output MUST be in **${targetLanguageName}**. 
-   - If the input is English, **TRANSLATE** it to ${targetLanguageName}. Do NOT keep it in English (unless Target is English).
-   - If the input is Korean, **TRANSLATE** it to ${targetLanguageName}.
-   - If the input is already in English (e.g. "Crush - Beautiful", "Drama Title"), but the Target Language is NOT English (e.g. Japanese, Spanish), you MUST translate/transliterate it to the target language.
-   - Do NOT just copy the English input unless the target language uses English titles officially.
-2. **PRONUNCIATION / TRANSCRIPTION**:
-   - If the input text appears to be a pronunciation guide (e.g. Romanized Korean in square brackets like "[ha-da]"), transcribe it into the script/phonetic notation of **${targetLanguageName}**.
-3. **ZERO REFUSAL / ZERO APOLOGY**: NEVER return messages like "I cannot translate", "Sorry", or "Provide more context". 
-   - If translation is impossible or unnecessary (standard codes), return the ORIGINAL input.
-4. **CLEAN OUTPUT ONLY**: Return ONLY the translated string. Do NOT include any explanations or conversational fillers.
-5. **Product Options**:
-   - Maintain global codes (S, M, L, XL) as Latin characters.
-   - Translate color names and descriptive options naturally into ${targetLanguageName}.
-6. **Emphasized Reviews**: Handle text with symbols like "~", "!", etc. naturally. Keep the emotional tone while reflecting the original punctuation.
-7. **No Korean Characters**: Ensure absolutely NO Hangul remains in the output.
-7. **Mixed Input Handling**: 
-   - Input: "내 손을 잡아 (Hold My Hand)"
-   - Instruction: Translate content into a single clean title in the target language.
-8. **Naturalness**: Avoid robotic literal translations. Use correct grammar, casing, and spacing.
-9. **Context**: K-Drama, K-Pop, Movie titles.
-
+CRITICAL TRANSLATION RULES:
+1. **Target Language Only & No Hangul**: 
+   - Translate all content (Korean/English) into ${targetLanguageName}.
+   - AI outputs MUST NOT contain any Hangul characters.
+2. **Proper Nouns & Artists**:
+   - Use official international names (e.g., IU, BTS, BLACKPINK).
+   - If no official name exists, transliterate the sound into ${targetLanguageName} script. Never leave as Hangul.
+3. **Pronunciation ([PRON:...]) Task**:
+   - Perform **Phonetic Transcription ONLY**. Never translate meaning. Help a native speaker of ${targetLanguageName} pronounce the Korean sound accurately using their native script and reading conventions.
+   - en: Standard English romanization (e.g., ha-da).
+   - ja: Katakana only (e.g., ハダ).
+   - zh: Learner-friendly Pinyin or notation.
+   - ru: Cyrillic only (e.g., хада).
+   - vi: Use Vietnamese alphabet and reading habits to approximate the Korean sound. **Strictly avoid Korean Revised Romanization (RR) or generic English-style hyphenated romanization.** Do NOT output RR-style forms (e.g., hae-ju-da, yeop, geu-nyang, mo-reu-da). Do not simply add Vietnamese letters or accents to an English/RR base. For long sentences, maintain a natural Vietnamese-readable phonetic flow and avoid mechanical syllable-by-syllable hyphenation (e.g., mwol-hae-jwo-ya...).
+   - bn: Bengali script only.
+   - ar: Arabic script only.
+   - hi: Devanagari script only.
+   - th: Thai script only.
+   - es, fr, de, pt, pt-br, fi, id, it, tr: Use the language's native alphabet and reading conventions to represent the sound accurately. Do not use generic English-style romanization.
+4. **Music Titles**:
+   - Format: "Artist - Translated Title". Ensure both Artist and Title are in ${targetLanguageName} script or international names (No Hangul).
+   - DO NOT combine original and translation (No "Original (Translation)").
+5. **Format & Integrity**:
+   - Return clean output in ${targetLanguageName} only.
+   - No quotation marks, no markdown, no explanations.
+   - If input is a PoS label (명사, 동사), translate to the equivalent in ${targetLanguageName}.
 ${japaneseGuideline}`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -334,7 +352,7 @@ ${japaneseGuideline}`;
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini', 
+        model: 'gpt-4o', 
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: text },
@@ -814,3 +832,4 @@ app.post('/api/send-email', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Local API server running at http://localhost:${PORT}`);
 });
+

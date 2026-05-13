@@ -193,6 +193,7 @@ export default function SubscriptionPage() {
       if (profileError) throw profileError;
 
       toast.success('구독이 완료되었습니다.');
+      await new Promise(resolve => setTimeout(resolve, 800));
       await refreshUserPlan();
       setIsPaymentModalOpen(false);
     } catch (err) {
@@ -302,7 +303,7 @@ export default function SubscriptionPage() {
           </div>
 
           {/* Pricing Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-end mb-32">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch mb-32">
             {plans.map((plan) => {
               const promo = getActivePromo(plan.id);
               const price = calculatePrice(plan);
@@ -313,9 +314,9 @@ export default function SubscriptionPage() {
                   <motion.div 
                     key={plan.id}
                     layout
-                    className={`relative rounded-[2.5rem] p-8 md:p-10 transition-all duration-500 ${
+                    className={`relative h-full rounded-[2.5rem] p-8 md:p-10 transition-all duration-500 ${
                       plan.is_popular 
-                        ? 'bg-zinc-900 border-2 border-[#00BFA5] shadow-2xl shadow-[#00BFA5]/20 md:-translate-y-4' 
+                        ? 'bg-zinc-900 dark:bg-zinc-900 border-2 border-[#00BFA5] shadow-2xl shadow-[#00BFA5]/20 md:-translate-y-4' 
                         : 'bg-white dark:bg-zinc-900/50 border border-gray-100 dark:border-white/5 hover:-translate-y-2'
                     } ${isCurrentPlan ? 'ring-2 ring-[#00BFA5]/50 ring-offset-4 dark:ring-offset-[#0a0a0a]' : ''}`}
                   >
@@ -347,6 +348,14 @@ export default function SubscriptionPage() {
                       <p className="text-[#00BFA5] text-[11px] font-black mt-2 uppercase tracking-tight">🎉 Save {savings}% with yearly billing</p>
                     )}
                   </div>
+
+                  {isCurrentPlan && (
+                    <div className="flex justify-center mb-4">
+                      <span className="text-[10px] font-black px-3 py-1 rounded-full bg-[#00BFA5]/10 text-[#00BFA5] border border-[#00BFA5]/30 flex items-center gap-1.5">
+                        <Check size={12} strokeWidth={4} /> {t('subscription.current_plan_badge') || '현재 이용 중'}
+                      </span>
+                    </div>
+                  )}
 
                   <button
                     onClick={() => handleSubscribeClick(plan)}
@@ -555,7 +564,19 @@ export default function SubscriptionPage() {
                   onClick={async () => {
                     setLoadingPlan('free');
                     try {
-                      const { error } = await (supabase as any).from('profiles').update({ plan: 'free' }).eq('user_id', session?.user?.id);
+                      // 1. active 구독 cancelled 처리
+                      const { error: cancelError } = await (supabase as any)
+                        .from('subscriptions')
+                        .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+                        .eq('user_id', session?.user?.id)
+                        .eq('status', 'active');
+                      if (cancelError) throw cancelError;
+
+                      // 2. profiles.plan free로 동기화
+                      const { error } = await (supabase as any)
+                        .from('profiles')
+                        .update({ plan: 'free' })
+                        .eq('user_id', session?.user?.id);
                       if (error) throw error;
                       toast.success('구독이 해지되었습니다.');
                       await refreshUserPlan();
