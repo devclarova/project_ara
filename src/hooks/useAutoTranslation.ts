@@ -12,7 +12,7 @@ const memoryCache: Record<string, string> = {};
 
 const TRANSLATION_VERSION = 'v20_pron_fixed'; // 발음 전사 고도화 + 레이아웃 안정화 버전
 const PRONUNCIATION_TRANSLATION_VERSION = 'v21_pron_policy_v1';
-const VI_PRONUNCIATION_TRANSLATION_VERSION = 'v22_pron_policy_vi_v1';
+const VI_PRONUNCIATION_TRANSLATION_VERSION = 'v23_pron_policy_vi_v1';
 
 const isPronunciationCacheKey = (key: string) =>
   key.startsWith('voca_pron_') || key.startsWith('subtitle_pron_');

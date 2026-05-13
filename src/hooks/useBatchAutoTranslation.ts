@@ -9,7 +9,7 @@ import { queuedFetch } from '../lib/translationQueue';
 
 const BATCH_TRANSLATION_VERSION = 'v8_pron_fixed';
 const PRONUNCIATION_TRANSLATION_VERSION = 'v21_pron_policy_v1';
-const VI_PRONUNCIATION_TRANSLATION_VERSION = 'v22_pron_policy_vi_v1';
+const VI_PRONUNCIATION_TRANSLATION_VERSION = 'v23_pron_policy_vi_v1';
 
 const isPronunciationCacheKey = (key: string) =>
   key.startsWith('voca_pron_') || key.startsWith('subtitle_pron_');

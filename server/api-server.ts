@@ -231,7 +231,7 @@ CRITICAL TRANSLATION RULES:
    - ja: Katakana only (e.g., ハダ).
    - zh: Learner-friendly Pinyin or notation.
    - ru: Cyrillic only (e.g., хада).
-   - vi: Use Vietnamese alphabet and reading habits to approximate the Korean sound. **Strictly avoid Korean Revised Romanization (RR) or generic English-style hyphenated romanization.** Do NOT output RR-style forms (e.g., hae-ju-da, yeop, geu-nyang, mo-reu-da). Do not simply add Vietnamese letters or accents to an English/RR base. For long sentences, maintain a natural Vietnamese-readable phonetic flow and avoid mechanical syllable-by-syllable hyphenation (e.g., mwol-hae-jwo-ya...).
+   - vi: Use Vietnamese alphabet and reading habits to approximate the Korean sound. **Strictly avoid Korean Revised Romanization (RR) or English-style romanization.** Do NOT output RR-style forms (e.g., ha-da, hae-ju-da, yeop, geu-nyang, mo-reu-da, mwol hae jwo...). Do NOT preserve RR clusters like 'eo', 'eu', 'ae', 'oe', 'ui', 'yeo', 'jwo'. Instead, use Vietnamese-friendly letters like 'ơ', 'ư', 'ê', 'ô', 'uy', 'ch', 'gi', 'ng', 'nh'. For long sentences, maintain a natural Vietnamese-readable phonetic flow and separate by phrase groups naturally, not by every syllable. Use lowercase unless punctuation requires. Avoid arbitrary tone marks unless they improve readability. Do NOT translate meaning and never include Hangul. Remove any [PRON:...] markers.
    - bn: Bengali script only.
    - ar: Arabic script only.
    - hi: Devanagari script only.
@@ -330,7 +330,7 @@ CRITICAL TRANSLATION RULES:
    - ja: Katakana only (e.g., ハダ).
    - zh: Learner-friendly Pinyin or notation.
    - ru: Cyrillic only (e.g., хада).
-   - vi: Use Vietnamese alphabet and reading habits to approximate the Korean sound. **Strictly avoid Korean Revised Romanization (RR) or generic English-style hyphenated romanization.** Do NOT output RR-style forms (e.g., hae-ju-da, yeop, geu-nyang, mo-reu-da). Do not simply add Vietnamese letters or accents to an English/RR base. For long sentences, maintain a natural Vietnamese-readable phonetic flow and avoid mechanical syllable-by-syllable hyphenation (e.g., mwol-hae-jwo-ya...).
+   - vi: Use Vietnamese alphabet and reading habits to approximate the Korean sound. **Strictly avoid Korean Revised Romanization (RR) or English-style romanization.** Do NOT output RR-style forms (e.g., ha-da, hae-ju-da, yeop, geu-nyang, mo-reu-da, mwol hae jwo...). Do NOT preserve RR clusters like 'eo', 'eu', 'ae', 'oe', 'ui', 'yeo', 'jwo'. Instead, use Vietnamese-friendly letters like 'ơ', 'ư', 'ê', 'ô', 'uy', 'ch', 'gi', 'ng', 'nh'. For long sentences, maintain a natural Vietnamese-readable phonetic flow and separate by phrase groups naturally, not by every syllable. Use lowercase unless punctuation requires. Avoid arbitrary tone marks unless they improve readability. Do NOT translate meaning and never include Hangul. Remove any [PRON:...] markers.
    - bn: Bengali script only.
    - ar: Arabic script only.
    - hi: Devanagari script only.
