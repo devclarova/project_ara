@@ -13,6 +13,7 @@ interface StudyVocaItemProps {
   translatedPronProp?: string;
   translatedExampleProp?: string;
   translatedPosProp?: string;
+  isTranslating?: boolean;
 }
 
 const StudyVocaItem = ({
@@ -22,6 +23,7 @@ const StudyVocaItem = ({
   translatedPronProp,
   translatedExampleProp,
   translatedPosProp,
+  isTranslating,
 }: StudyVocaItemProps) => {
   const { i18n, t } = useTranslation();
   const targetLang = i18n.language;
@@ -32,21 +34,26 @@ const StudyVocaItem = ({
   const posSrc = normalize(item.pos);
   const pronSrc = normalize(item.pron);
 
-  // 개별 자동 번역 로직 — 부모로부터 주입된 Props(translated*Prop)가 없을 때만 활성화 (성능 최적화)
+  // 개별 자동 번역 로직 — 부모로부터 주입된 Props가 있거나 부모 배치가 로딩 중이면 개별 요청 차단 (429 방지)
+  const shouldSkipIndividual = Boolean(translatedMeaningProp) || isTranslating;
+  const shouldSkipPron = Boolean(translatedPronProp) || isTranslating;
+  const shouldSkipExample = Boolean(translatedExampleProp) || isTranslating;
+  const shouldSkipPos = Boolean(translatedPosProp) || isTranslating;
+
   const { translatedText: translatedMeaningHook } = useAutoTranslation(
-    translatedMeaningProp ? '' : meaningSrc,
+    shouldSkipIndividual ? '' : meaningSrc,
     `voca_meaning_${id}`,
     targetLang,
   );
 
   const { translatedText: translatedPronHook } = useAutoTranslation(
-    translatedPronProp ? '' : (isKorean ? pronSrc : (pronSrc || item.term)), // 한국어는 DB 값만, 타국어는 부재 시 원문 전사 요청
+    shouldSkipPron ? '' : (isKorean ? '' : `[PRON:${item.term}]`),
     `voca_pron_${id}`,
     targetLang,
   );
 
   const { translatedText: translatedExampleHook } = useAutoTranslation(
-    translatedExampleProp ? '' : exampleSrc,
+    shouldSkipExample ? '' : exampleSrc,
     `voca_example_${id}`,
     targetLang,
   );
@@ -71,7 +78,7 @@ const StudyVocaItem = ({
   }, [posSrc, t]);
 
   const { translatedText: translatedPosHook } = useAutoTranslation(
-    translatedPosProp ? '' : (mappedPos === posSrc ? mappedPos : ''), // 이미 i18n으로 번역되었다면 자동번역 스킵
+    shouldSkipPos ? '' : (mappedPos === posSrc ? mappedPos : ''), // 이미 i18n으로 번역되었다면 자동번역 스킵
     `voca_pos_${id}`,
     targetLang,
   );
@@ -85,7 +92,12 @@ const StudyVocaItem = ({
   const displayPron = useMemo(() => {
     // 1. 번역된 데이터 우선 (배치 번역 또는 개별 자동 번역)
     const translated = translatedPronProp || translatedPronHook;
-    if (translated) return normalize(translated);
+    if (translated) {
+      return normalize(translated)
+        .replace(/^\[(PRON:)?|\]$/g, '') // [PRON:...] 또는 [ ] 제거
+        .replace(/^PRON:/i, '')        // 혹시 남은 PRON: 제거
+        .trim();
+    }
 
     // 2. 한국어 타겟이고 DB에 발음 정보가 없는 경우 원문 노출 (또는 필요 시 빈값)
     if (isKorean) return normalize(item.pron);
@@ -95,7 +107,7 @@ const StudyVocaItem = ({
     if (pron && !hasKorean(pron)) return pron; // 이미 로마자/현지어라면 그대로 노출
     
     // DB 발음 정보가 없거나 한국어일 경우 원문을 로마자로 변환 (최종 폴백)
-    return romanizeKorean(item.term);
+    return normalize(item.pron); // 로마자 폴백 → DB pronunciation 폴백
   }, [translatedPronProp, translatedPronHook, item.pron, item.term, isKorean]);
 
   // 단어(Term)는 번역하지 않고 항상 원문 주입 (User Request: "단어 원문은 번역되면 안되고")
@@ -106,33 +118,47 @@ const StudyVocaItem = ({
       <div className="flex items-baseline gap-2">
         <h4 className="font-semibold dark:text-gray-300 break-all">{displayTerm}</h4>
 
-        {displayPron ? (
-          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-            [{displayPron}]
-          </span>
-        ) : null}
+        <div className="min-h-[1em]">
+          {isTranslating
+            ? <span className="inline-block h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+            : displayPron ? (
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                [{displayPron}]
+              </span>
+            ) : null}
+        </div>
       </div>
 
-      {displayPos ? (
-        <div className="mt-1 text-[14px] text-gray-500 dark:text-gray-400 font-medium">
-          ({displayPos})
-        </div>
-      ) : null}
+      <div className="mt-1 min-h-[1.2em]">
+        {isTranslating
+          ? <span className="inline-block h-3.5 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          : displayPos ? (
+            <span className="text-[14px] text-gray-500 dark:text-gray-400 font-medium">
+              ({displayPos})
+            </span>
+          ) : null}
+      </div>
 
-      {displayMeaning ? (
-        <div className="mt-1 text-sm text-gray-700 dark:text-gray-300 font-medium break-words line-clamp-2">
-          {displayMeaning}
-        </div>
-      ) : null}
+      <div className="mt-1 min-h-[1.5em]">
+        {isTranslating
+          ? <span className="inline-block h-4 w-36 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          : displayMeaning ? (
+            <span className="text-sm text-gray-700 dark:text-gray-300 font-medium break-words line-clamp-2">
+              {displayMeaning}
+            </span>
+          ) : null}
+      </div>
 
-      {displayExample ? (
-        <div className="mt-1">
-          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-            <span className="mr-1">{t('study.voca.example_label')}</span>
-            <span>{displayExample}</span>
-          </p>
-        </div>
-      ) : null}
+      <div className="mt-1 min-h-[1.2em]">
+        {isTranslating
+          ? <span className="inline-block h-3 w-44 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          : displayExample ? (
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+              <span className="mr-1">{t('study.voca.example_label')}</span>
+              <span>{displayExample}</span>
+            </p>
+          ) : null}
+      </div>
     </div>
   );
 };

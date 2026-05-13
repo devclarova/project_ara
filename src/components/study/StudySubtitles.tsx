@@ -138,21 +138,21 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
   
   // 발음 소스 결정: 한국어 타겟이면 DB 데이터만 사용(환원), 타국어 타겟이면 부재 시 원문 기반 전사 생성(고도화)
   const isKO = targetLang === 'ko' || targetLang === 'ko-KR';
-  const allPronTexts = dialogues.map(d => isKO ? (d.pronunciation ?? '') : (d.pronunciation || d.korean_subtitle || ''));
+  const allPronTexts = dialogues.map(d => isKO ? (d.pronunciation ?? '') : `[PRON:${d.korean_subtitle || ''}]`);
   const allPronKeys = dialogues.map(d => `subtitle_pron_${d.id}`);
 
   const combinedTexts = [...allContentTexts, ...allPronTexts];
   const combinedKeys = [...allContentKeys, ...allPronKeys];
 
-  const { translatedTexts: allTranslatedTexts } = useBatchAutoTranslation(
+  const { translatedTexts: allTranslated, loading: translationLoading } = useBatchAutoTranslation(
     combinedTexts,
     combinedKeys,
     targetLang,
   );
 
-  // 통합 결과 분해 — 인덱싱 기반으로 원본 텍스트(Content/Pron) 매핑 복원
-  const translatedContents = allTranslatedTexts.slice(0, dialogues.length);
-  const translatedProns = allTranslatedTexts.slice(dialogues.length);
+  const translatedContents = allTranslated.slice(0, allContentTexts.length);
+  const translatedProns = allTranslated.slice(allContentTexts.length);
+
   // -------------------------------------
 
   return (
@@ -179,6 +179,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
                 onSeek={onSeek}
                 translatedPron={translatedProns[currentPage * pageSize + idx] || d.pronunciation || ''}
                 translatedContent={translatedContents[currentPage * pageSize + idx]}
+                isTranslating={translationLoading}
               />
             ))}
           </ul>

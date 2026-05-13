@@ -190,8 +190,7 @@ const StudyVoca = ({
   const combinedTexts = useMemo(() => {
     const meanings = data.map(w => w.meaning || '');
     const prons = data.map(w => {
-      const p = w.pron || '';
-      return (!isKorean && p) ? `[${p}]` : p;
+      return isKorean ? (w.pron || '') : `[PRON:${w.term || ''}]`;
     });
     const examples = data.map(w => w.example || '');
     const poses = data.map(w => w.pos || '');
@@ -200,13 +199,13 @@ const StudyVoca = ({
 
   const combinedKeys = useMemo(() => {
     const meanings = data.map(w => `voca_meaning_${w.id}`);
-    const prons = data.map(w => `voca_pron_v4_${w.id}`);
+    const prons = data.map(w => `voca_pron_${w.id}`);
     const examples = data.map(w => `voca_example_${w.id}`);
     const poses = data.map(w => `voca_pos_${w.id}`);
     return [...meanings, ...prons, ...examples, ...poses];
   }, [data]);
 
-  const { translatedTexts } = useBatchAutoTranslation(combinedTexts, combinedKeys, targetLang);
+  const { translatedTexts, loading: isTranslating } = useBatchAutoTranslation(combinedTexts, combinedKeys, targetLang);
 
   const getTr = (fieldIdx: number, itemIdx: number) => {
     let tr = translatedTexts[fieldIdx * data.length + itemIdx] || '';
@@ -257,6 +256,7 @@ const StudyVoca = ({
                 translatedPronProp={translatedTexts[data.length + globalIdx] || undefined}
                 translatedExampleProp={translatedTexts[data.length * 2 + globalIdx] || undefined}
                 translatedPosProp={translatedTexts[data.length * 3 + globalIdx] || undefined}
+                isTranslating={isTranslating}
               />
             </div>
           );

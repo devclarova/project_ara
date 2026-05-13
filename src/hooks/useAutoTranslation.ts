@@ -4,54 +4,29 @@
  * - 방법(How): 로컬 서버 API와 Supabase 번역 DB를 연동한 2단계 캐싱(Memory/Session/DB)을 수행하며, 동시성 제어(Concurrency Limiter)를 통해 API 과호출을 방지함
  */
 import { supabase } from '@/lib/supabase';
+import { queuedFetch } from '@/lib/translationQueue';
 import { useEffect, useState } from 'react';
 
 // 간단한 캐시 객체
 const memoryCache: Record<string, string> = {};
 
-const TRANSLATION_VERSION = 'v18_enhanced_quality'; // 발음 전사 강화 + 번역 품질 개선 버전
+const TRANSLATION_VERSION = 'v20_pron_fixed'; // 발음 전사 고도화 + 레이아웃 안정화 버전
+const PRONUNCIATION_TRANSLATION_VERSION = 'v21_pron_policy_v1';
+const VI_PRONUNCIATION_TRANSLATION_VERSION = 'v22_pron_policy_vi_v1';
 
-// --- Concurrency Limiter & Throttling ---
-const MAX_CONCURRENCY = 20; // 동시 요청 수 극대화
-const REQUEST_GAP_MS = 10; // 요청 간 최소 간격 최소화
-let activeCount = 0;
-let lastRequestTime = 0;
-const requestQueue: (() => void)[] = [];
+const isPronunciationCacheKey = (key: string) =>
+  key.startsWith('voca_pron_') || key.startsWith('subtitle_pron_');
 
-const processQueue = () => {
-    if (requestQueue.length === 0 || activeCount >= MAX_CONCURRENCY) return;
+const isVietnameseTarget = (lang: string) =>
+  lang.toLowerCase() === 'vi' || lang.toLowerCase() === 'vi-vn';
 
-    const now = Date.now();
-    const timeSinceLast = now - lastRequestTime;
-    const waitTime = Math.max(0, REQUEST_GAP_MS - timeSinceLast);
-
-    setTimeout(() => {
-        if (requestQueue.length > 0 && activeCount < MAX_CONCURRENCY) {
-            const next = requestQueue.shift();
-            lastRequestTime = Date.now();
-            next?.();
-        }
-    }, waitTime);
-};
-
-const enqueueRequest = (fn: () => Promise<void>) => {
-  return new Promise<void>((resolve, reject) => {
-    const run = async () => {
-      activeCount++;
-      try {
-        await fn();
-        resolve();
-      } catch (e) {
-        reject(e);
-      } finally {
-        activeCount--;
-        processQueue();
-      }
-    };
-
-    requestQueue.push(run);
-    processQueue();
-  });
+const getTranslationVersion = (key: string, lang: string) => {
+  if (isPronunciationCacheKey(key)) {
+    return isVietnameseTarget(lang)
+      ? VI_PRONUNCIATION_TRANSLATION_VERSION
+      : PRONUNCIATION_TRANSLATION_VERSION;
+  }
+  return TRANSLATION_VERSION;
 };
 
 export function useAutoTranslation(text: string, contentId: string, targetLang: string) {
@@ -59,7 +34,7 @@ export function useAutoTranslation(text: string, contentId: string, targetLang: 
   const [isLoading, setIsLoading] = useState(false);
 
   // 버전이 적용된 ID
-  const uniqueId = `${contentId}_${TRANSLATION_VERSION}`;
+  const uniqueId = `${contentId}_${getTranslationVersion(contentId, targetLang)}`;
 
   useEffect(() => {
     let mounted = true;
@@ -97,7 +72,6 @@ export function useAutoTranslation(text: string, contentId: string, targetLang: 
       setIsLoading(true);
 
       try {
-        await enqueueRequest(async () => {
           if (!mounted) return;
 
           const { data: { user } } = await supabase.auth.getUser();
@@ -121,36 +95,15 @@ export function useAutoTranslation(text: string, contentId: string, targetLang: 
             return;
           }
 
-          // 6. Call Local Server API
-          let retryCount = 0;
-          const MAX_RETRIES = 3;
-          const BACKOFF_MS = [1000, 2000, 4000];
-          let response: Response | null = null;
-
-          while (retryCount <= MAX_RETRIES) {
-            response = await fetch('/api/translate-single', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                text,
-                targetLang,
-              }),
-            });
-
-            if (response.status === 429 && retryCount < MAX_RETRIES) {
-              const waitTime = BACKOFF_MS[retryCount];
-              console.warn(`Translation API 429: Retrying in ${waitTime}ms... (${retryCount + 1}/${MAX_RETRIES})`);
-              await new Promise(resolve => setTimeout(resolve, waitTime));
-              retryCount++;
-              continue;
-            }
-            break;
-          }
+          // 6. Call Local Server API — queuedFetch가 동시 요청 제한 + 429 retry 처리
+          const response = await queuedFetch('/api/translate-single', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, targetLang }),
+          });
   
-          if (!response || !response.ok) {
-             console.error('Translation API Error:', response?.status);
+          if (!response.ok) {
+             console.error('Translation API Error:', response.status);
              return;
           }
   
@@ -177,7 +130,6 @@ export function useAutoTranslation(text: string, contentId: string, targetLang: 
   
             if (mounted) setTranslatedText(result);
           }
-        }); // End of enqueueRequest
       } catch (err) {
         console.error('Auto Translate Error:', err);
       } finally {

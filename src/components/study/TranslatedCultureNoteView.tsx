@@ -20,6 +20,7 @@ interface Props {
   translatedSubtitle?: string;
   translatedContents?: string[];
   isKorean: boolean;
+  isTranslating?: boolean;
 }
 
 const TranslatedCultureNoteView: React.FC<Props> = ({ 
@@ -28,7 +29,8 @@ const TranslatedCultureNoteView: React.FC<Props> = ({
   translatedTitle, 
   translatedSubtitle,
   translatedContents = [],
-  isKorean
+  isKorean,
+  isTranslating
 }) => {
   const { t } = useTranslation();
 
@@ -48,13 +50,19 @@ const TranslatedCultureNoteView: React.FC<Props> = ({
 
   return (
     <div className="p-3 sm:p-4 bg-white dark:bg-secondary dark:text-gray-300 border dark:border-gray-600 rounded-lg shadow-sm">
-      <h4 className="text-base sm:text-lg font-semibold mb-1">{displayTitle}</h4>
+      {isTranslating
+        ? <div className="h-5 w-40 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-1" />
+        : <h4 className="text-base sm:text-lg font-semibold mb-1">{displayTitle}</h4>
+      }
 
-      {(displaySubtitle) && (
-        <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line p-1">
-          {displaySubtitle}
-        </p>
-      )}
+      {isTranslating
+        ? <div className="h-4 w-56 bg-gray-200 dark:bg-gray-700 rounded animate-pulse p-1" />
+        : displaySubtitle && (
+          <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line p-1">
+            {displaySubtitle}
+          </p>
+        )
+      }
 
       <ul className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2">
         {contents.length > 0 ? (
@@ -64,6 +72,7 @@ const TranslatedCultureNoteView: React.FC<Props> = ({
               content={item.content_value}
               translatedValue={translatedContents[index]}
               isKorean={isKorean}
+              isTranslating={isTranslating}
             />
           ))
         ) : (

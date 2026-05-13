@@ -5,8 +5,26 @@
  */
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { queuedFetch } from '../lib/translationQueue';
 
-const BATCH_TRANSLATION_VERSION = 'v6_enhanced_quality';
+const BATCH_TRANSLATION_VERSION = 'v8_pron_fixed';
+const PRONUNCIATION_TRANSLATION_VERSION = 'v21_pron_policy_v1';
+const VI_PRONUNCIATION_TRANSLATION_VERSION = 'v22_pron_policy_vi_v1';
+
+const isPronunciationCacheKey = (key: string) =>
+  key.startsWith('voca_pron_') || key.startsWith('subtitle_pron_');
+
+const isVietnameseTarget = (lang: string) =>
+  lang.toLowerCase() === 'vi' || lang.toLowerCase() === 'vi-vn';
+
+const getTranslationVersion = (key: string, lang: string) => {
+  if (isPronunciationCacheKey(key)) {
+    return isVietnameseTarget(lang)
+      ? VI_PRONUNCIATION_TRANSLATION_VERSION
+      : PRONUNCIATION_TRANSLATION_VERSION;
+  }
+  return BATCH_TRANSLATION_VERSION;
+};
 
 const batchMemoryCache: Record<string, string> = {};
 
@@ -61,7 +79,7 @@ export const useBatchAutoTranslation = (
       const { data: { user } } = await supabase.auth.getUser();
 
       try {
-        const uniqueKeys = cacheKeyInfos.map(k => `${k}_${BATCH_TRANSLATION_VERSION}`);
+        const uniqueKeys = cacheKeyInfos.map(k => `${k}_${getTranslationVersion(k, targetLang)}`);
 
         // 2. Check DB Cache
         const finalResults = new Array(texts.length).fill(null);
@@ -134,27 +152,26 @@ export const useBatchAutoTranslation = (
 
         const inputsToTranslate = missingIndices.map(i => texts[i]);
 
-        // 3. Parallel Batch Processing — Split large batches into smaller chunks for faster OpenAI parallel inference
-        const CHUNK_SIZE = 15;
+        // 3. Sequential Batch Processing — chunk 단위 순차 처리로 OpenAI 429 rate limit 방지
+        const CHUNK_SIZE = 40;
         const chunks: string[][] = [];
         for (let i = 0; i < inputsToTranslate.length; i += CHUNK_SIZE) {
             chunks.push(inputsToTranslate.slice(i, i + CHUNK_SIZE));
         }
 
-        const chunkPromises = chunks.map(chunk => 
-            fetch('/api/translate-batch', {
+        const allChunkResults: string[][] = [];
+        for (const chunk of chunks) {
+            const r = await queuedFetch('/api/translate-batch', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ texts: chunk, targetLang }),
-            }).then(async r => {
-                if (!r.ok) throw new Error(`API Error: ${r.status}`);
-                const data = await r.json();
-                return data.translations as string[];
-            })
-        );
+            });
+            if (!r.ok) throw new Error(`API Error: ${r.status}`);
+            const data = await r.json();
+            allChunkResults.push(data.translations as string[]);
+        }
 
-        const chunkedResults = await Promise.all(chunkPromises);
-        const parsedResults = chunkedResults.flat();
+        const parsedResults = allChunkResults.flat();
         
         if (parsedResults.length === inputsToTranslate.length) {
              const upsertData: any[] = [];
@@ -191,7 +208,35 @@ export const useBatchAutoTranslation = (
              }
 
         } else {
-             console.error('Mismatch in translation count', inputsToTranslate.length, parsedResults.length);
+             console.warn('Mismatch in translation count', inputsToTranslate.length, parsedResults.length);
+             // 응답받은 만큼만 적용 (인덱스 범위 내에서 처리)
+             const upsertData: any[] = [];
+             missingIndices.forEach((originalIdx, i) => {
+                const tr = parsedResults[i]; // 범위 초과 시 undefined
+                if (tr) {
+                    finalResults[originalIdx] = tr;
+                    const mk = `${uniqueKeys[originalIdx]}_${targetLang}`;
+                    batchMemoryCache[mk] = tr;
+                    try { sessionStorage.setItem(`ara_bt_${mk}`, tr); } catch {}
+                    if (user) {
+                        upsertData.push({
+                            user_id: user.id,
+                            content_id: uniqueKeys[originalIdx],
+                            original_text: texts[originalIdx],
+                            translated_text: tr,
+                            target_lang: targetLang
+                        });
+                    }
+                }
+             });
+             if (mounted) setTranslatedTexts([...finalResults]);
+             if (upsertData.length > 0) {
+                 (supabase.from('translations') as any).upsert(upsertData, {
+                     onConflict: 'user_id,content_id,target_lang'
+                 }).then(({ error }: any) => {
+                     if (error) console.error('Batch save error:', error);
+                 });
+             }
         }
 
       } catch (err) {
