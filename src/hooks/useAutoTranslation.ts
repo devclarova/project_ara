@@ -13,6 +13,7 @@ const memoryCache: Record<string, string> = {};
 const TRANSLATION_VERSION = 'v20_pron_fixed'; // 발음 전사 고도화 + 레이아웃 안정화 버전
 const PRONUNCIATION_TRANSLATION_VERSION = 'v21_pron_policy_v1';
 const VI_PRONUNCIATION_TRANSLATION_VERSION = 'v23_pron_policy_vi_v1';
+const ZH_PRONUNCIATION_TRANSLATION_VERSION = 'v23_pron_policy_zh_v2';
 
 const isPronunciationCacheKey = (key: string) =>
   key.startsWith('voca_pron_') || key.startsWith('subtitle_pron_');
@@ -20,11 +21,20 @@ const isPronunciationCacheKey = (key: string) =>
 const isVietnameseTarget = (lang: string) =>
   lang.toLowerCase() === 'vi' || lang.toLowerCase() === 'vi-vn';
 
+const isChineseTarget = (lang: string) => {
+  const normalized = lang.toLowerCase();
+  return normalized === 'zh' || normalized === 'zh-cn';
+};
+
 const getTranslationVersion = (key: string, lang: string) => {
   if (isPronunciationCacheKey(key)) {
-    return isVietnameseTarget(lang)
-      ? VI_PRONUNCIATION_TRANSLATION_VERSION
-      : PRONUNCIATION_TRANSLATION_VERSION;
+    if (isVietnameseTarget(lang)) {
+      return VI_PRONUNCIATION_TRANSLATION_VERSION;
+    }
+    if (isChineseTarget(lang)) {
+      return ZH_PRONUNCIATION_TRANSLATION_VERSION;
+    }
+    return PRONUNCIATION_TRANSLATION_VERSION;
   }
   return TRANSLATION_VERSION;
 };
