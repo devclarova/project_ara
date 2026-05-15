@@ -159,10 +159,10 @@ export default function EpisodeVocaModal({
   }, [words, isKorean, t, isVocaPage]);
 
   const combinedKeys = useMemo(() => {
-    const meanings = words.map(w => `episode_voca_meaning_${w.id}`);
-    const prons = words.map(w => `episode_voca_pron_v4_${w.id}`);
-    const examples = words.map(w => `episode_voca_example_${w.id}`);
-    const poses = words.map(w => `episode_voca_pos_${w.id}`);
+    const meanings = words.map(w => `voca_meaning_${w.id}`);
+    const prons = words.map(w => `voca_pron_${w.id}`);
+    const examples = words.map(w => `voca_example_${w.id}`);
+    const poses = words.map(w => `voca_pos_${w.id}`);
     return [...meanings, ...prons, ...examples, ...poses];
   }, [words]);
 

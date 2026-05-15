@@ -41,6 +41,7 @@ const batchMemoryCache: Record<string, string> = {};
 interface UseBatchAutoTranslationResult {
   translatedTexts: (string | null)[];
   loading: boolean;
+  status: 'idle' | 'loading' | 'success' | 'error';
   error: unknown;
 }
 
@@ -52,8 +53,11 @@ export const useBatchAutoTranslation = (
   const [translatedTexts, setTranslatedTexts] = useState<(string | null)[]>(
     new Array(texts.length).fill(null)
   );
-  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [error, setError] = useState<unknown>(null);
+
+  // 호환성 유지 — status 기반으로 loading 파생
+  const loading = status === 'loading';
 
   // 중복 요청 방지
   const processingRef = useRef<string>('');
@@ -64,6 +68,7 @@ export const useBatchAutoTranslation = (
     // 1. 유효성 검사
     if (!texts || texts.length === 0 || !targetLang) {
       setTranslatedTexts([]);
+      setStatus('idle');
       return;
     }
 
@@ -73,6 +78,7 @@ export const useBatchAutoTranslation = (
     // 한국어 타겟이면 번역 불필요 (원본 그대로 리턴)
     if (targetLang === 'ko' || targetLang === 'ko-KR') {
       setTranslatedTexts(texts);
+      setStatus('success');
       return;
     }
 
@@ -82,7 +88,7 @@ export const useBatchAutoTranslation = (
 
     const translateBatch = async () => {
       if (!mounted) return;
-      setLoading(true);
+      setStatus('loading');
       setError(null);
 
       // 0. Get User (needed for DB operations)
@@ -179,7 +185,7 @@ export const useBatchAutoTranslation = (
         if (missingIndices.length === 0) {
           if (mounted) {
             setTranslatedTexts(finalResults);
-            setLoading(false);
+            setStatus('success');
           }
           return;
         }
@@ -234,7 +240,10 @@ export const useBatchAutoTranslation = (
                 }
              });
 
-             if (mounted) setTranslatedTexts([...finalResults]);
+             if (mounted) {
+                setTranslatedTexts([...finalResults]);
+                setStatus('success');
+             }
 
              // 4. Save to DB
              if (upsertData.length > 0) {
@@ -267,7 +276,10 @@ export const useBatchAutoTranslation = (
                     }
                 }
              });
-             if (mounted) setTranslatedTexts([...finalResults]);
+             if (mounted) {
+                setTranslatedTexts([...finalResults]);
+                setStatus('success');
+             }
              if (upsertData.length > 0) {
                  (supabase.from('translations') as any).upsert(upsertData, {
                      onConflict: 'user_id,content_id,target_lang'
@@ -279,9 +291,14 @@ export const useBatchAutoTranslation = (
 
       } catch (err) {
         console.error('Batch Translation Failed', err);
-        if (mounted) setError(err);
+        if (mounted) {
+          setError(err);
+          setStatus('error');
+        }
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          // Finalize state if needed
+        }
       }
     };
 
@@ -293,5 +310,5 @@ export const useBatchAutoTranslation = (
 
   }, [texts.join(','), targetLang]);
 
-  return { translatedTexts, loading, error };
+  return { translatedTexts, loading, status, error };
 };

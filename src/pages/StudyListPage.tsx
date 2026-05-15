@@ -357,7 +357,7 @@ export default function StudyListPage() {
 function BannerTitle({ banner, fallback }: { banner: any, fallback: string }) {
   const { t, i18n } = useTranslation();
   const title = banner?.title || '';
-  const { translatedText } = useAutoTranslation(title, `banner_title_inline_${banner?.id}`, i18n.language);
+  const { translatedText } = useAutoTranslation(title, `banner_title_${banner?.id}`, i18n.language);
 
   // [Surgical Tip] 마케팅 구독 수동 번역 키 우선 적용 (번역 딜레이 방지)
   if (banner?.id?.includes('subscription') || title.toLowerCase().includes('subscription')) {

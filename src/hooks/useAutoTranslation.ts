@@ -41,7 +41,10 @@ const getTranslationVersion = (key: string, lang: string) => {
 
 export function useAutoTranslation(text: string, contentId: string, targetLang: string) {
   const [translatedText, setTranslatedText] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+
+  // 호환성 유지 — status 기반으로 isLoading 파생
+  const isLoading = status === 'loading';
 
   // 버전이 적용된 ID
   const uniqueId = `${contentId}_${getTranslationVersion(contentId, targetLang)}`;
@@ -51,13 +54,16 @@ export function useAutoTranslation(text: string, contentId: string, targetLang: 
 
     async function fetchTranslation() {
       // 1. Basic validation
-      if (!text || typeof text !== 'string' || !text.trim() || !contentId || !targetLang) return;
+      if (!text || typeof text !== 'string' || !text.trim() || !contentId || !targetLang) {
+        setStatus('idle');
+        return;
+      }
 
       // 2. Skip translation for Korean target
       if (targetLang === 'ko' || targetLang === 'ko-KR') {
           if (mounted) {
               setTranslatedText(null); // Use original text
-              setIsLoading(false);
+              setStatus('success');
           }
           return;
       }
@@ -65,7 +71,10 @@ export function useAutoTranslation(text: string, contentId: string, targetLang: 
       // 3. Check memory cache first
       const cacheKey = `ara_trans_${uniqueId}_${targetLang}`;
       if (memoryCache[cacheKey]) {
-        if (mounted) setTranslatedText(memoryCache[cacheKey]);
+        if (mounted) {
+          setTranslatedText(memoryCache[cacheKey]);
+          setStatus('success');
+        }
         return;
       }
 
@@ -74,12 +83,15 @@ export function useAutoTranslation(text: string, contentId: string, targetLang: 
         const stored = sessionStorage.getItem(cacheKey);
         if (stored) {
           memoryCache[cacheKey] = stored;
-          if (mounted) setTranslatedText(stored);
+          if (mounted) {
+            setTranslatedText(stored);
+            setStatus('success');
+          }
           return;
         }
       } catch (e) {}
 
-      setIsLoading(true);
+      setStatus('loading');
 
       try {
           if (!mounted) return;
@@ -112,7 +124,7 @@ export function useAutoTranslation(text: string, contentId: string, targetLang: 
               
               if (mounted) {
                 setTranslatedText(val);
-                setIsLoading(false);
+                setStatus('success');
               }
               return;
             }
@@ -127,6 +139,9 @@ export function useAutoTranslation(text: string, contentId: string, targetLang: 
   
           if (!response.ok) {
              console.error('Translation API Error:', response.status);
+             if (mounted) {
+               setStatus('error');
+             }
              return;
           }
   
@@ -151,12 +166,21 @@ export function useAutoTranslation(text: string, contentId: string, targetLang: 
             memoryCache[cacheKey] = result;
             try { sessionStorage.setItem(cacheKey, result); } catch {}
   
-            if (mounted) setTranslatedText(result);
+            if (mounted) {
+              setTranslatedText(result);
+              setStatus('success');
+            }
+          } else {
+            if (mounted) setStatus('error');
           }
       } catch (err) {
         console.error('Auto Translate Error:', err);
+        if (mounted) setStatus('error');
       } finally {
-        if (mounted) setIsLoading(false);
+        if (mounted && status === 'loading') {
+          // If still in loading state, finalize it
+          // Note: In most cases, success/error was already set above.
+        }
       }
     }
 
@@ -167,5 +191,5 @@ export function useAutoTranslation(text: string, contentId: string, targetLang: 
     };
   }, [text, contentId, targetLang]);
 
-  return { translatedText, isLoading };
+  return { translatedText, isLoading, status };
 }
