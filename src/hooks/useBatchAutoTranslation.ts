@@ -121,12 +121,36 @@ export const useBatchAutoTranslation = (
         let cacheMap: Record<string, string> = {};
         if (afterLocalCache.length > 0) {
             const keysToQuery = afterLocalCache.map(i => uniqueKeys[i]);
+            type TranslationCacheRow = {
+              content_id: string;
+              translated_text: string | null;
+              user_id: string | null;
+            };
+
             const { data: cachedData } = await (supabase.from('translations') as any)
-              .select('content_id, translated_text')
+              .select('content_id, translated_text, user_id')
               .in('content_id', keysToQuery)
               .eq('target_lang', targetLang);
-            cacheMap = (cachedData || []).reduce((acc: Record<string, string>, curr: any) => {
-              acc[curr.content_id] = curr.translated_text;
+
+            const typedRows = (cachedData || []) as TranslationCacheRow[];
+            const personalCacheKeys = new Set<string>();
+
+            cacheMap = typedRows.reduce((acc: Record<string, string>, curr) => {
+              if (!curr.content_id || !curr.translated_text) return acc;
+
+              const isPersonal = Boolean(user && curr.user_id === user.id);
+              const isPublic = curr.user_id == null;
+
+              if (isPersonal) {
+                acc[curr.content_id] = curr.translated_text;
+                personalCacheKeys.add(curr.content_id);
+                return acc;
+              }
+
+              if (isPublic && !personalCacheKeys.has(curr.content_id) && !acc[curr.content_id]) {
+                acc[curr.content_id] = curr.translated_text;
+              }
+
               return acc;
             }, {} as Record<string, string>);
         }
@@ -174,7 +198,11 @@ export const useBatchAutoTranslation = (
             const r = await queuedFetch('/api/translate-batch', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ texts: chunk, targetLang }),
+                body: JSON.stringify({ 
+                    texts: chunk, 
+                    targetLang,
+                    contentIds: missingIndices.slice(allChunkResults.flat().length, allChunkResults.flat().length + chunk.length).map(i => uniqueKeys[i])
+                }),
             });
             if (!r.ok) throw new Error(`API Error: ${r.status}`);
             const data = await r.json();

@@ -16,6 +16,8 @@ const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
+const inFlightMap = new Map<string, Promise<any>>();
+
 const DEFAULT_SYSTEM_PROMPT = `You are ARA's helpful learning assistant.
 
 About ARA:
@@ -164,7 +166,6 @@ app.post('/api/detect-language', async (req, res) => {
   }
 });
 
-
 // --- Helper Data ---
 const langCodeToName: Record<string, string> = {
   'ko': 'Korean',
@@ -191,21 +192,87 @@ const langCodeToName: Record<string, string> = {
 // Batch Translation Endpoint
 app.post('/api/translate-batch', async (req, res) => {
   try {
-    const { texts, targetLang } = req.body;
+    const { texts, targetLang, contentIds } = req.body;
 
     if (!texts || !Array.isArray(texts) || !targetLang) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      console.error('OPENAI_API_KEY is not set');
-      return res.status(500).json({ error: 'Server configuration error' });
+    const results = new Array(texts.length).fill(null);
+    const indicesToProcess: number[] = [];
+
+    // 1. 서버 사이드 공용 캐시 재조회 (DB)
+    if (contentIds && contentIds.length === texts.length) {
+        const { data: cachedRows } = await supabaseAdmin
+            .from('translations')
+            .select('content_id, translated_text')
+            .in('content_id', Array.from(new Set(contentIds)))
+            .eq('target_lang', targetLang)
+            .is('user_id', null);
+
+        const cacheMap = new Map((cachedRows || []).map(r => [r.content_id, r.translated_text]));
+
+        texts.forEach((_, idx) => {
+            const cid = contentIds[idx];
+            if (cacheMap.has(cid)) {
+                results[idx] = cacheMap.get(cid);
+            } else {
+                indicesToProcess.push(idx);
+            }
+        });
+    } else {
+        texts.forEach((_, idx) => indicesToProcess.push(idx));
     }
+
+    if (indicesToProcess.length === 0) {
+        return res.status(200).json({ translations: results });
+    }
+
+    // 2. In-flight Deduplication (Lock)
+    const stillToTranslateIndices: number[] = [];
+    const pendingPromises: Promise<void>[] = [];
+
+    indicesToProcess.forEach(idx => {
+        const cid = contentIds?.[idx];
+        const lockKey = cid ? `${targetLang}:${cid}` : null;
+        const inFlight = lockKey ? inFlightMap.get(lockKey) : null;
+
+        if (inFlight) {
+            pendingPromises.push(
+                inFlight.then(res => { results[idx] = res; }).catch(() => {
+                    stillToTranslateIndices.push(idx);
+                })
+            );
+        } else {
+            stillToTranslateIndices.push(idx);
+        }
+    });
+
+    await Promise.all(pendingPromises);
+
+    const finalMissingIndices = stillToTranslateIndices.filter(idx => results[idx] === null);
+    if (finalMissingIndices.length === 0) {
+        return res.status(200).json({ translations: results });
+    }
+
+    const uniqueToTranslate = new Map<string, { text: string, indices: number[] }>();
+    finalMissingIndices.forEach(idx => {
+        const cid = contentIds?.[idx] || `manual_${idx}`;
+        if (!uniqueToTranslate.has(cid)) {
+            uniqueToTranslate.set(cid, { text: texts[idx], indices: [] });
+        }
+        uniqueToTranslate.get(cid)!.indices.push(idx);
+    });
+
+    const itemsToCall = Array.from(uniqueToTranslate.entries());
+    const textsToCall = itemsToCall.map(([_, val]) => val.text);
+
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) throw new Error('OPENAI_API_KEY is not set');
 
     const targetLanguageName = langCodeToName[targetLang] || targetLang;
 
-    const systemPrompt = `You are an elite-tier translation and phonetic transcription engine for ARA (Korean Learning App).
+    const fullSystemPrompt = `You are an elite-tier translation and phonetic transcription engine for ARA (Korean Learning App).
 Target Language: ${targetLanguageName} (Code: ${targetLang})
 Context: Korean Subtitles, K-Pop Lyrics, K-Drama.
 
@@ -228,9 +295,9 @@ CRITICAL TRANSLATION RULES:
 3. **Pronunciation ([PRON:...]) Task**:
    - Perform **Phonetic Transcription ONLY**. Never translate meaning. Help a native speaker of ${targetLanguageName} pronounce the Korean sound accurately using their native script and reading conventions.
    - en: Standard English romanization (e.g., ha-da).
-   - ja: Katakana only (e.g., ハダ).
+   - ja: Katakana only (e.g., ハ다).
    - zh: Latin-letter Korean sound guide for Chinese learners only. Never translate meaning into Chinese. This is NOT Mandarin vocabulary pinyin. Represent the original Korean pronunciation accurately, not the Chinese meaning. Do NOT replace Korean words with Chinese equivalents or their pinyin. For example, [PRON:생일] should follow "saeng il" or "seng il" style, NOT "sheng ri"; [PRON:우리] should follow "u ri" style, NOT "wo men" or "wu li"; [PRON:강아지] should follow "gang a ji" style, NOT "xiao gou"; [PRON:알았다] should follow "a ra da" style, NOT "hao le"; [PRON:수제비] should follow "su je bi" style, NOT "shou gong mian". Avoid Chinese characters and tone marks. Use simple spaced syllables and preserve the Korean sound flow for easy reading.
-   - ru: Cyrillic only (e.g., хада).
+   - ru: Cyrillic only (e.g., ха다).
    - vi: Use Vietnamese alphabet and reading habits to approximate the Korean sound. **Strictly avoid Korean Revised Romanization (RR) or English-style romanization.** Do NOT output RR-style forms (e.g., ha-da, hae-ju-da, yeop, geu-nyang, mo-reu-da, mwol hae jwo...). Do NOT preserve RR clusters like 'eo', 'eu', 'ae', 'oe', 'ui', 'yeo', 'jwo'. Instead, use Vietnamese-friendly letters like 'ơ', 'ư', 'ê', 'ô', 'uy', 'ch', 'gi', 'ng', 'nh'. For long sentences, maintain a natural Vietnamese-readable phonetic flow and separate by phrase groups naturally, not by every syllable. Use lowercase unless punctuation requires. Avoid arbitrary tone marks unless they improve readability. Do NOT translate meaning and never include Hangul. Remove any [PRON:...] markers.
    - bn: Bengali script only.
    - ar: Arabic script only.
@@ -240,55 +307,86 @@ CRITICAL TRANSLATION RULES:
 4. **Music Titles**:
    - Format: "Artist - Translated Title". Ensure both Artist and Title are in ${targetLanguageName} script or international names (No Hangul).
    - DO NOT combine original and translation (No "Original (Translation)").
-5. **Format & Integrity**:
-   - Return valid JSON only. No markdown, no quotes wrapping the array items, no explanations.
+5. **Integrity**: Return valid JSON only. No markdown, no quotes wrapping the array items, no explanations.
 `;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: JSON.stringify({ texts }) },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.3,
-      }),
+    const apiTask = (async () => {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            messages: [
+              { role: 'system', content: fullSystemPrompt },
+              { role: 'user', content: JSON.stringify({ texts: textsToCall }) },
+            ],
+            response_format: { type: "json_object" },
+            temperature: 0.3,
+          }),
+        });
+
+        if (!response.ok) throw new Error(`OpenAI API error: ${response.status}`);
+        const data = await response.json();
+        const contentStr = data.choices[0].message.content;
+        const parsed = JSON.parse(contentStr);
+        const trs = parsed.translations || parsed;
+        if (!Array.isArray(trs)) throw new Error('Invalid AI response format');
+        return trs;
+    })();
+
+    const locks: string[] = [];
+    itemsToCall.forEach(([cid, _], i) => {
+        const lockKey = `${targetLang}:${cid}`;
+        const itemPromise = apiTask.then(allResults => allResults[i]);
+        inFlightMap.set(lockKey, itemPromise);
+        locks.push(lockKey);
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenAI API Error:', errorData);
-      return res.status(response.status).json({ error: 'OpenAI API Error' });
-    }
-
-    const data = await response.json();
-    const contentStr = data.choices[0].message.content;
-    let parsedResults: string[] = [];
-    
     try {
-        const parsed = JSON.parse(contentStr);
-        if (parsed.translations && Array.isArray(parsed.translations)) {
-            parsedResults = parsed.translations;
-        } else if (Array.isArray(parsed)) {
-            parsedResults = parsed;
-        } else {
-             // Fallback
-             const firstArray = Object.values(parsed).find(v => Array.isArray(v));
-             if (firstArray) parsedResults = firstArray as string[];
+        const timeoutPromise = new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error('Batch translation timeout')), 20000)
+        );
+        const finalResultsFromAI = await Promise.race([apiTask, timeoutPromise]);
+
+        const upsertData: any[] = [];
+        itemsToCall.forEach(([cid, val], i) => {
+            const translated = finalResultsFromAI[i];
+            if (translated) {
+                val.indices.forEach(idx => { results[idx] = translated; });
+                if (!cid.startsWith('manual_')) {
+                    upsertData.push({
+                        content_id: cid,
+                        target_lang: targetLang,
+                        original_text: val.text,
+                        translated_text: translated,
+                        user_id: null
+                    });
+                }
+            }
+        });
+
+        if (upsertData.length > 0) {
+            if (!supabaseServiceKey) {
+                console.warn('SUPABASE_SERVICE_ROLE_KEY is missing. Skipping public batch save.');
+            } else {
+                try {
+                    const { error } = await supabaseAdmin.from('translations').insert(upsertData);
+                    if (error && error.code !== '23505') {
+                        console.error('Public batch save error:', error.code, error.message);
+                    }
+                } catch (dbErr) {
+                    console.error('Unexpected DB error during public batch save:', dbErr);
+                }
+            }
         }
-    } catch (e) {
-        console.error('Failed to parse JSON response', e);
-        return res.status(500).json({ error: 'JSON Parse Error' });
+
+        return res.status(200).json({ translations: results });
+    } finally {
+        locks.forEach(l => inFlightMap.delete(l));
     }
-
-    return res.status(200).json({ translations: parsedResults });
-
   } catch (error) {
     console.error('Batch translation error:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
@@ -298,22 +396,47 @@ CRITICAL TRANSLATION RULES:
 // Single Translation Endpoint
 app.post('/api/translate-single', async (req, res) => {
   try {
-    const { text, targetLang } = req.body;
+    const { text, targetLang, contentId } = req.body;
 
     if (!text || !targetLang) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: 'Server configuration error' });
+    const lockKey = contentId ? `${targetLang}:${contentId}` : null;
+
+    // 1. 서버 사이드 공용 캐시 재조회 (DB)
+    if (lockKey && contentId) {
+        const { data: cached } = await supabaseAdmin
+            .from('translations')
+            .select('translated_text')
+            .eq('content_id', contentId)
+            .eq('target_lang', targetLang)
+            .is('user_id', null)
+            .maybeSingle();
+        
+        if (cached?.translated_text) {
+            return res.status(200).json({ translatedText: cached.translated_text });
+        }
+
+        // 2. In-flight Deduplication (Lock)
+        const inFlight = inFlightMap.get(lockKey);
+        if (inFlight) {
+            try {
+                const result = await inFlight;
+                return res.status(200).json({ translatedText: result });
+            } catch (err) { }
+        }
     }
 
-    const targetLanguageName = langCodeToName[targetLang] || targetLang;
-    const japaneseGuideline = targetLang === 'ja' 
-      ? '\n- For Japanese: Use hiragana (ひらがな) and katakana (カタカナ) as much as possible. Minimize the use of kanji (漢字). Prefer simpler, more accessible Japanese.'
-      : '';
-    const systemPrompt = `You are an elite-tier translation and phonetic transcription engine for ARA (Korean Learning App).
+    const translateTask = (async () => {
+        const apiKey = process.env.OPENAI_API_KEY;
+        if (!apiKey) throw new Error('OPENAI_API_KEY is not set');
+
+        const targetLanguageName = langCodeToName[targetLang] || targetLang;
+        const japaneseGuideline = targetLang === 'ja' 
+          ? '\n- For Japanese: Use hiragana (ひらがな) and katakana (カタカナ) as much as possible. Minimize the use of kanji (漢字). Prefer simpler, more accessible Japanese.'
+          : '';
+        const systemPrompt = `You are an elite-tier translation and phonetic transcription engine for ARA (Korean Learning App).
 Target Language: ${targetLanguageName} (Code: ${targetLang})
 Context: Korean Subtitles, K-Pop Lyrics, K-Drama, Vocabulary.
 
@@ -329,7 +452,7 @@ CRITICAL TRANSLATION RULES:
    - en: Standard English romanization (e.g., ha-da).
    - ja: Katakana only (e.g., ハダ).
    - zh: Latin-letter Korean sound guide for Chinese learners only. Never translate meaning into Chinese. This is NOT Mandarin vocabulary pinyin. Represent the original Korean pronunciation accurately, not the Chinese meaning. Do NOT replace Korean words with Chinese equivalents or their pinyin. For example, [PRON:생일] should follow "saeng il" or "seng il" style, NOT "sheng ri"; [PRON:우리] should follow "u ri" style, NOT "wo men" or "wu li"; [PRON:강아지] should follow "gang a ji" style, NOT "xiao gou"; [PRON:알았다] should follow "a ra da" style, NOT "hao le"; [PRON:수제비] should follow "su je bi" style, NOT "shou gong mian". Avoid Chinese characters and tone marks. Use simple spaced syllables and preserve the Korean sound flow for easy reading.
-   - ru: Cyrillic only (e.g., хада).
+   - ru: Cyrillic only (e.g., ха다).
    - vi: Use Vietnamese alphabet and reading habits to approximate the Korean sound. **Strictly avoid Korean Revised Romanization (RR) or English-style romanization.** Do NOT output RR-style forms (e.g., ha-da, hae-ju-da, yeop, geu-nyang, mo-reu-da, mwol hae jwo...). Do NOT preserve RR clusters like 'eo', 'eu', 'ae', 'oe', 'ui', 'yeo', 'jwo'. Instead, use Vietnamese-friendly letters like 'ơ', 'ư', 'ê', 'ô', 'uy', 'ch', 'gi', 'ng', 'nh'. For long sentences, maintain a natural Vietnamese-readable phonetic flow and separate by phrase groups naturally, not by every syllable. Use lowercase unless punctuation requires. Avoid arbitrary tone marks unless they improve readability. Do NOT translate meaning and never include Hangul. Remove any [PRON:...] markers.
    - bn: Bengali script only.
    - ar: Arabic script only.
@@ -345,38 +468,70 @@ CRITICAL TRANSLATION RULES:
    - If input is a PoS label (명사, 동사), translate to the equivalent in ${targetLanguageName}.
 ${japaneseGuideline}`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o', 
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: text },
-        ],
-        max_tokens: 200, 
-        temperature: 0.3,
-      }),
-    });
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o', 
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: text },
+            ],
+            max_tokens: 200, 
+            temperature: 0.3,
+          }),
+        });
 
-    if (!response.ok) {
-       console.error('OpenAI API Error:', response.status);
-       return res.status(response.status).json({ error: 'OpenAI API Error' });
+        if (!response.ok) throw new Error(`OpenAI API error: ${response.status}`);
+        const data = await response.json();
+        const result = data.choices?.[0]?.message?.content?.trim();
+        if (!result) throw new Error('Empty AI response');
+
+        if (contentId) {
+            if (!supabaseServiceKey) {
+                console.warn('SUPABASE_SERVICE_ROLE_KEY is missing. Skipping public cache save.');
+            } else {
+                try {
+                    const { error } = await supabaseAdmin.from('translations').insert({
+                        content_id: contentId,
+                        target_lang: targetLang,
+                        original_text: text,
+                        translated_text: result,
+                        user_id: null
+                    });
+                    
+                    if (error && error.code !== '23505') {
+                        console.error('Public cache save error:', error.code, error.message);
+                    }
+                } catch (dbErr) {
+                    console.error('Unexpected DB error during public cache save:', dbErr);
+                }
+            }
+        }
+
+        return result;
+    })();
+
+    const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Translation timeout')), 15000)
+    );
+
+    if (lockKey) inFlightMap.set(lockKey, translateTask);
+
+    try {
+        const finalResult = await Promise.race([translateTask, timeoutPromise]);
+        return res.status(200).json({ translatedText: finalResult });
+    } finally {
+        if (lockKey) inFlightMap.delete(lockKey);
     }
-
-    const data = await response.json();
-    const result = data.choices?.[0]?.message?.content?.trim();
-
-    return res.status(200).json({ translatedText: result });
   } catch (error) {
     console.error('Single translation error:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
 
 // --- Admin Stats Endpoint ---
 app.get('/api/admin/stats/overview', async (req, res) => {

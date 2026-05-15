@@ -87,29 +87,42 @@ export function useAutoTranslation(text: string, contentId: string, targetLang: 
           const { data: { user } } = await supabase.auth.getUser();
 
           // 5. Check Supabase (DB Cache)
-          const { data: existing } = await (supabase.from('translations') as any)
-            .select('translated_text')
-            .eq('content_id', uniqueId)
-            .eq('target_lang', targetLang)
-            .maybeSingle();
+          type TranslationRow = {
+            translated_text: string | null;
+            user_id: string | null;
+          };
 
-          if (existing) {
-            const val = existing.translated_text;
-            memoryCache[cacheKey] = val;
-            try { sessionStorage.setItem(cacheKey, val); } catch {}
-            
-            if (mounted) {
-              setTranslatedText(val);
-              setIsLoading(false);
+          const { data: rows } = await (supabase.from('translations') as any)
+            .select('translated_text, user_id')
+            .eq('content_id', uniqueId)
+            .eq('target_lang', targetLang);
+
+          const typedRows = (rows || []) as TranslationRow[];
+
+          if (typedRows.length > 0) {
+            // Priority: Personal > Public
+            const personalMatch = user ? typedRows.find(row => row.user_id === user.id) : undefined;
+            const publicMatch = typedRows.find(row => row.user_id == null);
+            const bestMatch = personalMatch || publicMatch;
+
+            if (bestMatch?.translated_text) {
+              const val = bestMatch.translated_text;
+              memoryCache[cacheKey] = val;
+              try { sessionStorage.setItem(cacheKey, val); } catch {}
+              
+              if (mounted) {
+                setTranslatedText(val);
+                setIsLoading(false);
+              }
+              return;
             }
-            return;
           }
 
           // 6. Call Local Server API — queuedFetch가 동시 요청 제한 + 429 retry 처리
           const response = await queuedFetch('/api/translate-single', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text, targetLang }),
+            body: JSON.stringify({ text, targetLang, contentId: uniqueId }),
           });
   
           if (!response.ok) {
