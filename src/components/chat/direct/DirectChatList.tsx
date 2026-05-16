@@ -16,7 +16,7 @@ import { formatChatListDate } from '@/utils/dateUtils';
 import { BanBadge } from '@/components/common/BanBadge';
 // 히스토리 제어: SPA(Single Page Application)의 스크롤 위치 유지 정책을 수동으로 전환하여 페이지 전환 시 예기치 않은 레이아웃 이동 방지
 interface DirectChatListProps {
-  onChatSelect: (chatId: string) => void;
+  onChatSelect: (chatId: string, messageId?: string, chatName?: string) => void;
   onCreateChat: () => void;
   selectedChatId?: string;
   onLeave?: () => void;
@@ -39,7 +39,7 @@ const ChatItem = memo(
   }: {
     chat: import('../../../types/ChatType').ChatListItem;
     isSelected: boolean;
-    onSelect: (id: string) => void;
+    onSelect: (id: string, chatName?: string) => void;
     currentUserId?: string;
     onLeave: (chatId: string) => void;
     onReport: (targetId: string, type: 'chat' | 'user') => void;
@@ -92,7 +92,7 @@ const ChatItem = memo(
     return (
       <div
         className={`chat-item ${isSelected ? 'selected' : ''}`}
-        onClick={() => onSelect(chat.id)}
+        onClick={() => onSelect(chat.id, chat.other_user?.nickname)}
       >
         <div className="chat-avatar cursor-pointer" onClick={handleAvatarClick}>
           {chat.other_user.avatar_url ? (
@@ -125,7 +125,7 @@ const ChatItem = memo(
             </div>
             <div className="flex items-center gap-1">
               <div className="chat-time font-mono">
-                {(chat.last_message?.created_at || chat.last_message_at)
+                {chat.last_message?.created_at || chat.last_message_at
                   ? formatTime(chat.last_message?.created_at || chat.last_message_at!)
                   : ''}
               </div>
@@ -282,11 +282,11 @@ const DirectChatList = ({
   const userSearchInputRef = useRef<HTMLInputElement>(null);
 
   /**
- * ARA 전역 진입점 (System Entry Point):
- * - i18next 라이브러리의 불필요한 런타임 로그를 가로채는 보안 인터셉터 포함
- * - 전역 스타일 시트, 국제화 프로토콜, 라우팅 컨텍스트의 오케스트레이션을 담당함
- */
-// 런타임 정숙화: i18next 개발용 홍보 문구가 프로덕션 콘솔의 가독성을 해치지 않도록 초기 진입 단계에서 필터링함
+   * ARA 전역 진입점 (System Entry Point):
+   * - i18next 라이브러리의 불필요한 런타임 로그를 가로채는 보안 인터셉터 포함
+   * - 전역 스타일 시트, 국제화 프로토콜, 라우팅 컨텍스트의 오케스트레이션을 담당함
+   */
+  // 런타임 정숙화: i18next 개발용 홍보 문구가 프로덕션 콘솔의 가독성을 해치지 않도록 초기 진입 단계에서 필터링함
   // useEffect가 searchUsers 변경으로 인해 실행될 때, 검색어가 그대로라면 무시하기 위함
   const lastProcessedTermRef = useRef<string>(searchTerm);
 
@@ -310,7 +310,7 @@ const DirectChatList = ({
 
     const trimmed = searchTerm.trim();
     if (!trimmed) {
-      clearSearchResults();  // 국제화 지원 엔진: i18next 표준을 준수하여 미디어 생성 일자를 사용자 선호 언어 규칙에 맞춰 정규화함
+      clearSearchResults(); // 국제화 지원 엔진: i18next 표준을 준수하여 미디어 생성 일자를 사용자 선호 언어 규칙에 맞춰 정규화함
       return;
     }
 
@@ -357,16 +357,18 @@ const DirectChatList = ({
 
   const handleUserSelect = useCallback(
     async (user: ChatUser) => {
-      // 선택 시 진행 중이던 검색 타이머 취소 (중복 검색 방지)
       if (debounceRef.current) {
         window.clearTimeout(debounceRef.current);
         debounceRef.current = null;
       }
+
       try {
         setIsCreatingChat(true);
+
         const chatId = await createDirectChat(user.id);
+
         if (chatId) {
-          onChatSelect(chatId);
+          onChatSelect(chatId, undefined, user.nickname);
           setShowUserSearch(false);
           setSearchTerm('');
         }
@@ -378,17 +380,21 @@ const DirectChatList = ({
     },
     [createDirectChat, onChatSelect],
   );
+
   const handleChatSelect = useCallback(
-    (chatId: string) => {
-      onChatSelect(chatId);
+    (chatId: string, chatName?: string) => {
+      onChatSelect(chatId, undefined, chatName);
     },
     [onChatSelect],
   );
+
   if (error) {
     return (
       <div className="chat-list">
         <div className="error-message">
-          <p>{t('common.error', '오류')} : {error}</p>
+          <p>
+            {t('common.error', '오류')} : {error}
+          </p>
         </div>
       </div>
     );

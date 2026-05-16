@@ -1,29 +1,28 @@
 import { BanBadge } from '@/components/common/BanBadge';
 import PlanBadge from '@/components/common/PlanBadge';
-import { ensureMyProfileId } from '@/lib/ensureMyProfileId';
 import { getErrorMessage } from '@/utils/errorMessage';
 
 import BlockButton from '@/components/common/BlockButton';
+import EditTweetModal from '@/components/common/EditTweetModal';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import ReportModal from '@/components/common/ReportModal';
+import ShareButton from '@/components/common/ShareButton';
 import TranslateButton from '@/components/common/TranslateButton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBlockedUsers } from '@/contexts/BlockedUsersContext';
 import { SnsStore } from '@/lib/snsState';
 import { supabase } from '@/lib/supabase';
 import { type TweetStats, type TweetUser, type UITweet } from '@/types/sns';
 import { formatSmartDate } from '@/utils/dateUtils';
 import DOMPurify from 'dompurify';
-import { Bird, Heart, MessageCircle, Share2, MoreHorizontal, ShieldAlert } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import ImageSlider from '../tweet/components/ImageSlider';
 import ModalImageSlider from '../tweet/components/ModalImageSlider';
-import EditTweetModal from '@/components/common/EditTweetModal';
-import { useBlockedUsers } from '@/contexts/BlockedUsersContext';
 
 const SNS_LAST_TWEET_ID_KEY = 'sns-last-tweet-id';
 
@@ -137,7 +136,8 @@ export default function TweetCard({
   }, [isHiddenProp]);
   // 최종 슬라이드에 사용할 이미지 목록 (prop 우선, 없으면 content에서 추출한 것)
   // Soft delete 또는 숨김 처리되면 이미지는 숨김 (관리자가 아닐 때)
-  const allImages = (isSoftDeleted || isHiddenContent) ? [] : propImages.length > 0 ? propImages : contentImages;
+  const allImages =
+    isSoftDeleted || isHiddenContent ? [] : propImages.length > 0 ? propImages : contentImages;
   const [isDraggingText, setIsDraggingText] = useState(false);
   const dragInfo = useRef({
     startX: 0,
@@ -160,16 +160,15 @@ export default function TweetCard({
 
   // 본문에서는 img 태그는 제거 (슬라이드에서만 보여줌)
   // Soft Delete 되면 Placeholder 사용
-  const displayContent = isSoftDeleted 
-    ? t('community.deleted_post', '관리자에 의해 삭제된 메시지입니다.') 
-    : isHiddenContent 
-      ? t('community.hidden_content', '관리자에 의해 숨김 처리된 콘텐츠입니다.') 
+  const displayContent = isSoftDeleted
+    ? t('community.deleted_post', '관리자에 의해 삭제된 메시지입니다.')
+    : isHiddenContent
+      ? t('community.hidden_content', '관리자에 의해 숨김 처리된 콘텐츠입니다.')
       : currentContent;
 
   const safeContent = DOMPurify.sanitize(displayContent, {
     FORBID_TAGS: ['img'],
   });
-
 
   // Removed liked status check on mount to prevent DB request storm
   // initialLiked from props is used instead
@@ -302,8 +301,9 @@ export default function TweetCard({
     try {
       if (optimisticLiked) {
         // 1) 좋아요 레코드 추가
-        const { error: likeError } = await (supabase.from('tweet_likes') as any)
-          .insert([{ tweet_id: id, user_id: likeUserId }]);
+        const { error: likeError } = await (supabase.from('tweet_likes') as any).insert([
+          { tweet_id: id, user_id: likeUserId },
+        ]);
         // 이미 눌렀던 경우(UNIQUE 충돌)만 조용히 무시
         if (likeError && likeError.code !== '23505') throw likeError;
 
@@ -312,8 +312,10 @@ export default function TweetCard({
 
         // 2) 알림 추가 (자기 글 좋아요면 알림 안 보냄, 작성자 프로필 없으면 스킵)
         // 상호 차단 관계인 경우 알림 생성을 스킵함
-        const isBlockedRelation = authorProfileId && (blockedIds.includes(authorProfileId) || blockingMeIds.includes(authorProfileId));
-        
+        const isBlockedRelation =
+          authorProfileId &&
+          (blockedIds.includes(authorProfileId) || blockingMeIds.includes(authorProfileId));
+
         if (authorProfileId && authorProfileId !== likeUserId && !isBlockedRelation) {
           const { error: notiError } = await (supabase.from('notifications') as any).insert([
             {
@@ -418,8 +420,7 @@ export default function TweetCard({
       }
 
       const table = type === 'reply' ? 'tweet_replies' : 'tweets';
-      const { error } = await (supabase
-        .from(table) as any)
+      const { error } = await (supabase.from(table) as any)
         .update({ content: finalContent, updated_at: nowIso })
         .eq('id', id)
         .eq('author_id', profileId);
@@ -477,18 +478,19 @@ export default function TweetCard({
       const { error } = await (supabase as any).rpc('toggle_content_hidden', {
         p_type: type === 'reply' ? 'reply' : 'tweet',
         p_id: id,
-        p_hidden: newHiddenStatus
+        p_hidden: newHiddenStatus,
       });
 
       if (error) throw error;
 
       setIsHiddenLocal(newHiddenStatus);
-      toast.success(newHiddenStatus ? '게시물이 숨김 처리되었습니다.' : '게시물 숨김이 해제되었습니다.');
-      
+      toast.success(
+        newHiddenStatus ? '게시물이 숨김 처리되었습니다.' : '게시물 숨김이 해제되었습니다.',
+      );
+
       // 상위 컴포넌트 및 스토어 동기화
       onUpdated?.(id, { is_hidden: newHiddenStatus } as any);
       SnsStore.updateTweet(id, { is_hidden: newHiddenStatus } as any);
-
     } catch (err) {
       console.error('Error toggling hide status:', err);
       toast.error(t('common.error_admin_action', '관리자 작업 중 오류가 발생했습니다.'));
@@ -524,9 +526,32 @@ export default function TweetCard({
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, type === 'reply' ? tweetId! : id);
     }
-    const target = type === 'reply' ? `/sns/${tweetId}?highlight=${id}` : `/sns/${id}`;
+
+    const target = type === 'reply' && tweetId ? `/sns/${tweetId}?highlight=${id}` : `/sns/${id}`;
     safeNavigate(target);
   };
+
+  // 택스트만 번역
+  const plainTextContent = (() => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = safeContent;
+    return tmp.textContent || tmp.innerText || '';
+  })();
+
+  const SITE_URL = 'https://arakorean.com';
+
+  const tweetPath = type === 'reply' && tweetId ? `/sns/${tweetId}?highlight=${id}` : `/sns/${id}`;
+  const tweetUrl = `${SITE_URL}${tweetPath}`;
+
+  const shareTitle = `${user.name || 'ARA 사용자'}님의 게시글 | ARA 커뮤니티`;
+
+  const shareText =
+    plainTextContent.trim().length > 0
+      ? plainTextContent.trim().length > 120
+        ? `${plainTextContent.trim().slice(0, 120)}...`
+        : plainTextContent.trim()
+      : t('common.share_default_text', '재미있게 한국어를 배워요! ARA에서 학습 장면을 공유합니다.');
+
   const isDeletedUser = user.username === 'anonymous';
 
   const handleAvatarClick = (e: React.MouseEvent) => {
@@ -568,12 +593,6 @@ export default function TweetCard({
     if (selection && selection.toString().length > 0) return;
     handleCardClick();
   };
-  // 택스트만 번역
-  const plainTextContent = (() => {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = safeContent;
-    return tmp.textContent || tmp.innerText || '';
-  })();
 
   const openEditModal = () => {
     // 현재 스크롤 위치 저장
@@ -665,13 +684,18 @@ export default function TweetCard({
               {(() => {
                 const created = timestamp;
                 const edited = currentUpdatedAt;
-                const toMs = (v: any) => v ? new Date(v).getTime() : 0;
+                const toMs = (v: any) => (v ? new Date(v).getTime() : 0);
                 const isEdited = edited && toMs(edited) > toMs(created) + 1000;
-                return isEdited ? <span className="ml-1 text-xs text-gray-400">{t('common.edited', '수정됨')}</span> : null;
+                return isEdited ? (
+                  <span className="ml-1 text-xs text-gray-400">{t('common.edited', '수정됨')}</span>
+                ) : null;
               })()}
             </span>
             {isAdmin && isHiddenProp && (
-              <Badge variant="outline" className="ml-2 border-amber-500 text-amber-500 text-[10px] py-0 h-4">
+              <Badge
+                variant="outline"
+                className="ml-2 border-amber-500 text-amber-500 text-[10px] py-0 h-4"
+              >
                 {t('common.hidden', '숨김')}
               </Badge>
             )}
@@ -762,7 +786,11 @@ export default function TweetCard({
                       className={`w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-sm flex items-center gap-2 ${isHiddenLocal ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}
                     >
                       <i className={isHiddenLocal ? 'ri-eye-line' : 'ri-eye-off-line'} />
-                      <span>{isHiddenLocal ? t('common.unhide', '숨김 해제') : t('common.hide', '숨기기')}</span>
+                      <span>
+                        {isHiddenLocal
+                          ? t('common.unhide', '숨김 해제')
+                          : t('common.hide', '숨기기')}
+                      </span>
                     </button>
                   </>
                 )}
@@ -960,7 +988,7 @@ export default function TweetCard({
             </div>
             <span className="text-sm">{likeCount}</span>
           </button>
-          {/* 조회수 (클릭 시 상세 이동) */}
+          {/* 조회수 */}
           <button
             className={`flex items-center space-x-2 group p-2 rounded-full transition-colors ${disableInteractions ? 'cursor-default' : 'hover:text-green-500 dark:hover:text-green-400'}`}
             onClick={e => {
@@ -979,6 +1007,20 @@ export default function TweetCard({
             </div>
             <span className="text-sm">{viewCount}</span>
           </button>
+          {/* 공유 버튼 */}
+          <div
+            className="flex items-center"
+            onClick={e => {
+              e.stopPropagation();
+            }}
+          >
+            <ShareButton
+              title={shareTitle}
+              text={shareText}
+              url={tweetUrl}
+              className="!border-0 !px-2 !py-2 [&_span]:!hidden !text-gray-500 dark:!text-gray-400 hover:!text-primary dark:hover:!text-primary"
+            />
+          </div>
         </div>
       </div>
       {showDialog && (
@@ -1015,7 +1057,11 @@ export default function TweetCard({
         <ReportModal
           isOpen={showReportModal}
           onClose={() => setShowReportModal(false)}
-          targetType={type === 'post' ? 'tweet' : (type as import('@/components/common/ReportModal').ReportTargetType)} 
+          targetType={
+            type === 'post'
+              ? 'tweet'
+              : (type as import('@/components/common/ReportModal').ReportTargetType)
+          }
           targetId={id}
           contentSnapshot={{
             id,
@@ -1037,10 +1083,14 @@ export default function TweetCard({
             onClick={e => e.stopPropagation()}
           >
             <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
-              {isHiddenLocal ? t('admin.unhide_title', '게시물 숨김 해제') : t('admin.hide_title', '게시물 숨기기')}
+              {isHiddenLocal
+                ? t('admin.unhide_title', '게시물 숨김 해제')
+                : t('admin.hide_title', '게시물 숨기기')}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-              {isHiddenLocal ? t('admin.unhide_confirm_msg', '이 게시물의 숨김을 해제하시겠습니까?') : t('admin.hide_confirm_msg', '이 게시물을 숨기시겠습니까?')}
+              {isHiddenLocal
+                ? t('admin.unhide_confirm_msg', '이 게시물의 숨김을 해제하시겠습니까?')
+                : t('admin.hide_confirm_msg', '이 게시물을 숨기시겠습니까?')}
             </p>
             <div className="flex justify-end space-x-2">
               <button

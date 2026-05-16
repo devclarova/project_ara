@@ -3,7 +3,7 @@
  * - 목적(Why): 서비스 내 주요 콘텐츠를 외부 소셜 플랫폼이나 클립보드로 전파하여 유입 경로를 확장함
  * - 방법(How): Web Share API를 통한 네이티브 공유 환경을 우선 제공하고, 미지원 브라우저에서는 클립보드 복사(Clipboard API) 및 정규화된 URL 추출 알고리즘으로 대체 실행함
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 type ShareButtonProps = {
@@ -33,8 +33,7 @@ export default function ShareButton({
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
-  const canUseShare =
-    typeof navigator !== 'undefined' && 'share' in navigator;
+  const canUseShare = typeof navigator !== 'undefined' && 'share' in navigator;
 
   // Canonical Analysis: Extracts the optimal shared URL by prioritizing props, canonical tags, and window location.
   const shareUrl = useMemo(() => {
@@ -45,7 +44,10 @@ export default function ShareButton({
   const shareData = useMemo(() => {
     return {
       title: (title ?? document.title).slice(0, 80),
-      text: (text ?? t('common.share_default_text', '재미있게 한국어를 배워요! ARA에서 학습 장면을 공유합니다.')).slice(0, 200),
+      text: (
+        text ??
+        t('common.share_default_text', '재미있게 한국어를 배워요! ARA에서 학습 장면을 공유합니다.')
+      ).slice(0, 200),
       url: shareUrl,
     };
   }, [title, text, shareUrl, t]);
@@ -53,6 +55,10 @@ export default function ShareButton({
   // Clipboard Bridge: Interfaces with the navigator.clipboard API for link copying, with a prompt-based fallback.
   const copyToClipboard = async () => {
     try {
+      if (!navigator.clipboard) {
+        throw new Error('Clipboard API not available');
+      }
+
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       onShared?.();
@@ -66,7 +72,9 @@ export default function ShareButton({
   const share = async () => {
     if (canUseShare) {
       try {
-        await (navigator as Navigator & { share: (data: ShareData) => Promise<void> }).share(shareData);
+        await (navigator as Navigator & { share: (data: ShareData) => Promise<void> }).share(
+          shareData,
+        );
         onShared?.();
         return;
       } catch {
