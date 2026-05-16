@@ -7,7 +7,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { queuedFetch } from '../lib/translationQueue';
 
-const BATCH_TRANSLATION_VERSION = 'v8_pron_fixed';
+const BATCH_TRANSLATION_VERSION = 'v20_pron_fixed';
 const PRONUNCIATION_TRANSLATION_VERSION = 'v21_pron_policy_v1';
 const VI_PRONUNCIATION_TRANSLATION_VERSION = 'v23_pron_policy_vi_v1';
 const ZH_PRONUNCIATION_TRANSLATION_VERSION = 'v23_pron_policy_zh_v2';

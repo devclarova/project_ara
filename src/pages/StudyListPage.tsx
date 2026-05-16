@@ -105,6 +105,83 @@ export default function StudyListPage() {
 
   const categoryScrollRef = useRef<HTMLDivElement>(null);
   const [isScrollable, setIsScrollable] = useState(false);
+  const [scrollState, setScrollState] = useState({ isAtStart: true, isAtEnd: true });
+  
+  // 가로 스크롤/드래그 상태 관리
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeftStart = useRef(0);
+  const dragThreshold = 5;
+  const moveX = useRef(0);
+
+  const checkScrollStatus = () => {
+    if (categoryScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = categoryScrollRef.current;
+      setIsScrollable(scrollWidth > clientWidth);
+      setScrollState({
+        isAtStart: scrollLeft <= 2,
+        isAtEnd: scrollLeft + clientWidth >= scrollWidth - 2,
+      });
+    }
+  };
+
+  useEffect(() => {
+    checkScrollStatus();
+    window.addEventListener('resize', checkScrollStatus);
+    return () => window.removeEventListener('resize', checkScrollStatus);
+  }, [clips]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!categoryScrollRef.current) return;
+    isDragging.current = true;
+    startX.current = e.pageX - categoryScrollRef.current.offsetLeft;
+    scrollLeftStart.current = categoryScrollRef.current.scrollLeft;
+    moveX.current = 0;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || !categoryScrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - categoryScrollRef.current.offsetLeft;
+    const walk = (x - startX.current) * 1.5;
+    moveX.current = Math.abs(x - startX.current);
+    categoryScrollRef.current.scrollLeft = scrollLeftStart.current - walk;
+    checkScrollStatus();
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+  };
+
+  useEffect(() => {
+    const el = categoryScrollRef.current;
+    if (!el) return;
+
+    const onNativeWheel = (e: WheelEvent) => {
+      // 세로 휠 입력을 가로 스크롤로 변환 (기존 UX 복구)
+      if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) {
+        // 부모 페이지 세로 스크롤 방지 (중요: passive: false 필수)
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+        checkScrollStatus();
+      }
+    };
+
+    el.addEventListener('wheel', onNativeWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onNativeWheel);
+  }, []);
+
+  const handleScroll = () => {
+    checkScrollStatus();
+  };
+
+  const handleClickCapture = (e: React.MouseEvent) => {
+    // 드래그 중에는 클릭 이벤트가 카테고리 선택으로 이어지지 않도록 차단
+    if (moveX.current > dragThreshold) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  };
 
   // 메타데이터 배치 번역 — 대량의 학습 콘텐츠 제목 및 설명을 타겟 언어로 일괄 변환 처리
   const { translatedTexts: trTitles, status: trTitlesStatus } = useBatchAutoTranslation(clips.map((c: any) => c.title), clips.map((c: any) => `study_title_${c.id}`), targetLang);
@@ -184,8 +261,22 @@ export default function StudyListPage() {
             {/* 탐색 인터페이스 — 카테고리 필터 및 검색 바를 포함한 스티키 네비게이션 레이어 */}
             <div className="flex flex-row justify-between items-center gap-1 md:gap-3 bg-white dark:bg-background sticky top-0 z-20 pb-2 pl-6 pt-8 pr-5">
               <div
-                className={`flex-1 min-w-0 overflow-x-auto no-scrollbar ${isScrollable ? 'mask-gradient' : ''}`}
+                className={`flex-1 min-w-0 overflow-x-auto no-scrollbar cursor-grab active:cursor-grabbing select-none ${
+                  isScrollable 
+                    ? (!scrollState.isAtStart && !scrollState.isAtEnd) 
+                      ? 'mask-gradient-both' 
+                      : scrollState.isAtStart 
+                        ? 'mask-gradient' 
+                        : 'mask-gradient-left'
+                    : ''
+                }`}
                 ref={categoryScrollRef}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onScroll={handleScroll}
+                onClickCapture={handleClickCapture}
               >
                 <CategoryTabs
                   active={activeCategory}
