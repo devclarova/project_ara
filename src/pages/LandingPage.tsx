@@ -7,7 +7,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
 
-
 import FooterSection from '@/components/landing/FooterSection';
 import HeroSection from '@/components/landing/HeroSection';
 import HowItWorksSection from '@/components/landing/HowItWorksSection';
@@ -19,7 +18,6 @@ import TestimonialsSection from '@/components/landing/TestimonialsSection';
 type HomeProps = {
   onSignup?: () => void;
 };
-
 
 const HEADER_OFFSET = 0; // 헤더 높이 보정값 — 스크롤 위치 계산 시 네비게이션 바 레이아웃 간섭 방지
 const SCROLL_SNAP_BREAKPOINT = 1024; // 섹션 스냅 트리거 임계치 — 1024px(lg) 이상 데스크톱 환경에서만 풀페이지 스냅 활성화
@@ -226,8 +224,23 @@ const LandingPage = ({ onSignup }: HomeProps) => {
   return (
     <main className="relative min-h-screen bg-white dark:bg-background text-slate-900 dark:text-gray-100">
       <Helmet>
-        <title>{t('study.meta_title')}</title>
-        <meta name="description" content={t('landing.description')} />
+        <title>{t('landing.seo.title')}</title>
+        <meta name="description" content={t('landing.seo.description')} />
+        <meta name="keywords" content={t('landing.seo.keywords')} />
+
+        {/* Open Graph - 카톡/페북 등 공유 미리보기 */}
+        <meta property="og:title" content={t('landing.seo.og_title')} />
+        <meta property="og:description" content={t('landing.seo.og_description')} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://arakorean.com/" />
+
+        {/* Twitter / X 공유 미리보기 */}
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={t('landing.seo.og_title')} />
+        <meta name="twitter:description" content={t('landing.seo.og_description')} />
+
+        {/* 대표 URL */}
+        <link rel="canonical" href="https://arakorean.com/" />
       </Helmet>
 
       {/* 전역 스크롤 프로그레스 바 — 전체 콘텐츠 대비 현재 열람 위치를 시각적 게이지로 표현 */}
@@ -286,11 +299,10 @@ const LandingPage = ({ onSignup }: HomeProps) => {
       <PopularContentSection />
       <TestimonialsSection />
       <FooterSection />
-      
+
       <FloatingButtons />
     </main>
   );
 };
-
 
 export default LandingPage;

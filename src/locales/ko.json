@@ -103,6 +103,13 @@
     }
   },
   "study": {
+    "seo": {
+      "title": "학습 | ARA",
+      "description": "ARA Study에서 자체 제작 애니메이션 콘텐츠로 실제 한국어 표현, 자막, 단어, 발음, 문화 노트를 함께 학습해보세요.",
+      "keywords": "ARA, 한국어 학습, Learn Korean, 자체 제작 애니메이션, Korean animation, 한국어 표현, 자막 학습, 단어장, 발음 학습, 문화노트",
+      "og_title": "ARA Study - 자체 제작 애니메이션 한국어 학습",
+      "og_description": "자체 제작 애니메이션으로 실제 한국어 표현과 문화까지 자연스럽게 배우는 ARA Study."
+    },
     "studylist": "학습 목록",
     "category": {
       "all": "전체",
@@ -596,6 +603,13 @@
     }
   },
   "goods": {
+    "seo": {
+      "title": "굿즈샵 | ARA",
+      "description": "ARA의 정체성을 담은 공식 굿즈를 만나보세요. 의류, 액세서리, 문구 등 다양한 ARA 공식 굿즈를 확인할 수 있습니다.",
+      "keywords": "ARA 굿즈, ARA 공식 굿즈, 굿즈샵, 공식 굿즈 스토어, 한국어 학습 굿즈, ARA merchandise, Korean learning goods",
+      "og_title": "ARA 굿즈샵 - 공식 굿즈 스토어",
+      "og_description": "ARA의 정체성을 담은 공식 굿즈와 다양한 상품을 만나보세요."
+    },
     "title": "굿즈샵",
     "subtitle": "ARA의 정체성을 담은 공식 굿즈를 만나보세요",
     "product_details": "상품 상세",
@@ -1048,7 +1062,7 @@
     "deleted_post": "이 게시물은 정책 위반으로 인해 삭제되었습니다.",
     "edit_post": "게시글 수정",
     "seo": {
-      "title": "커뮤니티 | ARA - K-콘텐츠로 배우는 한국어",
+      "title": "커뮤니티 | ARA ",
       "description": "전 세계 학습자들이 함께하는 ARA 커뮤니티입니다. K-콘텐츠를 통해 한국어를 배우고, 친구들과 소통하며 각국의 문화를 즐겨보세요.",
       "keywords": "ARA, 한국어 학습, Learn Korean, Korean culture, K-POP, K-Drama, K-Culture, language exchange, feed, global learners",
       "og_title": "ARA 커뮤니티 - K-콘텐츠 기반 글로벌 학습 플랫폼",
@@ -1242,6 +1256,13 @@
     }
   },
   "landing": {
+    "seo": {
+      "title": "ARA - 애니메이션으로 배우는 한국어 학습 플랫폼",
+      "description": "자체 제작 애니메이션으로 실제 한국어 표현을 배우고, 글로벌 커뮤니티와 1:1 채팅으로 소통하는 한국어 학습 플랫폼 ARA",
+      "keywords": "ARA, 한국어 학습, Learn Korean, 자체 제작 애니메이션, Korean animation, K-콘텐츠, 한국어 표현, 글로벌 커뮤니티, 1:1 채팅, 문화노트",
+      "og_title": "ARA - 애니메이션으로 배우는 한국어",
+      "og_description": "자체 제작 애니메이션으로 실제 한국어 표현을 배우고, 전 세계 학습자들과 함께 소통하는 한국어 학습 플랫폼 ARA."
+    },
     "badge": "애니메이션으로 배우는 한국어 · 글로벌 커뮤니티",
     "title_1": "살아있는 한국어를 애니메이션으로 배우고",
     "title_2": "전 세계 친구들과 함께 성장하세요",
@@ -1313,33 +1334,21 @@
       "preview": {
         "title": "이야기로 배우는 한국어 표현",
         "subtitle": "상황 속 대화로 표현과 뉘앙스를 자연스럽게",
-        "bullets": [
-          "대화 → 표현 이해",
-          "사용 상황 & 문화 팁",
-          "짧은 연습 문제 포함"
-        ],
+        "bullets": ["대화 → 표현 이해", "사용 상황 & 문화 팁", "짧은 연습 문제 포함"],
         "ctaLabel": "에피소드 미리보기",
         "alt": "이야기 기반 에피소드 학습 화면"
       },
       "folktale": {
         "title": "전래동화·설화로 만나는 한국어",
         "subtitle": "옛이야기를 현대 한국어로 다시 읽어요",
-        "bullets": [
-          "전래동화 & 설화 콘텐츠",
-          "표현 속 문화와 배경 설명",
-          "입문자용 추천 묶음"
-        ],
+        "bullets": ["전래동화 & 설화 콘텐츠", "표현 속 문화와 배경 설명", "입문자용 추천 묶음"],
         "ctaLabel": "동화 콘텐츠 미리보기",
         "alt": "한국 전래동화 및 설화 학습 콘텐츠"
       },
       "community": {
         "title": "전 세계 친구들과 함께 연습",
         "subtitle": "여러 언어권 학습자와 문장을 나누고 피드백을 받아요",
-        "bullets": [
-          "다국어 사용자 커뮤니티",
-          "짧은 문장 교류",
-          "표현/문화 팁 공유"
-        ],
+        "bullets": ["다국어 사용자 커뮤니티", "짧은 문장 교류", "표현/문화 팁 공유"],
         "ctaLabel": "커뮤니티 미리보기",
         "alt": "글로벌 커뮤니티 활동 예시"
       }

@@ -13,11 +13,13 @@ import { useNewChatNotification } from '../../contexts/NewChatNotificationContex
 import styles from '../../components/chat/chat.module.css';
 import { useDirectChat } from '@/contexts/DirectChatContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { Helmet } from 'react-helmet-async';
 
 function DirectChatPage() {
   const { t } = useTranslation();
   const location = useLocation();
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [selectedChatName, setSelectedChatName] = useState<string | null>(null);
   const [highlightMessageId, setHighlightMessageId] = useState<string | undefined>(undefined);
   const { markChatAsRead } = useNewChatNotification();
 
@@ -52,8 +54,9 @@ function DirectChatPage() {
     return () => document.removeEventListener('visibilitychange', restore);
   }, [isMobile]);
 
-  const handleChatSelect = (chatId: string, messageId?: string) => {
+  const handleChatSelect = (chatId: string, messageId?: string, chatName?: string) => {
     setSelectedChatId(chatId);
+    setSelectedChatName(chatName ?? null);
     setHighlightMessageId(messageId);
     markChatAsRead();
     if (isMobile) setShowListOnMobile(false);
@@ -70,6 +73,7 @@ function DirectChatPage() {
 
   const handleBackToList = () => {
     setSelectedChatId(null);
+    setSelectedChatName(null);
     setHighlightMessageId(undefined);
     resetCurrentChat();
     if (isMobile) setShowListOnMobile(true);
@@ -90,15 +94,16 @@ function DirectChatPage() {
 
   const { user } = useAuth();
 
-  useEffect(() => {
-    document.title = '채팅 | ARA';
-  }, []);
+  const pageTitle = selectedChatName
+    ? `${selectedChatName}님과의 채팅 | ARA`
+    : `${t('chat.title_direct_chat')} | ARA`;
 
   useEffect(() => {
     if (!user?.id) return;
 
     if (!location.state?.roomId) {
       setSelectedChatId(null);
+      setSelectedChatName(null);
       setHighlightMessageId(undefined);
       resetCurrentChat();
       if (isMobile) setShowListOnMobile(true);
@@ -113,6 +118,7 @@ function DirectChatPage() {
     // user change 시에는 초기화하는 게 맞음.
     if (!location.state?.roomId) {
       setSelectedChatId(null);
+      setSelectedChatName(null);
       setHighlightMessageId(undefined);
       resetCurrentChat();
       if (isMobile) setShowListOnMobile(true);
@@ -128,49 +134,57 @@ function DirectChatPage() {
   }, []);
 
   return (
-    // flex-1: App.tsx의 main(flex flex-col)으로부터 남은 높이를 상속받음
-    // h-full: 부모 높이를 100% 채움
-    // overflow-hidden: 페이지 자체 스크롤 방지
-    // bg-slate-50: 박스 외곽 여백을 보여주기 위한 톤 다운 배경 (dark 대응)
-    <div className={`${styles.chatPage} flex-1 w-full h-full overflow-hidden bg-slate-50/50 dark:bg-background`}>
-      {/* 
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      <div
+        className={`${styles.chatPage} flex-1 w-full h-full overflow-hidden bg-slate-50/50 dark:bg-background`}
+      >
+        {/* 
         max-w-7xl mx-auto: 중앙 정렬 박스
         p-4 md:p-8: 상하좌우 여백 확보
         h-full: 부모 높이를 가져오되 패딩 제외 영역만큼 축소
       */}
-      <div className="max-w-7xl mx-auto w-full h-full flex flex-col p-4 md:p-8">
-        {/* 전체 컨테이너: 박스 느낌을 주기 위해 테두리와 그림자 적용 */}
-        <div className={`${styles.chatContainer} flex-1 flex rounded-2xl border border-border shadow-xl overflow-hidden bg-background`}>
-          {/* 사이드바: 리스트 영역 */}
-          {(!isMobile || showListOnMobile) && (
-            <div className={`chat-sidebar ${isMobile ? 'w-full' : 'w-[300px] lg:w-[320px]'} flex-shrink-0 flex flex-col min-h-0 border-r border-border bg-secondary/30`}>
-              <DirectChatList
-                onChatSelect={handleChatSelect}
-                onCreateChat={() => {}}
-                selectedChatId={selectedChatId || undefined}
-                onLeave={handleBackToList}
-              />
-            </div>
-          )}
-
-          {/* 메인: 채팅방 또는 환영 검색 화면 */}
-          {(!isMobile || !showListOnMobile) && (
-            <div className="chat-main flex-1 flex flex-col min-h-0 bg-background relative">
-              {selectedChatId ? (
-                <DirectChatRoom
-                  chatId={selectedChatId}
-                  isMobile={isMobile}
-                  onBackToList={handleBackToList}
-                  highlightMessageId={highlightMessageId}
+        <div className="max-w-7xl mx-auto w-full h-full flex flex-col p-4 md:p-8">
+          {/* 전체 컨테이너: 박스 느낌을 주기 위해 테두리와 그림자 적용 */}
+          <div
+            className={`${styles.chatContainer} flex-1 flex rounded-2xl border border-border shadow-xl overflow-hidden bg-background`}
+          >
+            {/* 사이드바: 리스트 영역 */}
+            {(!isMobile || showListOnMobile) && (
+              <div
+                className={`chat-sidebar ${isMobile ? 'w-full' : 'w-[300px] lg:w-[320px]'} flex-shrink-0 flex flex-col min-h-0 border-r border-border bg-secondary/30`}
+              >
+                <DirectChatList
+                  onChatSelect={handleChatSelect}
+                  onCreateChat={() => {}}
+                  selectedChatId={selectedChatId || undefined}
+                  onLeave={handleBackToList}
                 />
-              ) : (
-                !isMobile && <ChatWelcomeSearch onChatSelect={handleChatSelect} />
-              )}
-            </div>
-          )}
+              </div>
+            )}
+
+            {/* 메인: 채팅방 또는 환영 검색 화면 */}
+            {(!isMobile || !showListOnMobile) && (
+              <div className="chat-main flex-1 flex flex-col min-h-0 bg-background relative">
+                {selectedChatId ? (
+                  <DirectChatRoom
+                    chatId={selectedChatId}
+                    isMobile={isMobile}
+                    onBackToList={handleBackToList}
+                    highlightMessageId={highlightMessageId}
+                  />
+                ) : (
+                  !isMobile && <ChatWelcomeSearch onChatSelect={handleChatSelect} />
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

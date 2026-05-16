@@ -44,7 +44,6 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
-
   // Refs
   const pageRef = useRef(0);
   const loadingRef = useRef(false);
@@ -56,9 +55,9 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
     }
-    
+
     // myProfileIdRef.current = profileId; // profileId is now reactive from useAuth, but if needed for refs:
-    
+
     return () => {
       if ('scrollRestoration' in window.history) {
         window.history.scrollRestoration = 'auto';
@@ -71,9 +70,9 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
     user_id?: string; // from RPC
     avatar_url?: string; // from RPC
     deleted_at?: string | null; // Manually added
-    is_hidden?: boolean | null; // ✅ Added
+    is_hidden?: boolean | null; // Added
     profiles?: {
-      id: string; // ✅ Added
+      id: string; // Added
       nickname: string | null;
       user_id: string | null;
       avatar_url: string | null;
@@ -141,7 +140,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
             .select('tweet_id')
             .eq('user_id', profileId)
             .in('tweet_id', tweetIds);
-          
+
           if (likeData) {
             likedIds = new Set(likeData.map((l: any) => l.tweet_id));
           }
@@ -149,15 +148,15 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
 
         // 4. 작성자들의 국가 정보를 전역에서 일괄 조회 (Optimize)
         let countryMap = new Map<string, { name: string; flag_url: string }>();
-        const countryIds = Array.from(new Set(
-          data.map(d => d.profiles?.country).filter(Boolean) as string[]
-        ));
+        const countryIds = Array.from(
+          new Set(data.map(d => d.profiles?.country).filter(Boolean) as string[]),
+        );
 
         if (countryIds.length > 0) {
           const { data: countryData } = await (supabase.from('countries') as any)
             .select('id, name, flag_url')
             .in('id', countryIds);
-          
+
           if (countryData) {
             countryData.forEach((c: any) => {
               countryMap.set(String(c.id), { name: c.name, flag_url: c.flag_url });
@@ -171,12 +170,19 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
             user: {
               id: tweet.profiles?.id ?? (tRecord.author_id as string) ?? '',
               name: tweet.profiles?.nickname ?? t('common.unknown', 'Unknown'),
-              username: tweet.profiles?.user_id ?? tweet.profiles?.nickname ?? t('common.anonymous', 'anonymous'),
+              username:
+                tweet.profiles?.user_id ??
+                tweet.profiles?.nickname ??
+                t('common.anonymous', 'anonymous'),
               avatar: tweet.profiles?.avatar_url ?? '/images/ara_basic_profile.png',
               banned_until: tweet.profiles?.banned_until ?? null,
               plan: tweet.profiles?.plan ?? 'free',
-              countryFlag: tweet.profiles?.country ? countryMap.get(String(tweet.profiles.country))?.flag_url : null,
-              countryName: tweet.profiles?.country ? countryMap.get(String(tweet.profiles.country))?.name : null,
+              countryFlag: tweet.profiles?.country
+                ? countryMap.get(String(tweet.profiles.country))?.flag_url
+                : null,
+              countryName: tweet.profiles?.country
+                ? countryMap.get(String(tweet.profiles.country))?.name
+                : null,
             },
             content: tweet.content,
             image: tweet.image_url ?? undefined,
@@ -392,8 +398,10 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
         },
       )
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tweets' }, payload => {
-        const updated = payload.new as Database['public']['Tables']['tweets']['Row'] & { is_hidden?: boolean };
-        
+        const updated = payload.new as Database['public']['Tables']['tweets']['Row'] & {
+          is_hidden?: boolean;
+        };
+
         // [추가] 만약 업데이트된 트윗이 '숨김' 상태가 되었다면 일반 유저의 목록에서 즉시 제거
         if (updated.is_hidden && !isAdmin) {
           setTweets(prev => prev.filter(t => t.id !== updated.id));
@@ -425,26 +433,30 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
     const profileChannel = supabase
       .channel('home-feed-author-sync')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
-        type ProfileUpdate = { id: string; user_id: string; banned_until?: string | null; plan?: 'free' | 'basic' | 'premium' };
+        type ProfileUpdate = {
+          id: string;
+          user_id: string;
+          banned_until?: string | null;
+          plan?: 'free' | 'basic' | 'premium';
+        };
         const updated = payload.new as ProfileUpdate;
         if (updated.banned_until === undefined) return;
-          setTweets(prev =>
-            prev.map(t => {
-              // 프로필 PK(id) 또는 인증 ID(user_id)로 매칭
-              if (
-                String(t.user.id) === String(updated.id) ||
-                String(t.user.username) === String(updated.user_id)
-              ) {
-                return {
-                  ...t,
-                  user: { ...t.user, banned_until: updated.banned_until, plan: updated.plan },
-                };
-              }
-              return t;
-            }),
-          );
-        }
-      )
+        setTweets(prev =>
+          prev.map(t => {
+            // 프로필 PK(id) 또는 인증 ID(user_id)로 매칭
+            if (
+              String(t.user.id) === String(updated.id) ||
+              String(t.user.username) === String(updated.user_id)
+            ) {
+              return {
+                ...t,
+                user: { ...t.user, banned_until: updated.banned_until, plan: updated.plan },
+              };
+            }
+            return t;
+          }),
+        );
+      })
       .subscribe();
 
     return () => {

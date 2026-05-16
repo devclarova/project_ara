@@ -24,6 +24,8 @@ import EditTweetModal from '@/components/common/EditTweetModal';
 import { getErrorMessage } from '@/utils/errorMessage';
 import PlanBadge from '@/components/common/PlanBadge';
 import { useBlockedUsers } from '@/contexts/BlockedUsersContext';
+import ShareButton from '@/components/common/ShareButton';
+import { Helmet } from 'react-helmet-async';
 
 function htmlToEditorText(html: string) {
   const doc = new DOMParser().parseFromString(html || '', 'text/html');
@@ -239,11 +241,13 @@ export default function TweetDetailCard({
     setIsHiddenLocal(tweet.is_hidden || false);
   }, [tweet.is_hidden]);
   const allImages =
-    (isSoftDeleted || isHiddenContent) ? [] : propImages.length > 0 ? propImages : contentImages;
+    isSoftDeleted || isHiddenContent ? [] : propImages.length > 0 ? propImages : contentImages;
 
   const displayContent =
-    (isSoftDeleted || isHiddenContent)
-      ? (isSoftDeleted ? t('community.deleted_post') : t('community.hidden_content')) 
+    isSoftDeleted || isHiddenContent
+      ? isSoftDeleted
+        ? t('community.deleted_post')
+        : t('community.hidden_content')
       : currentContent;
 
   const safeContent = DOMPurify.sanitize(displayContent, {
@@ -263,6 +267,27 @@ export default function TweetDetailCard({
     tmp.innerHTML = safeContent;
     return tmp.textContent || tmp.innerText || '';
   })();
+
+  const SITE_URL = 'https://arakorean.com';
+
+  const tweetPath = `/sns/${tweet.id}`;
+  const tweetUrl = `${SITE_URL}${tweetPath}`;
+
+  const shareTitle = `${tweet.user.name || 'ARA 사용자'}님의 게시글 | ARA 커뮤니티`;
+
+  const shareText =
+    plainTextContent.trim().length > 0
+      ? plainTextContent.trim().length > 120
+        ? `${plainTextContent.trim().slice(0, 120)}...`
+        : plainTextContent.trim()
+      : t('common.share_default_text', '재미있게 한국어를 배워요! ARA에서 학습 장면을 공유합니다.');
+
+  const normalizeUrl = (url?: string | null) => {
+    if (!url) return null;
+    return url.startsWith('http') ? url : `${SITE_URL}${url}`;
+  };
+
+  const ogImage = allImages.length > 0 ? normalizeUrl(allImages[0]) : null;
 
   // 내가 이 트윗에 좋아요 눌렀는지 초기 로드
   useEffect(() => {
@@ -332,12 +357,19 @@ export default function TweetDetailCard({
       setLiked(true);
       setLikeCount(prev => prev + 1);
       toast.success(t('common.success_like'));
-      
+
       // 알림 생성 (본인 게시글이 아닐 때만, 작성자 없으면 스킵)
       // 상호 차단 관계인 경우 알림 생성을 스킵함
-      const isBlockedRelation = authorProfileId && (blockedIds.includes(authorProfileId) || blockingMeIds.includes(authorProfileId));
+      const isBlockedRelation =
+        authorProfileId &&
+        (blockedIds.includes(authorProfileId) || blockingMeIds.includes(authorProfileId));
 
-      if (authorProfileId && !isDeletedUser && authorProfileId !== profileId && !isBlockedRelation) {
+      if (
+        authorProfileId &&
+        !isDeletedUser &&
+        authorProfileId !== profileId &&
+        !isBlockedRelation
+      ) {
         await (supabase.from('notifications') as any).insert({
           type: 'like',
           content: t('tweet.liked_feed'),
@@ -406,17 +438,18 @@ export default function TweetDetailCard({
       const { error } = await (supabase as any).rpc('toggle_content_hidden', {
         p_type: 'tweet',
         p_id: tweet.id,
-        p_hidden: newHiddenStatus
+        p_hidden: newHiddenStatus,
       });
 
       if (error) throw error;
 
       setIsHiddenLocal(newHiddenStatus);
-      toast.success(newHiddenStatus ? '게시물이 숨김 처리되었습니다.' : '게시물 숨김이 해제되었습니다.');
-      
+      toast.success(
+        newHiddenStatus ? '게시물이 숨김 처리되었습니다.' : '게시물 숨김이 해제되었습니다.',
+      );
+
       // 스토어 동기화
       SnsStore.updateTweet(tweet.id, { is_hidden: newHiddenStatus } as any);
-
     } catch (err) {
       console.error('Error toggling hide status:', err);
       toast.error(t('common.error_admin_action', '관리자 작업 중 오류가 발생했습니다.'));
@@ -557,9 +590,7 @@ export default function TweetDetailCard({
     }
 
     // 번역 캐시 무효화 (게시글 내용이 바뀌었으므로 기존 번역 삭제)
-    await (supabase.from('translations') as any)
-      .delete()
-      .like('content_id', `tweet_${tweet.id}%`);
+    await (supabase.from('translations') as any).delete().like('content_id', `tweet_${tweet.id}%`);
 
     skipNextPropSync.current = true;
     setCurrentContent(finalHtml);
@@ -582,347 +613,399 @@ export default function TweetDetailCard({
   };
 
   return (
-    <div className="relative border-b border-gray-200 dark:border-gray-700 px-4 py-6 bg-white dark:bg-background">
-      <div className="flex items-center space-x-3">
-        <button
-          type="button"
-          onClick={handleBackClick}
-          className="mt-1 mr-1 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition-colors flex-shrink-0"
-        >
-          <i className="ri-arrow-left-line text-lg text-gray-700 dark:text-gray-100" />
-        </button>
+    <>
+      <Helmet>
+        <title>{shareTitle}</title>
+        <meta name="description" content={shareText} />
 
-        <div
-          onClick={handleAvatarClick}
-          className={`cursor-pointer flex-shrink-0 self-start relative ${isDeletedUser ? 'cursor-default' : ''}`}
-        >
-          <PlanBadge plan={tweet.user.plan}>
-            <Avatar className="border-2 border-white dark:border-background">
-              <AvatarImage
-                src={tweet.user.avatar || '/images/ara_basic_profile.png'}
-                alt={isDeletedUser ? t('deleted_user') : tweet.user.name}
-              />
-              <AvatarFallback>
-                {isDeletedUser ? '?' : tweet.user.name.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-          </PlanBadge>
-        </div>
+        {/* Open Graph - 카톡/페북 등 공유 미리보기 */}
+        <meta property="og:title" content={shareTitle} />
+        <meta property="og:description" content={shareText} />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={tweetUrl} />
+        {ogImage && <meta property="og:image" content={ogImage} />}
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center flex-wrap">
-            <div className="relative inline-flex items-center pr-2.5">
-              <span
-                className={`font-bold text-gray-900 dark:text-gray-100 truncate ${isDeletedUser ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
-                onClick={handleAvatarClick}
-              >
-                {isDeletedUser ? t('deleted_user') : tweet.user.name}
-              </span>
-              {!isDeletedUser && (
-                <OnlineIndicator
-                  userId={tweet.user.id}
-                  size="sm"
-                  className="absolute -top-0.5 right-0 z-20 border-white dark:border-background border shadow-none"
+        {/* Twitter / X 공유 미리보기 */}
+        <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+        <meta name="twitter:title" content={shareTitle} />
+        <meta name="twitter:description" content={shareText} />
+        {ogImage && <meta name="twitter:image" content={ogImage} />}
+
+        {/* 대표 URL */}
+        <link rel="canonical" href={tweetUrl} />
+      </Helmet>
+
+      <div className="relative border-b border-gray-200 dark:border-gray-700 px-4 py-6 bg-white dark:bg-background">
+        <div className="flex items-center space-x-3">
+          <button
+            type="button"
+            onClick={handleBackClick}
+            className="mt-1 mr-1 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition-colors flex-shrink-0"
+          >
+            <i className="ri-arrow-left-line text-lg text-gray-700 dark:text-gray-100" />
+          </button>
+
+          <div
+            onClick={handleAvatarClick}
+            className={`cursor-pointer flex-shrink-0 self-start relative ${isDeletedUser ? 'cursor-default' : ''}`}
+          >
+            <PlanBadge plan={tweet.user.plan}>
+              <Avatar className="border-2 border-white dark:border-background">
+                <AvatarImage
+                  src={tweet.user.avatar || '/images/ara_basic_profile.png'}
+                  alt={isDeletedUser ? t('deleted_user') : tweet.user.name}
                 />
+                <AvatarFallback>
+                  {isDeletedUser ? '?' : tweet.user.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </PlanBadge>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center flex-wrap">
+              <div className="relative inline-flex items-center pr-2.5">
+                <span
+                  className={`font-bold text-gray-900 dark:text-gray-100 truncate ${isDeletedUser ? 'cursor-default' : 'hover:underline cursor-pointer'}`}
+                  onClick={handleAvatarClick}
+                >
+                  {isDeletedUser ? t('deleted_user') : tweet.user.name}
+                </span>
+                {!isDeletedUser && (
+                  <OnlineIndicator
+                    userId={tweet.user.id}
+                    size="sm"
+                    className="absolute -top-0.5 right-0 z-20 border-white dark:border-background border shadow-none"
+                  />
+                )}
+              </div>
+              <BanBadge bannedUntil={tweet.user.banned_until ?? null} size="sm" />
+
+              {authorCountryFlagUrl && !isDeletedUser && (
+                <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 h-5 ml-2">
+                  <img
+                    src={authorCountryFlagUrl}
+                    alt={authorCountryName ?? '국가'}
+                    title={authorCountryName ?? ''}
+                    className="w-5 h-3.5 rounded-[2px] object-cover"
+                  />
+                </Badge>
+              )}
+
+              {!authorCountryFlagUrl && authorCountryName && (
+                <Badge
+                  variant="secondary"
+                  className="flex items-center px-1 py-0.5 ml-2"
+                  title={authorCountryName}
+                >
+                  <span>{t('common.loading')}</span>
+                </Badge>
+              )}
+
+              <span className="mx-2 text-gray-500 dark:text-gray-400">·</span>
+              <span className="text-gray-500 dark:text-gray-400 text-sm">
+                {formatSmartDate(tweet.timestamp)}
+                {(() => {
+                  const toMs = (v: unknown) => {
+                    if (!v) return null;
+                    const ms = new Date(v as string | number).getTime();
+                    return Number.isFinite(ms) ? ms : null;
+                  };
+                  const tweetRecord = tweet as any;
+                  const created =
+                    tweetRecord.createdAt || tweetRecord.created_at || tweet.timestamp;
+                  const edited = currentUpdatedAt || tweetRecord.updatedAt;
+                  const createdMs = toMs(created);
+                  const editedMs = toMs(edited);
+                  const isEdited =
+                    createdMs != null && editedMs != null && editedMs > createdMs + 1000;
+                  return isEdited ? (
+                    <span className="ml-1 text-xs text-gray-400">{t('common.edited')}</span>
+                  ) : null;
+                })()}
+              </span>
+              {isAdmin && tweet.is_hidden && (
+                <Badge
+                  variant="outline"
+                  className="ml-2 border-amber-500 text-amber-500 text-[10px] py-0 h-4"
+                >
+                  {t('common.hidden')}
+                </Badge>
               )}
             </div>
-            <BanBadge bannedUntil={tweet.user.banned_until ?? null} size="sm" />
+          </div>
+          <div className="relative ml-auto" ref={menuRef}>
+            <button
+              onClick={e => {
+                e.stopPropagation();
+                setShowMenu(prev => !prev);
+              }}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition"
+            >
+              <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
+            </button>
 
-            {authorCountryFlagUrl && !isDeletedUser && (
-              <Badge variant="secondary" className="flex items-center px-1.5 py-0.5 h-5 ml-2">
-                <img
-                  src={authorCountryFlagUrl}
-                  alt={authorCountryName ?? '국가'}
-                  title={authorCountryName ?? ''}
-                  className="w-5 h-3.5 rounded-[2px] object-cover"
-                />
-              </Badge>
-            )}
+            {showMenu && (
+              <div className="absolute right-3 top-8 min-w-[9rem] whitespace-nowrap bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
+                {authUser?.id === tweet.user.username ? (
+                  <>
+                    <EditButton
+                      onEdit={() => {
+                        openEditModal();
+                        setShowMenu(false);
+                      }}
+                      onClose={() => setShowMenu(false)}
+                    />
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setShowDeleteDialog(true);
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
+                    >
+                      <i className="ri-delete-bin-line" />
+                      {t('common.delete')}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <ReportButton onClick={() => setShowMenu(false)} />
+                    {authorProfileId && (
+                      <BlockButton
+                        targetProfileId={authorProfileId}
+                        onClose={() => setShowMenu(false)}
+                      />
+                    )}
+                  </>
+                )}
 
-            {!authorCountryFlagUrl && authorCountryName && (
-              <Badge
-                variant="secondary"
-                className="flex items-center px-1 py-0.5 ml-2"
-                title={authorCountryName}
-              >
-                <span>{t('common.loading')}</span>
-              </Badge>
-            )}
-
-            <span className="mx-2 text-gray-500 dark:text-gray-400">·</span>
-            <span className="text-gray-500 dark:text-gray-400 text-sm">
-              {formatSmartDate(tweet.timestamp)}
-              {(() => {
-                const toMs = (v: unknown) => {
-                  if (!v) return null;
-                  const ms = new Date(v as string | number).getTime();
-                  return Number.isFinite(ms) ? ms : null;
-                };
-                const tweetRecord = tweet as any;
-                const created =
-                  tweetRecord.createdAt || tweetRecord.created_at || tweet.timestamp;
-                const edited = currentUpdatedAt || tweetRecord.updatedAt;
-                const createdMs = toMs(created);
-                const editedMs = toMs(edited);
-                const isEdited =
-                  createdMs != null && editedMs != null && editedMs > createdMs + 1000;
-                return isEdited ? <span className="ml-1 text-xs text-gray-400">{t('common.edited')}</span> : null;
-              })()}
-            </span>
-            {isAdmin && tweet.is_hidden && (
-              <Badge variant="outline" className="ml-2 border-amber-500 text-amber-500 text-[10px] py-0 h-4">
-                {t('common.hidden')}
-              </Badge>
+                {/* 관리자 전용 메뉴 */}
+                {isAdmin && (
+                  <>
+                    <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
+                    <button
+                      type="button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        setShowAdminConfirm(true);
+                        setShowMenu(false);
+                      }}
+                      className={`w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-sm flex items-center gap-2 ${isHiddenLocal ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}
+                    >
+                      <i className={isHiddenLocal ? 'ri-eye-line' : 'ri-eye-off-line'} />
+                      <span>
+                        {isHiddenLocal
+                          ? t('common.unhide', '숨김 해제')
+                          : t('common.hide', '숨기기')}
+                      </span>
+                    </button>
+                  </>
+                )}
+              </div>
             )}
           </div>
         </div>
-        <div className="relative ml-auto" ref={menuRef}>
-          <button
-            onClick={e => {
-              e.stopPropagation();
-              setShowMenu(prev => !prev);
-            }}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-primary/10 transition"
-          >
-            <i className="ri-more-2-fill text-gray-500 dark:text-gray-400 text-lg" />
-          </button>
 
-          {showMenu && (
-            <div className="absolute right-3 top-8 min-w-[9rem] whitespace-nowrap bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg dark:shadow-black/30 py-2 z-50">
-              {authUser?.id === tweet.user.username ? (
-                <>
-                  <EditButton
-                    onEdit={() => {
-                      openEditModal();
-                      setShowMenu(false);
-                    }}
-                    onClose={() => setShowMenu(false)}
-                  />
-                  <button
-                    onClick={e => {
-                      e.stopPropagation();
-                      setShowDeleteDialog(true);
-                    }}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-red-600 dark:text-red-400 flex items-center gap-2"
-                  >
-                    <i className="ri-delete-bin-line" />
-                    {t('common.delete')}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <ReportButton onClick={() => setShowMenu(false)} />
-                  {authorProfileId && (
-                    <BlockButton
-                      targetProfileId={authorProfileId}
-                      onClose={() => setShowMenu(false)}
-                    />
-                  )}
-                </>
-              )}
+        {showDeleteDialog && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[1000]">
+            <div
+              className="bg-white dark:bg-secondary rounded-2xl p-6 w-[90%] max-w-sm"
+              onClick={e => e.stopPropagation()}
+            >
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
+                {t('tweet.delete_msg_title')}
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+                {t('tweet.delete_msg_desc')}
+              </p>
 
-              {/* 관리자 전용 메뉴 */}
-              {isAdmin && (
-                <>
-                  <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
-                  <button
-                    type="button"
-                    onClick={e => {
-                      e.stopPropagation();
-                      setShowAdminConfirm(true);
-                      setShowMenu(false);
-                    }}
-                    className={`w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-white/10 text-sm flex items-center gap-2 ${isHiddenLocal ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}
-                  >
-                    <i className={isHiddenLocal ? 'ri-eye-line' : 'ri-eye-off-line'} />
-                    <span>{isHiddenLocal ? t('common.unhide', '숨김 해제') : t('common.hide', '숨기기')}</span>
-                  </button>
-                </>
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setShowDeleteDialog(false)}
+                  className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  onClick={handleDeleteTweet}
+                  className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+                >
+                  {t('common.delete')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 관리자 액션 확인 다이얼로그 */}
+        {showAdminConfirm && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[1000]">
+            <div
+              className="bg-white dark:bg-secondary rounded-2xl p-6 w-[90%] max-w-sm"
+              onClick={e => e.stopPropagation()}
+            >
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
+                {isHiddenLocal
+                  ? t('admin.unhide_title', '게시물 숨김 해제')
+                  : t('admin.hide_title', '게시물 숨기기')}
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+                {isHiddenLocal
+                  ? t('admin.unhide_confirm_msg', '이 게시물의 숨김을 해제하시겠습니까?')
+                  : t('admin.hide_confirm_msg', '이 게시물을 숨기시겠습니까?')}
+              </p>
+
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setShowAdminConfirm(false)}
+                  className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10"
+                  disabled={isAdminHiding}
+                >
+                  {t('common.cancel', '취소')}
+                </button>
+                <button
+                  onClick={handleToggleAdminHide}
+                  className={`px-4 py-2 rounded-lg text-white ${isHiddenLocal ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-600 hover:bg-amber-700'}`}
+                  disabled={isAdminHiding}
+                >
+                  {isAdminHiding
+                    ? t('common.processing', '처리 중...')
+                    : t('common.confirm', '확인')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-4">
+          {/* 텍스트 + 번역 버튼 */}
+          {hasText && (
+            <div className="flex items-center gap-2">
+              <div
+                className={`text-xl leading-relaxed break-words whitespace-pre-line ${isSoftDeleted || isHiddenContent ? 'italic text-gray-500 opacity-60' : 'text-gray-900 dark:text-gray-100'}`}
+              >
+                <div dangerouslySetInnerHTML={{ __html: safeContent }} />
+              </div>
+
+              {/* 번역 버튼 */}
+              {!isSoftDeleted && plainTextContent.trim().length > 0 && (
+                <TranslateButton
+                  text={plainTextContent}
+                  contentId={`tweet_${tweet.id}`}
+                  setTranslated={setTranslated}
+                  size="sm"
+                />
               )}
             </div>
           )}
-        </div>
-      </div>
 
-      {showDeleteDialog && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[1000]">
-          <div
-            className="bg-white dark:bg-secondary rounded-2xl p-6 w-[90%] max-w-sm"
-            onClick={e => e.stopPropagation()}
-          >
-            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
-              {t('tweet.delete_msg_title')}
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-              {t('tweet.delete_msg_desc')}
-            </p>
-
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setShowDeleteDialog(false)}
-                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={handleDeleteTweet}
-                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
-              >
-                {t('common.delete')}
-              </button>
+          {/* 번역 결과 */}
+          {translated && (
+            <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 rounded-lg text-sm whitespace-pre-line break-words">
+              {translated}
             </div>
-          </div>
+          )}
+
+          {/* 이미지 슬라이더 */}
+          {allImages.length > 0 && (
+            <ImageSlider
+              allImages={allImages}
+              currentImage={currentImage}
+              setCurrentImage={setCurrentImage}
+              setDirection={setDirection}
+              direction={direction}
+              onOpen={index => {
+                setModalIndex(index);
+                setShowImageModal(true);
+              }}
+            />
+          )}
+
+          {showImageModal && (
+            <ModalImageSlider
+              allImages={allImages}
+              modalIndex={modalIndex}
+              setModalIndex={setModalIndex}
+              onClose={() => setShowImageModal(false)}
+            />
+          )}
         </div>
-      )}
 
-      {/* 관리자 액션 확인 다이얼로그 */}
-      {showAdminConfirm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-[1000]">
-          <div
-            className="bg-white dark:bg-secondary rounded-2xl p-6 w-[90%] max-w-sm"
-            onClick={e => e.stopPropagation()}
-          >
-            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
-              {isHiddenLocal ? t('admin.unhide_title', '게시물 숨김 해제') : t('admin.hide_title', '게시물 숨기기')}
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-              {isHiddenLocal ? t('admin.unhide_confirm_msg', '이 게시물의 숨김을 해제하시겠습니까?') : t('admin.hide_confirm_msg', '이 게시물을 숨기시겠습니까?')}
-            </p>
-
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setShowAdminConfirm(false)}
-                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-white/10"
-                disabled={isAdminHiding}
-              >
-                {t('common.cancel', '취소')}
-              </button>
-              <button
-                onClick={handleToggleAdminHide}
-                className={`px-4 py-2 rounded-lg text-white ${isHiddenLocal ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-600 hover:bg-amber-700'}`}
-                disabled={isAdminHiding}
-              >
-                {isAdminHiding ? t('common.processing', '처리 중...') : t('common.confirm', '확인')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="mt-4">
-        {/* 텍스트 + 번역 버튼 */}
-        {hasText && (
-          <div className="flex items-center gap-2">
-            <div
-              className={`text-xl leading-relaxed break-words whitespace-pre-line ${(isSoftDeleted || isHiddenContent) ? 'italic text-gray-500 opacity-60' : 'text-gray-900 dark:text-gray-100'}`}
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-start gap-8 text-sm text-gray-500 dark:text-gray-400">
+            {/* 댓글 수 */}
+            <button
+              className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400 transition-colors group"
+              onClick={onReplyClick}
             >
-              <div dangerouslySetInnerHTML={{ __html: safeContent }} />
-            </div>
+              <div className="p-2 rounded-full group-hover:bg-primary/10 dark:group-hover:bg-primary/15 transition-colors">
+                <i className="ri-chat-3-line text-lg" />
+              </div>
+              <span className="text-sm text-gray-900 dark:text-gray-100">
+                {normalizedStats.replies}
+              </span>
+            </button>
 
-            {/* 번역 버튼 */}
-            {!isSoftDeleted && plainTextContent.trim().length > 0 && (
-              <TranslateButton
-                text={plainTextContent}
-                contentId={`tweet_${tweet.id}`}
-                setTranslated={setTranslated}
-                size="sm"
+            {/* 좋아요 */}
+            <button
+              className={`flex items-center space-x-2 transition-colors group ${
+                liked ? 'text-red-500' : 'hover:text-red-500'
+              }`}
+              onClick={toggleTweetLike}
+            >
+              <div className="p-2 rounded-full group-hover:bg-primary/10 dark:group-hover:bg-primary/15 transition-colors">
+                <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg`}></i>
+              </div>
+              <span className="text-sm text-gray-900 dark:text-gray-100">{likeCount}</span>
+            </button>
+
+            {/* 조회수 */}
+            <div className="flex items-center space-x-2">
+              <div className="p-2 rounded-full">
+                <i className="ri-eye-line text-lg" />
+              </div>
+              <span className="text-sm text-gray-900 dark:text-gray-100">
+                {normalizedStats.views}
+              </span>
+            </div>
+            {/* 공유 */}
+            <div
+              className="flex items-center"
+              onClick={e => {
+                e.stopPropagation();
+              }}
+            >
+              <ShareButton
+                title={shareTitle}
+                text={shareText}
+                url={tweetUrl}
+                className="!border-0 !px-2 !py-2 [&_span]:!hidden !text-gray-500 dark:!text-gray-400 hover:!text-primary dark:hover:!text-primary"
               />
-            )}
-          </div>
-        )}
-
-        {/* 번역 결과 */}
-        {translated && (
-          <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 rounded-lg text-sm whitespace-pre-line break-words">
-            {translated}
-          </div>
-        )}
-
-        {/* 이미지 슬라이더 */}
-        {allImages.length > 0 && (
-          <ImageSlider
-            allImages={allImages}
-            currentImage={currentImage}
-            setCurrentImage={setCurrentImage}
-            setDirection={setDirection}
-            direction={direction}
-            onOpen={index => {
-              setModalIndex(index);
-              setShowImageModal(true);
-            }}
-          />
-        )}
-
-        {showImageModal && (
-          <ModalImageSlider
-            allImages={allImages}
-            modalIndex={modalIndex}
-            setModalIndex={setModalIndex}
-            onClose={() => setShowImageModal(false)}
-          />
-        )}
-      </div>
-
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-start gap-8 text-sm text-gray-500 dark:text-gray-400">
-          {/* 댓글 수 */}
-          <button
-            className="flex items-center space-x-2 hover:text-blue-500 dark:hover:text-blue-400 transition-colors group"
-            onClick={onReplyClick}
-          >
-            <div className="p-2 rounded-full group-hover:bg-primary/10 dark:group-hover:bg-primary/15 transition-colors">
-              <i className="ri-chat-3-line text-lg" />
             </div>
-            <span className="text-sm text-gray-900 dark:text-gray-100">
-              {normalizedStats.replies}
-            </span>
-          </button>
-
-          {/* 좋아요 */}
-          <button
-            className={`flex items-center space-x-2 transition-colors group ${
-              liked ? 'text-red-500' : 'hover:text-red-500'
-            }`}
-            onClick={toggleTweetLike}
-          >
-            <div className="p-2 rounded-full group-hover:bg-primary/10 dark:group-hover:bg-primary/15 transition-colors">
-              <i className={`${liked ? 'ri-heart-fill' : 'ri-heart-line'} text-lg`}></i>
-            </div>
-            <span className="text-sm text-gray-900 dark:text-gray-100">{likeCount}</span>
-          </button>
-
-          {/* 조회수 */}
-          <div className="flex items-center space-x-2">
-            <div className="p-2 rounded-full">
-              <i className="ri-eye-line text-lg" />
-            </div>
-            <span className="text-sm text-gray-900 dark:text-gray-100">
-              {normalizedStats.views}
-            </span>
           </div>
         </div>
+        <EditTweetModal
+          open={isEditModalOpen}
+          title="게시글 수정"
+          editText={editText}
+          setEditText={setEditText}
+          editImages={editImages}
+          setEditImages={setEditImages}
+          isUploading={isUploading}
+          onFileChange={handleEditFiles} // 기존 함수 그대로 사용 가능
+          onClose={() => {
+            // 취소하면 원복해두고 닫기(선택)
+            setEditText(htmlToEditorText(currentContent));
+            setEditImages(extractImageSrcs(currentContent));
+            closeEditModal();
+          }}
+          onSave={async () => {
+            await saveEdit(); // saveEdit 내부에서 currentContent 업데이트 하니까 OK
+            closeEditModal(); // saveEdit 안에서 닫지 않는다면 여기서 닫기
+          }}
+          disableSave={!editText.trim() && editImages.length === 0}
+        />
       </div>
-      <EditTweetModal
-        open={isEditModalOpen}
-        title="게시글 수정"
-        editText={editText}
-        setEditText={setEditText}
-        editImages={editImages}
-        setEditImages={setEditImages}
-        isUploading={isUploading}
-        onFileChange={handleEditFiles} // 기존 함수 그대로 사용 가능
-        onClose={() => {
-          // 취소하면 원복해두고 닫기(선택)
-          setEditText(htmlToEditorText(currentContent));
-          setEditImages(extractImageSrcs(currentContent));
-          closeEditModal();
-        }}
-        onSave={async () => {
-          await saveEdit(); // saveEdit 내부에서 currentContent 업데이트 하니까 OK
-          closeEditModal(); // saveEdit 안에서 닫지 않는다면 여기서 닫기
-        }}
-        disableSave={!editText.trim() && editImages.length === 0}
-      />
-    </div>
+    </>
   );
 }
