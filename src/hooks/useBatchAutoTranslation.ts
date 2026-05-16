@@ -53,7 +53,9 @@ export const useBatchAutoTranslation = (
   const [translatedTexts, setTranslatedTexts] = useState<(string | null)[]>(
     new Array(texts.length).fill(null)
   );
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
+    texts.length > 0 && targetLang && !targetLang.toLowerCase().startsWith('ko') ? 'loading' : 'idle'
+  );
   const [error, setError] = useState<unknown>(null);
 
   // 호환성 유지 — status 기반으로 loading 파생

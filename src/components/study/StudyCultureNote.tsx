@@ -119,7 +119,7 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
   const combinedTexts = useMemo(() => combinedItems.map(i => i.text), [combinedItems]);
   const combinedKeys = useMemo(() => combinedItems.map(i => i.key), [combinedItems]);
 
-  const { translatedTexts, loading: isTranslating } = useBatchAutoTranslation(combinedTexts, combinedKeys, targetLang);
+  const { translatedTexts, status: translationStatus } = useBatchAutoTranslation(combinedTexts, combinedKeys, targetLang);
 
   // 현재 보고 있는 문화 노트로 이동
   const handleNextNote = () => {
@@ -204,7 +204,7 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
         translatedSubtitle={noteSubtitle}
         translatedContents={noteList}
         isKorean={isKorean}
-        isTranslating={isTranslating}
+        translationStatus={translationStatus}
       />
 
       {/* 버튼들 */}

@@ -41,7 +41,9 @@ const getTranslationVersion = (key: string, lang: string) => {
 
 export function useAutoTranslation(text: string, contentId: string, targetLang: string) {
   const [translatedText, setTranslatedText] = useState<string | null>(null);
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
+    text && targetLang && !targetLang.toLowerCase().startsWith('ko') ? 'loading' : 'idle'
+  );
 
   // 호환성 유지 — status 기반으로 isLoading 파생
   const isLoading = status === 'loading';

@@ -340,7 +340,8 @@ CRITICAL TRANSLATION RULES:
     const locks: string[] = [];
     itemsToCall.forEach(([cid, _], i) => {
         const lockKey = `${targetLang}:${cid}`;
-        const itemPromise = apiTask.then(allResults => allResults[i]);
+        // [Surgical Fix] apiTask 실패 시 unhandled rejection 방지를 위해 dummy catch 추가
+        const itemPromise = apiTask.then(allResults => allResults[i]).catch(() => undefined);
         inFlightMap.set(lockKey, itemPromise);
         locks.push(lockKey);
     });
@@ -387,8 +388,11 @@ CRITICAL TRANSLATION RULES:
     } finally {
         locks.forEach(l => inFlightMap.delete(l));
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Batch translation error:', error);
+    if (error?.message?.includes('429')) {
+      return res.status(429).json({ error: 'Rate limit exceeded' });
+    }
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 });

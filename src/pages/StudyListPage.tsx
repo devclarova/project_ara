@@ -20,6 +20,7 @@ import type { Study } from '../types/study';
 import { useAuth } from '@/contexts/AuthContext';
 import SignInModal from '@/components/auth/SignInModal';
 import { BookOpen, ExternalLink } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useMarketingBanners } from '@/hooks/useMarketingBanners';
 
 const ALL_CATEGORIES: string[] = ['all', 'drama', 'movie', 'show', 'music'];
@@ -106,9 +107,9 @@ export default function StudyListPage() {
   const [isScrollable, setIsScrollable] = useState(false);
 
   // 메타데이터 배치 번역 — 대량의 학습 콘텐츠 제목 및 설명을 타겟 언어로 일괄 변환 처리
-  const { translatedTexts: trTitles } = useBatchAutoTranslation(clips.map((c: any) => c.title), clips.map((c: any) => `study_title_${c.id}`), targetLang);
-  const { translatedTexts: trDescs } = useBatchAutoTranslation(clips.map((c: any) => c.short_description || ''), clips.map((c: any) => `study_desc_${c.id}`), targetLang);
-  const { translatedTexts: trEpisodes } = useBatchAutoTranslation(clips.map((c: any) => (c.video && c.video?.length > 0 ? c.video[0].episode : '') || ''), clips.map((c: any) => `study_episode_${c.id}`), targetLang);
+  const { translatedTexts: trTitles, status: trTitlesStatus } = useBatchAutoTranslation(clips.map((c: any) => c.title), clips.map((c: any) => `study_title_${c.id}`), targetLang);
+  const { translatedTexts: trDescs, status: trDescsStatus } = useBatchAutoTranslation(clips.map((c: any) => c.short_description || ''), clips.map((c: any) => `study_desc_${c.id}`), targetLang);
+  const { translatedTexts: trEpisodes, status: trEpisodesStatus } = useBatchAutoTranslation(clips.map((c: any) => (c.video && c.video?.length > 0 ? c.video[0].episode : '') || ''), clips.map((c: any) => `study_episode_${c.id}`), targetLang);
 
   useEffect(() => {
     let ignore = false;
@@ -260,8 +261,12 @@ export default function StudyListPage() {
                         episode={v?.episode || ''}
                         scene={v?.scene || ''}
                         level={v?.level || ''}
-                        duration={typeof v?.runtime_bucket === 'string' ? v.runtime_bucket : null}
+                        duration={
+                          v?.runtime_bucket || 
+                          (v?.runtime ? `${Math.max(1, Math.floor(v.runtime / 60))}${t('study.formats.minutes_label', { defaultValue: '분' })}` : null)
+                        }
                         translatedEpisodeProp={originalIndex >= 0 ? trEpisodes[originalIndex] : null}
+                        translationStatus={trTitlesStatus}
                         basePath={user ? '/study' : '/guest-study'}
                         isGuest={!user}
                         isPreview={study.is_featured}
@@ -357,26 +362,21 @@ export default function StudyListPage() {
 function BannerTitle({ banner, fallback }: { banner: any, fallback: string }) {
   const { t, i18n } = useTranslation();
   const title = banner?.title || '';
-  const { translatedText } = useAutoTranslation(title, `banner_title_${banner?.id}`, i18n.language);
+  const { translatedText, status } = useAutoTranslation(title, `banner_title_${banner?.id}`, i18n.language);
 
-  // [Surgical Tip] 마케팅 구독 수동 번역 키 우선 적용 (번역 딜레이 방지)
-  if (banner?.id?.includes('subscription') || title.toLowerCase().includes('subscription')) {
-    const manualTitle = t('marketing.subscription.title');
-    if (manualTitle && manualTitle !== 'marketing.subscription.title') {
-      return (
-        <h4 className="text-sm sm:text-[13px] md:text-base font-black text-white leading-tight tracking-tight drop-shadow-sm line-clamp-1">
-          {manualTitle}
-        </h4>
-      );
-    }
-  }
+  const displayTitle = useMemo(() => {
+    if (i18n.language.startsWith('ko')) return title || fallback;
+    if (!translatedText || translatedText === title) return title || fallback;
+    return `${title} (${translatedText})`;
+  }, [title, translatedText, i18n.language, fallback]);
 
   return (
     <h4 className="text-sm sm:text-[13px] md:text-base font-black text-white leading-tight tracking-tight drop-shadow-sm line-clamp-1">
-      {translatedText || title || fallback}
+      {!i18n.language.startsWith('ko') && status === 'loading'
+        ? <Skeleton className="h-4 w-32 bg-white/20" />
+        : displayTitle}
     </h4>
   );
 }
 
 // End of file
-

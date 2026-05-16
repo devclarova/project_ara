@@ -177,7 +177,7 @@ const StudySubtitles: React.FC<SubtitleListProps> = ({
                 subtitle={d}
                 onSelect={onSelectDialogue}
                 onSeek={onSeek}
-                translatedPron={translatedProns[currentPage * pageSize + idx] || d.pronunciation || ''}
+                translatedPron={translatedProns[currentPage * pageSize + idx] || null}
                 translatedContent={translatedContents[currentPage * pageSize + idx]}
                 isTranslating={translationLoading}
               />

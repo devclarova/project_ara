@@ -19,6 +19,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useTTS } from '@/hooks/useTTS';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export type EpisodeWord = {
   id: string;
@@ -166,7 +167,7 @@ export default function EpisodeVocaModal({
     return [...meanings, ...prons, ...examples, ...poses];
   }, [words]);
 
-  const { translatedTexts: allTranslated } = useBatchAutoTranslation(combinedTexts, combinedKeys, targetLang);
+  const { translatedTexts: allTranslated, status: translationStatus } = useBatchAutoTranslation(combinedTexts, combinedKeys, targetLang);
 
   const getTr = (fieldIdx: number) => {
     let tr = allTranslated[fieldIdx * words.length + index] || '';
@@ -401,7 +402,9 @@ export default function EpisodeVocaModal({
                   </div>
 
                   <div className="mt-2 min-h-[20px] text-[13px] sm:text-[15px] text-gray-500 dark:text-gray-300">
-                    {displayPron ? (
+                    {!i18n.language.startsWith('ko') && translationStatus === 'loading' && !showOriginal ? (
+                      <div className="flex justify-center"><Skeleton className="h-4 w-24" /></div>
+                    ) : displayPron ? (
                       `[${displayPron}]`
                     ) : (
                       <span className="invisible">placeholder</span>
@@ -409,7 +412,9 @@ export default function EpisodeVocaModal({
                   </div>
 
                   <div className="mt-2 min-h-[18px] text-[12px] sm:text-xs text-gray-400">
-                    {displayPos ? (
+                    {!i18n.language.startsWith('ko') && translationStatus === 'loading' && !showOriginal ? (
+                      <div className="flex justify-center"><Skeleton className="h-3.5 w-16" /></div>
+                    ) : displayPos ? (
                       `(${displayPos})`
                     ) : (
                       <span className="invisible">placeholder</span>
@@ -419,13 +424,24 @@ export default function EpisodeVocaModal({
 
                 <div className="mt-3 sm:mt-2">
                   <div className="mt-2 text-center text-[18px] sm:text-[22px] font-bold text-gray-900 dark:text-gray-100 px-2 break-keep min-h-[22px] sm:min-h-[30px]">
-                    {displayMeaning || '-'}
+                    {!i18n.language.startsWith('ko') && translationStatus === 'loading' && !showOriginal ? (
+                      <div className="flex justify-center"><Skeleton className="h-6 w-48" /></div>
+                    ) : (
+                      displayMeaning || '-'
+                    )}
                   </div>
                 </div>
 
                 <div className="mt-3 sm:mt-2">
                   <div className="mt-2 px-3 sm:px-5 text-center text-[13px] sm:text-[15px] leading-relaxed text-gray-600 dark:text-gray-300 break-keep min-h-[28px] sm:min-h-[42px]">
-                    {displayExample ? `“${displayExample}”` : '-'}
+                    {!i18n.language.startsWith('ko') && translationStatus === 'loading' && !showOriginal ? (
+                      <div className="flex flex-col items-center gap-1">
+                        <Skeleton className="h-3.5 w-full max-w-[280px]" />
+                        <Skeleton className="h-3.5 w-4/5 max-w-[220px]" />
+                      </div>
+                    ) : (
+                      displayExample ? `“${displayExample}”` : '-'
+                    )}
                   </div>
                 </div>
 

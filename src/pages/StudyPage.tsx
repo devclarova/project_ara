@@ -9,6 +9,7 @@ import { InfoItem } from '@/components/study/ContentCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { Skeleton } from '@/components/ui/skeleton';
 import { NavLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useBatchAutoTranslation } from '@/hooks/useBatchAutoTranslation';
@@ -133,7 +134,7 @@ const StudyPage = () => {
     ];
   }, [study]);
 
-  const { translatedTexts: metaTranslations } = useBatchAutoTranslation(metaTexts, metaKeys, targetLang);
+  const { translatedTexts: metaTranslations, status: metaStatus } = useBatchAutoTranslation(metaTexts, metaKeys, targetLang);
 
   const [
     translatedTitle,
@@ -169,20 +170,13 @@ const StudyPage = () => {
 
   let displayTitle = effectiveTitle || t('study.no_title');
 
-  // 번역 렌더링 로직 — 타겟 언어별 포맷 분기 처리
-  if (translatedTitle && effectiveTitle && translatedTitle !== effectiveTitle) {
-    if (targetLang.startsWith('ko')) {
-      displayTitle = effectiveTitle;
-    } else {
-      // 음악 카테고리는 중복 느낌을 줄이기 위해 괄호 병기 사용 (가수 - 제목 (번역))
-      // 그 외(드라마, 영화 등)는 기존 포맷 유지 (원제 - 번역)
-      if (isMusic) {
-        displayTitle = `${effectiveTitle} (${translatedTitle})`;
-      } else {
-        displayTitle = `${effectiveTitle} - ${translatedTitle}`;
-      }
-    }
-  }
+  const formattedTitle = useMemo(() => {
+    if (targetLang.startsWith('ko')) return effectiveTitle;
+    if (!translatedTitle || translatedTitle === effectiveTitle) return effectiveTitle;
+    return `${effectiveTitle} (${translatedTitle})`;
+  }, [effectiveTitle, translatedTitle, targetLang]);
+
+  displayTitle = formattedTitle;
 
   const translatedLevelDisplay = useMemo(() => {
     const lvl = study?.level;
@@ -524,7 +518,11 @@ const StudyPage = () => {
                     >
                       <i className="ri-movie-2-line text-base opacity-70 group-hover:opacity-100 shrink-0 dark:text-gray-100 mr-1" />
                       <span className="font-medium hidden sm:block dark:text-gray-100 leading-[0.9]">
-                        {loading ? t('common.loading') : (displayTitle ?? t('study.no_title'))}
+                        {loading || (!targetLang.startsWith('ko') && metaStatus === 'loading') ? (
+                          <Skeleton className="h-3 w-24" />
+                        ) : (
+                          displayTitle ?? t('study.no_title')
+                        )}
                       </span>
                     </NavLink>
 
@@ -541,28 +539,30 @@ const StudyPage = () => {
                                 study?.categories ?? t('study.category.all'),
                               )}&content=${encodeURIComponent(
                                 String(study.contents),
-                              )}&episode=${encodeURIComponent(study.episode)}`,
-                            }
-                          : '/studylist'
-                      }
-                      className={({ isActive }) =>
-                        `group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl leading-none transition-all text-sm whitespace-normal break-words text-left h-auto
-        ${
-          isActive
-            ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10'
-            : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white hover:dark:bg-gray-600 dark:text-gray-300'
-        }`
-                      }
-                      title={loading ? t('common.loading') : (displayEpisode || t('study.no_episode'))}
-                    >
-                      <i className={`${isMusic ? 'ri-music-2-line' : 'ri-hashtag'} text-base opacity-70 group-hover:opacity-100 shrink-0 dark:text-gray-100 mr-1`} />
-                      <span className="font-medium hidden sm:block dark:text-gray-100 leading-[0.9]">
-                        {loading ? t('common.loading') : (
-                          isMusic && translatedEpisode && translatedEpisode !== study?.episode
-                            ? `${displayEpisode} (${translatedEpisode})`
-                            : (displayEpisode || t('study.no_episode'))
-                        )}
-                      </span>
+                                )}&episode=${encodeURIComponent(study.episode)}`,
+                              }
+                            : '/studylist'
+                        }
+                        className={({ isActive }) =>
+                          `group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl leading-none transition-all text-sm whitespace-normal break-words text-left h-auto
+          ${
+            isActive
+              ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10'
+              : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white hover:dark:bg-gray-600 dark:text-gray-300'
+          }`
+                        }
+                        title={loading ? t('common.loading') : (displayEpisode || t('study.no_episode'))}
+                      >
+                        <i className={`${isMusic ? 'ri-music-2-line' : 'ri-hashtag'} text-base opacity-70 group-hover:opacity-100 shrink-0 dark:text-gray-100 mr-1`} />
+                        <span className="font-medium hidden sm:block dark:text-gray-100 leading-[0.9]">
+                          {loading || (!targetLang.startsWith('ko') && metaStatus === 'loading') ? (
+                            <Skeleton className="h-3 w-16" />
+                          ) : (
+                            isMusic && translatedEpisode && translatedEpisode !== study?.episode
+                              ? `${displayEpisode} (${translatedEpisode})`
+                              : (displayEpisode || t('study.no_episode'))
+                          )}
+                        </span>
                     </NavLink>
                   </div>
                 </nav>
@@ -580,10 +580,8 @@ const StudyPage = () => {
 
                   {/* 중앙 타이틀 */}
                   <h1 className="flex-1 flex flex-col items-center justify-center font-bold text-gray-900 select-none tracking-tight px-2 min-w-0">
-                    {loading ? (
-                      <span className="animate-pulse text-gray-400 text-lg sm:text-xl lg:text-2xl dark:text-gray-100">
-                        {t('common.loading')}
-                      </span>
+                    {loading || (!targetLang.startsWith('ko') && metaStatus === 'loading') ? (
+                      <Skeleton className="h-8 w-64 mb-1" />
                     ) : (
                       <div className="flex flex-col sm:flex-row items-center justify-center text-center gap-1 sm:gap-2 w-full">
                         <span className="text-lg sm:text-xl lg:text-2xl xl:text-3xl dark:text-gray-100 break-keep leading-tight">
@@ -618,11 +616,18 @@ const StudyPage = () => {
                 </div>
                 
                 {/* 콘텐츠 상세 요약 정보 노출 영역 — 다국어 설명 지원 */}
-                {!loading && (translatedDescription || parentShortDesc) && (
-                  <div className="mt-3 px-4 sm:px-6 md:px-8">
-                    <p className="text-center text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed max-w-3xl mx-auto">
-                      {translatedDescription || parentShortDesc}
-                    </p>
+                {!loading && (
+                  <div className="mt-3 px-4 sm:px-6 md:px-8 min-h-[1.5em]">
+                    {!targetLang.startsWith('ko') && metaStatus === 'loading' ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <Skeleton className="h-4 w-full max-w-2xl" />
+                        <Skeleton className="h-4 w-4/5 max-w-xl" />
+                      </div>
+                    ) : (translatedDescription || parentShortDesc) ? (
+                      <p className="text-center text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed max-w-3xl mx-auto">
+                        {translatedDescription || parentShortDesc}
+                      </p>
+                    ) : null}
                   </div>
                 )}
               </div>
@@ -631,14 +636,30 @@ const StudyPage = () => {
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600 dark:text-gray-300 px-1">
                 <span className="flex items-center gap-1 shrink-0">
                   {/* 시간(runtime) */}
-                  <InfoItem
-                    icon="ri-time-line"
-                    text={loading ? '—' : (translatedRuntime ?? translatedRuntimeBucket ?? study?.runtime ?? study?.runtime_bucket ?? '—')}
-                  />
+                  {loading || (!targetLang.startsWith('ko') && metaStatus === 'loading') ? (
+                    <Skeleton className="h-4 w-20" />
+                  ) : (
+                    <InfoItem
+                      icon="ri-time-line"
+                      text={translatedRuntime ?? translatedRuntimeBucket ?? study?.runtime ?? study?.runtime_bucket ?? '—'}
+                    />
+                  )}
                 </span>
                 <span className="flex items-center gap-1 shrink-0">
                   {/* 난이도 */}
-                  <InfoItem icon="ri-star-line" text={loading ? '—' : (translatedLevel ?? study?.level ?? '—')} />
+                  {loading || (!targetLang.startsWith('ko') && metaStatus === 'loading') ? (
+                    <Skeleton className="h-4 w-16" />
+                  ) : (
+                    <InfoItem icon="ri-star-line" text={translatedLevelDisplay ?? '—'} />
+                  )}
+                </span>
+                <span className="flex items-center gap-1 shrink-0">
+                  {/* 카테고리 (Breadcrumb 외 메타 영역 추가 대응) */}
+                  {loading || (!targetLang.startsWith('ko') && metaStatus === 'loading') ? (
+                    <Skeleton className="h-4 w-24" />
+                  ) : (
+                    <InfoItem icon="ri-folder-2-line" text={translatedCategory ?? study?.categories ?? '—'} />
+                  )}
                 </span>
                 {/* 조회수 */}
                 <span className="flex items-center gap-1 shrink-0">
