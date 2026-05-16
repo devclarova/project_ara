@@ -26,6 +26,7 @@ import { useNavigate } from 'react-router-dom';
 import Modal from '@/components/common/Modal';
 import ReportModal from '@/components/common/ReportModal';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
+import PlanBadge from '@/components/common/PlanBadge';
 
 // 개별 채팅 세션 컴포넌트(Chat Session Unit) — 성능 최적화를 위해 불필요한 리렌더링을 차단하는 심층 비교(Custom Comparison) 기반 메모이제이션 적용
 const ChatItem = memo(
@@ -94,21 +95,24 @@ const ChatItem = memo(
         className={`chat-item ${isSelected ? 'selected' : ''}`}
         onClick={() => onSelect(chat.id)}
       >
-        <div className="chat-avatar cursor-pointer" onClick={handleAvatarClick}>
-          {chat.other_user.avatar_url ? (
-            <img
-              src={chat.other_user.avatar_url}
-              alt={chat.other_user.nickname}
-              loading="lazy"
-              decoding="async"
-            />
-          ) : (
-            <div className="avatar-placeholder">{chat.other_user.nickname.charAt(0)}</div>
-          )}
+        <div className="chat-avatar cursor-pointer overflow-visible relative p-1.5" onClick={handleAvatarClick}>
+          <PlanBadge plan={chat.other_user.plan?.toLowerCase() || null} size="lg">
+            {chat.other_user.avatar_url ? (
+              <img
+                src={chat.other_user.avatar_url}
+                alt={chat.other_user.nickname}
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-cover rounded-full"
+              />
+            ) : (
+              <div className="avatar-placeholder">{chat.other_user.nickname.charAt(0)}</div>
+            )}
+          </PlanBadge>
           <OnlineIndicator
             userId={chat.other_user.id}
             size="sm"
-            className="absolute bottom-0 right-0 z-10 border-white dark:border-secondary border-2"
+            className="absolute bottom-1.5 right-1.5 z-10 border-white dark:border-secondary border-2"
           />
           {chat.unread_count > 0 && <div className="unread-badge">{chat.unread_count}</div>}
         </div>
@@ -221,11 +225,13 @@ const UserItem = memo(
     return (
       <div className="user-item" onMouseDown={() => onSelect(user)}>
         <div className="user-avatar">
-          {user.avatar_url ? (
-            <img src={user.avatar_url} alt={user.nickname} />
-          ) : (
-            <div className="avatar-placeholder">{user.nickname.charAt(0)}</div>
-          )}
+          <PlanBadge plan={user.plan} size="sm">
+            {user.avatar_url ? (
+              <img src={user.avatar_url} alt={user.nickname} />
+            ) : (
+              <div className="avatar-placeholder">{user.nickname.charAt(0)}</div>
+            )}
+          </PlanBadge>
         </div>
         <div className="user-info">
           <div className="user-nickname flex items-center gap-1">

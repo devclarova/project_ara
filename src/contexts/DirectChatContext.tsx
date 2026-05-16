@@ -225,6 +225,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUserId]); // currentUserId가 바뀔 때만 (즉 로그인 시에만) 초기화
 
+
   const fetchProfileByAuthId = useCallback(
     async (authUserId: string): Promise<ChatUser> => {
       if (!authUserId || authUserId === 'undefined') {
@@ -246,7 +247,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       if (cached) return cached;
 
       const { data } = await (supabase.from('profiles') as any)
-        .select('id, nickname, avatar_url, username, is_online')
+        .select('id, nickname, avatar_url, username, is_online, plan')
         .eq('user_id', authUserId)
         .maybeSingle();
 
@@ -258,6 +259,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
             username: data.username,
             avatar_url: data.avatar_url,
             is_online: data.is_online,
+            plan: data.plan ? data.plan.toLowerCase() : null,
           }
         : {
             id: authUserId,
@@ -265,6 +267,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
             nickname: `User ${authUserId.slice(0, 8)}`,
             avatar_url: null,
             is_online: false,
+            plan: null,
           };
 
       profileCache.current.set(authUserId, userInfo);
@@ -278,11 +281,13 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
     [user],
   );
 
+  // 🟢 현재 로그인 사용자의 프로필 초기화 (Optimistic UI를 위해 mount 시 1회 수행)
   useEffect(() => {
-    if (user?.id) {
-      fetchProfileByAuthId(user.id);
+    if (currentUserId) {
+      fetchProfileByAuthId(currentUserId);
     }
-  }, [user?.id, fetchProfileByAuthId]);
+  }, [currentUserId, fetchProfileByAuthId]);
+
 
   const chatsRef = useRef<ChatListItem[]>([]);
   useEffect(() => {
@@ -501,6 +506,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
           nickname: '나',
           avatar_url: null,
           email: '',
+          plan: null,
         },
         attachments: previewAttachments,
       };

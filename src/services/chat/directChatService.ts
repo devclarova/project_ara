@@ -46,7 +46,7 @@ async function getCurrentUser() {
 export async function getUserProfile(userId: string): Promise<ChatApiResponse<ChatUser>> {
   try {
     const { data: profileData, error: profileError } = await (supabase.from('profiles') as any)
-      .select('id, nickname, avatar_url, username, is_online')
+      .select('id, nickname, avatar_url, username, is_online, plan')
       .eq('user_id', userId)
       .maybeSingle();
 
@@ -64,6 +64,7 @@ export async function getUserProfile(userId: string): Promise<ChatApiResponse<Ch
       username: profileData.username,
       avatar_url: profileData.avatar_url,
       is_online: profileData.is_online,
+      plan: profileData.plan,
     };
 
     return { success: true, data: userInfo };
@@ -274,7 +275,7 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
     if (otherUserIds.length > 0) {
       const { data: profiles, error: profileError } = await (supabase
         .from('profiles') as any)
-        .select('id, nickname, avatar_url, username, banned_until, is_online')
+        .select('id, nickname, avatar_url, username, banned_until, is_online, plan')
         .in('id', otherUserIds);
 
       if (!profileError && profiles) {
@@ -287,6 +288,7 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
             avatar_url: p.avatar_url,
             banned_until: p.banned_until,
             is_online: p.is_online,
+            plan: p.plan ? p.plan.toLowerCase() : null,
           });
         });
       }
@@ -403,7 +405,7 @@ export async function getDirectChat(chatId: string): Promise<ChatApiResponse<Cha
 
     // 상대방 프로필 조회
     const { data: profile } = await (supabase.from('profiles') as any)
-      .select('id, nickname, avatar_url, username, banned_until')
+      .select('id, nickname, avatar_url, username, banned_until, plan')
       .eq('id', otherUserId)
       .single();
 
@@ -416,6 +418,7 @@ export async function getDirectChat(chatId: string): Promise<ChatApiResponse<Cha
           avatar_url: profile.avatar_url,
           banned_until: profile.banned_until,
           is_online: profile.is_online,
+          plan: profile.plan,
         }
       : {
           id: otherUserId,
@@ -786,16 +789,12 @@ export async function getMessages(
 
         // 실제 반환 데이터 (limit 자르기 - nextMessages에서만 자르면 됨)
         const effectiveNextMessages = rawNextMessages.slice(0, nextLimit);
-        const finalMessages = [...sortedPrev, ...effectiveNextMessages];
-
-        // 최종 시간순 정렬 (이미 merge로 되어있지만 안전하게)
-        finalMessages.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-        );
+        const rawFinalMessages = [...sortedPrev, ...effectiveNextMessages];
 
         // 읽음 처리 (비동기)
         (async () => {
           try {
-            const unreadIds = finalMessages
+            const unreadIds = rawFinalMessages
               .filter((m: any) => !m.is_read && m.sender_id !== currentUser.id)
               .map((m: any) => m.id);
 
@@ -810,12 +809,59 @@ export async function getMessages(
           }
         })();
 
+        // --- 프로필 매핑 로직 통합 시작 ---
+        const senderIds = Array.from(new Set(rawFinalMessages.map((m: any) => m.sender_id)));
+        const { data: profiles } = await (supabase
+          .from('profiles') as any)
+          .select('id, nickname, avatar_url, user_id, username, plan')
+          .in('user_id', senderIds);
+
+        const profileMap = new Map<string, ChatUser>();
+        profileMap.set(currentUser.id, {
+          id: currentUser.profileId,
+          email: currentUser.email || '',
+          nickname: '나',
+          username: currentUser.user_metadata?.username,
+          avatar_url: currentUser.user_metadata?.avatar_url || null,
+          plan: currentUser.user_metadata?.plan || null,
+        });
+
+        if (profiles) {
+          profiles.forEach((p: any) => {
+            profileMap.set(p.user_id, {
+              id: p.id,
+              email: `user-${p.id}@example.com`,
+              nickname: p.nickname,
+              username: p.username,
+              avatar_url: p.avatar_url,
+              plan: p.plan ? p.plan.toLowerCase() : null,
+            });
+          });
+        }
+
+        const finalMessagesWithProfiles: DirectMessage[] = rawFinalMessages.map((msg: any) => {
+          let senderInfo = profileMap.get(msg.sender_id);
+          if (!senderInfo) {
+            senderInfo = {
+              id: msg.sender_id,
+              email: '',
+              nickname: msg.sender_id === currentUser.id ? '나' : '알 수 없음',
+              avatar_url: null,
+              plan: null,
+            };
+          }
+          return {
+            ...msg,
+            sender: senderInfo,
+          };
+        });
+
+        finalMessagesWithProfiles.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
         return {
           success: true,
           data: {
-            messages: finalMessages,
-            // targetId 모드에서는 hasNext(미래) 여부만 체크.
-            // hasMore(과거)는 UI에서 true로 가정하고 스크롤 시 로드 시도함.
+            messages: finalMessagesWithProfiles,
             hasNext: hasNext,
           },
         };
@@ -900,7 +946,7 @@ export async function getMessages(
     // 프로필 정보 조회
     const { data: profiles } = await (supabase
       .from('profiles') as any)
-      .select('id, nickname, avatar_url, user_id, username')
+      .select('id, nickname, avatar_url, user_id, username, plan')
       .in('user_id', senderIds);
 
     const profileMap = new Map<string, ChatUser>();
@@ -911,6 +957,7 @@ export async function getMessages(
       nickname: '나',
       username: currentUser.user_metadata?.username, // user_metadata에서 가져오거나 undefined
       avatar_url: currentUser.user_metadata?.avatar_url || null,
+      plan: currentUser.user_metadata?.plan || null,
     });
 
     if (profiles) {
@@ -921,6 +968,7 @@ export async function getMessages(
           nickname: p.nickname,
           username: p.username,
           avatar_url: p.avatar_url,
+          plan: p.plan ? p.plan.toLowerCase() : null,
         });
       });
     }
@@ -934,6 +982,7 @@ export async function getMessages(
           email: '',
           nickname: message.sender_id === currentUser.id ? '나' : '알 수 없음',
           avatar_url: null,
+          plan: null,
         };
       }
 
@@ -1028,7 +1077,7 @@ export async function searchMessagesGlobal(
     if (senderIds.length > 0) {
       const { data: profiles, error: profileError } = await (supabase
         .from('profiles') as any)
-        .select('id, nickname, avatar_url, user_id, banned_until')
+        .select('id, nickname, avatar_url, user_id, banned_until, plan')
         .in('user_id', senderIds); // user_id 컬럼으로 검색 (auth.uid와 매핑)
 
       if (!profileError && profiles) {
@@ -1056,6 +1105,7 @@ export async function searchMessagesGlobal(
               nickname: profile.nickname,
               avatar_url: profile.avatar_url,
               banned_until: profile.banned_until,
+              plan: profile.plan,
               email: '',
             }
           : {
@@ -1121,7 +1171,7 @@ export async function searchUsers(searchTerm: string): Promise<ChatApiResponse<C
     // 사용자 검색 (profiles 테이블에서 검색, 현재 사용자와 이미 채팅 중인 사용자 제외)
     const { data: profiles, error: searchError } = await (supabase
       .from('profiles') as any)
-      .select('id, nickname, avatar_url, created_at, banned_until')
+      .select('id, nickname, avatar_url, created_at, banned_until, plan')
       .ilike('nickname', `%${searchTerm}%`)
       .neq('user_id', currentUser.id) // user_id로 현재 사용자 제외
       .limit(20);
@@ -1148,6 +1198,7 @@ export async function searchUsers(searchTerm: string): Promise<ChatApiResponse<C
       nickname: profile.nickname,
       avatar_url: profile.avatar_url,
       banned_until: profile.banned_until,
+      plan: profile.plan,
     }));
 
     return { success: true, data: chatUsers };
@@ -1260,7 +1311,7 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
     if (otherUserIds.length > 0) {
       const { data: profiles, error: profileError } = await (supabase
         .from('profiles') as any)
-        .select('id, nickname, avatar_url, username, is_online')
+        .select('id, nickname, avatar_url, username, is_online, plan')
         .in('id', otherUserIds);
 
       if (!profileError && profiles) {
@@ -1272,6 +1323,7 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
             username: p.username,
             avatar_url: p.avatar_url,
             is_online: p.is_online,
+            plan: p.plan ? p.plan.toLowerCase() : null,
           });
         });
       }
@@ -1351,7 +1403,6 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
 export async function exitDirectChat(chatId: string): Promise<ChatApiResponse<boolean>> {
   try {
     const currentUser = await getCurrentUser();
-    console.log('[DEBUG] exitDirectChat entry:', { chatId, userId: currentUser?.id, profileId: currentUser?.profileId });
     if (!currentUser) {
       return { success: false, error: '사용자가 로그인되지 않았습니다.' };
     }
@@ -1679,7 +1730,7 @@ export async function getMediaInChat(chatId: string): Promise<ChatApiResponse<Di
 
     const { data: profiles } = await (supabase
       .from('profiles') as any)
-      .select('id, nickname, avatar_url, user_id')
+      .select('id, nickname, avatar_url, user_id, plan')
       .in('user_id', senderIds);
 
     const profileMap = new Map<string, ChatUser>();
@@ -1691,6 +1742,7 @@ export async function getMediaInChat(chatId: string): Promise<ChatApiResponse<Di
           email: `user-${p.id}@example.com`,
           nickname: p.nickname,
           avatar_url: p.avatar_url,
+          plan: p.plan ? p.plan.toLowerCase() : null,
         });
       });
     }
@@ -1705,6 +1757,7 @@ export async function getMediaInChat(chatId: string): Promise<ChatApiResponse<Di
           email: `user-${msg.sender_id}@example.com`,
           nickname: '알 수 없음',
           avatar_url: null,
+          plan: null,
         };
       }
 
