@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Modal from '@/components/common/Modal';
+import ModalImageSlider from '../../community/tweet/components/ModalImageSlider';
 import { 
   User, 
   Mail, 
@@ -52,6 +53,10 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
   const [subscriptions, setSubscriptions] = React.useState<any[]>([]);
   const [visibleCount, setVisibleCount] = React.useState(5);
   const [financeLoading, setFinanceLoading] = React.useState(false);
+
+  // 이미지 확대 보기 상태
+  const [modalImages, setModalImages] = useState<string[]>([]);
+  const [modalIndex, setModalIndex] = useState(0);
   
   React.useEffect(() => {
     const fetchTracking = async () => {
@@ -121,9 +126,21 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
     <Modal isOpen={isOpen} onClose={onClose} title="사용자 상세 프로필" className="max-w-2xl h-auto">
       <div className="overflow-hidden">
         {/* Banner with Profile Image Overlay */}
-        <div className="relative h-48 bg-zinc-200 dark:bg-zinc-800">
+        <div 
+          className={`relative h-48 bg-zinc-200 dark:bg-zinc-800 ${user.banner_url ? 'cursor-pointer group/banner' : ''}`}
+          onClick={() => {
+            if (user.banner_url) {
+              setModalImages([user.banner_url]);
+              setModalIndex(0);
+            }
+          }}
+        >
           {user.banner_url ? (
-            <img src={user.banner_url} alt="banner" className="w-full h-full object-cover" />
+            <img 
+              src={user.banner_url} 
+              alt="banner" 
+              className="w-full h-full object-cover transition-all group-hover/banner:brightness-90" 
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center opacity-20">
               <Globe size={64} />
@@ -131,11 +148,18 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
           )}
           
           <div className="absolute -bottom-12 left-8 p-1 bg-white dark:bg-zinc-900 rounded-full shadow-lg">
-            <div className="relative w-24 h-24 rounded-full bg-zinc-100 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 overflow-hidden shadow-inner">
+            <div 
+              className="relative w-24 h-24 rounded-full bg-zinc-100 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 overflow-hidden shadow-inner cursor-pointer group/avatar"
+              onClick={(e) => {
+                e.stopPropagation();
+                setModalImages([user.avatar_url || '/images/ara_basic_profile.png']);
+                setModalIndex(0);
+              }}
+            >
               <img 
                 src={user.avatar_url || '/images/ara_basic_profile.png'} 
                 alt="avatar" 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-all group-hover/avatar:brightness-90"
               />
             </div>
           </div>
@@ -322,6 +346,16 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
           </div>
         </div>
       </div>
+
+      {/* 이미지 확대 슬라이더 모달 */}
+      {modalImages.length > 0 && (
+        <ModalImageSlider
+          allImages={modalImages}
+          modalIndex={modalIndex}
+          setModalIndex={setModalIndex}
+          onClose={() => setModalImages([])}
+        />
+      )}
     </Modal>
   );
 };
