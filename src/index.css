@@ -95,6 +95,11 @@ html {
   overflow-x: hidden;
   font-size: 16px;
   overflow-y: scroll;
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 body {
