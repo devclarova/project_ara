@@ -538,9 +538,9 @@ export default function TweetDetail() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [id, blockedIds]); // blockedIds ?�존??추�?
+  }, [id, blockedIds]); // blockedIds 의존성 추가
 
-  // ???��? ?�성 ??콜백: ?�로 ?�성???��?�??�크�?+ ?�이?�이??
+  // 댓글 생성 콜백: 새로 생성된 댓글은 스크롤+하이라이트
   const handleReplyCreated = (reply: UIReply) => {
     const fixed: UIReply = {
       ...reply,
@@ -551,22 +551,22 @@ export default function TweetDetail() {
       },
     };
 
-    // 1. Optimistic Update: 즉시 목록??추�?
+    // 1. Optimistic Update: 즉시 목록에 추가
     setReplies(prev => {
-      // ?��? 존재?�면 추�??��? ?�음 (?�시 모�? 중복 방�?)
+      // 댓글 존재하면 추가하지 않음 (임시 모드 중복 방지)
       if (prev.some(r => r.id === fixed.id)) return prev;
 
       const combined = [...prev, fixed];
-      // ?�렬
+      // 정렬
       return combined.sort(
         (a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime(),
       );
     });
 
-    // 2. ?�크�?처리
+    // 2. 스크롤처리
     setTimeout(() => {
       setScrollTargetId(fixed.id);
-      setActiveHighlightId(fixed.id); // ?�성 직후 ?�이?�이??
+      setActiveHighlightId(fixed.id); // 생성 직후 하이라이트
       requestAnimationFrame(() => {
         document
           .getElementById(`reply-${fixed.id}`)
@@ -576,6 +576,14 @@ export default function TweetDetail() {
   };
 
   const handleChildReplyAdded = (newReply: UIReply) => {
+    const fixed: UIReply = {
+      ...newReply,
+      user: {
+        ...newReply.user,
+        is_admin: isAdmin || false,
+      },
+    };
+    newReply = fixed;
     // 1) ?�?��???목록??추�? (?�리 ?�더링�? ReplyList가 parent_reply_id�??�아??붙임)
     setReplies(prev => {
       if (prev.some(r => r.id === newReply.id)) return prev;

@@ -15,7 +15,7 @@ interface TweetModalProps {
 
 export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps) {
   const { t } = useTranslation();
-  const { user, isBanned, bannedUntil } = useAuth();
+  const { user, isBanned, bannedUntil, isAdmin } = useAuth();
   const [content, setContent] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -135,6 +135,7 @@ export default function TweetModal({ onClose, onTweetCreated }: TweetModalProps)
           name: data.profiles?.nickname || t('common.unknown', 'Unknown'),
           username: data.profiles?.user_id || t('common.anonymous', 'anonymous'),
           avatar: data.profiles?.avatar_url || '/images/ara_basic_profile.png',
+          is_admin: isAdmin || false,
         },
         content: data.content,
         image: data.image_url || '',
