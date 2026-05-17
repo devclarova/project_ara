@@ -23,6 +23,7 @@ import { getErrorMessage, htmlToPlainText } from '@/utils/errorMessage';
 import ModalImageSlider from './ModalImageSlider';
 import SeagullIcon from '@/components/common/SeagullIcon';
 import PlanBadge from '@/components/common/PlanBadge';
+import { AdminAvatarBadge } from '@/components/common/AdminBadge';
 
 function linkifyMentions(html: string) {
   if (/<a\b[^>]*>/.test(html)) return html;
@@ -802,15 +803,27 @@ export function ReplyCard(props: ReplyCardProps) {
           onClick={handleAvatarClick}
           className={`flex-shrink-0 self-start cursor-pointer transition-all duration-300 active:scale-95 z-20 ${isDeletedUser ? 'cursor-default' : ''}`}
         >
-          <PlanBadge plan={reply.user.plan}>
-            <Avatar className="w-10 h-10 border-2 border-white dark:border-background shadow-sm">
-              <AvatarImage
-                src={reply.user.avatar || '/images/ara_basic_profile.png'}
-                alt={isDeletedUser ? t('deleted_user') : reply.user.name}
-              />
-              <AvatarFallback>{isDeletedUser ? '?' : reply.user.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-          </PlanBadge>
+          {reply.user.is_admin ? (
+            <AdminAvatarBadge isAdmin={true} size="md" animated>
+              <Avatar className="w-10 h-10 border-2 border-white dark:border-background shadow-sm">
+                <AvatarImage
+                  src={reply.user.avatar || '/images/ara_basic_profile.png'}
+                  alt={isDeletedUser ? t('deleted_user') : reply.user.name}
+                />
+                <AvatarFallback>{isDeletedUser ? '?' : reply.user.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+            </AdminAvatarBadge>
+          ) : (
+            <PlanBadge plan={reply.user.plan}>
+              <Avatar className="w-10 h-10 border-2 border-white dark:border-background shadow-sm">
+                <AvatarImage
+                  src={reply.user.avatar || '/images/ara_basic_profile.png'}
+                  alt={isDeletedUser ? t('deleted_user') : reply.user.name}
+                />
+                <AvatarFallback>{isDeletedUser ? '?' : reply.user.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+            </PlanBadge>
+          )}
         </div>
 
         <div className="flex-1 min-w-0">

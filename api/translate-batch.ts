@@ -1,8 +1,16 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+const inFlightMap = new Map<string, Promise<string>>();
 
 interface BatchTranslateRequest {
   texts: string[];
   targetLang: string;
+  contentIds?: string[];
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -27,17 +35,88 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { texts, targetLang } = req.body as BatchTranslateRequest;
+    const { texts, targetLang, contentIds } = req.body as BatchTranslateRequest;
 
     if (!texts || !Array.isArray(texts) || texts.length === 0 || !targetLang) {
       return res.status(400).json({ error: 'Missing required fields or invalid format' });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      console.error('OPENAI_API_KEY is not set');
-      return res.status(500).json({ error: 'Server configuration error' });
+    const results = new Array(texts.length).fill(null);
+    const indicesToProcess: number[] = [];
+
+    // 1. 서버 사이드 공용 캐시 재조회 (DB)
+    if (contentIds && contentIds.length === texts.length) {
+        const { data: cachedRows } = await supabaseAdmin
+            .from('translations')
+            .select('content_id, translated_text')
+            .in('content_id', Array.from(new Set(contentIds)))
+            .eq('target_lang', targetLang)
+            .is('user_id', null);
+
+        const cacheMap = new Map((cachedRows || []).map(r => [r.content_id, r.translated_text]));
+
+        texts.forEach((_, idx) => {
+            const cid = contentIds[idx];
+            if (cacheMap.has(cid)) {
+                results[idx] = cacheMap.get(cid);
+            } else {
+                indicesToProcess.push(idx);
+            }
+        });
+    } else {
+        // contentIds가 없으면 전체 처리
+        texts.forEach((_, idx) => indicesToProcess.push(idx));
     }
+
+    if (indicesToProcess.length === 0) {
+        return res.status(200).json({ translations: results });
+    }
+
+    // 2. In-flight Deduplication (Lock)
+    const stillToTranslateIndices: number[] = [];
+    const pendingPromises: Promise<void>[] = [];
+
+    indicesToProcess.forEach(idx => {
+        const cid = contentIds?.[idx];
+        const lockKey = cid ? `${targetLang}:${cid}` : null;
+        const inFlight = lockKey ? inFlightMap.get(lockKey) : null;
+
+        if (inFlight) {
+            pendingPromises.push(
+                inFlight.then(res => { results[idx] = res; }).catch(() => {
+                    // 실패 시 다시 번역 대상에 포함 (실제로 다음 단계에서 처리하기엔 늦으므로 개별 처리)
+                    stillToTranslateIndices.push(idx);
+                })
+            );
+        } else {
+            stillToTranslateIndices.push(idx);
+        }
+    });
+
+    await Promise.all(pendingPromises);
+
+    // 3. 진짜 OpenAI 호출이 필요한 항목만 추출 (중복 제거 포함)
+    const finalMissingIndices = stillToTranslateIndices.filter(idx => results[idx] === null);
+    if (finalMissingIndices.length === 0) {
+        return res.status(200).json({ translations: results });
+    }
+
+    // 동일 요청 내 중복 contentId 처리
+    const uniqueToTranslate = new Map<string, { text: string, indices: number[] }>();
+    finalMissingIndices.forEach(idx => {
+        const cid = contentIds?.[idx] || `manual_${idx}`;
+        if (!uniqueToTranslate.has(cid)) {
+            uniqueToTranslate.set(cid, { text: texts[idx], indices: [] });
+        }
+        uniqueToTranslate.get(cid)!.indices.push(idx);
+    });
+
+    const itemsToCall = Array.from(uniqueToTranslate.entries());
+    const textsToCall = itemsToCall.map(([_, val]) => val.text);
+
+    // 4. OpenAI 호출 로직을 Promise로 래핑
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) throw new Error('OPENAI_API_KEY is not set');
 
     const langCodeToName: Record<string, string> = {
       ko: 'Korean',
@@ -62,7 +141,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
     const targetLanguageName = langCodeToName[targetLang] || targetLang;
 
-    const systemPrompt = `You are an elite-tier translation and phonetic transcription engine for ARA (Korean Learning App).
+    const fullSystemPrompt = `You are an elite-tier translation and phonetic transcription engine for ARA (Korean Learning App).
 Target Language: ${targetLanguageName} (Code: ${targetLang})
 Context: Korean Subtitles, K-Pop Lyrics, K-Drama.
 
@@ -85,10 +164,10 @@ CRITICAL TRANSLATION RULES:
 3. **Pronunciation ([PRON:...]) Task**:
    - Perform **Phonetic Transcription ONLY**. Never translate meaning. Help a native speaker of ${targetLanguageName} pronounce the Korean sound accurately using their native script and reading conventions.
    - en: Standard English romanization (e.g., ha-da).
-   - ja: Katakana only (e.g., ハダ).
-   - zh: Learner-friendly Pinyin or notation.
-   - ru: Cyrillic only (e.g., хада).
-   - vi: Use Vietnamese alphabet and reading habits to approximate the Korean sound. **Strictly avoid Korean Revised Romanization (RR) or generic English-style hyphenated romanization.** Do NOT output RR-style forms (e.g., hae-ju-da, yeop, geu-nyang, mo-reu-da). Do not simply add Vietnamese letters or accents to an English/RR base. For long sentences, maintain a natural Vietnamese-readable phonetic flow and avoid mechanical syllable-by-syllable hyphenation (e.g., mwol-hae-jwo-ya...).
+   - ja: Katakana only (e.g., ハ다).
+   - zh: Latin-letter Korean sound guide for Chinese learners only. Never translate meaning into Chinese. This is NOT Mandarin vocabulary pinyin. Represent the original Korean pronunciation accurately, not the Chinese meaning. Do NOT replace Korean words with Chinese equivalents or their pinyin. For example, [PRON:생일] should follow "saeng il" or "seng il" style, NOT "sheng ri"; [PRON:우리] should follow "u ri" style, NOT "wo men" or "wu li"; [PRON:강아지] should follow "gang a ji" style, NOT "xiao gou"; [PRON:알았다] should follow "a ra da" style, NOT "hao le"; [PRON:수제비] should follow "su je bi" style, NOT "shou gong mian". Avoid Chinese characters and tone marks. Use simple spaced syllables and preserve the Korean sound flow for easy reading.
+   - ru: Cyrillic only (e.g., ха다).
+   - vi: Use Vietnamese alphabet and reading habits to approximate the Korean sound. **Strictly avoid Korean Revised Romanization (RR) or English-style romanization.** Do NOT output RR-style forms (e.g., ha-da, hae-ju-da, yeop, geu-nyang, mo-reu-da, mwol hae jwo...). Do NOT preserve RR clusters like 'eo', 'eu', 'ae', 'oe', 'ui', 'yeo', 'jwo'. Instead, use Vietnamese-friendly letters like 'ơ', 'ư', 'ê', 'ô', 'uy', 'ch', 'gi', 'ng', 'nh'. For long sentences, maintain a natural Vietnamese-readable phonetic flow and separate by phrase groups naturally, not by every syllable. Use lowercase unless punctuation requires. Avoid arbitrary tone marks unless they improve readability. Do NOT translate meaning and never include Hangul. Remove any [PRON:...] markers.
    - bn: Bengali script only.
    - ar: Arabic script only.
    - hi: Devanagari script only.
@@ -100,54 +179,91 @@ CRITICAL TRANSLATION RULES:
 5. **Integrity**: Return valid JSON only. No markdown, no quotes wrapping the array items, no explanations.
 `;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: JSON.stringify({ texts }) },
-        ],
-        response_format: { type: 'json_object' },
-        temperature: 0.3,
-      }),
+    const apiTask = (async () => {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            messages: [
+              { role: 'system', content: fullSystemPrompt },
+              { role: 'user', content: JSON.stringify({ texts: textsToCall }) },
+            ],
+            response_format: { type: 'json_object' },
+            temperature: 0.3,
+          }),
+        });
+
+        if (!response.ok) throw new Error(`OpenAI API error: ${response.status}`);
+        const data = await response.json();
+        const contentStr = data.choices[0].message.content;
+        const parsed = JSON.parse(contentStr);
+        const trs = parsed.translations || parsed;
+        if (!Array.isArray(trs)) throw new Error('Invalid AI response format');
+        return trs;
+    })();
+
+    // In-flight Map 등록 (각 항목별로)
+    const locks: string[] = [];
+    itemsToCall.forEach(([cid, _], i) => {
+        const lockKey = `${targetLang}:${cid}`;
+        // [Surgical Fix] apiTask 실패 시 unhandled rejection 방지를 위해 dummy catch 추가
+        const itemPromise = apiTask.then(allResults => allResults[i]).catch(() => undefined);
+        inFlightMap.set(lockKey, itemPromise);
+        locks.push(lockKey);
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenAI API error:', errorData);
-      return res.status(response.status).json({ error: 'Translation API error' });
-    }
-
-    const data = await response.json();
-    const contentStr = data.choices[0].message.content;
-
-    // Parse JSON safely
-    let parsedResults: string[] = [];
     try {
-      const parsed = JSON.parse(contentStr);
-      if (parsed.translations && Array.isArray(parsed.translations)) {
-        parsedResults = parsed.translations;
-      } else if (Array.isArray(parsed)) {
-        parsedResults = parsed;
-      } else {
-        // Fallback: try to find any array
-        const firstArray = Object.values(parsed).find(v => Array.isArray(v));
-        if (firstArray) parsedResults = firstArray as string[];
-      }
-    } catch (e) {
-      console.error('Failed to parse JSON response', e);
-      return res.status(500).json({ error: 'JSON parsing failed' });
-    }
+        const timeoutPromise = new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error('Batch translation timeout')), 20000)
+        );
+        const finalResultsFromAI = await Promise.race([apiTask, timeoutPromise]);
 
-    return res.status(200).json({ translations: parsedResults });
-  } catch (error) {
+        // 결과 배분 및 DB 저장
+        const upsertData: any[] = [];
+        itemsToCall.forEach(([cid, val], i) => {
+            const translated = finalResultsFromAI[i];
+            if (translated) {
+                val.indices.forEach(idx => { results[idx] = translated; });
+                if (!cid.startsWith('manual_')) {
+                    upsertData.push({
+                        content_id: cid,
+                        target_lang: targetLang,
+                        original_text: val.text,
+                        translated_text: translated,
+                        user_id: null
+                    });
+                }
+            }
+        });
+
+        if (upsertData.length > 0) {
+            if (!supabaseServiceKey) {
+                console.warn('SUPABASE_SERVICE_ROLE_KEY is missing. Skipping public cache batch save.');
+            } else {
+                try {
+                    const { error } = await supabaseAdmin.from('translations').insert(upsertData);
+                    if (error && error.code !== '23505') {
+                        console.error('Public batch save error:', error.code, error.message);
+                    }
+                } catch (dbErr) {
+                    console.error('Unexpected DB error during public batch save:', dbErr);
+                }
+            }
+        }
+
+        return res.status(200).json({ translations: results });
+    } finally {
+        locks.forEach(l => inFlightMap.delete(l));
+    }
+  } catch (error: any) {
     console.error('Batch translation error:', error);
+    if (error?.message?.includes('429')) {
+      return res.status(429).json({ error: 'Rate limit exceeded' });
+    }
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
-

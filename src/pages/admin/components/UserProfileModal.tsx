@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Modal from '@/components/common/Modal';
+import { AdminAvatarBadge, AdminTextBadge } from '@/components/common/AdminBadge';
+import PlanBadge from '@/components/common/PlanBadge';
+import ModalImageSlider from '../../community/tweet/components/ModalImageSlider';
 import { 
   User, 
   Mail, 
@@ -42,6 +45,7 @@ interface UserProfileModalProps {
     last_sign_in_at: string | null;
     created_at: string;
     location: string | null;
+    plan?: string | null;
   } | null;
 }
 
@@ -52,6 +56,10 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
   const [subscriptions, setSubscriptions] = React.useState<any[]>([]);
   const [visibleCount, setVisibleCount] = React.useState(5);
   const [financeLoading, setFinanceLoading] = React.useState(false);
+
+  // 이미지 확대 보기 상태
+  const [modalImages, setModalImages] = useState<string[]>([]);
+  const [modalIndex, setModalIndex] = useState(0);
   
   React.useEffect(() => {
     const fetchTracking = async () => {
@@ -121,9 +129,21 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
     <Modal isOpen={isOpen} onClose={onClose} title="사용자 상세 프로필" className="max-w-2xl h-auto">
       <div className="overflow-hidden">
         {/* Banner with Profile Image Overlay */}
-        <div className="relative h-48 bg-zinc-200 dark:bg-zinc-800">
+        <div 
+          className={`relative h-48 bg-zinc-200 dark:bg-zinc-800 ${user.banner_url ? 'cursor-pointer group/banner' : ''}`}
+          onClick={() => {
+            if (user.banner_url) {
+              setModalImages([user.banner_url]);
+              setModalIndex(0);
+            }
+          }}
+        >
           {user.banner_url ? (
-            <img src={user.banner_url} alt="banner" className="w-full h-full object-cover" />
+            <img 
+              src={user.banner_url} 
+              alt="banner" 
+              className="w-full h-full object-cover transition-all group-hover/banner:brightness-90" 
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center opacity-20">
               <Globe size={64} />
@@ -131,47 +151,80 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
           )}
           
           <div className="absolute -bottom-12 left-8 p-1 bg-white dark:bg-zinc-900 rounded-full shadow-lg">
-            <div className="relative w-24 h-24 rounded-full bg-zinc-100 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 overflow-hidden shadow-inner">
-              <img 
-                src={user.avatar_url || '/images/ara_basic_profile.png'} 
-                alt="avatar" 
-                className="w-full h-full object-cover"
-              />
-            </div>
+            {user.is_admin ? (
+              <AdminAvatarBadge isAdmin={user.is_admin} size="lg" animated>
+                <div 
+                  className="relative w-24 h-24 rounded-full bg-zinc-100 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 overflow-hidden shadow-inner cursor-pointer group/avatar"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setModalImages([user.avatar_url || '/images/ara_basic_profile.png']);
+                    setModalIndex(0);
+                  }}
+                >
+                  <img 
+                    src={user.avatar_url || '/images/ara_basic_profile.png'} 
+                    alt="avatar" 
+                    className="w-full h-full object-cover transition-all group-hover/avatar:brightness-90"
+                  />
+                </div>
+              </AdminAvatarBadge>
+            ) : (
+              <PlanBadge plan={user.plan} size="lg">
+                <div 
+                  className="relative w-24 h-24 rounded-full bg-zinc-100 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 overflow-hidden shadow-inner cursor-pointer group/avatar"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setModalImages([user.avatar_url || '/images/ara_basic_profile.png']);
+                    setModalIndex(0);
+                  }}
+                >
+                  <img 
+                    src={user.avatar_url || '/images/ara_basic_profile.png'} 
+                    alt="avatar" 
+                    className="w-full h-full object-cover transition-all group-hover/avatar:brightness-90"
+                  />
+                </div>
+              </PlanBadge>
+            )}
           </div>
         </div>
 
         {/* Content Area */}
         <div className="pt-16 pb-8 px-8 space-y-8">
           {/* Header Info */}
-          <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-4">
-                <div className="relative">
-                  {user.nickname}
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-6">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-2xl font-bold text-zinc-900 dark:text-white flex flex-wrap items-center gap-x-3 gap-y-2">
+                <div className="relative shrink-0 max-w-full">
+                  <span className="block truncate max-w-[200px] sm:max-w-[300px] pr-2">{user.nickname}</span>
                   <div 
-                    className={`absolute top-0.5 -right-3 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-zinc-900 ${isOnline ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-zinc-300'}`} 
+                    className={`absolute top-1.5 -right-1 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-zinc-900 ${isOnline ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-zinc-300'}`} 
                     title={isOnline ? '온라인' : '오프라인'} 
                   />
                 </div>
-                {user.is_admin && (
-                  <span className="px-2 py-0.5 bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 text-[10px] rounded-full flex items-center gap-1 font-bold border border-violet-200 dark:border-violet-800">
-                    <Shield size={10} /> 관리자
-                  </span>
-                )}
+                <AdminTextBadge isAdmin={user.is_admin} size="sm" />
+                <span className={`whitespace-nowrap shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                  user.plan?.toLowerCase() === 'premium' 
+                    ? 'bg-primary/10 text-primary border-primary/20' 
+                    : user.plan?.toLowerCase() === 'basic'
+                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700'
+                }`}>
+                  {user.plan?.toUpperCase() || 'FREE'}
+                </span>
               </h2>
-              <p className="text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 mt-1">
+              <p className="text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 mt-1 truncate">
                 <Mail size={14} /> {user.email}
               </p>
             </div>
-            <div className="flex gap-4 text-center">
+            <div className="flex gap-6 text-center shrink-0">
               <div>
                 <p className="text-lg font-bold text-zinc-900 dark:text-white">{user.followers_count || 0}</p>
-                <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">팔로워</p>
+                <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold whitespace-nowrap">팔로워</p>
               </div>
               <div>
                 <p className="text-lg font-bold text-zinc-900 dark:text-white">{user.following_count || 0}</p>
-                <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">팔로잉</p>
+                <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold whitespace-nowrap">팔로잉</p>
               </div>
             </div>
           </div>
@@ -322,6 +375,16 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
           </div>
         </div>
       </div>
+
+      {/* 이미지 확대 슬라이더 모달 */}
+      {modalImages.length > 0 && (
+        <ModalImageSlider
+          allImages={modalImages}
+          modalIndex={modalIndex}
+          setModalIndex={setModalIndex}
+          onClose={() => setModalImages([])}
+        />
+      )}
     </Modal>
   );
 };

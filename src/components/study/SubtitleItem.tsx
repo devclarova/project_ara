@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Subtitle } from '../../types/study';
 import { useTranslation } from 'react-i18next';
-import { useAutoTranslation } from '@/hooks/useAutoTranslation';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface SubtitleItemProps {
   subtitle: Subtitle;
@@ -31,16 +31,16 @@ const SubtitleItem: React.FC<SubtitleItemProps> = ({ subtitle, onSelect, onSeek,
       {/* 지역화 데이터 바인딩 — 번역 파이프라인에서 수신된 발음/내용 데이터가 존재할 경우 우선 렌더링, 부재 시 원문 노출 */}
       <div className="block w-full text-base sm:text-lg text-gray-500 dark:text-gray-400 text-left mt-1 min-h-[1.5em]">
         {isTranslating
-          ? <span className="inline-block h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          ? <Skeleton className="h-4 w-32" />
           : (translatedPron?.trim() || subtitle.pronunciation?.trim())
             ? `[${translatedPron?.trim() || subtitle.pronunciation?.trim()}]`
-            : <span className="inline-block h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+            : null
         }
       </div>
       {/* 내용 번역 (또는 원본) */}
       <div className="block w-full text-base sm:text-lg text-gray-700 dark:text-gray-300 text-left mt-0.5 cursor-default select-text min-h-[1.5em]">
         {isTranslating
-          ? <span className="inline-block h-5 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          ? <Skeleton className="h-5 w-48" />
           : (translatedContent || subtitle.english_subtitle) || ''
         }
       </div>

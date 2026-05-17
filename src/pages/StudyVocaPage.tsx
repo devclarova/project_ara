@@ -93,13 +93,13 @@ function VocabCard({ v, onOpen, onDelete, onChangeStatus }: VocabCardProps) {
 
   const { translatedText: translatedMeaning } = useAutoTranslation(
     meaningSrc,
-    `voca_page_meaning_${v.id}`,
+    `voca_meaning_${v.id}`,
     targetLang,
   );
 
   const { translatedText: translatedExampleKo } = useAutoTranslation(
     exampleKoSrc,
-    `voca_page_example_ko_${v.id}`,
+    `voca_example_${v.id}`,
     targetLang,
   );
 

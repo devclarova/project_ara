@@ -14,6 +14,7 @@ type CultureNoteRow = {
 };
 
 type CultureNoteContent = {
+  id: number;
   culture_note_id: number;
   content_value: string;
 };
@@ -70,7 +71,7 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
       // 2) 여러 개의 culture_note_id에 해당하는 culture_note_contents 조회
       const noteIds = notesData.map((note: any) => note.id); // 여러 개의 culture_note_id 추출
       const { data: contentsData, error: contentsError } = await (supabase.from('culture_note_contents') as any)
-        .select('content_value, culture_note_id')
+        .select('id, content_value, culture_note_id')
         .in('culture_note_id', noteIds); // 여러 개의 culture_note_id로 콘텐츠 조회
 
       if (!alive) return;
@@ -107,8 +108,8 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
       if (note.subtitle) list.push({ text: note.subtitle, key: `cult_subtitle_${note.id}` });
       // 3. 연관 콘텐츠 리스트
       const noteContents = contents.filter(c => c.culture_note_id === note.id);
-      noteContents.forEach((c, idx) => {
-        list.push({ text: c.content_value, key: `cult_content_${note.id}_${idx}` });
+      noteContents.forEach((c) => {
+        list.push({ text: c.content_value, key: `cult_content_${c.id}` });
       });
     });
     
@@ -118,7 +119,7 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
   const combinedTexts = useMemo(() => combinedItems.map(i => i.text), [combinedItems]);
   const combinedKeys = useMemo(() => combinedItems.map(i => i.key), [combinedItems]);
 
-  const { translatedTexts, loading: isTranslating } = useBatchAutoTranslation(combinedTexts, combinedKeys, targetLang);
+  const { translatedTexts, status: translationStatus } = useBatchAutoTranslation(combinedTexts, combinedKeys, targetLang);
 
   // 현재 보고 있는 문화 노트로 이동
   const handleNextNote = () => {
@@ -203,7 +204,7 @@ const StudyCultureNote = (props: StudyCultureNoteProps) => {
         translatedSubtitle={noteSubtitle}
         translatedContents={noteList}
         isKorean={isKorean}
-        isTranslating={isTranslating}
+        translationStatus={translationStatus}
       />
 
       {/* 버튼들 */}

@@ -1,6 +1,7 @@
 import { useAutoTranslation } from '@/hooks/useAutoTranslation';
 import { useTranslation } from 'react-i18next';
 import { useMemo } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { WordItem } from './StudyVoca';
 import { romanizeKorean, hasKorean } from '@/utils/romanize';
 
@@ -14,6 +15,7 @@ interface StudyVocaItemProps {
   translatedExampleProp?: string;
   translatedPosProp?: string;
   isTranslating?: boolean;
+  disableIndividualTranslation?: boolean;
 }
 
 const StudyVocaItem = ({
@@ -24,6 +26,7 @@ const StudyVocaItem = ({
   translatedExampleProp,
   translatedPosProp,
   isTranslating,
+  disableIndividualTranslation = false,
 }: StudyVocaItemProps) => {
   const { i18n, t } = useTranslation();
   const targetLang = i18n.language;
@@ -35,24 +38,24 @@ const StudyVocaItem = ({
   const pronSrc = normalize(item.pron);
 
   // 개별 자동 번역 로직 — 부모로부터 주입된 Props가 있거나 부모 배치가 로딩 중이면 개별 요청 차단 (429 방지)
-  const shouldSkipIndividual = Boolean(translatedMeaningProp) || isTranslating;
-  const shouldSkipPron = Boolean(translatedPronProp) || isTranslating;
-  const shouldSkipExample = Boolean(translatedExampleProp) || isTranslating;
-  const shouldSkipPos = Boolean(translatedPosProp) || isTranslating;
+  const shouldSkipIndividual = disableIndividualTranslation || Boolean(translatedMeaningProp) || isTranslating;
+  const shouldSkipPron = disableIndividualTranslation || Boolean(translatedPronProp) || isTranslating;
+  const shouldSkipExample = disableIndividualTranslation || Boolean(translatedExampleProp) || isTranslating;
+  const shouldSkipPos = disableIndividualTranslation || Boolean(translatedPosProp) || isTranslating;
 
-  const { translatedText: translatedMeaningHook } = useAutoTranslation(
+  const { translatedText: translatedMeaningHook, status: meaningStatus } = useAutoTranslation(
     shouldSkipIndividual ? '' : meaningSrc,
     `voca_meaning_${id}`,
     targetLang,
   );
 
-  const { translatedText: translatedPronHook } = useAutoTranslation(
+  const { translatedText: translatedPronHook, status: pronStatus } = useAutoTranslation(
     shouldSkipPron ? '' : (isKorean ? '' : `[PRON:${item.term}]`),
     `voca_pron_${id}`,
     targetLang,
   );
 
-  const { translatedText: translatedExampleHook } = useAutoTranslation(
+  const { translatedText: translatedExampleHook, status: exampleStatus } = useAutoTranslation(
     shouldSkipExample ? '' : exampleSrc,
     `voca_example_${id}`,
     targetLang,
@@ -77,7 +80,7 @@ const StudyVocaItem = ({
     return key ? t(key) : rawPos;
   }, [posSrc, t]);
 
-  const { translatedText: translatedPosHook } = useAutoTranslation(
+  const { translatedText: translatedPosHook, status: posStatus } = useAutoTranslation(
     shouldSkipPos ? '' : (mappedPos === posSrc ? mappedPos : ''), // 이미 i18n으로 번역되었다면 자동번역 스킵
     `voca_pos_${id}`,
     targetLang,
@@ -119,8 +122,8 @@ const StudyVocaItem = ({
         <h4 className="font-semibold dark:text-gray-300 break-all">{displayTerm}</h4>
 
         <div className="min-h-[1em]">
-          {isTranslating
-            ? <span className="inline-block h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          {!isKorean && (isTranslating || pronStatus === 'loading')
+            ? <Skeleton className="h-3 w-20" />
             : displayPron ? (
               <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                 [{displayPron}]
@@ -130,8 +133,8 @@ const StudyVocaItem = ({
       </div>
 
       <div className="mt-1 min-h-[1.2em]">
-        {isTranslating
-          ? <span className="inline-block h-3.5 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+        {!isKorean && (isTranslating || posStatus === 'loading')
+          ? <Skeleton className="h-3.5 w-16" />
           : displayPos ? (
             <span className="text-[14px] text-gray-500 dark:text-gray-400 font-medium">
               ({displayPos})
@@ -140,8 +143,8 @@ const StudyVocaItem = ({
       </div>
 
       <div className="mt-1 min-h-[1.5em]">
-        {isTranslating
-          ? <span className="inline-block h-4 w-36 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+        {!isKorean && (isTranslating || meaningStatus === 'loading')
+          ? <Skeleton className="h-4 w-36" />
           : displayMeaning ? (
             <span className="text-sm text-gray-700 dark:text-gray-300 font-medium break-words line-clamp-2">
               {displayMeaning}
@@ -150,8 +153,8 @@ const StudyVocaItem = ({
       </div>
 
       <div className="mt-1 min-h-[1.2em]">
-        {isTranslating
-          ? <span className="inline-block h-3 w-44 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+        {!isKorean && (isTranslating || exampleStatus === 'loading')
+          ? <Skeleton className="h-3 w-44" />
           : displayExample ? (
             <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
               <span className="mr-1">{t('study.voca.example_label')}</span>

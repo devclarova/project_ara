@@ -4,6 +4,7 @@ import SignInModal from '../auth/SignInModal';
 import { useTranslation } from 'react-i18next';
 import { useMemo } from 'react';
 import { useAutoTranslation } from '@/hooks/useAutoTranslation';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 
 type ContentCardProps = StudyListProps & {
@@ -15,6 +16,8 @@ type ContentCardProps = StudyListProps & {
   translatedDescProp?: string | null;
   translatedDurationProp?: string | null;
   translatedEpisodeProp?: string | null;
+  created_at?: string;
+  translationStatus?: 'idle' | 'loading' | 'success' | 'error';
 };
 
 export const InfoItem = ({ icon, text }: { icon: string; text?: string }) => {
@@ -47,6 +50,7 @@ const ContentCard = ({
   translatedDurationProp,
   translatedEpisodeProp,
   created_at,
+  translationStatus
 }: ContentCardProps) => {
   const { user, userPlan, isAdmin } = useAuth();
   const { t, i18n } = useTranslation();
@@ -81,10 +85,25 @@ const ContentCard = ({
     targetLang,
   );
 
-  const translatedTitle = translatedTitleProp || translatedTitleHook;
-  const translatedDesc = translatedDescProp || translatedDescHook;
-  const translatedDuration = translatedDurationProp || translatedDurationHook;
+  const displayTitle = useMemo(() => {
+    if (i18n.language.startsWith('ko')) return title;
+    const tr = translatedTitleProp || translatedTitleHook;
+    if (!tr || tr === title) return title;
+    return `${title} (${tr})`;
+  }, [title, translatedTitleProp, translatedTitleHook, i18n.language]);
+
+  const displayDesc = useMemo(() => {
+    if (i18n.language.startsWith('ko')) return short_description;
+    return translatedDescProp || translatedDescHook || short_description;
+  }, [short_description, translatedDescProp, translatedDescHook, i18n.language]);
+  
   const translatedEpisode = translatedEpisodeProp || translatedEpisodeHook;
+
+  const displayDuration = useMemo(() => {
+    if (i18n.language.startsWith('ko')) return duration || '—';
+    const val = (translatedDurationProp?.trim() || translatedDurationHook?.trim()) || duration;
+    return val || '—';
+  }, [duration, translatedDurationProp, translatedDurationHook, i18n.language]);
 
   // 시각적 일관성 확보 — 자동 번역 대신 각 언어별 미리 정의된 포맷(i18n formats) 강제 적용
   // 숫자형 데이터(화/회 등)에 대한 정규화 필터링 수행
@@ -113,30 +132,6 @@ const ContentCard = ({
     if (l === '고급' || l === 'advanced') return t('study.level.advanced');
     return level;
   }, [level, t]);
-
-  // Title Formatting
-  const isKoreanTitle = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(title);
-  let displayTitle = title;
-
-  const shouldShowTranslation =
-    translatedTitle &&
-    (() => {
-      if (targetLang.startsWith('ko')) return false;
-      if (targetLang.startsWith('en')) {
-        return isKoreanTitle && translatedTitle.toLowerCase() !== title.toLowerCase();
-      }
-      return translatedTitle !== title;
-    })();
-
-  if (shouldShowTranslation) {
-    displayTitle = translatedTitle;
-  }
-
-  // Description Formatting
-  let displayDesc = short_description;
-  if (translatedDesc && translatedDesc !== short_description) {
-    displayDesc = translatedDesc;
-  }
 
   // Helpers
   const enc = (v?: string | number | null) => encodeURIComponent(String(v ?? ''));
@@ -219,12 +214,15 @@ const ContentCard = ({
         )}
       </div>
 
-      {/* 본문 구조 정석화 (flex-1 적용) */}
       <div className="flex-1 px-2 py-2 sm:px-3 sm:py-2 md:px-4 md:py-2">
         <div className="grid min-h-20">
-          <h3 className="text-sm sm:text-[13px] md:text-base font-semibold text-gray-900 line-clamp-2 dark:text-gray-100">
-            {displayTitle}
-          </h3>
+          {!i18n.language.startsWith('ko') && translationStatus === 'loading' ? (
+            <Skeleton className="h-5 w-3/4 mb-1" />
+          ) : (
+            <h3 className="text-sm sm:text-[13px] md:text-base font-semibold text-gray-900 line-clamp-2 dark:text-gray-100">
+              {displayTitle}
+            </h3>
+          )}
           <div className="flex flex-col gap-2 w-full mt-1">
             {/* 첫 번째 줄: episode | scene */}
             {/* 첫 번째 줄: episode (or Song Title) | scene */}
@@ -240,21 +238,29 @@ const ContentCard = ({
                   className={`flex items-center justify-start ${scene ? 'w-1/2 pr-3' : 'w-full'}`}
                 >
                   {episode && (
-                    <InfoItem
-                      icon={isMusic ? 'ri-music-2-line' : 'ri-youtube-line'}
-                      text={
-                        translatedEpisode && translatedEpisode !== episode
-                          ? translatedEpisode
-                          : displayEpisode
-                      }
-                    />
+                    !i18n.language.startsWith('ko') && translationStatus === 'loading' ? (
+                      <Skeleton className="h-3 w-16" />
+                    ) : (
+                      <InfoItem
+                        icon={isMusic ? 'ri-music-2-line' : 'ri-youtube-line'}
+                        text={
+                          translatedEpisode && translatedEpisode !== episode
+                            ? translatedEpisode
+                            : displayEpisode
+                        }
+                      />
+                    )
                   )}
                 </div>
 
                 {/* 오른쪽 아이템 (scene이 있을 때만 렌더링) */}
                 {scene && (
                   <div className="flex items-center justify-start w-1/2 pl-3">
-                    <InfoItem icon="ri-clapperboard-line" text={displayScene} />
+                    {!i18n.language.startsWith('ko') && translationStatus === 'loading' ? (
+                      <Skeleton className="h-3 w-12" />
+                    ) : (
+                      <InfoItem icon="ri-clapperboard-line" text={displayScene} />
+                    )}
                   </div>
                 )}
               </div>
@@ -268,13 +274,21 @@ const ContentCard = ({
 
                 {/* 왼쪽 */}
                 <div className="flex items-center justify-start w-1/2 pr-3">
-                  {level && <InfoItem icon="ri-star-line" text={translatedLevel} />}
+                  {level && (
+                    !i18n.language.startsWith('ko') && translationStatus === 'loading' ? (
+                      <Skeleton className="h-3 w-12" />
+                    ) : (
+                      <InfoItem icon="ri-star-line" text={translatedLevel} />
+                    )
+                  )}
                 </div>
 
                 {/* 오른쪽 */}
                 <div className="flex items-center justify-start w-1/2 pl-3">
-                  {duration && (
-                    <InfoItem icon="ri-time-line" text={`${translatedDuration || duration}`} />
+                  {!i18n.language.startsWith('ko') && translationStatus === 'loading' ? (
+                    <Skeleton className="h-3 w-12" />
+                  ) : (
+                    <InfoItem icon="ri-time-line" text={displayDuration} />
                   )}
                 </div>
               </div>
@@ -294,18 +308,28 @@ const ContentCard = ({
         >
           {/* 제목 - 고정 영역 */}
           <div className="flex-shrink-0 mb-2">
-            <div className="text-[15px] sm:text-base font-bold text-gray-900 leading-[1.3] dark:text-gray-100 line-clamp-2 group-hover:text-primary transition-colors">
-              {displayTitle}
-            </div>
+            {!i18n.language.startsWith('ko') && translationStatus === 'loading' ? (
+              <Skeleton className="h-5 w-full mb-1" />
+            ) : (
+              <div className="text-[15px] sm:text-base font-bold text-gray-900 leading-[1.3] dark:text-gray-100 line-clamp-2 group-hover:text-primary transition-colors">
+                {displayTitle}
+              </div>
+            )}
           </div>
 
           {/* 설명 - 유연한 영역 */}
           <div className="flex-1 overflow-hidden flex items-center justify-center px-1 py-2">
-            {displayDesc && (
+            {!i18n.language.startsWith('ko') && translationStatus === 'loading' ? (
+              <div className="w-full space-y-2">
+                <Skeleton className="h-3.5 w-full" />
+                <Skeleton className="h-3.5 w-5/6" />
+                <Skeleton className="h-3.5 w-4/6" />
+              </div>
+            ) : displayDesc ? (
               <div className="text-[12px] sm:text-[13px] text-gray-600 leading-[1.5] dark:text-gray-300 line-clamp-4">
                 {displayDesc}
               </div>
-            )}
+            ) : null}
           </div>
 
           {/* 하단 메타 정보 - 고정 영역 */}
@@ -313,11 +337,19 @@ const ContentCard = ({
             <div className="flex items-center justify-center gap-4 text-xs text-gray-500 dark:text-gray-400">
               <div className="flex items-center gap-1">
                 <i className="ri-star-fill text-primary/80"></i>
-                <span>{translatedLevel}</span>
+                {!i18n.language.startsWith('ko') && translationStatus === 'loading' ? (
+                  <Skeleton className="h-3 w-10" />
+                ) : (
+                  <span>{translatedLevel}</span>
+                )}
               </div>
               <div className="flex items-center gap-1">
                 <i className="ri-time-line text-primary/80"></i>
-                <span>{translatedDuration || duration}</span>
+                {!i18n.language.startsWith('ko') && translationStatus === 'loading' ? (
+                  <Skeleton className="h-3 w-12" />
+                ) : (
+                  <span>{displayDuration}</span>
+                )}
               </div>
             </div>
           </div>

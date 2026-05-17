@@ -9,6 +9,7 @@ export interface ChatUser {
   avatar_url?: string | null; // 프로필 이미지 URL (선택)
   banned_until?: string | null;
   is_online?: boolean;
+  plan?: string | null;
 }
 
 // 1:1 채팅 정보

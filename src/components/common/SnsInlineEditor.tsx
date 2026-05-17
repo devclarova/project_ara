@@ -30,6 +30,7 @@ export type EditorCreatedTweet = {
     countryFlag?: string | null;
     countryName?: string | null;
     banned_until?: string | null;
+    is_admin?: boolean | null;
   };
   content: string;
   image?: string | string[];
@@ -75,7 +76,7 @@ export interface SnsInlineEditorHandle {
 const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>((props, ref) => {
   const { t } = useTranslation();
   const { mode, onCancel } = props;
-  const { user, userPlan, isBanned, bannedUntil } = useAuth();
+  const { user, userPlan, isBanned, bannedUntil, isAdmin } = useAuth();
   const { blockedIds, blockingMeIds } = useBlockedUsers();
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
@@ -338,7 +339,8 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
                plan: userPlan || (user as any).plan || 'free',
                countryFlag: profileCountryFlag,
                countryName: profileCountryName,
-               banned_until: bannedUntil || null
+               banned_until: bannedUntil || null,
+               is_admin: isAdmin || false
            },
            content: finalContent,
            timestamp: inserted.created_at || new Date().toISOString(),
@@ -397,7 +399,8 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
             plan: userPlan || (user as any).plan || 'free',
             countryFlag: profileCountryFlag,
             countryName: profileCountryName,
-            banned_until: bannedUntil || null
+            banned_until: bannedUntil || null,
+            is_admin: isAdmin || false
           },
           content: finalContent,
           image: undefined,

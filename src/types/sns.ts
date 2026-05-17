@@ -7,6 +7,7 @@ export type TweetUser = {
   plan?: 'free' | 'basic' | 'premium';
   countryFlag?: string | null;
   countryName?: string | null;
+  is_admin?: boolean | null;
 };
 
 // DB Row Types (Manual definition since database.ts is incomplete)
@@ -16,6 +17,7 @@ export interface DBProfile {
   nickname: string;
   avatar_url: string | null;
   plan?: 'free' | 'basic' | 'premium';
+  is_admin?: boolean | null;
 }
 
 export interface TweetQueryResponse {
@@ -35,6 +37,7 @@ export interface TweetQueryResponse {
     avatar_url: string | null;
     banned_until?: string | null;
     plan?: 'free' | 'basic' | 'premium';
+    is_admin?: boolean | null;
     countries?: {
       name: string;
       flag_url: string;
@@ -59,6 +62,7 @@ export interface ReplyQueryResponse {
     avatar_url: string | null;
     banned_until?: string | null;
     plan?: 'free' | 'basic' | 'premium';
+    is_admin?: boolean | null;
   } | null;
   tweet_replies_likes?: { count: number }[];
   tweets?: {

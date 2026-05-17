@@ -36,7 +36,7 @@ const CategoryTabs = ({ active, onChange, className = '', categories = DEFAULT_C
         role="tablist"
         aria-label="콘텐츠 카테고리"
         onKeyDown={handleKey}
-        className="flex gap-0 xs:gap-2 sm:gap-3 px-1 sm:px-0 min-w-max overflow-x-auto scrollbar-none"
+        className="flex gap-0 xs:gap-2 sm:gap-3 px-1 sm:px-0 min-w-max overflow-x-auto no-scrollbar touch-pan-x"
       >
         {categories.map((item) => {
           const c = item.value;

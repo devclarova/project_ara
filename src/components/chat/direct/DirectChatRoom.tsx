@@ -10,6 +10,7 @@ import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import ReportButton from '@/components/common/ReportButton';
 import ReportModal from '@/components/common/ReportModal';
 import TranslateButton from '@/components/common/TranslateButton';
+import PlanBadge from '@/components/common/PlanBadge';
 import { useAuth } from '@/contexts/AuthContext';
 import { getMediaInChat } from '@/services/chat/directChatService';
 import { formatDividerDate, formatMessageTime } from '@/utils/dateUtils';
@@ -124,24 +125,39 @@ const LazyImage = memo(
 LazyImage.displayName = 'LazyImage';
 
 const CachedAvatar = memo(
-  ({ url, nickname, size = 32 }: { url?: string | null; nickname: string; size?: number }) => {
-    if (!url) {
-      return (
-        <div
-          className="avatar-placeholder"
-          style={{ width: size, height: size, fontSize: size * 0.4 }}
-        >
-          {nickname.charAt(0)}
-        </div>
-      );
-    }
-    return (
+  ({ 
+    url, 
+    nickname, 
+    size = 32, 
+    plan = null,
+    badgeSize
+  }: { 
+    url?: string | null; 
+    nickname: string; 
+    size?: number;
+    plan?: string | null;
+    badgeSize?: 'sm' | 'md' | 'lg';
+  }) => {
+    const avatarContent = !url ? (
+      <div
+        className="avatar-placeholder"
+        style={{ width: size, height: size, fontSize: size * 0.4 }}
+      >
+        {nickname.charAt(0)}
+      </div>
+    ) : (
       <LazyImage
         src={url}
         alt={nickname}
         className="avatar-image object-cover rounded-full"
         style={{ width: size, height: size }}
       />
+    );
+
+    return (
+      <PlanBadge plan={plan?.toLowerCase() || null} size={badgeSize || (size >= 32 ? 'md' : 'sm')}>
+        {avatarContent}
+      </PlanBadge>
     );
   },
 );
@@ -366,6 +382,7 @@ const MessageItem = memo(
               <CachedAvatar
                 url={message.sender?.avatar_url}
                 nickname={message.sender?.nickname || '나'}
+                plan={message.sender?.plan}
               />
             </div>
           </>
@@ -375,6 +392,7 @@ const MessageItem = memo(
               <CachedAvatar
                 url={message.sender?.avatar_url}
                 nickname={message.sender?.nickname || '?'}
+                plan={message.sender?.plan}
               />
             </div>
             <div className="message-bubble relative px-3 py-2 group">
@@ -627,6 +645,7 @@ const DirectChatRoom = ({
               senderId: msg.sender_id,
               senderName: msg.sender?.nickname || 'Unknown',
               senderAvatarUrl: msg.sender?.avatar_url,
+              plan: msg.sender?.plan || null,
               type: 'video',
             });
           } else if (type !== 'file') {
@@ -638,6 +657,7 @@ const DirectChatRoom = ({
               senderId: msg.sender_id,
               senderName: msg.sender?.nickname || 'Unknown',
               senderAvatarUrl: msg.sender?.avatar_url,
+              plan: msg.sender?.plan || null,
               type: 'image',
             });
           }
@@ -684,6 +704,7 @@ const DirectChatRoom = ({
                       senderId: msg.sender_id,
                       senderName: msg.sender?.nickname || 'Unknown',
                       senderAvatarUrl: msg.sender?.avatar_url,
+                      plan: msg.sender?.plan || null,
                       type: 'video',
                     });
                   } else if (type !== 'file') {
@@ -694,6 +715,7 @@ const DirectChatRoom = ({
                       senderId: msg.sender_id,
                       senderName: msg.sender?.nickname || 'Unknown',
                       senderAvatarUrl: msg.sender?.avatar_url,
+                      plan: msg.sender?.plan || null,
                       type: 'image',
                     });
                   }
@@ -720,6 +742,7 @@ const DirectChatRoom = ({
     sender: string;
     content: string;
     avatar?: string | null;
+    plan?: string | null;
   } | null>(null);
   const isUserNearBottomRef = useRef(true); // 스크롤이 바닥 근처인지 추적
 
@@ -827,7 +850,7 @@ const DirectChatRoom = ({
           scrollToBottom(false);
         } else {
           // 아니면 "새 메시지" 버튼 표시
-          if (!isMyMessage) {
+          if (!isMyMessage && lastMessage.sender) {
             let content = typeof lastMessage.content === 'string' ? lastMessage.content : '';
 
             if (lastMessage.attachments && lastMessage.attachments.length > 0) {
@@ -849,6 +872,7 @@ const DirectChatRoom = ({
               sender: lastMessage.sender?.nickname || 'Unknown',
               content: content,
               avatar: lastMessage.sender?.avatar_url,
+              plan: lastMessage.sender?.plan ? lastMessage.sender.plan.toLowerCase() : null,
             });
           }
         }
@@ -1467,14 +1491,17 @@ const DirectChatRoom = ({
               scrollToBottom(false);
               setNewMessageToast(null);
             }}
-            className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-primary/95 text-primary-foreground shadow-lg backdrop-blur-sm rounded-full pl-2 pr-4 py-1.5 flex items-center gap-2 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 transition-all active:scale-95 hover:scale-105 group max-w-[70vw] sm:max-w-[350px]"
+            className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-primary/95 text-primary-foreground shadow-lg backdrop-blur-sm rounded-full pl-2 pr-4 py-1.5 flex items-center gap-2 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 transition-all active:scale-95 hover:scale-105 group max-w-[70vw] sm:max-w-[350px] overflow-visible"
           >
-            <div className="shrink-0">
-              <CachedAvatar
-                url={newMessageToast.avatar}
-                nickname={newMessageToast.sender}
-                size={24}
-              />
+            <div className="shrink-0 p-2 overflow-visible relative z-20">
+              <PlanBadge plan={newMessageToast.plan?.toLowerCase()} size="lg">
+                <CachedAvatar
+                  url={newMessageToast.avatar}
+                  nickname={newMessageToast.sender}
+                  size={32}
+                  plan={null}
+                />
+              </PlanBadge>
             </div>
 
             <div className="flex items-center gap-2 min-w-0 flex-1 text-xs sm:text-sm">

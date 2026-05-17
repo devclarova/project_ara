@@ -198,10 +198,10 @@ const StudyVoca = ({
   }, [data, isKorean]);
 
   const combinedKeys = useMemo(() => {
-    const meanings = data.map(w => `voca_meaning_${w.id}`);
-    const prons = data.map(w => `voca_pron_${w.id}`);
-    const examples = data.map(w => `voca_example_${w.id}`);
-    const poses = data.map(w => `voca_pos_${w.id}`);
+    const meanings = data.map(w => `voca_meaning_${w.id ?? w.term}`);
+    const prons = data.map(w => `voca_pron_${w.id ?? w.term}`);
+    const examples = data.map(w => `voca_example_${w.id ?? w.term}`);
+    const poses = data.map(w => `voca_pos_${w.id ?? w.term}`);
     return [...meanings, ...prons, ...examples, ...poses];
   }, [data]);
 
@@ -240,7 +240,7 @@ const StudyVoca = ({
           const globalIdx = start + i;
           return (
             <div
-              key={w.id ?? i}
+              key={w.id ?? `${w.term}-${i}`}
               role="button"
               tabIndex={0}
               onClick={() => openModal(w)}
@@ -257,6 +257,7 @@ const StudyVoca = ({
                 translatedExampleProp={translatedTexts[data.length * 2 + globalIdx] || undefined}
                 translatedPosProp={translatedTexts[data.length * 3 + globalIdx] || undefined}
                 isTranslating={isTranslating}
+                disableIndividualTranslation={true}
               />
             </div>
           );

@@ -26,6 +26,7 @@ import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 import { OnlineIndicator } from './OnlineIndicator';
 import SeagullIcon from './SeagullIcon';
 import PlanBadge from '@/components/common/PlanBadge';
+import { AdminAvatarBadge } from '@/components/common/AdminBadge';
 
 function Header() {
   const { t, i18n } = useTranslation();
@@ -174,6 +175,11 @@ function Header() {
     };
     loadProfile();
   }, [user]);
+  const blockedUserIdsRef = useRef(blockedUserIds);
+  useEffect(() => {
+    blockedUserIdsRef.current = blockedUserIds;
+  }, [blockedUserIds]);
+
   // 알림 미읽음 개수 계산 (receiver_id + is_read = false)
   useEffect(() => {
     if (!profileId) {
@@ -192,29 +198,31 @@ function Header() {
       }
       // 2. 차단한 사용자의 알림 필터링 + 자동 읽음 처리
       const blockedNotiIds = (unreadNotis || [])
-        .filter((n: any) => blockedUserIds.has(n.sender_id))
+        .filter((n: any) => blockedUserIdsRef.current.has(n.sender_id))
         .map((n: any) => n.id);
       if (blockedNotiIds.length > 0) {
         // 차단된 알림은 백그라운드에서 읽음 처리
         await (supabase.from('notifications') as any).update({ is_read: true }).in('id', blockedNotiIds);
       }
       // 3. 실제 표시될 숫자 계산
-      const validCount = (unreadNotis || []).filter((n: any) => !blockedUserIds.has(n.sender_id)).length;
+      const validCount = (unreadNotis || []).filter((n: any) => !blockedUserIdsRef.current.has(n.sender_id)).length;
       setUnreadNotificationCount(validCount);
     };
     fetchUnreadCount();
-    // Real-time Presence Sync: Leverages Postgres CDC (Change Data Capture) via Supabase to synchronize notification states.
+
+    // Real-time Presence Sync
     const channel = supabase
       .channel(`header-notifications-${profileId}`)
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: '*', // INSERT, UPDATE, DELETE 모두 감지
           schema: 'public',
           table: 'notifications',
           filter: `receiver_id=eq.${profileId}`,
         },
         () => {
+          // 어떤 변화든 발생하면 즉시 재조회하여 정합성 보장
           fetchUnreadCount();
         },
       )
@@ -222,7 +230,7 @@ function Header() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [profileId, blockedUserIds]);
+  }, [profileId]); // blockedUserIds 의존성 제거 (ref 사용)
   // 알림 전체 비우기 이벤트 감지 → 뱃지 0으로
   useEffect(() => {
     const handleCleared = () => {
@@ -409,12 +417,21 @@ function Header() {
                   title="내 프로필"
                   aria-expanded={isProfileMenuOpen}
                 >
-                  <PlanBadge plan={userPlan}>
-                    <Avatar className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-white dark:border-secondary">
-                      <AvatarImage src={headerAvatar} alt={displayNickname} />
-                      <AvatarFallback>{displayNickname.charAt(0).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                  </PlanBadge>
+                  {isAdmin ? (
+                    <AdminAvatarBadge isAdmin={true} size="sm" animated>
+                      <Avatar className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-white dark:border-secondary">
+                        <AvatarImage src={headerAvatar} alt={displayNickname} />
+                        <AvatarFallback>{displayNickname.charAt(0).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                    </AdminAvatarBadge>
+                  ) : (
+                    <PlanBadge plan={userPlan}>
+                      <Avatar className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-white dark:border-secondary">
+                        <AvatarImage src={headerAvatar} alt={displayNickname} />
+                        <AvatarFallback>{displayNickname.charAt(0).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                    </PlanBadge>
+                  )}
                   <div className="flex flex-col items-start min-w-0">
                     <div className="relative inline-flex items-center">
                       <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 group-hover:opacity-80 whitespace-nowrap">
@@ -676,18 +693,33 @@ function Header() {
             setIsOpen(false);
           }}
         >
-          <PlanBadge plan={userPlan} size="sm">
-            <Avatar className="w-8 h-8 border-2 border-white dark:border-secondary">
-              <AvatarImage src={headerAvatar} alt={displayNickname} />
-              <AvatarFallback>
-                {user ? (
-                  displayNickname.charAt(0).toUpperCase()
-                ) : (
-                  <User className="w-4 h-4 text-gray-400" />
-                )}
-              </AvatarFallback>
-            </Avatar>
-          </PlanBadge>
+          {isAdmin ? (
+            <AdminAvatarBadge isAdmin={true} size="xs" animated>
+              <Avatar className="w-8 h-8 border-2 border-white dark:border-secondary">
+                <AvatarImage src={headerAvatar} alt={displayNickname} />
+                <AvatarFallback>
+                  {user ? (
+                    displayNickname.charAt(0).toUpperCase()
+                  ) : (
+                    <User className="w-4 h-4 text-gray-400" />
+                  )}
+                </AvatarFallback>
+              </Avatar>
+            </AdminAvatarBadge>
+          ) : (
+            <PlanBadge plan={userPlan} size="sm">
+              <Avatar className="w-8 h-8 border-2 border-white dark:border-secondary">
+                <AvatarImage src={headerAvatar} alt={displayNickname} />
+                <AvatarFallback>
+                  {user ? (
+                    displayNickname.charAt(0).toUpperCase()
+                  ) : (
+                    <User className="w-4 h-4 text-gray-400" />
+                  )}
+                </AvatarFallback>
+              </Avatar>
+            </PlanBadge>
+          )}
           <div className="flex-1">
             <div className="relative inline-flex items-center">
               <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">

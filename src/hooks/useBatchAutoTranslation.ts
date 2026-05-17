@@ -7,9 +7,10 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { queuedFetch } from '../lib/translationQueue';
 
-const BATCH_TRANSLATION_VERSION = 'v8_pron_fixed';
+const BATCH_TRANSLATION_VERSION = 'v20_pron_fixed';
 const PRONUNCIATION_TRANSLATION_VERSION = 'v21_pron_policy_v1';
-const VI_PRONUNCIATION_TRANSLATION_VERSION = 'v22_pron_policy_vi_v1';
+const VI_PRONUNCIATION_TRANSLATION_VERSION = 'v23_pron_policy_vi_v1';
+const ZH_PRONUNCIATION_TRANSLATION_VERSION = 'v23_pron_policy_zh_v2';
 
 const isPronunciationCacheKey = (key: string) =>
   key.startsWith('voca_pron_') || key.startsWith('subtitle_pron_');
@@ -17,11 +18,20 @@ const isPronunciationCacheKey = (key: string) =>
 const isVietnameseTarget = (lang: string) =>
   lang.toLowerCase() === 'vi' || lang.toLowerCase() === 'vi-vn';
 
+const isChineseTarget = (lang: string) => {
+  const normalized = lang.toLowerCase();
+  return normalized === 'zh' || normalized === 'zh-cn';
+};
+
 const getTranslationVersion = (key: string, lang: string) => {
   if (isPronunciationCacheKey(key)) {
-    return isVietnameseTarget(lang)
-      ? VI_PRONUNCIATION_TRANSLATION_VERSION
-      : PRONUNCIATION_TRANSLATION_VERSION;
+    if (isVietnameseTarget(lang)) {
+      return VI_PRONUNCIATION_TRANSLATION_VERSION;
+    }
+    if (isChineseTarget(lang)) {
+      return ZH_PRONUNCIATION_TRANSLATION_VERSION;
+    }
+    return PRONUNCIATION_TRANSLATION_VERSION;
   }
   return BATCH_TRANSLATION_VERSION;
 };
@@ -31,6 +41,7 @@ const batchMemoryCache: Record<string, string> = {};
 interface UseBatchAutoTranslationResult {
   translatedTexts: (string | null)[];
   loading: boolean;
+  status: 'idle' | 'loading' | 'success' | 'error';
   error: unknown;
 }
 
@@ -42,8 +53,13 @@ export const useBatchAutoTranslation = (
   const [translatedTexts, setTranslatedTexts] = useState<(string | null)[]>(
     new Array(texts.length).fill(null)
   );
-  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
+    texts.length > 0 && targetLang && !targetLang.toLowerCase().startsWith('ko') ? 'loading' : 'idle'
+  );
   const [error, setError] = useState<unknown>(null);
+
+  // 호환성 유지 — status 기반으로 loading 파생
+  const loading = status === 'loading';
 
   // 중복 요청 방지
   const processingRef = useRef<string>('');
@@ -54,6 +70,7 @@ export const useBatchAutoTranslation = (
     // 1. 유효성 검사
     if (!texts || texts.length === 0 || !targetLang) {
       setTranslatedTexts([]);
+      setStatus('idle');
       return;
     }
 
@@ -63,6 +80,7 @@ export const useBatchAutoTranslation = (
     // 한국어 타겟이면 번역 불필요 (원본 그대로 리턴)
     if (targetLang === 'ko' || targetLang === 'ko-KR') {
       setTranslatedTexts(texts);
+      setStatus('success');
       return;
     }
 
@@ -72,7 +90,7 @@ export const useBatchAutoTranslation = (
 
     const translateBatch = async () => {
       if (!mounted) return;
-      setLoading(true);
+      setStatus('loading');
       setError(null);
 
       // 0. Get User (needed for DB operations)
@@ -111,12 +129,36 @@ export const useBatchAutoTranslation = (
         let cacheMap: Record<string, string> = {};
         if (afterLocalCache.length > 0) {
             const keysToQuery = afterLocalCache.map(i => uniqueKeys[i]);
+            type TranslationCacheRow = {
+              content_id: string;
+              translated_text: string | null;
+              user_id: string | null;
+            };
+
             const { data: cachedData } = await (supabase.from('translations') as any)
-              .select('content_id, translated_text')
+              .select('content_id, translated_text, user_id')
               .in('content_id', keysToQuery)
               .eq('target_lang', targetLang);
-            cacheMap = (cachedData || []).reduce((acc: Record<string, string>, curr: any) => {
-              acc[curr.content_id] = curr.translated_text;
+
+            const typedRows = (cachedData || []) as TranslationCacheRow[];
+            const personalCacheKeys = new Set<string>();
+
+            cacheMap = typedRows.reduce((acc: Record<string, string>, curr) => {
+              if (!curr.content_id || !curr.translated_text) return acc;
+
+              const isPersonal = Boolean(user && curr.user_id === user.id);
+              const isPublic = curr.user_id == null;
+
+              if (isPersonal) {
+                acc[curr.content_id] = curr.translated_text;
+                personalCacheKeys.add(curr.content_id);
+                return acc;
+              }
+
+              if (isPublic && !personalCacheKeys.has(curr.content_id) && !acc[curr.content_id]) {
+                acc[curr.content_id] = curr.translated_text;
+              }
+
               return acc;
             }, {} as Record<string, string>);
         }
@@ -145,7 +187,7 @@ export const useBatchAutoTranslation = (
         if (missingIndices.length === 0) {
           if (mounted) {
             setTranslatedTexts(finalResults);
-            setLoading(false);
+            setStatus('success');
           }
           return;
         }
@@ -164,7 +206,11 @@ export const useBatchAutoTranslation = (
             const r = await queuedFetch('/api/translate-batch', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ texts: chunk, targetLang }),
+                body: JSON.stringify({ 
+                    texts: chunk, 
+                    targetLang,
+                    contentIds: missingIndices.slice(allChunkResults.flat().length, allChunkResults.flat().length + chunk.length).map(i => uniqueKeys[i])
+                }),
             });
             if (!r.ok) throw new Error(`API Error: ${r.status}`);
             const data = await r.json();
@@ -196,7 +242,10 @@ export const useBatchAutoTranslation = (
                 }
              });
 
-             if (mounted) setTranslatedTexts([...finalResults]);
+             if (mounted) {
+                setTranslatedTexts([...finalResults]);
+                setStatus('success');
+             }
 
              // 4. Save to DB
              if (upsertData.length > 0) {
@@ -229,7 +278,10 @@ export const useBatchAutoTranslation = (
                     }
                 }
              });
-             if (mounted) setTranslatedTexts([...finalResults]);
+             if (mounted) {
+                setTranslatedTexts([...finalResults]);
+                setStatus('success');
+             }
              if (upsertData.length > 0) {
                  (supabase.from('translations') as any).upsert(upsertData, {
                      onConflict: 'user_id,content_id,target_lang'
@@ -241,9 +293,14 @@ export const useBatchAutoTranslation = (
 
       } catch (err) {
         console.error('Batch Translation Failed', err);
-        if (mounted) setError(err);
+        if (mounted) {
+          setError(err);
+          setStatus('error');
+        }
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          // Finalize state if needed
+        }
       }
     };
 
@@ -255,5 +312,5 @@ export const useBatchAutoTranslation = (
 
   }, [texts.join(','), targetLang]);
 
-  return { translatedTexts, loading, error };
+  return { translatedTexts, loading, status, error };
 };

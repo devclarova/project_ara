@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Skeleton } from '@/components/ui/skeleton';
 import TranslatedCultureNoteItem from './TranslatedCultureNoteItem';
 
 interface CultureNoteData {
@@ -20,7 +21,7 @@ interface Props {
   translatedSubtitle?: string;
   translatedContents?: string[];
   isKorean: boolean;
-  isTranslating?: boolean;
+  translationStatus?: 'idle' | 'loading' | 'success' | 'error';
 }
 
 const TranslatedCultureNoteView: React.FC<Props> = ({ 
@@ -30,7 +31,7 @@ const TranslatedCultureNoteView: React.FC<Props> = ({
   translatedSubtitle,
   translatedContents = [],
   isKorean,
-  isTranslating
+  translationStatus
 }) => {
   const { t } = useTranslation();
 
@@ -50,13 +51,13 @@ const TranslatedCultureNoteView: React.FC<Props> = ({
 
   return (
     <div className="p-3 sm:p-4 bg-white dark:bg-secondary dark:text-gray-300 border dark:border-gray-600 rounded-lg shadow-sm">
-      {isTranslating
-        ? <div className="h-5 w-40 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-1" />
+      {!isKorean && translationStatus === 'loading'
+        ? <Skeleton className="h-5 w-40 mb-1" />
         : <h4 className="text-base sm:text-lg font-semibold mb-1">{displayTitle}</h4>
       }
 
-      {isTranslating
-        ? <div className="h-4 w-56 bg-gray-200 dark:bg-gray-700 rounded animate-pulse p-1" />
+      {!isKorean && translationStatus === 'loading'
+        ? <Skeleton className="h-4 w-56 p-1" />
         : displaySubtitle && (
           <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line p-1">
             {displaySubtitle}
@@ -72,7 +73,7 @@ const TranslatedCultureNoteView: React.FC<Props> = ({
               content={item.content_value}
               translatedValue={translatedContents[index]}
               isKorean={isKorean}
-              isTranslating={isTranslating}
+              translationStatus={translationStatus}
             />
           ))
         ) : (
