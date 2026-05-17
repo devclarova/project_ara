@@ -59,6 +59,7 @@ interface NotificationQueryResult {
 }
 
 import FloatingButtons from '@/components/common/FloatingButtons';
+import { Helmet } from 'react-helmet-async';
 
 type ActiveTab = 'all' | 'like' | 'comment' | 'follow' | 'system' | 'updates';
 
@@ -90,13 +91,6 @@ export default function HNotificationsPage() {
   const getFilteredCount = (tabKey: ActiveTab) => {
     return getFilteredNotifications(tabKey).filter(n => !n.is_read).length;
   };
-
-  // 전체 카운트는 따로 필요할 때 계산 (현재는 탭별 카운트만 사용)
-  const totalUnreadCount = notifications.filter(n => !n.is_read).length;
-
-  useEffect(() => {
-    document.title = '알림 | ARA';
-  }, []);
 
   // 내 profile id 로드
   useEffect(() => {
@@ -133,15 +127,19 @@ export default function HNotificationsPage() {
       }
 
       setNotifications(
-        ((data as unknown as NotificationQueryResult[]) ?? []).map((n) => {
+        ((data as unknown as NotificationQueryResult[]) ?? []).map(n => {
           // 0. 기본 내용 설정
           let contentToUse = n.content || '';
 
           // 1. 게시글 삭제 여부 판단 (조인된 tweet 데이터 유무 기준)
-          const isPostDeleted = (n.type === 'like' || n.type === 'mention' || n.type === 'like_feed') && !n.comment_id && !n.tweet;
-          
+          const isPostDeleted =
+            (n.type === 'like' || n.type === 'mention' || n.type === 'like_feed') &&
+            !n.comment_id &&
+            !n.tweet;
+
           // 2. 댓글 삭제 여부 판단 (조인된 reply 데이터 유무 기준 또는 comment_id 가 널이 된 경우)
-          const isCommentType = n.type === 'comment' || n.type === 'reply' || n.type === 'like_comment';
+          const isCommentType =
+            n.type === 'comment' || n.type === 'reply' || n.type === 'like_comment';
           const isCommentDeleted = isCommentType && (!n.comment_id || !n.reply);
 
           if (isCommentDeleted) {
@@ -170,10 +168,10 @@ export default function HNotificationsPage() {
               name: n.type === 'system' ? t('common.ara_team') : n.sender?.nickname || 'Unknown',
               username: n.type === 'system' ? 'ara_official' : n.sender?.username || 'unknown',
               avatar: n.sender?.avatar_url || '',
-              bio: n.sender?.bio || ''
-            }
+              bio: n.sender?.bio || '',
+            },
           };
-        })
+        }),
       );
       setLoading(false);
     };
@@ -315,7 +313,9 @@ export default function HNotificationsPage() {
     if (!profileId) return;
 
     try {
-      const { error } = await (supabase.from('notifications') as any).delete().eq('receiver_id', profileId);
+      const { error } = await (supabase.from('notifications') as any)
+        .delete()
+        .eq('receiver_id', profileId);
 
       if (error) {
         console.error('알림 비우기 실패:', error.message);
@@ -371,9 +371,14 @@ export default function HNotificationsPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center bg-white dark:bg-background">
-        <div
-          className="
+      <>
+        <Helmet>
+          <title>{t('nav.notifications')} | ARA</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="flex justify-center bg-white dark:bg-background">
+          <div
+            className="
             flex flex-col 
             w-full max-w-2xl lg:max-w-3xl
             border-x border-gray-200 dark:border-gray-700
@@ -381,21 +386,28 @@ export default function HNotificationsPage() {
             sm:min-h-[calc(100vh-81px)]
             md:min-h-[calc(100vh-97px)]
           "
-        >
-          <div className="flex-1 min-h-0 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+          >
+            <div className="flex-1 min-h-0 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="flex justify-center bg-white dark:bg-background">
-      <div className="flex flex-col w-full max-w-2xl lg:max-w-3xl border-x border-gray-200 dark:border-gray-700 min-h-[calc(100vh-73px)] sm:min-h-[calc(100vh-81px)] md:min-h-[calc(100vh-97px)]">
-        {/* 상단 헤더 */}
-        <div
-          className="
+    <>
+      <Helmet>
+        <title>{t('nav.notifications')} | ARA</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+
+      <div className="flex justify-center bg-white dark:bg-background">
+        <div className="flex flex-col w-full max-w-2xl lg:max-w-3xl border-x border-gray-200 dark:border-gray-700 min-h-[calc(100vh-73px)] sm:min-h-[calc(100vh-81px)] md:min-h-[calc(100vh-97px)]">
+          {/* 상단 헤더 */}
+          <div
+            className="
             shrink-0 
             sticky top-[57px] sm:top-[73px] lg:top-[81px] xl:top-[97px]
             bg-white/80 dark:bg-background/80 
@@ -404,163 +416,160 @@ export default function HNotificationsPage() {
             px-4 py-3 z-30
             flex items-center justify-between
           "
-        >
-          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-            {t('nav.notifications')}
-          </h1>
+          >
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+              {t('nav.notifications')}
+            </h1>
 
-          {notifications.length > 0 && (
-            <button
-              type="button"
-              onClick={handleClearAll}
-              className="text-xs sm:text-sm px-2 py-1 rounded-full
+            {notifications.length > 0 && (
+              <button
+                type="button"
+                onClick={handleClearAll}
+                className="text-xs sm:text-sm px-2 py-1 rounded-full
                          border border-gray-300 text-gray-600 hover:bg-gray-100
                          dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800
                          transition-colors"
-            >
-              {t('notification.clear_all')}
-            </button>
-          )}
-        </div>
-
-        {/* 알림 탭 */}
-        <div className="sticky top-[110px] sm:top-[126px] lg:top-[134px] xl:top-[150px] bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 z-20">
-          <div className="flex">
-            {[
-              { key: 'all' as const, label: t('notification.tab_all', '전체') },
-              { key: 'like' as const, label: t('notification.tab_likes') },
-              { key: 'comment' as const, label: t('notification.tab_comments') },
-              { key: 'follow' as const, label: t('notification.tab_follow') },
-              { key: 'updates' as const, label: t('notification.tab_updates') },
-              { key: 'system' as const, label: t('notification.tab_system', '시스템') },
-            ].map(tab => {
-              const isCommentsTab = tab.key === 'comment';
-              const isLikesTab = tab.key === 'like';
-
-              const unreadCount = getFilteredCount(tab.key);
-
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`flex-1 py-3 text-sm font-medium transition-all relative ${
-                    activeTab === tab.key
-                      ? 'text-primary'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                  }`}
-                >
-                  <span className="flex items-center justify-center gap-1.5">
-                    {tab.label}
-                    {unreadCount > 0 && (
-                      <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs font-bold text-white bg-primary rounded-full">
-                        {unreadCount > 99 ? '99+' : unreadCount}
-                      </span>
-                    )}
-                  </span>
-                  {activeTab === tab.key && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#00dbaa] to-[#009e89]" />
-                  )}
-                </button>
-              );
-            })}
+              >
+                {t('notification.clear_all')}
+              </button>
+            )}
           </div>
-        </div>
 
-        {/* 알림 리스트 */}
-        <div className="flex-1 divide-y divide-gray-100 dark:divide-gray-900">
-          {(() => {
-            const filteredNotifications = getFilteredNotifications(activeTab);
+          {/* 알림 탭 */}
+          <div className="sticky top-[110px] sm:top-[126px] lg:top-[134px] xl:top-[150px] bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 z-20">
+            <div className="flex">
+              {[
+                { key: 'all' as const, label: t('notification.tab_all', '전체') },
+                { key: 'like' as const, label: t('notification.tab_likes') },
+                { key: 'comment' as const, label: t('notification.tab_comments') },
+                { key: 'follow' as const, label: t('notification.tab_follow') },
+                { key: 'updates' as const, label: t('notification.tab_updates') },
+                { key: 'system' as const, label: t('notification.tab_system', '시스템') },
+              ].map(tab => {
+                const unreadCount = getFilteredCount(tab.key);
 
-            return filteredNotifications.length > 0 ? (
-              <>
-                {filteredNotifications.map(n => (
-                  <NotificationCard
-                    key={n.id}
-                    notification={{
-                      id: n.id,
-                      type: n.type,
-                      user: n.user,
-                      action: '', 
-                      content: n.content,
-                      timestamp: n.created_at,
-                      isRead: n.is_read,
-                      tweetId: n.tweet_id,
-                      replyId: n.comment_id,
-                    }}
-                    onMarkAsRead={markAsRead}
-                    onDelete={handleRequestDelete}
-                    onSilentDelete={async (id, options?: SilentDeleteOptions) => {
-                      // 직접 삭제 (모달 없이) - 삭제된 컨텐츠 클릭 시 사용
-                      try {
-                        const skipCountDecrement = options?.skipCountDecrement ?? false;
-                        
-                        // UI 선반영
-                        const target = notifications.find(n => n.id === id);
-                        setNotifications(prev => prev.filter(n => n.id !== id));
-
-                        // 뱃지 업데이트: 아직 읽지 않은 알림을 삭제할 때만 차감
-                        // 이미 markAsRead로 차감했다면 (skipCountDecrement === true) 중복 차감하지 않음
-                        if (target && !target.is_read && !skipCountDecrement) {
-                          window.dispatchEvent(new Event('notification:deleted-one'));
-                        }
-
-                        // DB 삭제
-                        await (supabase.from('notifications') as any).delete().eq('id', id);
-                      } catch (err) {
-                        console.error('알림 자동 삭제 실패:', err);
-                      }
-                    }}
-                  />
-                ))}
-
-                <div className="h-px bg-gray-100 dark:bg-gray-900" />
-              </>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                <i className="ri-notification-3-line text-3xl mb-2" />
-                {t('notification.no_notifications')}
-              </div>
-            );
-          })()}
-        </div>
-      </div>
-
-      {/* 삭제 확인 모달 */}
-      {showDeleteModal && (
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4"
-          onClick={() => setShowDeleteModal(false)}
-        >
-          <div
-            className="bg-white dark:bg-secondary w-full max-w-sm rounded-xl p-6 shadow-xl relative animate-in fade-in zoom-in duration-200"
-            onClick={e => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
-              {t('notification.delete_confirm_title')}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
-              {t('notification.delete_confirm_desc')}
-            </p>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
-              >
-                {t('common.delete')}
-              </button>
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`flex-1 py-3 text-sm font-medium transition-all relative ${
+                      activeTab === tab.key
+                        ? 'text-primary'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                    }`}
+                  >
+                    <span className="flex items-center justify-center gap-1.5">
+                      {tab.label}
+                      {unreadCount > 0 && (
+                        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs font-bold text-white bg-primary rounded-full">
+                          {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
+                      )}
+                    </span>
+                    {activeTab === tab.key && (
+                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#00dbaa] to-[#009e89]" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
-        </div>
-      )}
 
-      <FloatingButtons />
-    </div>
+          {/* 알림 리스트 */}
+          <div className="flex-1 divide-y divide-gray-100 dark:divide-gray-900">
+            {(() => {
+              const filteredNotifications = getFilteredNotifications(activeTab);
+
+              return filteredNotifications.length > 0 ? (
+                <>
+                  {filteredNotifications.map(n => (
+                    <NotificationCard
+                      key={n.id}
+                      notification={{
+                        id: n.id,
+                        type: n.type,
+                        user: n.user,
+                        action: '',
+                        content: n.content,
+                        timestamp: n.created_at,
+                        isRead: n.is_read,
+                        tweetId: n.tweet_id,
+                        replyId: n.comment_id,
+                      }}
+                      onMarkAsRead={markAsRead}
+                      onDelete={handleRequestDelete}
+                      onSilentDelete={async (id, options?: SilentDeleteOptions) => {
+                        // 직접 삭제 (모달 없이) - 삭제된 컨텐츠 클릭 시 사용
+                        try {
+                          const skipCountDecrement = options?.skipCountDecrement ?? false;
+
+                          // UI 선반영
+                          const target = notifications.find(n => n.id === id);
+                          setNotifications(prev => prev.filter(n => n.id !== id));
+
+                          // 뱃지 업데이트: 아직 읽지 않은 알림을 삭제할 때만 차감
+                          // 이미 markAsRead로 차감했다면 (skipCountDecrement === true) 중복 차감하지 않음
+                          if (target && !target.is_read && !skipCountDecrement) {
+                            window.dispatchEvent(new Event('notification:deleted-one'));
+                          }
+
+                          // DB 삭제
+                          await (supabase.from('notifications') as any).delete().eq('id', id);
+                        } catch (err) {
+                          console.error('알림 자동 삭제 실패:', err);
+                        }
+                      }}
+                    />
+                  ))}
+
+                  <div className="h-px bg-gray-100 dark:bg-gray-900" />
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                  <i className="ri-notification-3-line text-3xl mb-2" />
+                  {t('notification.no_notifications')}
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+
+        {/* 삭제 확인 모달 */}
+        {showDeleteModal && (
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setShowDeleteModal(false)}
+          >
+            <div
+              className="bg-white dark:bg-secondary w-full max-w-sm rounded-xl p-6 shadow-xl relative animate-in fade-in zoom-in duration-200"
+              onClick={e => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
+                {t('notification.delete_confirm_title')}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                {t('notification.delete_confirm_desc')}
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-4 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                >
+                  {t('common.delete')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <FloatingButtons />
+      </div>
+    </>
   );
 }
-

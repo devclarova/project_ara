@@ -9,15 +9,15 @@ import SupportPolicy from '@/pages/settings/SupportPolicy';
 import SystemSettings from '@/pages/settings/SystemSettings';
 import SubscriptionCouponSettings from '../../pages/settings/SubscriptionCouponSettings';
 // IDE Cache Clear Comment
+import SearchBar from '@/components/ui/SearchBar';
 import type { MenuId, SidebarItem } from '@/types/settings';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Input } from '@/components/ui/input';
-import SearchBar from '@/components/ui/SearchBar';
+import { useLocation } from 'react-router-dom';
 import SettingsContent from './SettingsContent';
 import SettingsLayout from './SettingsLayout';
 import SettingsSidebar from './SettingsSidebar';
-import { useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 
 // 통합 설정 센터(Unified Settings Center) — 라우팅 상태 및 검색 가시성에 따른 가변적 레이아웃 제어
 export default function ProfileSettings() {
@@ -76,13 +76,12 @@ export default function ProfileSettings() {
   const [showMenuOnMobile, setShowMenuOnMobile] = useState(true);
 
   const location = useLocation();
-  const state = location.state as { activeTab?: MenuId; openSetting?: import('@/types/settings').ActiveSetting } | null;
+  const state = location.state as {
+    activeTab?: MenuId;
+    openSetting?: import('@/types/settings').ActiveSetting;
+  } | null;
 
   const [activeId, setActiveId] = useState<MenuId>(state?.activeTab || 'alarm');
-
-  useEffect(() => {
-    document.title = `${settingsTitle} | ARA`;
-  }, [settingsTitle]);
 
   useEffect(() => {
     // 1. Priority: Navigation State (Internal Route)
@@ -193,55 +192,61 @@ export default function ProfileSettings() {
     );
 
   return (
-    <div className="bg-white dark:bg-background">
-      <div className="flex justify-center">
-        {/* 가운데 설정 컬럼 (프로필 페이지와 동일한 폭/보더 톤) */}
-        <div className="w-full max-w-2xl lg:max-w-3xl dark:border-gray-700 dark:bg-background">
-          <main className="px-4 sm:px-6 md:px-8 py-6 md:py-8 text-[17px] md:text-[18px] text-gray-900 dark:text-gray-100 transition-colors">
-            {/* 상단 검색 인풋 여백 */}
-            <div className="mb-4 md:mb-6">
-              <SearchBar
-                placeholder={t('common.search_placeholder', 'Search...')}
-                value={searchQuery}
-                onChange={e => handleSearch(e.target.value)}
-                onSubmit={() => {}}
-              />
-            </div>
+    <>
+      <Helmet>
+        <title>{settingsTitle} | ARA</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      <div className="bg-white dark:bg-background">
+        <div className="flex justify-center">
+          {/* 가운데 설정 컬럼 (프로필 페이지와 동일한 폭/보더 톤) */}
+          <div className="w-full max-w-2xl lg:max-w-3xl dark:border-gray-700 dark:bg-background">
+            <main className="px-4 sm:px-6 md:px-8 py-6 md:py-8 text-[17px] md:text-[18px] text-gray-900 dark:text-gray-100 transition-colors">
+              {/* 상단 검색 인풋 여백 */}
+              <div className="mb-4 md:mb-6">
+                <SearchBar
+                  placeholder={t('common.search_placeholder', 'Search...')}
+                  value={searchQuery}
+                  onChange={e => handleSearch(e.target.value)}
+                  onSubmit={() => {}}
+                />
+              </div>
 
-            {/* 반응형: 데스크톱(양쪽) vs 모바일(한 화면씩) */}
-            {!isMobile ? (
-              // 데스크톱 / 태블릿(>=768px): 좌/우 모두 보이기
-              <SettingsLayout
-                left={
-                  <SettingsSidebar
-                    title={settingsTitle}
-                    items={filteredItems}
-                    activeId={activeId}
-                    onChange={handleChange}
-                    searchQuery={searchQuery}
-                    onSearch={setSearchQuery}
-                    className="flex-1" // 1:1 비율을 위해 flex-1 적용 (기존 고정폭 md:w-96 제거됨)
-                  />
-                }
-                right={rightPanel}
-              />
-            ) : showMenuOnMobile ? (
-              // 모바일: 메뉴 화면
-              <SettingsSidebar
-                title={t('settings.account_settings')}
-                items={filteredItems}
-                activeId={activeId}
-                onChange={handleChange}
-                className="w-full"
-                searchQuery={searchQuery}
-              />
-            ) : (
-              // 모바일: 설정 내용 화면
-              rightPanel
-            )}
-          </main>
+              {/* 반응형: 데스크톱(양쪽) vs 모바일(한 화면씩) */}
+              {!isMobile ? (
+                // 데스크톱 / 태블릿(>=768px): 좌/우 모두 보이기
+                <SettingsLayout
+                  left={
+                    <SettingsSidebar
+                      title={settingsTitle}
+                      items={filteredItems}
+                      activeId={activeId}
+                      onChange={handleChange}
+                      searchQuery={searchQuery}
+                      onSearch={setSearchQuery}
+                      className="flex-1" // 1:1 비율을 위해 flex-1 적용 (기존 고정폭 md:w-96 제거됨)
+                    />
+                  }
+                  right={rightPanel}
+                />
+              ) : showMenuOnMobile ? (
+                // 모바일: 메뉴 화면
+                <SettingsSidebar
+                  title={t('settings.account_settings')}
+                  items={filteredItems}
+                  activeId={activeId}
+                  onChange={handleChange}
+                  className="w-full"
+                  searchQuery={searchQuery}
+                />
+              ) : (
+                // 모바일: 설정 내용 화면
+                rightPanel
+              )}
+            </main>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

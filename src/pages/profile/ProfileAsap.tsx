@@ -21,6 +21,7 @@ import { formatBanPeriod, isBanned } from '@/utils/banUtils';
 import { addYears } from 'date-fns';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { AdminTextBadge } from '@/components/common/AdminBadge';
+import { Helmet } from 'react-helmet-async';
 
 function AdminMiniSigil() {
   return (
@@ -108,15 +109,11 @@ export default function ProfileAsap() {
   const { username } = useParams<{ username: string }>();
   const decodedUsername = username ? decodeURIComponent(username) : '';
   const isOwnProfile = user && userProfile ? user.id === userProfile.user_id : false;
-
-  useEffect(() => {
-    if (!userProfile) {
-      document.title = `${t('profile.title')} | ARA`;
-      return;
-    }
-
-    document.title = isOwnProfile ? `${t('profile.my_profile')} | ARA` : t('profile.title_named', { name: userProfile.name });
-  }, [userProfile, isOwnProfile]);
+  const pageTitle = userProfile
+    ? isOwnProfile
+      ? `${t('common.my_profile')} | ARA`
+      : `${userProfile.name} | ARA`
+    : `${t('common.loading')} | ARA`;
 
   // 실시간 프로필 업데이트 리스너 — 계정 제재 상태 등 중요 변경사항 즉시 반영
 
@@ -273,255 +270,300 @@ export default function ProfileAsap() {
   // 로딩 / 에러 상태
   if (!userProfile) {
     return (
-      <div className="min-h-screen bg-white dark:bg-background">
-        <div className="flex justify-center">
-          <div className="w-full max-w-2xl lg:max-w-3xl border-x border-gray-200 dark:border-gray-700 dark:bg-background">
-            <div className="flex items-center justify-center py-20">
-              <div className="text-center text-gray-500 dark:text-gray-400">
-                <i className="ri-user-line text-6xl text-gray-300 dark:text-gray-600 mb-4" />
-                <p>{t('common.error_loading_profile')}</p>
+      <>
+        <Helmet>
+          <title>{pageTitle}</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="min-h-screen bg-white dark:bg-background">
+          <div className="flex justify-center">
+            <div className="w-full max-w-2xl lg:max-w-3xl border-x border-gray-200 dark:border-gray-700 dark:bg-background">
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center text-gray-500 dark:text-gray-400">
+                  <i className="ri-user-line text-6xl text-gray-300 dark:text-gray-600 mb-4" />
+                  <p>{t('common.error_loading_profile')}</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
   return (
-    // 프로필 레이아웃 컨테이너 — 뷰포트 중앙 정렬 및 플랜별(Premium/Admin) 특화 시각 효과 적용
-    <div className={`min-h-screen relative overflow-hidden ${
-      userProfile.is_admin
-        ? 'bg-white dark:bg-[#070b19]'
-        : userProfile.plan === 'premium'
-          ? 'bg-white dark:bg-[#0a1a14]'
-          : 'bg-white dark:bg-background'
-    }`}>
-      {userProfile.is_admin ? (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-          {/* Royal Indigo Glow */}
-          <div className="absolute top-[-25%] left-[-15%] w-[80vw] h-[60vh] bg-[#4338CA]/15 rounded-[100%] blur-[130px] opacity-70 animate-pulse mix-blend-screen" style={{ animationDuration: '10s' }}></div>
-          {/* Rich Gold Glow */}
-          <div className="absolute bottom-[-15%] right-[-15%] w-[70vw] h-[70vh] bg-[#D7B86A]/10 rounded-[100%] blur-[110px] opacity-60 animate-pulse mix-blend-screen" style={{ animationDuration: '14s' }}></div>
-          {/* Refined Silver/Slate Glow */}
-          <div className="absolute top-[25%] right-[20%] w-[50vw] h-[50vh] bg-[#9BA4B5]/8 rounded-[100%] blur-[90px] opacity-50 animate-pulse mix-blend-screen" style={{ animationDuration: '18s' }}></div>
-        </div>
-      ) : (
-        userProfile.plan === 'premium' && (
-          <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-            <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[50vh] bg-[#00BFA5]/10 rounded-[100%] blur-[120px] opacity-70 animate-pulse mix-blend-screen" style={{ animationDuration: '8s' }}></div>
-            <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vh] bg-[#00E5FF]/10 rounded-[100%] blur-[100px] opacity-60 animate-pulse mix-blend-screen" style={{ animationDuration: '12s' }}></div>
-          </div>
-        )
-      )}
-      <FloatingButtons className="bottom-10 right-6 lg:right-16 xl:right-[calc(50vw-500px)] z-[40]" />
-      <div className="flex justify-center relative z-10">
-        {/* 가운데 프로필 컬럼 */}
-        <div className={`w-full max-w-2xl lg:max-w-3xl border-x ${
+    <>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      {/* // 프로필 레이아웃 컨테이너 — 뷰포트 중앙 정렬 및 플랜별(Premium/Admin) 특화 시각 효과 적용 */}
+      <div
+        className={`min-h-screen relative overflow-hidden ${
           userProfile.is_admin
-            ? 'border-[#4338CA]/20 bg-transparent'
-            : userProfile.plan === 'premium' && !userProfile.is_admin
-              ? 'border-[#00BFA5]/20 bg-transparent'
-              : 'border-gray-200 dark:border-gray-700 dark:bg-background'
-        }`}>
-          {/* 상단 네비게이션 레이어 — 스티키 레이아웃 기반의 이름 노출 및 뒤로가기 액션 제어 */}
-          <div className={`sticky top-0 backdrop-blur-md border-b p-4 z-20 ${
-            userProfile.is_admin
-              ? 'bg-[#e5e7eb]/80 dark:bg-[#4338CA]/10 border-[#4338CA]/20 shadow-[0_4px_20px_rgba(67,56,202,0.05)]'
-              : userProfile.plan === 'premium' && !userProfile.is_admin
-                ? 'bg-[#ccede8]/80 dark:bg-[#03A595]/20 border-[#00BFA5]/20 shadow-[0_4px_20px_rgba(0,191,165,0.05)]'
-                : 'bg-white/80 dark:bg-background/80 border-gray-200 dark:border-gray-700'
-          }`}>
-            <div className="flex items-center">
-              {/* 뒤로가기 */}
-              <button
-                onClick={() => navigate(-1)}
-                className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
-                  userProfile.is_admin
-                    ? 'hover:bg-[#4338CA]/20'
-                    : userProfile.plan === 'premium' && !userProfile.is_admin
-                      ? 'hover:bg-[#b2e0da]/50'
-                      : 'hover:bg-gray-100 dark:hover:bg-primary/10'
-                }`}
-              >
-                <i className="ri-arrow-left-line text-xl text-gray-700 dark:text-gray-100" />
-              </button>
-              {/* 이름 */}
-              <div className="flex flex-col ml-3 justify-center">
-                <h1 className={`text-xl font-bold flex items-center ${
-                  userProfile.is_admin
-                    ? 'text-[#4338CA] dark:text-[#D7B86A]'
-                    : userProfile.plan === 'premium' && !userProfile.is_admin
-                      ? 'text-[#007A6E] dark:text-[#00E5FF]'
-                      : 'text-gray-900 dark:text-gray-100'
-                }`}>
-                  {userProfile.name}
-                  {userProfile.is_admin && <AdminMiniSigil />}
-                  {userProfile.plan === 'premium' && !userProfile.is_admin && (
-                    <SeagullIcon size={20} className="ml-1 text-[#00BFA5] drop-shadow-[0_0_8px_rgba(0,191,165,0.8)]" />
-                  )}
-                </h1>
-                {userProfile.is_admin ? (
-                  <span className="text-[10px] font-black tracking-widest uppercase opacity-80 leading-none mt-0.5 text-[#4338CA] dark:text-[#D7B86A]">
-                    ARA Admin
-                  </span>
-                ) : (
-                  (userProfile.plan === 'premium' || userProfile.plan === 'basic') && (
-                    <span className={`text-[10px] font-black tracking-widest uppercase opacity-80 leading-none mt-0.5 ${userProfile.plan === 'premium' ? 'text-[#00BFA5] dark:text-[#00E5FF]' : 'text-[#6366f1] dark:text-indigo-400'}`}>
-                      {userProfile.plan === 'premium' ? 'Premium Member' : userProfile.plan === 'basic' ? 'Basic Member' : ''}
-                    </span>
-                  )
-                )}
-              </div>
-              {/* 오른쪽 영역 */}
-              {!isOwnProfile && (
-                <div className="ml-auto relative" ref={menuRef}>
-                  <button
-                    onClick={e => {
-                      e.stopPropagation();
-                      setShowMenu(prev => !prev);
-                    }}
-                    className={`w-8 h-8 flex items-center justify-center rounded-full transition ${
+            ? 'bg-white dark:bg-[#070b19]'
+            : userProfile.plan === 'premium'
+              ? 'bg-white dark:bg-[#0a1a14]'
+              : 'bg-white dark:bg-background'
+        }`}
+      >
+        {userProfile.is_admin ? (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+            {/* Royal Indigo Glow */}
+            <div
+              className="absolute top-[-25%] left-[-15%] w-[80vw] h-[60vh] bg-[#4338CA]/15 rounded-[100%] blur-[130px] opacity-70 animate-pulse mix-blend-screen"
+              style={{ animationDuration: '10s' }}
+            ></div>
+            {/* Rich Gold Glow */}
+            <div
+              className="absolute bottom-[-15%] right-[-15%] w-[70vw] h-[70vh] bg-[#D7B86A]/10 rounded-[100%] blur-[110px] opacity-60 animate-pulse mix-blend-screen"
+              style={{ animationDuration: '14s' }}
+            ></div>
+            {/* Refined Silver/Slate Glow */}
+            <div
+              className="absolute top-[25%] right-[20%] w-[50vw] h-[50vh] bg-[#9BA4B5]/8 rounded-[100%] blur-[90px] opacity-50 animate-pulse mix-blend-screen"
+              style={{ animationDuration: '18s' }}
+            ></div>
+          </div>
+        ) : (
+          userProfile.plan === 'premium' && (
+            <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+              <div
+                className="absolute top-[-20%] left-[-10%] w-[70vw] h-[50vh] bg-[#00BFA5]/10 rounded-[100%] blur-[120px] opacity-70 animate-pulse mix-blend-screen"
+                style={{ animationDuration: '8s' }}
+              ></div>
+              <div
+                className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vh] bg-[#00E5FF]/10 rounded-[100%] blur-[100px] opacity-60 animate-pulse mix-blend-screen"
+                style={{ animationDuration: '12s' }}
+              ></div>
+            </div>
+          )
+        )}
+        <FloatingButtons className="bottom-10 right-6 lg:right-16 xl:right-[calc(50vw-500px)] z-[40]" />
+        <div className="flex justify-center relative z-10">
+          {/* 가운데 프로필 컬럼 */}
+          <div
+            className={`w-full max-w-2xl lg:max-w-3xl border-x ${
+              userProfile.is_admin
+                ? 'border-[#4338CA]/20 bg-transparent'
+                : userProfile.plan === 'premium' && !userProfile.is_admin
+                  ? 'border-[#00BFA5]/20 bg-transparent'
+                  : 'border-gray-200 dark:border-gray-700 dark:bg-background'
+            }`}
+          >
+            {/* 상단 네비게이션 레이어 — 스티키 레이아웃 기반의 이름 노출 및 뒤로가기 액션 제어 */}
+            <div
+              className={`sticky top-0 backdrop-blur-md border-b p-4 z-20 ${
+                userProfile.is_admin
+                  ? 'bg-[#e5e7eb]/80 dark:bg-[#4338CA]/10 border-[#4338CA]/20 shadow-[0_4px_20px_rgba(67,56,202,0.05)]'
+                  : userProfile.plan === 'premium' && !userProfile.is_admin
+                    ? 'bg-[#ccede8]/80 dark:bg-[#03A595]/20 border-[#00BFA5]/20 shadow-[0_4px_20px_rgba(0,191,165,0.05)]'
+                    : 'bg-white/80 dark:bg-background/80 border-gray-200 dark:border-gray-700'
+              }`}
+            >
+              <div className="flex items-center">
+                {/* 뒤로가기 */}
+                <button
+                  onClick={() => navigate(-1)}
+                  className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                    userProfile.is_admin
+                      ? 'hover:bg-[#4338CA]/20'
+                      : userProfile.plan === 'premium' && !userProfile.is_admin
+                        ? 'hover:bg-[#b2e0da]/50'
+                        : 'hover:bg-gray-100 dark:hover:bg-primary/10'
+                  }`}
+                >
+                  <i className="ri-arrow-left-line text-xl text-gray-700 dark:text-gray-100" />
+                </button>
+                {/* 이름 */}
+                <div className="flex flex-col ml-3 justify-center">
+                  <h1
+                    className={`text-xl font-bold flex items-center ${
                       userProfile.is_admin
-                        ? 'hover:bg-[#4338CA]/20'
-                        : userProfile.plan === 'premium'
-                          ? 'hover:bg-[#b2e0da]/50'
-                          : 'hover:bg-gray-100 dark:hover:bg-primary/10'
+                        ? 'text-[#4338CA] dark:text-[#D7B86A]'
+                        : userProfile.plan === 'premium' && !userProfile.is_admin
+                          ? 'text-[#007A6E] dark:text-[#00E5FF]'
+                          : 'text-gray-900 dark:text-gray-100'
                     }`}
                   >
-                    <i className="ri-more-fill text-gray-500 dark:text-gray-400 text-lg" />
-                  </button>
-                  {showMenu && (
-                    <div className="absolute right-0 top-10 w-36 bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg py-2 z-50 overflow-hidden">
-                      <button
-                        onClick={e => {
-                          e.stopPropagation();
-                          setShowMenu(false);
-                          setShowReportModal(true);
-                        }}
-                        className={`w-full text-left px-4 py-3 flex items-center gap-2 text-gray-800 dark:text-gray-200 text-sm ${userProfile.plan === 'premium' ? 'hover:bg-[#b2e0da]/50' : 'hover:bg-gray-100 dark:hover:bg-white/10'}`}
+                    {userProfile.name}
+                    {userProfile.is_admin && <AdminMiniSigil />}
+                    {userProfile.plan === 'premium' && !userProfile.is_admin && (
+                      <SeagullIcon
+                        size={20}
+                        className="ml-1 text-[#00BFA5] drop-shadow-[0_0_8px_rgba(0,191,165,0.8)]"
+                      />
+                    )}
+                  </h1>
+                  {userProfile.is_admin ? (
+                    <span className="text-[10px] font-black tracking-widest uppercase opacity-80 leading-none mt-0.5 text-[#4338CA] dark:text-[#D7B86A]">
+                      ARA Admin
+                    </span>
+                  ) : (
+                    (userProfile.plan === 'premium' || userProfile.plan === 'basic') && (
+                      <span
+                        className={`text-[10px] font-black tracking-widest uppercase opacity-80 leading-none mt-0.5 ${userProfile.plan === 'premium' ? 'text-[#00BFA5] dark:text-[#00E5FF]' : 'text-[#6366f1] dark:text-indigo-400'}`}
                       >
-                        <i className="ri-flag-line" />
-                        {t('common.report')}
-                      </button>
-
-                      {userProfile?.id && (
-                        <BlockButton
-                          targetProfileId={userProfile.id}
-                          onClose={() => setShowMenu(false)}
-                        />
-                      )}
-                    </div>
+                        {userProfile.plan === 'premium'
+                          ? 'Premium Member'
+                          : userProfile.plan === 'basic'
+                            ? 'Basic Member'
+                            : ''}
+                      </span>
+                    )
                   )}
                 </div>
-              )}
+                {/* 오른쪽 영역 */}
+                {!isOwnProfile && (
+                  <div className="ml-auto relative" ref={menuRef}>
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setShowMenu(prev => !prev);
+                      }}
+                      className={`w-8 h-8 flex items-center justify-center rounded-full transition ${
+                        userProfile.is_admin
+                          ? 'hover:bg-[#4338CA]/20'
+                          : userProfile.plan === 'premium'
+                            ? 'hover:bg-[#b2e0da]/50'
+                            : 'hover:bg-gray-100 dark:hover:bg-primary/10'
+                      }`}
+                    >
+                      <i className="ri-more-fill text-gray-500 dark:text-gray-400 text-lg" />
+                    </button>
+                    {showMenu && (
+                      <div className="absolute right-0 top-10 w-36 bg-white dark:bg-secondary border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg py-2 z-50 overflow-hidden">
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            setShowMenu(false);
+                            setShowReportModal(true);
+                          }}
+                          className={`w-full text-left px-4 py-3 flex items-center gap-2 text-gray-800 dark:text-gray-200 text-sm ${userProfile.plan === 'premium' ? 'hover:bg-[#b2e0da]/50' : 'hover:bg-gray-100 dark:hover:bg-white/10'}`}
+                        >
+                          <i className="ri-flag-line" />
+                          {t('common.report')}
+                        </button>
+
+                        {userProfile?.id && (
+                          <BlockButton
+                            targetProfileId={userProfile.id}
+                            onClose={() => setShowMenu(false)}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-          {/* 프로필 정보 요약 섹션 — 아바타, 통계, 관리 액션이 포함된 핵심 프로필 헤더 컴포넌트 */}
-          <ProfileHeader
-            userProfile={userProfile}
-            isOwnProfile={isOwnProfile}
-            onProfileUpdated={updated => setUserProfile(updated)}
-            onEditClick={() => setIsEditModalOpen(true)}
-          />
+            {/* 프로필 정보 요약 섹션 — 아바타, 통계, 관리 액션이 포함된 핵심 프로필 헤더 컴포넌트 */}
+            <ProfileHeader
+              userProfile={userProfile}
+              isOwnProfile={isOwnProfile}
+              onProfileUpdated={updated => setUserProfile(updated)}
+              onEditClick={() => setIsEditModalOpen(true)}
+            />
 
-          {userProfile.banned_until &&
-            isBanned(userProfile.banned_until) &&
-            (() => {
-              const banInfo = banStartDate
-                ? formatBanPeriod(banStartDate, userProfile.banned_until)
-                : null;
-              const isPermanent = new Date(userProfile.banned_until) > addYears(new Date(), 50);
+            {userProfile.banned_until &&
+              isBanned(userProfile.banned_until) &&
+              (() => {
+                const banInfo = banStartDate
+                  ? formatBanPeriod(banStartDate, userProfile.banned_until)
+                  : null;
+                const isPermanent = new Date(userProfile.banned_until) > addYears(new Date(), 50);
 
-              return (
-                <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-y border-red-200 dark:border-red-800/50 px-4 sm:px-6 py-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-0.5">
-                      <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center">
-                        <i className="ri-error-warning-fill text-xl text-red-600 dark:text-red-400" />
+                return (
+                  <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-y border-red-200 dark:border-red-800/50 px-4 sm:px-6 py-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 mt-0.5">
+                        <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center">
+                          <i className="ri-error-warning-fill text-xl text-red-600 dark:text-red-400" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-bold text-red-700 dark:text-red-300 mb-2 flex flex-wrap items-center gap-2">
+                          {isPermanent ? (
+                            <>
+                              <span>🚫 {t('profile.sanction_permanent')}</span>
+                              <span className="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">
+                                Permanent Ban
+                              </span>
+                            </>
+                          ) : (
+                            <span>🚫 {t('profile.sanction_temporary')}</span>
+                          )}
+                        </h3>
+                        {!isPermanent && (
+                          <>
+                            {banInfo ? (
+                              <div className="space-y-1.5">
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                                  <span className="font-semibold text-red-600 dark:text-red-400">
+                                    {t('profile.sanction_period', { duration: banInfo.duration })}:
+                                  </span>
+                                  <span className="text-red-700 dark:text-red-300 font-mono text-[11px] bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded">
+                                    {banInfo.startFormatted}
+                                  </span>
+                                  <span className="text-red-600 dark:text-red-400">~</span>
+                                  <span className="text-red-700 dark:text-red-300 font-mono text-[11px] bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded">
+                                    {banInfo.endFormatted}
+                                  </span>
+                                  {banCount > 0 && (
+                                    <span className="font-bold text-red-700 dark:text-red-300 ml-1">
+                                      {t('profile.sanction_count', { count: banCount })}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[11px] text-red-600/80 dark:text-red-400/80">
+                                  •{' '}
+                                  {t('profile.sanction_remaining', { days: banInfo.daysRemaining })}
+                                </p>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-red-600 dark:text-red-400">
+                                {t('profile.sanction_ends')}:{' '}
+                                {new Date(userProfile.banned_until!)
+                                  .toLocaleString(i18n.language === 'ko' ? 'ko-KR' : 'en-US', {
+                                    year: 'numeric',
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: false,
+                                  })
+                                  .replace(/\. /g, '.')
+                                  .replace(/\.$/, '')}
+                              </p>
+                            )}
+                          </>
+                        )}
                       </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-bold text-red-700 dark:text-red-300 mb-2 flex flex-wrap items-center gap-2">
-                        {isPermanent ? (
-                          <>
-                            <span>🚫 {t('profile.sanction_permanent')}</span>
-                            <span className="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">
-                              Permanent Ban
-                            </span>
-                          </>
-                        ) : (
-                          <span>🚫 {t('profile.sanction_temporary')}</span>
-                        )}
-                      </h3>
-                      {!isPermanent && (
-                        <>
-                          {banInfo ? (
-                            <div className="space-y-1.5">
-                              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-                                <span className="font-semibold text-red-600 dark:text-red-400">
-                                  {t('profile.sanction_period', { duration: banInfo.duration })}:
-                                </span>
-                                <span className="text-red-700 dark:text-red-300 font-mono text-[11px] bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded">
-                                  {banInfo.startFormatted}
-                                </span>
-                                <span className="text-red-600 dark:text-red-400">~</span>
-                                <span className="text-red-700 dark:text-red-300 font-mono text-[11px] bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded">
-                                  {banInfo.endFormatted}
-                                </span>
-                                {banCount > 0 && (
-                                  <span className="font-bold text-red-700 dark:text-red-300 ml-1">
-                                    {t('profile.sanction_count', { count: banCount })}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-[11px] text-red-600/80 dark:text-red-400/80">
-                                • {t('profile.sanction_remaining', { days: banInfo.daysRemaining })}
-                              </p>
-                            </div>
-                          ) : (
-                            <p className="text-xs text-red-600 dark:text-red-400">
-                              {t('profile.sanction_ends')}:{' '}
-                              {new Date(userProfile.banned_until!)
-                                .toLocaleString(i18n.language === 'ko' ? 'ko-KR' : 'en-US', {
-                                  year: 'numeric',
-                                  month: '2-digit',
-                                  day: '2-digit',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                  hour12: false,
-                                })
-                                .replace(/\. /g, '.')
-                                .replace(/\.$/, '')}
-                            </p>
-                          )}
-                        </>
-                      )}
-                    </div>
                   </div>
-                </div>
-              );
-            })()}
+                );
+              })()}
 
-          {/* 탭 (게시물 / 답글 / 좋아요) */}
-          <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
-          {/* 탭에 따른 트윗 리스트 */}
-          <ProfileTweets activeTab={activeTab} userProfile={userProfile} />
-          {/* 프로필 편집 모달 */}
-          <EditProfileModal
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-            userProfile={userProfile}
-            onSave={handleSaveProfile}
-          />
+            {/* 탭 (게시물 / 답글 / 좋아요) */}
+            <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
+            {/* 탭에 따른 트윗 리스트 */}
+            <ProfileTweets activeTab={activeTab} userProfile={userProfile} />
+            {/* 프로필 편집 모달 */}
+            <EditProfileModal
+              isOpen={isEditModalOpen}
+              onClose={() => setIsEditModalOpen(false)}
+              userProfile={userProfile}
+              onSave={handleSaveProfile}
+            />
 
-          <ReportModal
-            isOpen={showReportModal}
-            onClose={() => setShowReportModal(false)}
-            targetType="user"
-            targetId={userProfile.id}
-          />
+            <ReportModal
+              isOpen={showReportModal}
+              onClose={() => setShowReportModal(false)}
+              targetType="user"
+              targetId={userProfile.id}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

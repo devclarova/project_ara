@@ -4,7 +4,11 @@
   "devCommand": "vite --port $PORT",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/share/sns/:id",
+      "destination": "/api/share/sns/:id"
+    },
+    {
+      "source": "/:path((?!api/share/sns/.*|share/sns/.*).*)",
       "destination": "/index.html"
     }
   ]

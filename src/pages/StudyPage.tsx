@@ -32,7 +32,20 @@ type VideoRow = {
   runtime_bucket: string | null;
   image_url: string | null;
   view_count: number | null;
-  study: { title: string; short_description: string | null } | Array<{ title: string; short_description: string | null }> | null;
+  study:
+    | {
+        title: string;
+        short_description: string | null;
+        is_featured?: boolean | null;
+        poster_image_url?: string | null;
+      }
+    | Array<{
+        title: string;
+        short_description: string | null;
+        is_featured?: boolean | null;
+        poster_image_url?: string | null;
+      }>
+    | null;
 };
 
 import FloatingButtons from '@/components/common/FloatingButtons';
@@ -63,6 +76,16 @@ const StudyPage = () => {
   const handleSelectDialogue = (s: Subtitle) => setSelectedSubtitle(s);
   const vref = useRef<VideoPlayerHandle>(null);
 
+  useEffect(() => {
+    if (!user) return;
+
+    const redirect = sessionStorage.getItem('ara_redirect_after_login');
+    if (!redirect) return;
+
+    sessionStorage.removeItem('ara_redirect_after_login');
+    navigate(redirect, { replace: true });
+  }, [user, navigate]);
+
   const dec = (v?: string | null) => (v == null ? v : decodeURIComponent(v));
   const enc = (v?: string | number | null) => encodeURIComponent(String(v ?? ''));
 
@@ -77,15 +100,18 @@ const StudyPage = () => {
   // 페이지 타이틀 생성 로직 — 언어 모드 및 번역 데이터 조합 처리
   const isKoreanTitle = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(study?.contents ?? '');
   // 데이터 일관성 확보를 위해 부모 Study 레코드의 제목을 최우선 바인딩
-  const parentTitle = study?.study && !Array.isArray(study.study) 
-    ? study.study.title 
-    : (Array.isArray(study?.study) ? study?.study[0]?.title : null);
+  const parentStudy =
+    study?.study && !Array.isArray(study.study)
+      ? study.study
+      : Array.isArray(study?.study)
+        ? study.study[0]
+        : null;
+
+  const parentTitle = parentStudy?.title ?? null;
+  const parentShortDesc = parentStudy?.short_description ?? null;
+  const parentPosterImageUrl = parentStudy?.poster_image_url ?? null;
 
   const effectiveTitle = parentTitle || study?.contents || '';
-  
-  const parentShortDesc = study?.study && !Array.isArray(study.study) 
-    ? study.study.short_description 
-    : (Array.isArray(study?.study) ? study?.study[0]?.short_description : null);
 
   // 로컬 헬퍼: 모든 타입을 안전하게 문자열로 변환하여 trim() 에러 방지 (unknown 타입 가드 적용)
   const toMetaText = (val: unknown): string => {
@@ -96,8 +122,9 @@ const StudyPage = () => {
 
     if (Array.isArray(val)) {
       return val
-        .filter((item): item is string | number | boolean =>
-          typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean'
+        .filter(
+          (item): item is string | number | boolean =>
+            typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean',
         )
         .map(String)
         .join(', ');
@@ -134,7 +161,11 @@ const StudyPage = () => {
     ];
   }, [study]);
 
-  const { translatedTexts: metaTranslations, status: metaStatus } = useBatchAutoTranslation(metaTexts, metaKeys, targetLang);
+  const { translatedTexts: metaTranslations, status: metaStatus } = useBatchAutoTranslation(
+    metaTexts,
+    metaKeys,
+    targetLang,
+  );
 
   const [
     translatedTitle,
@@ -150,7 +181,8 @@ const StudyPage = () => {
     if (!val) return '';
     const str = String(val).trim();
     // Match "Ep 1", "Episode 01", "제1화", "1" etc.
-    const match = str.match(/^(\d+)$/) || str.match(/^(?:ep|episode|제|第)?\.?\s*(\d+)(?:화|회|集|話)?$/i);
+    const match =
+      str.match(/^(\d+)$/) || str.match(/^(?:ep|episode|제|第)?\.?\s*(\d+)(?:화|회|集|話)?$/i);
     if (match) {
       return t(`study.formats.${key}`, { val: match[1] });
     }
@@ -181,12 +213,12 @@ const StudyPage = () => {
   const translatedLevelDisplay = useMemo(() => {
     const lvl = study?.level;
     const levelMap: Record<string, string> = {
-      '초급': 'study.level.beginner',
-      '중급': 'study.level.intermediate',
-      '고급': 'study.level.advanced',
-      'beginner': 'study.level.beginner',
-      'intermediate': 'study.level.intermediate',
-      'advanced': 'study.level.advanced'
+      초급: 'study.level.beginner',
+      중급: 'study.level.intermediate',
+      고급: 'study.level.advanced',
+      beginner: 'study.level.beginner',
+      intermediate: 'study.level.intermediate',
+      advanced: 'study.level.advanced',
     };
     const key = levelMap[String(lvl)];
     return key ? t(key) : lvl;
@@ -208,7 +240,14 @@ const StudyPage = () => {
     ? `${t('study.share_text_prefix')} ${displayTitle} ${displayEpisode} ${displayScene}`
     : t('study.meta_desc_default');
 
-  const ogImage = study?.image_url ?? '/images/font_slogan_logo.png';
+  const SITE_URL = 'https://arakorean.com';
+
+  const normalizeUrl = (url?: string | null) => {
+    if (!url) return null;
+    return url.startsWith('http') ? url : `${SITE_URL}${url}`;
+  };
+
+  const ogImage = normalizeUrl(parentStudy?.poster_image_url);
 
   // 시네마틱 경로 생성 헬퍼 — 씬(Scene) 정보 부재 시 해당 세그먼트 자동 제외
   const buildStudyUrl = (row: {
@@ -222,6 +261,9 @@ const StudyPage = () => {
     return s ? `${basePath}/${c}/${e}/${s}` : `${basePath}/${c}/${e}`;
   };
 
+  const currentStudyUrl = study
+    ? `${SITE_URL}${buildStudyUrl(study)}`
+    : `${SITE_URL}/study/${enc(contents)}/${enc(episode)}${scene ? `/${enc(scene)}` : ''}`;
 
   useEffect(() => {
     const fetchStudy = async () => {
@@ -237,7 +279,7 @@ const StudyPage = () => {
 
         const { data, error } = await (supabase.from('video') as any)
           .select(
-            'id,study_id,categories,contents,episode,scene,level,runtime,runtime_bucket,image_url,view_count, study:study_id(title,short_description,is_featured)',
+            'id,study_id,categories,contents,episode,scene,level,runtime,runtime_bucket,image_url,view_count, study:study_id(title,short_description,is_featured,poster_image_url)',
           )
           .eq('contents', c || '')
           .eq('episode', e || '')
@@ -249,10 +291,16 @@ const StudyPage = () => {
 
         // 보호처리 — 게스트 접근 차단 (추천 콘텐츠는 통과)
         if (isGuest && data) {
-          const studyData = data.study as { is_featured?: boolean } | { is_featured?: boolean }[] | null;
-          const isFeatured = Array.isArray(studyData) ? studyData[0]?.is_featured : studyData?.is_featured;
-          
+          const studyData = data.study as
+            | { is_featured?: boolean }
+            | { is_featured?: boolean }[]
+            | null;
+          const isFeatured = Array.isArray(studyData)
+            ? studyData[0]?.is_featured
+            : studyData?.is_featured;
+
           if (!isFeatured) {
+            sessionStorage.setItem('ara_redirect_after_login', location.pathname + location.search);
             setShowSignIn(true);
             setStudy(null);
             setLoading(false);
@@ -262,8 +310,13 @@ const StudyPage = () => {
 
         // 플랜별 접근 제어
         if (!isGuest && data) {
-          const studyData = data.study as { required_plan?: string } | { required_plan?: string }[] | null;
-          const requiredPlan = Array.isArray(studyData) ? studyData[0]?.required_plan : studyData?.required_plan;
+          const studyData = data.study as
+            | { required_plan?: string }
+            | { required_plan?: string }[]
+            | null;
+          const requiredPlan = Array.isArray(studyData)
+            ? studyData[0]?.required_plan
+            : studyData?.required_plan;
           const PLAN_LEVEL: Record<string, number> = { free: 0, basic: 1, premium: 2 };
           const requiredLevel = PLAN_LEVEL[requiredPlan ?? 'free'] ?? 0;
           const userLevel = PLAN_LEVEL[userPlan ?? 'free'] ?? 0;
@@ -281,7 +334,7 @@ const StudyPage = () => {
       // CASE 2: 씬(Scene) 미지정 접근 — 에피소드 내 첫 번째 씬 자동 인덱싱
       const { data } = await (supabase.from('video') as any)
         .select(
-          'id,study_id,categories,contents,episode,scene,level,runtime,runtime_bucket,image_url,view_count, study:study_id(title,short_description,is_featured)',
+          'id,study_id,categories,contents,episode,scene,level,runtime,runtime_bucket,image_url,view_count, study:study_id(title,short_description,is_featured,poster_image_url)',
         )
         .eq('contents', c || '')
         .eq('episode', e || '')
@@ -292,10 +345,16 @@ const StudyPage = () => {
 
       // 게스트 보호 처리 (추천 콘텐츠는 통과)
       if (isGuest && row) {
-        const studyData = row.study as { is_featured?: boolean } | { is_featured?: boolean }[] | null;
-        const isFeatured = Array.isArray(studyData) ? studyData[0]?.is_featured : studyData?.is_featured;
+        const studyData = row.study as
+          | { is_featured?: boolean }
+          | { is_featured?: boolean }[]
+          | null;
+        const isFeatured = Array.isArray(studyData)
+          ? studyData[0]?.is_featured
+          : studyData?.is_featured;
 
         if (!isFeatured) {
+          sessionStorage.setItem('ara_redirect_after_login', location.pathname + location.search);
           setShowSignIn(true);
           setStudy(null);
           setLoading(false);
@@ -305,8 +364,13 @@ const StudyPage = () => {
 
       // 플랜별 접근 제어
       if (!isGuest && row) {
-        const studyData = row.study as { required_plan?: string } | { required_plan?: string }[] | null;
-        const requiredPlan = Array.isArray(studyData) ? studyData[0]?.required_plan : studyData?.required_plan;
+        const studyData = row.study as
+          | { required_plan?: string }
+          | { required_plan?: string }[]
+          | null;
+        const requiredPlan = Array.isArray(studyData)
+          ? studyData[0]?.required_plan
+          : studyData?.required_plan;
         const PLAN_LEVEL: Record<string, number> = { free: 0, basic: 1, premium: 2 };
         const requiredLevel = PLAN_LEVEL[requiredPlan ?? 'free'] ?? 0;
         const userLevel = PLAN_LEVEL[userPlan ?? 'free'] ?? 0;
@@ -328,7 +392,7 @@ const StudyPage = () => {
     };
 
     void fetchStudy();
-  }, [contents, episode, scene, navigate]);
+  }, [contents, episode, scene, navigate, isGuest, location.pathname, location.search]);
 
   // 인접 콘텐츠 이동 간 세션 권한 및 유효성 검증 로직
   const goToByStudyId = async (targetStudyId: number) => {
@@ -362,7 +426,7 @@ const StudyPage = () => {
         .select('is_featured')
         .eq('id', next)
         .maybeSingle();
-      
+
       if (!sData?.is_featured) {
         setShowSignIn(true);
         return;
@@ -411,29 +475,25 @@ const StudyPage = () => {
     <>
       <Helmet>
         <title>{pageTitle}</title>
-
         <meta name="description" content={description} />
 
         {/* SNS 공유 최적화를 위한 Open Graph 메타 데이터 섹션 */}
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={description} />
-        <meta property="og:image" content={ogImage} />
-        <meta
-          property="og:url"
-          content={
-            study
-              ? `https://ara.com${buildStudyUrl(study)}`
-              : `https://ara.com/study/${enc(contents)}/${enc(episode)}${scene ? `/${enc(scene)}` : ''}`
-          }
-        />
         <meta property="og:type" content="article" />
+        <meta property="og:url" content={currentStudyUrl} />
+        {ogImage && <meta property="og:image" content={ogImage} />}
 
         {/* 트위터(X) 카드 최적화 메타 데이터 섹션 */}
-        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={description} />
-        <meta name="twitter:image" content={ogImage} />
+        {ogImage && <meta name="twitter:image" content={ogImage} />}
+
+        {/* 대표 URL */}
+        <link rel="canonical" href={currentStudyUrl} />
       </Helmet>
+
       <div className="min-h-screen bg-white dark:bg-background">
         <div className="flex justify-center">
           <div className="flex w-full max-w-5xl min-h-screen">
@@ -514,14 +574,16 @@ const StudyPage = () => {
             : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white dark:hover:bg-gray-600'
         }`
                       }
-                      title={loading ? t('common.loading') : (study?.contents ?? t('study.no_title'))}
+                      title={
+                        loading ? t('common.loading') : (study?.contents ?? t('study.no_title'))
+                      }
                     >
                       <i className="ri-movie-2-line text-base opacity-70 group-hover:opacity-100 shrink-0 dark:text-gray-100 mr-1" />
                       <span className="font-medium hidden sm:block dark:text-gray-100 leading-[0.9]">
                         {loading || (!targetLang.startsWith('ko') && metaStatus === 'loading') ? (
                           <Skeleton className="h-3 w-24" />
                         ) : (
-                          displayTitle ?? t('study.no_title')
+                          (displayTitle ?? t('study.no_title'))
                         )}
                       </span>
                     </NavLink>
@@ -539,30 +601,34 @@ const StudyPage = () => {
                                 study?.categories ?? t('study.category.all'),
                               )}&content=${encodeURIComponent(
                                 String(study.contents),
-                                )}&episode=${encodeURIComponent(study.episode)}`,
-                              }
-                            : '/studylist'
-                        }
-                        className={({ isActive }) =>
-                          `group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl leading-none transition-all text-sm whitespace-normal break-words text-left h-auto
-          ${
-            isActive
-              ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10'
-              : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white hover:dark:bg-gray-600 dark:text-gray-300'
-          }`
-                        }
-                        title={loading ? t('common.loading') : (displayEpisode || t('study.no_episode'))}
-                      >
-                        <i className={`${isMusic ? 'ri-music-2-line' : 'ri-hashtag'} text-base opacity-70 group-hover:opacity-100 shrink-0 dark:text-gray-100 mr-1`} />
-                        <span className="font-medium hidden sm:block dark:text-gray-100 leading-[0.9]">
-                          {loading || (!targetLang.startsWith('ko') && metaStatus === 'loading') ? (
-                            <Skeleton className="h-3 w-16" />
-                          ) : (
-                            isMusic && translatedEpisode && translatedEpisode !== study?.episode
-                              ? `${displayEpisode} (${translatedEpisode})`
-                              : (displayEpisode || t('study.no_episode'))
-                          )}
-                        </span>
+                              )}&episode=${encodeURIComponent(study.episode)}`,
+                            }
+                          : '/studylist'
+                      }
+                      className={({ isActive }) =>
+                        `group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl leading-none transition-all text-sm whitespace-normal break-words text-left h-auto
+        ${
+          isActive
+            ? 'ring-indigo-200 text-indigo-700 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10'
+            : 'ring-gray-200 text-gray-700 hover:ring-indigo-200 hover:bg-white hover:dark:bg-gray-600 dark:text-gray-300'
+        }`
+                      }
+                      title={
+                        loading ? t('common.loading') : displayEpisode || t('study.no_episode')
+                      }
+                    >
+                      <i
+                        className={`${isMusic ? 'ri-music-2-line' : 'ri-hashtag'} text-base opacity-70 group-hover:opacity-100 shrink-0 dark:text-gray-100 mr-1`}
+                      />
+                      <span className="font-medium hidden sm:block dark:text-gray-100 leading-[0.9]">
+                        {loading || (!targetLang.startsWith('ko') && metaStatus === 'loading') ? (
+                          <Skeleton className="h-3 w-16" />
+                        ) : isMusic && translatedEpisode && translatedEpisode !== study?.episode ? (
+                          `${displayEpisode} (${translatedEpisode})`
+                        ) : (
+                          displayEpisode || t('study.no_episode')
+                        )}
+                      </span>
                     </NavLink>
                   </div>
                 </nav>
@@ -614,7 +680,7 @@ const StudyPage = () => {
                     <i className="ri-arrow-drop-right-line text-4xl sm:text-5xl transition-transform duration-200 group-hover:translate-x-1" />
                   </button>
                 </div>
-                
+
                 {/* 콘텐츠 상세 요약 정보 노출 영역 — 다국어 설명 지원 */}
                 {!loading && (
                   <div className="mt-3 px-4 sm:px-6 md:px-8 min-h-[1.5em]">
@@ -623,7 +689,7 @@ const StudyPage = () => {
                         <Skeleton className="h-4 w-full max-w-2xl" />
                         <Skeleton className="h-4 w-4/5 max-w-xl" />
                       </div>
-                    ) : (translatedDescription || parentShortDesc) ? (
+                    ) : translatedDescription || parentShortDesc ? (
                       <p className="text-center text-sm sm:text-base text-gray-600 dark:text-gray-400 leading-relaxed max-w-3xl mx-auto">
                         {translatedDescription || parentShortDesc}
                       </p>
@@ -641,7 +707,13 @@ const StudyPage = () => {
                   ) : (
                     <InfoItem
                       icon="ri-time-line"
-                      text={translatedRuntime ?? translatedRuntimeBucket ?? study?.runtime ?? study?.runtime_bucket ?? '—'}
+                      text={
+                        translatedRuntime ??
+                        translatedRuntimeBucket ??
+                        study?.runtime ??
+                        study?.runtime_bucket ??
+                        '—'
+                      }
                     />
                   )}
                 </span>
@@ -658,7 +730,10 @@ const StudyPage = () => {
                   {loading || (!targetLang.startsWith('ko') && metaStatus === 'loading') ? (
                     <Skeleton className="h-4 w-24" />
                   ) : (
-                    <InfoItem icon="ri-folder-2-line" text={translatedCategory ?? study?.categories ?? '—'} />
+                    <InfoItem
+                      icon="ri-folder-2-line"
+                      text={translatedCategory ?? study?.categories ?? '—'}
+                    />
                   )}
                 </span>
                 {/* 조회수 */}
@@ -671,8 +746,9 @@ const StudyPage = () => {
                 {!loading && (
                   <div className="ml-auto shrink-0">
                     <ShareButton
-                      title={`${displayTitle}`}
+                      title={pageTitle}
                       text={`${t('study.share_text_prefix')} ${displayTitle} ${!isMusic ? displayEpisode : ''} ${!isMusic ? displayScene : ''}`}
+                      url={currentStudyUrl}
                     />
                   </div>
                 )}
@@ -704,6 +780,5 @@ const StudyPage = () => {
     </>
   );
 };
-
 
 export default StudyPage;
