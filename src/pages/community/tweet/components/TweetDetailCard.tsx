@@ -271,7 +271,8 @@ export default function TweetDetailCard({
   const SITE_URL = 'https://arakorean.com';
 
   const tweetPath = `/sns/${tweet.id}`;
-  const tweetUrl = `${SITE_URL}${tweetPath}`;
+  const sharePath = `/share/sns/${tweet.id}`;
+  const tweetUrl = `${SITE_URL}${sharePath}`;
 
   const shareTitle = `${tweet.user.name || 'ARA 사용자'}님의 게시글 | ARA 커뮤니티`;
 

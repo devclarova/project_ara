@@ -1,28 +1,30 @@
 import { BanBadge } from '@/components/common/BanBadge';
 import PlanBadge from '@/components/common/PlanBadge';
+import { ensureMyProfileId } from '@/lib/ensureMyProfileId';
 import { getErrorMessage } from '@/utils/errorMessage';
 
 import BlockButton from '@/components/common/BlockButton';
-import EditTweetModal from '@/components/common/EditTweetModal';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import ReportModal from '@/components/common/ReportModal';
-import ShareButton from '@/components/common/ShareButton';
 import TranslateButton from '@/components/common/TranslateButton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { useBlockedUsers } from '@/contexts/BlockedUsersContext';
 import { SnsStore } from '@/lib/snsState';
 import { supabase } from '@/lib/supabase';
 import { type TweetStats, type TweetUser, type UITweet } from '@/types/sns';
 import { formatSmartDate } from '@/utils/dateUtils';
 import DOMPurify from 'dompurify';
+import { Bird, Heart, MessageCircle, Share2, MoreHorizontal, ShieldAlert } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import ImageSlider from '../tweet/components/ImageSlider';
 import ModalImageSlider from '../tweet/components/ModalImageSlider';
+import EditTweetModal from '@/components/common/EditTweetModal';
+import { useBlockedUsers } from '@/contexts/BlockedUsersContext';
+import ShareButton from '@/components/common/ShareButton';
 
 const SNS_LAST_TWEET_ID_KEY = 'sns-last-tweet-id';
 
@@ -526,32 +528,9 @@ export default function TweetCard({
     if (typeof window !== 'undefined') {
       sessionStorage.setItem(SNS_LAST_TWEET_ID_KEY, type === 'reply' ? tweetId! : id);
     }
-
-    const target = type === 'reply' && tweetId ? `/sns/${tweetId}?highlight=${id}` : `/sns/${id}`;
+    const target = type === 'reply' ? `/sns/${tweetId}?highlight=${id}` : `/sns/${id}`;
     safeNavigate(target);
   };
-
-  // 택스트만 번역
-  const plainTextContent = (() => {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = safeContent;
-    return tmp.textContent || tmp.innerText || '';
-  })();
-
-  const SITE_URL = 'https://arakorean.com';
-
-  const tweetPath = type === 'reply' && tweetId ? `/sns/${tweetId}?highlight=${id}` : `/sns/${id}`;
-  const tweetUrl = `${SITE_URL}${tweetPath}`;
-
-  const shareTitle = `${user.name || 'ARA 사용자'}님의 게시글 | ARA 커뮤니티`;
-
-  const shareText =
-    plainTextContent.trim().length > 0
-      ? plainTextContent.trim().length > 120
-        ? `${plainTextContent.trim().slice(0, 120)}...`
-        : plainTextContent.trim()
-      : t('common.share_default_text', '재미있게 한국어를 배워요! ARA에서 학습 장면을 공유합니다.');
-
   const isDeletedUser = user.username === 'anonymous';
 
   const handleAvatarClick = (e: React.MouseEvent) => {
@@ -593,6 +572,21 @@ export default function TweetCard({
     if (selection && selection.toString().length > 0) return;
     handleCardClick();
   };
+  // 택스트만 번역
+  const plainTextContent = (() => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = safeContent;
+    return tmp.textContent || tmp.innerText || '';
+  })();
+
+  const SITE_URL = 'https://arakorean.com';
+
+  const sharePath =
+    type === 'reply' && tweetId ? `/share/sns/${tweetId}?highlight=${id}` : `/share/sns/${id}`;
+
+  const tweetUrl = `${SITE_URL}${sharePath}`;
+
+  const shareTitle = `${user.name || 'ARA 사용자'}님의 게시글 | ARA 커뮤니티`;
 
   const openEditModal = () => {
     // 현재 스크롤 위치 저장
@@ -1007,7 +1001,6 @@ export default function TweetCard({
             </div>
             <span className="text-sm">{viewCount}</span>
           </button>
-          {/* 공유 버튼 */}
           <div
             className="flex items-center"
             onClick={e => {
