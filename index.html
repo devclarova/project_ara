@@ -59,27 +59,30 @@
     <!-- 테마 -->
     <script>
       (function () {
-        var KEY = 'theme-mode'; // 'light' | 'dark' | 'system'
-        var saved = localStorage.getItem(KEY) || 'system';
+        var KEY = 'theme-mode';
+        var saved = localStorage.getItem(KEY);
+        if (saved !== 'light' && saved !== 'dark' && saved !== 'system') {
+          saved = 'light';
+        }
         var mq = window.matchMedia('(prefers-color-scheme: dark)');
+        var resolvedTheme = saved === 'system' ? (mq.matches ? 'dark' : 'light') : saved;
 
-        function apply(mode) {
-          var dark = mode === 'dark' || (mode === 'system' && mq.matches);
-          document.documentElement.classList.toggle('dark', dark);
+        function apply(mode, resolved) {
+          document.documentElement.classList.toggle('dark', resolved === 'dark');
           document.documentElement.dataset.themeMode = mode;
+          document.documentElement.style.colorScheme = resolved;
         }
 
         window.__setTheme = function (mode) {
+          if (mode !== 'light' && mode !== 'dark' && mode !== 'system') {
+            mode = 'light';
+          }
+          var res = mode === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : mode;
           localStorage.setItem(KEY, mode);
-          apply(mode);
+          apply(mode, res);
         };
 
-        mq.addEventListener &&
-          mq.addEventListener('change', function () {
-            if ((localStorage.getItem(KEY) || 'system') === 'system') apply('system');
-          });
-
-        apply(saved);
+        apply(saved, resolvedTheme);
       })();
     </script>
 
