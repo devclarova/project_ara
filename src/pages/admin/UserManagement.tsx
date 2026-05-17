@@ -38,6 +38,7 @@ import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { AnimatePresence, motion } from 'framer-motion';
+import { AdminAvatarBadge, AdminTextBadge } from '@/components/common/AdminBadge';
 import PlanBadge from '@/components/common/PlanBadge';
 import {
   DropdownMenu,
@@ -773,15 +774,27 @@ const UserManagement = () => {
                         setShowUserProfileModal(true);
                       }}
                     >
-                      <PlanBadge plan={user.plan} size="sm">
-                        <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-foreground font-bold border-2 border-gray-100 dark:border-gray-700 overflow-hidden group-hover/user:border-primary transition-all">
-                          <img
-                            src={user.avatar_url || '/images/ara_basic_profile.png'}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      </PlanBadge>
+                      {user.is_admin ? (
+                        <AdminAvatarBadge isAdmin={user.is_admin} size="sm" animated>
+                          <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-foreground font-bold border-2 border-gray-100 dark:border-gray-700 overflow-hidden group-hover/user:border-primary transition-all">
+                            <img
+                              src={user.avatar_url || '/images/ara_basic_profile.png'}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </AdminAvatarBadge>
+                      ) : (
+                        <PlanBadge plan={user.plan} size="sm">
+                          <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-foreground font-bold border-2 border-gray-100 dark:border-gray-700 overflow-hidden group-hover/user:border-primary transition-all">
+                            <img
+                              src={user.avatar_url || '/images/ara_basic_profile.png'}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </PlanBadge>
+                      )}
                       <div>
                         <div className="flex items-center gap-2">
                            <p className="text-sm font-semibold text-foreground group-hover/user:text-primary transition-colors">{user.nickname}</p>

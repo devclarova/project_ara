@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import Modal from '@/components/common/Modal';
+import { AdminAvatarBadge, AdminTextBadge } from '@/components/common/AdminBadge';
+import PlanBadge from '@/components/common/PlanBadge';
 import ModalImageSlider from '../../community/tweet/components/ModalImageSlider';
 import { 
   User, 
@@ -149,20 +151,41 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
           )}
           
           <div className="absolute -bottom-12 left-8 p-1 bg-white dark:bg-zinc-900 rounded-full shadow-lg">
-            <div 
-              className="relative w-24 h-24 rounded-full bg-zinc-100 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 overflow-hidden shadow-inner cursor-pointer group/avatar"
-              onClick={(e) => {
-                e.stopPropagation();
-                setModalImages([user.avatar_url || '/images/ara_basic_profile.png']);
-                setModalIndex(0);
-              }}
-            >
-              <img 
-                src={user.avatar_url || '/images/ara_basic_profile.png'} 
-                alt="avatar" 
-                className="w-full h-full object-cover transition-all group-hover/avatar:brightness-90"
-              />
-            </div>
+            {user.is_admin ? (
+              <AdminAvatarBadge isAdmin={user.is_admin} size="lg" animated>
+                <div 
+                  className="relative w-24 h-24 rounded-full bg-zinc-100 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 overflow-hidden shadow-inner cursor-pointer group/avatar"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setModalImages([user.avatar_url || '/images/ara_basic_profile.png']);
+                    setModalIndex(0);
+                  }}
+                >
+                  <img 
+                    src={user.avatar_url || '/images/ara_basic_profile.png'} 
+                    alt="avatar" 
+                    className="w-full h-full object-cover transition-all group-hover/avatar:brightness-90"
+                  />
+                </div>
+              </AdminAvatarBadge>
+            ) : (
+              <PlanBadge plan={user.plan} size="lg">
+                <div 
+                  className="relative w-24 h-24 rounded-full bg-zinc-100 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 overflow-hidden shadow-inner cursor-pointer group/avatar"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setModalImages([user.avatar_url || '/images/ara_basic_profile.png']);
+                    setModalIndex(0);
+                  }}
+                >
+                  <img 
+                    src={user.avatar_url || '/images/ara_basic_profile.png'} 
+                    alt="avatar" 
+                    className="w-full h-full object-cover transition-all group-hover/avatar:brightness-90"
+                  />
+                </div>
+              </PlanBadge>
+            )}
           </div>
         </div>
 
@@ -179,11 +202,7 @@ const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose, us
                     title={isOnline ? '온라인' : '오프라인'} 
                   />
                 </div>
-                {user.is_admin && (
-                  <span className="whitespace-nowrap shrink-0 px-2.5 py-0.5 bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 text-[10px] rounded-full flex items-center gap-1 font-bold border border-violet-200 dark:border-violet-800">
-                    <Shield size={10} /> 관리자
-                  </span>
-                )}
+                <AdminTextBadge isAdmin={user.is_admin} size="sm" />
                 <span className={`whitespace-nowrap shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
                   user.plan?.toLowerCase() === 'premium' 
                     ? 'bg-primary/10 text-primary border-primary/20' 
