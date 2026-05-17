@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+Disallow: /chat
+Disallow: /notifications
+Disallow: /settings
+Disallow: /admin
+Disallow: /voca
+
+Sitemap: https://arakorean.com/sitemap.xml
