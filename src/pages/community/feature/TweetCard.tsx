@@ -1016,8 +1016,8 @@ export default function TweetCard({
           >
             <ShareButton
               title={shareTitle}
-              text={shareText}
               url={tweetUrl}
+              useDefaultText={false}
               className="!border-0 !px-2 !py-2 [&_span]:!hidden !text-gray-500 dark:!text-gray-400 hover:!text-primary dark:hover:!text-primary"
             />
           </div>

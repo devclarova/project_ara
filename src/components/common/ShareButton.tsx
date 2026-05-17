@@ -14,6 +14,7 @@ type ShareButtonProps = {
   linkUrl?: string;
   className?: string;
   onShared?: () => void;
+  useDefaultText?: boolean;
 };
 
 function getCanonicalUrl(): string | null {
@@ -29,6 +30,7 @@ export default function ShareButton({
   linkUrl,
   className = '',
   onShared,
+  useDefaultText = true,
 }: ShareButtonProps) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
@@ -42,15 +44,26 @@ export default function ShareButton({
 
   // 공유 데이터 구성
   const shareData = useMemo(() => {
-    return {
+    const resolvedText =
+      text ??
+      (useDefaultText
+        ? t(
+            'common.share_default_text',
+            '재미있게 한국어를 배워요! ARA에서 학습 장면을 공유합니다.',
+          )
+        : undefined);
+
+    const data: ShareData = {
       title: (title ?? document.title).slice(0, 80),
-      text: (
-        text ??
-        t('common.share_default_text', '재미있게 한국어를 배워요! ARA에서 학습 장면을 공유합니다.')
-      ).slice(0, 200),
       url: shareUrl,
     };
-  }, [title, text, shareUrl, t]);
+
+    if (resolvedText?.trim()) {
+      data.text = resolvedText.trim().slice(0, 200);
+    }
+
+    return data;
+  }, [title, text, shareUrl, t, useDefaultText]);
 
   // Clipboard Bridge: Interfaces with the navigator.clipboard API for link copying, with a prompt-based fallback.
   const copyToClipboard = async () => {

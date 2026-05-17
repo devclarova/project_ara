@@ -275,12 +275,7 @@ export default function TweetDetailCard({
 
   const shareTitle = `${tweet.user.name || 'ARA 사용자'}님의 게시글 | ARA 커뮤니티`;
 
-  const shareText =
-    plainTextContent.trim().length > 0
-      ? plainTextContent.trim().length > 120
-        ? `${plainTextContent.trim().slice(0, 120)}...`
-        : plainTextContent.trim()
-      : t('common.share_default_text', '재미있게 한국어를 배워요! ARA에서 학습 장면을 공유합니다.');
+  const ogDescription = 'ARA 커뮤니티에서 공유된 게시글입니다.';
 
   const normalizeUrl = (url?: string | null) => {
     if (!url) return null;
@@ -616,11 +611,11 @@ export default function TweetDetailCard({
     <>
       <Helmet>
         <title>{shareTitle}</title>
-        <meta name="description" content={shareText} />
+        <meta name="description" content={ogDescription} />
 
         {/* Open Graph - 카톡/페북 등 공유 미리보기 */}
         <meta property="og:title" content={shareTitle} />
-        <meta property="og:description" content={shareText} />
+        <meta property="og:description" content={ogDescription} />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={tweetUrl} />
         {ogImage && <meta property="og:image" content={ogImage} />}
@@ -628,7 +623,7 @@ export default function TweetDetailCard({
         {/* Twitter / X 공유 미리보기 */}
         <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
         <meta name="twitter:title" content={shareTitle} />
-        <meta name="twitter:description" content={shareText} />
+        <meta name="twitter:description" content={ogDescription} />
         {ogImage && <meta name="twitter:image" content={ogImage} />}
 
         {/* 대표 URL */}
@@ -977,8 +972,8 @@ export default function TweetDetailCard({
             >
               <ShareButton
                 title={shareTitle}
-                text={shareText}
                 url={tweetUrl}
+                useDefaultText={false}
                 className="!border-0 !px-2 !py-2 [&_span]:!hidden !text-gray-500 dark:!text-gray-400 hover:!text-primary dark:hover:!text-primary"
               />
             </div>
