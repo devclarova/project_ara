@@ -26,6 +26,7 @@ import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 import { OnlineIndicator } from './OnlineIndicator';
 import SeagullIcon from './SeagullIcon';
 import PlanBadge from '@/components/common/PlanBadge';
+import { AdminAvatarBadge } from '@/components/common/AdminBadge';
 
 function Header() {
   const { t, i18n } = useTranslation();
@@ -416,12 +417,21 @@ function Header() {
                   title="내 프로필"
                   aria-expanded={isProfileMenuOpen}
                 >
-                  <PlanBadge plan={userPlan}>
-                    <Avatar className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-white dark:border-secondary">
-                      <AvatarImage src={headerAvatar} alt={displayNickname} />
-                      <AvatarFallback>{displayNickname.charAt(0).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                  </PlanBadge>
+                  {isAdmin ? (
+                    <AdminAvatarBadge isAdmin={true} size="sm" animated>
+                      <Avatar className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-white dark:border-secondary">
+                        <AvatarImage src={headerAvatar} alt={displayNickname} />
+                        <AvatarFallback>{displayNickname.charAt(0).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                    </AdminAvatarBadge>
+                  ) : (
+                    <PlanBadge plan={userPlan}>
+                      <Avatar className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-white dark:border-secondary">
+                        <AvatarImage src={headerAvatar} alt={displayNickname} />
+                        <AvatarFallback>{displayNickname.charAt(0).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                    </PlanBadge>
+                  )}
                   <div className="flex flex-col items-start min-w-0">
                     <div className="relative inline-flex items-center">
                       <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 group-hover:opacity-80 whitespace-nowrap">
@@ -683,18 +693,33 @@ function Header() {
             setIsOpen(false);
           }}
         >
-          <PlanBadge plan={userPlan} size="sm">
-            <Avatar className="w-8 h-8 border-2 border-white dark:border-secondary">
-              <AvatarImage src={headerAvatar} alt={displayNickname} />
-              <AvatarFallback>
-                {user ? (
-                  displayNickname.charAt(0).toUpperCase()
-                ) : (
-                  <User className="w-4 h-4 text-gray-400" />
-                )}
-              </AvatarFallback>
-            </Avatar>
-          </PlanBadge>
+          {isAdmin ? (
+            <AdminAvatarBadge isAdmin={true} size="xs" animated>
+              <Avatar className="w-8 h-8 border-2 border-white dark:border-secondary">
+                <AvatarImage src={headerAvatar} alt={displayNickname} />
+                <AvatarFallback>
+                  {user ? (
+                    displayNickname.charAt(0).toUpperCase()
+                  ) : (
+                    <User className="w-4 h-4 text-gray-400" />
+                  )}
+                </AvatarFallback>
+              </Avatar>
+            </AdminAvatarBadge>
+          ) : (
+            <PlanBadge plan={userPlan} size="sm">
+              <Avatar className="w-8 h-8 border-2 border-white dark:border-secondary">
+                <AvatarImage src={headerAvatar} alt={displayNickname} />
+                <AvatarFallback>
+                  {user ? (
+                    displayNickname.charAt(0).toUpperCase()
+                  ) : (
+                    <User className="w-4 h-4 text-gray-400" />
+                  )}
+                </AvatarFallback>
+              </Avatar>
+            </PlanBadge>
+          )}
           <div className="flex-1">
             <div className="relative inline-flex items-center">
               <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">

@@ -20,6 +20,55 @@ import FloatingButtons from '@/components/common/FloatingButtons';
 import { formatBanPeriod, isBanned } from '@/utils/banUtils';
 import { addYears } from 'date-fns';
 import { getErrorMessage } from '@/utils/errorMessage';
+import { AdminTextBadge } from '@/components/common/AdminBadge';
+
+function AdminMiniSigil() {
+  return (
+    <span className="relative inline-flex items-center justify-center w-5 h-5 ml-1.5 shrink-0 select-none">
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        className="w-full h-full"
+        fill="none"
+      >
+        <path
+          d="M12 2.9 19.7 7.35v9.3L12 21.1 4.3 16.65v-9.3L12 2.9Z"
+          fill="url(#adminMiniSigilBg)"
+          stroke="rgba(215,228,245,0.72)"
+          strokeWidth="1.15"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M12.05 6.15 16.9 17.95h-2.18l-.82-2.2H10.1l-.82 2.2H7.15l4.9-11.8Zm-1.28 7.74h2.46l-1.2-3.45-1.26 3.45Z"
+          fill="#F6DFA5"
+        />
+        <path
+          d="M7.35 12.4c1.72-1.55 3.3-2.32 4.72-2.32 1.43 0 2.96.77 4.58 2.32"
+          stroke="#C7D7F2"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+          opacity="0.86"
+        />
+        <defs>
+          <linearGradient
+            id="adminMiniSigilBg"
+            x1="5"
+            y1="4"
+            x2="19"
+            y2="20"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopColor="#111827" />
+            <stop offset="0.38" stopColor="#312E81" />
+            <stop offset="0.72" stopColor="#0F766E" />
+            <stop offset="1" stopColor="#0B1020" />
+          </linearGradient>
+        </defs>
+      </svg>
+    </span>
+  );
+}
+
 export interface UserProfile {
   id: string;
   user_id: string;
@@ -40,6 +89,7 @@ export interface UserProfile {
   gender?: string | null;
   banned_until?: string | null;
   plan?: 'free' | 'basic' | 'premium';
+  is_admin?: boolean | null;
 }
 export default function ProfileAsap() {
   const { t, i18n } = useTranslation();
@@ -103,7 +153,7 @@ export default function ProfileAsap() {
       let baseQuery = (supabase.from('profiles') as any).select(`
         id, user_id, nickname, avatar_url, banner_url, banner_position_y,
         bio, country, followers_count, following_count, created_at,
-        nickname_updated_at, country_updated_at, banned_until, plan
+        nickname_updated_at, country_updated_at, banned_until, plan, is_admin
       `);
 
       if (!decodedUsername && user) {
@@ -157,6 +207,7 @@ export default function ProfileAsap() {
         country_updated_at: profile.country_updated_at,
         banned_until: profile.banned_until ?? null,
         plan: profile.plan ?? 'free',
+        is_admin: profile.is_admin ?? false,
       });
 
       if (profile.banned_until) fetchBanDetails(profile.user_id);
@@ -237,40 +288,88 @@ export default function ProfileAsap() {
     );
   }
   return (
-    // 프로필 레이아웃 컨테이너 — 뷰포트 중앙 정렬 및 플랜별(Premium) 특화 시각 효과 적용
-    <div className={`min-h-screen relative overflow-hidden ${userProfile.plan === 'premium' ? 'bg-white dark:bg-[#0a1a14]' : 'bg-white dark:bg-background'}`}>
-      {userProfile.plan === 'premium' && (
+    // 프로필 레이아웃 컨테이너 — 뷰포트 중앙 정렬 및 플랜별(Premium/Admin) 특화 시각 효과 적용
+    <div className={`min-h-screen relative overflow-hidden ${
+      userProfile.is_admin
+        ? 'bg-white dark:bg-[#070b19]'
+        : userProfile.plan === 'premium'
+          ? 'bg-white dark:bg-[#0a1a14]'
+          : 'bg-white dark:bg-background'
+    }`}>
+      {userProfile.is_admin ? (
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-          <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[50vh] bg-[#00BFA5]/10 rounded-[100%] blur-[120px] opacity-70 animate-pulse mix-blend-screen" style={{ animationDuration: '8s' }}></div>
-          <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vh] bg-[#00E5FF]/10 rounded-[100%] blur-[100px] opacity-60 animate-pulse mix-blend-screen" style={{ animationDuration: '12s' }}></div>
+          {/* Royal Indigo Glow */}
+          <div className="absolute top-[-25%] left-[-15%] w-[80vw] h-[60vh] bg-[#4338CA]/15 rounded-[100%] blur-[130px] opacity-70 animate-pulse mix-blend-screen" style={{ animationDuration: '10s' }}></div>
+          {/* Rich Gold Glow */}
+          <div className="absolute bottom-[-15%] right-[-15%] w-[70vw] h-[70vh] bg-[#D7B86A]/10 rounded-[100%] blur-[110px] opacity-60 animate-pulse mix-blend-screen" style={{ animationDuration: '14s' }}></div>
+          {/* Refined Silver/Slate Glow */}
+          <div className="absolute top-[25%] right-[20%] w-[50vw] h-[50vh] bg-[#9BA4B5]/8 rounded-[100%] blur-[90px] opacity-50 animate-pulse mix-blend-screen" style={{ animationDuration: '18s' }}></div>
         </div>
+      ) : (
+        userProfile.plan === 'premium' && (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+            <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[50vh] bg-[#00BFA5]/10 rounded-[100%] blur-[120px] opacity-70 animate-pulse mix-blend-screen" style={{ animationDuration: '8s' }}></div>
+            <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vh] bg-[#00E5FF]/10 rounded-[100%] blur-[100px] opacity-60 animate-pulse mix-blend-screen" style={{ animationDuration: '12s' }}></div>
+          </div>
+        )
       )}
       <FloatingButtons className="bottom-10 right-6 lg:right-16 xl:right-[calc(50vw-500px)] z-[40]" />
       <div className="flex justify-center relative z-10">
         {/* 가운데 프로필 컬럼 */}
-        <div className={`w-full max-w-2xl lg:max-w-3xl border-x ${userProfile.plan === 'premium' ? 'border-[#00BFA5]/20 bg-transparent' : 'border-gray-200 dark:border-gray-700 dark:bg-background'}`}>
+        <div className={`w-full max-w-2xl lg:max-w-3xl border-x ${
+          userProfile.is_admin
+            ? 'border-[#4338CA]/20 bg-transparent'
+            : userProfile.plan === 'premium' && !userProfile.is_admin
+              ? 'border-[#00BFA5]/20 bg-transparent'
+              : 'border-gray-200 dark:border-gray-700 dark:bg-background'
+        }`}>
           {/* 상단 네비게이션 레이어 — 스티키 레이아웃 기반의 이름 노출 및 뒤로가기 액션 제어 */}
-          <div className={`sticky top-0 backdrop-blur-md border-b p-4 z-20 ${userProfile.plan === 'premium' ? 'bg-[#ccede8]/80 dark:bg-[#03A595]/20 border-[#00BFA5]/20 shadow-[0_4px_20px_rgba(0,191,165,0.05)]' : 'bg-white/80 dark:bg-background/80 border-gray-200 dark:border-gray-700'}`}>
+          <div className={`sticky top-0 backdrop-blur-md border-b p-4 z-20 ${
+            userProfile.is_admin
+              ? 'bg-[#e5e7eb]/80 dark:bg-[#4338CA]/10 border-[#4338CA]/20 shadow-[0_4px_20px_rgba(67,56,202,0.05)]'
+              : userProfile.plan === 'premium' && !userProfile.is_admin
+                ? 'bg-[#ccede8]/80 dark:bg-[#03A595]/20 border-[#00BFA5]/20 shadow-[0_4px_20px_rgba(0,191,165,0.05)]'
+                : 'bg-white/80 dark:bg-background/80 border-gray-200 dark:border-gray-700'
+          }`}>
             <div className="flex items-center">
               {/* 뒤로가기 */}
               <button
                 onClick={() => navigate(-1)}
-                className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${userProfile.plan === 'premium' ? 'hover:bg-[#b2e0da]/50' : 'hover:bg-gray-100 dark:hover:bg-primary/10'}`}
+                className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                  userProfile.is_admin
+                    ? 'hover:bg-[#4338CA]/20'
+                    : userProfile.plan === 'premium' && !userProfile.is_admin
+                      ? 'hover:bg-[#b2e0da]/50'
+                      : 'hover:bg-gray-100 dark:hover:bg-primary/10'
+                }`}
               >
                 <i className="ri-arrow-left-line text-xl text-gray-700 dark:text-gray-100" />
               </button>
               {/* 이름 */}
               <div className="flex flex-col ml-3 justify-center">
-                <h1 className={`text-xl font-bold flex items-center ${userProfile.plan === 'premium' ? 'text-[#007A6E] dark:text-[#00E5FF]' : 'text-gray-900 dark:text-gray-100'}`}>
+                <h1 className={`text-xl font-bold flex items-center ${
+                  userProfile.is_admin
+                    ? 'text-[#4338CA] dark:text-[#D7B86A]'
+                    : userProfile.plan === 'premium' && !userProfile.is_admin
+                      ? 'text-[#007A6E] dark:text-[#00E5FF]'
+                      : 'text-gray-900 dark:text-gray-100'
+                }`}>
                   {userProfile.name}
-                  {userProfile.plan === 'premium' && (
+                  {userProfile.is_admin && <AdminMiniSigil />}
+                  {userProfile.plan === 'premium' && !userProfile.is_admin && (
                     <SeagullIcon size={20} className="ml-1 text-[#00BFA5] drop-shadow-[0_0_8px_rgba(0,191,165,0.8)]" />
                   )}
                 </h1>
-                {(userProfile.plan === 'premium' || userProfile.plan === 'basic') && (
-                  <span className={`text-[10px] font-black tracking-widest uppercase opacity-80 leading-none mt-0.5 ${userProfile.plan === 'premium' ? 'text-[#00BFA5] dark:text-[#00E5FF]' : 'text-[#6366f1] dark:text-indigo-400'}`}>
-                    {userProfile.plan === 'premium' ? 'Premium Member' : userProfile.plan === 'basic' ? 'Basic Member' : ''}
+                {userProfile.is_admin ? (
+                  <span className="text-[10px] font-black tracking-widest uppercase opacity-80 leading-none mt-0.5 text-[#4338CA] dark:text-[#D7B86A]">
+                    ARA Admin
                   </span>
+                ) : (
+                  (userProfile.plan === 'premium' || userProfile.plan === 'basic') && (
+                    <span className={`text-[10px] font-black tracking-widest uppercase opacity-80 leading-none mt-0.5 ${userProfile.plan === 'premium' ? 'text-[#00BFA5] dark:text-[#00E5FF]' : 'text-[#6366f1] dark:text-indigo-400'}`}>
+                      {userProfile.plan === 'premium' ? 'Premium Member' : userProfile.plan === 'basic' ? 'Basic Member' : ''}
+                    </span>
+                  )
                 )}
               </div>
               {/* 오른쪽 영역 */}
@@ -281,7 +380,13 @@ export default function ProfileAsap() {
                       e.stopPropagation();
                       setShowMenu(prev => !prev);
                     }}
-                    className={`w-8 h-8 flex items-center justify-center rounded-full transition ${userProfile.plan === 'premium' ? 'hover:bg-[#b2e0da]/50' : 'hover:bg-gray-100 dark:hover:bg-primary/10'}`}
+                    className={`w-8 h-8 flex items-center justify-center rounded-full transition ${
+                      userProfile.is_admin
+                        ? 'hover:bg-[#4338CA]/20'
+                        : userProfile.plan === 'premium'
+                          ? 'hover:bg-[#b2e0da]/50'
+                          : 'hover:bg-gray-100 dark:hover:bg-primary/10'
+                    }`}
                   >
                     <i className="ri-more-fill text-gray-500 dark:text-gray-400 text-lg" />
                   </button>

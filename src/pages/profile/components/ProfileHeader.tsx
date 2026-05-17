@@ -6,6 +6,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { AdminAvatarBadge } from '@/components/common/AdminBadge';
 import { supabase } from '@/lib/supabase';
 
 import { useEffect, useRef, useState } from 'react';
@@ -385,23 +386,44 @@ export default function ProfileHeader({
       </div>
       <div className="px-4 pb-4">
         {/* 아바타 */}
-        <div className="relative -mt-16 mb-1 w-32 h-32">
-          <div className="w-32 h-32 rounded-full border-4 border-white bg-white overflow-hidden shadow-md dark:border-gray-900 dark:bg-gray-900">
-             <Avatar 
-                className="w-full h-full cursor-pointer"
-                onClick={() => {
-                  const url = previewAvatar || userProfile.avatar || '/images/ara_basic_profile.png';
-                  setModalImages([url]);
-                  setModalImageIndex(0);
-                }}
-              >
-                <AvatarImage
-                  src={previewAvatar || userProfile.avatar || '/images/ara_basic_profile.png'}
-                  alt={userProfile.name}
-                />
-                <AvatarFallback>{userProfile.name.charAt(0).toUpperCase()}</AvatarFallback>
-              </Avatar>
-          </div>
+        <div className={`relative -mt-16 mb-1 w-32 h-32 ${userProfile.is_admin ? 'z-10 flex items-center justify-center' : ''}`}>
+          {userProfile.is_admin ? (
+            <AdminAvatarBadge isAdmin={true} size="lg" animated showPin={false}>
+              <div className="w-32 h-32 rounded-full border-4 border-white bg-white overflow-hidden shadow-md dark:border-gray-900 dark:bg-gray-900">
+                 <Avatar 
+                    className="w-full h-full cursor-pointer"
+                    onClick={() => {
+                      const url = previewAvatar || userProfile.avatar || '/images/ara_basic_profile.png';
+                      setModalImages([url]);
+                      setModalImageIndex(0);
+                    }}
+                  >
+                    <AvatarImage
+                      src={previewAvatar || userProfile.avatar || '/images/ara_basic_profile.png'}
+                      alt={userProfile.name}
+                    />
+                    <AvatarFallback>{userProfile.name.charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+              </div>
+            </AdminAvatarBadge>
+          ) : (
+            <div className="w-32 h-32 rounded-full border-4 border-white bg-white overflow-hidden shadow-md dark:border-gray-900 dark:bg-gray-900">
+               <Avatar 
+                  className="w-full h-full cursor-pointer"
+                  onClick={() => {
+                    const url = previewAvatar || userProfile.avatar || '/images/ara_basic_profile.png';
+                    setModalImages([url]);
+                    setModalImageIndex(0);
+                  }}
+                >
+                  <AvatarImage
+                    src={previewAvatar || userProfile.avatar || '/images/ara_basic_profile.png'}
+                    alt={userProfile.name}
+                  />
+                  <AvatarFallback>{userProfile.name.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
+            </div>
+          )}
         </div>
 
         {/* 내 프로필일 때만 “프로필 편집” 버튼 */}

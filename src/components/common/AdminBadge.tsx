@@ -8,6 +8,7 @@ type AdminAvatarBadgeProps = {
   animated?: boolean;
   children: ReactNode;
   className?: string;
+  showPin?: boolean;
 };
 
 type AdminTextBadgeProps = {
@@ -30,8 +31,8 @@ const sizeMap: Record<
   }
 > = {
   xs: {
-    padding: 'p-[1.5px]',
-    maskInset: 'inset-[1.5px]',
+    padding: 'p-[2px]',
+    maskInset: 'inset-[2px]',
     ringInset: 'inset-0',
     iconBox: 'h-3.5 w-3.5',
     iconSvg: 'h-2.5 w-2.5',
@@ -39,8 +40,8 @@ const sizeMap: Record<
     shadow: '',
   },
   sm: {
-    padding: 'p-[2px]',
-    maskInset: 'inset-[2px]',
+    padding: 'p-[2.5px]',
+    maskInset: 'inset-[2.5px]',
     ringInset: 'inset-0',
     iconBox: 'h-[18px] w-[18px]',
     iconSvg: 'h-[18px] w-[18px]',
@@ -62,7 +63,7 @@ const sizeMap: Record<
     ringInset: 'inset-0',
     iconBox: 'h-[26px] w-[26px]',
     iconSvg: 'h-[26px] w-[26px]',
-    iconOffset: '-left-1.5 -top-1.5',
+    iconOffset: '-left-1 -top-1',
     shadow: '',
   },
 };
@@ -72,14 +73,14 @@ const animSpeedFwd = {
   sm: 'animate-[spin_20s_linear_infinite]',
   md: 'animate-[spin_16s_linear_infinite]',
   lg: 'animate-[spin_12s_linear_infinite]',
-};
+} as const;
 
 const animSpeedRev = {
   xs: 'animate-[spin_24s_linear_infinite_reverse]',
   sm: 'animate-[spin_20s_linear_infinite_reverse]',
   md: 'animate-[spin_16s_linear_infinite_reverse]',
   lg: 'animate-[spin_12s_linear_infinite_reverse]',
-};
+} as const;
 
 const textSizeMap = {
   xs: 'h-5 px-2 text-[10px] gap-1',
@@ -153,10 +154,8 @@ function AdminIconPin({
     <span
       className={cx(
         'absolute z-20 inline-flex items-center justify-center rounded-full border',
-        'border-[#4338CA]/40 bg-gradient-to-br from-white via-[#F8FAFC] to-[#E5DAC0]',
+        'border-[#D7E4F5]/45 bg-gradient-to-br from-[#1E1B4B] via-[#312E81] to-[#4A3F2C]',
         'shadow-sm',
-        'dark:border-[#D7E4F5]/45 dark:from-[#1E1B4B] dark:via-[#312E81] dark:to-[#4A3F2C]',
-        'dark:shadow-sm',
         config.iconBox,
         config.iconOffset
       )}
@@ -172,6 +171,7 @@ export function AdminAvatarBadge({
   animated = false,
   children,
   className,
+  showPin = true,
 }: AdminAvatarBadgeProps) {
   if (!isAdmin) return <>{children}</>;
 
@@ -193,7 +193,8 @@ export function AdminAvatarBadge({
         className={cx(
           'absolute rounded-full dark:hidden',
           config.ringInset,
-          shouldAnimate && `${animSpeedFwd[size]} motion-reduce:animate-none`
+          shouldAnimate && animSpeedFwd[size],
+          shouldAnimate && 'motion-reduce:animate-none'
         )}
         style={{
           background: haloGradientLight,
@@ -205,7 +206,8 @@ export function AdminAvatarBadge({
         className={cx(
           'absolute rounded-full hidden dark:block',
           config.ringInset,
-          shouldAnimate && `${animSpeedFwd[size]} motion-reduce:animate-none`
+          shouldAnimate && animSpeedFwd[size],
+          shouldAnimate && 'motion-reduce:animate-none'
         )}
         style={{
           background: haloGradientDark,
@@ -222,7 +224,7 @@ export function AdminAvatarBadge({
         {children}
       </span>
 
-      <AdminIconPin size={size} />
+      {showPin && <AdminIconPin size={size} />}
     </span>
   );
 }
@@ -249,8 +251,7 @@ export function AdminTextBadge({
       <span
         className={cx(
           'inline-flex items-center justify-center rounded-full border',
-          'border-[#4338CA]/40 bg-gradient-to-br from-white via-[#F8FAFC] to-[#E5DAC0]',
-          'dark:border-[#D7E4F5]/45 dark:from-[#1E1B4B] dark:via-[#312E81] dark:to-[#4A3F2C]',
+          'border-[#D7E4F5]/45 bg-gradient-to-br from-[#1E1B4B] via-[#312E81] to-[#4A3F2C]',
           size === 'xs' ? 'h-3.5 w-3.5' : size === 'sm' ? 'h-4 w-4' : 'h-[18px] w-[18px]'
         )}
       >
