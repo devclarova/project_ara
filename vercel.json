@@ -8,7 +8,7 @@
       "destination": "/api/share/sns/:id"
     },
     {
-      "source": "/(.*)",
+      "source": "/:path((?!api/share/sns/.*|share/sns/.*).*)",
       "destination": "/index.html"
     }
   ]
