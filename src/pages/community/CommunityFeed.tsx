@@ -16,6 +16,17 @@ import { useBlockedUsers } from '@/hooks/useBlockedUsers';
 import type { UITweet } from '@/types/sns';
 import type { Database } from '@/types/database';
 import { getErrorMessage } from '@/utils/errorMessage';
+import type { PostgrestError } from '@supabase/supabase-js';
+
+type ProfileFeedRow = {
+  id: string;
+  nickname: string | null;
+  user_id: string | null;
+  avatar_url: string | null;
+  banned_until: string | null;
+  plan: string | null;
+  is_admin: boolean | null;
+};
 
 type OutletCtx = {
   newTweet: UITweet | null;
@@ -79,6 +90,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
       avatar_url: string | null;
       banned_until?: string | null;
       plan?: 'free' | 'basic' | 'premium';
+      is_admin?: boolean | null;
       country?: string | null;
     } | null;
   };
@@ -118,7 +130,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
             id, content, image_url, created_at, updated_at, deleted_at, is_hidden,
             reply_count, repost_count, like_count, bookmark_count, view_count,
             profiles:author_id ( 
-              id, nickname, user_id, avatar_url, banned_until, plan, country
+              id, nickname, user_id, avatar_url, banned_until, plan, country, is_admin
             )
           `,
             )
@@ -175,6 +187,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
               avatar: tweet.profiles?.avatar_url ?? '/images/ara_basic_profile.png',
               banned_until: tweet.profiles?.banned_until ?? null,
               plan: tweet.profiles?.plan ?? 'free',
+              is_admin: tweet.profiles?.is_admin ?? false,
               countryFlag: tweet.profiles?.country ? countryMap.get(String(tweet.profiles.country))?.flag_url : null,
               countryName: tweet.profiles?.country ? countryMap.get(String(tweet.profiles.country))?.name : null,
             },
@@ -268,10 +281,17 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
   // 5. 새 트윗(InlineEditor) 작성 시 처리
   useEffect(() => {
     if (newTweet) {
-      setTweets(prev => [newTweet, ...prev]);
+      const tweetWithAdmin: UITweet = {
+        ...newTweet,
+        user: {
+          ...newTweet.user,
+          is_admin: isAdmin || false,
+        },
+      };
+      setTweets(prev => [tweetWithAdmin, ...prev]);
       setNewTweet(null); // 사용 후 초기화
     }
-  }, [newTweet, setNewTweet]);
+  }, [newTweet, setNewTweet, isAdmin]);
   const navType = useNavigationType();
   // 6. 스크롤 위치 복원 (Store 사용 - Main 브랜치의 로직 통합)
   useLayoutEffect(() => {
@@ -354,10 +374,11 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
             is_hidden?: boolean | null;
           };
 
-          const { data: profile } = await (supabase.from('profiles') as any)
-            .select('id, nickname, user_id, avatar_url, banned_until, plan')
+          const { data: profile } = (await supabase
+            .from('profiles')
+            .select('id, nickname, user_id, avatar_url, banned_until, plan, is_admin')
             .eq('id', newTweet.author_id)
-            .maybeSingle();
+            .maybeSingle()) as { data: ProfileFeedRow | null; error: PostgrestError | null };
 
           const formattedTweet: UITweet = {
             id: newTweet.id,
@@ -367,7 +388,8 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
               username: profile?.user_id || t('common.anonymous'),
               avatar: profile?.avatar_url || '/images/ara_basic_profile.png',
               banned_until: profile?.banned_until ?? null,
-              plan: profile?.plan,
+              plan: (profile?.plan ?? 'free') as 'free' | 'basic' | 'premium',
+              is_admin: profile?.is_admin ?? false,
             },
             content: newTweet.content,
             image: newTweet.image_url || undefined,
@@ -425,7 +447,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
     const profileChannel = supabase
       .channel('home-feed-author-sync')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, payload => {
-        type ProfileUpdate = { id: string; user_id: string; banned_until?: string | null; plan?: 'free' | 'basic' | 'premium' };
+        type ProfileUpdate = { id: string; user_id: string; banned_until?: string | null; plan?: 'free' | 'basic' | 'premium'; is_admin?: boolean | null };
         const updated = payload.new as ProfileUpdate;
         if (updated.banned_until === undefined) return;
           setTweets(prev =>
@@ -437,7 +459,7 @@ export default function CommunityFeed({ searchQuery }: HomeProps) {
               ) {
                 return {
                   ...t,
-                  user: { ...t.user, banned_until: updated.banned_until, plan: updated.plan },
+                  user: { ...t.user, banned_until: updated.banned_until, plan: updated.plan, is_admin: updated.is_admin },
                 };
               }
               return t;

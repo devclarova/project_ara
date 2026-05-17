@@ -1,5 +1,6 @@
 import { BanBadge } from '@/components/common/BanBadge';
 import PlanBadge from '@/components/common/PlanBadge';
+import { AdminAvatarBadge } from '@/components/common/AdminBadge';
 import { ensureMyProfileId } from '@/lib/ensureMyProfileId';
 import { getErrorMessage } from '@/utils/errorMessage';
 
@@ -606,17 +607,31 @@ export default function TweetCard({
           onClick={handleAvatarClick}
           className={`relative flex-shrink-0 ${isDeletedUser ? 'cursor-default' : 'cursor-pointer'}`}
         >
-          <PlanBadge plan={user.plan}>
-            <Avatar className="w-10 h-10 border-2 border-white dark:border-background">
-              <AvatarImage
-                src={user.avatar || '/images/ara_basic_profile.png'}
-                alt={isDeletedUser ? t('deleted_user') : user.name}
-              />
-              <AvatarFallback>
-                {isDeletedUser ? '?' : user.name.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-          </PlanBadge>
+          {user.is_admin ? (
+            <AdminAvatarBadge isAdmin={true} size="md" animated>
+              <Avatar className="w-10 h-10 border-2 border-white dark:border-background">
+                <AvatarImage
+                  src={user.avatar || '/images/ara_basic_profile.png'}
+                  alt={isDeletedUser ? t('deleted_user') : user.name}
+                />
+                <AvatarFallback>
+                  {isDeletedUser ? '?' : user.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </AdminAvatarBadge>
+          ) : (
+            <PlanBadge plan={user.plan}>
+              <Avatar className="w-10 h-10 border-2 border-white dark:border-background">
+                <AvatarImage
+                  src={user.avatar || '/images/ara_basic_profile.png'}
+                  alt={isDeletedUser ? t('deleted_user') : user.name}
+                />
+                <AvatarFallback>
+                  {isDeletedUser ? '?' : user.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </PlanBadge>
+          )}
         </div>
 
         {/* User Info & Menu */}

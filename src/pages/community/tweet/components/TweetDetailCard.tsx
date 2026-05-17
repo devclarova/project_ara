@@ -23,6 +23,7 @@ import EditButton from '@/components/common/EditButton';
 import EditTweetModal from '@/components/common/EditTweetModal';
 import { getErrorMessage } from '@/utils/errorMessage';
 import PlanBadge from '@/components/common/PlanBadge';
+import { AdminAvatarBadge } from '@/components/common/AdminBadge';
 import { useBlockedUsers } from '@/contexts/BlockedUsersContext';
 
 function htmlToEditorText(html: string) {
@@ -596,17 +597,31 @@ export default function TweetDetailCard({
           onClick={handleAvatarClick}
           className={`cursor-pointer flex-shrink-0 self-start relative ${isDeletedUser ? 'cursor-default' : ''}`}
         >
-          <PlanBadge plan={tweet.user.plan}>
-            <Avatar className="border-2 border-white dark:border-background">
-              <AvatarImage
-                src={tweet.user.avatar || '/images/ara_basic_profile.png'}
-                alt={isDeletedUser ? t('deleted_user') : tweet.user.name}
-              />
-              <AvatarFallback>
-                {isDeletedUser ? '?' : tweet.user.name.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-          </PlanBadge>
+          {tweet.user.is_admin ? (
+            <AdminAvatarBadge isAdmin={true} size="md" animated>
+              <Avatar className="border-2 border-white dark:border-background">
+                <AvatarImage
+                  src={tweet.user.avatar || '/images/ara_basic_profile.png'}
+                  alt={isDeletedUser ? t('deleted_user') : tweet.user.name}
+                />
+                <AvatarFallback>
+                  {isDeletedUser ? '?' : tweet.user.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </AdminAvatarBadge>
+          ) : (
+            <PlanBadge plan={tweet.user.plan}>
+              <Avatar className="border-2 border-white dark:border-background">
+                <AvatarImage
+                  src={tweet.user.avatar || '/images/ara_basic_profile.png'}
+                  alt={isDeletedUser ? t('deleted_user') : tweet.user.name}
+                />
+                <AvatarFallback>
+                  {isDeletedUser ? '?' : tweet.user.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </PlanBadge>
+          )}
         </div>
 
         <div className="flex-1 min-w-0">
