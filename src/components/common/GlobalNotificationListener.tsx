@@ -116,6 +116,32 @@ export const GlobalNotificationListener: React.FC = () => {
                 }
               }
 
+              // 댓글/답글/멘션 등 comment_id가 있는 경우 원본 내용 가져오기
+              let contentToDisplay = newNotif.content?.replace(/<[^>]*>/g, '') || '';
+              
+              if (newNotif.comment_id && (!contentToDisplay || contentToDisplay.trim() === '')) {
+                const { data: replyData } = await (supabase.from('tweet_replies') as any)
+                  .select('content')
+                  .eq('id', newNotif.comment_id)
+                  .maybeSingle();
+                
+                if (replyData?.content) {
+                  // HTML 태그 제거 및 길이 제한 (말줄임)
+                  const cleanText = replyData.content.replace(/<[^>]*>/g, '').trim();
+                  contentToDisplay = cleanText.length > 60 ? cleanText.slice(0, 60) + '...' : cleanText;
+                }
+              } else if (newNotif.type === 'like' && !newNotif.comment_id && newNotif.tweet_id) {
+                 // 피드 좋아요 시 내용이 없으면 트윗 내용 가져오기 시도
+                 const { data: tweetData } = await (supabase.from('tweets') as any)
+                  .select('content')
+                  .eq('id', newNotif.tweet_id)
+                  .maybeSingle();
+                if (tweetData?.content) {
+                  const cleanText = tweetData.content.replace(/<[^>]*>/g, '').trim();
+                  contentToDisplay = cleanText.length > 60 ? cleanText.slice(0, 60) + '...' : cleanText;
+                }
+              }
+
               // 프로필이 없어도 알림은 띄움 (Fallback)
               toast.custom((t) => (
                 <NotificationToast
@@ -125,7 +151,7 @@ export const GlobalNotificationListener: React.FC = () => {
                     avatar_url: senderProfile?.avatar_url ?? null,
                     plan: senderProfile?.plan ?? null,
                   }}
-                  content={newNotif.content?.replace(/<[^>]*>/g, '') || ''}
+                  content={contentToDisplay}
                   timestamp={newNotif.created_at}
                   replyId={newNotif.comment_id}
                   onClick={() => {

@@ -115,7 +115,7 @@ export default function Sidebar({ onTweetClick }: SidebarProps) {
 
   const navigationItems = [
     { icon: 'ri-home-5-fill', label: t('nav.home'), path: '/sns' },
-    { icon: 'ri-notification-3-line', label: t('nav.notifications'), path: '/sns/hnotifications' },
+    { icon: 'ri-notification-3-line', label: t('nav.notifications'), path: '/hnotifications' },
     { icon: 'ri-chat-3-line', label: t('nav.chat'), path: '/sns/chat' },
     { icon: 'ri-user-line', label: t('nav.profile'), onClick: handleProfileClick },
     { imgSrc: '/apple-touch-icon.png', label: t('nav.study'), path: '/studyList' },

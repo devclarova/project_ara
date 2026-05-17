@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import NotificationCard from '@/pages/community/feature/NotificationCard';
+import type { SilentDeleteOptions } from '@/pages/community/feature/NotificationCard';
 import { toast } from 'sonner';
 
 interface Notification {
@@ -21,19 +22,20 @@ interface Notification {
     | 'system'
     | 'repost'
     | 'like_comment'
-    | 'like_feed';
+    | 'like_feed'
+    | 'updates';
   content: string;
   is_read: boolean;
   created_at: string;
   tweet_id: string | null;
   comment_id: string | null;
-  sender: {
+  user: {
     id: string;
     name: string;
     username: string;
-    avatar: string | null;
+    avatar: string;
     bio?: string | null;
-  } | null;
+  };
 }
 
 interface NotificationQueryResult {
@@ -58,19 +60,39 @@ interface NotificationQueryResult {
 
 import FloatingButtons from '@/components/common/FloatingButtons';
 
+type ActiveTab = 'all' | 'like' | 'comment' | 'follow' | 'system' | 'updates';
+
 export default function HNotificationsPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [profileId, setProfileId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'like' | 'comment' | 'follow' | 'system' | 'updates'>(
-    'like',
-  );
+  const [activeTab, setActiveTab] = useState<ActiveTab>('all');
 
   // 삭제 모달 상태
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // 알림 필터 로직 (탭별 기준 통일)
+  const getFilteredNotifications = (tabKey: ActiveTab) => {
+    return notifications.filter(n => {
+      if (tabKey === 'all') return true;
+      if (tabKey === 'comment')
+        return (['comment', 'reply', 'mention'] as string[]).includes(n.type);
+      if (tabKey === 'like')
+        return (['like', 'like_comment', 'like_feed'] as string[]).includes(n.type);
+      return n.type === tabKey;
+    });
+  };
+
+  // 카운트용 헬퍼
+  const getFilteredCount = (tabKey: ActiveTab) => {
+    return getFilteredNotifications(tabKey).filter(n => !n.is_read).length;
+  };
+
+  // 전체 카운트는 따로 필요할 때 계산 (현재는 탭별 카운트만 사용)
+  const totalUnreadCount = notifications.filter(n => !n.is_read).length;
 
   useEffect(() => {
     document.title = '알림 | ARA';
@@ -112,44 +134,46 @@ export default function HNotificationsPage() {
 
       setNotifications(
         ((data as unknown as NotificationQueryResult[]) ?? []).map((n) => {
-          // 피드 좋아요 혹은 멘션인 경우, 알림 자체 content가 비어있으면 원본 트윗 내용을 보여줌
-          let contentToUse = n.content;
+          // 0. 기본 내용 설정
+          let contentToUse = n.content || '';
 
-          if (n.type === 'like' && !n.comment_id && n.tweet?.content) {
-            contentToUse = n.tweet.content;
-          }
+          // 1. 게시글 삭제 여부 판단 (조인된 tweet 데이터 유무 기준)
+          const isPostDeleted = (n.type === 'like' || n.type === 'mention' || n.type === 'like_feed') && !n.comment_id && !n.tweet;
+          
+          // 2. 댓글 삭제 여부 판단 (조인된 reply 데이터 유무 기준 또는 comment_id 가 널이 된 경우)
+          const isCommentType = n.type === 'comment' || n.type === 'reply' || n.type === 'like_comment';
+          const isCommentDeleted = isCommentType && (!n.comment_id || !n.reply);
 
-          if (
-            n.type === 'mention' &&
-            (!contentToUse || contentToUse.trim() === '') &&
-            n.tweet?.content
-          ) {
-            contentToUse = n.tweet.content;
-          }
-
-          if (n.type === 'reply' && n.comment_id && n.reply?.content && !contentToUse) {
-            contentToUse = n.reply.content;
+          if (isCommentDeleted) {
+            contentToUse = t('notification.deleted_comment', '삭제된 댓글입니다.');
+          } else if (isPostDeleted) {
+            contentToUse = t('notification.deleted_post', '삭제된 게시글입니다.');
+          } else {
+            // 정상 데이터 매핑
+            if (n.comment_id && n.reply?.content) {
+              contentToUse = n.reply.content;
+            } else if (!n.comment_id && n.tweet?.content) {
+              contentToUse = n.tweet.content;
+            }
           }
 
           return {
             id: n.id,
             type: n.type,
-            content: contentToUse ?? '',
+            content: contentToUse,
             is_read: n.is_read,
             created_at: n.created_at,
             tweet_id: n.tweet_id,
             comment_id: n.comment_id,
-            sender: n.sender
-              ? {
-                  id: n.sender.id,
-                  name: n.sender.nickname ?? '',
-                  username: (n.sender.username || n.sender.nickname) ?? '',
-                  avatar: n.sender.avatar_url,
-                  bio: n.sender.bio,
-                }
-              : null,
+            user: {
+              id: n.sender?.id || '',
+              name: n.type === 'system' ? t('common.ara_team') : n.sender?.nickname || 'Unknown',
+              username: n.type === 'system' ? 'ara_official' : n.sender?.username || 'unknown',
+              avatar: n.sender?.avatar_url || '',
+              bio: n.sender?.bio || ''
+            }
           };
-        }),
+        })
       );
       setLoading(false);
     };
@@ -207,7 +231,8 @@ export default function HNotificationsPage() {
             }
           }
 
-          if (newItem.type === 'reply' && newItem.comment_id && !contentToUse) {
+          // 댓글/답글/멘션 등 comment_id가 있는 모든 타입에 대해 내용 가져오기 보강
+          if (newItem.comment_id && (!contentToUse || contentToUse.trim() === '')) {
             const { data: replyData } = await (supabase.from('tweet_replies') as any)
               .select('content')
               .eq('id', newItem.comment_id)
@@ -225,15 +250,13 @@ export default function HNotificationsPage() {
             created_at: newItem.created_at,
             tweet_id: newItem.tweet_id,
             comment_id: newItem.comment_id,
-            sender: sender
-              ? {
-                  id: sender.id,
-                  name: sender.nickname ?? '',
-                  username: (sender.username || sender.nickname) ?? '',
-                  avatar: sender.avatar_url,
-                  bio: sender.bio,
-                }
-              : null,
+            user: {
+              id: sender?.id || '',
+              name: newItem.type === 'system' ? t('common.ara_team') : sender?.nickname || 'Unknown',
+              username: newItem.type === 'system' ? 'ara_official' : sender?.username || 'unknown',
+              avatar: sender?.avatar_url || '',
+              bio: sender?.bio || '',
+            },
           };
 
           setNotifications(prev => {
@@ -250,13 +273,41 @@ export default function HNotificationsPage() {
   }, [profileId]);
 
   // 읽음 처리
-  const markAsRead = async (id: string) => {
+  const markAsRead = async (id: string): Promise<boolean> => {
+    if (!profileId) return false;
+
     const target = notifications.find(n => n.id === id);
-    if (target && !target.is_read) {
+    if (!target || target.is_read) return true; // 이미 읽었으면 성공으로 간주
+
+    try {
+      // DB 업데이트 시도 및 결과 확인 (.select().single() 사용)
+      const { data, error } = await (supabase.from('notifications') as any)
+        .update({ is_read: true })
+        .eq('id', id)
+        .eq('receiver_id', profileId)
+        .select('id, is_read, receiver_id')
+        .maybeSingle();
+
+      if (error) {
+        console.error('알림 읽음 처리 DB 실패:', error.message);
+        toast.error(t('notification.error_mark_read', '알림 읽음 처리에 실패했습니다.'));
+        return false;
+      }
+
+      if (!data || data.is_read !== true) {
+        // 업데이트된 행이 없거나 상태가 변하지 않음 (RLS나 조건 불일치 가능성)
+        console.warn('알림 읽음 처리 결과 없음 (ID/Receiver 불일치 가능성):', { id, profileId });
+        return false;
+      }
+
+      // DB 성공 시에만 UI 반영
+      setNotifications(prev => prev.map(n => (n.id === id ? { ...n, is_read: true } : n)));
       window.dispatchEvent(new Event('notification:deleted-one'));
+      return true;
+    } catch (err: unknown) {
+      console.error('알림 읽음 처리 예외:', (err as Error).message);
+      return false;
     }
-    setNotifications(prev => prev.map(n => (n.id === id ? { ...n, is_read: true } : n)));
-    await (supabase.from('notifications') as any).update({ is_read: true }).eq('id', id);
   };
 
   // 전체 비우기
@@ -376,6 +427,7 @@ export default function HNotificationsPage() {
         <div className="sticky top-[110px] sm:top-[126px] lg:top-[134px] xl:top-[150px] bg-white/80 dark:bg-background/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 z-20">
           <div className="flex">
             {[
+              { key: 'all' as const, label: t('notification.tab_all', '전체') },
               { key: 'like' as const, label: t('notification.tab_likes') },
               { key: 'comment' as const, label: t('notification.tab_comments') },
               { key: 'follow' as const, label: t('notification.tab_follow') },
@@ -385,15 +437,7 @@ export default function HNotificationsPage() {
               const isCommentsTab = tab.key === 'comment';
               const isLikesTab = tab.key === 'like';
 
-              const filteredForCount = notifications.filter(n => {
-                if (isCommentsTab)
-                  return (['comment', 'reply', 'mention'] as string[]).includes(n.type);
-                if (isLikesTab)
-                  return (['like', 'like_comment', 'like_feed'] as string[]).includes(n.type);
-                return n.type === tab.key;
-              });
-
-              const unreadCount = filteredForCount.filter(n => !n.is_read).length;
+              const unreadCount = getFilteredCount(tab.key);
 
               return (
                 <button
@@ -425,13 +469,7 @@ export default function HNotificationsPage() {
         {/* 알림 리스트 */}
         <div className="flex-1 divide-y divide-gray-100 dark:divide-gray-900">
           {(() => {
-            const filteredNotifications = notifications.filter(n => {
-              if (activeTab === 'comment')
-                return (['comment', 'reply', 'mention'] as string[]).includes(n.type);
-              if (activeTab === 'like')
-                return (['like', 'like_comment', 'like_feed'] as string[]).includes(n.type);
-              return n.type === activeTab;
-            });
+            const filteredNotifications = getFilteredNotifications(activeTab);
 
             return filteredNotifications.length > 0 ? (
               <>
@@ -440,48 +478,29 @@ export default function HNotificationsPage() {
                     key={n.id}
                     notification={{
                       id: n.id,
-                      type: n.type as Notification['type'], // Alignment with card props
-                      user: {
-                        id: n.sender?.id || '',
-                        name:
-                          n.type === 'system' ? t('common.ara_team') : n.sender?.name || 'Unknown',
-                        username:
-                          n.type === 'system' ? 'ara_admin' : n.sender?.username || 'anonymous',
-                        avatar:
-                          n.type === 'system'
-                            ? '/images/sample_font_logo.png'
-                            : n.sender?.avatar || '/images/ara_basic_profile.png',
-                        bio: n.sender?.bio,
-                      },
-                      action:
-                        n.type === 'comment' || n.type === 'mention'
-                          ? t('notification.action_comment')
-                          : n.type === 'reply'
-                            ? t('notification.action_reply', '대댓글을 남겼습니다')
-                            : n.type === 'like' || n.type === 'like_comment' || n.type === 'like_feed'
-                            ? n.comment_id
-                              ? t('notification.action_like_comment')
-                              : t('notification.action_like_feed')
-                            : n.type === 'system'
-                              ? '' // 시스템 알림은 본문이 길어서 action 칸은 비웁니다
-                              : n.content,
-                      content: n.content || '',
+                      type: n.type,
+                      user: n.user,
+                      action: '', 
+                      content: n.content,
                       timestamp: n.created_at,
                       isRead: n.is_read,
                       tweetId: n.tweet_id,
-                      replyId: n.comment_id, // null 가능
+                      replyId: n.comment_id,
                     }}
                     onMarkAsRead={markAsRead}
                     onDelete={handleRequestDelete}
-                    onSilentDelete={async id => {
+                    onSilentDelete={async (id, options?: SilentDeleteOptions) => {
                       // 직접 삭제 (모달 없이) - 삭제된 컨텐츠 클릭 시 사용
                       try {
+                        const skipCountDecrement = options?.skipCountDecrement ?? false;
+                        
                         // UI 선반영
                         const target = notifications.find(n => n.id === id);
                         setNotifications(prev => prev.filter(n => n.id !== id));
 
-                        // 뱃지 업데이트
-                        if (target && !target.is_read) {
+                        // 뱃지 업데이트: 아직 읽지 않은 알림을 삭제할 때만 차감
+                        // 이미 markAsRead로 차감했다면 (skipCountDecrement === true) 중복 차감하지 않음
+                        if (target && !target.is_read && !skipCountDecrement) {
                           window.dispatchEvent(new Event('notification:deleted-one'));
                         }
 

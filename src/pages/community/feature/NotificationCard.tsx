@@ -22,6 +22,10 @@ import { useAutoTranslation } from '@/hooks/useAutoTranslation';
 import { useFollow } from '@/hooks/useFollow';
 
 
+export type SilentDeleteOptions = {
+  skipCountDecrement?: boolean;
+};
+
  interface NotificationCardProps {
    notification: {
      id: string;
@@ -40,9 +44,9 @@ import { useFollow } from '@/hooks/useFollow';
      tweetId: string | null;
      replyId?: string | null;
    };
-  onMarkAsRead?: (id: string) => void;
+  onMarkAsRead?: (id: string) => Promise<boolean>;
   onDelete?: (id: string) => void;
-  onSilentDelete?: (id: string) => void;
+  onSilentDelete?: (id: string, options?: SilentDeleteOptions) => void | Promise<void>;
 }
 
 export default function NotificationCard({
@@ -243,16 +247,23 @@ export default function NotificationCard({
       : 'border-l-4 border-l-transparent';
 
   // "삭제된 댓글"로 취급해야 하는 알림인지 판별
-  // type === 'comment' 이면서 replyId 없음 → 원래 댓글 알림인데 댓글이 삭제된 케이스
-  // 참고: type === 'like' 이면서 replyId 없음 → 정상적인 게시글 좋아요 (삭제된 댓글 아님)
-  // 댓글 좋아요(type === 'like' + replyId 있음)의 삭제 체크는 handleClick 내부의 DB 조회로 처리
-  const isDeletedCommentNotification =
-    notification.type === 'comment' && !notification.replyId;
+  // 원래 댓글 알림인데 댓글이 삭제된 케이스
+  const isCommentType = notification.type === 'comment' || notification.type === 'reply' || notification.type === 'like_comment';
+  const isDeletedCommentNotification = isCommentType && !notification.replyId;
 
   // Check logic inside handleClick
   const handleClick = async () => {
+    let markAsReadSuccess = false;
+    
     if (!notification.isRead && onMarkAsRead) {
-      onMarkAsRead(notification.id);
+      const result = await onMarkAsRead(notification.id);
+      // markAsRead가 Promise<boolean>을 반환하므로 성공 여부 확인
+      // result가 void인 경우를 대비해 boolean으로 강제 변환하여 비교
+      markAsReadSuccess = !!result;
+      
+      if (!markAsReadSuccess) {
+        console.warn('[NotificationCard] Mark as read failed or was not needed for ID:', notification.id);
+      }
     }
 
     // 시스템 알림이나 소식(updates) 알림은 이동 로직 없이 읽음 처리만 함
@@ -271,59 +282,68 @@ export default function NotificationCard({
 
     // 게시글 자체가 삭제된 경우 (tweetId가 null인 경우)
     if (!notification.tweetId) {
-      toast.info(t('notification.deleted_post'));
-      onSilentDelete?.(notification.id); // 게시글 삭제됨 -> 알림 삭제
+      toast.info(t('notification.deleted_post', '삭제된 게시글입니다.'));
+      // [Policy Update] 더 이상 자동 삭제하지 않음. 읽음 처리만 하고 종료.
       return;
     }
 
     // "삭제된 댓글"로 판단되는 알림 (이미 정보가 불완전한 경우)
     if (isDeletedCommentNotification) {
-      toast.info(t('notification.deleted_comment'));
-      
-      if (location.pathname !== targetSns) {
-        navigate(targetSns);
-      }
-      onSilentDelete?.(notification.id);
+      toast.info(t('notification.deleted_comment', '삭제된 댓글입니다.'));
+      // [Policy Update] 더 이상 부모 게시글로 이동하지 않음. 읽음 처리만 하고 종료.
       return;
     }
 
     // 댓글/댓글 좋아요 알림: tweetId + replyId 둘 다 있을 때 -> 실제 DB 존재 여부 확인
     if (notification.tweetId && notification.replyId) {
-      // 1. 실제로 댓글이 존재하는지 확인 (DB 체크)
-      const { data: replyExists } = await (supabase.from('tweet_replies') as any)
-        .select('id')
-        .eq('id', notification.replyId)
-        .maybeSingle();
+      try {
+        // 1. 실제로 댓글이 존재하는지 확인 (DB 체크)
+        const { data: replyExists, error: replyError } = await (supabase.from('tweet_replies') as any)
+          .select('id')
+          .eq('id', notification.replyId)
+          .maybeSingle();
 
-      if (!replyExists) {
-        // 이미 삭제된 댓글임
-        toast.info(t('notification.deleted_comment'));
-        
-        // 그래도 게시글로 이동은 함 (사용자 경험 유지) - 먼저 이동
-        if (location.pathname !== targetSns) {
-           navigate(targetSns);
+        if (replyError || !replyExists) {
+          // 이미 삭제된 댓글임
+          toast.info(t('notification.deleted_comment', '삭제된 댓글입니다.'));
+          // [Policy Update] 더 이상 자동 삭제하거나 이동하지 않음.
+          return;
         }
-        
-        // 이동 후 삭제 (컴포넌트 언마운트되더라도 실행됨)
-        onSilentDelete?.(notification.id); 
-        return;
-      }
 
-      // 2. 존재하면 정상 이동 + 하이라이트
-      navigate(targetSns, {
-        replace: location.pathname === targetSns,
-        state: {
-          highlightCommentId: notification.replyId,
-          scrollKey: Date.now(),
-        },
-      });
+        // 2. 존재하면 정상 이동 + 하이라이트
+        navigate(targetSns, {
+          replace: location.pathname === targetSns,
+          state: {
+            highlightCommentId: notification.replyId,
+            scrollKey: Date.now(),
+          },
+        });
+      } catch (err) {
+        console.error('[NotificationCard] Reply check failed:', err);
+      }
       return;
     }
 
-    // 그 외는 피드 디테일로만 이동
+    // 그 외는 피드 디테일로만 이동 (게시글 자체가 존재해야 함)
     if (notification.tweetId) {
-      if (location.pathname !== targetSns) {
-        navigate(targetSns);
+      try {
+        // 게시글 존재 여부 확인 (게시글 좋아요 등)
+        const { data: tweetExists, error: tweetError } = await (supabase.from('tweets') as any)
+          .select('id')
+          .eq('id', notification.tweetId)
+          .maybeSingle();
+
+        if (tweetError || !tweetExists) {
+          toast.info(t('notification.deleted_post', '삭제된 게시글입니다.'));
+          // [Policy Update] 더 이상 자동 삭제하지 않음.
+          return;
+        }
+
+        if (location.pathname !== targetSns) {
+          navigate(targetSns);
+        }
+      } catch (err) {
+        console.error('[NotificationCard] Tweet check failed:', err);
       }
     }
   };
