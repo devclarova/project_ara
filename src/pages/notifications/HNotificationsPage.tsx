@@ -159,6 +159,7 @@ export default function HNotificationsPage() {
             }
           }
 
+          const isOfficial = n.type === 'system' || n.type === 'updates';
           return {
             id: n.id,
             type: n.type,
@@ -168,13 +169,13 @@ export default function HNotificationsPage() {
             tweet_id: n.tweet_id,
             comment_id: n.comment_id,
             user: {
-              id: n.sender?.id || '',
-              name: n.type === 'system' ? t('common.ara_team') : n.sender?.nickname || 'Unknown',
-              username: n.type === 'system' ? 'ara_official' : n.sender?.username || 'unknown',
-              avatar: n.sender?.avatar_url || '',
-              bio: n.sender?.bio || '',
-              plan: n.sender?.plan ?? null,
-              is_admin: n.sender?.is_admin ?? false,
+              id: isOfficial ? '' : (n.sender?.id || ''),
+              name: isOfficial ? t('common.ara_team', { defaultValue: 'ARA 운영팀' }) : (n.sender?.nickname || 'Unknown'),
+              username: isOfficial ? 'ara_official' : (n.sender?.username || 'unknown'),
+              avatar: isOfficial ? '' : (n.sender?.avatar_url || ''),
+              bio: isOfficial ? '' : (n.sender?.bio || ''),
+              plan: isOfficial ? null : (n.sender?.plan ?? null),
+              is_admin: isOfficial ? true : (n.sender?.is_admin ?? false),
             },
           };
         }),
@@ -246,6 +247,7 @@ export default function HNotificationsPage() {
             }
           }
 
+          const isOfficial = newItem.type === 'system' || newItem.type === 'updates';
           const uiItem: Notification = {
             id: newItem.id,
             type: newItem.type,
@@ -255,13 +257,13 @@ export default function HNotificationsPage() {
             tweet_id: newItem.tweet_id,
             comment_id: newItem.comment_id,
             user: {
-              id: sender?.id || '',
-              name: newItem.type === 'system' ? t('common.ara_team') : sender?.nickname || 'Unknown',
-              username: newItem.type === 'system' ? 'ara_official' : sender?.username || 'unknown',
-              avatar: sender?.avatar_url || '',
-              bio: sender?.bio || '',
-              plan: sender?.plan ?? null,
-              is_admin: sender?.is_admin ?? false,
+              id: isOfficial ? '' : (sender?.id || ''),
+              name: isOfficial ? t('common.ara_team', { defaultValue: 'ARA 운영팀' }) : (sender?.nickname || 'Unknown'),
+              username: isOfficial ? 'ara_official' : (sender?.username || 'unknown'),
+              avatar: isOfficial ? '' : (sender?.avatar_url || ''),
+              bio: isOfficial ? '' : (sender?.bio || ''),
+              plan: isOfficial ? null : (sender?.plan ?? null),
+              is_admin: isOfficial ? true : (sender?.is_admin ?? false),
             },
           };
 

@@ -384,7 +384,7 @@ export default function NotificationCard({
       <div className="flex items-start space-x-3">
         {/* Avatar */}
         <div onClick={handleAvatarClick} className="cursor-pointer flex-shrink-0 relative">
-          {notification.type !== 'system' && notification.user.is_admin ? (
+          {notification.type === 'system' || notification.type === 'updates' || notification.user.is_admin ? (
             <AdminAvatarBadge isAdmin={true} size="md" animated>
               <Avatar className="w-10 h-10">
                 <AvatarImage
@@ -392,11 +392,11 @@ export default function NotificationCard({
                   alt={notification.user.name}
                 />
                 <AvatarFallback>
-                  {notification.user.name ? notification.user.name.charAt(0).toUpperCase() : 'U'}
+                  {notification.type === 'system' || notification.type === 'updates' ? '📢' : (notification.user.name ? notification.user.name.charAt(0).toUpperCase() : 'U')}
                 </AvatarFallback>
               </Avatar>
             </AdminAvatarBadge>
-          ) : notification.type !== 'system' ? (
+          ) : (
             <PlanBadge plan={notification.user.plan}>
               <Avatar className="w-10 h-10">
                 <AvatarImage
@@ -408,18 +408,8 @@ export default function NotificationCard({
                 </AvatarFallback>
               </Avatar>
             </PlanBadge>
-          ) : (
-            <Avatar className="w-10 h-10">
-              <AvatarImage
-                src={notification.user.avatar || '/images/ara_basic_profile.png'}
-                alt={notification.user.name}
-              />
-              <AvatarFallback>
-                📢
-              </AvatarFallback>
-            </Avatar>
           )}
-          {notification.type !== 'system' && (
+          {notification.type !== 'system' && notification.type !== 'updates' && (
           <OnlineIndicator 
             userId={notification.user.id} 
             size="sm" 
