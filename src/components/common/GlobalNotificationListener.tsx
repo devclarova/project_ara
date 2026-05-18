@@ -89,7 +89,7 @@ export const GlobalNotificationListener: React.FC = () => {
               if ((type === 'mention' || type === 'repost' || type === 'reply') && !userSettingsRef.current.notify_comment) return;
               
               const { data: senderProfile } = await (supabase.from('profiles') as any)
-                .select('id, nickname, avatar_url, plan, username, bio')
+                .select('id, nickname, avatar_url, plan, username, bio, is_admin')
                 .eq('id', newNotif.sender_id)
                 .maybeSingle();
 
@@ -150,6 +150,7 @@ export const GlobalNotificationListener: React.FC = () => {
                     nickname: senderProfile?.nickname ?? '알 수 없는 사용자',
                     avatar_url: senderProfile?.avatar_url ?? null,
                     plan: senderProfile?.plan ?? null,
+                    is_admin: senderProfile?.is_admin ?? false,
                   }}
                   content={contentToDisplay}
                   timestamp={newNotif.created_at}
@@ -230,7 +231,7 @@ export const GlobalNotificationListener: React.FC = () => {
             }
 
             const { data: senderProfile } = await (supabase.from('profiles') as any)
-              .select('nickname, avatar_url, plan')
+              .select('nickname, avatar_url, plan, is_admin')
               .eq('user_id', newMessage.sender_id)
               .maybeSingle();
 
@@ -262,6 +263,7 @@ export const GlobalNotificationListener: React.FC = () => {
                   nickname: senderProfile?.nickname ?? '알 수 없는 사용자',
                   avatar_url: senderProfile?.avatar_url ?? null,
                   plan: senderProfile?.plan ?? null,
+                  is_admin: senderProfile?.is_admin ?? false,
                 }}
                 content={contentWithMedia}
                 timestamp={newMessage.created_at ?? ''}

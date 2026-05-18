@@ -35,6 +35,8 @@ interface Notification {
     username: string;
     avatar: string;
     bio?: string | null;
+    plan?: string | null;
+    is_admin?: boolean | null;
   };
 }
 
@@ -53,6 +55,8 @@ interface NotificationQueryResult {
     avatar_url: string | null;
     username: string | null;
     bio: string | null;
+    plan?: string | null;
+    is_admin?: boolean | null;
   } | null;
   tweet: { content: string | null } | null;
   reply: { content: string | null } | null;
@@ -113,7 +117,7 @@ export default function HNotificationsPage() {
         .select(
           `
           id, type, content, is_read, created_at, tweet_id, comment_id,
-          sender:sender_id (id, nickname, user_id, avatar_url, username, bio),
+          sender:sender_id (id, nickname, user_id, avatar_url, username, bio, plan, is_admin),
           tweet:tweets (content),
           reply:tweet_replies (content)
         `,
@@ -169,6 +173,8 @@ export default function HNotificationsPage() {
               username: n.type === 'system' ? 'ara_official' : n.sender?.username || 'unknown',
               avatar: n.sender?.avatar_url || '',
               bio: n.sender?.bio || '',
+              plan: n.sender?.plan ?? null,
+              is_admin: n.sender?.is_admin ?? false,
             },
           };
         }),
@@ -205,7 +211,7 @@ export default function HNotificationsPage() {
 
           const { data: sender } = newItem.sender_id
             ? await (supabase.from('profiles') as any)
-                .select('id, nickname, user_id, avatar_url, username, bio')
+                .select('id, nickname, user_id, avatar_url, username, bio, plan, is_admin')
                 .eq('id', newItem.sender_id)
                 .maybeSingle()
             : { data: null };
@@ -254,6 +260,8 @@ export default function HNotificationsPage() {
               username: newItem.type === 'system' ? 'ara_official' : sender?.username || 'unknown',
               avatar: sender?.avatar_url || '',
               bio: sender?.bio || '',
+              plan: sender?.plan ?? null,
+              is_admin: sender?.is_admin ?? false,
             },
           };
 
