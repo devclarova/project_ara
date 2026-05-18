@@ -1,88 +1,128 @@
 /**
  * 피드백 자동 트리거 훅 (Feedback Auto-Trigger Hook)
  * - 목적: 사용자의 서비스 이용 패턴에 따라 적절한 시점에 피드백 모달을 자동으로 노출
- * - 전략: 2단계 트리거 → 1회차(3분+2페이지), 2회차(dismiss 후 10분+5페이지 추가), 완료 시 영구 비노출
+ * - 전략: 단일 단계 트리거 → 첫 진입 후 5분 경과 AND 5페이지 이상 방문 시 최대 1회 노출 (사용자별 스코프 격리)
  */
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 const FEEDBACK_STATUS_KEY = 'ara_feedback_status';
 const FIRST_VISIT_TIME_KEY = 'ara_first_visit_time';
-const DISMISS_TIME_KEY = 'ara_feedback_dismiss_time';
 const PAGE_COUNT_KEY = 'ara_page_visit_count';
-const DISMISS_PAGE_COUNT_KEY = 'ara_dismiss_page_count';
 
 type FeedbackStatus = 'none' | 'dismissed' | 'completed';
 
-function getStatus(): FeedbackStatus {
-  return (localStorage.getItem(FEEDBACK_STATUS_KEY) as FeedbackStatus) || 'none';
+// 로그인 사용자별 스코프 key 헬퍼
+const getScopedKey = (baseKey: string, userId: string) => `${baseKey}_${userId}`;
+
+function getStatus(userId: string): FeedbackStatus {
+  return (localStorage.getItem(getScopedKey(FEEDBACK_STATUS_KEY, userId)) as FeedbackStatus) || 'none';
 }
 
-function getPageCount(): number {
-  return parseInt(sessionStorage.getItem(PAGE_COUNT_KEY) || '0', 10);
+function getPageCount(userId: string): number {
+  return parseInt(sessionStorage.getItem(getScopedKey(PAGE_COUNT_KEY, userId)) || '0', 10);
 }
 
-function setPageCount(count: number) {
-  sessionStorage.setItem(PAGE_COUNT_KEY, String(count));
-}
-
-function getDismissPageCount(): number {
-  return parseInt(sessionStorage.getItem(DISMISS_PAGE_COUNT_KEY) || '0', 10);
-}
-
-function setDismissPageCount(count: number) {
-  sessionStorage.setItem(DISMISS_PAGE_COUNT_KEY, String(count));
+function setPageCount(userId: string, count: number) {
+  sessionStorage.setItem(getScopedKey(PAGE_COUNT_KEY, userId), String(count));
 }
 
 export function useFeedbackTrigger() {
   const { user } = useAuth();
   const location = useLocation();
   const [shouldShow, setShouldShow] = useState(false);
+  const [dbChecked, setDbChecked] = useState(false);
   const checkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // 페이지 방문 카운트 — 라우트 변경 시마다 증가
+  // DB 제출 이력 조회
+  useEffect(() => {
+    let isMounted = true;
+    if (!user) {
+      setDbChecked(false);
+      setShouldShow(false);
+      return;
+    }
+
+    // 새로운 user가 유입되는 순간 즉시 dbChecked와 shouldShow를 false로 초기화하여 이전 계정 상태의 race 예방
+    setDbChecked(false);
+    setShouldShow(false);
+
+    const checkDbHistory = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('feedback')
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1);
+
+        if (error) throw error;
+
+        if (isMounted) {
+          if (data && data.length > 0) {
+            // 이미 제출 이력이 있다면 사용자 스코프 completed로 보정
+            localStorage.setItem(getScopedKey(FEEDBACK_STATUS_KEY, user.id), 'completed');
+          }
+          setDbChecked(true);
+        }
+      } catch (err) {
+        // 에러 발생 시 기존 로컬 캐시 상태를 신뢰하여 체크 완료 처리하며 로그는 경고 수준으로 최소화
+        console.warn('Feedback DB check failed, falling back to local cache.');
+        if (isMounted) {
+          setDbChecked(true);
+        }
+      }
+    };
+
+    checkDbHistory();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
+
+  // 페이지 방문 카운트 — 라우트 변경 시마다 증가 (사용자별 격리)
   useEffect(() => {
     if (!user) return;
-    const status = getStatus();
-    if (status === 'completed') return;
+    const status = getStatus(user.id);
+    if (status === 'completed' || status === 'dismissed') return;
 
-    const newCount = getPageCount() + 1;
-    setPageCount(newCount);
+    const newCount = getPageCount(user.id) + 1;
+    setPageCount(user.id, newCount);
   }, [location.pathname, user]);
 
-  // 첫 방문 시각 기록
+  // 첫 방문 시각 기록 (사용자별 격리)
   useEffect(() => {
     if (!user) return;
-    if (!localStorage.getItem(FIRST_VISIT_TIME_KEY)) {
-      localStorage.setItem(FIRST_VISIT_TIME_KEY, String(Date.now()));
+    const status = getStatus(user.id);
+    if (status === 'completed' || status === 'dismissed') return;
+
+    const firstVisitKey = getScopedKey(FIRST_VISIT_TIME_KEY, user.id);
+    if (!localStorage.getItem(firstVisitKey)) {
+      localStorage.setItem(firstVisitKey, String(Date.now()));
     }
   }, [user]);
 
-  // 주기적 조건 체크 — 30초마다 확인
+  // 주기적 조건 체크 — 30초마다 확인 (사용자별 격리)
   useEffect(() => {
-    if (!user) return;
+    if (!user || !dbChecked) return;
 
     const check = () => {
-      const status = getStatus();
-      if (status === 'completed') return;
+      const status = getStatus(user.id);
+      if (status === 'completed' || status === 'dismissed') return;
 
       const now = Date.now();
-      const firstVisit = parseInt(localStorage.getItem(FIRST_VISIT_TIME_KEY) || '0', 10);
-      const pageCount = getPageCount();
+      const firstVisitKey = getScopedKey(FIRST_VISIT_TIME_KEY, user.id);
+      const firstVisit = parseInt(localStorage.getItem(firstVisitKey) || '0', 10);
+      const pageCount = getPageCount(user.id);
 
       if (status === 'none') {
-        // 1회차: 첫 방문 후 3분(180000ms) 경과 + 2페이지 이상 방문
+        // 단일 노출 조건: 첫 진입 후 5분(300,000ms) 경과 AND 5페이지 이상 방문
         const elapsed = now - firstVisit;
-        if (elapsed >= 180_000 && pageCount >= 2) {
-          setShouldShow(true);
-        }
-      } else if (status === 'dismissed') {
-        // 2회차: dismiss 후 10분(600000ms) 경과 + dismiss 시점 이후 5페이지 추가 방문
-        const dismissTime = parseInt(localStorage.getItem(DISMISS_TIME_KEY) || '0', 10);
-        const elapsed = now - dismissTime;
-        const additionalPages = pageCount - getDismissPageCount();
-        if (elapsed >= 600_000 && additionalPages >= 5) {
+        if (elapsed >= 300_000 && pageCount >= 5) {
+          // 노출 발생 즉시 사용자 스코프 localStorage를 'dismissed'로 선제 마킹하여 새로고침/이탈 시 재노출 방지
+          localStorage.setItem(getScopedKey(FEEDBACK_STATUS_KEY, user.id), 'dismissed');
           setShouldShow(true);
         }
       }
@@ -95,28 +135,24 @@ export function useFeedbackTrigger() {
     return () => {
       if (checkIntervalRef.current) clearInterval(checkIntervalRef.current);
     };
-  }, [user]);
+  }, [user, dbChecked]);
 
   // dismiss 처리 — 자동 트리거를 닫았을 때
   const onDismiss = useCallback(() => {
-    const status = getStatus();
-    if (status === 'none') {
-      localStorage.setItem(FEEDBACK_STATUS_KEY, 'dismissed');
-      localStorage.setItem(DISMISS_TIME_KEY, String(Date.now()));
-      setDismissPageCount(getPageCount());
-    } else if (status === 'dismissed') {
-      // 2회차에서도 dismiss → completed로 전환하여 더 이상 노출하지 않음
-      localStorage.setItem(FEEDBACK_STATUS_KEY, 'completed');
+    if (user) {
+      localStorage.setItem(getScopedKey(FEEDBACK_STATUS_KEY, user.id), 'dismissed');
     }
     setShouldShow(false);
-  }, []);
+  }, [user]);
 
   // 제출 완료 처리 — 영구 비노출
   const onComplete = useCallback(() => {
-    localStorage.setItem(FEEDBACK_STATUS_KEY, 'completed');
+    if (user) {
+      localStorage.setItem(getScopedKey(FEEDBACK_STATUS_KEY, user.id), 'completed');
+    }
     setShouldShow(false);
     if (checkIntervalRef.current) clearInterval(checkIntervalRef.current);
-  }, []);
+  }, [user]);
 
   return {
     shouldShow,
