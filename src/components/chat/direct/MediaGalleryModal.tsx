@@ -70,6 +70,7 @@ export default function MediaGalleryModal({ isOpen, onClose, chatId }: MediaGall
                 senderName: msg.sender?.nickname || 'Unknown',
                 senderAvatarUrl: msg.sender?.avatar_url,
                 plan: msg.sender?.plan || null,
+                is_admin: msg.sender?.is_admin || null,
                 type: 'video',
               });
             } else if (type !== 'file') {
@@ -81,6 +82,7 @@ export default function MediaGalleryModal({ isOpen, onClose, chatId }: MediaGall
                 senderName: msg.sender?.nickname || 'Unknown',
                 senderAvatarUrl: msg.sender?.avatar_url,
                 plan: msg.sender?.plan || null,
+                is_admin: msg.sender?.is_admin || null,
                 type: 'image',
               });
             }

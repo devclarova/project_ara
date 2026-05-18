@@ -27,6 +27,7 @@ import Modal from '@/components/common/Modal';
 import ReportModal from '@/components/common/ReportModal';
 import { OnlineIndicator } from '@/components/common/OnlineIndicator';
 import PlanBadge from '@/components/common/PlanBadge';
+import { AdminAvatarBadge } from '@/components/common/AdminBadge';
 
 // 개별 채팅 세션 컴포넌트(Chat Session Unit) — 성능 최적화를 위해 불필요한 리렌더링을 차단하는 심층 비교(Custom Comparison) 기반 메모이제이션 적용
 const ChatItem = memo(
@@ -96,19 +97,35 @@ const ChatItem = memo(
         onClick={() => onSelect(chat.id, chat.other_user?.nickname)}
       >
         <div className="chat-avatar cursor-pointer overflow-visible relative p-1.5" onClick={handleAvatarClick}>
-          <PlanBadge plan={chat.other_user.plan?.toLowerCase() || null} size="lg">
-            {chat.other_user.avatar_url ? (
-              <img
-                src={chat.other_user.avatar_url}
-                alt={chat.other_user.nickname}
-                loading="lazy"
-                decoding="async"
-                className="w-full h-full object-cover rounded-full"
-              />
-            ) : (
-              <div className="avatar-placeholder">{chat.other_user.nickname.charAt(0)}</div>
-            )}
-          </PlanBadge>
+          {chat.other_user.is_admin ? (
+            <AdminAvatarBadge isAdmin={true} size="lg" animated>
+              {chat.other_user.avatar_url ? (
+                <img
+                  src={chat.other_user.avatar_url}
+                  alt={chat.other_user.nickname}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <div className="avatar-placeholder">{chat.other_user.nickname.charAt(0)}</div>
+              )}
+            </AdminAvatarBadge>
+          ) : (
+            <PlanBadge plan={chat.other_user.plan?.toLowerCase() || null} size="lg">
+              {chat.other_user.avatar_url ? (
+                <img
+                  src={chat.other_user.avatar_url}
+                  alt={chat.other_user.nickname}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <div className="avatar-placeholder">{chat.other_user.nickname.charAt(0)}</div>
+              )}
+            </PlanBadge>
+          )}
           <OnlineIndicator
             userId={chat.other_user.id}
             size="sm"
@@ -225,13 +242,23 @@ const UserItem = memo(
     return (
       <div className="user-item" onMouseDown={() => onSelect(user)}>
         <div className="user-avatar">
-          <PlanBadge plan={user.plan} size="sm">
-            {user.avatar_url ? (
-              <img src={user.avatar_url} alt={user.nickname} />
-            ) : (
-              <div className="avatar-placeholder">{user.nickname.charAt(0)}</div>
-            )}
-          </PlanBadge>
+          {user.is_admin ? (
+            <AdminAvatarBadge isAdmin={true} size="sm" animated>
+              {user.avatar_url ? (
+                <img src={user.avatar_url} alt={user.nickname} />
+              ) : (
+                <div className="avatar-placeholder">{user.nickname.charAt(0)}</div>
+              )}
+            </AdminAvatarBadge>
+          ) : (
+            <PlanBadge plan={user.plan} size="sm">
+              {user.avatar_url ? (
+                <img src={user.avatar_url} alt={user.nickname} />
+              ) : (
+                <div className="avatar-placeholder">{user.nickname.charAt(0)}</div>
+              )}
+            </PlanBadge>
+          )}
         </div>
         <div className="user-info">
           <div className="user-nickname flex items-center gap-1">

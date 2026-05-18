@@ -11,6 +11,7 @@ import ReportButton from '@/components/common/ReportButton';
 import ReportModal from '@/components/common/ReportModal';
 import TranslateButton from '@/components/common/TranslateButton';
 import PlanBadge from '@/components/common/PlanBadge';
+import { AdminAvatarBadge } from '@/components/common/AdminBadge';
 import { useAuth } from '@/contexts/AuthContext';
 import { getMediaInChat } from '@/services/chat/directChatService';
 import { formatDividerDate, formatMessageTime } from '@/utils/dateUtils';
@@ -130,13 +131,15 @@ const CachedAvatar = memo(
     nickname, 
     size = 32, 
     plan = null,
-    badgeSize
+    badgeSize,
+    isAdmin = null
   }: { 
     url?: string | null; 
     nickname: string; 
     size?: number;
     plan?: string | null;
     badgeSize?: 'sm' | 'md' | 'lg';
+    isAdmin?: boolean | null;
   }) => {
     const avatarContent = !url ? (
       <div
@@ -153,6 +156,14 @@ const CachedAvatar = memo(
         style={{ width: size, height: size }}
       />
     );
+
+    if (isAdmin) {
+      return (
+        <AdminAvatarBadge isAdmin={true} size={badgeSize || (size >= 48 ? 'lg' : size >= 32 ? 'md' : 'sm')} animated>
+          {avatarContent}
+        </AdminAvatarBadge>
+      );
+    }
 
     return (
       <PlanBadge plan={plan?.toLowerCase() || null} size={badgeSize || (size >= 32 ? 'md' : 'sm')}>
@@ -383,6 +394,7 @@ const MessageItem = memo(
                 url={message.sender?.avatar_url}
                 nickname={message.sender?.nickname || '나'}
                 plan={message.sender?.plan}
+                isAdmin={message.sender?.is_admin}
               />
             </div>
           </>
@@ -393,6 +405,7 @@ const MessageItem = memo(
                 url={message.sender?.avatar_url}
                 nickname={message.sender?.nickname || '?'}
                 plan={message.sender?.plan}
+                isAdmin={message.sender?.is_admin}
               />
             </div>
             <div className="message-bubble relative px-3 py-2 group">
@@ -646,6 +659,7 @@ const DirectChatRoom = ({
               senderName: msg.sender?.nickname || 'Unknown',
               senderAvatarUrl: msg.sender?.avatar_url,
               plan: msg.sender?.plan || null,
+              is_admin: msg.sender?.is_admin,
               type: 'video',
             });
           } else if (type !== 'file') {
@@ -658,6 +672,7 @@ const DirectChatRoom = ({
               senderName: msg.sender?.nickname || 'Unknown',
               senderAvatarUrl: msg.sender?.avatar_url,
               plan: msg.sender?.plan || null,
+              is_admin: msg.sender?.is_admin,
               type: 'image',
             });
           }
@@ -705,6 +720,7 @@ const DirectChatRoom = ({
                       senderName: msg.sender?.nickname || 'Unknown',
                       senderAvatarUrl: msg.sender?.avatar_url,
                       plan: msg.sender?.plan || null,
+                      is_admin: msg.sender?.is_admin,
                       type: 'video',
                     });
                   } else if (type !== 'file') {
@@ -716,6 +732,7 @@ const DirectChatRoom = ({
                       senderName: msg.sender?.nickname || 'Unknown',
                       senderAvatarUrl: msg.sender?.avatar_url,
                       plan: msg.sender?.plan || null,
+                      is_admin: msg.sender?.is_admin,
                       type: 'image',
                     });
                   }
@@ -743,6 +760,7 @@ const DirectChatRoom = ({
     content: string;
     avatar?: string | null;
     plan?: string | null;
+    is_admin?: boolean | null;
   } | null>(null);
   const isUserNearBottomRef = useRef(true); // 스크롤이 바닥 근처인지 추적
 
@@ -873,6 +891,7 @@ const DirectChatRoom = ({
               content: content,
               avatar: lastMessage.sender?.avatar_url,
               plan: lastMessage.sender?.plan ? lastMessage.sender.plan.toLowerCase() : null,
+              is_admin: lastMessage.sender?.is_admin,
             });
           }
         }
@@ -1494,14 +1513,27 @@ const DirectChatRoom = ({
             className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-primary/95 text-primary-foreground shadow-lg backdrop-blur-sm rounded-full pl-2 pr-4 py-1.5 flex items-center gap-2 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 transition-all active:scale-95 hover:scale-105 group max-w-[70vw] sm:max-w-[350px] overflow-visible"
           >
             <div className="shrink-0 p-2 overflow-visible relative z-20">
-              <PlanBadge plan={newMessageToast.plan?.toLowerCase()} size="lg">
-                <CachedAvatar
-                  url={newMessageToast.avatar}
-                  nickname={newMessageToast.sender}
-                  size={32}
-                  plan={null}
-                />
-              </PlanBadge>
+              {newMessageToast.is_admin ? (
+                <AdminAvatarBadge isAdmin={true} size="lg" animated>
+                  <CachedAvatar
+                    url={newMessageToast.avatar}
+                    nickname={newMessageToast.sender}
+                    size={32}
+                    plan={null}
+                    isAdmin={false}
+                  />
+                </AdminAvatarBadge>
+              ) : (
+                <PlanBadge plan={newMessageToast.plan?.toLowerCase()} size="lg">
+                  <CachedAvatar
+                    url={newMessageToast.avatar}
+                    nickname={newMessageToast.sender}
+                    size={32}
+                    plan={null}
+                    isAdmin={false}
+                  />
+                </PlanBadge>
+              )}
             </div>
 
             <div className="flex items-center gap-2 min-w-0 flex-1 text-xs sm:text-sm">

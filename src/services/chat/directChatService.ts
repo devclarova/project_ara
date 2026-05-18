@@ -46,7 +46,7 @@ async function getCurrentUser() {
 export async function getUserProfile(userId: string): Promise<ChatApiResponse<ChatUser>> {
   try {
     const { data: profileData, error: profileError } = await (supabase.from('profiles') as any)
-      .select('id, nickname, avatar_url, username, is_online, plan')
+      .select('id, nickname, avatar_url, username, is_online, plan, is_admin')
       .eq('user_id', userId)
       .maybeSingle();
 
@@ -65,6 +65,7 @@ export async function getUserProfile(userId: string): Promise<ChatApiResponse<Ch
       avatar_url: profileData.avatar_url,
       is_online: profileData.is_online,
       plan: profileData.plan,
+      is_admin: profileData.is_admin,
     };
 
     return { success: true, data: userInfo };
@@ -275,7 +276,7 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
     if (otherUserIds.length > 0) {
       const { data: profiles, error: profileError } = await (supabase
         .from('profiles') as any)
-        .select('id, nickname, avatar_url, username, banned_until, is_online, plan')
+        .select('id, nickname, avatar_url, username, banned_until, is_online, plan, is_admin')
         .in('id', otherUserIds);
 
       if (!profileError && profiles) {
@@ -289,6 +290,7 @@ export async function getChatList(): Promise<ChatApiResponse<ChatListItem[]>> {
             banned_until: p.banned_until,
             is_online: p.is_online,
             plan: p.plan ? p.plan.toLowerCase() : null,
+            is_admin: p.is_admin,
           });
         });
       }
@@ -405,7 +407,7 @@ export async function getDirectChat(chatId: string): Promise<ChatApiResponse<Cha
 
     // 상대방 프로필 조회
     const { data: profile } = await (supabase.from('profiles') as any)
-      .select('id, nickname, avatar_url, username, banned_until, plan')
+      .select('id, nickname, avatar_url, username, banned_until, plan, is_admin, is_online')
       .eq('id', otherUserId)
       .single();
 
@@ -419,12 +421,14 @@ export async function getDirectChat(chatId: string): Promise<ChatApiResponse<Cha
           banned_until: profile.banned_until,
           is_online: profile.is_online,
           plan: profile.plan,
+          is_admin: profile.is_admin,
         }
       : {
           id: otherUserId,
           email: `user-${otherUserId}@example.com`,
           nickname: `User ${otherUserId.slice(0, 8)}`,
           avatar_url: null,
+          is_admin: null,
         };
 
     // 마지막 메시지 조회
@@ -813,7 +817,7 @@ export async function getMessages(
         const senderIds = Array.from(new Set(rawFinalMessages.map((m: any) => m.sender_id)));
         const { data: profiles } = await (supabase
           .from('profiles') as any)
-          .select('id, nickname, avatar_url, user_id, username, plan')
+          .select('id, nickname, avatar_url, user_id, username, plan, is_admin')
           .in('user_id', senderIds);
 
         const profileMap = new Map<string, ChatUser>();
@@ -824,6 +828,7 @@ export async function getMessages(
           username: currentUser.user_metadata?.username,
           avatar_url: currentUser.user_metadata?.avatar_url || null,
           plan: currentUser.user_metadata?.plan || null,
+          is_admin: currentUser.user_metadata?.is_admin || null,
         });
 
         if (profiles) {
@@ -835,6 +840,7 @@ export async function getMessages(
               username: p.username,
               avatar_url: p.avatar_url,
               plan: p.plan ? p.plan.toLowerCase() : null,
+              is_admin: p.is_admin,
             });
           });
         }
@@ -848,6 +854,7 @@ export async function getMessages(
               nickname: msg.sender_id === currentUser.id ? '나' : '알 수 없음',
               avatar_url: null,
               plan: null,
+              is_admin: null,
             };
           }
           return {
@@ -946,7 +953,7 @@ export async function getMessages(
     // 프로필 정보 조회
     const { data: profiles } = await (supabase
       .from('profiles') as any)
-      .select('id, nickname, avatar_url, user_id, username, plan')
+      .select('id, nickname, avatar_url, user_id, username, plan, is_admin')
       .in('user_id', senderIds);
 
     const profileMap = new Map<string, ChatUser>();
@@ -958,6 +965,7 @@ export async function getMessages(
       username: currentUser.user_metadata?.username, // user_metadata에서 가져오거나 undefined
       avatar_url: currentUser.user_metadata?.avatar_url || null,
       plan: currentUser.user_metadata?.plan || null,
+      is_admin: currentUser.user_metadata?.is_admin || null,
     });
 
     if (profiles) {
@@ -969,6 +977,7 @@ export async function getMessages(
           username: p.username,
           avatar_url: p.avatar_url,
           plan: p.plan ? p.plan.toLowerCase() : null,
+          is_admin: p.is_admin,
         });
       });
     }
@@ -983,6 +992,7 @@ export async function getMessages(
           nickname: message.sender_id === currentUser.id ? '나' : '알 수 없음',
           avatar_url: null,
           plan: null,
+          is_admin: null,
         };
       }
 
@@ -1077,7 +1087,7 @@ export async function searchMessagesGlobal(
     if (senderIds.length > 0) {
       const { data: profiles, error: profileError } = await (supabase
         .from('profiles') as any)
-        .select('id, nickname, avatar_url, user_id, banned_until, plan')
+        .select('id, nickname, avatar_url, user_id, banned_until, plan, is_admin')
         .in('user_id', senderIds); // user_id 컬럼으로 검색 (auth.uid와 매핑)
 
       if (!profileError && profiles) {
@@ -1106,6 +1116,7 @@ export async function searchMessagesGlobal(
               avatar_url: profile.avatar_url,
               banned_until: profile.banned_until,
               plan: profile.plan,
+              is_admin: (profile as any).is_admin,
               email: '',
             }
           : {
@@ -1114,6 +1125,7 @@ export async function searchMessagesGlobal(
               nickname: '알 수 없음',
               avatar_url: null,
               email: '',
+              is_admin: null,
             },
       };
     });
@@ -1171,7 +1183,7 @@ export async function searchUsers(searchTerm: string): Promise<ChatApiResponse<C
     // 사용자 검색 (profiles 테이블에서 검색, 현재 사용자와 이미 채팅 중인 사용자 제외)
     const { data: profiles, error: searchError } = await (supabase
       .from('profiles') as any)
-      .select('id, nickname, avatar_url, created_at, banned_until, plan')
+      .select('id, nickname, avatar_url, created_at, banned_until, plan, is_admin')
       .ilike('nickname', `%${searchTerm}%`)
       .neq('user_id', currentUser.id) // user_id로 현재 사용자 제외
       .limit(20);
@@ -1199,6 +1211,7 @@ export async function searchUsers(searchTerm: string): Promise<ChatApiResponse<C
       avatar_url: profile.avatar_url,
       banned_until: profile.banned_until,
       plan: profile.plan,
+      is_admin: profile.is_admin,
     }));
 
     return { success: true, data: chatUsers };
@@ -1311,7 +1324,7 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
     if (otherUserIds.length > 0) {
       const { data: profiles, error: profileError } = await (supabase
         .from('profiles') as any)
-        .select('id, nickname, avatar_url, username, is_online, plan')
+        .select('id, nickname, avatar_url, username, is_online, plan, is_admin')
         .in('id', otherUserIds);
 
       if (!profileError && profiles) {
@@ -1324,6 +1337,7 @@ export async function getInactiveChatList(): Promise<ChatApiResponse<ChatListIte
             avatar_url: p.avatar_url,
             is_online: p.is_online,
             plan: p.plan ? p.plan.toLowerCase() : null,
+            is_admin: p.is_admin,
           });
         });
       }
@@ -1730,7 +1744,7 @@ export async function getMediaInChat(chatId: string): Promise<ChatApiResponse<Di
 
     const { data: profiles } = await (supabase
       .from('profiles') as any)
-      .select('id, nickname, avatar_url, user_id, plan')
+      .select('id, nickname, avatar_url, user_id, plan, is_admin')
       .in('user_id', senderIds);
 
     const profileMap = new Map<string, ChatUser>();
@@ -1743,6 +1757,7 @@ export async function getMediaInChat(chatId: string): Promise<ChatApiResponse<Di
           nickname: p.nickname,
           avatar_url: p.avatar_url,
           plan: p.plan ? p.plan.toLowerCase() : null,
+          is_admin: p.is_admin,
         });
       });
     }
@@ -1758,6 +1773,7 @@ export async function getMediaInChat(chatId: string): Promise<ChatApiResponse<Di
           nickname: '알 수 없음',
           avatar_url: null,
           plan: null,
+          is_admin: null,
         };
       }
 

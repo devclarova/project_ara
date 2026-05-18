@@ -10,6 +10,7 @@ export interface ChatUser {
   banned_until?: string | null;
   is_online?: boolean;
   plan?: string | null;
+  is_admin?: boolean | null;
 }
 
 // 1:1 채팅 정보
