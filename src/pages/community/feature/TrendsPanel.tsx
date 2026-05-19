@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import PlanBadge from '@/components/common/PlanBadge';
+import { AdminAvatarBadge } from '@/components/common/AdminBadge';
 import { motion } from 'framer-motion';
 
 interface TrendingTweet {
@@ -17,6 +18,7 @@ interface TrendingTweet {
     nickname: string;
     avatar_url: string | null;
     plan?: 'free' | 'basic' | 'premium';
+    is_admin?: boolean | null;
   } | null;
 }
 
@@ -162,19 +164,35 @@ export default function TrendsPanel({
                         }}
                         className="flex-shrink-0 pt-0.5 relative"
                       >
-                        <PlanBadge plan={tweet.profiles?.plan} size="sm">
-                          <Avatar className={`w-9 h-9 border ${isPremium ? 'border-white dark:border-background' : 'border-black/5 dark:border-white/10'}`}>
-                            <AvatarImage
-                              src={tweet.profiles?.avatar_url || '/images/ara_basic_profile.png'}
-                              alt={tweet.profiles?.nickname || t('common.user', 'User')}
-                            />
-                            <AvatarFallback>
-                              {tweet.profiles?.nickname
-                                ? tweet.profiles.nickname.charAt(0).toUpperCase()
-                                : 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                        </PlanBadge>
+                        {tweet.profiles?.is_admin ? (
+                          <AdminAvatarBadge isAdmin={true} size="sm" animated>
+                            <Avatar className={`w-9 h-9 border ${isPremium ? 'border-white dark:border-background' : 'border-black/5 dark:border-white/10'}`}>
+                              <AvatarImage
+                                src={tweet.profiles?.avatar_url || '/images/ara_basic_profile.png'}
+                                alt={tweet.profiles?.nickname || t('common.user', 'User')}
+                              />
+                              <AvatarFallback>
+                                {tweet.profiles?.nickname
+                                  ? tweet.profiles.nickname.charAt(0).toUpperCase()
+                                  : 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                          </AdminAvatarBadge>
+                        ) : (
+                          <PlanBadge plan={tweet.profiles?.plan} size="sm">
+                            <Avatar className={`w-9 h-9 border ${isPremium ? 'border-white dark:border-background' : 'border-black/5 dark:border-white/10'}`}>
+                              <AvatarImage
+                                src={tweet.profiles?.avatar_url || '/images/ara_basic_profile.png'}
+                                alt={tweet.profiles?.nickname || t('common.user', 'User')}
+                              />
+                              <AvatarFallback>
+                                {tweet.profiles?.nickname
+                                  ? tweet.profiles.nickname.charAt(0).toUpperCase()
+                                  : 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                          </PlanBadge>
+                        )}
                       </div>
 
                       <div className="flex-1 min-w-0">
