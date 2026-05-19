@@ -183,11 +183,27 @@ export default function GoodsDetailPage() {
       });
       if (error) throw error;
       const rpcData = data as any;
-      if (rpcData && rpcData.is_valid) {
-        setAppliedCoupon(rpcData.promotion);
+      const isValid = Boolean(rpcData?.is_valid ?? rpcData?.valid);
+
+      if (rpcData && isValid) {
+        const promoObj = rpcData.promotion ? {
+          id: rpcData.promotion.id,
+          name: rpcData.promotion.title ?? rpcData.promotion.name ?? '',
+          code: couponCode.trim(),
+          discount_type: rpcData.promotion.discount_type === 'percent' ? 'percentage' : rpcData.promotion.discount_type,
+          discount_value: rpcData.promotion.discount_value ?? 0
+        } : {
+          id: rpcData.promotion_id,
+          name: rpcData.title ?? '',
+          code: couponCode.trim(),
+          discount_type: rpcData.discount_type === 'percent' ? 'percentage' : rpcData.discount_type,
+          discount_value: rpcData.discount_value ?? 0
+        };
+
+        setAppliedCoupon(promoObj as any);
         toast.success(t('goods.coupon.applied'));
       } else {
-        setCouponError(rpcData?.reason || t('goods.coupon.invalid'));
+        setCouponError(rpcData?.reason ?? rpcData?.error ?? t('goods.coupon.invalid'));
         setAppliedCoupon(null);
       }
     } catch (err: unknown) {

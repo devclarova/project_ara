@@ -157,8 +157,9 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
 
       if (error) throw error;
       const rpcData = data as any;
+      const isValid = Boolean(rpcData?.is_valid ?? rpcData?.valid);
 
-      if (rpcData && rpcData.is_valid) {
+      if (rpcData && isValid) {
         // 쿠폰 등록 (사용 처리)
         // 실제 운영에서는 장바구니/결제 시에 usage가 기록되지만, 
         // 본 단계에서는 '등록(Claim)' 개념으로 usage_history에 기록합니다.
@@ -169,28 +170,35 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
           .ilike('code', couponCode.trim())
           .single();
           
-        if (couponData) {
+        if (couponData?.id) {
+          const discountApplied = rpcData.promotion?.discount_value ?? rpcData.discount_value ?? 0;
           const { error: insertError } = await (supabase.from('coupon_usages') as any)
             .insert({
               coupon_id: couponData.id,
               user_id: session.user.id,
-              discount_applied: rpcData.discount_value || rpcData.promotion?.discount_value || 0
+              discount_applied: discountApplied
             } as any);
             
           if (insertError) throw insertError;
           
+          const title = rpcData.promotion?.title ?? rpcData.promotion?.name ?? rpcData.title ?? '';
+          const discountType = rpcData.promotion?.discount_type ?? rpcData.discount_type ?? 'percent';
+          const discountValue = rpcData.promotion?.discount_value ?? rpcData.discount_value ?? 0;
+
           toast.success(
             <div className="flex flex-col gap-1">
               <span className="font-bold">{t('settings.coupons.redeem_success')}</span>
-              <span className="text-sm opacity-90">{t('settings.coupons.redeem_success_desc', { name: t(rpcData.title || rpcData.promotion?.name), discount: (rpcData.discount_type || rpcData.promotion?.discount_type) === 'percent' ? `${rpcData.discount_value || rpcData.promotion?.discount_value}%` : `₩${(rpcData.discount_value || rpcData.promotion?.discount_value || 0).toLocaleString()}` })}</span>
+              <span className="text-sm opacity-90">{t('settings.coupons.redeem_success_desc', { name: t(title), discount: discountType === 'percent' ? `${discountValue}%` : `₩${discountValue.toLocaleString()}` })}</span>
             </div>
           );
           
           setCouponCode('');
           fetchData(); // 사용 내역 갱신
+        } else {
+          toast.error(t('settings.coupons.redeem_fail'));
         }
       } else {
-        toast.error(rpcData?.error || rpcData?.reason || t('settings.coupons.redeem_fail'));
+        toast.error(rpcData?.reason ?? rpcData?.error ?? t('settings.coupons.redeem_fail'));
       }
     } catch (err: unknown) {
       console.error('Coupon validation error:', getErrorMessage(err));
@@ -272,8 +280,9 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
         .insert({
             promotion_id: promoData.id,
             code: secretCode,
-            status: 'active',
-            is_reusable: false
+            usage_limit: 1,
+            per_user_limit: 1,
+            is_active: true
         } as any);
 
       if (issueError) throw issueError;

@@ -209,11 +209,6 @@ export default function SubscriptionPage() {
     setIsValidatingCoupon(true);
     setCouponError('');
     try {
-      interface CouponResult {
-        is_valid: boolean;
-        promotion: PlanPromotion | null;
-        reason: string | null;
-      }
       const { data, error } = await (supabase as any).rpc('validate_coupon', { 
         p_code: couponCode.trim().toUpperCase(),
         p_user_id: session.user.id
@@ -221,12 +216,30 @@ export default function SubscriptionPage() {
       
       if (error) throw error;
       
-      const result = data as unknown as CouponResult;
-      if (result?.is_valid) {
-        setAppliedCoupon(result.promotion);
+      const rpcData = data as any;
+      const isValid = Boolean(rpcData?.is_valid ?? rpcData?.valid);
+
+      if (rpcData && isValid) {
+        const promoObj = rpcData.promotion ? {
+          id: rpcData.promotion.id,
+          plan_id: null,
+          label: rpcData.promotion.title || '',
+          discount_type: rpcData.promotion.discount_type === 'percent' ? 'percentage' : rpcData.promotion.discount_type,
+          discount_value: rpcData.promotion.discount_value || 0,
+          is_active: true
+        } : {
+          id: rpcData.promotion_id,
+          plan_id: null,
+          label: rpcData.title || '',
+          discount_type: rpcData.discount_type === 'percent' ? 'percentage' : rpcData.discount_type,
+          discount_value: rpcData.discount_value || 0,
+          is_active: true
+        };
+
+        setAppliedCoupon(promoObj as any);
         toast.success(t('subscription.errors.coupon_success'));
       } else {
-        setCouponError(result?.reason || t('subscription.errors.coupon_invalid'));
+        setCouponError(rpcData?.reason ?? rpcData?.error ?? t('subscription.errors.coupon_invalid'));
         setAppliedCoupon(null);
       }
     } catch (err) {
