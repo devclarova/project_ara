@@ -40,9 +40,27 @@ interface UserCoupon {
       starts_at: string;
       ends_at: string;
       is_active: boolean;
+      target_type?: string;
     } | null;
   } | null;
 }
+
+const getCouponConstraintInfo = (targetType: string) => {
+  switch (targetType) {
+    case 'all':
+      return { usage: '요금제·굿즈샵', target: '전체 대상' };
+    case 'subscription':
+      return { usage: '요금제 사용', target: '전체 대상' };
+    case 'goods':
+      return { usage: '굿즈샵 사용', target: '전체 대상' };
+    case 'subscriber':
+      return { usage: '굿즈샵 사용', target: '프리미엄 전용' };
+    case 'new_user':
+      return { usage: '사용처 확인 필요', target: '신규 유저' };
+    default:
+      return { usage: '알 수 없음', target: '알 수 없음' };
+  }
+};
 
 interface SubscriptionCouponSettingsProps {
   onBackToMenu?: () => void;
@@ -139,7 +157,8 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
               max_discount,
               starts_at,
               ends_at,
-              is_active
+              is_active,
+              target_type
             )
           )
         `)
@@ -567,6 +586,19 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
                         {statusText}
                       </span>
                     </div>
+                    {promo.target_type && (() => {
+                      const info = getCouponConstraintInfo(promo.target_type);
+                      return (
+                        <div className="flex items-center gap-1 mt-1 text-[9px] font-bold">
+                          <span className="px-1.5 py-0.2 bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-gray-400 rounded border border-gray-200 dark:border-zinc-700 whitespace-nowrap">
+                            {info.usage}
+                          </span>
+                          <span className="px-1.5 py-0.2 bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-gray-400 rounded border border-gray-200 dark:border-zinc-700 whitespace-nowrap">
+                            {info.target}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className="flex flex-col items-end gap-0.5 shrink-0">
                     <span className="font-bold text-primary text-xs whitespace-nowrap">

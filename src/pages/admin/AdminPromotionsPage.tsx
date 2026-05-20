@@ -21,7 +21,7 @@ interface Promotion {
   discount_value: number;
   min_order_amount: number;
   max_discount: number | null;
-  target_type: 'all' | 'new_user' | 'subscriber';
+  target_type: 'all' | 'new_user' | 'subscriber' | 'subscription' | 'goods';
   applicable_products: string[] | null;
   starts_at: string;
   ends_at: string;
@@ -37,7 +37,31 @@ interface Coupon {
   used_count: number;
   per_user_limit: number;
   is_active: boolean;
+  claimed_count?: number;
+  unused_count?: number;
+  used_claimed_count?: number;
+  actual_usage_count?: number;
+  promotions?: {
+    target_type: 'all' | 'new_user' | 'subscriber' | 'subscription' | 'goods';
+  } | null;
 }
+
+const getCouponConstraintInfo = (targetType: string) => {
+  switch (targetType) {
+    case 'all':
+      return { usage: '요금제·굿즈샵', target: '전체' };
+    case 'subscription':
+      return { usage: '요금제', target: '전체' };
+    case 'goods':
+      return { usage: '굿즈샵', target: '전체' };
+    case 'subscriber':
+      return { usage: '굿즈샵', target: '프리미엄 회원' };
+    case 'new_user':
+      return { usage: '정책 확인 필요', target: '신규 유저' };
+    default:
+      return { usage: '알 수 없음', target: '알 수 없음' };
+  }
+};
 
 // Components
 const AdminPromotionsPage = () => {
@@ -198,13 +222,62 @@ const AdminPromotionsPage = () => {
   const fetchCoupons = async (promoId: string) => {
     setLoadingCoupons(true);
     try {
-      const { data, error } = await (supabase.from('coupons') as any)
-        .select('*')
+      const { data: couponsData, error } = await (supabase.from('coupons') as any)
+        .select('*, promotions(target_type)')
         .eq('promotion_id', promoId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCoupons(data || []);
+      
+      const loadedCoupons = (couponsData || []) as Coupon[];
+      const couponIds = loadedCoupons.map(c => c.id);
+      
+      let userCouponsMap: Record<string, { total: number; unused: number; used: number }> = {};
+      let usagesMap: Record<string, number> = {};
+      
+      if (couponIds.length > 0) {
+        // Fetch user_coupons counts matching the coupon IDs
+        const { data: ucData, error: ucError } = await supabase
+          .from('user_coupons')
+          .select('coupon_id, is_used')
+          .in('coupon_id', couponIds);
+          
+        if (!ucError && ucData) {
+          ucData.forEach((uc: any) => {
+            if (!userCouponsMap[uc.coupon_id]) {
+              userCouponsMap[uc.coupon_id] = { total: 0, unused: 0, used: 0 };
+            }
+            userCouponsMap[uc.coupon_id].total += 1;
+            if (uc.is_used) {
+              userCouponsMap[uc.coupon_id].used += 1;
+            } else {
+              userCouponsMap[uc.coupon_id].unused += 1;
+            }
+          });
+        }
+        
+        // Fetch actual coupon_usages count matching the coupon IDs
+        const { data: usagesData, error: usagesError } = await supabase
+          .from('coupon_usages')
+          .select('coupon_id')
+          .in('coupon_id', couponIds);
+          
+        if (!usagesError && usagesData) {
+          usagesData.forEach((usage: any) => {
+            usagesMap[usage.coupon_id] = (usagesMap[usage.coupon_id] || 0) + 1;
+          });
+        }
+      }
+      
+      const mappedCoupons = loadedCoupons.map(c => ({
+        ...c,
+        claimed_count: userCouponsMap[c.id]?.total || 0,
+        unused_count: userCouponsMap[c.id]?.unused || 0,
+        used_claimed_count: userCouponsMap[c.id]?.used || 0,
+        actual_usage_count: usagesMap[c.id] || 0
+      }));
+
+      setCoupons(mappedCoupons);
     } catch (error: unknown) {
       console.error('Fetch coupons error:', getErrorMessage(error));
       toast.error('쿠폰 목록을 불러오는 데 실패했습니다.');
@@ -334,9 +407,17 @@ const AdminPromotionsPage = () => {
                       <tr key={promo.id} className="hover:bg-muted/50 transition-colors">
                         <td className="px-6 py-4">
                           <p className="font-semibold text-foreground">{promo.title}</p>
-                          <p className="text-xs text-muted-foreground mt-1 truncate max-w-[200px]">
-                            {promo.target_type === 'all' ? '전체 사용자' : promo.target_type === 'new_user' ? '신규 가입자' : '유료 구독자'} 대상
-                          </p>
+                          <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                            {(() => {
+                              const info = getCouponConstraintInfo(promo.target_type);
+                              return (
+                                <>
+                                  <div>사용처: {info.usage}</div>
+                                  <div>대상: {info.target}</div>
+                                </>
+                              );
+                            })()}
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <span className="inline-flex items-center px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium whitespace-nowrap">
@@ -433,8 +514,10 @@ const AdminPromotionsPage = () => {
                         <table className="w-full text-sm text-left">
                             <thead className="text-xs text-muted-foreground uppercase bg-secondary/50 border-b border-gray-200 dark:border-gray-800">
                                 <tr>
-                                    <th className="px-6 py-3 font-medium">코드</th>
-                                    <th className="px-6 py-3 font-medium">사용 횟수/한도</th>
+                                    <th className="px-6 py-3 font-medium">코드 (사용처)</th>
+                                    <th className="px-6 py-3 font-medium">사용 / 한도</th>
+                                    <th className="px-6 py-3 font-medium">등록 수 (미사용/사용됨)</th>
+                                    <th className="px-6 py-3 font-medium">실제 사용 이력</th>
                                     <th className="px-6 py-3 font-medium">인당 제한</th>
                                     <th className="px-6 py-3 font-medium">상태</th>
                                     <th className="px-6 py-3 font-medium text-right">삭제</th>
@@ -443,31 +526,53 @@ const AdminPromotionsPage = () => {
                             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                                 {coupons.map(coupon => (
                                     <tr key={coupon.id} className="hover:bg-muted/50 transition-colors">
-                                        <td className="px-6 py-3 font-mono font-medium text-primary flex items-center gap-2">
-                                            {coupon.code}
-                                            <button onClick={() => {
-                                                navigator.clipboard.writeText(coupon.code);
-                                                toast.success('복사되었습니다.');
-                                            }} className="text-muted-foreground hover:text-foreground">
-                                                <Copy size={14} />
-                                            </button>
-                                        </td>
                                         <td className="px-6 py-3">
-                                            {coupon.used_count} / {coupon.usage_limit > 0 ? coupon.usage_limit : '무제한'}
+                                            <div className="font-mono font-medium text-primary flex items-center gap-2">
+                                                {coupon.code}
+                                                <button onClick={() => {
+                                                    navigator.clipboard.writeText(coupon.code);
+                                                    toast.success('복사되었습니다.');
+                                                }} className="text-muted-foreground hover:text-foreground">
+                                                    <Copy size={14} />
+                                                </button>
+                                            </div>
+                                            {(() => {
+                                              const tType = coupon.promotions?.target_type || selectedPromoForCoupons?.target_type;
+                                              const info = getCouponConstraintInfo(tType || '');
+                                              return (
+                                                <div className="text-xs text-muted-foreground mt-0.5 space-y-0.5">
+                                                  <div>사용처: {info.usage}</div>
+                                                  <div>대상: {info.target}</div>
+                                                </div>
+                                              );
+                                            })()}
                                         </td>
-                                        <td className="px-6 py-3">
+                                        <td className="px-6 py-3 whitespace-nowrap">
+                                            <span className="font-medium text-foreground">{coupon.used_count ?? 0}</span>
+                                            <span className="text-muted-foreground"> / {coupon.usage_limit !== undefined && coupon.usage_limit !== null && coupon.usage_limit > 0 ? coupon.usage_limit : '무제한'}</span>
+                                        </td>
+                                        <td className="px-6 py-3 whitespace-nowrap">
+                                            <div>총: <span className="font-medium text-foreground">{coupon.claimed_count || 0}</span>개</div>
+                                            <div className="text-xs text-muted-foreground mt-0.5">
+                                                (미사용: {coupon.unused_count || 0} / 사용: {coupon.used_claimed_count || 0})
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-3 whitespace-nowrap font-medium text-foreground">
+                                            {coupon.actual_usage_count || 0}회
+                                        </td>
+                                        <td className="px-6 py-3 whitespace-nowrap text-muted-foreground">
                                             {coupon.per_user_limit}회
                                         </td>
-                                        <td className="px-6 py-3">
+                                        <td className="px-6 py-3 whitespace-nowrap">
                                             <button 
                                                 onClick={() => toggleCouponStatus(coupon.id, coupon.is_active)}
-                                                className={`text-xs px-2 py-0.5 rounded-full ${coupon.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-600'}`}
+                                                className={`text-xs px-2.5 py-1 rounded-full font-medium ${coupon.is_active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}`}
                                             >
                                                 {coupon.is_active ? '활성' : '비활성'}
                                             </button>
                                         </td>
-                                        <td className="px-6 py-3 text-right">
-                                            <button onClick={() => handleDeleteCoupon(coupon.id)} className="text-red-500 hover:bg-red-50 p-1.5 rounded">
+                                        <td className="px-6 py-3 text-right whitespace-nowrap">
+                                            <button onClick={() => handleDeleteCoupon(coupon.id)} className="text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 p-1.5 rounded transition-colors">
                                                 <Trash2 size={16} />
                                             </button>
                                         </td>
@@ -528,7 +633,13 @@ const AdminPromotionsPage = () => {
                 <div>
                     <label className="block text-sm font-medium text-muted-foreground mb-1">지원 대상</label>
                     {(() => {
-                      const targetLabels: Record<string, string> = { all: '모든 사용자', new_user: '신규 가입자 (첫주문)', subscriber: '프리미엄 구독자 전용' };
+                      const targetLabels: Record<string, string> = { 
+                        all: '전체 사용 가능 (요금제·굿즈샵)', 
+                        subscription: '요금제 전용 (요금제)', 
+                        goods: '굿즈샵 전용 (굿즈샵)', 
+                        subscriber: '프리미엄 회원 혜택 (굿즈샵)', 
+                        new_user: '신규 유저 혜택 (정책 확인 필요)' 
+                      };
                       return (
                         <DropdownMenu>
                           <DropdownMenuTrigger 
@@ -542,9 +653,11 @@ const AdminPromotionsPage = () => {
                             onCloseAutoFocus={(e) => e.preventDefault()}
                             className="w-[var(--radix-dropdown-menu-trigger-width)] rounded-xl shadow-xl border border-gray-100 dark:border-gray-700/70 bg-white dark:bg-secondary z-[200]"
                           >
-                            <DropdownMenuItem onClick={() => setPromoForm({...promoForm, target_type: 'all'})}>모든 사용자</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setPromoForm({...promoForm, target_type: 'new_user'})}>신규 가입자 (첫주문)</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setPromoForm({...promoForm, target_type: 'subscriber'})}>프리미엄 구독자 전용</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setPromoForm({...promoForm, target_type: 'all'})}>전체 사용 가능 (요금제·굿즈샵)</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setPromoForm({...promoForm, target_type: 'subscription'})}>요금제 전용</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setPromoForm({...promoForm, target_type: 'goods'})}>굿즈샵 전용</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setPromoForm({...promoForm, target_type: 'subscriber'})}>프리미엄 회원 혜택 (굿즈샵)</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setPromoForm({...promoForm, target_type: 'new_user'})}>신규 유저 혜택</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       );
