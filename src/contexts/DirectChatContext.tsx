@@ -247,7 +247,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
       if (cached) return cached;
 
       const { data } = await (supabase.from('profiles') as any)
-        .select('id, nickname, avatar_url, username, is_online, plan')
+        .select('id, nickname, avatar_url, username, is_online, plan, is_admin')
         .eq('user_id', authUserId)
         .maybeSingle();
 
@@ -260,6 +260,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
             avatar_url: data.avatar_url,
             is_online: data.is_online,
             plan: data.plan ? data.plan.toLowerCase() : null,
+            is_admin: data.is_admin,
           }
         : {
             id: authUserId,
@@ -268,6 +269,7 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
             avatar_url: null,
             is_online: false,
             plan: null,
+            is_admin: null,
           };
 
       profileCache.current.set(authUserId, userInfo);
@@ -933,11 +935,11 @@ export const DirectChatProvider: React.FC<DirectChatProviderProps> = ({ children
         const authId = updated.user_id;
         if (authId && profileCache.current.has(authId)) {
           const existing = profileCache.current.get(authId)!;
-          profileCache.current.set(authId, { ...existing, nickname: updated.nickname ?? existing.nickname, avatar_url: updated.avatar_url ?? existing.avatar_url, banned_until: updated.banned_until });
+          profileCache.current.set(authId, { ...existing, nickname: updated.nickname ?? existing.nickname, avatar_url: updated.avatar_url ?? existing.avatar_url, banned_until: updated.banned_until, is_admin: (updated as any).is_admin });
         }
-        setChats(prev => prev.map((chat: any) => chat.other_user?.id === updated.id ? { ...chat, other_user: { ...chat.other_user, nickname: updated.nickname ?? chat.other_user.nickname, avatar_url: updated.avatar_url ?? chat.other_user.avatar_url, banned_until: updated.banned_until } } : chat));
-        setCurrentChat(prev => (prev && prev.other_user?.id === updated.id) ? { ...prev, other_user: { ...prev.other_user, nickname: updated.nickname ?? prev.other_user.nickname, avatar_url: updated.avatar_url ?? prev.other_user.avatar_url, banned_until: updated.banned_until } } : prev);
-        setMessages(prev => prev.map((msg: any) => (msg.sender?.id === updated.id || msg.sender_id === updated.user_id) ? { ...msg, sender: { ...(msg.sender || {}), nickname: updated.nickname ?? msg.sender?.nickname, avatar_url: updated.avatar_url ?? msg.sender?.avatar_url, banned_until: updated.banned_until } as ChatUser } : msg));
+        setChats(prev => prev.map((chat: any) => chat.other_user?.id === updated.id ? { ...chat, other_user: { ...chat.other_user, nickname: updated.nickname ?? chat.other_user.nickname, avatar_url: updated.avatar_url ?? chat.other_user.avatar_url, banned_until: updated.banned_until, is_admin: (updated as any).is_admin } } : chat));
+        setCurrentChat(prev => (prev && prev.other_user?.id === updated.id) ? { ...prev, other_user: { ...prev.other_user, nickname: updated.nickname ?? prev.other_user.nickname, avatar_url: updated.avatar_url ?? prev.other_user.avatar_url, banned_until: updated.banned_until, is_admin: (updated as any).is_admin } } : prev);
+        setMessages(prev => prev.map((msg: any) => (msg.sender?.id === updated.id || msg.sender_id === updated.user_id) ? { ...msg, sender: { ...(msg.sender || {}), nickname: updated.nickname ?? msg.sender?.nickname, avatar_url: updated.avatar_url ?? msg.sender?.avatar_url, banned_until: updated.banned_until, is_admin: (updated as any).is_admin } as ChatUser } : msg));
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };

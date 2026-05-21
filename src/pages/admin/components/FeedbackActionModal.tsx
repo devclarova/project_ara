@@ -7,8 +7,9 @@ import { MessageSquare, Send, CheckCircle, Clock, User } from 'lucide-react';
 import UserProfileModal from './UserProfileModal';
 
 const PATH_TO_LABEL: Record<string, string> = {
-  '/': '랜딩 페이지',
-  '/sns': '커뮤니티 피드',
+  '/': '홈/랜딩',
+  '/landing': '홈/랜딩',
+  '/sns': '커뮤니티',
   '/community': '커뮤니티',
   '/chat': '채팅',
   '/login': '로그인',
@@ -16,15 +17,15 @@ const PATH_TO_LABEL: Record<string, string> = {
   '/register': '회원가입',
   '/signup': '회원가입',
   '/profile': '프로필',
-  '/profile/': '프로필',
   '/settings': '설정',
-  '/subscription': '구독/결제',
+  '/subscription': '구독',
   '/goods': '굿즈샵',
-  '/goods/': '굿즈 상세',
+  '/studyList': '학습 목록',
   '/study': '학습',
-  '/study/': '학습 상세',
-  '/study/voca': '단어장',
+  '/guest-study': '게스트 학습',
+  '/voca': '단어장',
   '/admin': '관리자',
+  '/hnotifications': '알림',
   '/notifications': '알림',
 };
 

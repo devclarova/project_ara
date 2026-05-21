@@ -20,6 +20,8 @@ import { toast } from 'sonner';
 import { formatSmartDate } from '@/utils/dateUtils';
 import { useAutoTranslation } from '@/hooks/useAutoTranslation';
 import { useFollow } from '@/hooks/useFollow';
+import { AdminAvatarBadge } from '@/components/common/AdminBadge';
+import PlanBadge from '@/components/common/PlanBadge';
 
 
 export type SilentDeleteOptions = {
@@ -36,6 +38,8 @@ export type SilentDeleteOptions = {
        username: string;
        avatar: string;
        bio?: string | null;
+       plan?: string | null;
+       is_admin?: boolean | null;
      };
      action: string;
      content: string | null;
@@ -380,16 +384,32 @@ export default function NotificationCard({
       <div className="flex items-start space-x-3">
         {/* Avatar */}
         <div onClick={handleAvatarClick} className="cursor-pointer flex-shrink-0 relative">
-          <Avatar className="w-10 h-10">
-            <AvatarImage
-              src={notification.user.avatar || '/images/ara_basic_profile.png'}
-              alt={notification.user.name}
-            />
-            <AvatarFallback>
-              {notification.type === 'system' ? '📢' : (notification.user.name ? notification.user.name.charAt(0).toUpperCase() : 'U')}
-            </AvatarFallback>
-          </Avatar>
-          {notification.type !== 'system' && (
+          {notification.type === 'system' || notification.type === 'updates' || notification.user.is_admin ? (
+            <AdminAvatarBadge isAdmin={true} size="md" animated>
+              <Avatar className="w-10 h-10">
+                <AvatarImage
+                  src={notification.user.avatar || '/images/ara_basic_profile.png'}
+                  alt={notification.user.name}
+                />
+                <AvatarFallback>
+                  {notification.type === 'system' || notification.type === 'updates' ? '📢' : (notification.user.name ? notification.user.name.charAt(0).toUpperCase() : 'U')}
+                </AvatarFallback>
+              </Avatar>
+            </AdminAvatarBadge>
+          ) : (
+            <PlanBadge plan={notification.user.plan}>
+              <Avatar className="w-10 h-10">
+                <AvatarImage
+                  src={notification.user.avatar || '/images/ara_basic_profile.png'}
+                  alt={notification.user.name}
+                />
+                <AvatarFallback>
+                  {notification.user.name ? notification.user.name.charAt(0).toUpperCase() : 'U'}
+                </AvatarFallback>
+              </Avatar>
+            </PlanBadge>
+          )}
+          {notification.type !== 'system' && notification.type !== 'updates' && (
           <OnlineIndicator 
             userId={notification.user.id} 
             size="sm" 

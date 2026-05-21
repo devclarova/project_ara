@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import PlanBadge from '@/components/common/PlanBadge';
+import { AdminAvatarBadge } from '@/components/common/AdminBadge';
 import { Button } from '@/components/ui/button';
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -40,7 +41,7 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user, userPlan, profileId, isBanned, bannedUntil } = useAuth();
+  const { user, userPlan, profileId, isBanned, bannedUntil, isAdmin } = useAuth();
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [profileNickname, setProfileNickname] = useState<string | null>(null);
   const maxLength = 280;
@@ -224,12 +225,21 @@ export default function ComposeBox({ onTweetPost }: ComposeBoxProps) {
       <div className="flex space-x-3 w-full">
         {/* ✅ 프로필 아바타 */}
         <div className="flex-shrink-0">
-          <PlanBadge plan={userPlan}>
-            <Avatar className="w-full h-full border-2 border-white dark:border-background">
-              <AvatarImage src={profileAvatar || '/images/ara_basic_profile.png'} alt={profileNickname || t('common.avatar', 'User avatar')} />
-              <AvatarFallback>{(profileNickname || 'U').charAt(0).toUpperCase()}</AvatarFallback>
-            </Avatar>
-          </PlanBadge>
+          {isAdmin ? (
+            <AdminAvatarBadge isAdmin={true} size="md" animated>
+              <Avatar className="w-full h-full border-2 border-white dark:border-background">
+                <AvatarImage src={profileAvatar || '/images/ara_basic_profile.png'} alt={profileNickname || t('common.avatar', 'User avatar')} />
+                <AvatarFallback>{(profileNickname || 'U').charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+            </AdminAvatarBadge>
+          ) : (
+            <PlanBadge plan={userPlan}>
+              <Avatar className="w-full h-full border-2 border-white dark:border-background">
+                <AvatarImage src={profileAvatar || '/images/ara_basic_profile.png'} alt={profileNickname || t('common.avatar', 'User avatar')} />
+                <AvatarFallback>{(profileNickname || 'U').charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+            </PlanBadge>
+          )}
         </div>
 
         {/* ✅ 입력 필드 */}

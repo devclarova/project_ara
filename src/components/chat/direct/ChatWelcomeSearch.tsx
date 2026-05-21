@@ -5,6 +5,7 @@ import { Search, User, MessageCircle, ArrowRight, X } from 'lucide-react';
 import HighlightText from '@/components/common/HighlightText';
 import { BanBadge } from '@/components/common/BanBadge';
 import PlanBadge from '@/components/common/PlanBadge';
+import { AdminAvatarBadge } from '@/components/common/AdminBadge';
 // import styles from '../chat.module.css';
 
 interface Props {
@@ -122,19 +123,35 @@ export default function ChatWelcomeSearch({ onChatSelect }: Props) {
                             className="hover:bg-primary/5 transition-colors cursor-pointer p-4 flex items-center gap-4 group"
                             onClick={() => onChatSelect(chat.id)}
                           >
-                            <PlanBadge plan={otherUser.plan} size="sm">
-                              {otherUser.avatar_url ? (
-                                <img
-                                  src={otherUser.avatar_url}
-                                  alt={otherUser.nickname}
-                                  className="w-12 h-12 rounded-full object-cover shadow-sm border border-border"
-                                />
-                              ) : (
-                                <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-muted-foreground font-bold text-lg">
-                                  {otherUser.nickname.charAt(0)}
-                                </div>
-                              )}
-                            </PlanBadge>
+                            {otherUser.is_admin ? (
+                              <AdminAvatarBadge isAdmin={true} size="sm" animated>
+                                {otherUser.avatar_url ? (
+                                  <img
+                                    src={otherUser.avatar_url}
+                                    alt={otherUser.nickname}
+                                    className="w-12 h-12 rounded-full object-cover shadow-sm border border-border"
+                                  />
+                                ) : (
+                                  <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-muted-foreground font-bold text-lg">
+                                    {otherUser.nickname.charAt(0)}
+                                  </div>
+                                )}
+                              </AdminAvatarBadge>
+                            ) : (
+                              <PlanBadge plan={otherUser.plan} size="sm">
+                                {otherUser.avatar_url ? (
+                                  <img
+                                    src={otherUser.avatar_url}
+                                    alt={otherUser.nickname}
+                                    className="w-12 h-12 rounded-full object-cover shadow-sm border border-border"
+                                  />
+                                ) : (
+                                  <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-muted-foreground font-bold text-lg">
+                                    {otherUser.nickname.charAt(0)}
+                                  </div>
+                                )}
+                              </PlanBadge>
+                            )}
                             <div className="flex-1 min-w-0">
                               {/* justify-between 제거하여 닉네임 분할 문제 해결 */}
                               <div className="font-semibold text-lg text-foreground flex items-center mb-0.5 gap-1">
@@ -179,19 +196,35 @@ export default function ChatWelcomeSearch({ onChatSelect }: Props) {
                           onClick={() => onChatSelect(msg.chat_id, msg.id)}
                         >
                           <div className="flex items-start gap-4">
-                            <PlanBadge plan={msg.sender?.plan} size="sm">
-                              {msg.sender?.avatar_url ? (
-                                <img
-                                  src={msg.sender.avatar_url}
-                                  alt={msg.sender.nickname}
-                                  className="w-10 h-10 rounded-full object-cover mt-1 border border-border"
-                                />
-                              ) : (
-                                <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-sm text-muted-foreground font-bold mt-1">
-                                  {msg.sender?.nickname?.charAt(0) || '?'}
-                                </div>
-                              )}
-                            </PlanBadge>
+                            {msg.sender?.is_admin ? (
+                              <AdminAvatarBadge isAdmin={true} size="sm" animated>
+                                {msg.sender?.avatar_url ? (
+                                  <img
+                                    src={msg.sender.avatar_url}
+                                    alt={msg.sender.nickname}
+                                    className="w-10 h-10 rounded-full object-cover mt-1 border border-border"
+                                  />
+                                ) : (
+                                  <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-sm text-muted-foreground font-bold mt-1">
+                                    {msg.sender?.nickname?.charAt(0) || '?'}
+                                  </div>
+                                )}
+                              </AdminAvatarBadge>
+                            ) : (
+                              <PlanBadge plan={msg.sender?.plan} size="sm">
+                                {msg.sender?.avatar_url ? (
+                                  <img
+                                    src={msg.sender.avatar_url}
+                                    alt={msg.sender.nickname}
+                                    className="w-10 h-10 rounded-full object-cover mt-1 border border-border"
+                                  />
+                                ) : (
+                                  <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-sm text-muted-foreground font-bold mt-1">
+                                    {msg.sender?.nickname?.charAt(0) || '?'}
+                                  </div>
+                                )}
+                              </PlanBadge>
+                            )}
                             <div className="flex-1 min-w-0">
                               <div className="flex justify-between items-center mb-1.5">
                                 <span className="font-semibold text-sm text-foreground flex items-center gap-1">

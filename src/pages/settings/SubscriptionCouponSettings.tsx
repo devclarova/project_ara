@@ -23,19 +23,44 @@ interface SubscriptionItem {
   ends_at: string | null;
 }
 
-interface CouponUsage {
+interface UserCoupon {
   id: string;
-  used_at: string;
-  discount_applied: number;
+  is_used: boolean;
+  created_at: string;
+  used_at: string | null;
   coupons: {
     code: string;
     promotions: {
       title: string;
+      description: string | null;
       discount_type: 'percent' | 'fixed';
       discount_value: number;
+      min_order_amount: number | null;
+      max_discount: number | null;
+      starts_at: string;
+      ends_at: string;
+      is_active: boolean;
+      target_type?: string;
     } | null;
   } | null;
 }
+
+const getCouponConstraintInfo = (targetType: string) => {
+  switch (targetType) {
+    case 'all':
+      return { usage: '요금제·굿즈샵', target: '전체 대상' };
+    case 'subscription':
+      return { usage: '요금제 사용', target: '전체 대상' };
+    case 'goods':
+      return { usage: '굿즈샵 사용', target: '전체 대상' };
+    case 'subscriber':
+      return { usage: '굿즈샵 사용', target: '프리미엄 전용' };
+    case 'new_user':
+      return { usage: '사용처 확인 필요', target: '신규 유저' };
+    default:
+      return { usage: '알 수 없음', target: '알 수 없음' };
+  }
+};
 
 interface SubscriptionCouponSettingsProps {
   onBackToMenu?: () => void;
@@ -81,7 +106,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [subscription, setSubscription] = useState<SubscriptionItem | null>(null);
   const [subscriptionHistory, setSubscriptionHistory] = useState<SubscriptionItem[]>([]);
-  const [usageHistory, setUsageHistory] = useState<CouponUsage[]>([]);
+  const [userCoupons, setUserCoupons] = useState<UserCoupon[]>([]);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isIssuingVip, setIsIssuingVip] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -114,27 +139,34 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
 
       setSubscriptionHistory(historyData ?? []);
 
-      // 3. 쿠폰 사용 내역
-      const { data: usageData } = await (supabase.from('coupon_usages') as any)
+      // 3. 보유 쿠폰 목록 가져오기 (user_coupons 기반)
+      const { data: walletData } = await (supabase.from('user_coupons') as any)
         .select(`
           id,
+          is_used,
+          created_at,
           used_at,
-          discount_applied,
           coupons (
             code,
             promotions (
               title,
+              description,
               discount_type,
-              discount_value
+              discount_value,
+              min_order_amount,
+              max_discount,
+              starts_at,
+              ends_at,
+              is_active,
+              target_type
             )
           )
         `)
         .eq('user_id', session.user.id)
-        .order('used_at', { ascending: false })
-        .limit(5);
+        .order('created_at', { ascending: false });
 
-      if (usageData) {
-        setUsageHistory(usageData as unknown as CouponUsage[]);
+      if (walletData) {
+        setUserCoupons(walletData as unknown as UserCoupon[]);
       }
     } catch (error) {
       console.error('Error fetching subscription data', error);
@@ -149,7 +181,7 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
 
     setValidating(true);
     try {
-      // 쿠폰 검증 RPC 호출
+      // 1. 쿠폰 검증 RPC 호출
       const { data, error } = await (supabase as any).rpc('validate_coupon', {
         p_code: couponCode.trim(),
         p_user_id: session.user.id
@@ -157,40 +189,74 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
 
       if (error) throw error;
       const rpcData = data as any;
+      const isValid = Boolean(rpcData?.is_valid ?? rpcData?.valid);
 
-      if (rpcData && rpcData.is_valid) {
-        // 쿠폰 등록 (사용 처리)
-        // 실제 운영에서는 장바구니/결제 시에 usage가 기록되지만, 
-        // 본 단계에서는 '등록(Claim)' 개념으로 usage_history에 기록합니다.
+      if (rpcData && isValid) {
+        // 2. coupon_id 확보 (rpcData.coupon_id 우선, 없으면 coupons 테이블 직접 조회 fallback)
+        let couponId = rpcData.coupon_id;
         
-        // 해당 쿠폰 정보 가져오기
-        const { data: couponData } = await (supabase.from('coupons') as any)
-          .select('id')
-          .ilike('code', couponCode.trim())
-          .single();
-          
-        if (couponData) {
-          const { error: insertError } = await (supabase.from('coupon_usages') as any)
-            .insert({
-              coupon_id: couponData.id,
-              user_id: session.user.id,
-              discount_applied: rpcData.discount_value || rpcData.promotion?.discount_value || 0
-            } as any);
-            
-          if (insertError) throw insertError;
-          
-          toast.success(
-            <div className="flex flex-col gap-1">
-              <span className="font-bold">{t('settings.coupons.redeem_success')}</span>
-              <span className="text-sm opacity-90">{t('settings.coupons.redeem_success_desc', { name: t(rpcData.title || rpcData.promotion?.name), discount: (rpcData.discount_type || rpcData.promotion?.discount_type) === 'percent' ? `${rpcData.discount_value || rpcData.promotion?.discount_value}%` : `₩${(rpcData.discount_value || rpcData.promotion?.discount_value || 0).toLocaleString()}` })}</span>
-            </div>
-          );
-          
-          setCouponCode('');
-          fetchData(); // 사용 내역 갱신
+        if (!couponId) {
+          const { data: couponData } = await (supabase.from('coupons') as any)
+            .select('id')
+            .ilike('code', couponCode.trim())
+            .single();
+          couponId = couponData?.id;
         }
+
+        if (!couponId) {
+          toast.error(t('settings.coupons.redeem_fail'));
+          return;
+        }
+
+        // 3. 중복 등록 여부 사전 검증
+        const { data: existingCoupon } = await (supabase.from('user_coupons') as any)
+          .select('id, is_used')
+          .eq('user_id', session.user.id)
+          .eq('coupon_id', couponId)
+          .maybeSingle();
+
+        if (existingCoupon) {
+          if (existingCoupon.is_used) {
+            toast.error(t('settings.coupons.already_used', '이미 사용 완료된 쿠폰입니다.'));
+          } else {
+            toast.error(t('settings.coupons.already_registered', '이미 등록하여 보유 중인 쿠폰입니다.'));
+          }
+          return;
+        }
+
+        // 4. 보유 쿠폰함(user_coupons)에 insert
+        const { error: insertError } = await (supabase.from('user_coupons') as any)
+          .insert({
+            user_id: session.user.id,
+            coupon_id: couponId,
+            is_used: false
+          });
+
+        if (insertError) {
+          // Unique 제약조건 충돌 예외 처리
+          if (insertError.code === '23505') {
+            toast.error(t('settings.coupons.already_registered', '이미 등록된 쿠폰입니다.'));
+          } else {
+            throw insertError;
+          }
+          return;
+        }
+
+        const title = rpcData.promotion?.title ?? rpcData.promotion?.name ?? rpcData.title ?? '';
+        const discountType = rpcData.promotion?.discount_type ?? rpcData.discount_type ?? 'percent';
+        const discountValue = rpcData.promotion?.discount_value ?? rpcData.discount_value ?? 0;
+
+        toast.success(
+          <div className="flex flex-col gap-1">
+            <span className="font-bold">{t('settings.coupons.redeem_success')}</span>
+            <span className="text-sm opacity-90">{t('settings.coupons.redeem_success_desc', { name: t(title), discount: discountType === 'percent' ? `${discountValue}%` : `₩${discountValue.toLocaleString()}` })}</span>
+          </div>
+        );
+        
+        setCouponCode('');
+        fetchData(); // 보유 쿠폰 목록 갱신
       } else {
-        toast.error(rpcData?.error || rpcData?.reason || t('settings.coupons.redeem_fail'));
+        toast.error(rpcData?.reason ?? rpcData?.error ?? t('settings.coupons.redeem_fail'));
       }
     } catch (err: unknown) {
       console.error('Coupon validation error:', getErrorMessage(err));
@@ -238,57 +304,28 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
     
     setIsIssuingVip(true);
     try {
-      // 1. 이번 달에 이미 받았는지 확인 (간단 가상 로직: usage_history에서 제목으로 체크)
-      const currentMonth = new Date().getMonth();
-      const alreadyReceived = usageHistory.some(h => {
-          const usedMonth = new Date(h.used_at).getMonth();
-          return usedMonth === currentMonth && h.coupons?.promotions?.title?.includes('VIP 시크릿');
-      });
+      // RPC를 통한 서버 사이드 원자적 발급 및 검증 수행 (RLS 우회 없이 안전한 방식)
+      const { data, error: rpcError } = await (supabase as any).rpc('open_vip_coupon_box');
 
-      if (alreadyReceived) {
-          toast.error(t('settings.coupons.vip_already_claimed'));
-          return;
-      }
-
-      // 2. 실제 쿠폰 발행 (가상 RPC 또는 직접 인서트 연동)
-      // 실제 프로젝트에서는 전용 RPC를 호출하는 것이 안전하지만, 
-      // 여기서는 실체화를 위해 '이달의 VIP 전용 99% 할인' 프로모션을 찾아 쿠폰을 발행하는 로직을 모사합니다.
+      if (rpcError) throw rpcError;
       
-      const secretCode = `VIP-SECRET-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
-      
-      // 데모를 위해 고정된 'VIP 전용' 프로모션 ID가 있다고 가정하거나 
-      // validate_coupon에서 처리할 수 있는 형태의 신규 쿠폰 데이터 생성
-      const { data: promoData } = await (supabase.from('promotions') as any)
-        .select('id, title')
-        .eq('title', 'VIP 전용 시크릿 혜택')
-        .maybeSingle();
+      const rpcData = data as any;
+      const isSuccess = Boolean(rpcData?.success);
 
-      if (!promoData) {
-          toast.error(t('settings.coupons.no_vip_available'));
-          return;
+      if (isSuccess) {
+        toast.success(
+          <div className="flex flex-col gap-1">
+              <span className="font-bold text-[#00F0FF]">{t('settings.coupons.vip_success_title')}</span>
+              <span className="text-sm opacity-90 text-gray-200">{t('settings.coupons.vip_success_code', { code: rpcData.code })}</span>
+              <span className="text-[10px] text-gray-400">{t('settings.coupons.vip_success_desc')}</span>
+          </div>,
+          { duration: 6000 }
+        );
+  
+        fetchData(); // 보유 쿠폰 목록 갱신
+      } else {
+        toast.error(rpcData?.reason ?? rpcData?.error ?? t('settings.coupons.redeem_fail'));
       }
-
-      const { error: issueError } = await (supabase.from('coupons') as any)
-        .insert({
-            promotion_id: promoData.id,
-            code: secretCode,
-            status: 'active',
-            is_reusable: false
-        } as any);
-
-      if (issueError) throw issueError;
-
-      toast.success(
-        <div className="flex flex-col gap-1">
-            <span className="font-bold text-[#00F0FF]">{t('settings.coupons.vip_success_title')}</span>
-            <span className="text-sm opacity-90 text-gray-200">{t('settings.coupons.vip_success_code', { code: secretCode })}</span>
-            <span className="text-[10px] text-gray-400">{t('settings.coupons.vip_success_desc')}</span>
-        </div>,
-        { duration: 6000 }
-      );
-
-      fetchData(); // 연령/내역 갱신
-
     } catch (err: unknown) {
         console.error('VIP Box open fail:', getErrorMessage(err));
         toast.error(t('settings.coupons.redeem_error'));
@@ -489,22 +526,46 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
         </form>
       </div>
 
-      {/* 쿠폰 사용 내역 */}
+      {/* 보유 쿠폰함 (My Coupon Wallet) */}
       <div className="space-y-2">
         <h4 className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-          <History size={13} /> {t('subscription.recent_coupons', '최근 쿠폰 기록')}
+          <History size={13} /> {t('subscription.recent_coupons', '내 보유 쿠폰함')}
         </h4>
 
-        {usageHistory.length === 0 ? (
+        {userCoupons.length === 0 ? (
           <div className="py-5 text-center text-xs text-gray-500 bg-gray-50 dark:bg-zinc-800/50 rounded-xl border border-gray-100 dark:border-white/5">
             {t('settings.coupons.no_history')}
           </div>
         ) : (
           <div className="space-y-1.5">
-            {usageHistory.map((usage) => {
-              const promo = usage.coupons?.promotions;
+            {userCoupons.map((item) => {
+              const promo = item.coupons?.promotions;
               if (!promo) return null;
               
+              // 상태별 상태 계산
+              const now = new Date();
+              const endsAt = promo.ends_at ? new Date(promo.ends_at) : null;
+              const isExpired = endsAt ? endsAt < now : false;
+              const isActive = promo.is_active;
+
+              let statusText = t('settings.coupons.status.available', '사용 가능');
+              let statusClass = 'bg-[#00BFA5]/10 text-[#00BFA5] border border-[#00BFA5]/20';
+              let opacityClass = '';
+
+              if (item.is_used) {
+                statusText = t('settings.coupons.status.used', '사용 완료');
+                statusClass = 'bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-gray-500 border border-gray-200 dark:border-zinc-700';
+                opacityClass = 'opacity-60';
+              } else if (isExpired) {
+                statusText = t('settings.coupons.status.expired', '만료됨');
+                statusClass = 'bg-red-500/10 text-red-500 border border-red-500/20';
+                opacityClass = 'opacity-80';
+              } else if (!isActive) {
+                statusText = t('settings.coupons.status.inactive', '비활성');
+                statusClass = 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20';
+                opacityClass = 'opacity-80';
+              }
+
               // 쿠폰 코드 마스킹 처리 (보안)
               const maskCode = (code: string) => {
                 if (!code) return '';
@@ -516,10 +577,28 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
               };
 
               return (
-                <div key={usage.id} className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl border border-gray-100 dark:border-white/5 bg-white dark:bg-zinc-900">
+                <div key={item.id} className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl border border-gray-100 dark:border-white/5 bg-white dark:bg-zinc-900 transition-opacity ${opacityClass}`}>
                   <div className="flex flex-col gap-0.5 min-w-0">
                     <span className="font-semibold text-xs text-gray-900 dark:text-white truncate">{promo.title}</span>
-                    <span className="text-xs text-gray-400 font-mono">{maskCode(usage.coupons?.code || '')}</span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs text-gray-400 font-mono">{maskCode(item.coupons?.code || '')}</span>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full whitespace-nowrap ${statusClass}`}>
+                        {statusText}
+                      </span>
+                    </div>
+                    {promo.target_type && (() => {
+                      const info = getCouponConstraintInfo(promo.target_type);
+                      return (
+                        <div className="flex items-center gap-1 mt-1 text-[9px] font-bold">
+                          <span className="px-1.5 py-0.2 bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-gray-400 rounded border border-gray-200 dark:border-zinc-700 whitespace-nowrap">
+                            {info.usage}
+                          </span>
+                          <span className="px-1.5 py-0.2 bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-gray-400 rounded border border-gray-200 dark:border-zinc-700 whitespace-nowrap">
+                            {info.target}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className="flex flex-col items-end gap-0.5 shrink-0">
                     <span className="font-bold text-primary text-xs whitespace-nowrap">
@@ -528,9 +607,10 @@ export default function SubscriptionCouponSettings({ onBackToMenu }: Subscriptio
                         : t('settings.coupons.discount_fixed', { value: promo.discount_value.toLocaleString() })
                       }
                     </span>
-                    <span className="text-xs text-gray-400 whitespace-nowrap">
-                      {format(new Date(usage.used_at), 'yy.MM.dd')}
-                    </span>
+                    <div className="flex flex-col items-end text-[10px] text-gray-400 whitespace-nowrap mt-0.5">
+                      <span>{t('settings.coupons.registered_at', '등록')}: {format(new Date(item.created_at), 'yy.MM.dd')}</span>
+                      <span>{t('settings.coupons.expires_at', '만료')}: {endsAt ? format(endsAt, 'yy.MM.dd') : t('settings.coupons.no_expiration', '상시')}</span>
+                    </div>
                   </div>
                 </div>
               );

@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { formatRelativeTime, formatMessageTime } from '@/utils/dateUtils';
 import PlanBadge from '@/components/common/PlanBadge';
+import { AdminAvatarBadge } from '@/components/common/AdminBadge';
 
 interface NotificationToastProps {
   type: 'chat' | 'comment' | 'like' | 'mention' | 'follow' | 'repost' | 'reply' | 'system' | 'like_comment' | 'like_feed' | 'updates';
@@ -16,6 +17,7 @@ interface NotificationToastProps {
     nickname: string;
     avatar_url: string | null;
     plan?: string | null;
+    is_admin?: boolean | null;
   };
   content: string;
   timestamp: string;
@@ -170,14 +172,25 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
        {/* Layout Composition: Implements a hierarchical arrangement of avatar assets, status indicators, and notification payloads. */}
        <div className="flex-shrink-0 relative overflow-visible p-1">
         <div className={`absolute -inset-1 rounded-full opacity-10 blur-[2px] transition-opacity group-hover:opacity-20 ${styles.iconBg}`}></div>
-        <PlanBadge plan={sender.plan?.toLowerCase() || null} size="md">
-          <Avatar className="w-10 h-10 border border-white/20 dark:border-white/10 shadow-sm relative z-10">
-            <AvatarImage src={sender.avatar_url || '/images/ara_basic_profile.png'} alt={sender.nickname} />
-            <AvatarFallback className="bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
-              {sender.nickname?.[0]?.toUpperCase() || 'U'}
-            </AvatarFallback>
-          </Avatar>
-        </PlanBadge>
+        {sender.is_admin ? (
+          <AdminAvatarBadge isAdmin={true} size="md" animated>
+            <Avatar className="w-10 h-10 border border-white/20 dark:border-white/10 shadow-sm relative z-10">
+              <AvatarImage src={sender.avatar_url || '/images/ara_basic_profile.png'} alt={sender.nickname} />
+              <AvatarFallback className="bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
+                {type === 'system' || type === 'updates' ? '📢' : (sender.nickname?.[0]?.toUpperCase() || 'U')}
+              </AvatarFallback>
+            </Avatar>
+          </AdminAvatarBadge>
+        ) : (
+          <PlanBadge plan={sender.plan?.toLowerCase() || null} size="md">
+            <Avatar className="w-10 h-10 border border-white/20 dark:border-white/10 shadow-sm relative z-10">
+              <AvatarImage src={sender.avatar_url || '/images/ara_basic_profile.png'} alt={sender.nickname} />
+              <AvatarFallback className="bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
+                {sender.nickname?.[0]?.toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+          </PlanBadge>
+        )}
         <div className={`absolute -bottom-0.5 -right-0.5 rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow-md border-2 border-white dark:border-zinc-900 z-20 ${styles.iconBg}`}>
           {styles.icon}
         </div>

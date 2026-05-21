@@ -14,6 +14,7 @@ import type { UIReply } from '@/types/sns';
 import { getBanMessage } from '@/utils/banUtils';
 import SeagullIcon from '@/components/common/SeagullIcon';
 import PlanBadge from '@/components/common/PlanBadge';
+import { AdminAvatarBadge } from '@/components/common/AdminBadge';
 import { useBlockedUsers } from '@/contexts/BlockedUsersContext';
 
 type EditorMode = 'tweet' | 'reply';
@@ -474,12 +475,21 @@ const SnsInlineEditor = forwardRef<SnsInlineEditorHandle, SnsInlineEditorProps>(
     <div className="border-b border-gray-200 dark:border-gray-700 px-4 py-4 bg-white dark:bg-background">
       <div className="flex items-start gap-3">
         {/* 내 아바타 */}
-        <PlanBadge plan={userPlan} size="sm">
-          <Avatar className="border-2 border-white dark:border-background">
-            <AvatarImage src={profileAvatar || '/images/ara_basic_profile.png'} alt="me" />
-            <AvatarFallback>{t('common.me', 'ME')}</AvatarFallback>
-          </Avatar>
-        </PlanBadge>
+        {isAdmin ? (
+          <AdminAvatarBadge isAdmin={true} size="sm" animated>
+            <Avatar className="border-2 border-white dark:border-background">
+              <AvatarImage src={profileAvatar || '/images/ara_basic_profile.png'} alt="me" />
+              <AvatarFallback>{t('common.me', 'ME')}</AvatarFallback>
+            </Avatar>
+          </AdminAvatarBadge>
+        ) : (
+          <PlanBadge plan={userPlan} size="sm">
+            <Avatar className="border-2 border-white dark:border-background">
+              <AvatarImage src={profileAvatar || '/images/ara_basic_profile.png'} alt="me" />
+              <AvatarFallback>{t('common.me', 'ME')}</AvatarFallback>
+            </Avatar>
+          </PlanBadge>
+        )}
         {/* 입력 영역 */}
         <div className="flex-1">
           <textarea

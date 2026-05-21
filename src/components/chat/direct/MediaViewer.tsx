@@ -3,6 +3,7 @@ import { X, Download, ChevronLeft, ChevronRight, Play, Pause, Volume2, VolumeX, 
 import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '@/utils/errorMessage';
 import PlanBadge from '@/components/common/PlanBadge';
+import { AdminAvatarBadge } from '@/components/common/AdminBadge';
 
 export interface MediaItem {
   url: string;
@@ -12,6 +13,7 @@ export interface MediaItem {
   senderName: string;
   senderAvatarUrl?: string | null;
   plan?: string | null;
+  is_admin?: boolean | null;
   type: 'image' | 'video';
 }
 
@@ -681,19 +683,35 @@ export default function MediaViewer({ isOpen, onClose, mediaList, initialMediaId
           {/* Left: Sender Info */}
           <div className="flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300 p-2 overflow-visible relative">
                 <div className="relative z-20">
-                  <PlanBadge plan={selectedMedia.plan?.toLowerCase() || null} size="lg">
-                  <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center font-bold backdrop-blur-md shadow-lg border border-black/10 dark:border-white/10 overflow-hidden shrink-0 text-zinc-800 dark:text-white">
-                    {selectedMedia.senderAvatarUrl ? (
-                      <img 
-                        src={selectedMedia.senderAvatarUrl} 
-                        alt={selectedMedia.senderName}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span>{selectedMedia.senderName.charAt(0)}</span>
-                    )}
-                  </div>
-                </PlanBadge>
+                  {selectedMedia.is_admin ? (
+                    <AdminAvatarBadge isAdmin={true} size="lg" animated>
+                      <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center font-bold backdrop-blur-md shadow-lg border border-black/10 dark:border-white/10 overflow-hidden shrink-0 text-zinc-800 dark:text-white">
+                        {selectedMedia.senderAvatarUrl ? (
+                          <img 
+                            src={selectedMedia.senderAvatarUrl} 
+                            alt={selectedMedia.senderName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span>{selectedMedia.senderName.charAt(0)}</span>
+                        )}
+                      </div>
+                    </AdminAvatarBadge>
+                  ) : (
+                    <PlanBadge plan={selectedMedia.plan?.toLowerCase() || null} size="lg">
+                      <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center font-bold backdrop-blur-md shadow-lg border border-black/10 dark:border-white/10 overflow-hidden shrink-0 text-zinc-800 dark:text-white">
+                        {selectedMedia.senderAvatarUrl ? (
+                          <img 
+                            src={selectedMedia.senderAvatarUrl} 
+                            alt={selectedMedia.senderName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span>{selectedMedia.senderName.charAt(0)}</span>
+                        )}
+                      </div>
+                    </PlanBadge>
+                  )}
               </div>
              <div className="flex flex-col drop-shadow-md text-zinc-900 dark:text-white">
                 <span className="font-bold text-sm tracking-wide">{selectedMedia.senderName}</span>

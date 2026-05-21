@@ -35,6 +35,8 @@ interface Notification {
     username: string;
     avatar: string;
     bio?: string | null;
+    plan?: string | null;
+    is_admin?: boolean | null;
   };
 }
 
@@ -53,6 +55,8 @@ interface NotificationQueryResult {
     avatar_url: string | null;
     username: string | null;
     bio: string | null;
+    plan?: string | null;
+    is_admin?: boolean | null;
   } | null;
   tweet: { content: string | null } | null;
   reply: { content: string | null } | null;
@@ -113,7 +117,7 @@ export default function HNotificationsPage() {
         .select(
           `
           id, type, content, is_read, created_at, tweet_id, comment_id,
-          sender:sender_id (id, nickname, user_id, avatar_url, username, bio),
+          sender:sender_id (id, nickname, user_id, avatar_url, username, bio, plan, is_admin),
           tweet:tweets (content),
           reply:tweet_replies (content)
         `,
@@ -155,6 +159,7 @@ export default function HNotificationsPage() {
             }
           }
 
+          const isOfficial = n.type === 'system' || n.type === 'updates';
           return {
             id: n.id,
             type: n.type,
@@ -164,11 +169,13 @@ export default function HNotificationsPage() {
             tweet_id: n.tweet_id,
             comment_id: n.comment_id,
             user: {
-              id: n.sender?.id || '',
-              name: n.type === 'system' ? t('common.ara_team') : n.sender?.nickname || 'Unknown',
-              username: n.type === 'system' ? 'ara_official' : n.sender?.username || 'unknown',
-              avatar: n.sender?.avatar_url || '',
-              bio: n.sender?.bio || '',
+              id: isOfficial ? '' : (n.sender?.id || ''),
+              name: isOfficial ? t('common.ara_team', { defaultValue: 'ARA 운영팀' }) : (n.sender?.nickname || 'Unknown'),
+              username: isOfficial ? 'ara_official' : (n.sender?.username || 'unknown'),
+              avatar: isOfficial ? '' : (n.sender?.avatar_url || ''),
+              bio: isOfficial ? '' : (n.sender?.bio || ''),
+              plan: isOfficial ? null : (n.sender?.plan ?? null),
+              is_admin: isOfficial ? true : (n.sender?.is_admin ?? false),
             },
           };
         }),
@@ -205,7 +212,7 @@ export default function HNotificationsPage() {
 
           const { data: sender } = newItem.sender_id
             ? await (supabase.from('profiles') as any)
-                .select('id, nickname, user_id, avatar_url, username, bio')
+                .select('id, nickname, user_id, avatar_url, username, bio, plan, is_admin')
                 .eq('id', newItem.sender_id)
                 .maybeSingle()
             : { data: null };
@@ -240,6 +247,7 @@ export default function HNotificationsPage() {
             }
           }
 
+          const isOfficial = newItem.type === 'system' || newItem.type === 'updates';
           const uiItem: Notification = {
             id: newItem.id,
             type: newItem.type,
@@ -249,11 +257,13 @@ export default function HNotificationsPage() {
             tweet_id: newItem.tweet_id,
             comment_id: newItem.comment_id,
             user: {
-              id: sender?.id || '',
-              name: newItem.type === 'system' ? t('common.ara_team') : sender?.nickname || 'Unknown',
-              username: newItem.type === 'system' ? 'ara_official' : sender?.username || 'unknown',
-              avatar: sender?.avatar_url || '',
-              bio: sender?.bio || '',
+              id: isOfficial ? '' : (sender?.id || ''),
+              name: isOfficial ? t('common.ara_team', { defaultValue: 'ARA 운영팀' }) : (sender?.nickname || 'Unknown'),
+              username: isOfficial ? 'ara_official' : (sender?.username || 'unknown'),
+              avatar: isOfficial ? '' : (sender?.avatar_url || ''),
+              bio: isOfficial ? '' : (sender?.bio || ''),
+              plan: isOfficial ? null : (sender?.plan ?? null),
+              is_admin: isOfficial ? true : (sender?.is_admin ?? false),
             },
           };
 

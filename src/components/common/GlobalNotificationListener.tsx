@@ -89,7 +89,7 @@ export const GlobalNotificationListener: React.FC = () => {
               if ((type === 'mention' || type === 'repost' || type === 'reply') && !userSettingsRef.current.notify_comment) return;
               
               const { data: senderProfile } = await (supabase.from('profiles') as any)
-                .select('id, nickname, avatar_url, plan, username, bio')
+                .select('id, nickname, avatar_url, plan, username, bio, is_admin')
                 .eq('id', newNotif.sender_id)
                 .maybeSingle();
 
@@ -143,19 +143,21 @@ export const GlobalNotificationListener: React.FC = () => {
               }
 
               // 프로필이 없어도 알림은 띄움 (Fallback)
-              toast.custom((t) => (
+              const isOfficialNotif = newNotif.type === 'system' || newNotif.type === 'updates';
+              toast.custom((toastId) => (
                 <NotificationToast
                   type={newNotif.type as any}
                   sender={{
-                    nickname: senderProfile?.nickname ?? '알 수 없는 사용자',
-                    avatar_url: senderProfile?.avatar_url ?? null,
-                    plan: senderProfile?.plan ?? null,
+                    nickname: isOfficialNotif ? t('common.ara_team', { defaultValue: 'ARA 운영팀' }) : (senderProfile?.nickname ?? '알 수 없는 사용자'),
+                    avatar_url: isOfficialNotif ? null : (senderProfile?.avatar_url ?? null),
+                    plan: isOfficialNotif ? null : (senderProfile?.plan ?? null),
+                    is_admin: isOfficialNotif ? true : (senderProfile?.is_admin ?? false),
                   }}
                   content={contentToDisplay}
                   timestamp={newNotif.created_at}
                   replyId={newNotif.comment_id}
                   onClick={() => {
-                    toast.dismiss(t);
+                    toast.dismiss(toastId);
                     if (newNotif.tweet_id) {
                       navigate(`/sns/${newNotif.tweet_id}`, { 
                         state: { 
@@ -169,7 +171,7 @@ export const GlobalNotificationListener: React.FC = () => {
                        navigate('/hnotifications');
                     }
                   }}
-                  toastId={t}
+                  toastId={toastId}
                 />
               ), {
                 id: `notif-${newNotif.id}`,
@@ -230,7 +232,7 @@ export const GlobalNotificationListener: React.FC = () => {
             }
 
             const { data: senderProfile } = await (supabase.from('profiles') as any)
-              .select('nickname, avatar_url, plan')
+              .select('nickname, avatar_url, plan, is_admin')
               .eq('user_id', newMessage.sender_id)
               .maybeSingle();
 
@@ -262,6 +264,7 @@ export const GlobalNotificationListener: React.FC = () => {
                   nickname: senderProfile?.nickname ?? '알 수 없는 사용자',
                   avatar_url: senderProfile?.avatar_url ?? null,
                   plan: senderProfile?.plan ?? null,
+                  is_admin: senderProfile?.is_admin ?? false,
                 }}
                 content={contentWithMedia}
                 timestamp={newMessage.created_at ?? ''}
